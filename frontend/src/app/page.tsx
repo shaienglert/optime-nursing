@@ -9,7 +9,7 @@ const relationshipOptions = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myse
 
 const genderOptions = ["Male", "Female", "Prefer not to say"];
 
-const coupleAssistanceOptions = ["Partner 1", "Partner 2", "Both equally"];
+const coupleAssistanceOptions = ["Husband", "Wife", "Both equally"];
 
 const ageGroupOptions = ["60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95+"];
 
@@ -89,34 +89,6 @@ export default function Home() {
   const [distanceFromFamily, setDistanceFromFamily] = useState("");
   const [notes, setNotes] = useState("");
 
-  const answeredCount = useMemo(() => {
-    let count = 0;
-    if (relationship) count += 1;
-    if (relationship === "Myself" && gender) count += 1;
-    if (relationship === "Couple" && coupleAssistance) count += 1;
-    if (ageGroup) count += 1;
-    if (assistanceLevel) count += 1;
-    if (memoryStatus) count += 1;
-    if (happinessPreferences.length > 0) count += 1;
-    if (budget >= 3000) count += 1;
-    if (distanceFromFamily) count += 1;
-    if (notes.trim()) count += 1;
-    return count;
-  }, [relationship, gender, coupleAssistance, ageGroup, assistanceLevel, memoryStatus, happinessPreferences, budget, distanceFromFamily, notes]);
-
-  const understanding = useMemo(() => {
-    if (answeredCount <= 2) {
-      return { label: "Not enough information yet", style: "border-slate-200 bg-slate-100 text-slate-600" };
-    }
-    if (answeredCount <= 4) {
-      return { label: "Good understanding", style: "border-amber-200 bg-amber-100 text-amber-800" };
-    }
-    if (answeredCount <= 6) {
-      return { label: "Strong understanding", style: "border-emerald-200 bg-emerald-100 text-emerald-800" };
-    }
-    return { label: "Ready to match", style: "border-green-300 bg-green-100 text-green-900" };
-  }, [answeredCount]);
-
   const relationshipLabel = relationshipCopy(relationship);
 
   const ctaText = useMemo(() => ctaCopy(relationship), [relationship]);
@@ -153,12 +125,54 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f3eee1_0%,#fffaf2_36%,#ffffff_74%)] px-6 py-10 sm:px-10 lg:px-16">
       <section className="mx-auto max-w-6xl">
-        <div className="rounded-3xl border border-[#e8dcc9] bg-white/92 p-6 shadow-[0_24px_80px_-38px_rgba(96,80,56,0.38)] backdrop-blur sm:p-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5d7f6b]">OPTIME Nursing</p>
-          <h1 className="mt-4 max-w-4xl text-3xl font-semibold leading-tight text-[#2f2a24] sm:text-5xl">Find the right home, not just the best-rated one.</h1>
-          <p className="mt-5 max-w-3xl text-lg text-[#6b6257]">A simple, family-friendly questionnaire built for clear decisions with less stress.</p>
+        <div className="rounded-3xl border border-[#e8dcc9] bg-white/92 p-4 shadow-[0_24px_80px_-38px_rgba(96,80,56,0.38)] backdrop-blur sm:p-6">
+          <section className="relative overflow-hidden rounded-3xl border border-[#e7dcc9]">
+            <img
+              src="https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=1800&q=80"
+              alt="Warm senior living community with gardens and outdoor seating"
+              className="h-[540px] w-full object-cover object-center sm:h-[640px]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[rgba(255,251,243,0.98)] via-[rgba(255,251,243,0.85)] to-[rgba(255,251,243,0.08)]" />
+            <div className="absolute inset-y-0 left-0 z-10 flex w-full items-center p-6 sm:w-[78%] sm:p-10 lg:w-[56%] lg:p-12">
+              <div className="rounded-3xl bg-[rgba(255,252,246,0.55)] p-4 backdrop-blur-[2px] sm:p-6">
+                <div className="flex items-center gap-3 text-[#62816c]">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#a6bea8] bg-white/70 text-xl">✿</span>
+                  <div>
+                    <p className="text-2xl font-semibold tracking-[0.16em]">OPTIME</p>
+                    <p className="text-sm text-[#70856f]">Better choices. Better lives.</p>
+                  </div>
+                </div>
 
-          <div className={`mt-8 rounded-2xl border px-4 py-3 text-sm font-semibold sm:px-6 ${understanding.style}`}>{understanding.label}</div>
+                <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.05] text-[#1f392a] sm:text-6xl">
+                  Find the right home,
+                  <br />
+                  not just the best-rated one.
+                </h1>
+
+                <div className="mt-5 h-1 w-16 rounded-full bg-[#c9a15d]" />
+
+                <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#4f5d4d]">
+                  A simple, family-friendly questionnaire built for clear decisions with less stress.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => window.scrollTo({ top: 720, behavior: "smooth" })}
+                  className="mt-7 inline-flex items-center gap-3 rounded-2xl bg-[#6d8f72] px-7 py-3 text-lg font-semibold text-white shadow-[0_10px_24px_-14px_rgba(57,85,58,0.55)] transition hover:bg-[#5f8065]"
+                >
+                  Let&apos;s get started
+                  <span aria-hidden="true">→</span>
+                </button>
+
+                <div className="mt-7 grid grid-cols-2 gap-3 text-sm text-[#4a5547] sm:grid-cols-4">
+                  <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Trusted Information</p>
+                  <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Personalized Matches</p>
+                  <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Family Focused</p>
+                  <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Private &amp; Secure</p>
+                </div>
+              </div>
+            </div>
+          </section>
 
           <div className="mt-8 grid gap-5">
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
