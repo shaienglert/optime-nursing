@@ -126,24 +126,26 @@ export default function Home() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f3eee1_0%,#fffaf2_36%,#ffffff_74%)] px-6 py-10 sm:px-10 lg:px-16">
       <section className="mx-auto max-w-6xl">
         <div className="rounded-3xl border border-[#e8dcc9] bg-white/92 p-4 shadow-[0_24px_80px_-38px_rgba(96,80,56,0.38)] backdrop-blur sm:p-6">
-          <section className="relative overflow-hidden rounded-3xl border border-[#e7dcc9]">
+          <section className="relative overflow-hidden rounded-3xl border border-[#e7dcc9] bg-[#f8f3e8]">
             <img
-              src="https://images.unsplash.com/photo-1527772323382-e5dbd07c2393?auto=format&fit=crop&w=1800&q=80"
-              alt="Happy residents in a sunny garden community with outdoor seating"
-              className="h-[540px] w-full object-cover object-[62%_center] sm:h-[640px]"
+              src="/hero-reference.png"
+              alt="OPTIME hero reference image"
+              className="h-[560px] w-full object-cover object-[62%_center] sm:h-[660px]"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[rgba(255,251,243,0.98)] via-[rgba(255,251,243,0.85)] to-[rgba(255,251,243,0.08)]" />
-            <div className="absolute inset-y-0 left-0 z-10 flex w-full items-center p-6 sm:w-[78%] sm:p-10 lg:w-[56%] lg:p-12">
-              <div className="rounded-3xl bg-[rgba(255,252,246,0.55)] p-4 backdrop-blur-[2px] sm:p-6">
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,241,232,0.9)_0%,rgba(246,241,232,0.66)_42%,rgba(246,241,232,0.2)_70%,rgba(246,241,232,0.06)_100%)]" />
+            <div className="absolute inset-y-0 left-0 z-10 w-full rounded-3xl bg-[rgba(255,251,244,0.76)] backdrop-blur-[1.5px] sm:w-[64%]" />
+
+            <div className="absolute inset-y-0 left-0 z-20 flex w-full items-center px-6 py-8 sm:w-[64%] sm:px-10 lg:px-12">
+              <div className="w-full max-w-2xl">
                 <div className="flex items-center gap-3 text-[#62816c]">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#a6bea8] bg-white/70 text-xl">✿</span>
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#a6bea8] bg-white/85 text-lg">✤</span>
                   <div>
                     <p className="text-2xl font-semibold tracking-[0.16em]">OPTIME</p>
                     <p className="text-sm text-[#70856f]">Better choices. Better lives.</p>
                   </div>
                 </div>
 
-                <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.05] text-[#1f392a] sm:text-6xl">
+                <h1 className="mt-6 text-5xl font-semibold leading-[1.03] text-[#1f392a] sm:text-7xl">
                   Find the right home,
                   <br />
                   not just the best-rated one.
@@ -151,20 +153,20 @@ export default function Home() {
 
                 <div className="mt-5 h-1 w-16 rounded-full bg-[#c9a15d]" />
 
-                <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#4f5d4d]">
+                <p className="mt-6 text-lg leading-relaxed text-[#4f5d4d]">
                   A simple, family-friendly questionnaire built for clear decisions with less stress.
                 </p>
 
                 <button
                   type="button"
                   onClick={() => window.scrollTo({ top: 720, behavior: "smooth" })}
-                  className="mt-7 inline-flex items-center gap-3 rounded-2xl bg-[#6d8f72] px-7 py-3 text-lg font-semibold text-white shadow-[0_10px_24px_-14px_rgba(57,85,58,0.55)] transition hover:bg-[#5f8065]"
+                  className="mt-7 inline-flex items-center gap-3 rounded-2xl bg-[#6d8f72] px-8 py-3 text-lg font-semibold text-white shadow-[0_10px_24px_-14px_rgba(57,85,58,0.55)] transition hover:bg-[#5f8065]"
                 >
                   Let&apos;s get started
                   <span aria-hidden="true">→</span>
                 </button>
 
-                <div className="mt-7 grid grid-cols-2 gap-3 text-sm text-[#4a5547] sm:grid-cols-4">
+                <div className="mt-8 grid grid-cols-2 gap-3 text-sm text-[#4a5547] sm:grid-cols-4">
                   <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Trusted Information</p>
                   <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Personalized Matches</p>
                   <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Family Focused</p>
