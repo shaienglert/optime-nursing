@@ -130,12 +130,12 @@ export default function Home() {
             <img
               src="/hero-reference.png"
               alt="OPTIME hero reference image"
-              className="h-[560px] w-full object-cover object-[62%_center] sm:h-[660px]"
+              className="h-[420px] w-full object-cover object-[62%_center] sm:h-[470px]"
             />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,241,232,0.9)_0%,rgba(246,241,232,0.66)_42%,rgba(246,241,232,0.2)_70%,rgba(246,241,232,0.06)_100%)]" />
             <div className="absolute inset-y-0 left-0 z-10 w-full rounded-3xl bg-[rgba(255,251,244,0.76)] backdrop-blur-[1.5px] sm:w-[64%]" />
 
-            <div className="absolute inset-y-0 left-0 z-20 flex w-full items-center px-6 py-8 sm:w-[64%] sm:px-10 lg:px-12">
+            <div className="absolute inset-y-0 left-0 z-20 flex w-full items-center px-6 py-6 sm:w-[64%] sm:px-10 lg:px-12">
               <div className="w-full max-w-2xl">
                 <div className="flex items-center gap-3 text-[#62816c]">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#a6bea8] bg-white/85 text-lg">✤</span>
@@ -145,7 +145,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <h1 className="mt-6 text-5xl font-semibold leading-[1.03] text-[#1f392a] sm:text-7xl">
+                <h1 className="mt-5 text-4xl font-semibold leading-[1.05] text-[#1f392a] sm:text-6xl">
                   Find the right home,
                   <br />
                   not just the best-rated one.
@@ -153,30 +153,21 @@ export default function Home() {
 
                 <div className="mt-5 h-1 w-16 rounded-full bg-[#c9a15d]" />
 
-                <p className="mt-6 text-lg leading-relaxed text-[#4f5d4d]">
+                <p className="mt-5 text-lg leading-relaxed text-[#4f5d4d]">
                   A simple, family-friendly questionnaire built for clear decisions with less stress.
                 </p>
 
-                <button
-                  type="button"
-                  onClick={() => window.scrollTo({ top: 720, behavior: "smooth" })}
-                  className="mt-7 inline-flex items-center gap-3 rounded-2xl bg-[#6d8f72] px-8 py-3 text-lg font-semibold text-white shadow-[0_10px_24px_-14px_rgba(57,85,58,0.55)] transition hover:bg-[#5f8065]"
-                >
-                  Let&apos;s get started
-                  <span aria-hidden="true">→</span>
-                </button>
-
-                <div className="mt-8 grid grid-cols-2 gap-3 text-sm text-[#4a5547] sm:grid-cols-4">
-                  <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Trusted Information</p>
-                  <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Personalized Matches</p>
-                  <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Family Focused</p>
-                  <p className="rounded-xl border border-[#d8d3c7] bg-white/72 px-3 py-2 text-center">Private &amp; Secure</p>
+                <div className="mt-7 flex flex-wrap gap-2.5 text-sm">
+                  <p className="rounded-full bg-[#6d8f72] px-4 py-2 font-semibold text-white">✓ Personalized Matching</p>
+                  <p className="rounded-full bg-[#6d8f72] px-4 py-2 font-semibold text-white">✓ Transparent Scoring</p>
+                  <p className="rounded-full bg-[#6d8f72] px-4 py-2 font-semibold text-white">✓ Family First</p>
+                  <p className="rounded-full bg-[#6d8f72] px-4 py-2 font-semibold text-white">✓ AI Assisted Decisions</p>
                 </div>
               </div>
             </div>
           </section>
 
-          <div className="mt-8 grid gap-5">
+          <div className="mt-6 grid gap-5">
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
               <h3 className="text-lg font-semibold text-[#2f2a24]">1. Who are you searching for?</h3>
               <div className="mt-4 flex flex-wrap gap-2.5">
