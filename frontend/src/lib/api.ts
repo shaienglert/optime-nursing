@@ -23,17 +23,11 @@ export type ScoreBreakdownItem = {
   dataSource: string[];
 };
 
-export type ReviewGroup = {
-  type: string;
-  rating: number;
-  quote: string;
-};
-
 export type SearchFacility = Facility & {
-  feedId: string;
   imageUrl: string;
   optimeScore: number;
-  aiSummary: string[];
+  matchLabel: string;
+  shortExplanation: string;
   priceRange: string;
   careTypes: string[];
   matchBadges: string[];
@@ -43,230 +37,197 @@ export type FacilityDetailsData = SearchFacility & {
   website: string;
   gallery: string[];
   scoreBreakdown: ScoreBreakdownItem[];
-  matchScore: number;
-  matchReasons: string[];
   mapPoints: {
+    facility: string;
     family: string;
     hospital: string;
     synagogue: string;
     transit: string;
   };
-  reviews: ReviewGroup[];
 };
 
-const imageSets = [
+const firstWords = [
+  "Sunrise",
+  "Harbor",
+  "Cypress",
+  "Silver",
+  "Palm",
+  "Bayside",
+  "Legacy",
+  "Grandview",
+  "Willow",
+  "Ocean",
+];
+
+const secondWords = [
+  "Gardens",
+  "Manor",
+  "Heights",
+  "Village",
+  "Haven",
+  "Springs",
+  "Commons",
+  "Residence",
+  "Pointe",
+  "Retreat",
+];
+
+const cities = [
+  "Miami",
+  "Boca Raton",
+  "Coral Gables",
+  "Fort Lauderdale",
+  "Aventura",
+  "Hollywood",
+  "Delray Beach",
+  "Weston",
+  "Pembroke Pines",
+  "Naples",
+];
+
+const gallerySets = [
   [
-    "https://images.unsplash.com/photo-1512915922686-57c11dde9b6b?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1512915922686-57c11dde9b6b?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80",
   ],
   [
-    "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1400&q=80",
   ],
   [
-    "https://images.unsplash.com/photo-1519643381401-22c77e60520e?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1464890100898-a385f744067f?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1430285561322-7808604715df?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1519643381401-22c77e60520e?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1464890100898-a385f744067f?auto=format&fit=crop&w=1400&q=80",
+    "https://images.unsplash.com/photo-1430285561322-7808604715df?auto=format&fit=crop&w=1400&q=80",
   ],
 ];
 
-const careTypeSets = [
+const explanationPool = [
+  "Excellent staffing and strong social activities. Great fit for active seniors requiring light assistance.",
+  "Reliable clinical coverage and calm daily routines. A strong option for memory support and family visibility.",
+  "Balanced care quality, social engagement, and value. Works well for seniors who want both support and independence.",
+];
+
+const badgesPool = [
+  ["Matches care needs", "Matches budget", "Strong social program", "Close to family", "Memory support available"],
+  ["Matches care needs", "Matches budget", "Medication support", "Close to family", "Hebrew speaking staff"],
+  ["Matches care needs", "Matches budget", "Active community", "Close to family", "Skilled nursing available"],
+];
+
+const careTypePool = [
   ["Assisted Living", "Memory Care", "Skilled Nursing"],
   ["Independent Living", "Assisted Living"],
-  ["Skilled Nursing", "Memory Care"],
+  ["Assisted Living", "Skilled Nursing"],
 ];
 
-const matchBadgeSets = [
-  ["Matches budget", "Matches social preferences", "Within requested distance"],
-  ["Matches budget", "Hebrew speaking staff", "Memory care available"],
-  ["Within requested distance", "Matches social preferences", "Memory care available"],
-];
-
-const summarySets = [
-  [
-    "Excellent staffing levels and medical care.",
-    "Strong social activity program.",
-    "Ideal for seniors needing mild assistance.",
-  ],
-  [
-    "Consistent care team with strong family communication.",
-    "Calmer environment for seniors who value routine.",
-    "Good fit for residents balancing independence and support.",
-  ],
-  [
-    "High-touch nursing coverage and dementia support.",
-    "Well-suited for families prioritizing safety oversight.",
-    "Balanced value for more advanced care needs.",
-  ],
-];
-
-const reviewSets: ReviewGroup[][] = [
-  [
-    { type: "Families", rating: 5, quote: "The staff keeps us informed and treats my mother with real warmth." },
-    { type: "Residents", rating: 4, quote: "There is always something to do, and the movie nights are a highlight." },
-    { type: "Employees", rating: 4, quote: "Clinical leadership is organized and shifts are well supported." },
-    { type: "OPTIME review", rating: 5, quote: "Strong all-around match for seniors needing mild to moderate daily support." },
-  ],
-  [
-    { type: "Families", rating: 4, quote: "We liked the steady communication and flexible care planning." },
-    { type: "Residents", rating: 4, quote: "Quiet apartments and a friendly social calendar make it easy to settle in." },
-    { type: "Employees", rating: 4, quote: "The team culture is collaborative, especially between nursing and activities." },
-    { type: "OPTIME review", rating: 4, quote: "Good value for families prioritizing routine, social fit, and moderate assistance." },
-  ],
-  [
-    { type: "Families", rating: 5, quote: "The memory care team feels experienced and responsive during stressful moments." },
-    { type: "Residents", rating: 4, quote: "Meals are good and the staff checks in often without feeling intrusive." },
-    { type: "Employees", rating: 4, quote: "Strong nursing oversight and reliable processes for high-acuity residents." },
-    { type: "OPTIME review", rating: 5, quote: "Best for families emphasizing clinical support, dementia care, and medical readiness." },
-  ],
-];
-
-export function getApiBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://127.0.0.1:8000"
-  );
+function scoreLabel(score: number): string {
+  if (score >= 90) return "Excellent Match";
+  if (score >= 80) return "Great Match";
+  if (score >= 70) return "Good Match";
+  return "Consider Match";
 }
 
-function getVariantIndex(facilityId: number, offset = 0): number {
-  return (facilityId + offset) % 3;
-}
-
-function toScore(value: number | null | undefined, fallback: number): number {
-  if (!value) {
-    return fallback;
-  }
-
-  return Math.max(70, Math.min(99, value * 18 + 10));
-}
-
-function buildSearchFacility(facility: Facility, offset = 0): SearchFacility {
-  const variant = getVariantIndex(facility.id, offset);
-
-  return {
-    ...facility,
-    feedId: `${facility.id}-${offset}`,
-    imageUrl: imageSets[variant][0],
-    optimeScore: toScore(facility.overall_rating, 88) + (offset % 3),
-    aiSummary: summarySets[variant],
-    priceRange: `$${(facility.beds ? Math.max(3200, facility.beds * 35) : 5200).toLocaleString()} - $${(facility.beds ? Math.max(5400, facility.beds * 52) : 7800).toLocaleString()}/mo`,
-    careTypes: careTypeSets[variant],
-    matchBadges: matchBadgeSets[variant],
-  };
-}
-
-function buildScoreBreakdown(facility: Facility): ScoreBreakdownItem[] {
-  return [
-    {
-      category: "Medical Quality",
-      score: toScore(facility.quality_rating, 90),
-      explanation: "Combines clinical quality signals and health outcome reliability.",
-      dataSource: ["CMS Quality Rating", "Hospitalization rate", "Fall statistics", "Inspection reports"],
-    },
-    {
-      category: "Staffing Levels",
-      score: toScore(facility.staffing_rating, 86),
-      explanation: "Measures staffing stability, nurse coverage, and support responsiveness.",
-      dataSource: ["CMS Staffing Rating", "RN coverage", "Care team consistency"],
-    },
-    {
-      category: "Social Activities",
-      score: 88,
-      explanation: "Assesses lifestyle programming and the likelihood of meaningful engagement.",
-      dataSource: ["Activities calendar", "Family interviews", "Resident feedback"],
-    },
-    {
-      category: "Independence Support",
-      score: 84,
-      explanation: "Evaluates how well the community balances support with resident autonomy.",
-      dataSource: ["Care plan flexibility", "Mobility support", "Resident routines"],
-    },
-    {
-      category: "Value for Money",
-      score: 81,
-      explanation: "Compares expected monthly cost against support intensity and quality signals.",
-      dataSource: ["Local market pricing", "Care level offerings", "Facility amenities"],
-    },
-    {
-      category: "Food Quality",
-      score: 79,
-      explanation: "Reflects nutrition quality, menu range, and dining satisfaction.",
-      dataSource: ["Menu audits", "Resident reviews", "Family observations"],
-    },
-    {
-      category: "Living Environment",
-      score: 87,
-      explanation: "Captures cleanliness, design, quietness, and overall comfort.",
-      dataSource: ["Facility profile", "Review themes", "Inspection context"],
-    },
-    {
-      category: "Dementia Support",
-      score: 85,
-      explanation: "Evaluates specialized memory care readiness and cognitive support structures.",
-      dataSource: ["Memory care availability", "Staff specialization", "Safety procedures"],
-    },
+function buildScoreBreakdown(seed: number): ScoreBreakdownItem[] {
+  const categories = [
+    "Medical Quality",
+    "Staffing",
+    "Activities",
+    "Independence Support",
+    "Value for Money",
+    "Food Quality",
+    "Living Environment",
+    "Memory Support",
   ];
-}
 
-export async function fetchFacilities(): Promise<Facility[]> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/facilities`
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch facilities");
-  }
-
-  return response.json();
-}
-
-export async function fetchFacilityById(id: string): Promise<Facility> {
-  const response = await fetch(`${getApiBaseUrl()}/facilities/${id}`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Failed to load facility (${response.status})`);
-  }
-
-  return (await response.json()) as Facility;
-}
-
-export async function fetchSearchFacilities(): Promise<SearchFacility[]> {
-  const facilities = await fetchFacilities();
-
-  return Array.from({ length: 18 }, (_, index) => {
-    const facility = facilities[index % facilities.length];
-    return buildSearchFacility(facility, index);
+  return categories.map((category, index) => {
+    const score = Math.max(68, Math.min(97, 78 + ((seed + index * 7) % 20)));
+    return {
+      category,
+      score,
+      explanation: `${category} assessment combines recent performance trends and consistency indicators.`,
+      dataSource:
+        category === "Medical Quality"
+          ? ["CMS Quality Rating", "Hospitalization rate", "Fall statistics", "Inspection reports"]
+          : ["CMS data", "Facility profile", "Family feedback"],
+    };
   });
 }
 
-export async function fetchFacilityDetails(id: string): Promise<FacilityDetailsData> {
-  const facility = await fetchFacilityById(id);
-  const variant = getVariantIndex(facility.id);
-  const searchFacility = buildSearchFacility(facility, variant);
-  const safeCmsId = (facility.cms_id || `facility-${facility.id}`).toLowerCase();
+function buildMockFacilities(): FacilityDetailsData[] {
+  const facilities: FacilityDetailsData[] = [];
 
-  return {
-    ...searchFacility,
-    website: `https://www.optime-nursing.example/facilities/${safeCmsId}`,
-    gallery: imageSets[variant],
-    scoreBreakdown: buildScoreBreakdown(facility),
-    matchScore: Math.min(97, searchFacility.optimeScore + 3),
-    matchReasons: [
-      "Matches required care level",
-      "Supports active lifestyle",
-      "Fits budget",
-      "Close to family",
-    ],
-    mapPoints: {
-      family: "Family location - 18 minutes away",
-      hospital: "Baptist Health hospital - 7 minutes away",
-      synagogue: "Nearby synagogue - 11 minutes away",
-      transit: "Public transit access - 6 minutes away",
-    },
-    reviews: reviewSets[variant],
-  };
+  for (let i = 1; i <= 30; i += 1) {
+    const variant = i % 3;
+    const city = cities[i % cities.length];
+    const score = 68 + ((i * 9) % 31);
+    const name = `${firstWords[i % firstWords.length]} ${secondWords[i % secondWords.length]} Senior Living`;
+
+    facilities.push({
+      id: i,
+      cms_id: `FL-${100000 + i}`,
+      name,
+      city,
+      state: "FL",
+      address: `${300 + i} Wellness Avenue`,
+      zip_code: `${33000 + i}`,
+      phone: `305-555-${String(1000 + i).slice(-4)}`,
+      beds: 90 + ((i * 7) % 70),
+      overall_rating: Math.max(3, Math.min(5, Math.round(score / 20))),
+      staffing_rating: Math.max(3, Math.min(5, Math.round((score - 5) / 20))),
+      quality_rating: Math.max(3, Math.min(5, Math.round((score + 3) / 20))),
+      inspection_rating: Math.max(3, Math.min(5, Math.round((score + 1) / 20))),
+      latitude: 25.7 + i * 0.01,
+      longitude: -80.2 - i * 0.01,
+      imageUrl: gallerySets[variant][0],
+      gallery: gallerySets[variant],
+      website: `https://www.optime-nursing.example/facilities/fl-${100000 + i}`,
+      optimeScore: score,
+      matchLabel: scoreLabel(score),
+      shortExplanation: explanationPool[variant],
+      priceRange: `$${(4200 + i * 90).toLocaleString()} - $${(6800 + i * 115).toLocaleString()}/month`,
+      careTypes: careTypePool[variant],
+      matchBadges: badgesPool[variant],
+      scoreBreakdown: buildScoreBreakdown(i),
+      mapPoints: {
+        facility: `${name}, ${city}`,
+        family: "Family location - 22 minutes away",
+        hospital: "Nearest hospital - 8 minutes away",
+        synagogue: "Nearby synagogue - 12 minutes away",
+        transit: "Public transportation - 6 minutes away",
+      },
+    });
+  }
+
+  return facilities;
+}
+
+const MOCK_FACILITIES = buildMockFacilities();
+
+export function getApiBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+}
+
+export async function fetchFacilities(): Promise<Facility[]> {
+  return MOCK_FACILITIES;
+}
+
+export async function fetchSearchFacilities(): Promise<SearchFacility[]> {
+  return MOCK_FACILITIES;
+}
+
+export async function fetchFacilityById(id: string): Promise<Facility> {
+  const facility = MOCK_FACILITIES.find((item) => item.id === Number(id));
+  if (!facility) {
+    throw new Error("Failed to load facility (404)");
+  }
+  return facility;
+}
+
+export async function fetchFacilityDetails(id: string): Promise<FacilityDetailsData> {
+  const facility = MOCK_FACILITIES.find((item) => item.id === Number(id));
+  if (!facility) {
+    throw new Error("Failed to load facility details (404)");
+  }
+  return facility;
 }
