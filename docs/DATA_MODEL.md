@@ -23,6 +23,7 @@ Fields:
 - chain_id (nullable, indexed)
 - chain_name (nullable)
 - beds (nullable)
+- overall_rating (nullable, indexed)
 - is_active (default true)
 - created_at
 - updated_at
@@ -30,6 +31,7 @@ Fields:
 Indexes:
 - unique(cms_id)
 - index(state, city)
+- index(state, city, overall_rating)
 - index(zip_code)
 
 Relationships:
@@ -140,6 +142,7 @@ Indexes:
 - Use incremental upserts keyed by (cms_id, period).
 - Add materialized views for query-heavy API patterns (state/city/rating filters).
 - Introduce job orchestration and data quality checks before production-scale refresh.
+- Keep API-facing indexes aligned with common filters: state, city, min_rating, ownership_type.
 
 ## Architecture Recommendation Summary
 Recommended path:
