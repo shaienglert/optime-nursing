@@ -23,6 +23,9 @@ class Facility(Base):
 	beds = Column(Integer, nullable=True)
 	latitude = Column(Float, nullable=True)
 	longitude = Column(Float, nullable=True)
+	medical_quality_score = Column(Float, nullable=True)
+	staffing_score = Column(Float, nullable=True)
+	safety_score = Column(Float, nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 	updated_at = Column(
 		DateTime(timezone=True),
@@ -31,15 +34,9 @@ class Facility(Base):
 		nullable=False,
 	)
 
-	staffing_records = relationship(
-		"FacilityStaffing", back_populates="facility", cascade="all, delete-orphan"
-	)
-	inspections = relationship(
-		"FacilityInspection", back_populates="facility", cascade="all, delete-orphan"
-	)
-	quality_measures = relationship(
-		"FacilityQualityMeasure", back_populates="facility", cascade="all, delete-orphan"
-	)
+	staffing_records = relationship("Staffing", back_populates="facility", cascade="all, delete-orphan")
+	inspections = relationship("Inspections", back_populates="facility", cascade="all, delete-orphan")
+	quality_measures = relationship("QualityMeasures", back_populates="facility", cascade="all, delete-orphan")
 	reviews = relationship(
 		"FacilityReview", back_populates="facility", cascade="all, delete-orphan"
 	)
@@ -48,8 +45,8 @@ class Facility(Base):
 	)
 
 
-class FacilityStaffing(Base):
-	__tablename__ = "facility_staffing"
+class Staffing(Base):
+	__tablename__ = "staffing"
 
 	id = Column(Integer, primary_key=True, index=True)
 	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
@@ -63,8 +60,8 @@ class FacilityStaffing(Base):
 	facility = relationship("Facility", back_populates="staffing_records")
 
 
-class FacilityInspection(Base):
-	__tablename__ = "facility_inspections"
+class Inspections(Base):
+	__tablename__ = "inspections"
 
 	id = Column(Integer, primary_key=True, index=True)
 	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
@@ -79,8 +76,8 @@ class FacilityInspection(Base):
 	facility = relationship("Facility", back_populates="inspections")
 
 
-class FacilityQualityMeasure(Base):
-	__tablename__ = "facility_quality_measures"
+class QualityMeasures(Base):
+	__tablename__ = "quality_measures"
 
 	id = Column(Integer, primary_key=True, index=True)
 	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
@@ -92,6 +89,12 @@ class FacilityQualityMeasure(Base):
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 	facility = relationship("Facility", back_populates="quality_measures")
+
+
+# Backward-compatible aliases for existing imports.
+FacilityStaffing = Staffing
+FacilityInspection = Inspections
+FacilityQualityMeasure = QualityMeasures
 
 
 class FacilityReview(Base):
