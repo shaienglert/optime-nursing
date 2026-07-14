@@ -2,50 +2,66 @@
 
 import { useMemo, useState } from "react";
 
-const careNeedsOptions = [
-  "Independent",
+const relationshipOptions = [
+  "Mom",
+  "Dad",
+  "Spouse",
+  "Grandmother",
+  "Grandfather",
+  "Relative",
+  "Friend",
+  "Myself",
+  "Other",
+];
+
+const ageGroupOptions = [
+  "60-64",
+  "65-69",
+  "70-74",
+  "75-79",
+  "80-84",
+  "85-89",
+  "90-94",
+  "95+",
+];
+
+const assistanceOptions = [
+  "Fully independent",
+  "Light assistance",
   "Help with bathing",
   "Help with dressing",
-  "Help with medication",
-  "Wheelchair",
-  "Memory care",
-  "Dementia care",
-  "Nursing care",
+  "Help with medications",
+  "Daytime supervision",
+  "24/7 support required",
+  "Skilled nursing care",
 ];
 
-const socialPreferencesOptions = [
-  "Loves social activities",
-  "Loves movies",
-  "Loves music",
-  "Loves games",
-  "Loves outdoor activities",
-  "Loves quiet environments",
-  "Religious activities",
+const memoryOptions = [
+  "No",
+  "Occasionally forgetful",
+  "Mild memory issues",
+  "Significant memory issues",
+  "Not sure",
 ];
 
-const biggestConcernsOptions = [
-  "Poor care quality",
-  "Staff shortages",
-  "Falls and safety",
-  "Loneliness",
-  "Hidden costs",
-  "Medical emergencies",
-  "Loss of independence",
-  "Memory decline",
-];
-
-const cognitiveConditionOptions = [
-  "No memory issues",
-  "Mild memory loss",
-  "Early dementia",
-  "Moderate dementia",
-  "Advanced dementia",
+const happinessOptions = [
+  "Social activities",
+  "Movies",
+  "Music",
+  "Games",
+  "Outdoor activities",
+  "Quiet environment",
+  "Religious community",
+  "Exercise and wellness",
+  "Good food",
+  "Cultural activities",
 ];
 
 const distanceOptions = [
-  "Under 10 miles",
-  "Under 25 miles",
-  "Under 50 miles",
+  "Under 10 minutes",
+  "Under 20 minutes",
+  "Under 30 minutes",
+  "Under 1 hour",
   "Anywhere",
 ];
 
@@ -80,99 +96,144 @@ function toggleOption(current: string[], option: string): string[] {
 }
 
 export default function Home() {
-  const [aiDescription, setAiDescription] = useState(
-    "My mother is 82 years old, needs help with showering and dressing, loves movies and social activities, speaks English and Hebrew and has a budget of $7,000 per month.",
-  );
-  const [careNeeds, setCareNeeds] = useState<string[]>([]);
-  const [cognitiveCondition, setCognitiveCondition] = useState(
-    cognitiveConditionOptions[0],
-  );
-  const [socialPreferences, setSocialPreferences] = useState<string[]>([]);
-  const [biggestConcerns, setBiggestConcerns] = useState<string[]>([]);
+  const [relationship, setRelationship] = useState("");
+  const [ageGroup, setAgeGroup] = useState("");
+  const [assistanceLevel, setAssistanceLevel] = useState("");
+  const [memoryStatus, setMemoryStatus] = useState("");
+  const [happinessPreferences, setHappinessPreferences] = useState<string[]>([]);
   const [budget, setBudget] = useState(7000);
-  const [distanceFromFamily, setDistanceFromFamily] = useState(distanceOptions[1]);
+  const [distanceFromFamily, setDistanceFromFamily] = useState("");
+  const [notes, setNotes] = useState("");
 
-  const selectedSummary = useMemo(() => {
-    return `${careNeeds.length} care need(s), ${socialPreferences.length} social preference(s), ${biggestConcerns.length} concern(s)`;
-  }, [careNeeds, socialPreferences, biggestConcerns]);
+  const answeredCount = useMemo(() => {
+    let count = 0;
+    if (relationship) count += 1;
+    if (ageGroup) count += 1;
+    if (assistanceLevel) count += 1;
+    if (memoryStatus) count += 1;
+    if (happinessPreferences.length > 0) count += 1;
+    if (budget >= 3000) count += 1;
+    if (distanceFromFamily) count += 1;
+    if (notes.trim()) count += 1;
+    return count;
+  }, [relationship, ageGroup, assistanceLevel, memoryStatus, happinessPreferences, budget, distanceFromFamily, notes]);
+
+  const understanding = useMemo(() => {
+    if (answeredCount <= 2) {
+      return {
+        label: "Not enough information yet",
+        style: "border-slate-200 bg-slate-100 text-slate-600",
+      };
+    }
+    if (answeredCount <= 4) {
+      return {
+        label: "Good understanding",
+        style: "border-amber-200 bg-amber-100 text-amber-800",
+      };
+    }
+    if (answeredCount <= 6) {
+      return {
+        label: "Strong understanding",
+        style: "border-emerald-200 bg-emerald-100 text-emerald-800",
+      };
+    }
+    return {
+      label: "Ready to match",
+      style: "border-green-300 bg-green-100 text-green-900",
+    };
+  }, [answeredCount]);
+
+  const ctaText = useMemo(() => {
+    if (relationship === "Mom") return "Find the right home for Mom";
+    if (relationship === "Dad") return "Find the right home for Dad";
+    if (relationship === "Grandmother") return "Find the right home for Grandma";
+    return "Find the right home";
+  }, [relationship]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#cffafe_0%,#f8fafc_32%,#ffffff_65%)] px-6 py-10 sm:px-10 lg:px-16">
       <section className="mx-auto max-w-6xl">
         <div className="rounded-3xl border border-cyan-100 bg-white/90 p-6 shadow-[0_24px_80px_-32px_rgba(14,116,144,0.55)] backdrop-blur sm:p-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">
-            OPTIME Nursing AI
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">OPTIME Nursing</p>
           <h1 className="mt-4 max-w-4xl text-3xl font-semibold leading-tight text-slate-900 sm:text-5xl">
             Find the right home, not just the best-rated one.
           </h1>
           <p className="mt-5 max-w-3xl text-lg text-slate-600">
-            Describe your loved one in your own words and OPTIME will find the best matches.
+            A simple, family-friendly questionnaire built for clear decisions with less stress.
           </p>
 
-          <div className="mt-8 rounded-2xl border border-cyan-100 bg-cyan-50/40 p-4 sm:p-6">
-            <label htmlFor="ai-search" className="mb-3 block text-sm font-semibold text-cyan-900">
-              AI Search Prompt
-            </label>
-            <textarea
-              id="ai-search"
-              value={aiDescription}
-              onChange={(event) => setAiDescription(event.target.value)}
-              placeholder="My mother is 82 years old, needs help with showering and dressing, loves movies and social activities, speaks English and Hebrew and has a budget of $7,000 per month."
-              className="min-h-40 w-full resize-y rounded-xl border border-cyan-200 bg-white px-4 py-3 text-base text-slate-700 outline-none ring-cyan-300 transition placeholder:text-slate-400 focus:ring-2"
-            />
-            <button
-              type="button"
-              className="mt-4 inline-flex items-center rounded-full bg-cyan-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800"
-            >
-              Find Matching Communities
-            </button>
-          </div>
-
-          <div className="mt-12">
-            <h2 className="text-2xl font-semibold text-slate-900">Prefer a guided search?</h2>
-            <p className="mt-2 text-slate-600">Answer a few questions and we&apos;ll do the rest.</p>
+          <div className={`mt-8 rounded-2xl border px-4 py-3 text-sm font-semibold sm:px-6 ${understanding.style}`}>
+            {understanding.label}
           </div>
 
           <div className="mt-8 grid gap-5">
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-lg font-semibold text-slate-900">1. Care Needs</h3>
+              <h3 className="text-lg font-semibold text-slate-900">1. Who are you searching for?</h3>
               <div className="mt-4 flex flex-wrap gap-2.5">
-                {careNeedsOptions.map((option) => (
+                {relationshipOptions.map((option) => (
                   <OptionChip
                     key={option}
                     label={option}
-                    isActive={careNeeds.includes(option)}
-                    onClick={() => setCareNeeds((current) => toggleOption(current, option))}
+                    isActive={relationship === option}
+                    onClick={() => setRelationship(option)}
                   />
                 ))}
               </div>
             </article>
 
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-lg font-semibold text-slate-900">2. Cognitive Condition</h3>
+              <h3 className="text-lg font-semibold text-slate-900">2. Age Group</h3>
               <div className="mt-4 flex flex-wrap gap-2.5">
-                {cognitiveConditionOptions.map((option) => (
+                {ageGroupOptions.map((option) => (
                   <OptionChip
                     key={option}
                     label={option}
-                    isActive={cognitiveCondition === option}
-                    onClick={() => setCognitiveCondition(option)}
+                    isActive={ageGroup === option}
+                    onClick={() => setAgeGroup(option)}
                   />
                 ))}
               </div>
             </article>
 
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-lg font-semibold text-slate-900">3. Social Preferences</h3>
+              <h3 className="text-lg font-semibold text-slate-900">3. How much daily assistance is needed?</h3>
               <div className="mt-4 flex flex-wrap gap-2.5">
-                {socialPreferencesOptions.map((option) => (
+                {assistanceOptions.map((option) => (
                   <OptionChip
                     key={option}
                     label={option}
-                    isActive={socialPreferences.includes(option)}
+                    isActive={assistanceLevel === option}
+                    onClick={() => setAssistanceLevel(option)}
+                  />
+                ))}
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-slate-200 bg-white p-5">
+              <h3 className="text-lg font-semibold text-slate-900">4. Are there memory or confusion issues?</h3>
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                {memoryOptions.map((option) => (
+                  <OptionChip
+                    key={option}
+                    label={option}
+                    isActive={memoryStatus === option}
+                    onClick={() => setMemoryStatus(option)}
+                  />
+                ))}
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-slate-200 bg-white p-5">
+              <h3 className="text-lg font-semibold text-slate-900">5. What would make them happiest?</h3>
+              <p className="mt-1 text-sm text-slate-600">Select all that apply.</p>
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                {happinessOptions.map((option) => (
+                  <OptionChip
+                    key={option}
+                    label={option}
+                    isActive={happinessPreferences.includes(option)}
                     onClick={() =>
-                      setSocialPreferences((current) => toggleOption(current, option))
+                      setHappinessPreferences((current) => toggleOption(current, option))
                     }
                   />
                 ))}
@@ -180,25 +241,8 @@ export default function Home() {
             </article>
 
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-lg font-semibold text-slate-900">4. Biggest Concerns</h3>
-              <p className="mt-1 text-sm text-slate-600">What worries you the most?</p>
-              <div className="mt-4 flex flex-wrap gap-2.5">
-                {biggestConcernsOptions.map((option) => (
-                  <OptionChip
-                    key={option}
-                    label={option}
-                    isActive={biggestConcerns.includes(option)}
-                    onClick={() =>
-                      setBiggestConcerns((current) => toggleOption(current, option))
-                    }
-                  />
-                ))}
-              </div>
-            </article>
-
-            <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-lg font-semibold text-slate-900">5. Budget</h3>
-              <p className="mt-1 text-sm text-slate-600">$3,000 - $15,000/month</p>
+              <h3 className="text-lg font-semibold text-slate-900">6. Monthly budget</h3>
+              <p className="mt-1 text-sm text-slate-600">$3,000 - $15,000</p>
               <div className="mt-5">
                 <input
                   type="range"
@@ -209,12 +253,12 @@ export default function Home() {
                   onChange={(event) => setBudget(Number(event.target.value))}
                   className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-cyan-100 accent-cyan-700"
                 />
-                <p className="mt-3 text-sm font-semibold text-cyan-800">${budget.toLocaleString()}/month</p>
+                <p className="mt-3 text-base font-semibold text-cyan-800">${budget.toLocaleString()}</p>
               </div>
             </article>
 
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-lg font-semibold text-slate-900">6. Distance from family</h3>
+              <h3 className="text-lg font-semibold text-slate-900">7. Maximum distance from family</h3>
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {distanceOptions.map((option) => (
                   <OptionChip
@@ -226,13 +270,28 @@ export default function Home() {
                 ))}
               </div>
             </article>
+
+            <article className="rounded-2xl border border-slate-200 bg-white p-5">
+              <h3 className="text-lg font-semibold text-slate-900">8. Anything else we should know?</h3>
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Anything important to your family or loved one that we should consider during matching."
+                className="mt-4 min-h-32 w-full resize-y rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-700 outline-none ring-cyan-300 transition placeholder:text-slate-400 focus:ring-2"
+              />
+              <p className="mt-3 text-xs text-slate-500">
+                Examples: Loves old movies, Must have Hebrew speaking staff, Wants a Jewish community, Doesn&apos;t like noisy environments, Loves gardening
+              </p>
+            </article>
           </div>
 
-          <div className="mt-8 rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4 text-sm text-slate-700">
-            <p className="font-semibold text-cyan-900">Current draft profile</p>
-            <p className="mt-1">{selectedSummary}</p>
-            <p className="mt-1">Cognitive condition: {cognitiveCondition}</p>
-            <p className="mt-1">Distance preference: {distanceFromFamily}</p>
+          <div className="mt-8">
+            <button
+              type="button"
+              className="w-full rounded-full bg-cyan-700 px-6 py-4 text-base font-semibold text-white transition hover:bg-cyan-800 sm:w-auto"
+            >
+              {ctaText}
+            </button>
           </div>
         </div>
       </section>
