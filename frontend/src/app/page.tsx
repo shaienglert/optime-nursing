@@ -234,7 +234,7 @@ export default function Home() {
             </article>
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
-              <h3 className="text-lg font-semibold text-[#2f2a24]">5. What would make {relationshipLabel.toLowerCase()} happiest?</h3>
+              <h3 className="text-lg font-semibold text-[#2f2a24]">5. What would make {relationshipLabel} happiest?</h3>
               <p className="mt-1 text-sm text-[#6c6358]">Select all that apply.</p>
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {happinessOptions.map((option) => (
