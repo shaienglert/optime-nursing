@@ -26,6 +26,7 @@ class Facility(Base):
 	medical_quality_score = Column(Float, nullable=True)
 	staffing_score = Column(Float, nullable=True)
 	safety_score = Column(Float, nullable=True)
+	overall_optime_score = Column(Float, nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 	updated_at = Column(
 		DateTime(timezone=True),
@@ -35,8 +36,8 @@ class Facility(Base):
 	)
 
 	staffing_records = relationship("Staffing", back_populates="facility", cascade="all, delete-orphan")
-	inspections = relationship("Inspections", back_populates="facility", cascade="all, delete-orphan")
-	quality_measures = relationship("QualityMeasures", back_populates="facility", cascade="all, delete-orphan")
+	inspections = relationship("Inspection", back_populates="facility", cascade="all, delete-orphan")
+	quality_measures = relationship("QualityMeasure", back_populates="facility", cascade="all, delete-orphan")
 	reviews = relationship(
 		"FacilityReview", back_populates="facility", cascade="all, delete-orphan"
 	)
@@ -60,7 +61,7 @@ class Staffing(Base):
 	facility = relationship("Facility", back_populates="staffing_records")
 
 
-class Inspections(Base):
+class Inspection(Base):
 	__tablename__ = "inspections"
 
 	id = Column(Integer, primary_key=True, index=True)
@@ -76,7 +77,7 @@ class Inspections(Base):
 	facility = relationship("Facility", back_populates="inspections")
 
 
-class QualityMeasures(Base):
+class QualityMeasure(Base):
 	__tablename__ = "quality_measures"
 
 	id = Column(Integer, primary_key=True, index=True)
@@ -93,8 +94,10 @@ class QualityMeasures(Base):
 
 # Backward-compatible aliases for existing imports.
 FacilityStaffing = Staffing
-FacilityInspection = Inspections
-FacilityQualityMeasure = QualityMeasures
+FacilityInspection = Inspection
+FacilityQualityMeasure = QualityMeasure
+Inspections = Inspection
+QualityMeasures = QualityMeasure
 
 
 class FacilityReview(Base):
