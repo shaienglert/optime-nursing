@@ -5,7 +5,11 @@ import { useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 
-const relationshipOptions = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myself", "Relative", "Friend"];
+const relationshipOptions = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myself", "Couple", "Relative", "Friend"];
+
+const genderOptions = ["Male", "Female", "Prefer not to say"];
+
+const coupleAssistanceOptions = ["Partner 1", "Partner 2", "Both equally"];
 
 const ageGroupOptions = ["60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95+"];
 
@@ -57,11 +61,26 @@ function toggleOption(current: string[], option: string): string[] {
   return current.includes(option) ? current.filter((item) => item !== option) : [...current, option];
 }
 
+function relationshipCopy(relationship: string): string {
+  if (relationship === "Myself") return "You";
+  if (relationship === "Couple") return "You both";
+  return relationship || "your loved one";
+}
+
+function ctaCopy(relationship: string): string {
+  if (relationship === "Myself") return "Find the right home for me";
+  if (relationship === "Couple") return "Find the right home for us";
+  if (relationship) return `Find the right home for ${relationship}`;
+  return "Find the right home";
+}
+
 export default function Home() {
   const router = useRouter();
   const { setState } = useQuestionnaire();
 
   const [relationship, setRelationship] = useState("");
+  const [gender, setGender] = useState("");
+  const [coupleAssistance, setCoupleAssistance] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
   const [assistanceLevel, setAssistanceLevel] = useState("");
   const [memoryStatus, setMemoryStatus] = useState("");
@@ -73,6 +92,8 @@ export default function Home() {
   const answeredCount = useMemo(() => {
     let count = 0;
     if (relationship) count += 1;
+    if (relationship === "Myself" && gender) count += 1;
+    if (relationship === "Couple" && coupleAssistance) count += 1;
     if (ageGroup) count += 1;
     if (assistanceLevel) count += 1;
     if (memoryStatus) count += 1;
@@ -81,7 +102,7 @@ export default function Home() {
     if (distanceFromFamily) count += 1;
     if (notes.trim()) count += 1;
     return count;
-  }, [relationship, ageGroup, assistanceLevel, memoryStatus, happinessPreferences, budget, distanceFromFamily, notes]);
+  }, [relationship, gender, coupleAssistance, ageGroup, assistanceLevel, memoryStatus, happinessPreferences, budget, distanceFromFamily, notes]);
 
   const understanding = useMemo(() => {
     if (answeredCount <= 2) {
@@ -96,15 +117,15 @@ export default function Home() {
     return { label: "Ready to match", style: "border-green-300 bg-green-100 text-green-900" };
   }, [answeredCount]);
 
-  const relationshipLabel = relationship || "your loved one";
+  const relationshipLabel = relationshipCopy(relationship);
 
-  const ctaText = useMemo(() => {
-    return `Find the right home for ${relationshipLabel}`;
-  }, [relationshipLabel]);
+  const ctaText = useMemo(() => ctaCopy(relationship), [relationship]);
 
   const handleFindHome = () => {
     setState({
       relationship,
+      gender,
+      coupleAssistance,
       ageGroup,
       assistanceLevel,
       memoryStatus,
@@ -116,6 +137,8 @@ export default function Home() {
 
     const params = new URLSearchParams();
     if (relationship) params.set("relationship", relationship);
+    if (gender) params.set("gender", gender);
+    if (coupleAssistance) params.set("coupleAssistance", coupleAssistance);
     if (ageGroup) params.set("age", ageGroup);
     if (assistanceLevel) params.set("care", assistanceLevel);
     if (memoryStatus) params.set("memory", memoryStatus);
@@ -142,10 +165,46 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-[#2f2a24]">1. Who are you searching for?</h3>
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {relationshipOptions.map((option) => (
-                  <OptionChip key={option} label={option} isActive={relationship === option} onClick={() => setRelationship(option)} />
+                  <OptionChip
+                    key={option}
+                    label={option}
+                    isActive={relationship === option}
+                    onClick={() => {
+                      setRelationship(option);
+                      if (option !== "Myself") setGender("");
+                      if (option !== "Couple") setCoupleAssistance("");
+                    }}
+                  />
                 ))}
               </div>
             </article>
+
+            {relationship === "Myself" ? (
+              <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
+                <h3 className="text-lg font-semibold text-[#2f2a24]">Gender</h3>
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  {genderOptions.map((option) => (
+                    <OptionChip key={option} label={option} isActive={gender === option} onClick={() => setGender(option)} />
+                  ))}
+                </div>
+              </article>
+            ) : null}
+
+            {relationship === "Couple" ? (
+              <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
+                <h3 className="text-lg font-semibold text-[#2f2a24]">Who needs more assistance?</h3>
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  {coupleAssistanceOptions.map((option) => (
+                    <OptionChip
+                      key={option}
+                      label={option}
+                      isActive={coupleAssistance === option}
+                      onClick={() => setCoupleAssistance(option)}
+                    />
+                  ))}
+                </div>
+              </article>
+            ) : null}
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
               <h3 className="text-lg font-semibold text-[#2f2a24]">2. Age Group</h3>
@@ -175,7 +234,7 @@ export default function Home() {
             </article>
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
-              <h3 className="text-lg font-semibold text-[#2f2a24]">5. What would make them happiest?</h3>
+              <h3 className="text-lg font-semibold text-[#2f2a24]">5. What would make {relationshipLabel.toLowerCase()} happiest?</h3>
               <p className="mt-1 text-sm text-[#6c6358]">Select all that apply.</p>
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {happinessOptions.map((option) => (

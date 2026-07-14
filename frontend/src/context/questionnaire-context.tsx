@@ -4,6 +4,8 @@ import { createContext, useContext, useMemo, useState } from "react";
 
 export type QuestionnaireState = {
   relationship: string;
+  gender: string;
+  coupleAssistance: string;
   ageGroup: string;
   assistanceLevel: string;
   memoryStatus: string;
@@ -15,6 +17,8 @@ export type QuestionnaireState = {
 
 const DEFAULT_STATE: QuestionnaireState = {
   relationship: "",
+  gender: "",
+  coupleAssistance: "",
   ageGroup: "",
   assistanceLevel: "",
   memoryStatus: "",

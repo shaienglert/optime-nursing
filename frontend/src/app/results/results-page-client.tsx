@@ -25,6 +25,12 @@ function highlightLabel(index: number, relationship: string): string | null {
   return null;
 }
 
+function relationshipCopy(relationship: string): string {
+  if (relationship === "Myself") return "You";
+  if (relationship === "Couple") return "You both";
+  return relationship || "your loved one";
+}
+
 function cardReasons(facility: SearchFacility, activity: string, distance: string): string[] {
   return [
     `Excellent staffing levels (${facility.staffing_rating ?? 4}/5)`,
@@ -44,7 +50,8 @@ export function ResultsPageClient() {
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const relationship = searchParams.get("relationship") || state.relationship || "your loved one";
+  const selectedRelationship = searchParams.get("relationship") || state.relationship || "";
+  const relationship = relationshipCopy(selectedRelationship);
   const age = searchParams.get("age") || state.ageGroup || "80-84";
   const care = searchParams.get("care") || state.assistanceLevel || "Help with bathing";
   const activity = (searchParams.get("activities") || state.happinessPreferences?.[0] || "Movies").split(",")[0];
