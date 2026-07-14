@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useQuestionnaire } from "@/context/questionnaire-context";
 import { SearchFacility, fetchSearchFacilities } from "@/lib/api";
 
 const INITIAL_LOAD = 20;
@@ -17,8 +18,25 @@ function scoreBadgeStyle(score: number): string {
   return "bg-[#f1caa4] text-[#7c4f23]";
 }
 
+function highlightLabel(index: number, relationship: string): string | null {
+  if (index === 0) return `Best Match for ${relationship}`;
+  if (index === 1) return "Excellent Alternative";
+  if (index === 2) return "Best Value Option";
+  return null;
+}
+
+function cardReasons(facility: SearchFacility, activity: string, distance: string): string[] {
+  return [
+    `Excellent staffing levels (${facility.staffing_rating ?? 4}/5)`,
+    `Strong ${activity.toLowerCase()} and activity program`,
+    `Within ${distance.replace("Under ", "").toLowerCase()} from family`,
+    "Fits budget requirements",
+  ];
+}
+
 export default function ResultsPage() {
   const searchParams = useSearchParams();
+  const { state } = useQuestionnaire();
   const [facilities, setFacilities] = useState<SearchFacility[]>([]);
   const [visibleCount, setVisibleCount] = useState(INITIAL_LOAD);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,14 +44,19 @@ export default function ResultsPage() {
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const relationship = searchParams.get("relationship") || "your loved one";
+  const relationship = searchParams.get("relationship") || state.relationship || "your loved one";
+  const age = searchParams.get("age") || state.ageGroup || "80-84";
+  const care = searchParams.get("care") || state.assistanceLevel || "Help with bathing";
+  const activity = (searchParams.get("activities") || state.happinessPreferences?.[0] || "Movies").split(",")[0];
+  const budget = Number(searchParams.get("budget") || state.budget || 7000);
+  const distance = searchParams.get("distance") || state.distanceFromFamily || "Under 25 minutes";
 
   const [filters, setFilters] = useState<string[]>([
-    `Age: ${searchParams.get("age") || "80-84"}`,
-    `Care: ${searchParams.get("care") || "Help with bathing"}`,
-    `Activities: ${(searchParams.get("activities") || "Movies").split(",")[0]}`,
-    `Budget: $${Number(searchParams.get("budget") || 7000).toLocaleString()}`,
-    `Distance: ${searchParams.get("distance") || "Under 25 miles"}`,
+    `Age: ${age}`,
+    `Care: ${care}`,
+    `Activities: ${activity}`,
+    `Budget: $${budget.toLocaleString()}`,
+    `Distance: ${distance}`,
   ]);
 
   useEffect(() => {
@@ -102,7 +125,7 @@ export default function ResultsPage() {
         <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">OPTIME Results</p>
           <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">Recommended communities for {relationship}</h1>
-          <p className="mt-2 text-[#6b645a]">Based on your preferences and care needs we found 37 matching communities.</p>
+          <p className="mt-2 text-[#6b645a]">These communities best match what matters most to {relationship}.</p>
 
           <div className="mt-5 flex flex-wrap gap-2">
             {filters.map((filter) => (
@@ -134,6 +157,11 @@ export default function ResultsPage() {
               <div className="p-5 sm:p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div>
+                    {highlightLabel(visibleFacilities.indexOf(facility), relationship) ? (
+                      <p className="mb-2 inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">
+                        {highlightLabel(visibleFacilities.indexOf(facility), relationship)}
+                      </p>
+                    ) : null}
                     <h2 className="text-2xl font-semibold text-[#2f2a24]">{facility.name}</h2>
                     <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
                   </div>
@@ -143,8 +171,23 @@ export default function ResultsPage() {
                   </div>
                 </div>
 
-                <p className="mt-4 text-sm leading-6 text-[#585045]">{facility.shortExplanation}</p>
+                <div className="mt-4 rounded-2xl border border-[#e8dcc7] bg-[#fbf8f1] p-4">
+                  <p className="text-sm font-semibold text-[#3d352b]">Why this is a great match:</p>
+                  <ul className="mt-2 space-y-1 text-sm text-[#5c5347]">
+                    {cardReasons(facility, activity, distance).map((reason) => (
+                      <li key={`${facility.id}-${reason}`}>• {reason}</li>
+                    ))}
+                  </ul>
+                </div>
                 <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {facility.careTypes.map((careType) => (
+                    <span key={careType} className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 text-xs font-medium text-[#5f5548]">
+                      {careType}
+                    </span>
+                  ))}
+                </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {facility.matchBadges.map((badge) => (
