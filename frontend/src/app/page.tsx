@@ -128,9 +128,9 @@ export default function Home() {
         <div className="rounded-3xl border border-[#e8dcc9] bg-white/92 p-4 shadow-[0_24px_80px_-38px_rgba(96,80,56,0.38)] backdrop-blur sm:p-6">
           <section className="relative overflow-hidden rounded-3xl border border-[#e7dcc9]">
             <img
-              src="https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=1800&q=80"
-              alt="Warm senior living community with gardens and outdoor seating"
-              className="h-[540px] w-full object-cover object-center sm:h-[640px]"
+              src="https://images.unsplash.com/photo-1527772323382-e5dbd07c2393?auto=format&fit=crop&w=1800&q=80"
+              alt="Happy residents in a sunny garden community with outdoor seating"
+              className="h-[540px] w-full object-cover object-[62%_center] sm:h-[640px]"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[rgba(255,251,243,0.98)] via-[rgba(255,251,243,0.85)] to-[rgba(255,251,243,0.08)]" />
             <div className="absolute inset-y-0 left-0 z-10 flex w-full items-center p-6 sm:w-[78%] sm:p-10 lg:w-[56%] lg:p-12">
