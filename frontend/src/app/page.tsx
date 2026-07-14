@@ -128,9 +128,9 @@ export default function Home() {
         <div className="rounded-3xl border border-[#e8dcc9] bg-white/92 p-4 shadow-[0_24px_80px_-38px_rgba(96,80,56,0.38)] backdrop-blur sm:p-6">
           <section className="relative overflow-hidden rounded-3xl border border-[#e7dcc9] bg-[#f8f3e8]">
             <img
-              src="https://images.pexels.com/photos/6838536/pexels-photo-6838536.jpeg?auto=compress&cs=tinysrgb&w=1800"
-              alt="Residents talking over tea in a sunny garden with outdoor seating"
-              className="h-[560px] w-full object-cover object-[64%_center] sm:h-[660px]"
+              src="/hero-reference.png"
+              alt="OPTIME hero reference image"
+              className="h-[560px] w-full object-cover object-[62%_center] sm:h-[660px]"
             />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(246,241,232,0.9)_0%,rgba(246,241,232,0.66)_42%,rgba(246,241,232,0.2)_70%,rgba(246,241,232,0.06)_100%)]" />
             <div className="absolute inset-y-0 left-0 z-10 w-full rounded-3xl bg-[rgba(255,251,244,0.76)] backdrop-blur-[1.5px] sm:w-[64%]" />
