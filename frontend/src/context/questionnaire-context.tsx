@@ -41,11 +41,14 @@ export type HumanIntelligenceV2 = {
   };
   culturalProfile: {
     religionImportance: string;
+    faithTraditions: string[];
+    religiousSupportNeeds: string[];
     kosherRequirements: string;
     synagogueChurchAccess: string;
     holidayCelebrations: string;
     culturalIdentity: string;
     israeliJewishCommunityPreference: string;
+    whatFeelsLikeHome: string[];
   };
   languageProfile: {
     preferredSpokenLanguage: string;
@@ -53,6 +56,18 @@ export type HumanIntelligenceV2 = {
     medicalDiscussionLanguage: string;
     socialInteractionLanguage: string;
     languageNeedScope: string;
+    languagesUnderstood: string[];
+    familyLanguages: string[];
+  };
+  foodProfile: {
+    dietaryPreferences: string[];
+  };
+  familyCultureProfile: {
+    involvementExpectation: string;
+    decisionRole: string;
+  };
+  communityPreferenceProfile: {
+    preferredEnvironment: string[];
   };
   personalityProfile: {
     introvertExtrovert: string;
@@ -141,6 +156,10 @@ export type HumanIntelligenceV2 = {
       family_fit_score: number;
       language_fit_score: number;
       cultural_fit_score: number;
+        religious_fit_score: number;
+        food_fit_score: number;
+        family_engagement_score: number;
+        community_style_score: number;
       independence_fit_score: number;
       transition_success_probability: number;
       loneliness_risk_score: number;
@@ -186,11 +205,14 @@ const DEFAULT_STATE: QuestionnaireState = {
     },
     culturalProfile: {
       religionImportance: "",
+      faithTraditions: [],
+      religiousSupportNeeds: [],
       kosherRequirements: "",
       synagogueChurchAccess: "",
       holidayCelebrations: "",
       culturalIdentity: "",
       israeliJewishCommunityPreference: "",
+      whatFeelsLikeHome: [],
     },
     languageProfile: {
       preferredSpokenLanguage: "",
@@ -198,6 +220,18 @@ const DEFAULT_STATE: QuestionnaireState = {
       medicalDiscussionLanguage: "",
       socialInteractionLanguage: "",
       languageNeedScope: "",
+      languagesUnderstood: [],
+      familyLanguages: [],
+    },
+    foodProfile: {
+      dietaryPreferences: [],
+    },
+    familyCultureProfile: {
+      involvementExpectation: "",
+      decisionRole: "",
+    },
+    communityPreferenceProfile: {
+      preferredEnvironment: [],
     },
     personalityProfile: {
       introvertExtrovert: "",
@@ -279,6 +313,10 @@ const DEFAULT_STATE: QuestionnaireState = {
         family_fit_score: 0,
         language_fit_score: 0,
         cultural_fit_score: 0,
+        religious_fit_score: 0,
+        food_fit_score: 0,
+        family_engagement_score: 0,
+        community_style_score: 0,
         independence_fit_score: 0,
         transition_success_probability: 0,
         loneliness_risk_score: 0,

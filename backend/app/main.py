@@ -117,8 +117,13 @@ class HumanIntelligenceIn(BaseModel):
     future_care_score: float
     social_fit_score: Optional[float] = None
     family_fit_score: Optional[float] = None
+    language_match_score: Optional[float] = None
+    religious_fit_score: Optional[float] = None
     language_fit_score: Optional[float] = None
     cultural_fit_score: Optional[float] = None
+    food_fit_score: Optional[float] = None
+    family_engagement_score: Optional[float] = None
+    community_style_score: Optional[float] = None
     independence_fit_score: Optional[float] = None
     transition_success_probability: Optional[float] = None
     metadata_json: Optional[str] = None
@@ -497,8 +502,13 @@ async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = 
         future_care_score=clip_0_100(payload.future_care_score),
         social_fit_score=clip_optional(payload.social_fit_score),
         family_fit_score=clip_optional(payload.family_fit_score),
+        language_match_score=clip_optional(payload.language_match_score),
+        religious_fit_score=clip_optional(payload.religious_fit_score),
         language_fit_score=clip_optional(payload.language_fit_score),
         cultural_fit_score=clip_optional(payload.cultural_fit_score),
+        food_fit_score=clip_optional(payload.food_fit_score),
+        family_engagement_score=clip_optional(payload.family_engagement_score),
+        community_style_score=clip_optional(payload.community_style_score),
         independence_fit_score=clip_optional(payload.independence_fit_score),
         transition_success_probability=clip_optional(payload.transition_success_probability),
         metadata_json=payload.metadata_json,

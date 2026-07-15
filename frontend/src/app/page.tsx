@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { persistHumanIntelligenceScores } from "@/lib/api";
+import { persistAdaptiveQuestionSignal, persistHumanIntelligenceScores } from "@/lib/api";
 
 const relationshipOptions = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myself", "Couple", "Relative", "Friend"];
 
@@ -71,6 +71,84 @@ const religionImportanceOptions = ["Not important", "Somewhat important", "Impor
 const yesNoOptions = ["Yes", "No", "Sometimes"];
 
 const languageOptions = ["English", "Hebrew", "Spanish", "Russian", "French", "Portuguese", "Arabic", "Other"];
+
+const languageCatalogOptions = [
+  "English",
+  "Spanish",
+  "Hebrew",
+  "Russian",
+  "Mandarin",
+  "Cantonese",
+  "Arabic",
+  "French",
+  "Portuguese",
+  "Haitian Creole",
+  "Persian",
+  "Yiddish",
+  "Other",
+];
+
+const faithTraditionOptions = [
+  "Jewish",
+  "Catholic",
+  "Protestant",
+  "Orthodox Christian",
+  "Muslim",
+  "Hindu",
+  "Buddhist",
+  "Sikh",
+  "No religion",
+  "Other",
+];
+
+const religiousSupportNeedsOptions = [
+  "Religious services",
+  "Place of worship",
+  "Chaplain",
+  "Prayer space",
+  "Holiday celebrations",
+  "Dietary accommodations",
+];
+
+const homeComfortOptions = [
+  "Familiar food",
+  "Familiar language",
+  "Shared traditions",
+  "Similar cultural background",
+  "Music",
+  "Holidays",
+  "Community celebrations",
+  "Religious practices",
+  "Family-centered culture",
+];
+
+const dietaryPreferenceOptions = [
+  "Kosher",
+  "Halal",
+  "Vegetarian",
+  "Vegan",
+  "Mediterranean",
+  "Asian cuisine",
+  "Latin cuisine",
+  "Low sodium",
+  "Diabetic",
+  "Gluten free",
+  "Other",
+];
+
+const familyInvolvementExpectationOptions = ["Daily visits", "Multiple weekly visits", "Weekly visits", "Monthly visits"];
+
+const familyDecisionRoleOptions = ["Resident decides", "Shared decision", "Family led"];
+
+const communityEnvironmentOptions = [
+  "Large active community",
+  "Small family atmosphere",
+  "Luxury environment",
+  "Faith community",
+  "Multicultural environment",
+  "Language-specific community",
+  "Quiet community",
+];
 
 const languageNeedScopeOptions = ["Social life", "Medical care", "Both", "Just daily comfort"];
 

@@ -306,8 +306,13 @@ export type HumanIntelligenceScorePayload = {
   future_care_score: number;
   social_fit_score?: number;
   family_fit_score?: number;
+  language_match_score?: number;
+  religious_fit_score?: number;
   language_fit_score?: number;
   cultural_fit_score?: number;
+  food_fit_score?: number;
+  family_engagement_score?: number;
+  community_style_score?: number;
   independence_fit_score?: number;
   transition_success_probability?: number;
   metadata_json?: string;
