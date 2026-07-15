@@ -17,8 +17,14 @@ CMS_METADATA_URL = (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CACHE_DIR = REPO_ROOT / "backend" / "app" / "data"
-OUTPUT_DOC = REPO_ROOT / "docs" / "PALM_BEACH_MARKET_ANALYSIS.md"
-OUTPUT_JSON = REPO_ROOT / "database" / "market_communities_palm_beach.json"
+OUTPUT_DOC = REPO_ROOT / "docs" / "SOUTH_FLORIDA_MARKET_ANALYSIS.md"
+OUTPUT_JSON = REPO_ROOT / "database" / "market_communities_south_florida.json"
+
+TARGET_COUNTIES = {
+    "PALM BEACH": "Palm Beach",
+    "BROWARD": "Broward",
+    "MIAMI DADE": "Miami-Dade",
+}
 
 
 def _to_int(value: Optional[str]) -> Optional[int]:
@@ -35,6 +41,11 @@ def _to_int(value: Optional[str]) -> Optional[int]:
 
 def _norm(value: Optional[str]) -> str:
     return (value or "").strip()
+
+
+def _normalize_county(value: Optional[str]) -> str:
+    text = _norm(value).upper().replace("-", " ").replace("/", " ")
+    return " ".join(text.split())
 
 
 def _download_provider_csv() -> Dict[str, str]:
@@ -70,8 +81,10 @@ def _iter_rows(csv_path: Path) -> Iterable[Dict[str, str]]:
             yield {k.strip(): (v.strip() if isinstance(v, str) else v) for k, v in row.items()}
 
 
-def _is_palm_beach_fl(row: Dict[str, str]) -> bool:
-    return _norm(row.get("State")).upper() == "FL" and _norm(row.get("County/Parish")).upper() == "PALM BEACH"
+def _target_county(row: Dict[str, str]) -> Optional[str]:
+    if _norm(row.get("State")).upper() != "FL":
+        return None
+    return TARGET_COUNTIES.get(_normalize_county(row.get("County/Parish")))
 
 
 def _operator_name(row: Dict[str, str]) -> str:
@@ -102,9 +115,29 @@ def _community_record(row: Dict[str, str]) -> Dict[str, object]:
     ownership_change = _norm(row.get("Provider Changed Ownership in Last 12 Months")).upper()
     special_focus_status = _norm(row.get("Special Focus Status"))
 
-    # CMS does not explicitly publish a "national chain" boolean; we use chain-scale threshold.
-    is_national_chain = bool(chain_id and (facilities_in_chain or 0) >= 25)
+    # CMS does not explicitly publish chain tier; derive only when chain scale is available.
+    chain_tier: Optional[str]
+    is_national_chain: Optional[bool]
+    is_regional_chain: Optional[bool]
+    if not chain_id and not chain_name:
+        chain_tier = "independent"
+        is_national_chain = False
+        is_regional_chain = False
+    elif facilities_in_chain is None:
+        chain_tier = None
+        is_national_chain = None
+        is_regional_chain = None
+    elif facilities_in_chain >= 25:
+        chain_tier = "national"
+        is_national_chain = True
+        is_regional_chain = False
+    else:
+        chain_tier = "regional"
+        is_national_chain = False
+        is_regional_chain = True
+
     is_independent = not chain_id and not chain_name
+    county_display = _target_county(row)
 
     return {
         "community_id": ccn,
@@ -114,7 +147,8 @@ def _community_record(row: Dict[str, str]) -> Dict[str, object]:
         "state": _norm(row.get("State")),
         "zip_code": _norm(row.get("ZIP Code")),
         "phone": _norm(row.get("Telephone Number")),
-        "county": _norm(row.get("County/Parish")),
+        "county": county_display,
+        "source_county_value": _norm(row.get("County/Parish")),
         "provider_type": provider_type,
         "ownership_type": ownership_type,
         "legal_business_name": _norm(row.get("Legal Business Name")),
@@ -122,7 +156,9 @@ def _community_record(row: Dict[str, str]) -> Dict[str, object]:
         "chain_id": chain_id,
         "chain_name": chain_name,
         "facilities_in_chain": facilities_in_chain,
+        "chain_tier": chain_tier,
         "is_national_chain": is_national_chain,
+        "is_regional_chain": is_regional_chain,
         "is_independent": is_independent,
         "certified_beds": beds,
         "overall_rating": overall_rating,
@@ -132,6 +168,59 @@ def _community_record(row: Dict[str, str]) -> Dict[str, object]:
         "special_focus_status": special_focus_status,
         "changed_ownership_last_12m": ownership_change == "Y",
         "source_processing_date": _norm(row.get("Processing Date")),
+    }
+
+
+def _county_metrics(communities: List[Dict[str, object]]) -> Dict[str, object]:
+    total_communities = len(communities)
+
+    missing_beds = sum(1 for c in communities if c.get("certified_beds") is None)
+    total_beds: Optional[int]
+    if missing_beds > 0:
+        total_beds = None
+    else:
+        total_beds = sum(int(c.get("certified_beds") or 0) for c in communities)
+
+    unknown_chain_tier = sum(1 for c in communities if c.get("chain_tier") is None)
+    if unknown_chain_tier > 0:
+        national_chain_count = None
+        regional_chain_count = None
+    else:
+        national_chain_count = sum(1 for c in communities if c.get("is_national_chain") is True)
+        regional_chain_count = sum(1 for c in communities if c.get("is_regional_chain") is True)
+
+    independent_count = sum(1 for c in communities if c.get("is_independent") is True)
+
+    op_stats: Dict[str, Dict[str, int]] = defaultdict(lambda: {"communities": 0, "beds": 0})
+    for c in communities:
+        name = str(c.get("operator_name") or "Unknown Operator")
+        op_stats[name]["communities"] += 1
+        if isinstance(c.get("certified_beds"), int):
+            op_stats[name]["beds"] += int(c["certified_beds"])
+
+    top_ops = sorted(
+        op_stats.items(),
+        key=lambda item: (item[1]["communities"], item[1]["beds"], item[0]),
+        reverse=True,
+    )
+
+    return {
+        "total_communities": total_communities,
+        "total_beds": total_beds,
+        "national_chain_count": national_chain_count,
+        "regional_chain_count": regional_chain_count,
+        "independent_count": independent_count,
+        "unknown_chain_tier_count": unknown_chain_tier,
+        "missing_beds_count": missing_beds,
+        "top_operators": [
+            {
+                "rank": idx,
+                "operator_name": name,
+                "communities": stats["communities"],
+                "beds": stats["beds"],
+            }
+            for idx, (name, stats) in enumerate(top_ops[:10], start=1)
+        ],
     }
 
 
@@ -190,24 +279,16 @@ def _outreach_reason(community: Dict[str, object]) -> str:
     return "; ".join(reasons)
 
 
-def _build_market_report(communities: List[Dict[str, object]], source: Dict[str, str]) -> str:
+def _as_text(value: Optional[object]) -> str:
+    return "null" if value is None else str(value)
+
+
+def _build_market_report(
+    communities: List[Dict[str, object]],
+    source: Dict[str, str],
+    county_metrics: Dict[str, Dict[str, object]],
+) -> str:
     total_communities = len(communities)
-    national_chain_count = sum(1 for c in communities if c.get("is_national_chain"))
-    independent_count = sum(1 for c in communities if c.get("is_independent"))
-
-    total_beds = sum((c.get("certified_beds") or 0) for c in communities)
-
-    op_stats: Dict[str, Dict[str, int]] = defaultdict(lambda: {"facilities": 0, "beds": 0})
-    for c in communities:
-        name = str(c.get("operator_name") or "Unknown Operator")
-        op_stats[name]["facilities"] += 1
-        op_stats[name]["beds"] += int(c.get("certified_beds") or 0)
-
-    top_ops = sorted(
-        op_stats.items(),
-        key=lambda item: (item[1]["facilities"], item[1]["beds"], item[0]),
-        reverse=True,
-    )[:10]
 
     scored = []
     for c in communities:
@@ -220,17 +301,17 @@ def _build_market_report(communities: List[Dict[str, object]], source: Dict[str,
         scored,
         key=lambda c: (c["outreach_score"], c.get("certified_beds") or 0, c.get("community_name") or ""),
         reverse=True,
-    )[:20]
+    )[:30]
 
     generated_utc = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     processing_dates = Counter(str(c.get("source_processing_date") or "") for c in communities)
     most_common_processing_date = processing_dates.most_common(1)[0][0] if processing_dates else ""
 
     lines: List[str] = []
-    lines.append("# Palm Beach County Market Intelligence (Verified Sources Only)")
+    lines.append("# South Florida Market Intelligence (Verified Sources Only)")
     lines.append("")
     lines.append("## Scope and Source Controls")
-    lines.append("- Geography: Palm Beach County, Florida")
+    lines.append("- Geography: Palm Beach, Broward, and Miami-Dade counties (Florida)")
     lines.append("- Facility class: CMS Nursing Home Provider Information records (skilled nursing facilities)")
     lines.append("- Estimates: none used; all values are direct source fields or deterministic calculations")
     lines.append(f"- Source dataset: {source['title']} ({CMS_PROVIDER_DATASET_ID})")
@@ -261,7 +342,9 @@ def _build_market_report(communities: List[Dict[str, object]], source: Dict[str,
     lines.append("  chain_id TEXT,")
     lines.append("  chain_name TEXT,")
     lines.append("  facilities_in_chain INTEGER,")
+    lines.append("  chain_tier TEXT,")
     lines.append("  is_national_chain BOOLEAN NOT NULL,")
+    lines.append("  is_regional_chain BOOLEAN NOT NULL,")
     lines.append("  is_independent BOOLEAN NOT NULL,")
     lines.append("  certified_beds INTEGER,")
     lines.append("  overall_rating INTEGER,")
@@ -277,36 +360,54 @@ def _build_market_report(communities: List[Dict[str, object]], source: Dict[str,
     lines.append(");")
     lines.append("```")
     lines.append("")
-    lines.append("Definition note: `is_national_chain` is true when CMS `Chain ID` is present and `Number of Facilities in Chain >= 25`.")
+    lines.append("Definition notes:")
+    lines.append("- `chain_tier = national` when chain identifier exists and `Number of Facilities in Chain >= 25`.")
+    lines.append("- `chain_tier = regional` when chain identifier exists and `Number of Facilities in Chain < 25`.")
+    lines.append("- `chain_tier = null` when chain affiliation exists but chain-size is unavailable in source.")
     lines.append("")
 
-    lines.append("## Market Metrics")
-    lines.append(f"- Total communities: {total_communities}")
-    lines.append(f"- National chain communities: {national_chain_count}")
-    lines.append(f"- Independent communities: {independent_count}")
-    lines.append(f"- Total certified beds: {total_beds}")
-    lines.append("")
-
-    lines.append("## Top 10 Operators by Market Share")
-    lines.append("| Rank | Operator | Communities | Facility Share | Beds | Bed Share |")
-    lines.append("|---|---|---:|---:|---:|---:|")
-    for idx, (name, stats) in enumerate(top_ops, start=1):
-        facilities = stats["facilities"]
-        beds = stats["beds"]
-        facility_share = (facilities / total_communities * 100.0) if total_communities else 0.0
-        bed_share = (beds / total_beds * 100.0) if total_beds else 0.0
+    lines.append("## County Metrics")
+    lines.append("| County | Total Communities | Total Beds | National Chain | Regional Chain | Independent |")
+    lines.append("|---|---:|---:|---:|---:|---:|")
+    for county_name in ["Palm Beach", "Broward", "Miami-Dade"]:
+        m = county_metrics.get(county_name)
+        if not m:
+            lines.append(f"| {county_name} | null | null | null | null | null |")
+            continue
         lines.append(
-            f"| {idx} | {name} | {facilities} | {facility_share:.1f}% | {beds} | {bed_share:.1f}% |"
+            f"| {county_name} | {_as_text(m.get('total_communities'))} | {_as_text(m.get('total_beds'))} | "
+            f"{_as_text(m.get('national_chain_count'))} | {_as_text(m.get('regional_chain_count'))} | "
+            f"{_as_text(m.get('independent_count'))} |"
         )
+
+    lines.append("")
+    lines.append(f"Combined communities across target counties: {total_communities}")
     lines.append("")
 
-    lines.append("## Recommended First 20 Communities for Outreach")
-    lines.append("| Rank | Community | City | Operator | Beds | Overall | Chain ID | Reason |")
+    lines.append("## Top Operators Per County")
+    for county_name in ["Palm Beach", "Broward", "Miami-Dade"]:
+        lines.append("")
+        lines.append(f"### {county_name}")
+        metrics = county_metrics.get(county_name)
+        top_ops = (metrics or {}).get("top_operators") or []
+        if not top_ops:
+            lines.append("null")
+            continue
+        lines.append("| Rank | Operator | Communities | Beds |")
+        lines.append("|---|---|---:|---:|")
+        for op in top_ops:
+            lines.append(
+                f"| {op['rank']} | {op['operator_name']} | {op['communities']} | {_as_text(op['beds'])} |"
+            )
+    lines.append("")
+
+    lines.append("## Recommended First 30 Communities for Outreach")
+    lines.append("| Rank | County | Community | City | Operator | Beds | Overall | Chain ID | Reason |")
     lines.append("|---|---|---|---|---:|---:|---|---|")
     for idx, c in enumerate(outreach_top, start=1):
         lines.append(
             "| "
-            f"{idx} | {c.get('community_name') or ''} | {c.get('city') or ''} | {c.get('operator_name') or ''} | "
+            f"{idx} | {c.get('county') or ''} | {c.get('community_name') or ''} | {c.get('city') or ''} | {c.get('operator_name') or ''} | "
             f"{c.get('certified_beds') or 0} | {c.get('overall_rating') or ''} | {c.get('chain_id') or ''} | "
             f"{c.get('outreach_reason') or ''} |"
         )
@@ -325,8 +426,19 @@ def main() -> None:
     source = _download_provider_csv()
     csv_path = Path(source["local_csv"])
 
-    communities = [_community_record(row) for row in _iter_rows(csv_path) if _is_palm_beach_fl(row)]
+    communities = [_community_record(row) for row in _iter_rows(csv_path) if _target_county(row)]
     communities.sort(key=lambda c: (str(c.get("community_name") or ""), str(c.get("community_id") or "")))
+
+    county_groups: Dict[str, List[Dict[str, object]]] = {name: [] for name in TARGET_COUNTIES.values()}
+    for c in communities:
+        county_name = str(c.get("county") or "")
+        county_groups.setdefault(county_name, []).append(c)
+
+    county_metrics: Dict[str, Dict[str, object]] = {
+        county_name: _county_metrics(group)
+        for county_name, group in county_groups.items()
+        if group
+    }
 
     generated_at_utc = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
@@ -338,7 +450,9 @@ def main() -> None:
                 "source_download_url": source["download_url"],
                 "source_metadata_modified": source.get("modified") or "",
                 "generated_at_utc": generated_at_utc,
+                "counties": ["Palm Beach", "Broward", "Miami-Dade"],
                 "record_count": len(communities),
+                "county_metrics": county_metrics,
                 "records": communities,
             },
             indent=2,
@@ -346,13 +460,14 @@ def main() -> None:
         encoding="utf-8",
     )
 
-    doc_content = _build_market_report(communities, source)
+    doc_content = _build_market_report(communities, source, county_metrics)
     OUTPUT_DOC.write_text(doc_content, encoding="utf-8")
 
     print({
         "communities": len(communities),
         "output_doc": str(OUTPUT_DOC),
         "output_json": str(OUTPUT_JSON),
+        "counties": {name: len(rows) for name, rows in county_groups.items() if rows},
         "source_csv": str(csv_path),
     })
 
