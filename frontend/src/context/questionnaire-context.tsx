@@ -33,6 +33,7 @@ export type HumanIntelligenceV2 = {
     grandchildrenImportance: string;
     familyDecisionDynamics: string;
     emergencySupportNetwork: string;
+    coupleStayTogetherPreference: string;
     widowStatus: string;
     lossTiming: string;
     socialActivityChangeSinceLoss: string;
@@ -73,6 +74,10 @@ export type HumanIntelligenceV2 = {
     previousMoves: string;
     bereavementStatus: string;
     lonelinessRisk: string;
+    socialIsolationConcern: string;
+    recentHospitalization: string;
+    hospitalizationRecency: string;
+    postHospitalRehabNeed: string;
     wanderingConcerns: string;
   };
   futureCareProfile: {
@@ -119,6 +124,30 @@ export type HumanIntelligenceV2 = {
     inferredConfidence: Record<string, number>;
   };
   confidence: Record<string, number>;
+  scoringEngine: {
+    overallConfidence: number;
+    confidenceThreshold: number;
+    adaptiveSignals: Array<{
+      questionKey: string;
+      answer: string;
+      signalType: string;
+      weights: Record<string, number>;
+      impactExplanation: string;
+      infoGain: number;
+    }>;
+    scoringWeights: Record<string, number>;
+    outputScores: {
+      social_fit_score: number;
+      family_fit_score: number;
+      language_fit_score: number;
+      cultural_fit_score: number;
+      independence_fit_score: number;
+      transition_success_probability: number;
+      loneliness_risk_score: number;
+    };
+    recommendationImpacts: string[];
+    additionalQuestionAsked: string;
+  };
 };
 
 const DEFAULT_STATE: QuestionnaireState = {
@@ -149,6 +178,7 @@ const DEFAULT_STATE: QuestionnaireState = {
       grandchildrenImportance: "",
       familyDecisionDynamics: "",
       emergencySupportNetwork: "",
+      coupleStayTogetherPreference: "",
       widowStatus: "",
       lossTiming: "",
       socialActivityChangeSinceLoss: "",
@@ -189,6 +219,10 @@ const DEFAULT_STATE: QuestionnaireState = {
       previousMoves: "",
       bereavementStatus: "",
       lonelinessRisk: "",
+      socialIsolationConcern: "",
+      recentHospitalization: "",
+      hospitalizationRecency: "",
+      postHospitalRehabNeed: "",
       wanderingConcerns: "",
     },
     futureCareProfile: {
@@ -235,6 +269,23 @@ const DEFAULT_STATE: QuestionnaireState = {
       inferredConfidence: {},
     },
     confidence: {},
+    scoringEngine: {
+      overallConfidence: 0,
+      confidenceThreshold: 72,
+      adaptiveSignals: [],
+      scoringWeights: {},
+      outputScores: {
+        social_fit_score: 0,
+        family_fit_score: 0,
+        language_fit_score: 0,
+        cultural_fit_score: 0,
+        independence_fit_score: 0,
+        transition_success_probability: 0,
+        loneliness_risk_score: 0,
+      },
+      recommendationImpacts: [],
+      additionalQuestionAsked: "",
+    },
   },
 };
 

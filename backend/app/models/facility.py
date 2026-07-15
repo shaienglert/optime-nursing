@@ -167,7 +167,28 @@ class HumanIntelligenceScore(Base):
 	loneliness_risk_score = Column(Float, nullable=False)
 	transition_risk_score = Column(Float, nullable=False)
 	future_care_score = Column(Float, nullable=False)
+	social_fit_score = Column(Float, nullable=True)
+	family_fit_score = Column(Float, nullable=True)
+	language_fit_score = Column(Float, nullable=True)
+	cultural_fit_score = Column(Float, nullable=True)
+	independence_fit_score = Column(Float, nullable=True)
+	transition_success_probability = Column(Float, nullable=True)
 	metadata_json = Column(Text, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class AdaptiveQuestionResponse(Base):
+	__tablename__ = "adaptive_question_responses"
+
+	id = Column(Integer, primary_key=True, index=True)
+	resident_key = Column(String(120), index=True, nullable=False)
+	question_key = Column(String(120), index=True, nullable=False)
+	answer = Column(Text, nullable=False)
+	signal_type = Column(String(120), nullable=False)
+	signal_json = Column(Text, nullable=True)
+	weights_json = Column(Text, nullable=True)
+	impact_explanation = Column(Text, nullable=False)
+	info_gain_score = Column(Float, nullable=False, default=0.0)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 

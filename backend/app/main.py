@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
-from app.models.facility import Facility, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
+from app.models.facility import AdaptiveQuestionResponse, Facility, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
 from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
@@ -115,6 +115,12 @@ class HumanIntelligenceIn(BaseModel):
     loneliness_risk_score: float
     transition_risk_score: float
     future_care_score: float
+    social_fit_score: Optional[float] = None
+    family_fit_score: Optional[float] = None
+    language_fit_score: Optional[float] = None
+    cultural_fit_score: Optional[float] = None
+    independence_fit_score: Optional[float] = None
+    transition_success_probability: Optional[float] = None
     metadata_json: Optional[str] = None
 
 
@@ -132,6 +138,23 @@ class ResidentOutcomeIn(BaseModel):
     loneliness_event: bool
     relocated_within_24m: bool
     notes: Optional[str] = None
+
+
+class AdaptiveQuestionResponseIn(BaseModel):
+    resident_key: str
+    question_key: str
+    answer: str
+    signal_type: str
+    signal_json: Optional[str] = None
+    weights_json: Optional[str] = None
+    impact_explanation: str
+    info_gain_score: float = 0.0
+
+
+class AdaptiveQuestionResponseOut(AdaptiveQuestionResponseIn):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ResidentOutcomeOut(BaseModel):
@@ -457,6 +480,11 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
 
 @app.post("/human-intelligence", response_model=HumanIntelligenceOut)
 async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db)):
+    def clip_optional(value: Optional[float]) -> Optional[float]:
+        if value is None:
+            return None
+        return clip_0_100(value)
+
     record = HumanIntelligenceScore(
         resident_key=payload.resident_key,
         relationship=payload.relationship,
@@ -467,12 +495,36 @@ async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = 
         loneliness_risk_score=clip_0_100(payload.loneliness_risk_score),
         transition_risk_score=clip_0_100(payload.transition_risk_score),
         future_care_score=clip_0_100(payload.future_care_score),
+        social_fit_score=clip_optional(payload.social_fit_score),
+        family_fit_score=clip_optional(payload.family_fit_score),
+        language_fit_score=clip_optional(payload.language_fit_score),
+        cultural_fit_score=clip_optional(payload.cultural_fit_score),
+        independence_fit_score=clip_optional(payload.independence_fit_score),
+        transition_success_probability=clip_optional(payload.transition_success_probability),
         metadata_json=payload.metadata_json,
     )
     db.add(record)
     db.commit()
     db.refresh(record)
     return HumanIntelligenceOut.model_validate(record)
+
+
+@app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut)
+async def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db)):
+    record = AdaptiveQuestionResponse(
+        resident_key=payload.resident_key,
+        question_key=payload.question_key,
+        answer=payload.answer,
+        signal_type=payload.signal_type,
+        signal_json=payload.signal_json,
+        weights_json=payload.weights_json,
+        impact_explanation=payload.impact_explanation,
+        info_gain_score=max(0.0, min(100.0, payload.info_gain_score)),
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return AdaptiveQuestionResponseOut.model_validate(record)
 
 
 @app.post("/resident-outcomes", response_model=ResidentOutcomeOut)

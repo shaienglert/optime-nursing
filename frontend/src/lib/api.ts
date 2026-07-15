@@ -304,6 +304,12 @@ export type HumanIntelligenceScorePayload = {
   loneliness_risk_score: number;
   transition_risk_score: number;
   future_care_score: number;
+  social_fit_score?: number;
+  family_fit_score?: number;
+  language_fit_score?: number;
+  cultural_fit_score?: number;
+  independence_fit_score?: number;
+  transition_success_probability?: number;
   metadata_json?: string;
 };
 
@@ -311,6 +317,21 @@ export type HumanIntelligenceScoreResponse = HumanIntelligenceScorePayload & { i
 
 export async function persistHumanIntelligenceScores(payload: HumanIntelligenceScorePayload): Promise<HumanIntelligenceScoreResponse> {
   return postJson<HumanIntelligenceScorePayload, HumanIntelligenceScoreResponse>("/human-intelligence", payload);
+}
+
+export type AdaptiveQuestionSignalPayload = {
+  resident_key: string;
+  question_key: string;
+  answer: string;
+  signal_type: string;
+  signal_json?: string;
+  weights_json?: string;
+  impact_explanation: string;
+  info_gain_score: number;
+};
+
+export async function persistAdaptiveQuestionSignal(payload: AdaptiveQuestionSignalPayload): Promise<{ id: number }> {
+  return postJson<AdaptiveQuestionSignalPayload, { id: number }>("/human-intelligence/adaptive-response", payload);
 }
 
 export type ResidentOutcomePayload = {

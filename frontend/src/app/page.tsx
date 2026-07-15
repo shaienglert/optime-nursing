@@ -54,11 +54,17 @@ const widowStatusOptions = ["Yes", "No", "Not sure"];
 
 const lossTimingOptions = ["Within 6 months", "6-12 months", "1-3 years", "Longer ago", "Not sure"];
 
+const hospitalizationTimingOptions = ["Within 30 days", "1-3 months", "3-6 months", "More than 6 months ago"];
+
 const socialChangeOptions = ["Much less social", "Somewhat less social", "About the same", "More social", "Not sure"];
+
+const isolationConcernOptions = ["No", "Mild concern", "Moderate concern", "High concern"];
 
 const decisionDynamicsOptions = ["Single decision maker", "Shared with spouse", "Shared among siblings", "Consensus", "Uncertain"];
 
 const supportNetworkOptions = ["Strong", "Moderate", "Limited", "Emergency only"];
+
+const coupleStayTogetherOptions = ["Must stay together", "Prefer staying together", "Open to separate care if needed"];
 
 const religionImportanceOptions = ["Not important", "Somewhat important", "Important", "Very important"];
 
@@ -377,6 +383,7 @@ export default function Home() {
   const [grandchildrenImportance, setGrandchildrenImportance] = useState("");
   const [familyDecisionDynamics, setFamilyDecisionDynamics] = useState("");
   const [emergencySupportNetwork, setEmergencySupportNetwork] = useState("");
+  const [coupleStayTogetherPreference, setCoupleStayTogetherPreference] = useState("");
   const [widowStatus, setWidowStatus] = useState("");
   const [lossTiming, setLossTiming] = useState("");
   const [socialActivityChangeSinceLoss, setSocialActivityChangeSinceLoss] = useState("");
@@ -407,6 +414,10 @@ export default function Home() {
   const [previousMoves, setPreviousMoves] = useState("");
   const [bereavementStatus, setBereavementStatus] = useState("");
   const [lonelinessRisk, setLonelinessRisk] = useState("");
+  const [socialIsolationConcern, setSocialIsolationConcern] = useState("");
+  const [recentHospitalization, setRecentHospitalization] = useState("");
+  const [hospitalizationRecency, setHospitalizationRecency] = useState("");
+  const [postHospitalRehabNeed, setPostHospitalRehabNeed] = useState("");
   const [wanderingConcerns, setWanderingConcerns] = useState("");
   const [agingInPlaceImportance, setAgingInPlaceImportance] = useState("");
   const [avoidFutureMovesPreference, setAvoidFutureMovesPreference] = useState("");
@@ -433,13 +444,23 @@ export default function Home() {
   const relationshipLabel = relationshipCopy(relationship);
 
   const ctaText = useMemo(() => ctaCopy(relationship), [relationship]);
-  const isFamilyStoryRelationship = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Couple"].includes(relationship);
+  const isFamilyStoryRelationship = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse"].includes(relationship);
   const isMotherOrGrandmother = ["Mom", "Grandma"].includes(relationship);
+  const shouldAskPartnerLossFollowUps = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse"].includes(relationship);
   const shouldAskReligionFollowUps = importanceRank(religionImportance) > importanceRank("Medium");
   const shouldAskGrandchildrenFollowUps = grandchildrenImportance === "Very important" || grandchildrenImportance === "High" || grandchildrenVisitsImportance === "Very important" || grandchildrenVisitsImportance === "High";
   const shouldAskLanguageFollowUps = preferredSpokenLanguage && preferredSpokenLanguage !== "English";
   const shouldAskMemoryFollowUps = memoryStatus !== "No" && memoryStatus !== "Not sure";
   const shouldAskWidowFollowUps = widowStatus === "Yes";
+  const shouldAskCoupleFollowUps = relationship === "Couple";
+  const shouldAskLivingAloneFollowUps = ["3-5 years", "5+ years"].includes(livingAloneDuration);
+  const shouldAskSocialIsolationFollowUps =
+    socialInteractionFrequency === "Biweekly" ||
+    socialInteractionFrequency === "Monthly or less" ||
+    socialInteractionNeed === "Much less social" ||
+    socialInteractionNeed === "Somewhat less social" ||
+    shouldAskLivingAloneFollowUps;
+  const shouldAskRecentHospitalizationFollowUps = recentHospitalization === "Yes" || assistanceLevel === "Skilled nursing care";
 
   const handleFindHome = () => {
     const distanceIntelligence = buildDistanceIntelligence({
@@ -507,6 +528,7 @@ export default function Home() {
           grandchildrenImportance,
           familyDecisionDynamics,
           emergencySupportNetwork,
+          coupleStayTogetherPreference,
           widowStatus,
           lossTiming,
           socialActivityChangeSinceLoss,
@@ -547,6 +569,10 @@ export default function Home() {
           previousMoves,
           bereavementStatus,
           lonelinessRisk,
+          socialIsolationConcern,
+          recentHospitalization,
+          hospitalizationRecency,
+          postHospitalRehabNeed,
           wanderingConcerns,
         },
         futureCareProfile: {
@@ -883,12 +909,36 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {isMotherOrGrandmother || relationship === "Spouse" ? (
+                {shouldAskCoupleFollowUps ? (
+                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Couples decision tree</h4>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Do both people need to stay together?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {coupleStayTogetherOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={coupleStayTogetherPreference === option} onClick={() => setCoupleStayTogetherPreference(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Which care balance matters most?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {coupleAssistanceOptions.map((option) => (
+                            <OptionChip key={`followup-${option}`} label={option} isActive={coupleAssistance === option} onClick={() => setCoupleAssistance(option)} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {shouldAskPartnerLossFollowUps ? (
                   <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
                     <h4 className="text-base font-semibold text-[#2f2a24]">Widowhood and transition</h4>
                     <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Has there been a loss of a spouse?</p>
+                        <p className="text-sm font-medium text-[#5e5346]">Has there been a loss of a spouse or long-term partner?</p>
                         <div className="mt-3 flex flex-wrap gap-2.5">
                           {widowStatusOptions.map((option) => (
                             <OptionChip key={option} label={option} isActive={widowStatus === option} onClick={() => setWidowStatus(option)} />
@@ -925,6 +975,54 @@ export default function Home() {
                         </div>
                       </div>
                     ) : null}
+                  </div>
+                ) : null}
+
+                {shouldAskLivingAloneFollowUps ? (
+                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Living alone and daily support</h4>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">How worried are you about isolation from living alone?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {isolationConcernOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={socialIsolationConcern === option} onClick={() => setSocialIsolationConcern(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">How much outside prompting is needed for social engagement?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {importanceOptions.map((option) => (
+                            <OptionChip key={`prompt-${option}`} label={option} isActive={newFriendsImportance === option} onClick={() => setNewFriendsImportance(option)} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {shouldAskSocialIsolationFollowUps ? (
+                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Social isolation tree</h4>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Current isolation concern</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {isolationConcernOptions.map((option) => (
+                            <OptionChip key={`isolation-${option}`} label={option} isActive={socialIsolationConcern === option} onClick={() => setSocialIsolationConcern(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">How much structured social programming is needed?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {importanceOptions.map((option) => (
+                            <OptionChip key={`structured-${option}`} label={option} isActive={preferredSocialIntensity === option} onClick={() => setPreferredSocialIntensity(option)} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : null}
 
@@ -1051,12 +1149,48 @@ export default function Home() {
                     </div>
                   </div>
                 ) : null}
+
+                <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                  <h4 className="text-base font-semibold text-[#2f2a24]">Recent hospitalization</h4>
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">Has there been a recent hospitalization?</p>
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        {yesNoOptions.map((option) => (
+                          <OptionChip key={`hospital-${option}`} label={option} isActive={recentHospitalization === option} onClick={() => setRecentHospitalization(option)} />
+                        ))}
+                      </div>
+                    </div>
+
+                    {shouldAskRecentHospitalizationFollowUps ? (
+                      <>
+                        <div>
+                          <p className="text-sm font-medium text-[#5e5346]">How recent was it?</p>
+                          <div className="mt-3 flex flex-wrap gap-2.5">
+                            {hospitalizationTimingOptions.map((option) => (
+                              <OptionChip key={option} label={option} isActive={hospitalizationRecency === option} onClick={() => setHospitalizationRecency(option)} />
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-[#5e5346]">Will post-hospital rehab or close monitoring be needed?</p>
+                          <div className="mt-3 flex flex-wrap gap-2.5">
+                            {yesNoOptions.map((option) => (
+                              <OptionChip key={`rehab-${option}`} label={option} isActive={postHospitalRehabNeed === option} onClick={() => setPostHospitalRehabNeed(option)} />
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
               </article>
             ) : null}
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
               <h3 className="text-lg font-semibold text-[#2f2a24]">7. Social life and friendships</h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {!isFamilyStoryRelationship ? (
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">How long has {relationshipLabel} lived alone?</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1065,6 +1199,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+                ) : null}
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">How often does {relationshipLabel} want social interaction?</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1109,6 +1244,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+                {!isFamilyStoryRelationship ? (
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Expected visit frequency</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1117,6 +1253,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+                ) : null}
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Religion or faith importance</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1125,6 +1262,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+                {!isFamilyStoryRelationship ? (
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Preferred spoken language</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1133,6 +1271,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
+                ) : null}
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Introvert or extrovert</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1151,14 +1290,18 @@ export default function Home() {
                 </div>
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {!shouldAskLanguageFollowUps ? (
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Native language</p>
                   <input value={nativeLanguage} onChange={(event) => setNativeLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, Spanish..." />
                 </div>
+                ) : null}
+                {!shouldAskLanguageFollowUps ? (
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Language for medical discussions</p>
                   <input value={medicalDiscussionLanguage} onChange={(event) => setMedicalDiscussionLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, translated support..." />
                 </div>
+                ) : null}
               </div>
             </article>
 
