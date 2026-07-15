@@ -768,6 +768,77 @@ export default function Home() {
       inferredConfidence: {},
     });
 
+    const languageOverlap = familyLanguages.filter((language) =>
+      [nativeLanguage, preferredSpokenLanguage, socialInteractionLanguage, ...languagesUnderstood].includes(language),
+    ).length;
+    const languageCoverage = [nativeLanguage, socialInteractionLanguage, medicalDiscussionLanguage].filter(Boolean).length;
+    const languageMatchScore = clampScore(45 + languageCoverage * 12 + languagesUnderstood.length * 4 + languageOverlap * 8);
+    const religiousFitScore = clampScore(
+      scoreFromReligionImportance(religionImportance) * 0.55 + faithTraditions.length * 6 + religiousSupportNeeds.length * 5,
+    );
+    const culturalFitScore = clampScore(
+      40 + whatFeelsLikeHome.length * 6 + (whatFeelsLikeHome.includes("Familiar language") ? 8 : 0) + (whatFeelsLikeHome.includes("Family-centered culture") ? 8 : 0),
+    );
+    const foodFitScore = clampScore(48 + dietaryPreferences.length * 7);
+    const familyVisitBase = scoreFromFrequency(
+      familyInvolvementExpectation === "Daily visits"
+        ? "Daily"
+        : familyInvolvementExpectation === "Multiple weekly visits"
+          ? "Several times weekly"
+          : familyInvolvementExpectation === "Weekly visits"
+            ? "Weekly"
+            : familyInvolvementExpectation === "Monthly visits"
+              ? "Monthly"
+              : visitFrequencyExpectation,
+    );
+    const familyDecisionBoost = familyDecisionRole === "Shared decision" ? 12 : familyDecisionRole === "Family led" ? 8 : 6;
+    const familyEngagementScore = clampScore(familyVisitBase * 0.82 + familyDecisionBoost + scoreFromImportance(grandchildrenImportance) * 0.12);
+    const communityStyleScore = clampScore(
+      44 + preferredEnvironment.length * 7 + (introvertExtrovert === "Introvert" && preferredEnvironment.includes("Quiet community") ? 10 : 0) + (introvertExtrovert === "Extrovert" && preferredEnvironment.includes("Large active community") ? 10 : 0),
+    );
+
+    const socialProfileScorePreview = Math.round((
+      scoreFromFrequency(socialInteractionFrequency) * 0.35 +
+      scoreFromImportance(newFriendsImportance) * 0.35 +
+      scoreFromImportance(preferredSocialIntensity === "Extrovert" ? "High" : preferredSocialIntensity === "Balanced" ? "Medium" : "Low") * 0.3
+    ));
+
+    const lonelinessRiskScorePreview = Math.round((
+      scoreFromFrequency(socialInteractionFrequency) * 0.35 +
+      scoreFromImportance(lonelinessRisk === "Very high" ? "Very high" : lonelinessRisk === "High" ? "High" : lonelinessRisk === "Moderate" ? "Medium" : "Low") * 0.45 +
+      scoreFromFrequency(visitFrequencyExpectation) * 0.2
+    ));
+
+    const transitionRiskScorePreview = Math.round((
+      scoreFromImportance(attitudeTowardMove === "Reluctant" ? "Very high" : attitudeTowardMove === "Anxious" ? "High" : attitudeTowardMove === "Cautious" ? "Medium" : "Low") * 0.45 +
+      scoreFromImportance(widowStatus === "Yes" ? "High" : "Medium") * 0.2 +
+      scoreFromImportance(biggestFear ? "High" : "Medium") * 0.35
+    ));
+
+    const adaptiveSignals = buildAdaptiveSignals({
+      widowStatus,
+      lossTiming,
+      livingAloneDuration,
+      preferredSpokenLanguage,
+      languagesUnderstood,
+      familyLanguages,
+      grandchildrenImportance,
+      religionImportance,
+      religiousSupportNeeds,
+      preferredSocialIntensity,
+      introvertExtrovert,
+      biggestFear,
+      communitySizePreference,
+    });
+
+    const scoringWeights = adaptiveSignals.reduce<Record<string, number>>((acc, signal) => {
+      for (const [weightKey, value] of Object.entries(signal.weights)) {
+        acc[weightKey] = (acc[weightKey] || 0) + value;
+      }
+      return acc;
+    }, {});
+    const overallConfidence = clampScore(62 + Math.min(24, adaptiveSignals.length * 3) + languageCoverage * 2);
+
     setState({
       relationship,
       gender,
@@ -905,6 +976,27 @@ export default function Home() {
           transitionRiskProfile: 60,
           futureCareProfile: 55,
           distanceProfile: 85,
+        },
+        scoringEngine: {
+          overallConfidence,
+          confidenceThreshold: 72,
+          adaptiveSignals,
+          scoringWeights,
+          outputScores: {
+            social_fit_score: socialProfileScorePreview,
+            family_fit_score: familyEngagementScore,
+            language_fit_score: languageMatchScore,
+            cultural_fit_score: culturalFitScore,
+            religious_fit_score: religiousFitScore,
+            food_fit_score: foodFitScore,
+            family_engagement_score: familyEngagementScore,
+            community_style_score: communityStyleScore,
+            independence_fit_score: scoreFromImportance(drivingImportance) * 0.45 + scoreFromImportance(abilityToLeaveIndependently === "Yes" ? "Very high" : abilityToLeaveIndependently === "Sometimes" ? "Medium" : "Low") * 0.55,
+            transition_success_probability: clampScore(100 - transitionRiskScorePreview * 0.58 + socialProfileScorePreview * 0.24 + familyEngagementScore * 0.18),
+            loneliness_risk_score: lonelinessRiskScorePreview,
+          },
+          recommendationImpacts: adaptiveSignals.map((signal) => signal.impactExplanation),
+          additionalQuestionAsked: overallConfidence < 72 ? "How often do you expect to visit?" : "",
         },
       },
     });
