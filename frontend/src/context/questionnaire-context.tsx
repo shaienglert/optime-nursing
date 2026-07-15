@@ -14,8 +14,102 @@ export type QuestionnaireState = {
   distanceFromFamily: string;
   referenceLocationType: string;
   referenceLocationValue: string;
-  maxDistanceMiles: string | null;
   notes: string;
+  humanIntelligenceV2: HumanIntelligenceV2;
+};
+
+export type HumanIntelligenceV2 = {
+  socialProfile: {
+    livingAloneDuration: string;
+    socialInteractionFrequency: string;
+    newFriendsImportance: string;
+    hobbyParticipation: string[];
+    preferredSocialIntensity: string;
+  };
+  familyProfile: {
+    involvedFamilyMembers: string;
+    visitFrequencyExpectation: string;
+    grandchildrenPresence: string;
+    familyDecisionDynamics: string;
+    emergencySupportNetwork: string;
+  };
+  culturalProfile: {
+    religionImportance: string;
+    kosherRequirements: string;
+    synagogueChurchAccess: string;
+    holidayCelebrations: string;
+    culturalIdentity: string;
+    israeliJewishCommunityPreference: string;
+  };
+  languageProfile: {
+    preferredSpokenLanguage: string;
+    nativeLanguage: string;
+    medicalDiscussionLanguage: string;
+    socialInteractionLanguage: string;
+  };
+  personalityProfile: {
+    introvertExtrovert: string;
+    communitySizePreference: string;
+    privacyImportance: string;
+    structureFlexibilityPreference: string;
+  };
+  interestsProfile: string[];
+  independenceProfile: {
+    drivingImportance: string;
+    cookingImportance: string;
+    abilityToLeaveIndependently: string;
+    petOwnershipImportance: string;
+    hostingFamilyImportance: string;
+  };
+  transitionRiskProfile: {
+    biggestFear: string;
+    attitudeTowardMove: string;
+    previousMoves: string;
+    bereavementStatus: string;
+    lonelinessRisk: string;
+  };
+  futureCareProfile: {
+    agingInPlaceImportance: string;
+    avoidFutureMovesPreference: string;
+    continuumOfCarePreference: string;
+  };
+  distanceProfile: {
+    referenceLocations: {
+      parentCurrentHome: string;
+      primaryCaregiverHome: string;
+      secondaryFamilyHomes: string;
+      preferredHospital: string;
+      placeOfWorship: string;
+    };
+    driveTimes: {
+      normal: string;
+      rushHour: string;
+      emergency: string;
+    };
+    familyVisitExpectation: string;
+    familyGeographyModel: {
+      involvedFamilyMembers: string;
+      familyCenterOfGravity: string;
+      multiLocationOptimization: string;
+    };
+    emotionalDistanceFactors: {
+      emergencyAccessImportance: string;
+      spontaneousVisitsImportance: string;
+      grandchildrenVisitsImportance: string;
+    };
+    careLevelWeight: number;
+    optimizationStrategy: string;
+    scores: {
+      family_distance_score: number | null;
+      visit_probability_score: number | null;
+      emergency_access_score: number | null;
+      grandchildren_access_score: number | null;
+      travel_burden_score: number | null;
+      family_engagement_score: number | null;
+    };
+    inferredConfidence: Record<string, number>;
+  };
+  confidence: Record<string, number>;
 };
 
 const DEFAULT_STATE: QuestionnaireState = {
@@ -30,8 +124,100 @@ const DEFAULT_STATE: QuestionnaireState = {
   distanceFromFamily: "",
   referenceLocationType: "",
   referenceLocationValue: "",
-  maxDistanceMiles: null,
   notes: "",
+  humanIntelligenceV2: {
+    socialProfile: {
+      livingAloneDuration: "",
+      socialInteractionFrequency: "",
+      newFriendsImportance: "",
+      hobbyParticipation: [],
+      preferredSocialIntensity: "",
+    },
+    familyProfile: {
+      involvedFamilyMembers: "",
+      visitFrequencyExpectation: "",
+      grandchildrenPresence: "",
+      familyDecisionDynamics: "",
+      emergencySupportNetwork: "",
+    },
+    culturalProfile: {
+      religionImportance: "",
+      kosherRequirements: "",
+      synagogueChurchAccess: "",
+      holidayCelebrations: "",
+      culturalIdentity: "",
+      israeliJewishCommunityPreference: "",
+    },
+    languageProfile: {
+      preferredSpokenLanguage: "",
+      nativeLanguage: "",
+      medicalDiscussionLanguage: "",
+      socialInteractionLanguage: "",
+    },
+    personalityProfile: {
+      introvertExtrovert: "",
+      communitySizePreference: "",
+      privacyImportance: "",
+      structureFlexibilityPreference: "",
+    },
+    interestsProfile: [],
+    independenceProfile: {
+      drivingImportance: "",
+      cookingImportance: "",
+      abilityToLeaveIndependently: "",
+      petOwnershipImportance: "",
+      hostingFamilyImportance: "",
+    },
+    transitionRiskProfile: {
+      biggestFear: "",
+      attitudeTowardMove: "",
+      previousMoves: "",
+      bereavementStatus: "",
+      lonelinessRisk: "",
+    },
+    futureCareProfile: {
+      agingInPlaceImportance: "",
+      avoidFutureMovesPreference: "",
+      continuumOfCarePreference: "",
+    },
+    distanceProfile: {
+      referenceLocations: {
+        parentCurrentHome: "",
+        primaryCaregiverHome: "",
+        secondaryFamilyHomes: "",
+        preferredHospital: "",
+        placeOfWorship: "",
+      },
+      driveTimes: {
+        normal: "",
+        rushHour: "",
+        emergency: "",
+      },
+      familyVisitExpectation: "",
+      familyGeographyModel: {
+        involvedFamilyMembers: "",
+        familyCenterOfGravity: "",
+        multiLocationOptimization: "",
+      },
+      emotionalDistanceFactors: {
+        emergencyAccessImportance: "",
+        spontaneousVisitsImportance: "",
+        grandchildrenVisitsImportance: "",
+      },
+      careLevelWeight: 0,
+      optimizationStrategy: "",
+      scores: {
+        family_distance_score: null,
+        visit_probability_score: null,
+        emergency_access_score: null,
+        grandchildren_access_score: null,
+        travel_burden_score: null,
+        family_engagement_score: null,
+      },
+      inferredConfidence: {},
+    },
+    confidence: {},
+  },
 };
 
 type QuestionnaireContextValue = {

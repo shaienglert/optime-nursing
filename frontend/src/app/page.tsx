@@ -39,7 +39,217 @@ const happinessOptions = [
   "Cultural activities",
 ];
 
-const distanceOptions = ["Under 10 minutes", "Under 20 minutes", "Under 30 minutes", "Under 1 hour", "Anywhere"];
+const livingAloneOptions = ["Less than 1 year", "1-3 years", "3-5 years", "5+ years", "Not living alone"];
+
+const socialInteractionOptions = ["Daily", "Several times weekly", "Weekly", "Biweekly", "Monthly or less"];
+
+const importanceOptions = ["Not important", "Low", "Medium", "High", "Very high"];
+
+const familyInvolvementOptions = ["1", "2", "3", "4", "5+"];
+
+const visitExpectationOptions = ["Daily", "Several times weekly", "Weekly", "Biweekly", "Monthly"];
+
+const decisionDynamicsOptions = ["Single decision maker", "Shared with spouse", "Shared among siblings", "Consensus", "Uncertain"];
+
+const supportNetworkOptions = ["Strong", "Moderate", "Limited", "Emergency only"];
+
+const religionImportanceOptions = ["Not important", "Somewhat important", "Important", "Very important"];
+
+const yesNoOptions = ["Yes", "No", "Sometimes"];
+
+const languageOptions = ["English", "Hebrew", "Spanish", "Russian", "French", "Portuguese", "Arabic", "Other"];
+
+const personalityOptions = ["Introvert", "Balanced", "Extrovert"];
+
+const sizePreferenceOptions = ["Small community", "Medium community", "Large community", "No preference"];
+
+const privacyOptions = ["Low", "Medium", "High", "Very high"];
+
+const structureOptions = ["Structure", "Flexibility", "Balanced"];
+
+const independenceOptions = ["Not important", "Somewhat important", "Important", "Very important"];
+
+const attitudeOptions = ["Positive", "Cautious", "Anxious", "Reluctant", "Unsure"];
+
+const bereavementOptions = ["No", "Yes, within 1 year", "Yes, within 3 years", "Yes, longer ago"];
+
+const lonelinessOptions = ["Low", "Moderate", "High", "Very high"];
+
+const carePreferenceOptions = ["Not important", "Somewhat important", "Important", "Very important"];
+
+const distanceStrategyOptions = ["Closest to resident", "Closest to family", "Balanced location", "Emergency priority", "Family visit maximization"];
+
+const careLevelWeights: Record<string, number> = {
+  "Fully independent": 10,
+  "Light assistance": 20,
+  "Help with bathing": 20,
+  "Help with dressing": 20,
+  "Help with medications": 20,
+  "Daytime supervision": 35,
+  "24/7 support required": 40,
+  "Skilled nursing care": 40,
+};
+
+type DistanceIntelligenceScores = {
+  family_distance_score: number | null;
+  visit_probability_score: number | null;
+  emergency_access_score: number | null;
+  grandchildren_access_score: number | null;
+  travel_burden_score: number | null;
+  family_engagement_score: number | null;
+};
+
+type DistanceIntelligenceInputs = {
+  referenceLocations: {
+    parentCurrentHome: string;
+    primaryCaregiverHome: string;
+    secondaryFamilyHomes: string;
+    preferredHospital: string;
+    placeOfWorship: string;
+  };
+  driveTimes: {
+    normal: string;
+    rushHour: string;
+    emergency: string;
+  };
+  familyVisitExpectation: string;
+  familyGeographyModel: {
+    involvedFamilyMembers: string;
+    familyCenterOfGravity: string;
+    multiLocationOptimization: string;
+  };
+  emotionalDistanceFactors: {
+    emergencyAccessImportance: string;
+    spontaneousVisitsImportance: string;
+    grandchildrenVisitsImportance: string;
+  };
+  careLevelWeight: number;
+  optimizationStrategy: string;
+  scores: DistanceIntelligenceScores;
+  inferredConfidence: Record<string, number>;
+};
+
+function importanceToWeight(value: string): number {
+  switch (value) {
+    case "Very high":
+    case "Very important":
+    case "High":
+    case "Important":
+      return 1;
+    case "Medium":
+    case "Somewhat important":
+      return 0.7;
+    case "Low":
+    case "Not important":
+      return 0.4;
+    default:
+      return 0.5;
+  }
+}
+
+function expectationToScore(value: string): number {
+  switch (value) {
+    case "Daily":
+      return 100;
+    case "Several times weekly":
+      return 88;
+    case "Weekly":
+      return 76;
+    case "Biweekly":
+      return 62;
+    case "Monthly":
+      return 48;
+    default:
+      return 55;
+  }
+}
+
+function driveTextToMinutes(value: string): number | null {
+  const match = value.match(/(\d+)/);
+  if (match) {
+    return Number(match[1]);
+  }
+  if (value.toLowerCase().includes("daily") || value.toLowerCase().includes("close")) return 10;
+  if (value.toLowerCase().includes("hour")) return 60;
+  return null;
+}
+
+function optimizationStrategyBoost(strategy: string): number {
+  switch (strategy) {
+    case "Closest to resident":
+      return 8;
+    case "Closest to family":
+      return 10;
+    case "Balanced location":
+      return 12;
+    case "Emergency priority":
+      return 14;
+    case "Family visit maximization":
+      return 15;
+    default:
+      return 0;
+  }
+}
+
+function deriveCareLevelWeight(assistanceLevel: string, memoryStatus: string): number {
+  if (assistanceLevel === "Skilled nursing care" || assistanceLevel === "24/7 support required") return 40;
+  if (assistanceLevel === "Daytime supervision" || assistanceLevel === "Help with medications") return 35;
+  if (memoryStatus !== "No" && memoryStatus !== "Not sure") return 35;
+  if (assistanceLevel === "Fully independent") return 10;
+  return 20;
+}
+
+function buildDistanceIntelligence(
+  inputs: DistanceIntelligenceInputs,
+): DistanceIntelligenceInputs {
+  const normal = driveTextToMinutes(inputs.driveTimes.normal);
+  const rush = driveTextToMinutes(inputs.driveTimes.rushHour);
+  const emergency = driveTextToMinutes(inputs.driveTimes.emergency);
+  const expectationScore = expectationToScore(inputs.familyVisitExpectation);
+  const careWeight = inputs.careLevelWeight || 20;
+  const strategyBoost = optimizationStrategyBoost(inputs.optimizationStrategy);
+  const involvedFamilyMembers = Number.parseInt(inputs.familyGeographyModel.involvedFamilyMembers || "0", 10);
+  const familyMemberCount = Number.isFinite(involvedFamilyMembers) ? involvedFamilyMembers : 0;
+  const emergencyImportance = importanceToWeight(inputs.emotionalDistanceFactors.emergencyAccessImportance);
+  const spontaneousImportance = importanceToWeight(inputs.emotionalDistanceFactors.spontaneousVisitsImportance);
+  const grandchildrenImportance = importanceToWeight(inputs.emotionalDistanceFactors.grandchildrenVisitsImportance);
+
+  const travelBurden = normal === null ? null : Math.max(0, 100 - normal * 2 - Math.max(0, (rush ?? normal) - normal) - Math.max(0, (emergency ?? normal) - normal));
+  const emergencyAccess = emergency === null ? null : Math.max(0, Math.min(100, 100 - emergency + Math.round(emergencyImportance * 15) + (inputs.optimizationStrategy === "Emergency priority" ? 10 : 0)));
+  const grandchildrenAccess = normal === null ? null : Math.max(0, Math.min(100, 100 - normal + Math.round(grandchildrenImportance * 12) + (inputs.optimizationStrategy === "Family visit maximization" ? 8 : 0)));
+
+  const familyEngagement = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round((expectationScore * 0.35) + (familyMemberCount * 6) + (spontaneousImportance * 12) + (grandchildrenImportance * 10) + strategyBoost - Math.max(0, careWeight - 10) * 0.2),
+    ),
+  );
+
+  const familyDistanceScore = normal === null ? null : Math.max(0, Math.min(100, Math.round(100 - normal + strategyBoost - Math.max(0, careWeight - 10) * 0.3)));
+  const visitProbabilityScore = Math.max(0, Math.min(100, Math.round((expectationScore * 0.45) + (familyMemberCount * 4) + (spontaneousImportance * 10) + (strategyBoost * 0.7))));
+
+  return {
+    ...inputs,
+    scores: {
+      family_distance_score: familyDistanceScore,
+      visit_probability_score: visitProbabilityScore,
+      emergency_access_score: emergencyAccess,
+      grandchildren_access_score: grandchildrenAccess,
+      travel_burden_score: travelBurden,
+      family_engagement_score: familyEngagement,
+    },
+    inferredConfidence: {
+      family_distance_score: normal === null ? 30 : 90,
+      visit_probability_score: expectationScore ? 80 : 25,
+      emergency_access_score: emergency === null ? 25 : 85,
+      grandchildren_access_score: normal === null ? 25 : 75,
+      travel_burden_score: normal === null ? 20 : 80,
+      family_engagement_score: familyMemberCount > 0 ? 75 : 30,
+    },
+    careLevelWeight: careWeight,
+  };
+}
 
 function OptionChip({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) {
   return (
@@ -86,10 +296,59 @@ export default function Home() {
   const [memoryStatus, setMemoryStatus] = useState("");
   const [happinessPreferences, setHappinessPreferences] = useState<string[]>([]);
   const [budget, setBudget] = useState(7000);
-  const [distanceFromFamily, setDistanceFromFamily] = useState("");
-  const [referenceLocationType, setReferenceLocationType] = useState("");
-  const [referenceLocationValue, setReferenceLocationValue] = useState("");
-  const [maxDistanceMiles, setMaxDistanceMiles] = useState<string | null>(null);
+  const [livingAloneDuration, setLivingAloneDuration] = useState("");
+  const [socialInteractionFrequency, setSocialInteractionFrequency] = useState("");
+  const [newFriendsImportance, setNewFriendsImportance] = useState("");
+  const [hobbyParticipation, setHobbyParticipation] = useState<string[]>([]);
+  const [preferredSocialIntensity, setPreferredSocialIntensity] = useState("");
+  const [involvedFamilyMembers, setInvolvedFamilyMembers] = useState("");
+  const [visitFrequencyExpectation, setVisitFrequencyExpectation] = useState("");
+  const [grandchildrenPresence, setGrandchildrenPresence] = useState("");
+  const [familyDecisionDynamics, setFamilyDecisionDynamics] = useState("");
+  const [emergencySupportNetwork, setEmergencySupportNetwork] = useState("");
+  const [religionImportance, setReligionImportance] = useState("");
+  const [kosherRequirements, setKosherRequirements] = useState("");
+  const [synagogueChurchAccess, setSynagogueChurchAccess] = useState("");
+  const [holidayCelebrations, setHolidayCelebrations] = useState("");
+  const [culturalIdentity, setCulturalIdentity] = useState("");
+  const [israeliJewishCommunityPreference, setIsraeliJewishCommunityPreference] = useState("");
+  const [preferredSpokenLanguage, setPreferredSpokenLanguage] = useState("");
+  const [nativeLanguage, setNativeLanguage] = useState("");
+  const [medicalDiscussionLanguage, setMedicalDiscussionLanguage] = useState("");
+  const [socialInteractionLanguage, setSocialInteractionLanguage] = useState("");
+  const [introvertExtrovert, setIntrovertExtrovert] = useState("");
+  const [communitySizePreference, setCommunitySizePreference] = useState("");
+  const [privacyImportance, setPrivacyImportance] = useState("");
+  const [structureFlexibilityPreference, setStructureFlexibilityPreference] = useState("");
+  const [independenceInterests, setIndependenceInterests] = useState<string[]>([]);
+  const [drivingImportance, setDrivingImportance] = useState("");
+  const [cookingImportance, setCookingImportance] = useState("");
+  const [abilityToLeaveIndependently, setAbilityToLeaveIndependently] = useState("");
+  const [petOwnershipImportance, setPetOwnershipImportance] = useState("");
+  const [hostingFamilyImportance, setHostingFamilyImportance] = useState("");
+  const [biggestFear, setBiggestFear] = useState("");
+  const [attitudeTowardMove, setAttitudeTowardMove] = useState("");
+  const [previousMoves, setPreviousMoves] = useState("");
+  const [bereavementStatus, setBereavementStatus] = useState("");
+  const [lonelinessRisk, setLonelinessRisk] = useState("");
+  const [agingInPlaceImportance, setAgingInPlaceImportance] = useState("");
+  const [avoidFutureMovesPreference, setAvoidFutureMovesPreference] = useState("");
+  const [continuumOfCarePreference, setContinuumOfCarePreference] = useState("");
+  const [parentCurrentHome, setParentCurrentHome] = useState("");
+  const [primaryCaregiverHome, setPrimaryCaregiverHome] = useState("");
+  const [secondaryFamilyHomes, setSecondaryFamilyHomes] = useState("");
+  const [preferredHospital, setPreferredHospital] = useState("");
+  const [placeOfWorship, setPlaceOfWorship] = useState("");
+  const [normalDriveTime, setNormalDriveTime] = useState("");
+  const [rushHourDriveTime, setRushHourDriveTime] = useState("");
+  const [emergencyDriveTime, setEmergencyDriveTime] = useState("");
+  const [familyVisitExpectation, setFamilyVisitExpectation] = useState("");
+  const [familyCenterOfGravity, setFamilyCenterOfGravity] = useState("");
+  const [multiLocationOptimization, setMultiLocationOptimization] = useState("");
+  const [emergencyAccessImportance, setEmergencyAccessImportance] = useState("");
+  const [spontaneousVisitsImportance, setSpontaneousVisitsImportance] = useState("");
+  const [grandchildrenVisitsImportance, setGrandchildrenVisitsImportance] = useState("");
+  const [optimizationStrategy, setOptimizationStrategy] = useState("Balanced location");
   const [notes, setNotes] = useState("");
 
   const relationshipLabel = relationshipCopy(relationship);
@@ -97,6 +356,43 @@ export default function Home() {
   const ctaText = useMemo(() => ctaCopy(relationship), [relationship]);
 
   const handleFindHome = () => {
+    const distanceIntelligence = buildDistanceIntelligence({
+      referenceLocations: {
+        parentCurrentHome,
+        primaryCaregiverHome,
+        secondaryFamilyHomes,
+        preferredHospital,
+        placeOfWorship,
+      },
+      driveTimes: {
+        normal: normalDriveTime,
+        rushHour: rushHourDriveTime,
+        emergency: emergencyDriveTime,
+      },
+      familyVisitExpectation,
+      familyGeographyModel: {
+        involvedFamilyMembers,
+        familyCenterOfGravity,
+        multiLocationOptimization,
+      },
+      emotionalDistanceFactors: {
+        emergencyAccessImportance,
+        spontaneousVisitsImportance,
+        grandchildrenVisitsImportance,
+      },
+      careLevelWeight: deriveCareLevelWeight(assistanceLevel, memoryStatus),
+      optimizationStrategy,
+      scores: {
+        family_distance_score: null,
+        visit_probability_score: null,
+        emergency_access_score: null,
+        grandchildren_access_score: null,
+        travel_burden_score: null,
+        family_engagement_score: null,
+      },
+      inferredConfidence: {},
+    });
+
     setState({
       relationship,
       gender,
@@ -106,11 +402,107 @@ export default function Home() {
       memoryStatus,
       happinessPreferences,
       budget,
-      distanceFromFamily,
-      referenceLocationType: referenceLocationType || "",
-      referenceLocationValue: referenceLocationValue || "",
-      maxDistanceMiles: maxDistanceMiles || null,
+      distanceFromFamily: familyVisitExpectation || optimizationStrategy,
+      referenceLocationType: "family-geography",
+      referenceLocationValue: familyCenterOfGravity || parentCurrentHome || primaryCaregiverHome || "",
       notes,
+      humanIntelligenceV2: {
+        socialProfile: {
+          livingAloneDuration,
+          socialInteractionFrequency,
+          newFriendsImportance,
+          hobbyParticipation,
+          preferredSocialIntensity,
+        },
+        familyProfile: {
+          involvedFamilyMembers,
+          visitFrequencyExpectation,
+          grandchildrenPresence,
+          familyDecisionDynamics,
+          emergencySupportNetwork,
+        },
+        culturalProfile: {
+          religionImportance,
+          kosherRequirements,
+          synagogueChurchAccess,
+          holidayCelebrations,
+          culturalIdentity,
+          israeliJewishCommunityPreference,
+        },
+        languageProfile: {
+          preferredSpokenLanguage,
+          nativeLanguage,
+          medicalDiscussionLanguage,
+          socialInteractionLanguage,
+        },
+        personalityProfile: {
+          introvertExtrovert,
+          communitySizePreference,
+          privacyImportance,
+          structureFlexibilityPreference,
+        },
+        interestsProfile: independenceInterests,
+        independenceProfile: {
+          drivingImportance,
+          cookingImportance,
+          abilityToLeaveIndependently,
+          petOwnershipImportance,
+          hostingFamilyImportance,
+        },
+        transitionRiskProfile: {
+          biggestFear,
+          attitudeTowardMove,
+          previousMoves,
+          bereavementStatus,
+          lonelinessRisk,
+        },
+        futureCareProfile: {
+          agingInPlaceImportance,
+          avoidFutureMovesPreference,
+          continuumOfCarePreference,
+        },
+        distanceProfile: {
+          referenceLocations: {
+            parentCurrentHome,
+            primaryCaregiverHome,
+            secondaryFamilyHomes,
+            preferredHospital,
+            placeOfWorship,
+          },
+          driveTimes: {
+            normal: normalDriveTime,
+            rushHour: rushHourDriveTime,
+            emergency: emergencyDriveTime,
+          },
+          familyVisitExpectation,
+          familyGeographyModel: {
+            involvedFamilyMembers,
+            familyCenterOfGravity,
+            multiLocationOptimization,
+          },
+          emotionalDistanceFactors: {
+            emergencyAccessImportance,
+            spontaneousVisitsImportance,
+            grandchildrenVisitsImportance,
+          },
+          careLevelWeight: deriveCareLevelWeight(assistanceLevel, memoryStatus),
+          optimizationStrategy,
+          scores: distanceIntelligence.scores,
+          inferredConfidence: distanceIntelligence.inferredConfidence,
+        },
+        confidence: {
+          socialProfile: 70,
+          familyProfile: 80,
+          culturalProfile: 75,
+          languageProfile: 65,
+          personalityProfile: 60,
+          interestsProfile: 55,
+          independenceProfile: 70,
+          transitionRiskProfile: 60,
+          futureCareProfile: 55,
+          distanceProfile: 85,
+        },
+      },
     });
 
     const params = new URLSearchParams();
@@ -122,7 +514,8 @@ export default function Home() {
     if (memoryStatus) params.set("memory", memoryStatus);
     if (happinessPreferences.length > 0) params.set("activities", happinessPreferences.join(","));
     params.set("budget", String(budget));
-    if (distanceFromFamily) params.set("distance", distanceFromFamily);
+    if (familyVisitExpectation) params.set("distance", familyVisitExpectation);
+    if (optimizationStrategy) params.set("distanceStrategy", optimizationStrategy);
     if (notes.trim()) params.set("notes", notes.trim());
 
     router.push(`/results?${params.toString()}`);
@@ -279,16 +672,253 @@ export default function Home() {
             </article>
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
-              <h3 className="text-lg font-semibold text-[#2f2a24]">7. Maximum distance from family</h3>
-              <div className="mt-4 flex flex-wrap gap-2.5">
-                {distanceOptions.map((option) => (
-                  <OptionChip key={option} label={option} isActive={distanceFromFamily === option} onClick={() => setDistanceFromFamily(option)} />
+              <h3 className="text-lg font-semibold text-[#2f2a24]">7. Social life and friendships</h3>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">How long has {relationshipLabel} lived alone?</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {livingAloneOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={livingAloneDuration === option} onClick={() => setLivingAloneDuration(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">How often does {relationshipLabel} want social interaction?</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {socialInteractionOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={socialInteractionFrequency === option} onClick={() => setSocialInteractionFrequency(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">How important is making new friends?</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {importanceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={newFriendsImportance === option} onClick={() => setNewFriendsImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Preferred social intensity</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {personalityOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={preferredSocialIntensity === option} onClick={() => setPreferredSocialIntensity(option)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-sm font-medium text-[#5e5346]">Favorite activities and interests</p>
+              <div className="mt-3 flex flex-wrap gap-2.5">
+                {happinessOptions.map((option) => (
+                  <OptionChip key={option} label={option} isActive={hobbyParticipation.includes(option)} onClick={() => setHobbyParticipation((current) => toggleOption(current, option))} />
                 ))}
               </div>
             </article>
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
-              <h3 className="text-lg font-semibold text-[#2f2a24]">8. Anything else we should know?</h3>
+              <h3 className="text-lg font-semibold text-[#2f2a24]">8. Family, culture, and language</h3>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">How many family members are actively involved?</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {familyInvolvementOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={involvedFamilyMembers === option} onClick={() => setInvolvedFamilyMembers(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Expected visit frequency</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {visitExpectationOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={visitFrequencyExpectation === option} onClick={() => setVisitFrequencyExpectation(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Religion or faith importance</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {religionImportanceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={religionImportance === option} onClick={() => setReligionImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Preferred spoken language</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {languageOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={preferredSpokenLanguage === option} onClick={() => setPreferredSpokenLanguage(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Introvert or extrovert</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {personalityOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={introvertExtrovert === option} onClick={() => setIntrovertExtrovert(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Community size preference</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {sizePreferenceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={communitySizePreference === option} onClick={() => setCommunitySizePreference(option)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Native language</p>
+                  <input value={nativeLanguage} onChange={(event) => setNativeLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, Spanish..." />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Language for medical discussions</p>
+                  <input value={medicalDiscussionLanguage} onChange={(event) => setMedicalDiscussionLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, translated support..." />
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
+              <h3 className="text-lg font-semibold text-[#2f2a24]">9. Independence and transition</h3>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Driving matters</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {independenceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={drivingImportance === option} onClick={() => setDrivingImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Cooking matters</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {independenceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={cookingImportance === option} onClick={() => setCookingImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Leave independently</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {yesNoOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={abilityToLeaveIndependently === option} onClick={() => setAbilityToLeaveIndependently(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Hosting family matters</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {independenceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={hostingFamilyImportance === option} onClick={() => setHostingFamilyImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Biggest fear about the move</p>
+                  <input value={biggestFear} onChange={(event) => setBiggestFear(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="Losing independence, loneliness, unfamiliarity..." />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Attitude toward the move</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {attitudeOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={attitudeTowardMove === option} onClick={() => setAttitudeTowardMove(option)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
+              <h3 className="text-lg font-semibold text-[#2f2a24]">10. Future care and distance intelligence</h3>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Primary reference location</p>
+                  <input value={parentCurrentHome} onChange={(event) => setParentCurrentHome(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="Home address, city, or neighborhood" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Primary caregiver home</p>
+                  <input value={primaryCaregiverHome} onChange={(event) => setPrimaryCaregiverHome(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="Address or city" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Normal drive time to family</p>
+                  <input value={normalDriveTime} onChange={(event) => setNormalDriveTime(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="25 minutes, 1 hour, close by" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Rush hour drive time</p>
+                  <input value={rushHourDriveTime} onChange={(event) => setRushHourDriveTime(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="40 minutes, 1.5 hours..." />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Emergency drive time</p>
+                  <input value={emergencyDriveTime} onChange={(event) => setEmergencyDriveTime(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="20 minutes, 45 minutes..." />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Optimization strategy</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {distanceStrategyOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={optimizationStrategy === option} onClick={() => setOptimizationStrategy(option)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Family visit expectation</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {visitExpectationOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={familyVisitExpectation === option} onClick={() => setFamilyVisitExpectation(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Emergency access importance</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {importanceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={emergencyAccessImportance === option} onClick={() => setEmergencyAccessImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Spontaneous visits importance</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {importanceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={spontaneousVisitsImportance === option} onClick={() => setSpontaneousVisitsImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Grandchildren visits importance</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {importanceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={grandchildrenVisitsImportance === option} onClick={() => setGrandchildrenVisitsImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Aging in place importance</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {carePreferenceOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={agingInPlaceImportance === option} onClick={() => setAgingInPlaceImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Avoid future moves</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {yesNoOptions.map((option) => (
+                      <OptionChip key={option} label={option} isActive={avoidFutureMovesPreference === option} onClick={() => setAvoidFutureMovesPreference(option)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
+              <h3 className="text-lg font-semibold text-[#2f2a24]">11. Anything else we should know?</h3>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}

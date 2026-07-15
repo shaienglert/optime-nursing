@@ -87,6 +87,34 @@ type PersonalizedExplanation = {
   narrative: string;
 };
 
+type DistanceProfile = {
+  familyVisitExpectation: string;
+  familyGeographyModel: {
+    involvedFamilyMembers: string;
+    familyCenterOfGravity: string;
+    multiLocationOptimization: string;
+  };
+  driveTimes: {
+    normal: string;
+    rushHour: string;
+    emergency: string;
+  };
+  emotionalDistanceFactors: {
+    emergencyAccessImportance: string;
+    spontaneousVisitsImportance: string;
+    grandchildrenVisitsImportance: string;
+  };
+  optimizationStrategy: string;
+  scores: {
+    family_distance_score: number | null;
+    visit_probability_score: number | null;
+    emergency_access_score: number | null;
+    grandchildren_access_score: number | null;
+    travel_burden_score: number | null;
+    family_engagement_score: number | null;
+  };
+};
+
 function sentenceCase(value: string): string {
   if (!value) return value;
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -127,7 +155,7 @@ function buildResidentProfileSummary(
   }
 
   if (distance) {
-    profileFacts.push(`family distance target is ${distance.toLowerCase()}`);
+    profileFacts.push(`family distance preference is ${distance.toLowerCase()}`);
   }
 
   if (noteWords.includes("widowed")) {
@@ -180,7 +208,17 @@ function buildConfidenceScore(facility: SearchFacility, sourcesAnalyzed: string[
 
 function buildPersonalizedExplanation(
   facility: SearchFacility,
-  context: { relationship: string; age: string; care: string; activity: string; memory: string; budget: number; distance: string; notes: string },
+  context: {
+    relationship: string;
+    age: string;
+    care: string;
+    activity: string;
+    memory: string;
+    budget: number;
+    distance: string;
+    notes: string;
+    distanceProfile?: DistanceProfile;
+  },
 ): PersonalizedExplanation {
   const factors = buildMatchFactors(facility, context);
   const notesLower = context.notes.toLowerCase();
@@ -194,15 +232,22 @@ function buildPersonalizedExplanation(
   const priceRange = parsePriceRange(facility.priceRange);
   const averagePrice = priceRange.low && priceRange.high ? Math.round((priceRange.low + priceRange.high) / 2) : 0;
   const overBudget = averagePrice > context.budget;
-  const distanceFlexible = context.distance.toLowerCase() === "anywhere";
+  const distanceProfile = context.distanceProfile;
+  const distanceFlexible = context.distance.toLowerCase() === "anywhere" || distanceProfile?.optimizationStrategy === "Family visit maximization";
   const mentionsJewish = notesLower.includes("jewish");
   const mentionsHebrew = notesLower.includes("hebrew");
   const mentionsWidowed = notesLower.includes("widowed");
+  const familyVisitExpectation = distanceProfile?.familyVisitExpectation || context.distance;
+  const normalDriveTime = distanceProfile?.driveTimes.normal || "unknown";
+  const rushHourDriveTime = distanceProfile?.driveTimes.rushHour || "unknown";
+  const emergencyDriveTime = distanceProfile?.driveTimes.emergency || "unknown";
+  const familyDistanceScore = distanceProfile?.scores.family_distance_score;
+  const familyEngagementScore = distanceProfile?.scores.family_engagement_score;
 
   const fitsYou = [
     `${sentenceCase(context.relationship)} is looking for ${context.care.toLowerCase()} support, and ${facility.name} explicitly offers ${facility.careTypes.join(", ")}.`,
     `${sentenceCase(context.relationship)} values ${context.activity.toLowerCase()}, and the community profile highlights ${facility.matchBadges[0] ?? "relevant daily programming"}.`,
-    `Family distance matters because the stated target is ${context.distance.toLowerCase()}, so the placement conversation should weigh that against ${communitySize} and the current $${context.budget.toLocaleString()} monthly budget.`
+    `Family distance now includes ${familyVisitExpectation.toLowerCase()} with normal drive time ${normalDriveTime}, rush-hour drive time ${rushHourDriveTime}, and emergency access ${emergencyDriveTime}. That should be weighed against ${communitySize}, the current $${context.budget.toLocaleString()} monthly budget, and the stated family engagement priority${familyEngagementScore ? ` (${familyEngagementScore}/100)` : ""}${familyDistanceScore ? `, family distance score ${familyDistanceScore}/100` : ""}.`
   ];
 
   if (mentionsWidowed) {
@@ -317,7 +362,7 @@ function buildPersonalizedExplanation(
     context.care,
     context.memory,
     context.activity,
-    context.distance,
+    familyVisitExpectation,
     context.notes,
   );
 
@@ -346,7 +391,7 @@ function buildPersonalizedExplanation(
 
 function buildMatchFactors(
   facility: SearchFacility,
-  context: { budget: number; care: string; activity: string; memory: string; distance: string },
+  context: { budget: number; care: string; activity: string; memory: string; distance: string; distanceProfile?: DistanceProfile },
 ): MatchFactor[] {
   const priceRange = parsePriceRange(facility.priceRange);
   const priceTarget = priceRange.low > 0 && priceRange.high > 0 ? (priceRange.low + priceRange.high) / 2 : context.budget;
