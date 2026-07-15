@@ -1,0 +1,131 @@
+{
+  "generated_at_utc": "2026-07-15T00:00:00Z",
+  "version": "v1",
+  "purpose": "Structured domain knowledge for factors that improve successful senior living adjustment.",
+  "evidence_basis": [
+    "docs/SUCCESS_SIGNAL_MODEL.md",
+    "docs/INTELLIGENCE_SIGNAL_PRIORITY.md"
+  ],
+  "factors": [
+    {
+      "factor_name": "Family involvement level",
+      "domain": "Family engagement",
+      "description": "Consistent family advocacy and follow-through improve transition stability and issue resolution.",
+      "evidence_level": "HIGH",
+      "source_type": ["Family interview", "Care team notes", "Outcome tracking"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Travel time from family",
+      "domain": "Family engagement",
+      "description": "Shorter travel time increases actual visit frequency and reduces isolation risk.",
+      "evidence_level": "HIGH",
+      "source_type": ["Mapping APIs", "Family reference address"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Language compatibility",
+      "domain": "Language matching",
+      "description": "Shared language between resident and community improves trust, comprehension, and daily comfort.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Community website", "Staff listings", "Intake form"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "factor_name": "Cultural compatibility",
+      "domain": "Cultural matching",
+      "description": "Cultural familiarity improves belonging and lowers adaptation friction after move-in.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Community website", "Activities", "Family input", "Reviews"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "factor_name": "Staff warmth and responsiveness",
+      "domain": "Transition psychology",
+      "description": "Warm, responsive staff make the first weeks safer and emotionally easier for residents and families.",
+      "evidence_level": "HIGH",
+      "source_type": ["Google", "Caring", "A Place for Mom", "Seniorly"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Staff continuity",
+      "domain": "Staff stability",
+      "description": "Stable staff relationships improve consistency, trust, and daily predictability.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Indeed", "Glassdoor", "Staffing disclosures"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Leadership continuity",
+      "domain": "Leadership stability",
+      "description": "Executive Director and Director of Nursing stability supports reliable operations and culture.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Website", "Leadership pages", "Filings"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Continuum of care availability",
+      "domain": "Continuum of care",
+      "description": "Access to multiple care levels reduces disruption if needs change after move-in.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Community profile", "Official website", "Care program pages"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Activity participation quality",
+      "domain": "Social integration",
+      "description": "Meaningful, well-attended activities accelerate social adjustment and reduce loneliness.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Resident testimonials", "Activities calendar"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Community engagement",
+      "domain": "Resident outcomes",
+      "description": "Visible engagement and belonging signals are leading indicators of first-year success.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Community updates", "Outcome tracking"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "CMS safety and staffing performance",
+      "domain": "Resident outcomes",
+      "description": "Strong regulatory, staffing, and inspection performance supports clinical stability during transition.",
+      "evidence_level": "HIGH",
+      "source_type": ["CMS Care Compare", "CMS Provider Database"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Food quality and wellness support",
+      "domain": "Transition psychology",
+      "description": "Good dining and wellness routines help residents settle into daily life and preserve satisfaction.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Dining pages", "Program calendars"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    }
+  ]
+}

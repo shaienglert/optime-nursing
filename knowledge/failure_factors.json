@@ -1,0 +1,111 @@
+{
+  "generated_at_utc": "2026-07-15T00:00:00Z",
+  "version": "v1",
+  "purpose": "Structured domain knowledge for factors that increase failed adjustment and relocation risk.",
+  "evidence_basis": [
+    "docs/SUCCESS_SIGNAL_MODEL.md",
+    "docs/INTELLIGENCE_SIGNAL_PRIORITY.md"
+  ],
+  "factors": [
+    {
+      "factor_name": "Long family travel time",
+      "domain": "Family engagement",
+      "description": "Long travel time reduces practical visit frequency even when families intend to stay involved.",
+      "evidence_level": "HIGH",
+      "source_type": ["Mapping APIs", "Family interview"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Low family involvement",
+      "domain": "Family engagement",
+      "description": "Weak family follow-through reduces advocacy, transition support, and early problem detection.",
+      "evidence_level": "HIGH",
+      "source_type": ["Family interview", "Care team notes"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Language mismatch",
+      "domain": "Language matching",
+      "description": "Communication mismatch increases confusion, frustration, and dependence on workarounds.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Intake form", "Community website", "Staff listings"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "factor_name": "Cultural mismatch",
+      "domain": "Cultural matching",
+      "description": "Lack of cultural familiarity can weaken belonging and increase early disengagement.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Family input", "Activities", "Community website", "Reviews"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "factor_name": "Loneliness indicators",
+      "domain": "Loneliness prevention",
+      "description": "Early loneliness often appears before overt dissatisfaction or relocation.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Family feedback", "Care notes"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Understaffing and burnout",
+      "domain": "Staff stability",
+      "description": "Understaffing reduces responsiveness and makes social and clinical transitions less reliable.",
+      "evidence_level": "HIGH",
+      "source_type": ["Indeed", "Glassdoor", "CMS staffing trends", "Reviews"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Leadership turnover",
+      "domain": "Leadership stability",
+      "description": "Frequent administrator or nursing leadership changes create inconsistency during the first year.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Website", "Filings", "Leadership history"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "No continuum of care",
+      "domain": "Continuum of care",
+      "description": "Communities that cannot absorb care-level changes raise the chance of a second move.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Care level listings", "Official website", "Program pages"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Weak social programming",
+      "domain": "Social integration",
+      "description": "Thin or repetitive social programming limits relationship formation and routine building.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Activities calendar", "Reviews", "Website"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Regulatory and staffing weakness",
+      "domain": "Resident outcomes",
+      "description": "Low CMS or inspection performance increases instability, complaints, and care disruptions.",
+      "evidence_level": "HIGH",
+      "source_type": ["CMS Care Compare", "CMS Provider Database", "State inspections"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    }
+  ]
+}

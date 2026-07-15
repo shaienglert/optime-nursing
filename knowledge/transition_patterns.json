@@ -1,0 +1,65 @@
+{
+  "generated_at_utc": "2026-07-15T00:00:00Z",
+  "version": "v1",
+  "purpose": "Transition psychology patterns that influence first-year adjustment after move-in.",
+  "evidence_basis": [
+    "docs/SUCCESS_SIGNAL_MODEL.md",
+    "docs/VALIDATION_STUDY_V1.md"
+  ],
+  "patterns": [
+    {
+      "pattern_name": "High-support transition",
+      "description": "Strong family involvement, responsive staff, and clear social onboarding improve adjustment in the first 90 days.",
+      "evidence_level": "HIGH",
+      "source_type": ["Family interview", "Staff observations", "Outcome tracking"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "pattern_name": "Widowhood or recent loss sensitivity",
+      "description": "Residents experiencing recent loss may need more deliberate social and emotional integration planning.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Family interview", "Care notes", "Social adjustment follow-up"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "pattern_name": "Cognitive-friction transition",
+      "description": "Memory or confusion issues increase adjustment risk when cueing, routines, and redirection are inconsistent.",
+      "evidence_level": "HIGH",
+      "source_type": ["Intake assessment", "Care observations", "Outcome tracking"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "pattern_name": "Distance-decay visitation",
+      "description": "Planned family involvement often drops when travel burden is high, weakening transition support.",
+      "evidence_level": "HIGH",
+      "source_type": ["Mapping APIs", "Family interview", "Visit logs"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "pattern_name": "Routine-anchored adaptation",
+      "description": "Residents adapt faster when meals, activities, and staff interactions become predictable quickly.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Activities schedules", "Dining routines", "Care observations"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "pattern_name": "Mismatch-driven early dissatisfaction",
+      "description": "Cultural, language, or social-environment mismatch often appears first as discomfort before formal complaints.",
+      "evidence_level": "MODERATE",
+      "source_type": ["Family feedback", "Reviews", "Outcome tracking"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    }
+  ]
+}

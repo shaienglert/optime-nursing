@@ -1,0 +1,84 @@
+{
+  "generated_at_utc": "2026-07-15T00:00:00Z",
+  "version": "v1",
+  "purpose": "Model of factors that increase or reduce social integration after senior living placement.",
+  "evidence_basis": [
+    "docs/SUCCESS_SIGNAL_MODEL.md",
+    "docs/INTELLIGENCE_SIGNAL_PRIORITY.md"
+  ],
+  "protective_factors": [
+    {
+      "factor_name": "Activity diversity",
+      "evidence_level": "MODERATE",
+      "source_type": ["Activities calendar", "Website"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "factor_name": "Community engagement signals",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Community updates", "Outcome tracking"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Social environment preference match",
+      "evidence_level": "MODERATE",
+      "source_type": ["Intake form", "Reviews", "Activities calendar"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "factor_name": "Resident satisfaction mentions",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Survey summaries"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    }
+  ],
+  "risk_factors": [
+    {
+      "factor_name": "Loneliness risk indicators",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Family feedback", "Care notes"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 5
+    },
+    {
+      "factor_name": "Large environment mismatch",
+      "evidence_level": "MODERATE",
+      "source_type": ["Community profile", "Intake preferences"],
+      "strength_of_evidence": 3,
+      "impact_on_successful_adjustment": 3,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "factor_name": "Weak activity participation quality",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Resident testimonials", "Activities calendar"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Cultural or language mismatch",
+      "evidence_level": "MODERATE",
+      "source_type": ["Family input", "Community website", "Reviews"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    }
+  ],
+  "integration_outcomes": [
+    "Early friendship formation",
+    "Routine participation",
+    "Reduced isolation",
+    "Higher family confidence",
+    "Lower relocation risk"
+  ]
+}

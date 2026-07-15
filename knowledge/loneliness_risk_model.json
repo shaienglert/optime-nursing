@@ -1,0 +1,92 @@
+{
+  "generated_at_utc": "2026-07-15T00:00:00Z",
+  "version": "v1",
+  "purpose": "Model of loneliness risk factors and protective factors after placement.",
+  "evidence_basis": [
+    "docs/SUCCESS_SIGNAL_MODEL.md",
+    "docs/INTELLIGENCE_SIGNAL_PRIORITY.md"
+  ],
+  "risk_factors": [
+    {
+      "factor_name": "Low visit frequency",
+      "evidence_level": "HIGH",
+      "source_type": ["Family interview", "Visit logs", "Mapping APIs"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Poor social environment match",
+      "evidence_level": "MODERATE",
+      "source_type": ["Intake form", "Activities calendar", "Reviews"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Low community engagement",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Community updates", "Outcome tracking"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Recent bereavement or loss",
+      "evidence_level": "MODERATE",
+      "source_type": ["Family interview", "Care notes"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    },
+    {
+      "factor_name": "Language or cultural isolation",
+      "evidence_level": "MODERATE",
+      "source_type": ["Intake form", "Community website", "Reviews"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    }
+  ],
+  "protective_factors": [
+    {
+      "factor_name": "Frequent family contact",
+      "evidence_level": "HIGH",
+      "source_type": ["Family interview", "Visit logs"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Strong activity participation quality",
+      "evidence_level": "MODERATE",
+      "source_type": ["Reviews", "Activities calendar", "Resident feedback"],
+      "strength_of_evidence": 4,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Warm staff relationships",
+      "evidence_level": "HIGH",
+      "source_type": ["Google", "Caring", "A Place for Mom", "Seniorly"],
+      "strength_of_evidence": 5,
+      "impact_on_successful_adjustment": 5,
+      "impact_on_relocation_risk": 4
+    },
+    {
+      "factor_name": "Resident peer similarity",
+      "evidence_level": "EMERGING",
+      "source_type": ["Community profile", "Resident demographics", "Family observations"],
+      "strength_of_evidence": 3,
+      "impact_on_successful_adjustment": 4,
+      "impact_on_relocation_risk": 3
+    }
+  ],
+  "monitoring_signals": [
+    "Withdrawal from activities",
+    "Declining visit participation",
+    "Negative adjustment language",
+    "Family concern about isolation",
+    "No early friendship formation"
+  ]
+}
