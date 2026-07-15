@@ -1723,7 +1723,172 @@ export default function Home() {
             </article>
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
-              <h3 className="text-lg font-semibold text-[#2f2a24]">9. Independence and transition</h3>
+              <h3 className="text-lg font-semibold text-[#2f2a24]">9. Cultural intelligence profile (asked for everyone)</h3>
+              <p className="mt-1 text-sm text-[#6c6358]">We never infer culture from name, ethnicity, or religion. We ask directly and support mixed identities.</p>
+
+              <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Native language</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {languageCatalogOptions.map((option) => (
+                      <OptionChip key={`native-${option}`} label={option} isActive={nativeLanguage === option} onClick={() => setNativeLanguage(option)} />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Preferred social language</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {languageCatalogOptions.map((option) => (
+                      <OptionChip key={`social-${option}`} label={option} isActive={socialInteractionLanguage === option} onClick={() => setSocialInteractionLanguage(option)} />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Preferred medical communication language</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {languageCatalogOptions.map((option) => (
+                      <OptionChip key={`medical-${option}`} label={option} isActive={medicalDiscussionLanguage === option} onClick={() => setMedicalDiscussionLanguage(option)} />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Languages understood (select multiple)</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {languageCatalogOptions.map((option) => (
+                      <OptionChip
+                        key={`understood-${option}`}
+                        label={option}
+                        isActive={languagesUnderstood.includes(option)}
+                        onClick={() => setLanguagesUnderstood((current) => toggleOption(current, option))}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <p className="text-sm font-medium text-[#5e5346]">Languages spoken by family (select multiple)</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {languageCatalogOptions.map((option) => (
+                      <OptionChip
+                        key={`family-lang-${option}`}
+                        label={option}
+                        isActive={familyLanguages.includes(option)}
+                        onClick={() => setFamilyLanguages((current) => toggleOption(current, option))}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Religion importance</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {religionImportanceOptions.map((option) => (
+                      <OptionChip key={`religion-importance-${option}`} label={option} isActive={religionImportance === option} onClick={() => setReligionImportance(option)} />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Faith traditions (select multiple)</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {faithTraditionOptions.map((option) => (
+                      <OptionChip
+                        key={`faith-${option}`}
+                        label={option}
+                        isActive={faithTraditions.includes(option)}
+                        onClick={() => setFaithTraditions((current) => toggleOption(current, option))}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <p className="text-sm font-medium text-[#5e5346]">Spiritual support needs (select multiple)</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {religiousSupportNeedsOptions.map((option) => (
+                      <OptionChip
+                        key={`support-${option}`}
+                        label={option}
+                        isActive={religiousSupportNeeds.includes(option)}
+                        onClick={() => setReligiousSupportNeeds((current) => toggleOption(current, option))}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">What makes this person feel at home? (select multiple)</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {homeComfortOptions.map((option) => (
+                      <OptionChip
+                        key={`home-${option}`}
+                        label={option}
+                        isActive={whatFeelsLikeHome.includes(option)}
+                        onClick={() => setWhatFeelsLikeHome((current) => toggleOption(current, option))}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Dietary preferences (select multiple)</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {dietaryPreferenceOptions.map((option) => (
+                      <OptionChip
+                        key={`diet-${option}`}
+                        label={option}
+                        isActive={dietaryPreferences.includes(option)}
+                        onClick={() => setDietaryPreferences((current) => toggleOption(current, option))}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Family involvement expectations</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {familyInvolvementExpectationOptions.map((option) => (
+                      <OptionChip key={`family-expectation-${option}`} label={option} isActive={familyInvolvementExpectation === option} onClick={() => setFamilyInvolvementExpectation(option)} />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#5e5346]">Family role in decisions</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {familyDecisionRoleOptions.map((option) => (
+                      <OptionChip key={`family-role-${option}`} label={option} isActive={familyDecisionRole === option} onClick={() => setFamilyDecisionRole(option)} />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <p className="text-sm font-medium text-[#5e5346]">Preferred community environment (select multiple)</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {communityEnvironmentOptions.map((option) => (
+                      <OptionChip
+                        key={`environment-${option}`}
+                        label={option}
+                        isActive={preferredEnvironment.includes(option)}
+                        onClick={() => setPreferredEnvironment((current) => toggleOption(current, option))}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
+              <h3 className="text-lg font-semibold text-[#2f2a24]">10. Independence and transition</h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Driving matters</p>
@@ -1775,7 +1940,7 @@ export default function Home() {
             </article>
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
-              <h3 className="text-lg font-semibold text-[#2f2a24]">10. Future care and distance intelligence</h3>
+              <h3 className="text-lg font-semibold text-[#2f2a24]">11. Future care and distance intelligence</h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Primary reference location</p>
@@ -1861,7 +2026,7 @@ export default function Home() {
             </article>
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
-              <h3 className="text-lg font-semibold text-[#2f2a24]">11. Anything else we should know?</h3>
+              <h3 className="text-lg font-semibold text-[#2f2a24]">12. Anything else we should know?</h3>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}

@@ -691,8 +691,10 @@ export function ResultsPageClient() {
     const hobbies = profile.socialProfile.hobbyParticipation.join(", ") || "not specified";
     const fear = profile.transitionRiskProfile.biggestFear || "not specified";
     const proximity = profile.distanceProfile.familyVisitExpectation || distance;
+    const scoreCard = profile.scoringEngine.outputScores;
+    const culturalSignals = profile.scoringEngine.recommendationImpacts.slice(0, 3).join(" ") || "No additional high-impact cultural signals were detected.";
 
-    return `${relationshipNarrative} profile shows ${age} age range, living alone for ${livingAlone}, with social rhythm ${social}. Preferred language is ${language}, religion importance is ${religion}, hobbies include ${hobbies}, and family proximity requirement is ${proximity}. Biggest transition fear is ${fear}. Loneliness risk appears ${lonelinessRisk}.`;
+    return `${relationshipNarrative} profile shows ${age} age range, living alone for ${livingAlone}, with social rhythm ${social}. Preferred language is ${language}, religion importance is ${religion}, hobbies include ${hobbies}, and family proximity requirement is ${proximity}. Biggest transition fear is ${fear}. Loneliness risk appears ${lonelinessRisk}. Cultural intelligence outputs: language match ${scoreCard.language_fit_score}, religious fit ${scoreCard.religious_fit_score}, cultural fit ${scoreCard.cultural_fit_score}, food fit ${scoreCard.food_fit_score}, family engagement ${scoreCard.family_engagement_score}, community style ${scoreCard.community_style_score}. Recommendation impacts: ${culturalSignals}`;
   }, [state.humanIntelligenceV2, relationship, age, distance]);
 
   const removeFilter = (value: string) => {
