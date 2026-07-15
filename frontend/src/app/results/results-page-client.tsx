@@ -783,6 +783,50 @@ export function ResultsPageClient() {
               <p className="mt-3 text-sm leading-7 text-[#554c41]">{personalAdvisorSummary}</p>
             </article>
 
+            <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.35)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5f7f6b]">Cultural Intelligence Scorecard</p>
+              <h2 className="mt-2 text-2xl font-semibold text-[#2f2a24]">Belonging and adjustment signals</h2>
+              <p className="mt-2 text-sm text-[#5c5347]">
+                These scores come from direct answers only and support mixed identities and multicultural households.
+              </p>
+
+              <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e7dbc6] bg-white">
+                <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                  <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                    <tr>
+                      <th className="px-4 py-3">Output score</th>
+                      <th className="px-4 py-3">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#efe6d8]">
+                    <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">language_match_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.language_fit_score}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">religious_fit_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.religious_fit_score}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">cultural_fit_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.cultural_fit_score}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">food_fit_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.food_fit_score}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">family_engagement_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.family_engagement_score}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">community_style_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.community_style_score}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {state.humanIntelligenceV2.scoringEngine.recommendationImpacts.length > 0 ? (
+                <div className="mt-4 rounded-2xl border border-[#e7dbc6] bg-[#fffdfa] p-4">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Recommendation impact</p>
+                  <ul className="mt-3 space-y-2 text-sm text-[#564d42]">
+                    {state.humanIntelligenceV2.scoringEngine.recommendationImpacts.map((impact) => (
+                      <li key={impact}>• {impact}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {state.humanIntelligenceV2.scoringEngine.overallConfidence < state.humanIntelligenceV2.scoringEngine.confidenceThreshold ? (
+                <p className="mt-4 text-sm text-[#8c5c40]">
+                  Confidence is below threshold; additional question asked: {state.humanIntelligenceV2.scoringEngine.additionalQuestionAsked || "How often do you expect to visit?"}
+                </p>
+              ) : null}
+            </article>
+
             {topRecommendations.map((facility, index) => {
               const explanation = buildPersonalizedExplanation(facility, {
                 relationship,
