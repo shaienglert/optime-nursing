@@ -38,6 +38,7 @@ export type SearchFacility = Facility & {
   priceRange: string;
   careTypes: string[];
   matchBadges: string[];
+  scoreBreakdown?: ScoreBreakdownItem[];
 };
 
 export type FacilityDetailsData = SearchFacility & {
