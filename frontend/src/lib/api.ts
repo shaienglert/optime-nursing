@@ -14,6 +14,13 @@ export interface Facility {
   inspection_rating?: number;
   latitude?: number | null;
   longitude?: number | null;
+  verified_name: string;
+  license_verified: boolean;
+  cms_verified: boolean;
+  website_verified: boolean;
+  phone_verified: boolean;
+  verification_score: number;
+  matching_confidence: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN";
 }
 
 export type ScoreBreakdownItem = {
@@ -121,6 +128,52 @@ const careTypePool = [
   ["Assisted Living", "Skilled Nursing"],
 ];
 
+function buildVerificationFields(seed: number, name: string, city: string, website: string | null | undefined, phone: string | null | undefined, cmsId: string): {
+  verified_name: string;
+  license_verified: boolean;
+  cms_verified: boolean;
+  website_verified: boolean;
+  phone_verified: boolean;
+  verification_score: number;
+  matching_confidence: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN";
+} {
+  const pattern = seed % 12;
+
+  if (pattern === 7) {
+    return {
+      verified_name: `${city} Senior Community`,
+      license_verified: Boolean(cmsId),
+      cms_verified: Boolean(cmsId),
+      website_verified: Boolean(website),
+      phone_verified: Boolean(phone),
+      verification_score: 40,
+      matching_confidence: "LOW",
+    };
+  }
+
+  if (pattern === 4) {
+    return {
+      verified_name: name.replace("Senior Living", "Senior Lving"),
+      license_verified: Boolean(cmsId),
+      cms_verified: Boolean(cmsId),
+      website_verified: Boolean(website),
+      phone_verified: Boolean(phone),
+      verification_score: 70,
+      matching_confidence: "MEDIUM",
+    };
+  }
+
+  return {
+    verified_name: name,
+    license_verified: Boolean(cmsId),
+    cms_verified: Boolean(cmsId),
+    website_verified: Boolean(website),
+    phone_verified: Boolean(phone),
+    verification_score: 100,
+    matching_confidence: "HIGH",
+  };
+}
+
 function scoreLabel(score: number): string {
   if (score >= 90) return "Excellent Match";
   if (score >= 80) return "Great Match";
@@ -162,16 +215,20 @@ function buildMockFacilities(): FacilityDetailsData[] {
     const city = cities[i % cities.length];
     const score = 68 + ((i * 9) % 31);
     const name = `${firstWords[i % firstWords.length]} ${secondWords[i % secondWords.length]} Senior Living`;
+    const website = i % 4 === 0 ? null : `https://www.optime-nursing.example/facilities/fl-${100000 + i}`;
+    const phone = `305-555-${String(1000 + i).slice(-4)}`;
+    const cmsId = `FL-${100000 + i}`;
+    const verification = buildVerificationFields(i, name, city, website, phone, cmsId);
 
     facilities.push({
       id: i,
-      cms_id: `FL-${100000 + i}`,
+      cms_id: cmsId,
       name,
       city,
       state: "FL",
       address: `${300 + i} Wellness Avenue`,
       zip_code: `${33000 + i}`,
-      phone: `305-555-${String(1000 + i).slice(-4)}`,
+      phone,
       beds: 90 + ((i * 7) % 70),
       overall_rating: Math.max(3, Math.min(5, Math.round(score / 20))),
       staffing_rating: Math.max(3, Math.min(5, Math.round((score - 5) / 20))),
@@ -181,13 +238,14 @@ function buildMockFacilities(): FacilityDetailsData[] {
       longitude: -80.2 - i * 0.01,
       imageUrl: gallerySets[variant][0],
       gallery: gallerySets[variant],
-      website: `https://www.optime-nursing.example/facilities/fl-${100000 + i}`,
+      website: website || `https://www.optime-nursing.example/facilities/fl-${100000 + i}`,
       optimeScore: score,
       matchLabel: scoreLabel(score),
       shortExplanation: explanationPool[variant],
       priceRange: `$${(4200 + i * 90).toLocaleString()} - $${(6800 + i * 115).toLocaleString()}/month`,
       careTypes: careTypePool[variant],
       matchBadges: badgesPool[variant],
+      ...verification,
       scoreBreakdown: buildScoreBreakdown(i),
       mapPoints: {
         facility: `${name}, ${city}`,
