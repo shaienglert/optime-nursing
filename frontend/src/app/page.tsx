@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
+import { persistHumanIntelligenceScores } from "@/lib/api";
 
 const relationshipOptions = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myself", "Couple", "Relative", "Friend"];
 
@@ -315,6 +316,44 @@ function ctaCopy(relationship: string): string {
   return "Find the right home";
 }
 
+function scoreFromImportance(value: string): number {
+  switch (value) {
+    case "Very high":
+    case "Very important":
+      return 95;
+    case "High":
+    case "Important":
+      return 82;
+    case "Medium":
+      return 68;
+    case "Low":
+    case "Somewhat important":
+      return 52;
+    case "Not important":
+      return 35;
+    default:
+      return 50;
+  }
+}
+
+function scoreFromFrequency(value: string): number {
+  switch (value) {
+    case "Daily":
+      return 90;
+    case "Several times weekly":
+      return 80;
+    case "Weekly":
+      return 70;
+    case "Biweekly":
+      return 58;
+    case "Monthly":
+    case "Monthly or less":
+      return 45;
+    default:
+      return 50;
+  }
+}
+
 export default function Home() {
   const router = useRouter();
   const { setState } = useQuestionnaire();
@@ -573,6 +612,65 @@ export default function Home() {
     if (familyVisitExpectation) params.set("distance", familyVisitExpectation);
     if (optimizationStrategy) params.set("distanceStrategy", optimizationStrategy);
     if (notes.trim()) params.set("notes", notes.trim());
+
+    const socialProfileScore = Math.round((
+      scoreFromFrequency(socialInteractionFrequency) * 0.35 +
+      scoreFromImportance(newFriendsImportance) * 0.35 +
+      scoreFromImportance(preferredSocialIntensity === "Extrovert" ? "High" : preferredSocialIntensity === "Balanced" ? "Medium" : "Low") * 0.3
+    ));
+
+    const familySupportScore = Math.round((
+      scoreFromFrequency(visitFrequencyExpectation) * 0.45 +
+      scoreFromImportance(grandchildrenImportance) * 0.25 +
+      scoreFromImportance(emergencySupportNetwork === "Strong" ? "Very high" : emergencySupportNetwork === "Moderate" ? "High" : emergencySupportNetwork === "Limited" ? "Medium" : "Low") * 0.3
+    ));
+
+    const culturalMatchScore = Math.round((
+      scoreFromImportance(religionImportance) * 0.45 +
+      scoreFromImportance(kosherRequirements === "Yes" ? "Very high" : kosherRequirements === "Sometimes" ? "Medium" : "Low") * 0.25 +
+      scoreFromImportance(israeliJewishCommunityPreference === "Yes" ? "High" : israeliJewishCommunityPreference === "Sometimes" ? "Medium" : "Low") * 0.3
+    ));
+
+    const lonelinessRiskScore = Math.round((
+      scoreFromFrequency(socialInteractionFrequency) * 0.35 +
+      scoreFromImportance(lonelinessRisk === "Very high" ? "Very high" : lonelinessRisk === "High" ? "High" : lonelinessRisk === "Moderate" ? "Medium" : "Low") * 0.45 +
+      scoreFromFrequency(visitFrequencyExpectation) * 0.2
+    ));
+
+    const transitionRiskScore = Math.round((
+      scoreFromImportance(attitudeTowardMove === "Reluctant" ? "Very high" : attitudeTowardMove === "Anxious" ? "High" : attitudeTowardMove === "Cautious" ? "Medium" : "Low") * 0.45 +
+      scoreFromImportance(widowStatus === "Yes" ? "High" : "Medium") * 0.2 +
+      scoreFromImportance(biggestFear ? "High" : "Medium") * 0.35
+    ));
+
+    const futureCareScore = Math.round((
+      scoreFromImportance(agingInPlaceImportance) * 0.4 +
+      scoreFromImportance(continuumOfCarePreference) * 0.35 +
+      scoreFromImportance(avoidFutureMovesPreference === "Yes" ? "High" : avoidFutureMovesPreference === "Sometimes" ? "Medium" : "Low") * 0.25
+    ));
+
+    const residentKey = `${relationship || "resident"}-${ageGroup || "unknown"}-${Date.now()}`;
+
+    void persistHumanIntelligenceScores({
+      resident_key: residentKey,
+      relationship,
+      age_group: ageGroup,
+      social_profile_score: socialProfileScore,
+      family_support_score: familySupportScore,
+      cultural_match_score: culturalMatchScore,
+      loneliness_risk_score: lonelinessRiskScore,
+      transition_risk_score: transitionRiskScore,
+      future_care_score: futureCareScore,
+      metadata_json: JSON.stringify({
+        livingAloneDuration,
+        visitFrequencyExpectation,
+        religionImportance,
+        preferredSpokenLanguage,
+        memoryStatus,
+      }),
+    }).catch(() => {
+      // non-blocking by design; recommendation flow should continue even if backend persistence is unavailable
+    });
 
     router.push(`/results?${params.toString()}`);
   };

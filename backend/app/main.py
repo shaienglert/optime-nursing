@@ -2,13 +2,15 @@ import os
 from statistics import mean
 from typing import Dict, List, Optional
 
+from sqlalchemy import func
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
-from app.models.facility import Facility, Inspection, QualityMeasure, Staffing
+from app.models.facility import Facility, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
 from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
@@ -101,6 +103,57 @@ class ImportSummaryOut(BaseModel):
     missing_records: int
     failed_mappings: int
     score_distributions: Dict[str, Dict[str, float]]
+
+
+class HumanIntelligenceIn(BaseModel):
+    resident_key: str
+    relationship: Optional[str] = None
+    age_group: Optional[str] = None
+    social_profile_score: float
+    family_support_score: float
+    cultural_match_score: float
+    loneliness_risk_score: float
+    transition_risk_score: float
+    future_care_score: float
+    metadata_json: Optional[str] = None
+
+
+class HumanIntelligenceOut(HumanIntelligenceIn):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ResidentOutcomeIn(BaseModel):
+    resident_key: str
+    human_intelligence_score_id: Optional[int] = None
+    facility_id: Optional[int] = None
+    successful_adjustment: bool
+    loneliness_event: bool
+    relocated_within_24m: bool
+    notes: Optional[str] = None
+
+
+class ResidentOutcomeOut(BaseModel):
+    id: int
+    resident_key: str
+    human_intelligence_score_id: Optional[int] = None
+    facility_id: Optional[int] = None
+    successful_adjustment: bool
+    loneliness_event: bool
+    relocated_within_24m: bool
+    notes: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ValidationFeedbackOut(BaseModel):
+    outcomes_count: int
+    adjustment_success_rate: float
+    loneliness_event_rate: float
+    relocation_rate_24m: float
+    average_scores_for_successful_adjustment: Dict[str, float]
+    average_scores_for_unsuccessful_adjustment: Dict[str, float]
 
 
 
@@ -260,6 +313,37 @@ def run_phase1_ingestion(db: Session, state: str = "FL", limit: int = 100) -> di
     }
 
 
+def _avg_or_zero(value: Optional[float]) -> float:
+    if value is None:
+        return 0.0
+    return round(float(value), 2)
+
+
+def _group_average_scores(db: Session, success_value: int) -> Dict[str, float]:
+    row = (
+        db.query(
+            func.avg(HumanIntelligenceScore.social_profile_score),
+            func.avg(HumanIntelligenceScore.family_support_score),
+            func.avg(HumanIntelligenceScore.cultural_match_score),
+            func.avg(HumanIntelligenceScore.loneliness_risk_score),
+            func.avg(HumanIntelligenceScore.transition_risk_score),
+            func.avg(HumanIntelligenceScore.future_care_score),
+        )
+        .join(ResidentOutcome, ResidentOutcome.human_intelligence_score_id == HumanIntelligenceScore.id)
+        .filter(ResidentOutcome.successful_adjustment == success_value)
+        .one()
+    )
+
+    return {
+        "social_profile_score": _avg_or_zero(row[0]),
+        "family_support_score": _avg_or_zero(row[1]),
+        "cultural_match_score": _avg_or_zero(row[2]),
+        "loneliness_risk_score": _avg_or_zero(row[3]),
+        "transition_risk_score": _avg_or_zero(row[4]),
+        "future_care_score": _avg_or_zero(row[5]),
+    }
+
+
 @app.on_event("startup")
 def startup() -> None:
     # Phase 1 MVP re-initializes schema to guarantee model/table parity.
@@ -368,4 +452,102 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
             staffing_components=staffing_components,
             safety_components=safety_components,
         ),
+    )
+
+
+@app.post("/human-intelligence", response_model=HumanIntelligenceOut)
+async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db)):
+    record = HumanIntelligenceScore(
+        resident_key=payload.resident_key,
+        relationship=payload.relationship,
+        age_group=payload.age_group,
+        social_profile_score=clip_0_100(payload.social_profile_score),
+        family_support_score=clip_0_100(payload.family_support_score),
+        cultural_match_score=clip_0_100(payload.cultural_match_score),
+        loneliness_risk_score=clip_0_100(payload.loneliness_risk_score),
+        transition_risk_score=clip_0_100(payload.transition_risk_score),
+        future_care_score=clip_0_100(payload.future_care_score),
+        metadata_json=payload.metadata_json,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return HumanIntelligenceOut.model_validate(record)
+
+
+@app.post("/resident-outcomes", response_model=ResidentOutcomeOut)
+async def create_resident_outcome(payload: ResidentOutcomeIn, db: Session = Depends(get_db)):
+    if payload.human_intelligence_score_id is not None:
+        score_record = db.query(HumanIntelligenceScore).filter(HumanIntelligenceScore.id == payload.human_intelligence_score_id).first()
+        if not score_record:
+            raise HTTPException(status_code=404, detail="Human intelligence score not found")
+
+    if payload.facility_id is not None:
+        facility = db.query(Facility).filter(Facility.id == payload.facility_id).first()
+        if not facility:
+            raise HTTPException(status_code=404, detail="Facility not found")
+
+    record = ResidentOutcome(
+        resident_key=payload.resident_key,
+        human_intelligence_score_id=payload.human_intelligence_score_id,
+        facility_id=payload.facility_id,
+        successful_adjustment=1 if payload.successful_adjustment else 0,
+        loneliness_event=1 if payload.loneliness_event else 0,
+        relocated_within_24m=1 if payload.relocated_within_24m else 0,
+        notes=payload.notes,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+    return ResidentOutcomeOut(
+        id=record.id,
+        resident_key=record.resident_key,
+        human_intelligence_score_id=record.human_intelligence_score_id,
+        facility_id=record.facility_id,
+        successful_adjustment=bool(record.successful_adjustment),
+        loneliness_event=bool(record.loneliness_event),
+        relocated_within_24m=bool(record.relocated_within_24m),
+        notes=record.notes,
+    )
+
+
+@app.get("/validation-feedback", response_model=ValidationFeedbackOut)
+async def get_validation_feedback(db: Session = Depends(get_db)):
+    outcomes_count = db.query(func.count(ResidentOutcome.id)).scalar() or 0
+    if outcomes_count == 0:
+        return ValidationFeedbackOut(
+            outcomes_count=0,
+            adjustment_success_rate=0.0,
+            loneliness_event_rate=0.0,
+            relocation_rate_24m=0.0,
+            average_scores_for_successful_adjustment={
+                "social_profile_score": 0.0,
+                "family_support_score": 0.0,
+                "cultural_match_score": 0.0,
+                "loneliness_risk_score": 0.0,
+                "transition_risk_score": 0.0,
+                "future_care_score": 0.0,
+            },
+            average_scores_for_unsuccessful_adjustment={
+                "social_profile_score": 0.0,
+                "family_support_score": 0.0,
+                "cultural_match_score": 0.0,
+                "loneliness_risk_score": 0.0,
+                "transition_risk_score": 0.0,
+                "future_care_score": 0.0,
+            },
+        )
+
+    success_count = db.query(func.sum(ResidentOutcome.successful_adjustment)).scalar() or 0
+    loneliness_count = db.query(func.sum(ResidentOutcome.loneliness_event)).scalar() or 0
+    relocation_count = db.query(func.sum(ResidentOutcome.relocated_within_24m)).scalar() or 0
+
+    return ValidationFeedbackOut(
+        outcomes_count=int(outcomes_count),
+        adjustment_success_rate=round((float(success_count) / float(outcomes_count)) * 100, 2),
+        loneliness_event_rate=round((float(loneliness_count) / float(outcomes_count)) * 100, 2),
+        relocation_rate_24m=round((float(relocation_count) / float(outcomes_count)) * 100, 2),
+        average_scores_for_successful_adjustment=_group_average_scores(db, 1),
+        average_scores_for_unsuccessful_adjustment=_group_average_scores(db, 0),
     )

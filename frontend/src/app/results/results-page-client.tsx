@@ -3,13 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { SearchFacility, fetchSearchFacilities } from "@/lib/api";
 
-const INITIAL_LOAD = 20;
-const PAGE_SIZE = 10;
+const TOP_RECOMMENDATION_COUNT = 3;
 
 function scoreBadgeStyle(score: number): string {
   if (score >= 90) return "bg-[#5f8768] text-white";
@@ -450,11 +449,10 @@ export function ResultsPageClient() {
   const searchParams = useSearchParams();
   const { state } = useQuestionnaire();
   const [facilities, setFacilities] = useState<SearchFacility[]>([]);
-  const [visibleCount, setVisibleCount] = useState(INITIAL_LOAD);
   const [isLoading, setIsLoading] = useState(true);
+  const [showMoreCommunities, setShowMoreCommunities] = useState(false);
   const [savedIds, setSavedIds] = useState<number[]>([]);
   const [compareIds, setCompareIds] = useState<number[]>([]);
-  const loaderRef = useRef<HTMLDivElement | null>(null);
 
   const selectedRelationship = searchParams.get("relationship") || state.relationship || "";
   const relationship = relationshipCopy(selectedRelationship);
@@ -490,7 +488,6 @@ export function ResultsPageClient() {
       const data = await fetchSearchFacilities();
       if (isMounted) {
         setFacilities(data);
-        setVisibleCount(INITIAL_LOAD);
         setIsLoading(false);
       }
     }
@@ -501,25 +498,23 @@ export function ResultsPageClient() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!loaderRef.current || isLoading) {
-      return;
-    }
+  const topRecommendations = useMemo(() => rankedFacilities.slice(0, TOP_RECOMMENDATION_COUNT), [rankedFacilities]);
+  const remainingRecommendations = useMemo(() => rankedFacilities.slice(TOP_RECOMMENDATION_COUNT), [rankedFacilities]);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleCount((current) => Math.min(current + PAGE_SIZE, facilities.length));
-        }
-      },
-      { rootMargin: "200px" },
-    );
+  const personalAdvisorSummary = useMemo(() => {
+    const profile = state.humanIntelligenceV2;
+    const relationshipNarrative = relationship === "You" || relationship === "You both" ? relationship : `your ${relationship.toLowerCase()}`;
+    const lonelinessRisk = profile.transitionRiskProfile.lonelinessRisk || "unknown";
+    const livingAlone = profile.socialProfile.livingAloneDuration || "unknown duration";
+    const social = profile.socialProfile.socialInteractionFrequency || "unknown social rhythm";
+    const language = profile.languageProfile.preferredSpokenLanguage || "English";
+    const religion = profile.culturalProfile.religionImportance || "not specified";
+    const hobbies = profile.socialProfile.hobbyParticipation.join(", ") || "not specified";
+    const fear = profile.transitionRiskProfile.biggestFear || "not specified";
+    const proximity = profile.distanceProfile.familyVisitExpectation || distance;
 
-    observer.observe(loaderRef.current);
-    return () => observer.disconnect();
-  }, [facilities.length, isLoading]);
-
-  const visibleFacilities = useMemo(() => rankedFacilities.slice(0, visibleCount), [rankedFacilities, visibleCount]);
+    return `${relationshipNarrative} profile shows ${age} age range, living alone for ${livingAlone}, with social rhythm ${social}. Preferred language is ${language}, religion importance is ${religion}, hobbies include ${hobbies}, and family proximity requirement is ${proximity}. Biggest transition fear is ${fear}. Loneliness risk appears ${lonelinessRisk}.`;
+  }, [state.humanIntelligenceV2, relationship, age, distance]);
 
   const removeFilter = (value: string) => {
     setFilters((current) => current.filter((item) => item !== value));
@@ -564,15 +559,66 @@ export function ResultsPageClient() {
           </div>
         </header>
 
-        {!isLoading && visibleFacilities.length === 0 ? (
+        {!isLoading && rankedFacilities.length === 0 ? (
           <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
             <p className="text-xl font-semibold">We couldn't find perfect matches, but we found nearby alternatives.</p>
           </section>
         ) : null}
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-2">
-          {visibleFacilities.map((facility, index) => (
-            <article key={`${facility.id}-${facility.imageUrl}`} className="overflow-hidden rounded-3xl border border-[#e8ddcc] bg-white shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
+        {!isLoading && rankedFacilities.length > 0 ? (
+          <section className="mt-6 space-y-6">
+            <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5f7f6b]">Expert Advisor Mode</p>
+              <h2 className="mt-2 text-2xl font-semibold text-[#2f2a24]">Personal explanation</h2>
+              <p className="mt-3 text-sm leading-7 text-[#554c41]">{personalAdvisorSummary}</p>
+            </article>
+
+            {topRecommendations.map((facility, index) => {
+              const explanation = buildPersonalizedExplanation(facility, {
+                relationship,
+                age,
+                care,
+                activity,
+                memory,
+                budget,
+                distance,
+                notes,
+              });
+
+              const renderRows = (rows: ExplanationListItem[]) => (
+                <div className="overflow-x-auto rounded-2xl border border-[#e7dbc6]">
+                  <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                    <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                      <tr>
+                        <th className="px-4 py-3">Dimension</th>
+                        <th className="px-4 py-3">Explanation</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#efe6d8] bg-white">
+                      {rows.map((row) => (
+                        <tr key={`${facility.id}-${row.title}`}>
+                          <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.title}</td>
+                          <td className="px-4 py-3">{row.detail}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+
+              return (
+                <div key={`${facility.id}-${facility.imageUrl}`} className="space-y-4">
+                  <article className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5f7f6b]">Recommendation #{index + 1} explanation</p>
+                    <p className="mt-3 text-sm text-[#5c5347]">Resident profile: {explanation.profileSummary}</p>
+                    <ul className="mt-3 space-y-2 text-sm text-[#5c5347]">
+                      {explanation.fitsYou.map((item) => (
+                        <li key={`${facility.id}-${item}`}>• {item}</li>
+                      ))}
+                    </ul>
+                  </article>
+
+                  <article className="overflow-hidden rounded-3xl border border-[#e8ddcc] bg-white shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
               <div className="relative h-64 w-full">
                 <Image src={facility.imageUrl} alt={facility.name} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
               </div>
@@ -599,56 +645,29 @@ export function ResultsPageClient() {
                   </div>
                 </div>
 
-                {(() => {
-                  const explanation = buildPersonalizedExplanation(facility, {
-                    relationship,
-                    age,
-                    care,
-                    activity,
-                    memory,
-                    budget,
-                    distance,
-                    notes,
-                  });
-
-                  return (
-                    <>
-                      <div className="mt-4 rounded-2xl border border-[#e8dcc7] bg-[#fbf8f1] p-4">
-                        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Why This Place Fits You</p>
-                        <p className="mt-2 text-sm text-[#5c5347]">Resident profile: {explanation.profileSummary}</p>
-                        <ul className="mt-3 space-y-2 text-sm text-[#5c5347]">
-                          {explanation.fitsYou.map((item) => (
-                            <li key={`${facility.id}-${item}`}>• {item}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="mt-4 overflow-hidden rounded-2xl border border-[#e7dbc6]">
-                        <div className="bg-[#f5efe4] px-4 py-3 text-sm font-semibold text-[#3f372e]">Matching dimensions</div>
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
-                            <thead className="bg-white/80 text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
-                              <tr>
-                                <th className="px-4 py-3">Dimension</th>
-                                <th className="px-4 py-3">Evidence</th>
-                                <th className="px-4 py-3">Score</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#efe6d8] bg-white">
-                              {explanation.matchingDimensions.map((row) => (
-                                <tr key={`${facility.id}-${row.label}`}>
-                                  <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.label}</td>
-                                  <td className="px-4 py-3">{row.evidence}</td>
-                                  <td className="px-4 py-3">{row.score}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
+                <div className="mt-4 overflow-hidden rounded-2xl border border-[#e7dbc6]">
+                  <div className="bg-[#f5efe4] px-4 py-3 text-sm font-semibold text-[#3f372e]">Matching dimensions</div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                      <thead className="bg-white/80 text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                        <tr>
+                          <th className="px-4 py-3">Dimension</th>
+                          <th className="px-4 py-3">Evidence</th>
+                          <th className="px-4 py-3">Score</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#efe6d8] bg-white">
+                        {explanation.matchingDimensions.map((row) => (
+                          <tr key={`${facility.id}-${row.label}`}>
+                            <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.label}</td>
+                            <td className="px-4 py-3">{row.evidence}</td>
+                            <td className="px-4 py-3">{row.score}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
                 <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
 
@@ -689,41 +708,7 @@ export function ResultsPageClient() {
                   </Link>
                 </div>
 
-                {(() => {
-                  const explanation = buildPersonalizedExplanation(facility, {
-                    relationship,
-                    age,
-                    care,
-                    activity,
-                    memory,
-                    budget,
-                    distance,
-                    notes,
-                  });
-
-                  const renderRows = (rows: ExplanationListItem[]) => (
-                    <div className="overflow-x-auto rounded-2xl border border-[#e7dbc6]">
-                      <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
-                        <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
-                          <tr>
-                            <th className="px-4 py-3">Dimension</th>
-                            <th className="px-4 py-3">Explanation</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#efe6d8] bg-white">
-                          {rows.map((row) => (
-                            <tr key={`${facility.id}-${row.title}`}>
-                              <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.title}</td>
-                              <td className="px-4 py-3">{row.detail}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  );
-
-                  return (
-                    <section className="mt-6 space-y-4 rounded-3xl border border-[#e8ddcc] bg-[#fffdfa] p-4 sm:p-5">
+                <section className="mt-6 space-y-4 rounded-3xl border border-[#e8ddcc] bg-[#fffdfa] p-4 sm:p-5">
                       <div>
                         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">What This Community Does Well For You</p>
                         <div className="mt-2">{renderRows(explanation.strengths)}</div>
@@ -781,16 +766,52 @@ export function ResultsPageClient() {
                         <p className="mt-3 text-sm leading-7 text-[#554c41]">{explanation.narrative}</p>
                       </div>
                     </section>
-                  );
-                })()}
               </div>
             </article>
-          ))}
-        </section>
+                </div>
+              );
+            })}
 
-        <div ref={loaderRef} className="py-10 text-center text-sm text-[#6d655b]">
-          {isLoading ? "Loading communities..." : visibleCount < facilities.length ? "Loading more results..." : "End of recommendations"}
-        </div>
+            {remainingRecommendations.length > 0 ? (
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => setShowMoreCommunities((current) => !current)}
+                  className="rounded-full border border-[#d9cfbf] bg-white px-5 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]"
+                >
+                  {showMoreCommunities ? "Hide additional communities" : "Show more communities"}
+                </button>
+
+                {showMoreCommunities ? (
+                  <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {remainingRecommendations.map((facility) => (
+                      <article key={`compact-${facility.id}`} className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]">
+                        <h3 className="text-lg font-semibold text-[#2f2a24]">{facility.name}</h3>
+                        <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
+                        <p className="mt-2 text-sm text-[#4f6f8f]">{facility.priceRange}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {facility.matchBadges.slice(0, 3).map((badge) => (
+                            <span key={`compact-${facility.id}-${badge}`} className="rounded-full bg-[#edf3ea] px-3 py-1 text-xs font-medium text-[#4c6f5b]">
+                              {badge}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-4 flex items-center justify-between">
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${scoreBadgeStyle(facility.optimeScore)}`}>Score {facility.optimeScore}</span>
+                          <Link href={`/facilities/${facility.id}`} className="text-sm font-semibold text-[#5f7f6b] hover:text-[#4f6f8f]">
+                            View
+                          </Link>
+                        </div>
+                      </article>
+                    ))}
+                  </section>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        <div className="py-10 text-center text-sm text-[#6d655b]">{isLoading ? "Loading communities..." : "End of recommendations"}</div>
       </section>
     </main>
   );

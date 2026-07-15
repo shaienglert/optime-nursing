@@ -1,12 +1,12 @@
 export interface Facility {
   id: number;
+  cms_id?: string;
   name: string;
   city?: string;
   state?: string;
   overall_rating?: number;
   staffing_rating?: number;
   beds?: number;
-  cms_id?: string;
   address?: string;
   zip_code?: string;
   phone?: string | null;
@@ -54,46 +54,40 @@ export type FacilityDetailsData = SearchFacility & {
   };
 };
 
-const firstWords = [
-  "Sunrise",
-  "Harbor",
-  "Cypress",
-  "Silver",
-  "Palm",
-  "Bayside",
-  "Legacy",
-  "Grandview",
-  "Willow",
-  "Ocean",
-];
+type BackendFacility = {
+  id: number;
+  cms_id?: string;
+  name: string;
+  city: string;
+  state: string;
+  address: string;
+  zip_code: string;
+  phone?: string | null;
+  overall_rating?: number | null;
+  staffing_rating?: number | null;
+  quality_rating?: number | null;
+  inspection_rating?: number | null;
+  beds?: number | null;
+  medical_quality_score?: number | null;
+  staffing_score?: number | null;
+  safety_score?: number | null;
+  overall_optime_score?: number | null;
+  confidence_level?: string | null;
+};
 
-const secondWords = [
-  "Gardens",
-  "Manor",
-  "Heights",
-  "Village",
-  "Haven",
-  "Springs",
-  "Commons",
-  "Residence",
-  "Pointe",
-  "Retreat",
-];
+type BackendFacilityDetails = BackendFacility & {
+  score_breakdown: {
+    medical_quality_score: number;
+    staffing_score: number;
+    safety_score: number;
+    overall_optime_score: number;
+    medical_components: Record<string, number>;
+    staffing_components: Record<string, number>;
+    safety_components: Record<string, number>;
+  };
+};
 
-const cities = [
-  "Miami",
-  "Boca Raton",
-  "Coral Gables",
-  "Fort Lauderdale",
-  "Aventura",
-  "Hollywood",
-  "Delray Beach",
-  "Weston",
-  "Pembroke Pines",
-  "Naples",
-];
-
-const gallerySets = [
+const GALLERY_SETS: string[][] = [
   [
     "https://images.unsplash.com/photo-1512915922686-57c11dde9b6b?auto=format&fit=crop&w=1400&q=80",
     "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80",
@@ -111,68 +105,34 @@ const gallerySets = [
   ],
 ];
 
-const explanationPool = [
-  "Excellent staffing and strong social activities. Great fit for active seniors requiring light assistance.",
-  "Reliable clinical coverage and calm daily routines. A strong option for memory support and family visibility.",
-  "Balanced care quality, social engagement, and value. Works well for seniors who want both support and independence.",
-];
-
-const badgesPool = [
-  ["Matches care needs", "Matches budget", "Strong social program", "Close to family", "Memory support available"],
-  ["Matches care needs", "Matches budget", "Medication support", "Close to family", "Hebrew speaking staff"],
-  ["Matches care needs", "Matches budget", "Active community", "Close to family", "Skilled nursing available"],
-];
-
-const careTypePool = [
-  ["Assisted Living", "Memory Care", "Skilled Nursing"],
-  ["Independent Living", "Assisted Living"],
-  ["Assisted Living", "Skilled Nursing"],
-];
-
-function buildVerificationFields(seed: number, name: string, city: string, website: string | null | undefined, phone: string | null | undefined, cmsId: string): {
-  verified_name: string;
-  license_verified: boolean;
-  cms_verified: boolean;
-  website_verified: boolean;
-  phone_verified: boolean;
-  verification_score: number;
-  matching_confidence: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN";
-} {
-  const pattern = seed % 12;
-
-  if (pattern === 7) {
-    return {
-      verified_name: `${city} Senior Community`,
-      license_verified: Boolean(cmsId),
-      cms_verified: Boolean(cmsId),
-      website_verified: Boolean(website),
-      phone_verified: Boolean(phone),
-      verification_score: 40,
-      matching_confidence: "LOW",
-    };
+function parseConfidence(value?: string | null): Facility["matching_confidence"] {
+  const normalized = (value || "").toUpperCase();
+  if (normalized === "HIGH" || normalized === "MEDIUM" || normalized === "LOW") {
+    return normalized;
   }
+  return "UNKNOWN";
+}
 
-  if (pattern === 4) {
-    return {
-      verified_name: name.replace("Senior Living", "Senior Lving"),
-      license_verified: Boolean(cmsId),
-      cms_verified: Boolean(cmsId),
-      website_verified: Boolean(website),
-      phone_verified: Boolean(phone),
-      verification_score: 70,
-      matching_confidence: "MEDIUM",
-    };
-  }
+function makePriceRange(facility: BackendFacility): string {
+  const base = facility.beds ? 3800 + Math.min(2200, facility.beds * 15) : 4200;
+  const high = base + 2400;
+  return `$${Math.round(base).toLocaleString()} - $${Math.round(high).toLocaleString()}/month`;
+}
 
-  return {
-    verified_name: name,
-    license_verified: Boolean(cmsId),
-    cms_verified: Boolean(cmsId),
-    website_verified: Boolean(website),
-    phone_verified: Boolean(phone),
-    verification_score: 100,
-    matching_confidence: "HIGH",
-  };
+function makeCareTypes(facility: BackendFacility): string[] {
+  const careTypes: string[] = ["Assisted Living"];
+  if ((facility.quality_rating ?? 0) >= 4) careTypes.push("Skilled Nursing");
+  if ((facility.inspection_rating ?? 0) >= 4) careTypes.push("Memory Care");
+  return careTypes;
+}
+
+function makeBadges(facility: BackendFacility): string[] {
+  const badges: string[] = ["Matches care needs"];
+  if ((facility.overall_rating ?? 0) >= 4) badges.push("Strong clinical quality");
+  if ((facility.staffing_rating ?? 0) >= 4) badges.push("Staffing stability");
+  if ((facility.quality_rating ?? 0) >= 4) badges.push("Medication support");
+  if ((facility.inspection_rating ?? 0) >= 4) badges.push("Safety indicators strong");
+  return badges;
 }
 
 function scoreLabel(score: number): string {
@@ -182,111 +142,196 @@ function scoreLabel(score: number): string {
   return "Consider Match";
 }
 
-function buildScoreBreakdown(seed: number): ScoreBreakdownItem[] {
-  const categories = [
-    "Medical Quality",
-    "Staffing",
-    "Activities",
-    "Independence Support",
-    "Value for Money",
-    "Food Quality",
-    "Living Environment",
-    "Memory Support",
-  ];
+function toFacility(facility: BackendFacility): Facility {
+  const verificationScore = Math.max(30, Math.min(100, Math.round((facility.overall_optime_score ?? 70))));
 
-  return categories.map((category, index) => {
-    const score = Math.max(68, Math.min(97, 78 + ((seed + index * 7) % 20)));
-    return {
-      category,
-      score,
-      explanation: `${category} assessment combines recent performance trends and consistency indicators.`,
-      dataSource:
-        category === "Medical Quality"
-          ? ["CMS Quality Rating", "Hospitalization rate", "Fall statistics", "Inspection reports"]
-          : ["CMS data", "Facility profile", "Family feedback"],
-    };
-  });
+  return {
+    id: facility.id,
+    cms_id: facility.cms_id,
+    name: facility.name,
+    city: facility.city,
+    state: facility.state,
+    overall_rating: facility.overall_rating ?? undefined,
+    staffing_rating: facility.staffing_rating ?? undefined,
+    beds: facility.beds ?? undefined,
+    address: facility.address,
+    zip_code: facility.zip_code,
+    phone: facility.phone ?? null,
+    quality_rating: facility.quality_rating ?? undefined,
+    inspection_rating: facility.inspection_rating ?? undefined,
+    latitude: null,
+    longitude: null,
+    verified_name: facility.name,
+    license_verified: Boolean(facility.cms_id),
+    cms_verified: Boolean(facility.cms_id),
+    website_verified: false,
+    phone_verified: Boolean(facility.phone),
+    verification_score: verificationScore,
+    matching_confidence: parseConfidence(facility.confidence_level),
+  };
 }
 
-function buildMockFacilities(): FacilityDetailsData[] {
-  const facilities: FacilityDetailsData[] = [];
+function toSearchFacility(facility: BackendFacility): SearchFacility {
+  const base = toFacility(facility);
+  const gallery = GALLERY_SETS[facility.id % GALLERY_SETS.length];
+  const optimeScore = Math.round(facility.overall_optime_score ?? 70);
 
-  for (let i = 1; i <= 30; i += 1) {
-    const variant = i % 3;
-    const city = cities[i % cities.length];
-    const score = 68 + ((i * 9) % 31);
-    const name = `${firstWords[i % firstWords.length]} ${secondWords[i % secondWords.length]} Senior Living`;
-    const website = i % 4 === 0 ? null : `https://www.optime-nursing.example/facilities/fl-${100000 + i}`;
-    const phone = `305-555-${String(1000 + i).slice(-4)}`;
-    const cmsId = `FL-${100000 + i}`;
-    const verification = buildVerificationFields(i, name, city, website, phone, cmsId);
-
-    facilities.push({
-      id: i,
-      cms_id: cmsId,
-      name,
-      city,
-      state: "FL",
-      address: `${300 + i} Wellness Avenue`,
-      zip_code: `${33000 + i}`,
-      phone,
-      beds: 90 + ((i * 7) % 70),
-      overall_rating: Math.max(3, Math.min(5, Math.round(score / 20))),
-      staffing_rating: Math.max(3, Math.min(5, Math.round((score - 5) / 20))),
-      quality_rating: Math.max(3, Math.min(5, Math.round((score + 3) / 20))),
-      inspection_rating: Math.max(3, Math.min(5, Math.round((score + 1) / 20))),
-      latitude: 25.7 + i * 0.01,
-      longitude: -80.2 - i * 0.01,
-      imageUrl: gallerySets[variant][0],
-      gallery: gallerySets[variant],
-      website: website || `https://www.optime-nursing.example/facilities/fl-${100000 + i}`,
-      optimeScore: score,
-      matchLabel: scoreLabel(score),
-      shortExplanation: explanationPool[variant],
-      priceRange: `$${(4200 + i * 90).toLocaleString()} - $${(6800 + i * 115).toLocaleString()}/month`,
-      careTypes: careTypePool[variant],
-      matchBadges: badgesPool[variant],
-      ...verification,
-      scoreBreakdown: buildScoreBreakdown(i),
-      mapPoints: {
-        facility: `${name}, ${city}`,
-        family: "Family location - 22 minutes away",
-        hospital: "Nearest hospital - 8 minutes away",
-        synagogue: "Nearby synagogue - 12 minutes away",
-        transit: "Public transportation - 6 minutes away",
+  return {
+    ...base,
+    imageUrl: gallery[0],
+    optimeScore,
+    matchLabel: scoreLabel(optimeScore),
+    shortExplanation: "Recommendation derived from production CMS and inspection-based scoring.",
+    priceRange: makePriceRange(facility),
+    careTypes: makeCareTypes(facility),
+    matchBadges: makeBadges(facility),
+    scoreBreakdown: [
+      {
+        category: "Medical Quality",
+        score: Math.round(facility.medical_quality_score ?? 0),
+        explanation: "Derived from CMS quality and event-rate metrics.",
+        dataSource: ["CMS Quality", "Inspections"],
       },
-    });
-  }
-
-  return facilities;
+      {
+        category: "Staffing",
+        score: Math.round(facility.staffing_score ?? 0),
+        explanation: "Derived from staffing hours and staffing quality metrics.",
+        dataSource: ["CMS Staffing"],
+      },
+      {
+        category: "Safety",
+        score: Math.round(facility.safety_score ?? 0),
+        explanation: "Derived from deficiencies, complaints, and inspection signals.",
+        dataSource: ["CMS Inspections"],
+      },
+    ],
+  };
 }
-
-const MOCK_FACILITIES = buildMockFacilities();
 
 export function getApiBaseUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 }
 
+async function fetchJson<T>(path: string): Promise<T> {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`API request failed (${response.status})`);
+  }
+  return response.json() as Promise<T>;
+}
+
+async function postJson<TReq, TRes>(path: string, payload: TReq): Promise<TRes> {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`API request failed (${response.status})`);
+  }
+  return response.json() as Promise<TRes>;
+}
+
 export async function fetchFacilities(): Promise<Facility[]> {
-  return MOCK_FACILITIES;
+  const facilities = await fetchJson<BackendFacility[]>("/facilities");
+  return facilities.map(toFacility);
 }
 
 export async function fetchSearchFacilities(): Promise<SearchFacility[]> {
-  return MOCK_FACILITIES;
+  try {
+    const facilities = await fetchJson<BackendFacility[]>("/facilities");
+    return facilities.map(toSearchFacility);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchFacilityById(id: string): Promise<Facility> {
-  const facility = MOCK_FACILITIES.find((item) => item.id === Number(id));
-  if (!facility) {
-    throw new Error("Failed to load facility (404)");
-  }
-  return facility;
+  const facility = await fetchJson<BackendFacilityDetails>(`/facilities/${id}`);
+  return toFacility(facility);
 }
 
 export async function fetchFacilityDetails(id: string): Promise<FacilityDetailsData> {
-  const facility = MOCK_FACILITIES.find((item) => item.id === Number(id));
-  if (!facility) {
-    throw new Error("Failed to load facility details (404)");
-  }
-  return facility;
+  const facility = await fetchJson<BackendFacilityDetails>(`/facilities/${id}`);
+  const searchFacility = toSearchFacility(facility);
+  const gallery = GALLERY_SETS[facility.id % GALLERY_SETS.length];
+
+  return {
+    ...searchFacility,
+    website: "",
+    gallery,
+    scoreBreakdown: [
+      {
+        category: "Medical Quality",
+        score: Math.round(facility.score_breakdown.medical_quality_score),
+        explanation: "CMS quality-aligned output from production ingestion.",
+        dataSource: ["CMS Quality", "Inspections"],
+      },
+      {
+        category: "Staffing",
+        score: Math.round(facility.score_breakdown.staffing_score),
+        explanation: "Staffing score from production staffing ingestion.",
+        dataSource: ["CMS Staffing"],
+      },
+      {
+        category: "Safety",
+        score: Math.round(facility.score_breakdown.safety_score),
+        explanation: "Safety score from deficiencies and complaint patterns.",
+        dataSource: ["CMS Inspections"],
+      },
+    ],
+    mapPoints: {
+      facility: `${facility.name}, ${facility.city}`,
+      family: "Family location",
+      hospital: "Nearest hospital",
+      synagogue: "Nearby synagogue",
+      transit: "Public transportation",
+    },
+  };
+}
+
+export type HumanIntelligenceScorePayload = {
+  resident_key: string;
+  relationship?: string;
+  age_group?: string;
+  social_profile_score: number;
+  family_support_score: number;
+  cultural_match_score: number;
+  loneliness_risk_score: number;
+  transition_risk_score: number;
+  future_care_score: number;
+  metadata_json?: string;
+};
+
+export type HumanIntelligenceScoreResponse = HumanIntelligenceScorePayload & { id: number };
+
+export async function persistHumanIntelligenceScores(payload: HumanIntelligenceScorePayload): Promise<HumanIntelligenceScoreResponse> {
+  return postJson<HumanIntelligenceScorePayload, HumanIntelligenceScoreResponse>("/human-intelligence", payload);
+}
+
+export type ResidentOutcomePayload = {
+  resident_key: string;
+  human_intelligence_score_id?: number;
+  facility_id?: number;
+  successful_adjustment: boolean;
+  loneliness_event: boolean;
+  relocated_within_24m: boolean;
+  notes?: string;
+};
+
+export async function persistResidentOutcome(payload: ResidentOutcomePayload): Promise<{ id: number }> {
+  return postJson<ResidentOutcomePayload, { id: number }>("/resident-outcomes", payload);
+}
+
+export async function fetchValidationFeedback(): Promise<{
+  outcomes_count: number;
+  adjustment_success_rate: number;
+  loneliness_event_rate: number;
+  relocation_rate_24m: number;
+}> {
+  return fetchJson("/validation-feedback");
 }
