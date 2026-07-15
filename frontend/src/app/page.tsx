@@ -438,6 +438,187 @@ function scoreFromFrequency(value: string): number {
   }
 }
 
+function clampScore(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function scoreFromReligionImportance(value: string): number {
+  switch (value) {
+    case "Very important":
+      return 95;
+    case "Important":
+      return 82;
+    case "Somewhat important":
+      return 64;
+    case "Not important":
+      return 40;
+    default:
+      return 52;
+  }
+}
+
+type CulturalSignalsInput = {
+  widowStatus: string;
+  lossTiming: string;
+  livingAloneDuration: string;
+  preferredSpokenLanguage: string;
+  languagesUnderstood: string[];
+  familyLanguages: string[];
+  grandchildrenImportance: string;
+  religionImportance: string;
+  religiousSupportNeeds: string[];
+  preferredSocialIntensity: string;
+  introvertExtrovert: string;
+  biggestFear: string;
+  communitySizePreference: string;
+};
+
+function buildAdaptiveSignals(input: CulturalSignalsInput): Array<{
+  questionKey: string;
+  answer: string;
+  signalType: string;
+  weights: Record<string, number>;
+  impactExplanation: string;
+  infoGain: number;
+}> {
+  const signals: Array<{
+    questionKey: string;
+    answer: string;
+    signalType: string;
+    weights: Record<string, number>;
+    impactExplanation: string;
+    infoGain: number;
+  }> = [];
+
+  if (input.widowStatus === "Yes" && ["Within 6 months", "6-12 months"].includes(input.lossTiming)) {
+    signals.push({
+      questionKey: "widow_recent_loss",
+      answer: `${input.widowStatus}:${input.lossTiming}`,
+      signalType: "transition-risk",
+      weights: {
+        loneliness_risk: 30,
+        social_match_weight: 20,
+        family_proximity_weight: 15,
+      },
+      impactExplanation: "Recent partner loss increases emotional-transition support needs and prioritizes stronger social and family proximity matches.",
+      infoGain: 28,
+    });
+  }
+
+  if (["3-5 years", "5+ years"].includes(input.livingAloneDuration)) {
+    signals.push({
+      questionKey: "living_alone_long_term",
+      answer: input.livingAloneDuration,
+      signalType: "transition-risk",
+      weights: {
+        transition_risk: 15,
+        community_size_preference_smaller: 20,
+      },
+      impactExplanation: "Long-term solo living suggests prioritizing easier transitions and smaller, relationship-oriented communities.",
+      infoGain: 22,
+    });
+  }
+
+  if (input.preferredSpokenLanguage === "Hebrew" || input.languagesUnderstood.includes("Hebrew") || input.familyLanguages.includes("Hebrew")) {
+    signals.push({
+      questionKey: "hebrew_required",
+      answer: "Hebrew",
+      signalType: "language-fit",
+      weights: {
+        language_match_weight: 20,
+      },
+      impactExplanation: "Hebrew communication needs increase priority for communities with Hebrew-speaking residents and staff support.",
+      infoGain: 24,
+    });
+  }
+
+  if (["High", "Very high"].includes(input.grandchildrenImportance)) {
+    signals.push({
+      questionKey: "grandchildren_high_involvement",
+      answer: input.grandchildrenImportance,
+      signalType: "family-engagement",
+      weights: {
+        family_distance_weight: 20,
+        intergenerational_program_weight: 15,
+      },
+      impactExplanation: "Frequent grandchild involvement increases value of family-access geography and intergenerational programming.",
+      infoGain: 20,
+    });
+  }
+
+  if (["Important", "Very important"].includes(input.religionImportance)) {
+    signals.push({
+      questionKey: "religion_important",
+      answer: input.religionImportance,
+      signalType: "religious-fit",
+      weights: {
+        synagogue_weight: 15,
+        kosher_weight: input.religiousSupportNeeds.includes("Dietary accommodations") ? 15 : 0,
+        jewish_community_weight: 20,
+      },
+      impactExplanation: "Religious continuity is a strong comfort factor, increasing priority for faith services, faith community access, and dietary accommodations.",
+      infoGain: 26,
+    });
+  }
+
+  if (input.preferredSocialIntensity === "Extrovert" || input.introvertExtrovert === "Extrovert") {
+    signals.push({
+      questionKey: "highly_social_personality",
+      answer: "Extrovert",
+      signalType: "social-fit",
+      weights: {
+        activity_score_weight: 20,
+        resident_engagement_weight: 15,
+      },
+      impactExplanation: "A highly social profile favors communities with robust daily activities and resident engagement culture.",
+      infoGain: 18,
+    });
+  }
+
+  if (input.preferredSocialIntensity === "Introvert" || input.introvertExtrovert === "Introvert") {
+    signals.push({
+      questionKey: "introverted_personality",
+      answer: "Introvert",
+      signalType: "community-style",
+      weights: {
+        small_community_weight: 20,
+        privacy_weight: 15,
+      },
+      impactExplanation: "An introverted profile increases fit for quieter, smaller communities with privacy support.",
+      infoGain: 16,
+    });
+  }
+
+  if (input.biggestFear.toLowerCase().includes("independence")) {
+    signals.push({
+      questionKey: "fear_losing_independence",
+      answer: input.biggestFear,
+      signalType: "independence-fit",
+      weights: {
+        independence_support_weight: 20,
+        autonomy_score_weight: 15,
+      },
+      impactExplanation: "Fear of losing independence increases weighting for autonomy-supportive programming and resident-directed routines.",
+      infoGain: 21,
+    });
+  }
+
+  if (input.communitySizePreference === "Small community") {
+    signals.push({
+      questionKey: "small_community_preference",
+      answer: input.communitySizePreference,
+      signalType: "community-style",
+      weights: {
+        small_community_weight: 18,
+      },
+      impactExplanation: "A small-community preference shifts matching toward lower-scale, relationship-dense settings.",
+      infoGain: 14,
+    });
+  }
+
+  return signals;
+}
+
 export default function Home() {
   const router = useRouter();
   const { setState } = useQuestionnaire();
@@ -477,6 +658,15 @@ export default function Home() {
   const [medicalDiscussionLanguage, setMedicalDiscussionLanguage] = useState("");
   const [socialInteractionLanguage, setSocialInteractionLanguage] = useState("");
   const [languageNeedScope, setLanguageNeedScope] = useState("");
+  const [languagesUnderstood, setLanguagesUnderstood] = useState<string[]>([]);
+  const [familyLanguages, setFamilyLanguages] = useState<string[]>([]);
+  const [faithTraditions, setFaithTraditions] = useState<string[]>([]);
+  const [religiousSupportNeeds, setReligiousSupportNeeds] = useState<string[]>([]);
+  const [whatFeelsLikeHome, setWhatFeelsLikeHome] = useState<string[]>([]);
+  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
+  const [familyInvolvementExpectation, setFamilyInvolvementExpectation] = useState("");
+  const [familyDecisionRole, setFamilyDecisionRole] = useState("");
+  const [preferredEnvironment, setPreferredEnvironment] = useState<string[]>([]);
   const [introvertExtrovert, setIntrovertExtrovert] = useState("");
   const [communitySizePreference, setCommunitySizePreference] = useState("");
   const [privacyImportance, setPrivacyImportance] = useState("");
@@ -614,11 +804,14 @@ export default function Home() {
         },
         culturalProfile: {
           religionImportance,
+          faithTraditions,
+          religiousSupportNeeds,
           kosherRequirements,
           synagogueChurchAccess,
           holidayCelebrations,
           culturalIdentity,
           israeliJewishCommunityPreference,
+          whatFeelsLikeHome,
         },
         languageProfile: {
           preferredSpokenLanguage,
@@ -626,6 +819,18 @@ export default function Home() {
           medicalDiscussionLanguage,
           socialInteractionLanguage,
           languageNeedScope,
+          languagesUnderstood,
+          familyLanguages,
+        },
+        foodProfile: {
+          dietaryPreferences,
+        },
+        familyCultureProfile: {
+          involvementExpectation: familyInvolvementExpectation,
+          decisionRole: familyDecisionRole,
+        },
+        communityPreferenceProfile: {
+          preferredEnvironment,
         },
         personalityProfile: {
           introvertExtrovert,
