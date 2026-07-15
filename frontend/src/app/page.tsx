@@ -1052,6 +1052,21 @@ export default function Home() {
 
     const residentKey = `${relationship || "resident"}-${ageGroup || "unknown"}-${Date.now()}`;
 
+    void Promise.allSettled(
+      adaptiveSignals.map((signal) =>
+        persistAdaptiveQuestionSignal({
+          resident_key: residentKey,
+          question_key: signal.questionKey,
+          answer: signal.answer,
+          signal_type: signal.signalType,
+          signal_json: JSON.stringify(signal),
+          weights_json: JSON.stringify(signal.weights),
+          impact_explanation: signal.impactExplanation,
+          info_gain_score: signal.infoGain,
+        }),
+      ),
+    );
+
     void persistHumanIntelligenceScores({
       resident_key: residentKey,
       relationship,
@@ -1062,12 +1077,39 @@ export default function Home() {
       loneliness_risk_score: lonelinessRiskScore,
       transition_risk_score: transitionRiskScore,
       future_care_score: futureCareScore,
+      language_match_score: languageMatchScore,
+      religious_fit_score: religiousFitScore,
+      language_fit_score: languageMatchScore,
+      cultural_fit_score: culturalFitScore,
+      food_fit_score: foodFitScore,
+      family_engagement_score: familyEngagementScore,
+      community_style_score: communityStyleScore,
+      social_fit_score: socialProfileScore,
+      family_fit_score: familyEngagementScore,
+      independence_fit_score: clampScore(
+        scoreFromImportance(drivingImportance) * 0.45 +
+        scoreFromImportance(abilityToLeaveIndependently === "Yes" ? "Very high" : abilityToLeaveIndependently === "Sometimes" ? "Medium" : "Low") * 0.55,
+      ),
+      transition_success_probability: clampScore(100 - transitionRiskScore * 0.58 + socialProfileScore * 0.24 + familyEngagementScore * 0.18),
       metadata_json: JSON.stringify({
         livingAloneDuration,
         visitFrequencyExpectation,
         religionImportance,
         preferredSpokenLanguage,
         memoryStatus,
+        nativeLanguage,
+        socialInteractionLanguage,
+        medicalDiscussionLanguage,
+        languagesUnderstood,
+        familyLanguages,
+        faithTraditions,
+        religiousSupportNeeds,
+        whatFeelsLikeHome,
+        dietaryPreferences,
+        familyInvolvementExpectation,
+        familyDecisionRole,
+        preferredEnvironment,
+        adaptiveSignals,
       }),
     }).catch(() => {
       // non-blocking by design; recommendation flow should continue even if backend persistence is unavailable
