@@ -30,8 +30,13 @@ export type HumanIntelligenceV2 = {
     involvedFamilyMembers: string;
     visitFrequencyExpectation: string;
     grandchildrenPresence: string;
+    grandchildrenImportance: string;
     familyDecisionDynamics: string;
     emergencySupportNetwork: string;
+    widowStatus: string;
+    lossTiming: string;
+    socialActivityChangeSinceLoss: string;
+    socialInteractionNeed: string;
   };
   culturalProfile: {
     religionImportance: string;
@@ -46,6 +51,7 @@ export type HumanIntelligenceV2 = {
     nativeLanguage: string;
     medicalDiscussionLanguage: string;
     socialInteractionLanguage: string;
+    languageNeedScope: string;
   };
   personalityProfile: {
     introvertExtrovert: string;
@@ -67,11 +73,14 @@ export type HumanIntelligenceV2 = {
     previousMoves: string;
     bereavementStatus: string;
     lonelinessRisk: string;
+    wanderingConcerns: string;
   };
   futureCareProfile: {
     agingInPlaceImportance: string;
     avoidFutureMovesPreference: string;
     continuumOfCarePreference: string;
+    secureMemoryNeighborhoodNeed: string;
+    familiarLanguageRequirement: string;
   };
   distanceProfile: {
     referenceLocations: {
@@ -137,8 +146,13 @@ const DEFAULT_STATE: QuestionnaireState = {
       involvedFamilyMembers: "",
       visitFrequencyExpectation: "",
       grandchildrenPresence: "",
+      grandchildrenImportance: "",
       familyDecisionDynamics: "",
       emergencySupportNetwork: "",
+      widowStatus: "",
+      lossTiming: "",
+      socialActivityChangeSinceLoss: "",
+      socialInteractionNeed: "",
     },
     culturalProfile: {
       religionImportance: "",
@@ -153,6 +167,7 @@ const DEFAULT_STATE: QuestionnaireState = {
       nativeLanguage: "",
       medicalDiscussionLanguage: "",
       socialInteractionLanguage: "",
+      languageNeedScope: "",
     },
     personalityProfile: {
       introvertExtrovert: "",
@@ -174,11 +189,14 @@ const DEFAULT_STATE: QuestionnaireState = {
       previousMoves: "",
       bereavementStatus: "",
       lonelinessRisk: "",
+      wanderingConcerns: "",
     },
     futureCareProfile: {
       agingInPlaceImportance: "",
       avoidFutureMovesPreference: "",
       continuumOfCarePreference: "",
+      secureMemoryNeighborhoodNeed: "",
+      familiarLanguageRequirement: "",
     },
     distanceProfile: {
       referenceLocations: {

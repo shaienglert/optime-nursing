@@ -49,6 +49,12 @@ const familyInvolvementOptions = ["1", "2", "3", "4", "5+"];
 
 const visitExpectationOptions = ["Daily", "Several times weekly", "Weekly", "Biweekly", "Monthly"];
 
+const widowStatusOptions = ["Yes", "No", "Not sure"];
+
+const lossTimingOptions = ["Within 6 months", "6-12 months", "1-3 years", "Longer ago", "Not sure"];
+
+const socialChangeOptions = ["Much less social", "Somewhat less social", "About the same", "More social", "Not sure"];
+
 const decisionDynamicsOptions = ["Single decision maker", "Shared with spouse", "Shared among siblings", "Consensus", "Uncertain"];
 
 const supportNetworkOptions = ["Strong", "Moderate", "Limited", "Emergency only"];
@@ -58,6 +64,8 @@ const religionImportanceOptions = ["Not important", "Somewhat important", "Impor
 const yesNoOptions = ["Yes", "No", "Sometimes"];
 
 const languageOptions = ["English", "Hebrew", "Spanish", "Russian", "French", "Portuguese", "Arabic", "Other"];
+
+const languageNeedScopeOptions = ["Social life", "Medical care", "Both", "Just daily comfort"];
 
 const personalityOptions = ["Introvert", "Balanced", "Extrovert"];
 
@@ -74,6 +82,10 @@ const attitudeOptions = ["Positive", "Cautious", "Anxious", "Reluctant", "Unsure
 const bereavementOptions = ["No", "Yes, within 1 year", "Yes, within 3 years", "Yes, longer ago"];
 
 const lonelinessOptions = ["Low", "Moderate", "High", "Very high"];
+
+const memorySafetyOptions = ["Yes", "No", "Maybe"];
+
+const familiarLanguageRequirementOptions = ["Yes", "No", "Maybe"];
 
 const carePreferenceOptions = ["Not important", "Somewhat important", "Important", "Very important"];
 
@@ -277,6 +289,25 @@ function relationshipCopy(relationship: string): string {
   return relationship || "your loved one";
 }
 
+function importanceRank(value: string): number {
+  switch (value) {
+    case "Not important":
+      return 0;
+    case "Low":
+    case "Somewhat important":
+      return 1;
+    case "Medium":
+    case "Important":
+      return 2;
+    case "High":
+    case "Very important":
+    case "Very high":
+      return 3;
+    default:
+      return -1;
+  }
+}
+
 function ctaCopy(relationship: string): string {
   if (relationship === "Myself") return "Find the right home for me";
   if (relationship === "Couple") return "Find the right home for us";
@@ -304,8 +335,13 @@ export default function Home() {
   const [involvedFamilyMembers, setInvolvedFamilyMembers] = useState("");
   const [visitFrequencyExpectation, setVisitFrequencyExpectation] = useState("");
   const [grandchildrenPresence, setGrandchildrenPresence] = useState("");
+  const [grandchildrenImportance, setGrandchildrenImportance] = useState("");
   const [familyDecisionDynamics, setFamilyDecisionDynamics] = useState("");
   const [emergencySupportNetwork, setEmergencySupportNetwork] = useState("");
+  const [widowStatus, setWidowStatus] = useState("");
+  const [lossTiming, setLossTiming] = useState("");
+  const [socialActivityChangeSinceLoss, setSocialActivityChangeSinceLoss] = useState("");
+  const [socialInteractionNeed, setSocialInteractionNeed] = useState("");
   const [religionImportance, setReligionImportance] = useState("");
   const [kosherRequirements, setKosherRequirements] = useState("");
   const [synagogueChurchAccess, setSynagogueChurchAccess] = useState("");
@@ -316,6 +352,7 @@ export default function Home() {
   const [nativeLanguage, setNativeLanguage] = useState("");
   const [medicalDiscussionLanguage, setMedicalDiscussionLanguage] = useState("");
   const [socialInteractionLanguage, setSocialInteractionLanguage] = useState("");
+  const [languageNeedScope, setLanguageNeedScope] = useState("");
   const [introvertExtrovert, setIntrovertExtrovert] = useState("");
   const [communitySizePreference, setCommunitySizePreference] = useState("");
   const [privacyImportance, setPrivacyImportance] = useState("");
@@ -331,9 +368,12 @@ export default function Home() {
   const [previousMoves, setPreviousMoves] = useState("");
   const [bereavementStatus, setBereavementStatus] = useState("");
   const [lonelinessRisk, setLonelinessRisk] = useState("");
+  const [wanderingConcerns, setWanderingConcerns] = useState("");
   const [agingInPlaceImportance, setAgingInPlaceImportance] = useState("");
   const [avoidFutureMovesPreference, setAvoidFutureMovesPreference] = useState("");
   const [continuumOfCarePreference, setContinuumOfCarePreference] = useState("");
+  const [secureMemoryNeighborhoodNeed, setSecureMemoryNeighborhoodNeed] = useState("");
+  const [familiarLanguageRequirement, setFamiliarLanguageRequirement] = useState("");
   const [parentCurrentHome, setParentCurrentHome] = useState("");
   const [primaryCaregiverHome, setPrimaryCaregiverHome] = useState("");
   const [secondaryFamilyHomes, setSecondaryFamilyHomes] = useState("");
@@ -354,6 +394,13 @@ export default function Home() {
   const relationshipLabel = relationshipCopy(relationship);
 
   const ctaText = useMemo(() => ctaCopy(relationship), [relationship]);
+  const isFamilyStoryRelationship = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Couple"].includes(relationship);
+  const isMotherOrGrandmother = ["Mom", "Grandma"].includes(relationship);
+  const shouldAskReligionFollowUps = importanceRank(religionImportance) > importanceRank("Medium");
+  const shouldAskGrandchildrenFollowUps = grandchildrenImportance === "Very important" || grandchildrenImportance === "High" || grandchildrenVisitsImportance === "Very important" || grandchildrenVisitsImportance === "High";
+  const shouldAskLanguageFollowUps = preferredSpokenLanguage && preferredSpokenLanguage !== "English";
+  const shouldAskMemoryFollowUps = memoryStatus !== "No" && memoryStatus !== "Not sure";
+  const shouldAskWidowFollowUps = widowStatus === "Yes";
 
   const handleFindHome = () => {
     const distanceIntelligence = buildDistanceIntelligence({
@@ -418,8 +465,13 @@ export default function Home() {
           involvedFamilyMembers,
           visitFrequencyExpectation,
           grandchildrenPresence,
+          grandchildrenImportance,
           familyDecisionDynamics,
           emergencySupportNetwork,
+          widowStatus,
+          lossTiming,
+          socialActivityChangeSinceLoss,
+          socialInteractionNeed,
         },
         culturalProfile: {
           religionImportance,
@@ -434,6 +486,7 @@ export default function Home() {
           nativeLanguage,
           medicalDiscussionLanguage,
           socialInteractionLanguage,
+          languageNeedScope,
         },
         personalityProfile: {
           introvertExtrovert,
@@ -455,11 +508,14 @@ export default function Home() {
           previousMoves,
           bereavementStatus,
           lonelinessRisk,
+          wanderingConcerns,
         },
         futureCareProfile: {
           agingInPlaceImportance,
           avoidFutureMovesPreference,
           continuumOfCarePreference,
+          secureMemoryNeighborhoodNeed,
+          familiarLanguageRequirement,
         },
         distanceProfile: {
           referenceLocations: {
@@ -670,6 +726,235 @@ export default function Home() {
                 <p className="mt-3 text-base font-semibold text-[#5b7d9f]">${budget.toLocaleString()}</p>
               </div>
             </article>
+
+            {relationship ? (
+              <article className="rounded-2xl border border-[#dcd1bf] bg-[#fdfaf4] p-5 shadow-[0_18px_36px_-28px_rgba(106,88,60,0.28)]">
+                <h3 className="text-lg font-semibold text-[#2f2a24]">7. Follow-up questions based on what matters most</h3>
+                <p className="mt-1 text-sm text-[#6c6358]">These appear only when the previous answers suggest they matter for adjustment and long-term fit.</p>
+
+                {isFamilyStoryRelationship ? (
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">How long has {isMotherOrGrandmother ? "she" : relationshipLabel.toLowerCase()} lived alone?</p>
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        {livingAloneOptions.map((option) => (
+                          <OptionChip key={option} label={option} isActive={livingAloneDuration === option} onClick={() => setLivingAloneDuration(option)} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">How often does family visit?</p>
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        {visitExpectationOptions.map((option) => (
+                          <OptionChip key={option} label={option} isActive={visitFrequencyExpectation === option} onClick={() => setVisitFrequencyExpectation(option)} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">Does she miss social interaction?</p>
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        {socialChangeOptions.map((option) => (
+                          <OptionChip key={option} label={option} isActive={socialInteractionNeed === option} onClick={() => setSocialInteractionNeed(option)} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">Are grandchildren important?</p>
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        {importanceOptions.map((option) => (
+                          <OptionChip key={option} label={option} isActive={grandchildrenImportance === option} onClick={() => setGrandchildrenImportance(option)} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">Does religion play a role?</p>
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        {religionImportanceOptions.map((option) => (
+                          <OptionChip key={option} label={option} isActive={religionImportance === option} onClick={() => setReligionImportance(option)} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">How much do family and decision-making dynamics matter?</p>
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        {decisionDynamicsOptions.map((option) => (
+                          <OptionChip key={option} label={option} isActive={familyDecisionDynamics === option} onClick={() => setFamilyDecisionDynamics(option)} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {isMotherOrGrandmother || relationship === "Spouse" ? (
+                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Widowhood and transition</h4>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Has there been a loss of a spouse?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {widowStatusOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={widowStatus === option} onClick={() => setWidowStatus(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">How recent was the loss?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {lossTimingOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={lossTiming === option} onClick={() => setLossTiming(option)} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {shouldAskWidowFollowUps ? (
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <p className="text-sm font-medium text-[#5e5346]">Has social activity changed since then?</p>
+                          <div className="mt-3 flex flex-wrap gap-2.5">
+                            {socialChangeOptions.map((option) => (
+                              <OptionChip key={option} label={option} isActive={socialActivityChangeSinceLoss === option} onClick={() => setSocialActivityChangeSinceLoss(option)} />
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-[#5e5346]">Is loneliness a concern?</p>
+                          <div className="mt-3 flex flex-wrap gap-2.5">
+                            {lonelinessOptions.map((option) => (
+                              <OptionChip key={option} label={option} isActive={lonelinessRisk === option} onClick={() => setLonelinessRisk(option)} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {shouldAskReligionFollowUps ? (
+                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Religion and Jewish life</h4>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Kosher?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {yesNoOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={kosherRequirements === option} onClick={() => setKosherRequirements(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Synagogue access?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {yesNoOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={synagogueChurchAccess === option} onClick={() => setSynagogueChurchAccess(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Religious services?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {importanceOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={holidayCelebrations === option} onClick={() => setHolidayCelebrations(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Jewish community?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {yesNoOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={israeliJewishCommunityPreference === option} onClick={() => setIsraeliJewishCommunityPreference(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Holiday celebrations?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {importanceOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={culturalIdentity === option} onClick={() => setCulturalIdentity(option)} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {shouldAskGrandchildrenFollowUps ? (
+                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Grandchildren and intergenerational life</h4>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Desired visit frequency</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {visitExpectationOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={grandchildrenPresence === option} onClick={() => setGrandchildrenPresence(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Importance of intergenerational programs</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {importanceOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={grandchildrenVisitsImportance === option} onClick={() => setGrandchildrenVisitsImportance(option)} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {shouldAskLanguageFollowUps ? (
+                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Language support</h4>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Is language required for social life or medical care only?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {languageNeedScopeOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={languageNeedScope === option} onClick={() => setLanguageNeedScope(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Preferred social interaction language</p>
+                        <input value={socialInteractionLanguage} onChange={(event) => setSocialInteractionLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, Spanish..." />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {shouldAskMemoryFollowUps ? (
+                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Memory and safety</h4>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Wandering concerns?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {memorySafetyOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={wanderingConcerns === option} onClick={() => setWanderingConcerns(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Need a secure memory neighborhood?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {memorySafetyOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={secureMemoryNeighborhoodNeed === option} onClick={() => setSecureMemoryNeighborhoodNeed(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Familiar language requirement?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {familiarLanguageRequirementOptions.map((option) => (
+                            <OptionChip key={option} label={option} isActive={familiarLanguageRequirement === option} onClick={() => setFamiliarLanguageRequirement(option)} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </article>
+            ) : null}
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
               <h3 className="text-lg font-semibold text-[#2f2a24]">7. Social life and friendships</h3>
