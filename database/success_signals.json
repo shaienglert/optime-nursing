@@ -1,0 +1,459 @@
+{
+  "generated_at_utc": "2026-07-15T00:00:00Z",
+  "model_version": "v1",
+  "purpose": "Predict successful adjustment after move to senior living",
+  "scoring_scale": {
+    "predictive_value_score": "1-5",
+    "collection_difficulty": "1-5",
+    "confidence_score": "1-5",
+    "reliability_score": "1-5"
+  },
+  "categories": [
+    {
+      "category_name": "Family Connection",
+      "signals": [
+        {
+          "signal_name": "Distance from family",
+          "why_it_matters": "Nearness increases visit consistency and emotional continuity.",
+          "how_measured": "Miles between reference family location and community.",
+          "sources": ["Family input", "Mapping APIs"],
+          "reliability_score": 5,
+          "update_frequency": "ON_CHANGE",
+          "predictive_value_score": 4,
+          "collection_difficulty": 1,
+          "confidence_score": 5
+        },
+        {
+          "signal_name": "Expected visit frequency",
+          "why_it_matters": "More frequent visits usually improve adjustment and retention.",
+          "how_measured": "Self-reported expected visits per week or month.",
+          "sources": ["Family interview", "Intake form"],
+          "reliability_score": 3,
+          "update_frequency": "AT_INTAKE_AND_REASSESSMENT",
+          "predictive_value_score": 4,
+          "collection_difficulty": 2,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Travel time",
+          "why_it_matters": "Long travel burden reduces real visit follow-through.",
+          "how_measured": "Median drive time from family to community.",
+          "sources": ["Mapping APIs", "Traffic APIs"],
+          "reliability_score": 5,
+          "update_frequency": "ON_CHANGE",
+          "predictive_value_score": 4,
+          "collection_difficulty": 1,
+          "confidence_score": 5
+        },
+        {
+          "signal_name": "Family involvement level",
+          "why_it_matters": "High involvement predicts better advocacy and transition support.",
+          "how_measured": "Structured intake scale (low, medium, high).",
+          "sources": ["Family interview", "Care team notes"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 3,
+          "confidence_score": 3
+        }
+      ]
+    },
+    {
+      "category_name": "Community Fit",
+      "signals": [
+        {
+          "signal_name": "Language compatibility",
+          "why_it_matters": "Communication barriers can slow trust and care quality.",
+          "how_measured": "Match ratio between resident language needs and community support.",
+          "sources": ["Community website", "Staff listings", "Intake form"],
+          "reliability_score": 4,
+          "update_frequency": "QUARTERLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 2,
+          "confidence_score": 4
+        },
+        {
+          "signal_name": "Religious compatibility",
+          "why_it_matters": "Faith alignment can improve comfort and belonging.",
+          "how_measured": "Binary and degree-of-fit match to stated preferences.",
+          "sources": ["Community website", "Family interview"],
+          "reliability_score": 4,
+          "update_frequency": "QUARTERLY",
+          "predictive_value_score": 3,
+          "collection_difficulty": 2,
+          "confidence_score": 4
+        },
+        {
+          "signal_name": "Cultural compatibility",
+          "why_it_matters": "Cultural fit affects adaptation, social confidence, and satisfaction.",
+          "how_measured": "Qualitative fit index from profile matching.",
+          "sources": ["Website", "Activities", "Family input", "Reviews"],
+          "reliability_score": 3,
+          "update_frequency": "QUARTERLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 3,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Community size preference",
+          "why_it_matters": "Size mismatch can reduce comfort and social integration.",
+          "how_measured": "Difference between preferred and actual resident size band.",
+          "sources": ["Community profile", "Intake form"],
+          "reliability_score": 4,
+          "update_frequency": "QUARTERLY",
+          "predictive_value_score": 3,
+          "collection_difficulty": 2,
+          "confidence_score": 4
+        },
+        {
+          "signal_name": "Luxury preference",
+          "why_it_matters": "Lifestyle mismatch can affect satisfaction and perceived value.",
+          "how_measured": "Amenity tier match against family preference.",
+          "sources": ["Website", "Photos", "Pricing collateral", "Intake form"],
+          "reliability_score": 3,
+          "update_frequency": "QUARTERLY",
+          "predictive_value_score": 3,
+          "collection_difficulty": 3,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Social environment preference",
+          "why_it_matters": "Introvert or extrovert fit affects daily wellbeing and participation.",
+          "how_measured": "Fit score from activity intensity and resident style preferences.",
+          "sources": ["Activities calendar", "Reviews", "Intake form"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 3,
+          "confidence_score": 3
+        }
+      ]
+    },
+    {
+      "category_name": "Social Success",
+      "signals": [
+        {
+          "signal_name": "Activity participation quality",
+          "why_it_matters": "High quality activities improve adjustment and reduce isolation risk.",
+          "how_measured": "Theme extraction on activity experience quality mentions.",
+          "sources": ["Reviews", "Resident testimonials", "Family notes"],
+          "reliability_score": 3,
+          "update_frequency": "WEEKLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Activity diversity",
+          "why_it_matters": "Diverse programming supports broader engagement and sustained interest.",
+          "how_measured": "Count of distinct activity categories per month.",
+          "sources": ["Activities calendar", "Website"],
+          "reliability_score": 4,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 2,
+          "confidence_score": 4
+        },
+        {
+          "signal_name": "Community engagement",
+          "why_it_matters": "High engagement correlates with stronger social adaptation.",
+          "how_measured": "Mention trends for belonging and interaction.",
+          "sources": ["Reviews", "Community posts", "Website updates"],
+          "reliability_score": 3,
+          "update_frequency": "WEEKLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Resident satisfaction mentions",
+          "why_it_matters": "Positive satisfaction signal is a leading indicator of adjustment.",
+          "how_measured": "Positive minus negative satisfaction mention balance.",
+          "sources": ["Reviews", "Survey summaries"],
+          "reliability_score": 3,
+          "update_frequency": "WEEKLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Loneliness risk indicators",
+          "why_it_matters": "Early loneliness risk predicts failed transitions and move-outs.",
+          "how_measured": "Recurring loneliness language pattern detection.",
+          "sources": ["Reviews", "Family feedback", "Care notes"],
+          "reliability_score": 2,
+          "update_frequency": "WEEKLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 4,
+          "confidence_score": 2
+        }
+      ]
+    },
+    {
+      "category_name": "Staff Relationship",
+      "signals": [
+        {
+          "signal_name": "Staff warmth mentions",
+          "why_it_matters": "Warmth strongly affects trust and emotional security.",
+          "how_measured": "Recurring warmth signal extraction with minimum mention threshold.",
+          "sources": ["Google", "Caring", "Seniorly"],
+          "reliability_score": 3,
+          "update_frequency": "WEEKLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Staff responsiveness mentions",
+          "why_it_matters": "Responsiveness predicts issue resolution and family confidence.",
+          "how_measured": "Recurring response-time and follow-through mention extraction.",
+          "sources": ["Google", "Caring", "A Place for Mom"],
+          "reliability_score": 3,
+          "update_frequency": "WEEKLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Staff continuity",
+          "why_it_matters": "Continuity improves relationship stability and care consistency.",
+          "how_measured": "Staff continuity proxy from tenure and turnover indicators.",
+          "sources": ["Indeed", "Glassdoor", "Staffing disclosures"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Employee turnover",
+          "why_it_matters": "High turnover is associated with instability and lower care consistency.",
+          "how_measured": "Trend in turnover and departure mentions over time.",
+          "sources": ["Indeed", "Glassdoor", "CMS staffing trends"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Employee satisfaction",
+          "why_it_matters": "Staff morale influences resident interactions and service quality.",
+          "how_measured": "Aggregated employee sentiment trend score.",
+          "sources": ["Indeed", "Glassdoor"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 3,
+          "confidence_score": 3
+        }
+      ]
+    },
+    {
+      "category_name": "Safety",
+      "signals": [
+        {
+          "signal_name": "CMS ratings",
+          "why_it_matters": "Broad safety and quality benchmark tied to outcomes.",
+          "how_measured": "Latest overall CMS rating.",
+          "sources": ["CMS Care Compare", "CMS Provider Database"],
+          "reliability_score": 5,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 1,
+          "confidence_score": 5
+        },
+        {
+          "signal_name": "Staffing ratings",
+          "why_it_matters": "Staffing quality predicts care responsiveness and safety outcomes.",
+          "how_measured": "Latest CMS staffing rating and trend.",
+          "sources": ["CMS Provider Database"],
+          "reliability_score": 5,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 1,
+          "confidence_score": 5
+        },
+        {
+          "signal_name": "Inspection ratings",
+          "why_it_matters": "Inspection performance captures compliance and risk signals.",
+          "how_measured": "Latest CMS inspection rating and trend.",
+          "sources": ["CMS Provider Database"],
+          "reliability_score": 5,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 1,
+          "confidence_score": 5
+        },
+        {
+          "signal_name": "Deficiencies",
+          "why_it_matters": "Deficiency severity and recurrence indicate operational risk.",
+          "how_measured": "Count and severity of deficiencies in rolling windows.",
+          "sources": ["CMS deficiency records", "State inspections"],
+          "reliability_score": 5,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 3,
+          "confidence_score": 5
+        },
+        {
+          "signal_name": "Fines",
+          "why_it_matters": "Monetary penalties indicate confirmed compliance failures.",
+          "how_measured": "Fine count and severity in rolling windows.",
+          "sources": ["CMS", "State enforcement actions"],
+          "reliability_score": 5,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 3,
+          "confidence_score": 5
+        }
+      ]
+    },
+    {
+      "category_name": "Stability",
+      "signals": [
+        {
+          "signal_name": "Ownership changes",
+          "why_it_matters": "Frequent ownership changes can disrupt operations and culture.",
+          "how_measured": "Ownership change events in last 12 months.",
+          "sources": ["CMS Provider Database", "State filings"],
+          "reliability_score": 4,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 2,
+          "confidence_score": 4
+        },
+        {
+          "signal_name": "Executive Director tenure",
+          "why_it_matters": "Leadership continuity supports stable operations and resident trust.",
+          "how_measured": "Tenure length in months and change events.",
+          "sources": ["Website", "Leadership pages", "Filings"],
+          "reliability_score": 3,
+          "update_frequency": "QUARTERLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Director of Nursing tenure",
+          "why_it_matters": "Clinical leadership stability predicts care consistency.",
+          "how_measured": "Tenure length in months and change events.",
+          "sources": ["Website", "Filings", "Compliance disclosures"],
+          "reliability_score": 3,
+          "update_frequency": "QUARTERLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Staff turnover trend",
+          "why_it_matters": "Worsening turnover trend signals rising disruption risk.",
+          "how_measured": "90-day and 180-day trend slope on turnover signals.",
+          "sources": ["Indeed", "Glassdoor", "Staffing trend sources"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 5,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        }
+      ]
+    },
+    {
+      "category_name": "Quality of Life",
+      "signals": [
+        {
+          "signal_name": "Food quality",
+          "why_it_matters": "Dining quality is a top driver of day-to-day satisfaction.",
+          "how_measured": "Recurring food sentiment signal extraction.",
+          "sources": ["Reviews", "Dining pages"],
+          "reliability_score": 3,
+          "update_frequency": "WEEKLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Outdoor spaces",
+          "why_it_matters": "Access to outdoor areas supports wellbeing and social interaction.",
+          "how_measured": "Presence and quality indicators from photos and descriptions.",
+          "sources": ["Website", "Virtual tours", "Reviews"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 3,
+          "collection_difficulty": 3,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Transportation",
+          "why_it_matters": "Reliable transport affects independence and appointment adherence.",
+          "how_measured": "Transportation availability, schedule breadth, and satisfaction mentions.",
+          "sources": ["Website", "Reviews"],
+          "reliability_score": 4,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 3,
+          "confidence_score": 4
+        },
+        {
+          "signal_name": "Dining flexibility",
+          "why_it_matters": "Flexible dining options improve autonomy and quality of life.",
+          "how_measured": "Availability of choice windows, menu flexibility, accommodation mentions.",
+          "sources": ["Website", "Reviews"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 3,
+          "collection_difficulty": 3,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Room quality",
+          "why_it_matters": "Room quality influences comfort and long-term retention.",
+          "how_measured": "Recurring room condition and comfort mentions.",
+          "sources": ["Reviews", "Photos", "Floor plans"],
+          "reliability_score": 3,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 4,
+          "confidence_score": 3
+        },
+        {
+          "signal_name": "Wellness programs",
+          "why_it_matters": "Wellness support improves functional outcomes and satisfaction.",
+          "how_measured": "Presence and breadth of wellness program categories.",
+          "sources": ["Website", "Program calendars"],
+          "reliability_score": 4,
+          "update_frequency": "MONTHLY",
+          "predictive_value_score": 4,
+          "collection_difficulty": 2,
+          "confidence_score": 4
+        }
+      ]
+    }
+  ],
+  "top_predictive_signals": [
+    "Family involvement level",
+    "Travel time",
+    "Language compatibility",
+    "Social environment preference",
+    "Activity participation quality",
+    "Community engagement",
+    "Loneliness risk indicators",
+    "Staff warmth mentions",
+    "Staff responsiveness mentions",
+    "Employee turnover",
+    "Staff continuity",
+    "CMS ratings",
+    "Staffing ratings",
+    "Inspection ratings",
+    "Deficiencies",
+    "Fines",
+    "Ownership changes",
+    "Executive Director tenure",
+    "Director of Nursing tenure",
+    "Staff turnover trend",
+    "Food quality",
+    "Transportation",
+    "Room quality",
+    "Wellness programs"
+  ]
+}
