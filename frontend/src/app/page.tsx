@@ -87,6 +87,9 @@ export default function Home() {
   const [happinessPreferences, setHappinessPreferences] = useState<string[]>([]);
   const [budget, setBudget] = useState(7000);
   const [distanceFromFamily, setDistanceFromFamily] = useState("");
+  const [referenceLocationType, setReferenceLocationType] = useState("");
+  const [referenceLocationValue, setReferenceLocationValue] = useState("");
+  const [maxDistanceMiles, setMaxDistanceMiles] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
 
   const relationshipLabel = relationshipCopy(relationship);
@@ -104,6 +107,9 @@ export default function Home() {
       happinessPreferences,
       budget,
       distanceFromFamily,
+      referenceLocationType: referenceLocationType || "",
+      referenceLocationValue: referenceLocationValue || "",
+      maxDistanceMiles: maxDistanceMiles || null,
       notes,
     });
 

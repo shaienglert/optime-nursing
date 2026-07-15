@@ -14,7 +14,7 @@ export type QuestionnaireState = {
   distanceFromFamily: string;
   referenceLocationType: string;
   referenceLocationValue: string;
-  maxDistanceMiles: string;
+  maxDistanceMiles: string | null;
   notes: string;
 };
 
@@ -30,7 +30,7 @@ const DEFAULT_STATE: QuestionnaireState = {
   distanceFromFamily: "",
   referenceLocationType: "",
   referenceLocationValue: "",
-  maxDistanceMiles: "",
+  maxDistanceMiles: null,
   notes: "",
 };
 
