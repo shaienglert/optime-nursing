@@ -47,12 +47,23 @@ app.add_middleware(
 
 class FacilityListOut(BaseModel):
     id: int
+    cms_id: str
     name: str
     city: str
+    state: str
+    address: str
+    zip_code: str
+    phone: Optional[str] = None
+    overall_rating: Optional[int] = None
+    staffing_rating: Optional[int] = None
+    quality_rating: Optional[int] = None
+    inspection_rating: Optional[int] = None
+    beds: Optional[int] = None
     medical_quality_score: Optional[float] = None
     staffing_score: Optional[float] = None
     safety_score: Optional[float] = None
     overall_optime_score: Optional[float] = None
+    confidence_level: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -71,8 +82,17 @@ class FacilityDetailsOut(BaseModel):
     id: int
     cms_id: str
     name: str
+    address: str
     city: str
     state: str
+    zip_code: str
+    phone: Optional[str] = None
+    overall_rating: Optional[int] = None
+    staffing_rating: Optional[int] = None
+    quality_rating: Optional[int] = None
+    inspection_rating: Optional[int] = None
+    beds: Optional[int] = None
+    confidence_level: Optional[str] = None
     score_breakdown: ScoreBreakdownOut
 
 
@@ -328,8 +348,17 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
         id=facility.id,
         cms_id=facility.cms_id,
         name=facility.name,
+        address=facility.address,
         city=facility.city,
         state=facility.state,
+        zip_code=facility.zip_code,
+        phone=facility.phone,
+        overall_rating=facility.overall_rating,
+        staffing_rating=facility.staffing_rating,
+        quality_rating=facility.quality_rating,
+        inspection_rating=facility.inspection_rating,
+        beds=facility.beds,
+        confidence_level=facility.confidence_level,
         score_breakdown=ScoreBreakdownOut(
             medical_quality_score=facility.medical_quality_score or 0.0,
             staffing_score=facility.staffing_score or 0.0,
