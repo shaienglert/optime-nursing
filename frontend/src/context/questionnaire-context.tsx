@@ -12,6 +12,9 @@ export type QuestionnaireState = {
   happinessPreferences: string[];
   budget: number;
   distanceFromFamily: string;
+  referenceLocationType: string;
+  referenceLocationValue: string;
+  maxDistanceMiles: string;
   notes: string;
 };
 
@@ -25,6 +28,9 @@ const DEFAULT_STATE: QuestionnaireState = {
   happinessPreferences: [],
   budget: 7000,
   distanceFromFamily: "",
+  referenceLocationType: "",
+  referenceLocationValue: "",
+  maxDistanceMiles: "",
   notes: "",
 };
 
