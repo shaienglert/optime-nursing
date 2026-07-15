@@ -730,6 +730,84 @@ export default function Home() {
     shouldAskLivingAloneFollowUps;
   const shouldAskRecentHospitalizationFollowUps = recentHospitalization === "Yes" || assistanceLevel === "Skilled nursing care";
 
+  const adaptiveConfidence = useMemo(() => {
+    const answeredSignals = [
+      relationship,
+      ageGroup,
+      assistanceLevel,
+      livingAloneDuration,
+      socialInteractionFrequency,
+      visitFrequencyExpectation,
+      religionImportance,
+      preferredSpokenLanguage,
+      nativeLanguage,
+      medicalDiscussionLanguage,
+      familyInvolvementExpectation,
+      familyDecisionRole,
+    ].filter((value) => value && value.trim() !== "").length;
+
+    const multiSignals = [
+      languagesUnderstood.length,
+      familyLanguages.length,
+      faithTraditions.length,
+      religiousSupportNeeds.length,
+      whatFeelsLikeHome.length,
+      dietaryPreferences.length,
+      preferredEnvironment.length,
+    ].reduce((acc, value) => acc + (value > 0 ? 1 : 0), 0);
+
+    return clampScore(42 + answeredSignals * 3 + multiSignals * 4);
+  }, [
+    relationship,
+    ageGroup,
+    assistanceLevel,
+    livingAloneDuration,
+    socialInteractionFrequency,
+    visitFrequencyExpectation,
+    religionImportance,
+    preferredSpokenLanguage,
+    nativeLanguage,
+    medicalDiscussionLanguage,
+    familyInvolvementExpectation,
+    familyDecisionRole,
+    languagesUnderstood.length,
+    familyLanguages.length,
+    faithTraditions.length,
+    religiousSupportNeeds.length,
+    whatFeelsLikeHome.length,
+    dietaryPreferences.length,
+    preferredEnvironment.length,
+  ]);
+
+  const additionalQuestion = useMemo(() => {
+    if (adaptiveConfidence >= 72) {
+      return null;
+    }
+
+    if (!religionImportance) {
+      return {
+        key: "religion_importance",
+        text: "How important is religious life?",
+      };
+    }
+
+    if (!visitFrequencyExpectation) {
+      return {
+        key: "visit_frequency",
+        text: "How often do you expect to visit?",
+      };
+    }
+
+    if (!socialInteractionFrequency) {
+      return {
+        key: "social_activity",
+        text: "Does she enjoy social activities?",
+      };
+    }
+
+    return null;
+  }, [adaptiveConfidence, religionImportance, visitFrequencyExpectation, socialInteractionFrequency]);
+
   const handleFindHome = () => {
     const distanceIntelligence = buildDistanceIntelligence({
       referenceLocations: {
@@ -837,7 +915,7 @@ export default function Home() {
       }
       return acc;
     }, {});
-    const overallConfidence = clampScore(62 + Math.min(24, adaptiveSignals.length * 3) + languageCoverage * 2);
+    const overallConfidence = clampScore(Math.max(adaptiveConfidence, 62 + Math.min(24, adaptiveSignals.length * 3) + languageCoverage * 2));
 
     setState({
       relationship,
@@ -996,7 +1074,7 @@ export default function Home() {
             loneliness_risk_score: lonelinessRiskScorePreview,
           },
           recommendationImpacts: adaptiveSignals.map((signal) => signal.impactExplanation),
-          additionalQuestionAsked: overallConfidence < 72 ? "How often do you expect to visit?" : "",
+          additionalQuestionAsked: additionalQuestion?.text || "",
         },
       },
     });
@@ -2035,6 +2113,38 @@ export default function Home() {
               />
               <p className="mt-3 text-xs text-[#8b7f71]">Examples: Loves old movies, Must have Hebrew speaking staff, Wants a Jewish community, Doesn't like noisy environments, Loves gardening</p>
             </article>
+
+            {additionalQuestion ? (
+              <article className="rounded-2xl border border-[#d7c6a8] bg-[#fff6e6] p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Confidence boost question</p>
+                <h3 className="mt-2 text-lg font-semibold text-[#2f2a24]">{additionalQuestion.text}</h3>
+                <p className="mt-1 text-sm text-[#6c6358]">We ask one extra question only when profile confidence is below threshold. Current confidence: {adaptiveConfidence}/100.</p>
+
+                {additionalQuestion.key === "religion_importance" ? (
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {religionImportanceOptions.map((option) => (
+                      <OptionChip key={`extra-religion-${option}`} label={option} isActive={religionImportance === option} onClick={() => setReligionImportance(option)} />
+                    ))}
+                  </div>
+                ) : null}
+
+                {additionalQuestion.key === "visit_frequency" ? (
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {visitExpectationOptions.map((option) => (
+                      <OptionChip key={`extra-visit-${option}`} label={option} isActive={visitFrequencyExpectation === option} onClick={() => setVisitFrequencyExpectation(option)} />
+                    ))}
+                  </div>
+                ) : null}
+
+                {additionalQuestion.key === "social_activity" ? (
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {socialInteractionOptions.map((option) => (
+                      <OptionChip key={`extra-social-${option}`} label={option} isActive={socialInteractionFrequency === option} onClick={() => setSocialInteractionFrequency(option)} />
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            ) : null}
           </div>
 
           <div className="mt-8">
