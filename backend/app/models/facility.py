@@ -152,3 +152,34 @@ class OptimeScore(Base):
 	computed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 	facility = relationship("Facility", back_populates="scores")
+
+
+class HumanIntelligenceScore(Base):
+	__tablename__ = "human_intelligence_scores"
+
+	id = Column(Integer, primary_key=True, index=True)
+	resident_key = Column(String(120), index=True, nullable=False)
+	relationship = Column(String(40), nullable=True)
+	age_group = Column(String(20), nullable=True)
+	social_profile_score = Column(Float, nullable=False)
+	family_support_score = Column(Float, nullable=False)
+	cultural_match_score = Column(Float, nullable=False)
+	loneliness_risk_score = Column(Float, nullable=False)
+	transition_risk_score = Column(Float, nullable=False)
+	future_care_score = Column(Float, nullable=False)
+	metadata_json = Column(Text, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class ResidentOutcome(Base):
+	__tablename__ = "resident_outcomes"
+
+	id = Column(Integer, primary_key=True, index=True)
+	resident_key = Column(String(120), index=True, nullable=False)
+	human_intelligence_score_id = Column(Integer, ForeignKey("human_intelligence_scores.id"), index=True, nullable=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=True)
+	successful_adjustment = Column(Integer, nullable=False, default=0)
+	loneliness_event = Column(Integer, nullable=False, default=0)
+	relocated_within_24m = Column(Integer, nullable=False, default=0)
+	notes = Column(Text, nullable=True)
+	recorded_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
