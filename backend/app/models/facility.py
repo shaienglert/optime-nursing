@@ -27,6 +27,14 @@ class Facility(Base):
 	staffing_score = Column(Float, nullable=True)
 	safety_score = Column(Float, nullable=True)
 	overall_optime_score = Column(Float, nullable=True)
+	medical_quality_confidence = Column(String(30), nullable=True)
+	staffing_confidence = Column(String(30), nullable=True)
+	safety_confidence = Column(String(30), nullable=True)
+	overall_confidence = Column(String(30), nullable=True)
+	source_name = Column(String(100), nullable=True)
+	source_date = Column(String(30), nullable=True)
+	import_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+	confidence_level = Column(String(30), nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 	updated_at = Column(
 		DateTime(timezone=True),
@@ -56,6 +64,10 @@ class Staffing(Base):
 	rn_hours_per_resident_day = Column(Float, nullable=True)
 	total_nurse_hours_per_resident_day = Column(Float, nullable=True)
 	weekend_total_nurse_hours_per_resident_day = Column(Float, nullable=True)
+	source_name = Column(String(100), nullable=True)
+	source_date = Column(String(30), nullable=True)
+	import_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+	confidence_level = Column(String(30), nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 	facility = relationship("Facility", back_populates="staffing_records")
@@ -72,6 +84,10 @@ class Inspection(Base):
 	severe_deficiency_count = Column(Integer, nullable=True)
 	fine_amount = Column(Numeric(12, 2), nullable=True)
 	payment_denials_count = Column(Integer, nullable=True)
+	source_name = Column(String(100), nullable=True)
+	source_date = Column(String(30), nullable=True)
+	import_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+	confidence_level = Column(String(30), nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 	facility = relationship("Facility", back_populates="inspections")
@@ -87,6 +103,10 @@ class QualityMeasure(Base):
 	measure_value = Column(Float, nullable=True)
 	quality_rating = Column(Integer, nullable=True)
 	period_label = Column(String(50), nullable=False)
+	source_name = Column(String(100), nullable=True)
+	source_date = Column(String(30), nullable=True)
+	import_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+	confidence_level = Column(String(30), nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 	facility = relationship("Facility", back_populates="quality_measures")
