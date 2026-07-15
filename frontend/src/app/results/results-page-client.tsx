@@ -114,6 +114,23 @@ type DistanceProfile = {
   };
 };
 
+type RelaxationNotice = {
+  preference: string;
+  originalRequirement: string;
+  relaxedRequirement: string;
+  impactOnResultsCount: number;
+};
+
+type RelaxationContext = {
+  budget: number;
+  care: string;
+  memory: string;
+  activity: string;
+  distance: string;
+  notes: string;
+  profile: ReturnType<typeof useQuestionnaire>["state"]["humanIntelligenceV2"];
+};
+
 function sentenceCase(value: string): string {
   if (!value) return value;
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -128,6 +145,148 @@ function normalizeWords(value: string): string[] {
 
 function uniqueStrings(values: string[]): string[] {
   return [...new Set(values.filter(Boolean))];
+}
+
+function midpointPrice(priceRange: string): number | null {
+  const { low, high } = parsePriceRange(priceRange);
+  if (!low || !high) return null;
+  return (low + high) / 2;
+}
+
+function sizeBucket(beds?: number): "small" | "medium" | "large" | "unknown" {
+  if (!beds) return "unknown";
+  if (beds <= 55) return "small";
+  if (beds <= 120) return "medium";
+  return "large";
+}
+
+function hasBadgeMatch(facility: SearchFacility, expressions: RegExp[]): boolean {
+  const haystack = [...facility.matchBadges, ...facility.careTypes].join(" ").toLowerCase();
+  return expressions.some((expression) => expression.test(haystack));
+}
+
+function buildRelaxedRecommendations(
+  facilities: SearchFacility[],
+  context: RelaxationContext,
+): { recommendations: SearchFacility[]; relaxations: RelaxationNotice[] } {
+  const baseFacilities = facilities.filter((facility) => facility.matching_confidence !== "LOW");
+  const profile = context.profile;
+  const notesLower = context.notes.toLowerCase();
+  const languagePreference = profile.languageProfile.preferredSpokenLanguage;
+  const sizePreference = profile.personalityProfile.communitySizePreference;
+  const religionImportant = ["Important", "Very important"].includes(profile.culturalProfile.religionImportance);
+  const wantsJewishSetting = profile.culturalProfile.israeliJewishCommunityPreference === "Yes" || notesLower.includes("jewish");
+  const distanceSignalAvailable = baseFacilities.some((facility) => hasBadgeMatch(facility, [/close to family/i, /family/i, /distance/i]));
+  const languageSignalAvailable = baseFacilities.some((facility) => hasBadgeMatch(facility, [/hebrew/i, /spanish/i, /russian/i, /french/i, /portuguese/i, /arabic/i]));
+  const religionSignalAvailable = baseFacilities.some((facility) => hasBadgeMatch(facility, [/jewish/i, /religious/i, /synagogue/i, /kosher/i, /hebrew/i]));
+  const luxuryPreference = /luxury|premium|upscale|high[- ]end/.test(notesLower);
+
+  const hardFiltered = baseFacilities.filter((facility) => {
+    const price = midpointPrice(facility.priceRange);
+    const budgetMatch = price === null ? true : price <= context.budget * 1.35;
+    const careMatch = careAlignmentScore(facility, context.care) >= 80;
+    const medicalMatch = context.memory.toLowerCase().includes("memory") || context.memory.toLowerCase().includes("significant")
+      ? facility.careTypes.some((item) => item.toLowerCase().includes("memory"))
+      : true;
+    const geographyMatch = facility.state === "FL";
+    return medicalMatch && budgetMatch && careMatch && geographyMatch;
+  });
+
+  const minimumTarget = Math.min(3, Math.max(1, hardFiltered.length || baseFacilities.length));
+
+  const constraints = [
+    {
+      key: "activities",
+      enabled: Boolean(context.activity),
+      originalRequirement: context.activity,
+      relaxedRequirement: "Any activity mix",
+      predicate: (facility: SearchFacility) => {
+        if (!context.activity) return true;
+        const normalized = context.activity.toLowerCase();
+        if (normalized.includes("social")) return hasBadgeMatch(facility, [/social/i, /active/i]);
+        if (normalized.includes("religious")) return hasBadgeMatch(facility, [/religious/i, /hebrew/i, /jewish/i]);
+        if (normalized.includes("music")) return hasBadgeMatch(facility, [/active/i, /program/i]);
+        return true;
+      },
+    },
+    {
+      key: "community-size",
+      enabled: Boolean(sizePreference && sizePreference !== "No preference"),
+      originalRequirement: sizePreference || "No preference",
+      relaxedRequirement: "Any community size",
+      predicate: (facility: SearchFacility) => {
+        if (!sizePreference || sizePreference === "No preference") return true;
+        const bucket = sizeBucket(facility.beds);
+        if (sizePreference === "Small community") return bucket === "small";
+        if (sizePreference === "Medium community") return bucket === "medium";
+        if (sizePreference === "Large community") return bucket === "large";
+        return true;
+      },
+    },
+    {
+      key: "language",
+      enabled: Boolean(languagePreference && languagePreference !== "English" && languageSignalAvailable),
+      originalRequirement: languagePreference || "English",
+      relaxedRequirement: "English-first communities accepted",
+      predicate: (facility: SearchFacility) => {
+        if (!languagePreference || languagePreference === "English") return true;
+        return hasBadgeMatch(facility, [new RegExp(languagePreference, "i")]);
+      },
+    },
+    {
+      key: "religion",
+      enabled: Boolean((religionImportant || wantsJewishSetting) && religionSignalAvailable),
+      originalRequirement: wantsJewishSetting ? "Jewish or religion-centered setting" : profile.culturalProfile.religionImportance || "Religion preference",
+      relaxedRequirement: "General communities accepted",
+      predicate: (facility: SearchFacility) => {
+        if (!religionImportant && !wantsJewishSetting) return true;
+        return hasBadgeMatch(facility, [/jewish/i, /religious/i, /synagogue/i, /kosher/i, /hebrew/i]);
+      },
+    },
+    {
+      key: "distance",
+      enabled: Boolean(context.distance && distanceSignalAvailable),
+      originalRequirement: context.distance,
+      relaxedRequirement: "Broader geography accepted",
+      predicate: (facility: SearchFacility) => {
+        if (!distanceSignalAvailable) return true;
+        return hasBadgeMatch(facility, [/close to family/i]);
+      },
+    },
+    {
+      key: "luxury",
+      enabled: luxuryPreference,
+      originalRequirement: "Premium/luxury setting",
+      relaxedRequirement: "Standard communities accepted",
+      predicate: (facility: SearchFacility) => {
+        const price = midpointPrice(facility.priceRange);
+        return price !== null && price >= 9000;
+      },
+    },
+  ].filter((constraint) => constraint.enabled);
+
+  let activeConstraints = [...constraints];
+  let currentResults = hardFiltered.filter((facility) => activeConstraints.every((constraint) => constraint.predicate(facility)));
+  const relaxations: RelaxationNotice[] = [];
+
+  while (currentResults.length < minimumTarget && activeConstraints.length > 0) {
+    const removed = activeConstraints.shift();
+    if (!removed) break;
+    const nextResults = hardFiltered.filter((facility) => activeConstraints.every((constraint) => constraint.predicate(facility)));
+    relaxations.push({
+      preference: removed.key,
+      originalRequirement: removed.originalRequirement,
+      relaxedRequirement: removed.relaxedRequirement,
+      impactOnResultsCount: nextResults.length - currentResults.length,
+    });
+    currentResults = nextResults;
+  }
+
+  if (currentResults.length === 0) {
+    currentResults = hardFiltered.length > 0 ? hardFiltered : baseFacilities;
+  }
+
+  return { recommendations: currentResults, relaxations };
 }
 
 function buildResidentProfileSummary(
@@ -480,6 +639,20 @@ export function ResultsPageClient() {
     [facilities],
   );
 
+  const relaxedAvailability = useMemo(
+    () =>
+      buildRelaxedRecommendations(rankedFacilities, {
+        budget,
+        care,
+        memory,
+        activity,
+        distance,
+        notes,
+        profile: state.humanIntelligenceV2,
+      }),
+    [rankedFacilities, budget, care, memory, activity, distance, notes, state.humanIntelligenceV2],
+  );
+
   useEffect(() => {
     let isMounted = true;
 
@@ -498,8 +671,14 @@ export function ResultsPageClient() {
     };
   }, []);
 
-  const topRecommendations = useMemo(() => rankedFacilities.slice(0, TOP_RECOMMENDATION_COUNT), [rankedFacilities]);
-  const remainingRecommendations = useMemo(() => rankedFacilities.slice(TOP_RECOMMENDATION_COUNT), [rankedFacilities]);
+  const topRecommendations = useMemo(
+    () => relaxedAvailability.recommendations.slice(0, TOP_RECOMMENDATION_COUNT),
+    [relaxedAvailability.recommendations],
+  );
+  const remainingRecommendations = useMemo(
+    () => relaxedAvailability.recommendations.slice(TOP_RECOMMENDATION_COUNT),
+    [relaxedAvailability.recommendations],
+  );
 
   const personalAdvisorSummary = useMemo(() => {
     const profile = state.humanIntelligenceV2;
@@ -559,14 +738,43 @@ export function ResultsPageClient() {
           </div>
         </header>
 
-        {!isLoading && rankedFacilities.length === 0 ? (
+        {!isLoading && relaxedAvailability.recommendations.length === 0 ? (
           <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
             <p className="text-xl font-semibold">We couldn't find perfect matches, but we found nearby alternatives.</p>
           </section>
         ) : null}
 
-        {!isLoading && rankedFacilities.length > 0 ? (
+        {!isLoading && relaxedAvailability.recommendations.length > 0 ? (
           <section className="mt-6 space-y-6">
+            {relaxedAvailability.relaxations.length > 0 ? (
+              <article className="rounded-3xl border border-[#e8ddcc] bg-[#fffaf2] p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Constraint Relaxation</p>
+                <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">OPTIME relaxed the following preferences to increase available options:</h2>
+                <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e7dbc6] bg-white">
+                  <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                    <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                      <tr>
+                        <th className="px-4 py-3">Preference</th>
+                        <th className="px-4 py-3">Original requirement</th>
+                        <th className="px-4 py-3">Relaxed requirement</th>
+                        <th className="px-4 py-3">Impact on results count</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#efe6d8]">
+                      {relaxedAvailability.relaxations.map((item) => (
+                        <tr key={`${item.preference}-${item.originalRequirement}`}>
+                          <td className="px-4 py-3 font-medium text-[#2f2a24]">{item.preference}</td>
+                          <td className="px-4 py-3">{item.originalRequirement}</td>
+                          <td className="px-4 py-3">{item.relaxedRequirement}</td>
+                          <td className="px-4 py-3">{item.impactOnResultsCount >= 0 ? `+${item.impactOnResultsCount}` : item.impactOnResultsCount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            ) : null}
+
             <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5f7f6b]">Expert Advisor Mode</p>
               <h2 className="mt-2 text-2xl font-semibold text-[#2f2a24]">Personal explanation</h2>
