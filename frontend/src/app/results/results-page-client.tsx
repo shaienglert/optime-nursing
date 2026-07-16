@@ -38,6 +38,36 @@ function recommendationTitle(index: number): string {
   return `#${index + 1} Recommendation`;
 }
 
+function maxPointsForCategory(name: string): number {
+  switch (name) {
+    case "Medical Fit":
+      return 28;
+    case "Lifestyle Fit":
+      return 18;
+    case "Social Fit":
+      return 15;
+    case "Family Proximity":
+      return 10;
+    case "Cultural Fit":
+      return 12;
+    case "Clinical Quality":
+      return 6;
+    default:
+      return 0;
+  }
+}
+
+function pointsAwardedForCategory(name: string, points: number): number {
+  if (name === "Medical Fit" || name === "Lifestyle Fit" || name === "Social Fit" || name === "Family Proximity" || name === "Cultural Fit" || name === "Clinical Quality") {
+    return Math.round(points * 100) / 100;
+  }
+  return Math.round(points * 100) / 100;
+}
+
+function formatPoints(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+}
+
 function hasRealAddressData(distanceProfile: ReturnType<typeof useQuestionnaire>["state"]["humanIntelligenceV2"]["distanceProfile"]): boolean {
   return Boolean(
     distanceProfile.referenceLocations.parentCurrentHome ||
@@ -290,6 +320,11 @@ export function ResultsPageClient() {
 
   const renderCompactCard = (recommendation: RankedRecommendation, index: number) => {
     const facility = recommendation.facility;
+    const report = recommendation.report;
+    const categoryRows = report.audit.categoryRows.filter((row) => ["Medical Fit", "Lifestyle Fit", "Social Fit", "Family Proximity", "Cultural Fit", "Activities Fit", "Clinical Quality"].includes(row.name));
+    const totalPointsAwarded = categoryRows.reduce((sum, row) => sum + row.finalContribution, 0) + report.audit.bonuses.reduce((sum, bonus) => sum + (bonus.applied ? bonus.value : 0), 0) - report.audit.penalties.reduce((sum, penalty) => sum + (penalty.applied ? penalty.value : 0), 0);
+    const maximumPossiblePoints = categoryRows.reduce((sum, row) => sum + maxPointsForCategory(row.name), 0);
+    const normalizedScore = maximumPossiblePoints > 0 ? Math.round((totalPointsAwarded / maximumPossiblePoints) * 100) : report.finalMatchScore;
     return (
       <article key={`compact-${facility.id}`} className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]">
         <div className="flex items-start justify-between gap-3">
@@ -301,6 +336,36 @@ export function ResultsPageClient() {
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${scoreBadgeStyle(recommendation.totalScore)}`}>
             {Math.round(recommendation.totalScore)}
           </span>
+        </div>
+
+        <div className="mt-3 rounded-xl border border-[#e7ddcd] bg-[#fcfaf5] p-3 text-sm text-[#4f473d]">
+          <p className="font-semibold text-[#2f2a24]">Score composition</p>
+          <div className="mt-2 space-y-1 text-xs sm:text-sm">
+            {categoryRows.map((row) => (
+              <div key={`compact-audit-${facility.id}-${row.name}`} className="flex items-center justify-between gap-3">
+                <span>{row.name}</span>
+                <span>{formatPoints(pointsAwardedForCategory(row.name, row.finalContribution))} / {maxPointsForCategory(row.name)}</span>
+              </div>
+            ))}
+            <div className="mt-2 border-t border-[#e7ddcd] pt-2">
+              <div className="flex items-center justify-between gap-3 font-semibold text-[#2f2a24]">
+                <span>Total Points Awarded</span>
+                <span>{formatPoints(totalPointsAwarded)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span>Maximum Possible Points</span>
+                <span>{formatPoints(maximumPossiblePoints)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span>Normalized Score</span>
+                <span>{normalizedScore}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span>Penalties</span>
+                <span>-{report.audit.penalties.reduce((sum, penalty) => sum + (penalty.applied ? penalty.value : 0), 0)}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <p className="mt-3 text-sm text-[#5f554a]">{recommendation.tradeoff}</p>
