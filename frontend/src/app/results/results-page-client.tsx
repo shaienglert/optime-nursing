@@ -85,6 +85,10 @@ function formatPoints(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
+function formatWeightPercent(value: number): string {
+  return `${(value * 100).toFixed(0)}%`;
+}
+
 function normalizedContribution(points: number, totalPoints: number): string {
   if (totalPoints <= 0) return "0.00%";
   return `${((points / totalPoints) * 100).toFixed(2)}%`;
@@ -482,6 +486,52 @@ export function ResultsPageClient() {
               <p className="mt-2 text-sm text-[#5c5347]">Ranking priority follows care, lifestyle, social, cultural, family, financial, clinical quality, then luxury amenities.</p>
               <p className="mt-1 text-sm text-[#5c5347]">Distance affects score only and never removes a community from visibility.</p>
             </article>
+
+            <section className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_14px_40px_-32px_rgba(69,58,43,0.3)]">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Generated Persona</p>
+              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">{engineOutput.persona.personaType}</h2>
+              <p className="mt-1 text-sm text-[#5c5347]">{engineOutput.persona.rankingStrategy}</p>
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-2xl border border-[#e7ddcd] bg-[#fcfaf5] p-4">
+                  <p className="text-sm font-semibold text-[#2f2a24]">Active Weights</p>
+                  <div className="mt-3 space-y-2 text-sm text-[#4f473d]">
+                    {engineOutput.persona.activeWeights.map((item) => (
+                      <div key={item.label} className="flex items-center justify-between gap-3">
+                        <span>{item.label}</span>
+                        <span className="font-semibold">{formatWeightPercent(item.weight)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-[#e7ddcd] bg-[#fcfaf5] p-4">
+                    <p className="text-sm font-semibold text-[#2f2a24]">Why these weights were selected</p>
+                    <ul className="mt-2 space-y-1 text-sm text-[#4f473d]">
+                      {engineOutput.persona.whySelected.map((item) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#6f9a86]" aria-hidden="true" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#e7ddcd] bg-[#fcfaf5] p-4">
+                    <p className="text-sm font-semibold text-[#2f2a24]">What would change this ranking?</p>
+                    <ul className="mt-2 space-y-1 text-sm text-[#4f473d]">
+                      {engineOutput.persona.whatWouldChangeThisRanking.map((item) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#c18b7a]" aria-hidden="true" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </section>
 
             <section className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_14px_40px_-32px_rgba(69,58,43,0.3)]">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Live Recommendation Score Audit Report</p>
