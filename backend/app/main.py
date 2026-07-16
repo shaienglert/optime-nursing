@@ -2,9 +2,9 @@ import os
 from statistics import mean
 from typing import Dict, List, Optional
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
@@ -409,13 +409,23 @@ async def import_summary():
 
 
 @app.get("/facilities", response_model=List[FacilityListOut])
-async def get_facilities(db: Session = Depends(get_db)):
-    return (
-        db.query(Facility)
-        .filter(Facility.state == "FL")
-        .order_by(Facility.overall_optime_score.desc().nullslast(), Facility.id.asc())
-        .all()
-    )
+async def get_facilities(q: Optional[str] = Query(default=None), db: Session = Depends(get_db)):
+    query = db.query(Facility).filter(Facility.state == "FL")
+
+    term = (q or "").strip()
+    if term:
+        like = f"%{term}%"
+        query = query.filter(
+            or_(
+                Facility.name.ilike(like),
+                Facility.city.ilike(like),
+                Facility.address.ilike(like),
+                Facility.zip_code.ilike(like),
+                Facility.cms_id.ilike(like),
+            )
+        )
+
+    return query.order_by(Facility.overall_optime_score.desc().nullslast(), Facility.id.asc()).all()
 
 
 @app.get("/facilities/{id}", response_model=FacilityDetailsOut)

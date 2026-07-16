@@ -147,8 +147,9 @@ function sentenceCase(value: string): string {
 
 function normalizeWords(value: string): string[] {
   return value
+    .normalize("NFKC")
     .toLowerCase()
-    .split(/[^a-z0-9]+/)
+    .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean);
 }
 
@@ -721,6 +722,7 @@ export function ResultsPageClient() {
   const budget = Number(searchParams.get("budget") || state.budget || 7000);
   const distance = searchParams.get("distance") || state.distanceFromFamily || "Under 25 minutes";
   const notes = searchParams.get("notes") || state.notes || "";
+  const textQuery = searchParams.get("q") || searchParams.get("search") || "";
 
   const [filters, setFilters] = useState<string[]>([
     `Age: ${age}`,
@@ -757,7 +759,7 @@ export function ResultsPageClient() {
 
     async function loadFacilities() {
       setIsLoading(true);
-      const data = await fetchSearchFacilities();
+      const data = await fetchSearchFacilities(textQuery);
       if (isMounted) {
         setFacilities(data);
         setIsLoading(false);
@@ -768,7 +770,7 @@ export function ResultsPageClient() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [textQuery]);
 
   const topRecommendations = useMemo(
     () => relaxedAvailability.recommendations.slice(0, TOP_RECOMMENDATION_COUNT),

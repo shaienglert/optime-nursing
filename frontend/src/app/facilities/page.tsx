@@ -9,6 +9,7 @@ export default function FacilitiesPage() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -17,7 +18,7 @@ export default function FacilitiesPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await fetchFacilities();
+        const data = await fetchFacilities(searchText);
         if (isMounted) {
           setFacilities(data);
         }
@@ -36,7 +37,7 @@ export default function FacilitiesPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [searchText]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 sm:px-10 lg:px-16">
@@ -50,6 +51,17 @@ export default function FacilitiesPage() {
           <Link href="/" className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300">
             Home
           </Link>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4">
+          <label htmlFor="facility-search" className="text-sm font-medium text-slate-700">Search communities</label>
+          <input
+            id="facility-search"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Try English or Hebrew (e.g. Hebrew, עברית, זוד)"
+            className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-800 outline-none ring-cyan-300 focus:ring-2"
+          />
         </div>
 
         {isLoading ? (

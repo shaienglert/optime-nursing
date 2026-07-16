@@ -39,6 +39,7 @@ export type SearchFacility = Facility & {
   careTypes: string[];
   matchBadges: string[];
   scoreBreakdown?: ScoreBreakdownItem[];
+  searchTokens?: string[];
 };
 
 export type FacilityDetailsData = SearchFacility & {
@@ -142,6 +143,70 @@ function scoreLabel(score: number): string {
   return "Consider Match";
 }
 
+function normalizeSearchText(value: string): string {
+  return value.normalize("NFKC").toLowerCase().trim();
+}
+
+function tokenizeSearchText(value: string): string[] {
+  return normalizeSearchText(value)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+}
+
+const SEARCH_SYNONYMS: Record<string, string[]> = {
+  hebrew: ["עברית", "hebrew", "יהודית"],
+  jewish: ["יהודי", "יהדות", "jewish", "synagogue", "בית", "כנסת"],
+  kosher: ["כשר", "kosher"],
+  social: ["חברתי", "social", "active"],
+  memory: ["זיכרון", "memory", "דמנציה"],
+  wheelchair: ["נגיש", "כיסא", "גלגלים", "wheelchair", "accessible"],
+};
+
+function expandSearchTerm(term: string): string[] {
+  const normalized = normalizeSearchText(term);
+  const expansions = new Set<string>([normalized]);
+  Object.entries(SEARCH_SYNONYMS).forEach(([key, values]) => {
+    if (key === normalized || values.includes(normalized)) {
+      expansions.add(key);
+      values.forEach((value) => expansions.add(normalizeSearchText(value)));
+    }
+  });
+  return [...expansions];
+}
+
+function buildFacilitySearchTokens(
+  base: Facility,
+  careTypes: string[] = [],
+  matchBadges: string[] = [],
+): string[] {
+  const joined = [
+    base.name,
+    base.city || "",
+    base.state || "",
+    base.address || "",
+    base.zip_code || "",
+    ...careTypes,
+    ...matchBadges,
+  ].join(" ");
+
+  const tokens = new Set<string>(tokenizeSearchText(joined));
+
+  tokenizeSearchText(joined).forEach((token) => {
+    expandSearchTerm(token).forEach((expanded) => tokens.add(expanded));
+  });
+
+  return [...tokens];
+}
+
+function matchesSearchQuery(tokens: string[], query: string): boolean {
+  const terms = tokenizeSearchText(query);
+  if (terms.length === 0) return true;
+  return terms.every((term) => {
+    const expanded = expandSearchTerm(term);
+    return expanded.some((candidate) => tokens.some((token) => token.includes(candidate) || candidate.includes(token)));
+  });
+}
+
 function toFacility(facility: BackendFacility): Facility {
   const verificationScore = Math.max(30, Math.min(100, Math.round((facility.overall_optime_score ?? 70))));
 
@@ -176,7 +241,7 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
   const gallery = GALLERY_SETS[facility.id % GALLERY_SETS.length];
   const optimeScore = Math.round(facility.overall_optime_score ?? 70);
 
-  return {
+  const result: SearchFacility = {
     ...base,
     imageUrl: gallery[0],
     optimeScore,
@@ -206,6 +271,9 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
       },
     ],
   };
+
+  result.searchTokens = buildFacilitySearchTokens(base, result.careTypes, result.matchBadges);
+  return result;
 }
 
 export function getApiBaseUrl(): string {
@@ -236,15 +304,25 @@ async function postJson<TReq, TRes>(path: string, payload: TReq): Promise<TRes> 
   return response.json() as Promise<TRes>;
 }
 
-export async function fetchFacilities(): Promise<Facility[]> {
+export async function fetchFacilities(searchText?: string): Promise<Facility[]> {
   const facilities = await fetchJson<BackendFacility[]>("/facilities");
-  return facilities.map(toFacility);
+  const mapped = facilities.map(toFacility);
+  const query = (searchText || "").trim();
+  if (!query) return mapped;
+
+  const filtered = mapped.filter((facility) => matchesSearchQuery(buildFacilitySearchTokens(facility), query));
+  return filtered;
 }
 
-export async function fetchSearchFacilities(): Promise<SearchFacility[]> {
+export async function fetchSearchFacilities(searchText?: string): Promise<SearchFacility[]> {
   try {
     const facilities = await fetchJson<BackendFacility[]>("/facilities");
-    return facilities.map(toSearchFacility);
+    const mapped = facilities.map(toSearchFacility);
+    const query = (searchText || "").trim();
+    if (!query) return mapped;
+
+    const filtered = mapped.filter((facility) => matchesSearchQuery(facility.searchTokens || [], query));
+    return filtered.length > 0 ? filtered : mapped;
   } catch {
     return [];
   }
