@@ -80,7 +80,7 @@ function loadBackendFacilities() {
     'conn = sqlite3.connect(sys.argv[1])',
     'conn.row_factory = sqlite3.Row',
     'cur = conn.cursor()',
-    'rows = cur.execute("select f.id, f.cms_id, f.name, f.city, f.state, f.address, f.zip_code, f.phone, f.overall_rating, f.staffing_rating, f.quality_rating, f.inspection_rating, f.beds, f.medical_quality_score, f.staffing_score, f.safety_score, f.overall_optime_score, f.confidence_level, p.intelligence_confidence, p.family_satisfaction_index, p.staff_stability_index, p.regulatory_risk_index, p.litigation_risk_index, p.social_energy_index, p.community_engagement_index, p.reputation_index, p.cultural_match_signals, p.sources_used as intelligence_sources_used, p.positive_signals as intelligence_positive_signals, p.negative_signals as intelligence_negative_signals from facilities f left join facility_intelligence_profiles p on p.facility_id = f.id where f.state = ? order by f.overall_optime_score desc, f.id asc", ("FL",)).fetchall()',
+    'rows = cur.execute("select f.id, f.cms_id, f.name, f.city, f.state, f.address, f.zip_code, f.phone, f.overall_rating, f.staffing_rating, f.quality_rating, f.inspection_rating, f.beds, f.medical_quality_score, f.staffing_score, f.safety_score, f.overall_optime_score, f.confidence_level, p.intelligence_confidence, p.family_satisfaction_index, p.staff_stability_index, p.regulatory_risk_index, p.litigation_risk_index, p.social_energy_index, p.community_engagement_index, p.reputation_index, p.cultural_match_signals, p.sources_used as intelligence_sources_used, p.positive_signals as intelligence_positive_signals, p.negative_signals as intelligence_negative_signals, p.signal_details as intelligence_signal_details from facilities f left join facility_intelligence_profiles p on p.facility_id = f.id where f.state = ? order by f.overall_optime_score desc, f.id asc", ("FL",)).fetchall()',
     'print(json.dumps([dict(row) for row in rows]))',
   ].join('\n');
   const result = spawnSync(pythonPath, ['-c', pythonCode, dbPath], {
@@ -407,6 +407,7 @@ function toSearchFacility(facility, mode) {
       sources_used: JSON.parse(facility.intelligence_sources_used || '[]'),
       positive_signals: JSON.parse(facility.intelligence_positive_signals || '[]'),
       negative_signals: JSON.parse(facility.intelligence_negative_signals || '[]'),
+      signal_details: JSON.parse(facility.intelligence_signal_details || '[]'),
       family_satisfaction_index: facility.family_satisfaction_index || 0,
       staff_stability_index: facility.staff_stability_index || 0,
       regulatory_risk_index: facility.regulatory_risk_index || 0,

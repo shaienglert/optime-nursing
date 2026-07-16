@@ -245,6 +245,7 @@ class FacilityIntelligenceProfile(Base):
 	missing_information = Column(Text, nullable=False, default="[]")
 	positive_signals = Column(Text, nullable=False, default="[]")
 	negative_signals = Column(Text, nullable=False, default="[]")
+	signal_details = Column(Text, nullable=False, default="[]")
 	unresolved_risks = Column(Text, nullable=False, default="[]")
 	intelligence_summary = Column(Text, nullable=False, default="")
 	update_frequency = Column(Text, nullable=False, default="{}")

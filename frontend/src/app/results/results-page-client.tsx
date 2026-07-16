@@ -619,6 +619,28 @@ export function ResultsPageClient() {
                         </section>
 
                         <section>
+                          <p className="font-semibold text-[#2f2a24]">Signal provenance</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {Array.from(new Set((recommendation.facility.intelligenceSnapshot?.signal_details || []).map((item) => item.provenance))).map((provenance) => (
+                              <span
+                                key={`${recommendation.facility.id}-audit-provenance-${provenance}`}
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  provenance === "REAL"
+                                    ? "border border-[#a7d8b5] bg-[#eef8f1] text-[#2f6d3e]"
+                                    : provenance === "SYNTHETIC"
+                                      ? "border border-[#e4d3a8] bg-[#fff7e8] text-[#8a6732]"
+                                      : provenance === "HEURISTIC"
+                                        ? "border border-[#c7d7e8] bg-[#eef4fb] text-[#2f5578]"
+                                        : "border border-[#dec8e8] bg-[#f8effc] text-[#6b3f80]"
+                                }`}
+                              >
+                                {provenance}
+                              </span>
+                            ))}
+                          </div>
+                        </section>
+
+                        <section>
                           <p className="font-semibold text-[#2f2a24]">Confidence calculation</p>
                           <p className="mt-1">Confidence score: {report.audit.confidence.confidenceScore}/100</p>
                           <p>Missing data impact: {report.audit.confidence.missingDataImpact}</p>

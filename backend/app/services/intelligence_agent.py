@@ -18,6 +18,46 @@ SOURCE_TIER_MULTI_SOURCE = "multiple_independent_sources"
 SOURCE_TIER_SINGLE_REVIEW = "single_review"
 SOURCE_TIER_SINGLE_SOCIAL_POST = "single_social_post"
 
+ALLOWED_PROVENANCE = {"REAL", "SYNTHETIC", "HEURISTIC", "INFERRED"}
+
+SOURCE_PROVENANCE_MAP = {
+    "CMS": "REAL",
+    "Medicare Care Compare": "REAL",
+    "State inspections": "REAL",
+    "AHCA": "REAL",
+    "Public court records": "REAL",
+    "Google Reviews": "SYNTHETIC",
+    "Indeed": "SYNTHETIC",
+    "Glassdoor": "SYNTHETIC",
+    "Facebook": "SYNTHETIC",
+    "Instagram": "SYNTHETIC",
+    "LinkedIn": "SYNTHETIC",
+    "Yelp": "SYNTHETIC",
+    "Official websites": "HEURISTIC",
+    "Public event calendars": "HEURISTIC",
+    "Local news": "HEURISTIC",
+    "Press releases": "HEURISTIC",
+}
+
+SOURCE_RAW_URL_MAP = {
+    "CMS": "https://data.cms.gov/",
+    "Medicare Care Compare": "https://www.medicare.gov/care-compare/",
+    "State inspections": "https://ahca.myflorida.com/",
+    "AHCA": "https://ahca.myflorida.com/",
+    "Public court records": "https://www.courtlistener.com/",
+    "Google Reviews": "https://www.google.com/maps",
+    "Indeed": "https://www.indeed.com/",
+    "Glassdoor": "https://www.glassdoor.com/",
+    "Facebook": "https://www.facebook.com/",
+    "Instagram": "https://www.instagram.com/",
+    "LinkedIn": "https://www.linkedin.com/",
+    "Yelp": "https://www.yelp.com/",
+    "Local news": "https://news.google.com/",
+    "Press releases": "https://www.prnewswire.com/",
+    "Official websites": "N/A",
+    "Public event calendars": "N/A",
+}
+
 UPDATE_FREQUENCY = {
     "news": "daily",
     "social_media": "daily",
@@ -100,6 +140,7 @@ def _signal_with_metadata(
     confidence: float,
     impact_score: float,
 ) -> Dict[str, object]:
+    provenance = SOURCE_PROVENANCE_MAP.get(source, "INFERRED")
     return {
         "source": source,
         "category": category,
@@ -109,7 +150,10 @@ def _signal_with_metadata(
         "source_tier": source_tier,
         "corroboration_count": corroboration_count,
         "summary": summary,
-        "date": datetime.now(timezone.utc).date().isoformat(),
+        "collection_timestamp": datetime.now(timezone.utc).date().isoformat(),
+        "raw_url": SOURCE_RAW_URL_MAP.get(source, "N/A"),
+        "provenance": provenance if provenance in ALLOWED_PROVENANCE else "INFERRED",
+        "collection_method": "wave3_activation_fallback",
         "severity": severity,
         "confidence": round(_clamp(confidence), 1),
         "impact_score": round(impact_score, 2),
@@ -129,7 +173,11 @@ def _normalize_signal(signal: Dict[str, object]) -> Dict[str, object]:
     normalized["severity"] = str(normalized.get("severity", "Low")).strip().title()
     normalized["confidence"] = round(_clamp(float(normalized.get("confidence", 60))), 1)
     normalized["impact_score"] = round(float(normalized.get("impact_score", 0.0)), 2)
-    normalized["date"] = str(normalized.get("date", datetime.now(timezone.utc).date().isoformat()))
+    normalized["collection_timestamp"] = str(normalized.get("collection_timestamp", normalized.get("date", datetime.now(timezone.utc).date().isoformat())))
+    normalized["raw_url"] = str(normalized.get("raw_url", SOURCE_RAW_URL_MAP.get(normalized["source"], "N/A")))
+    provenance = str(normalized.get("provenance", SOURCE_PROVENANCE_MAP.get(normalized["source"], "INFERRED"))).upper()
+    normalized["provenance"] = provenance if provenance in ALLOWED_PROVENANCE else "INFERRED"
+    normalized["collection_method"] = str(normalized.get("collection_method", "intelligence_inference")).strip() or "intelligence_inference"
     normalized["key"] = _make_signal_key(normalized)
     return normalized
 
@@ -571,6 +619,24 @@ def _upsert_profile(
     profile.missing_information = json.dumps(missing_information)
     profile.positive_signals = json.dumps(positive_signals)
     profile.negative_signals = json.dumps(negative_signals)
+    profile.signal_details = json.dumps(
+        [
+            {
+                "source": signal.get("source", ""),
+                "collection_timestamp": signal.get("collection_timestamp", ""),
+                "raw_url": signal.get("raw_url", "N/A"),
+                "provenance": signal.get("provenance", "INFERRED"),
+                "collection_method": signal.get("collection_method", "intelligence_inference"),
+                "signal_type": signal.get("signal", ""),
+                "category": signal.get("category", ""),
+                "polarity": signal.get("polarity", "neutral"),
+                "summary": signal.get("summary", ""),
+                "confidence": signal.get("confidence", 0),
+                "impact_score": signal.get("impact_score", 0),
+            }
+            for signal in signals
+        ]
+    )
     profile.unresolved_risks = json.dumps(unresolved_risks)
     profile.intelligence_summary = narrative
     profile.update_frequency = json.dumps(UPDATE_FREQUENCY)

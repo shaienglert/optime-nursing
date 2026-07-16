@@ -2,6 +2,12 @@ import { QuestionnaireState } from "@/context/questionnaire-context";
 import { SearchFacility } from "@/lib/api";
 import { QUESTION_GRAPH } from "@/lib/questionnaire-graph";
 
+type EngineRunMode = "production" | "simulation";
+
+type EngineRunOptions = {
+  mode?: EngineRunMode;
+};
+
 type SignalRole = "score contribution" | "explanation contribution" | "rejection rationale" | "missing information analysis";
 
 type PersonaType =
@@ -342,6 +348,7 @@ function careTypeTotalAdjustment(facility: SearchFacility, state: QuestionnaireS
 }
 
 const TRUSTED_INTELLIGENCE_SOURCES = ["CMS", "Medicare Care Compare", "State inspections", "AHCA", "Public court records"];
+const ALLOWED_PROVENANCE = ["REAL", "SYNTHETIC", "HEURISTIC", "INFERRED"] as const;
 
 function clampIntelligenceDelta(value: number, trusted: boolean): number {
   const cap = trusted ? 15 : 10;
@@ -352,18 +359,49 @@ function hasTrustedIntelligence(facility: SearchFacility): boolean {
   return facility.intelligenceSnapshot?.sources_used.some((source) => TRUSTED_INTELLIGENCE_SOURCES.includes(source)) || false;
 }
 
-function applyIntelligenceOverlay(priorityScores: PriorityScores, facility: SearchFacility): PriorityScores {
+function provenanceCap(provenance: string, mode: EngineRunMode): number {
+  if (provenance === "REAL") return 15;
+  if (provenance === "HEURISTIC") return 2;
+  if (provenance === "INFERRED") return 5;
+  if (provenance === "SYNTHETIC") return mode === "simulation" ? 10 : 0;
+  return 0;
+}
+
+function sumSignalImpact(facility: SearchFacility, categories: string[], mode: EngineRunMode): number {
+  const signalDetails = facility.intelligenceSnapshot?.signal_details || [];
+  const totals: Record<string, number> = {};
+
+  signalDetails.forEach((signal) => {
+    const category = (signal.category || "").toLowerCase();
+    if (!categories.includes(category)) return;
+
+    const provenance = String(signal.provenance || "INFERRED").toUpperCase();
+    if (!ALLOWED_PROVENANCE.includes(provenance as (typeof ALLOWED_PROVENANCE)[number])) return;
+    if (provenance === "SYNTHETIC" && mode === "production") return;
+
+    const rawImpact = Number(signal.impact_score || 0);
+    const signedImpact = signal.polarity === "negative" && rawImpact > 0 ? -rawImpact : rawImpact;
+    totals[provenance] = (totals[provenance] || 0) + signedImpact;
+  });
+
+  return Object.entries(totals).reduce((sum, [provenance, value]) => {
+    const cap = provenanceCap(provenance, mode);
+    return sum + clamp(value, -cap, cap);
+  }, 0);
+}
+
+function applyIntelligenceOverlay(priorityScores: PriorityScores, facility: SearchFacility, mode: EngineRunMode): PriorityScores {
   const snapshot = facility.intelligenceSnapshot;
   if (!snapshot) return priorityScores;
 
   const trusted = hasTrustedIntelligence(facility);
-  const familyDelta = clampIntelligenceDelta((snapshot.family_satisfaction_index - 50) * 0.16, false);
-  const socialDelta = clampIntelligenceDelta((((snapshot.social_energy_index + snapshot.community_engagement_index) / 2) - 50) * 0.16, false);
-  const culturalDelta = clampIntelligenceDelta((snapshot.cultural_match_signals - 50) * 0.16, false);
-  const reputationDelta = clampIntelligenceDelta((snapshot.reputation_index - 50) * 0.12, false);
-  const staffDelta = clampIntelligenceDelta((snapshot.staff_stability_index - 50) * 0.14, false);
+  const familyDelta = clampIntelligenceDelta(sumSignalImpact(facility, ["family_sentiment"], mode) + ((snapshot.family_satisfaction_index - 50) * 0.06), false);
+  const socialDelta = clampIntelligenceDelta(sumSignalImpact(facility, ["social_signals"], mode) + ((((snapshot.social_energy_index + snapshot.community_engagement_index) / 2) - 50) * 0.06), false);
+  const culturalDelta = clampIntelligenceDelta(sumSignalImpact(facility, ["social_signals"], mode) * 0.5 + ((snapshot.cultural_match_signals - 50) * 0.08), false);
+  const reputationDelta = clampIntelligenceDelta(sumSignalImpact(facility, ["news"], mode) + ((snapshot.reputation_index - 50) * 0.08), false);
+  const staffDelta = clampIntelligenceDelta(sumSignalImpact(facility, ["employee_intelligence"], mode) + ((snapshot.staff_stability_index - 50) * 0.08), false);
   const trustedRiskDelta = clampIntelligenceDelta(
-    ((50 - snapshot.regulatory_risk_index) * 0.24) + ((50 - snapshot.litigation_risk_index) * 0.16),
+    sumSignalImpact(facility, ["regulatory", "legal"], mode) + ((50 - snapshot.regulatory_risk_index) * 0.18) + ((50 - snapshot.litigation_risk_index) * 0.14),
     trusted,
   );
 
@@ -1410,7 +1448,8 @@ function buildQualityCheck(
   };
 }
 
-export function runOptimeV2Engine(facilities: SearchFacility[], state: QuestionnaireState): EngineOutput {
+export function runOptimeV2Engine(facilities: SearchFacility[], state: QuestionnaireState, options?: EngineRunOptions): EngineOutput {
+  const mode: EngineRunMode = options?.mode || "production";
   const answeredSignals = flattenAnsweredSignals(state);
   const signalRoles = answeredSignals.map((signal) => ({
     key: signal.key,
@@ -1439,7 +1478,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       luxuryAmenities,
     };
 
-    const priorityScores = applyIntelligenceOverlay(basePriorityScores, facility);
+    const priorityScores = applyIntelligenceOverlay(basePriorityScores, facility, mode);
 
     const totalScore = weightedTotal(priorityScores, persona.weights) + careTypeTotalAdjustment(facility, state);
 

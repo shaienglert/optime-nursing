@@ -57,8 +57,8 @@ function main() {
   const withoutIntelligence = withIntelligence.map(cloneWithoutIntelligence);
 
   const results = personas().map((persona) => {
-    const withOsint = runOptimeV2Engine(withIntelligence, persona.state);
-    const withoutOsint = runOptimeV2Engine(withoutIntelligence, persona.state);
+    const withOsint = runOptimeV2Engine(withIntelligence, persona.state, { mode: 'simulation' });
+    const withoutOsint = runOptimeV2Engine(withoutIntelligence, persona.state, { mode: 'simulation' });
     const topWith = withOsint.accepted[0]?.facility.id;
     const topWithout = withoutOsint.accepted[0]?.facility.id;
     return {

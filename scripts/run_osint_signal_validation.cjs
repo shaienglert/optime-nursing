@@ -64,8 +64,8 @@ function main() {
   const facilities = backendFacilities.map((facility) => toSearchFacility(facility, 'post'));
   const enriched = facilities.filter((facility) => facility.intelligenceSnapshot);
   const state = baseState();
-  const withOsint = runOptimeV2Engine(facilities, state);
-  const withoutOsint = runOptimeV2Engine(facilities.map(cloneWithoutIntelligence), state);
+  const withOsint = runOptimeV2Engine(facilities, state, { mode: 'simulation' });
+  const withoutOsint = runOptimeV2Engine(facilities.map(cloneWithoutIntelligence), state, { mode: 'simulation' });
   const withoutRankMap = new Map(withoutOsint.accepted.map((item, index) => [item.facility.id, { item, rank: index + 1 }]));
 
   const changedTop10 = withOsint.accepted.slice(0, 10).map((item, index) => {

@@ -72,6 +72,7 @@ class FacilityListOut(BaseModel):
     intelligence_sources_used: List[str] = Field(default_factory=list)
     intelligence_positive_signals: List[str] = Field(default_factory=list)
     intelligence_negative_signals: List[str] = Field(default_factory=list)
+    intelligence_signal_details: List[Dict[str, object]] = Field(default_factory=list)
     family_satisfaction_index: Optional[float] = None
     staff_stability_index: Optional[float] = None
     regulatory_risk_index: Optional[float] = None
@@ -216,6 +217,7 @@ class FacilityIntelligenceProfileOut(BaseModel):
     missing_information: List[str]
     positive_signals: List[str]
     negative_signals: List[str]
+    signal_details: List[Dict[str, object]]
     unresolved_risks: List[str]
     intelligence_summary: str
     social_energy_index: float
@@ -436,6 +438,18 @@ def _parse_json_array(raw: Optional[str]) -> List[str]:
     return []
 
 
+def _parse_json_objects(raw: Optional[str]) -> List[Dict[str, object]]:
+    if not raw:
+        return []
+    try:
+        value = json.loads(raw)
+        if isinstance(value, list):
+            return [item for item in value if isinstance(item, dict)]
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return []
+
+
 def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> FacilityIntelligenceProfileOut:
     return FacilityIntelligenceProfileOut(
         facility_id=profile.facility_id,
@@ -455,6 +469,7 @@ def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> Facili
         missing_information=_parse_json_array(profile.missing_information),
         positive_signals=_parse_json_array(profile.positive_signals),
         negative_signals=_parse_json_array(profile.negative_signals),
+        signal_details=_parse_json_objects(profile.signal_details),
         unresolved_risks=_parse_json_array(profile.unresolved_risks),
         intelligence_summary=profile.intelligence_summary,
         social_energy_index=profile.social_energy_index,
@@ -562,6 +577,7 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
                 intelligence_sources_used=_parse_json_array(profile.sources_used) if profile else [],
                 intelligence_positive_signals=_parse_json_array(profile.positive_signals) if profile else [],
                 intelligence_negative_signals=_parse_json_array(profile.negative_signals) if profile else [],
+                intelligence_signal_details=_parse_json_objects(profile.signal_details) if profile else [],
                 family_satisfaction_index=profile.family_satisfaction_index if profile else None,
                 staff_stability_index=profile.staff_stability_index if profile else None,
                 regulatory_risk_index=profile.regulatory_risk_index if profile else None,

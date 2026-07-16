@@ -44,11 +44,28 @@ export type CareType =
 
 export type CareTypeProbabilities = Record<CareType, number>;
 
+export type SignalProvenance = "REAL" | "SYNTHETIC" | "HEURISTIC" | "INFERRED";
+
+export type IntelligenceSignalDetail = {
+  source: string;
+  collection_timestamp: string;
+  raw_url: string;
+  provenance: SignalProvenance;
+  collection_method: string;
+  signal_type?: string;
+  category?: string;
+  polarity?: string;
+  summary?: string;
+  confidence?: number;
+  impact_score?: number;
+};
+
 export type FacilityIntelligenceSnapshot = {
   intelligence_confidence: number;
   sources_used: string[];
   positive_signals: string[];
   negative_signals: string[];
+  signal_details: IntelligenceSignalDetail[];
   family_satisfaction_index: number;
   staff_stability_index: number;
   regulatory_risk_index: number;
@@ -111,6 +128,7 @@ type BackendFacility = {
   intelligence_sources_used?: string[] | null;
   intelligence_positive_signals?: string[] | null;
   intelligence_negative_signals?: string[] | null;
+  intelligence_signal_details?: IntelligenceSignalDetail[] | null;
   family_satisfaction_index?: number | null;
   staff_stability_index?: number | null;
   regulatory_risk_index?: number | null;
@@ -151,6 +169,7 @@ export type FacilityIntelligenceProfile = {
   missing_information: string[];
   positive_signals: string[];
   negative_signals: string[];
+  signal_details: IntelligenceSignalDetail[];
   unresolved_risks: string[];
   intelligence_summary: string;
   social_energy_index: number;
@@ -732,6 +751,7 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
       sources_used: facility.intelligence_sources_used || [],
       positive_signals: facility.intelligence_positive_signals || [],
       negative_signals: facility.intelligence_negative_signals || [],
+      signal_details: facility.intelligence_signal_details || [],
       family_satisfaction_index: facility.family_satisfaction_index || 0,
       staff_stability_index: facility.staff_stability_index || 0,
       regulatory_risk_index: facility.regulatory_risk_index || 0,
