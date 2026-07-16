@@ -378,6 +378,8 @@ def build_facility_intelligence_profile(db: Session, facility: Facility) -> Faci
 
 
 def run_intelligence_collection(db: Session, facility_id: Optional[int] = None) -> Dict[str, object]:
+    FacilityIntelligenceProfile.__table__.create(bind=db.bind, checkfirst=True)
+
     if facility_id is not None:
         facilities = db.query(Facility).filter(Facility.id == facility_id).all()
     else:
