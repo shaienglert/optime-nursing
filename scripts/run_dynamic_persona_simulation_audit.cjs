@@ -938,4 +938,17 @@ function main() {
   console.log(markdown);
 }
 
-main();
+module.exports = {
+  CARE_TYPES,
+  loadBackendFacilities,
+  toSearchFacility,
+  emptyState,
+  buildShortExplanation,
+  inferLegacyCareTaxonomy,
+  inferExplicitCareTaxonomy,
+  combineConfidence,
+};
+
+if (require.main === module) {
+  main();
+}
