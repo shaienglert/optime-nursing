@@ -30,6 +30,13 @@ function highlightLabel(index: number): string {
   return "Worth Considering";
 }
 
+function recommendationTitle(index: number): string {
+  if (index === 0) return "#1 Recommendation";
+  if (index === 1) return "#2 Recommendation";
+  if (index === 2) return "#3 Recommendation";
+  return `#${index + 1} Recommendation`;
+}
+
 function hasRealAddressData(distanceProfile: ReturnType<typeof useQuestionnaire>["state"]["humanIntelligenceV2"]["distanceProfile"]): boolean {
   return Boolean(
     distanceProfile.referenceLocations.parentCurrentHome ||
@@ -100,11 +107,11 @@ export function ResultsPageClient() {
     router.replace("/");
   };
 
-  const renderCard = (recommendation: RankedRecommendation, index: number, compact = false) => {
+  const renderFullCard = (recommendation: RankedRecommendation, index: number) => {
     const facility = recommendation.facility;
 
     return (
-      <article key={compact ? `compact-${facility.id}` : facility.id} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
+      <article key={facility.id} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="mb-2 inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(index)}</p>
@@ -227,6 +234,65 @@ export function ResultsPageClient() {
     );
   };
 
+  const renderTopRecommendation = (recommendation: RankedRecommendation, index: number) => {
+    const facility = recommendation.facility;
+
+    return (
+      <section key={`top-${facility.id}`} className="space-y-4 rounded-3xl border border-[#e8ddcc] bg-[#fffdf9] p-5 shadow-[0_12px_40px_-28px_rgba(69,58,43,0.35)]">
+        <div className="rounded-2xl border border-[#d9cfbf] bg-[linear-gradient(120deg,#f7efe0_0%,#fbf6ec_55%,#ffffff_100%)] p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5f7f6b]">Advisor Recommendation</p>
+          <h3 className="mt-1 text-2xl font-semibold text-[#2f2a24]">{recommendationTitle(index)}</h3>
+          <p className="mt-2 text-sm text-[#5f5548]">{highlightLabel(index)} for {relationship}, with a person-first ranking emphasis on care fit before facility prestige.</p>
+        </div>
+
+        <div className="rounded-2xl border border-[#e7ddcd] bg-white p-4">
+          <p className="text-sm font-semibold text-[#2f2a24]">Personalized explanation</p>
+          <p className="mt-1 text-sm text-[#5f5548]">{recommendation.whyThisFits}</p>
+        </div>
+
+        {renderFullCard(recommendation, index)}
+      </section>
+    );
+  };
+
+  const renderCompactCard = (recommendation: RankedRecommendation, index: number) => {
+    const facility = recommendation.facility;
+    return (
+      <article key={`compact-${facility.id}`} className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#6a6257]">{recommendationTitle(index)}</p>
+            <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">{facility.name}</h3>
+            <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
+          </div>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${scoreBadgeStyle(recommendation.totalScore)}`}>
+            {Math.round(recommendation.totalScore)}
+          </span>
+        </div>
+
+        <p className="mt-3 text-sm text-[#5f554a]">{recommendation.tradeoff}</p>
+        <p className="mt-2 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {facility.matchBadges.slice(0, 3).map((badge) => (
+            <span key={`compact-${facility.id}-${badge}`} className="rounded-full bg-[#edf3ea] px-3 py-1 text-xs font-medium text-[#4c6f5b]">
+              {badge}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between">
+          <Link href={`/facilities/${facility.id}`} className="text-sm font-semibold text-[#5f7f6b] hover:text-[#4f6f8f]">
+            View
+          </Link>
+          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${facility.name} ${facility.city}`)}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#5b5245] hover:text-[#2f2a24]">
+            Map
+          </a>
+        </div>
+      </article>
+    );
+  };
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
       <section className="mx-auto max-w-7xl">
@@ -296,12 +362,13 @@ export function ResultsPageClient() {
               <p className="mt-1 text-sm text-[#5c5347]">Distance affects score only and never removes a community from visibility.</p>
             </article>
 
-            <section className="grid gap-4">
-              {topRecommendations.map((recommendation, index) => renderCard(recommendation, index))}
+            <section className="space-y-6">
+              {topRecommendations.map((recommendation, index) => renderTopRecommendation(recommendation, index))}
             </section>
 
             {remainingRecommendations.length > 0 ? (
               <div className="space-y-4">
+                <div className="h-px w-full bg-[linear-gradient(90deg,transparent,#d9cfbf,transparent)]" />
                 <button
                   type="button"
                   onClick={() => setShowMoreCommunities((current) => !current)}
@@ -312,7 +379,7 @@ export function ResultsPageClient() {
 
                 {showMoreCommunities ? (
                   <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {remainingRecommendations.map((recommendation, index) => renderCard(recommendation, index + TOP_RECOMMENDATION_COUNT, true))}
+                    {remainingRecommendations.map((recommendation, index) => renderCompactCard(recommendation, index + TOP_RECOMMENDATION_COUNT))}
                   </section>
                 ) : null}
               </div>
