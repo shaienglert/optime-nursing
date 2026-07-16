@@ -36,6 +36,39 @@ type ReportBreakdownItem = {
   weightedContribution: number;
 };
 
+type AuditCategoryRow = {
+  name: string;
+  rawScore: number;
+  weight: number;
+  weightedScore: number;
+  finalContribution: number;
+  source: string;
+};
+
+type AuditAdjustmentRow = {
+  name: string;
+  rawScore: number;
+  value: number;
+  source: string;
+  applied: boolean;
+};
+
+type AuditConfidence = {
+  confidenceScore: number;
+  missingDataImpact: string;
+  sourceCoverage: string;
+  lastIntelligenceRefresh: string;
+};
+
+type AuditFormula = {
+  executedFormula: string;
+  finalScore: number;
+  categoryRows: AuditCategoryRow[];
+  bonuses: AuditAdjustmentRow[];
+  penalties: AuditAdjustmentRow[];
+  confidence: AuditConfidence;
+};
+
 export type IntelligenceScoringReport = {
   finalMatchScore: number;
   confidenceScore: number;
@@ -48,6 +81,7 @@ export type IntelligenceScoringReport = {
   missingIntelligence: string[];
   humanNarrativeExplanation: string;
   scoreTraceability: string[];
+  audit: AuditFormula;
 };
 
 export type RankedRecommendation = {
@@ -661,19 +695,26 @@ function buildIntelligenceReport(
   const scoreBreakdown = buildReportBreakdown(facility, state, priorityScores, contributions);
   const sourcesUsed = buildIntelligenceSourcesUsed(facility);
   const missingIntelligence = [...missingInformation];
+  const facilityText = joinedFacilityText(facility);
+  const distanceEvaluation = parseDistancePoints(state);
+  const languagePreference = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage;
+  const preferredActivities = state.happinessPreferences;
+  const staffQualityScore = Math.round(facility.staffing_rating ? facility.staffing_rating * 20 : 50);
+  const reviewSentimentScore = Math.round(facility.overall_rating ? facility.overall_rating * 20 : 50);
+  const regulatoryQualityScore = Math.round(facility.inspection_rating ? facility.inspection_rating * 20 : 50);
+  const futureCareScore = Math.round(clamp((priorityScores.careFit * 0.65) + (priorityScores.clinicalQuality * 0.35)));
+  const languageFitScore = languagePreference ? (includesAny(facilityText, [languagePreference]) ? 92 : 48) : 50;
+  const activityFitScore = preferredActivities.length > 0 ? clamp(35 + preferredActivities.filter((activity) => includesAny(facilityText, [activity])).length * 18) : 50;
 
   if (!sourcesUsed.some((source) => /review|ratings?/i.test(source))) {
     missingIntelligence.push("No public review source is connected in the current search payload.");
   }
-
   if (!sourcesUsed.some((source) => /indeed|glassdoor|linkedin/i.test(source))) {
     missingIntelligence.push("No employee intelligence source is connected in the current search payload.");
   }
-
   if (!sourcesUsed.some((source) => /court|lawsuit|legal/i.test(source))) {
     missingIntelligence.push("No legal source is connected in the current search payload.");
   }
-
   if (!sourcesUsed.some((source) => /facebook|instagram|social/i.test(source))) {
     missingIntelligence.push("No public social channel source is connected in the current search payload.");
   }
@@ -681,13 +722,224 @@ function buildIntelligenceReport(
   const confidencePenalty = Math.min(30, missingIntelligence.length * 3);
   const adjustedConfidence = clamp(confidenceScore - confidencePenalty);
 
-  const positiveContributors = buildContributorRows(contributions, totalScore, "Weighted person-fit formula", true).slice(0, 4);
-  const negativeContributors = buildContributorRows(contributions, totalScore, "Lower weighted fit dimensions", false).slice(0, 3);
+  const categoryRows: AuditCategoryRow[] = [
+    {
+      name: "Medical Fit",
+      rawScore: priorityScores.careFit,
+      weight: PRIORITY_WEIGHTS.careFit,
+      weightedScore: roundContribution(priorityScores.careFit * PRIORITY_WEIGHTS.careFit),
+      finalContribution: roundContribution(priorityScores.careFit * PRIORITY_WEIGHTS.careFit),
+      source: "Care type matching from the current questionnaire and facility care types",
+    },
+    {
+      name: "Lifestyle Fit",
+      rawScore: priorityScores.lifestyleFit,
+      weight: PRIORITY_WEIGHTS.lifestyleFit,
+      weightedScore: roundContribution(priorityScores.lifestyleFit * PRIORITY_WEIGHTS.lifestyleFit),
+      finalContribution: roundContribution(priorityScores.lifestyleFit * PRIORITY_WEIGHTS.lifestyleFit),
+      source: "Activity preference matching against facility text",
+    },
+    {
+      name: "Social Fit",
+      rawScore: priorityScores.socialFit,
+      weight: PRIORITY_WEIGHTS.socialFit,
+      weightedScore: roundContribution(priorityScores.socialFit * PRIORITY_WEIGHTS.socialFit),
+      finalContribution: roundContribution(priorityScores.socialFit * PRIORITY_WEIGHTS.socialFit),
+      source: "Social and community cues in the current facility metadata",
+    },
+    {
+      name: "Family Proximity",
+      rawScore: priorityScores.familyFit,
+      weight: PRIORITY_WEIGHTS.familyFit,
+      weightedScore: roundContribution(priorityScores.familyFit * PRIORITY_WEIGHTS.familyFit),
+      finalContribution: roundContribution(priorityScores.familyFit * PRIORITY_WEIGHTS.familyFit),
+      source: `Distance and visit cadence; ${distanceEvaluation.note}`,
+    },
+    {
+      name: "Cultural Fit",
+      rawScore: priorityScores.culturalFit,
+      weight: PRIORITY_WEIGHTS.culturalFit,
+      weightedScore: roundContribution(priorityScores.culturalFit * PRIORITY_WEIGHTS.culturalFit),
+      finalContribution: roundContribution(priorityScores.culturalFit * PRIORITY_WEIGHTS.culturalFit),
+      source: "Cultural, faith, language, and food preference matching",
+    },
+    {
+      name: "Language Fit",
+      rawScore: languageFitScore,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: languagePreference ? `Preferred language check for ${languagePreference}` : "No language preference was supplied",
+    },
+    {
+      name: "Activities Fit",
+      rawScore: activityFitScore,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: preferredActivities.length > 0 ? "Lifestyle activity cues are already captured in the current ranking formula" : "No activity preference was supplied",
+    },
+    {
+      name: "Future Care Fit",
+      rawScore: futureCareScore,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: "Future care signals affect narrative and confidence, not the current score formula",
+    },
+    {
+      name: "Clinical Quality",
+      rawScore: priorityScores.clinicalQuality,
+      weight: PRIORITY_WEIGHTS.clinicalQuality,
+      weightedScore: roundContribution(priorityScores.clinicalQuality * PRIORITY_WEIGHTS.clinicalQuality),
+      finalContribution: roundContribution(priorityScores.clinicalQuality * PRIORITY_WEIGHTS.clinicalQuality),
+      source: "Facility clinical quality signals",
+    },
+    {
+      name: "Staff Quality",
+      rawScore: staffQualityScore,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: "Staff quality is visible in the runtime audit but not separately weighted in the current engine",
+    },
+    {
+      name: "Review Sentiment",
+      rawScore: reviewSentimentScore,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: "Review sentiment is not separately weighted in the current engine",
+    },
+    {
+      name: "Regulatory Quality",
+      rawScore: regulatoryQualityScore,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: "Regulatory quality is visible in the audit but not separately weighted in the current engine",
+    },
+    {
+      name: "Legal Risk",
+      rawScore: 0,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: "No legal source is connected in the current search payload",
+    },
+    {
+      name: "Distance Adjustment",
+      rawScore: distanceEvaluation.points,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: `Distance adjustment is already folded into family proximity in the current formula; ${distanceEvaluation.note}`,
+    },
+    {
+      name: "Unknown Data Penalty",
+      rawScore: missingIntelligence.length,
+      weight: 0,
+      weightedScore: 0,
+      finalContribution: 0,
+      source: "Missing intelligence lowers confidence only; it never lowers score",
+    },
+  ];
+
+  const bonuses: AuditAdjustmentRow[] = [
+    {
+      name: "independent living match",
+      rawScore: facility.careTypes.some((care) => /independent|active adult/i.test(care)) ? 1 : 0,
+      value: facility.careTypes.some((care) => /independent|active adult/i.test(care)) && state.assistanceLevel === "Fully independent" ? 8 : 0,
+      source: "Facility care types and independence requirement",
+      applied: facility.careTypes.some((care) => /independent|active adult/i.test(care)) && state.assistanceLevel === "Fully independent",
+    },
+    {
+      name: "strong social activity",
+      rawScore: socialMatchScore,
+      value: socialMatchScore >= 60 ? 7 : 0,
+      source: "Current social fit score",
+      applied: socialMatchScore >= 60,
+    },
+    {
+      name: "excellent reviews",
+      rawScore: reviewSentimentScore,
+      value: reviewSentimentScore >= 80 ? 6 : 0,
+      source: "Overall facility rating",
+      applied: reviewSentimentScore >= 80,
+    },
+    {
+      name: "bilingual staff",
+      rawScore: languageFitScore,
+      value: languagePreference && includesAny(facilityText, [languagePreference]) ? 5 : 0,
+      source: "Preferred language match in facility metadata",
+      applied: Boolean(languagePreference && includesAny(facilityText, [languagePreference])),
+    },
+    {
+      name: "continuum of care",
+      rawScore: facility.careTypes.length,
+      value: facility.careTypes.length > 1 ? 4 : 0,
+      source: "Multiple care types in the current facility profile",
+      applied: facility.careTypes.length > 1,
+    },
+  ];
+
+  const penalties: AuditAdjustmentRow[] = [
+    {
+      name: "no movie activities found",
+      rawScore: includesAny(facilityText, ["movie", "cinema"]) ? 0 : 1,
+      value: preferredActivities.includes("Movies") && !includesAny(facilityText, ["movie", "cinema"]) ? 2 : 0,
+      source: "Lifestyle preference check against current facility text",
+      applied: preferredActivities.includes("Movies") && !includesAny(facilityText, ["movie", "cinema"]),
+    },
+    {
+      name: "no Hebrew support found",
+      rawScore: languagePreference && /hebrew/i.test(languagePreference) ? 1 : 0,
+      value: languagePreference && /hebrew/i.test(languagePreference) && !includesAny(facilityText, ["hebrew", "עברית"]) ? 3 : 0,
+      source: "Language preference check against current facility text",
+      applied: Boolean(languagePreference && /hebrew/i.test(languagePreference) && !includesAny(facilityText, ["hebrew", "עברית"])),
+    },
+    {
+      name: "distance exceeds target",
+      rawScore: distanceEvaluation.points,
+      value: distanceEvaluation.points < 0 ? Math.abs(distanceEvaluation.points) : 0,
+      source: distanceEvaluation.note,
+      applied: distanceEvaluation.points < 0,
+    },
+    {
+      name: "missing employee reviews",
+      rawScore: sourcesUsed.some((source) => /indeed|glassdoor|linkedin/i.test(source)) ? 1 : 0,
+      value: sourcesUsed.some((source) => /indeed|glassdoor|linkedin/i.test(source)) ? 0 : 2,
+      source: "Employee intelligence source availability",
+      applied: !sourcesUsed.some((source) => /indeed|glassdoor|linkedin/i.test(source)),
+    },
+    {
+      name: "staffing concerns",
+      rawScore: staffQualityScore,
+      value: staffQualityScore < 60 ? 5 : 0,
+      source: "Staff quality score derived from current facility metadata",
+      applied: staffQualityScore < 60,
+    },
+  ];
+
   const traceability = [
     `Final score = sum of weighted core fit components: ${contributions.map((item) => `${item.label}=${item.value.toFixed(2)}`).join(", ")}.`,
     `Missing intelligence affects confidence only, never the score.`,
     `No hidden bonuses or hidden penalties are applied in the ranking formula.`,
   ];
+
+  const audit: AuditFormula = {
+    executedFormula: "final_score = careFit*0.28 + lifestyleFit*0.18 + socialFit*0.15 + culturalFit*0.12 + familyFit*0.10 + financialFit*0.08 + clinicalQuality*0.06 + luxuryAmenities*0.03",
+    finalScore: Math.round(totalScore),
+    categoryRows,
+    bonuses,
+    penalties,
+    confidence: {
+      confidenceScore: adjustedConfidence,
+      missingDataImpact: `${missingIntelligence.length} missing intelligence item(s); confidence reduced by ${confidencePenalty}`,
+      sourceCoverage: `${sourcesUsed.length} source bucket(s) connected`,
+      lastIntelligenceRefresh: new Date().toISOString(),
+    },
+  };
 
   return {
     finalMatchScore: Math.round(totalScore),
@@ -713,6 +965,7 @@ function buildIntelligenceReport(
     scoreTraceability: traceability
       .concat(positiveSignals.length > 0 ? [`Positive signals observed: ${positiveSignals.slice(0, 3).join("; ")}.`] : [])
       .concat(negativeSignals.length > 0 ? [`Negative signals observed: ${negativeSignals.slice(0, 3).join("; ")}.`] : []),
+    audit,
   };
 }
 

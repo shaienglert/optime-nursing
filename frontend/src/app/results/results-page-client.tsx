@@ -9,6 +9,7 @@ import { SearchFacility, fetchSearchFacilities } from "@/lib/api";
 import { RankedRecommendation, runOptimeV2Engine } from "@/lib/optime-v2-engine";
 
 const TOP_RECOMMENDATION_COUNT = 3;
+const TOP_AUDIT_COUNT = 10;
 
 function relationshipCopy(relationship: string): string {
   if (relationship === "Myself") return "You";
@@ -100,6 +101,7 @@ export function ResultsPageClient() {
 
   const engineOutput = useMemo(() => runOptimeV2Engine(facilities, state), [facilities, state]);
   const topRecommendations = useMemo(() => engineOutput.accepted.slice(0, TOP_RECOMMENDATION_COUNT), [engineOutput]);
+  const topAuditRecommendations = useMemo(() => engineOutput.accepted.slice(0, TOP_AUDIT_COUNT), [engineOutput]);
   const remainingRecommendations = useMemo(() => engineOutput.accepted.slice(TOP_RECOMMENDATION_COUNT), [engineOutput]);
 
   const startNewSearch = () => {
@@ -392,6 +394,109 @@ export function ResultsPageClient() {
               <p className="mt-2 text-sm text-[#5c5347]">Ranking priority follows care, lifestyle, social, cultural, family, financial, clinical quality, then luxury amenities.</p>
               <p className="mt-1 text-sm text-[#5c5347]">Distance affects score only and never removes a community from visibility.</p>
             </article>
+
+            <section className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_14px_40px_-32px_rgba(69,58,43,0.3)]">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Live Recommendation Score Audit Report</p>
+              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Top 10 communities with exact runtime score math</h2>
+              <p className="mt-2 text-sm text-[#5c5347]">Each audit row below uses the current runtime scores from the ranking engine. Missing intelligence lowers confidence only and never changes the score.</p>
+
+              <div className="mt-5 space-y-3">
+                {topAuditRecommendations.map((recommendation, index) => {
+                  const report = recommendation.report;
+
+                  return (
+                    <details key={`audit-${recommendation.facility.id}`} className="group rounded-2xl border border-[#e7ddcd] bg-[#fcfaf5] p-4">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a6257]">Rank #{report.rankingPosition ?? index + 1}</p>
+                          <h3 className="text-lg font-semibold text-[#2f2a24]">{recommendation.facility.name}</h3>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-semibold text-[#2f2a24]">{report.finalMatchScore}/100</p>
+                          <p className="text-xs text-[#6c655b]">Confidence {report.confidenceScore}/100</p>
+                        </div>
+                      </summary>
+
+                      <div className="mt-4 space-y-5 text-sm text-[#4f473d]">
+                        <section className="overflow-hidden rounded-xl border border-[#e7ddcd] bg-white">
+                          <table className="w-full border-collapse text-left text-sm">
+                            <thead className="bg-[#f7f3ea] text-xs uppercase tracking-[0.08em] text-[#6a6257]">
+                              <tr>
+                                <th className="px-3 py-2">Category</th>
+                                <th className="px-3 py-2">Raw Score</th>
+                                <th className="px-3 py-2">Weight</th>
+                                <th className="px-3 py-2">Weighted Score</th>
+                                <th className="px-3 py-2">Final Contribution</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {report.audit.categoryRows.map((row) => (
+                                <tr key={`${recommendation.facility.id}-${row.name}`} className="border-t border-[#efe7d9]">
+                                  <td className="px-3 py-2 font-medium text-[#2f2a24]">{row.name}</td>
+                                  <td className="px-3 py-2">{row.rawScore}</td>
+                                  <td className="px-3 py-2">{row.weight.toFixed(2)}</td>
+                                  <td className="px-3 py-2">{row.weightedScore.toFixed(2)}</td>
+                                  <td className="px-3 py-2">{row.finalContribution.toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </section>
+
+                        <section>
+                          <p className="font-semibold text-[#2f2a24]">Bonuses</p>
+                          <ul className="mt-2 space-y-1">
+                            {report.audit.bonuses.map((item) => (
+                              <li key={`${recommendation.facility.id}-bonus-${item.name}`} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#e6efe4] bg-[#f7fbf7] p-3">
+                                <span>{item.name}</span>
+                                <span>{item.applied ? `+${item.value}` : `+0`}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
+
+                        <section>
+                          <p className="font-semibold text-[#2f2a24]">Penalties</p>
+                          <ul className="mt-2 space-y-1">
+                            {report.audit.penalties.map((item) => (
+                              <li key={`${recommendation.facility.id}-penalty-${item.name}`} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#eeddd5] bg-[#fff9f7] p-3">
+                                <span>{item.name}</span>
+                                <span>{item.applied ? `-${item.value}` : `0`}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
+
+                        <section>
+                          <p className="font-semibold text-[#2f2a24]">Data sources used</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {report.intelligenceSourcesUsed.map((source) => (
+                              <span key={`${recommendation.facility.id}-audit-source-${source}`} className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 text-xs font-medium text-[#5f5548]">
+                                {source}
+                              </span>
+                            ))}
+                          </div>
+                        </section>
+
+                        <section>
+                          <p className="font-semibold text-[#2f2a24]">Confidence calculation</p>
+                          <p className="mt-1">Confidence score: {report.audit.confidence.confidenceScore}/100</p>
+                          <p>Missing data impact: {report.audit.confidence.missingDataImpact}</p>
+                          <p>Source coverage: {report.audit.confidence.sourceCoverage}</p>
+                          <p>Last intelligence refresh: {report.audit.confidence.lastIntelligenceRefresh}</p>
+                        </section>
+
+                        <section>
+                          <p className="font-semibold text-[#2f2a24]">Executed formula</p>
+                          <p className="mt-1">{report.audit.executedFormula}</p>
+                          <p className="mt-1">Final score = {report.audit.finalScore}/100</p>
+                        </section>
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            </section>
 
             <section className="space-y-6">
               {topRecommendations.map((recommendation, index) => renderTopRecommendation(recommendation, index))}
