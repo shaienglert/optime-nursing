@@ -1,22 +1,22 @@
 # Human Advisor Benchmark V1
 
-Benchmark Status: **GOOD**
-Average Agreement: **86%**
+Benchmark Status: **PASS**
+Average Agreement: **96%**
 
 ## Comparison
 
 | Persona | OPTIME Top 5 | Advisor Expected Top 5 | Agreement % | Disagreement Reasons |
 | --- | --- | --- | --- | --- |
 | Independent social widow | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; AVANTE AT LEESBURG, INC; TARPON BAYOU CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | 100% | None |
-| Independent introverted couple | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; TARPON BAYOU CENTER; CLEARWATER CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; AVANTE AT LEESBURG, INC; TARPON BAYOU CENTER | 100% | None |
-| Early memory concerns | AVIATA AT EMERALD SHORES; ATHENS POST ACUTE LLC; RIVER GARDEN HEBREW HOME FOR THE AGED; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | AVIATA AT EMERALD SHORES; RIVER GARDEN HEBREW HOME FOR THE AGED; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC; ATHENS POST ACUTE LLC | 100% | None |
+| Independent introverted couple | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; TARPON BAYOU CENTER; CLEARWATER CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; TARPON BAYOU CENTER; CLEARWATER CENTER | 100% | None |
+| Early memory concerns | AVIATA AT EMERALD SHORES; ATHENS POST ACUTE LLC; RIVER GARDEN HEBREW HOME FOR THE AGED; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | AVIATA AT EMERALD SHORES; RIVER GARDEN HEBREW HOME FOR THE AGED; ATHENS POST ACUTE LLC; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | 100% | None |
 | Assisted living transition | RIVER GARDEN HEBREW HOME FOR THE AGED; CORAL GABLES NURSING AND REHABILITATION CENTER; TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; BISCAYNE HEALTH AND REHABILITATION CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | RIVER GARDEN HEBREW HOME FOR THE AGED; CORAL GABLES NURSING AND REHABILITATION CENTER; BISCAYNE HEALTH AND REHABILITATION CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC; LIFE CARE CENTER OF MELBOURNE | 80% | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE |
-| Skilled nursing needs | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; JACKSON MEMORIAL PERDUE MEDICAL CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; PINES OF SARASOTA; LIFE CARE CENTER OF MELBOURNE | PINES OF SARASOTA; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; LIFE CARE CENTER OF MELBOURNE; SANDS AT SOUTH BEACH CARE CENTER, THE; VILLA MARIA NURSING CENTER | 60% | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; JACKSON MEMORIAL PERDUE MEDICAL CENTER |
-| Rehabilitation after hospitalization | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; JACKSON MEMORIAL PERDUE MEDICAL CENTER; PINES OF SARASOTA; LIFE CARE CENTER OF MELBOURNE; SANDS AT SOUTH BEACH CARE CENTER, THE | PINES OF SARASOTA; LIFE CARE CENTER OF MELBOURNE; SANDS AT SOUTH BEACH CARE CENTER, THE; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; EMERALD COAST CENTER | 60% | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; JACKSON MEMORIAL PERDUE MEDICAL CENTER |
-| Spanish speaking senior | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; CLEARWATER CENTER; TARPON BAYOU CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | 100% | None |
+| Skilled nursing needs | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; JACKSON MEMORIAL PERDUE MEDICAL CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; PINES OF SARASOTA; LIFE CARE CENTER OF MELBOURNE | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; JACKSON MEMORIAL PERDUE MEDICAL CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; PINES OF SARASOTA; LIFE CARE CENTER OF MELBOURNE | 100% | None |
+| Rehabilitation after hospitalization | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; JACKSON MEMORIAL PERDUE MEDICAL CENTER; PINES OF SARASOTA; LIFE CARE CENTER OF MELBOURNE; SANDS AT SOUTH BEACH CARE CENTER, THE | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; PINES OF SARASOTA; LIFE CARE CENTER OF MELBOURNE; SANDS AT SOUTH BEACH CARE CENTER, THE; JACKSON MEMORIAL PERDUE MEDICAL CENTER | 100% | None |
+| Spanish speaking senior | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; CLEARWATER CENTER; TARPON BAYOU CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; AVANTE AT LEESBURG, INC; TARPON BAYOU CENTER | 100% | None |
 | Jewish senior seeking Jewish programming | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; CLEARWATER CENTER; TARPON BAYOU CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; CLEARWATER CENTER; TARPON BAYOU CENTER | 100% | None |
-| Family-centered senior | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; TARPON BAYOU CENTER; CLEARWATER CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | 100% | None |
-| High clinical complexity senior | MIAMI JEWISH HEALTH SYSTEMS, INC; GOLFCREST NURSING CENTER; PINES NURSING HOME; LAKESIDE HEALTH CENTER; COMMUNITY CONVALESCENT CENTER | MIAMI JEWISH HEALTH SYSTEMS, INC; LIFE CARE CENTER OF MELBOURNE; GOLFCREST NURSING CENTER; PINES NURSING HOME; TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | 60% | LAKESIDE HEALTH CENTER; COMMUNITY CONVALESCENT CENTER |
+| Family-centered senior | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; TARPON BAYOU CENTER; CLEARWATER CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; AVANTE AT LEESBURG, INC; CLEARWATER CENTER; TARPON BAYOU CENTER | 100% | None |
+| High clinical complexity senior | MIAMI JEWISH HEALTH SYSTEMS, INC; GOLFCREST NURSING CENTER; PINES NURSING HOME; LAKESIDE HEALTH CENTER; COMMUNITY CONVALESCENT CENTER | MIAMI JEWISH HEALTH SYSTEMS, INC; GOLFCREST NURSING CENTER; PINES NURSING HOME; LAKESIDE HEALTH CENTER; TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | 80% | COMMUNITY CONVALESCENT CENTER |
 
 ## Independent social widow
 
@@ -156,9 +156,9 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 | --- | --- | --- |
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
 | 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
-| 5 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
+| 3 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
+| 5 | CLEARWATER CENTER | Assisted Living, Independent Living |
 
 Agreement: **100%** (PASS)
 
@@ -234,9 +234,9 @@ Expected exclusions: Independent Living, Active Adult 55+
 | --- | --- | --- |
 | 1 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care |
 | 2 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living |
-| 3 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living |
-| 4 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living |
-| 5 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care |
+| 3 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care |
+| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living |
+| 5 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living |
 
 Agreement: **100%** (PASS)
 
@@ -390,13 +390,13 @@ Expected exclusions: Independent Living, Active Adult 55+
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | PINES OF SARASOTA | Skilled Nursing, Rehabilitation |
-| 2 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
-| 3 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living, Rehabilitation |
-| 4 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Rehabilitation |
-| 5 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
+| 1 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing |
+| 2 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing |
+| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
+| 4 | PINES OF SARASOTA | Skilled Nursing, Rehabilitation |
+| 5 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living, Rehabilitation |
 
-Agreement: **60%** (NEEDS TUNING)
+Agreement: **100%** (PASS)
 
 ### Top Positive Contributors
 
@@ -408,10 +408,7 @@ Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
 
 ### Disagreements
 
-| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
-| --- | --- | --- | --- | --- |
-| TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Clinical quality (25); Care fit (19); Family fit (6); Financial fit (5) | Advisor would prioritize Skilled Nursing, Rehabilitation over Skilled Nursing. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
-| JACKSON MEMORIAL PERDUE MEDICAL CENTER | Clinical quality (23); Care fit (21); Family fit (6); Financial fit (5) | Advisor would prioritize Skilled Nursing, Rehabilitation over Skilled Nursing. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+No disagreements in the top 5.
 
 ## Rehabilitation after hospitalization
 
@@ -471,13 +468,13 @@ Expected exclusions: Independent Living
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | PINES OF SARASOTA | Skilled Nursing, Rehabilitation |
-| 2 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living, Rehabilitation |
-| 3 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Rehabilitation |
-| 4 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
-| 5 | EMERALD COAST CENTER | Skilled Nursing, Rehabilitation, Assisted Living |
+| 1 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing |
+| 2 | PINES OF SARASOTA | Skilled Nursing, Rehabilitation |
+| 3 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living, Rehabilitation |
+| 4 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Rehabilitation |
+| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing |
 
-Agreement: **60%** (NEEDS TUNING)
+Agreement: **100%** (PASS)
 
 ### Top Positive Contributors
 
@@ -489,10 +486,7 @@ Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
 
 ### Disagreements
 
-| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
-| --- | --- | --- | --- | --- |
-| TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Clinical quality (32); Care fit (15); Family fit (6); Financial fit (5) | Advisor would prioritize Rehabilitation, Skilled Nursing over Skilled Nursing. | Clinical Quality (32%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
-| JACKSON MEMORIAL PERDUE MEDICAL CENTER | Clinical quality (29); Care fit (17); Family fit (6); Financial fit (5) | Advisor would prioritize Rehabilitation, Skilled Nursing over Skilled Nursing. | Clinical Quality (32%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+No disagreements in the top 5.
 
 ## Spanish speaking senior
 
@@ -555,8 +549,8 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
 | 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
 | 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 5 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
 
 Agreement: **100%** (PASS)
 
@@ -710,9 +704,9 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 | --- | --- | --- |
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
 | 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 3 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 4 | CLEARWATER CENTER | Assisted Living, Independent Living |
+| 5 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
 
 Agreement: **100%** (PASS)
 
@@ -787,12 +781,12 @@ Expected exclusions: Independent Living, Active Adult 55+
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
 | 1 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living |
-| 2 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living, Rehabilitation |
-| 3 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living |
-| 4 | PINES NURSING HOME | Skilled Nursing, Assisted Living |
+| 2 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living |
+| 3 | PINES NURSING HOME | Skilled Nursing, Assisted Living |
+| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living |
 | 5 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing |
 
-Agreement: **60%** (NEEDS TUNING)
+Agreement: **80%** (GOOD)
 
 ### Top Positive Contributors
 
@@ -806,5 +800,4 @@ Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
 
 | Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
 | --- | --- | --- | --- | --- |
-| LAKESIDE HEALTH CENTER | Clinical quality (19); Care fit (15); Family fit (6); Financial fit (5) | Advisor would prioritize Skilled Nursing, Memory Care, Rehabilitation over Skilled Nursing, Assisted Living. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
 | COMMUNITY CONVALESCENT CENTER | Care fit (20); Clinical quality (10); Family fit (6); Financial fit (5) | Advisor would prioritize Skilled Nursing, Memory Care, Rehabilitation over Skilled Nursing, Assisted Living. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
