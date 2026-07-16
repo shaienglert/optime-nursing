@@ -68,6 +68,7 @@ function emptyCareTypeProbabilities() {
 
 function loadBackendFacilities() {
   const dbPath = path.join(repoRoot, 'optime_nursing.db');
+  const pythonPath = path.join(repoRoot, '.venv', 'Scripts', 'python.exe');
   const pythonCode = [
     'import json, sqlite3, sys',
     'sys.path.insert(0, r"' + path.join(repoRoot, 'backend').replace(/\\/g, '\\\\') + '")',
@@ -82,7 +83,7 @@ function loadBackendFacilities() {
     'rows = cur.execute("select f.id, f.cms_id, f.name, f.city, f.state, f.address, f.zip_code, f.phone, f.overall_rating, f.staffing_rating, f.quality_rating, f.inspection_rating, f.beds, f.medical_quality_score, f.staffing_score, f.safety_score, f.overall_optime_score, f.confidence_level, p.intelligence_confidence, p.family_satisfaction_index, p.staff_stability_index, p.regulatory_risk_index, p.litigation_risk_index, p.social_energy_index, p.community_engagement_index, p.reputation_index, p.cultural_match_signals, p.sources_used as intelligence_sources_used, p.positive_signals as intelligence_positive_signals, p.negative_signals as intelligence_negative_signals from facilities f left join facility_intelligence_profiles p on p.facility_id = f.id where f.state = ? order by f.overall_optime_score desc, f.id asc", ("FL",)).fetchall()',
     'print(json.dumps([dict(row) for row in rows]))',
   ].join('\n');
-  const result = spawnSync('python', ['-c', pythonCode, dbPath], {
+  const result = spawnSync(pythonPath, ['-c', pythonCode, dbPath], {
     cwd: repoRoot,
     encoding: 'utf8',
     maxBuffer: 20 * 1024 * 1024,
