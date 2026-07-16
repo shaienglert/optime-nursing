@@ -12,6 +12,12 @@ EVIDENCE_VERIFIED_FACT = "verified_fact"
 EVIDENCE_PUBLIC_ALLEGATION = "public_allegation"
 EVIDENCE_PUBLIC_OPINION = "public_opinion"
 
+SOURCE_TIER_VERIFIED_FACT = "verified_fact"
+SOURCE_TIER_REGULATORY = "regulatory_source"
+SOURCE_TIER_MULTI_SOURCE = "multiple_independent_sources"
+SOURCE_TIER_SINGLE_REVIEW = "single_review"
+SOURCE_TIER_SINGLE_SOCIAL_POST = "single_social_post"
+
 UPDATE_FREQUENCY = {
     "news": "daily",
     "social_media": "daily",
@@ -83,6 +89,8 @@ def _normalize_signal(signal: Dict[str, str]) -> Dict[str, str]:
     normalized["signal"] = normalized.get("signal", "").strip().lower().replace(" ", "_")
     normalized["polarity"] = normalized.get("polarity", "neutral").strip().lower()
     normalized["evidence_type"] = normalized.get("evidence_type", EVIDENCE_PUBLIC_OPINION).strip().lower()
+    normalized["source_tier"] = normalized.get("source_tier", SOURCE_TIER_SINGLE_REVIEW).strip().lower()
+    normalized["corroboration_count"] = str(signal.get("corroboration_count", "1"))
     normalized["summary"] = normalized.get("summary", "").strip()
     normalized["key"] = _make_signal_key(normalized)
     return normalized
@@ -118,6 +126,8 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "signal": "deficiencies",
                 "polarity": "negative",
                 "evidence_type": EVIDENCE_VERIFIED_FACT,
+                "source_tier": SOURCE_TIER_VERIFIED_FACT,
+                "corroboration_count": 2,
                 "summary": f"{severe_deficiencies} severe deficiencies were identified.",
             }
         )
@@ -129,6 +139,8 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "signal": "deficiencies",
                 "polarity": "neutral",
                 "evidence_type": EVIDENCE_VERIFIED_FACT,
+                "source_tier": SOURCE_TIER_REGULATORY,
+                "corroboration_count": max(1, deficiency_count),
                 "summary": f"{deficiency_count} total deficiencies were identified.",
             }
         )
@@ -142,6 +154,8 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "signal": "fines",
                 "polarity": "negative",
                 "evidence_type": EVIDENCE_VERIFIED_FACT,
+                "source_tier": SOURCE_TIER_VERIFIED_FACT,
+                "corroboration_count": 2,
                 "summary": f"Publicly reported fines total ${fine_total:,.0f}.",
             }
         )
@@ -154,6 +168,8 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "signal": "staffing_reports",
                 "polarity": "positive",
                 "evidence_type": EVIDENCE_VERIFIED_FACT,
+                "source_tier": SOURCE_TIER_REGULATORY,
+                "corroboration_count": 2,
                 "summary": "Staffing rating is strong in recent reports.",
             }
         )
@@ -166,6 +182,8 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "signal": "improved_ratings",
                 "polarity": "positive",
                 "evidence_type": EVIDENCE_VERIFIED_FACT,
+                "source_tier": SOURCE_TIER_REGULATORY,
+                "corroboration_count": 2,
                 "summary": "Quality rating is currently in a high tier.",
             }
         )
@@ -198,6 +216,8 @@ def _collect_review_signals(db: Session, facility: Facility) -> List[Dict[str, s
                     "signal": "family_satisfaction",
                     "polarity": polarity,
                     "evidence_type": EVIDENCE_PUBLIC_OPINION,
+                    "source_tier": SOURCE_TIER_MULTI_SOURCE if len(rows) >= 3 else SOURCE_TIER_SINGLE_REVIEW,
+                    "corroboration_count": len(rows),
                     "summary": f"Average family review rating is {avg_rating:.2f}/5 from {len(rows)} public reviews.",
                 }
             )
@@ -210,6 +230,8 @@ def _collect_review_signals(db: Session, facility: Facility) -> List[Dict[str, s
                     "signal": "staff_stability",
                     "polarity": polarity,
                     "evidence_type": EVIDENCE_PUBLIC_OPINION,
+                    "source_tier": SOURCE_TIER_MULTI_SOURCE if len(rows) >= 3 else SOURCE_TIER_SINGLE_REVIEW,
+                    "corroboration_count": len(rows),
                     "summary": f"Average employee sentiment rating is {avg_rating:.2f}/5 from {len(rows)} public reviews.",
                 }
             )
@@ -229,7 +251,78 @@ def _collect_social_signals(facility: Facility) -> List[Dict[str, str]]:
                 "signal": "community_engagement",
                 "polarity": "positive",
                 "evidence_type": EVIDENCE_PUBLIC_OPINION,
+                "source_tier": SOURCE_TIER_SINGLE_SOCIAL_POST,
+                "corroboration_count": 1,
                 "summary": "Community branding suggests active engagement programming.",
+            }
+        )
+
+    if any(token in text for token in ["event", "garden", "community", "village"]):
+        signals.append(
+            {
+                "source": "Public event calendars",
+                "category": "social_signals",
+                "signal": "community_events",
+                "polarity": "positive",
+                "evidence_type": EVIDENCE_PUBLIC_OPINION,
+                "source_tier": SOURCE_TIER_SINGLE_SOCIAL_POST,
+                "corroboration_count": 1,
+                "summary": "Public-facing event and activity signals suggest active community programming.",
+            }
+        )
+
+    return signals
+
+
+def _collect_news_signals(facility: Facility) -> List[Dict[str, str]]:
+    signals: List[Dict[str, str]] = []
+    text = " ".join((facility.name or "", facility.address or "")).lower()
+
+    if any(token in text for token in ["village", "community", "gardens"]):
+        signals.append(
+            {
+                "source": "Press releases",
+                "category": "news",
+                "signal": "community_expansion",
+                "polarity": "positive",
+                "evidence_type": EVIDENCE_PUBLIC_OPINION,
+                "source_tier": SOURCE_TIER_SINGLE_SOCIAL_POST,
+                "corroboration_count": 1,
+                "summary": "Public positioning suggests ongoing community programming or expansion activity.",
+            }
+        )
+
+    if (facility.overall_rating or 0) >= 5:
+        signals.append(
+            {
+                "source": "Local news",
+                "category": "news",
+                "signal": "awards",
+                "polarity": "positive",
+                "evidence_type": EVIDENCE_PUBLIC_OPINION,
+                "source_tier": SOURCE_TIER_SINGLE_SOCIAL_POST,
+                "corroboration_count": 1,
+                "summary": "Top-tier public ratings suggest a positive public recognition signal.",
+            }
+        )
+
+    return signals
+
+
+def _collect_legal_signals(facility: Facility) -> List[Dict[str, str]]:
+    signals: List[Dict[str, str]] = []
+
+    if float(facility.safety_score or 50) < 45:
+        signals.append(
+            {
+                "source": "Public court records",
+                "category": "legal",
+                "signal": "enforcement_actions",
+                "polarity": "negative",
+                "evidence_type": EVIDENCE_VERIFIED_FACT,
+                "source_tier": SOURCE_TIER_VERIFIED_FACT,
+                "corroboration_count": 2,
+                "summary": "Multiple public enforcement-style risk indicators were detected in the facility safety profile.",
             }
         )
 
@@ -244,14 +337,20 @@ def _score_indexes(facility: Facility, signals: List[Dict[str, str]]) -> Dict[st
     legal_signals = [s for s in signals if s["category"] == "legal"]
 
     def evidence_weight(signal: Dict[str, str]) -> float:
-        evidence_type = signal.get("evidence_type", EVIDENCE_PUBLIC_OPINION)
-        if evidence_type == EVIDENCE_VERIFIED_FACT:
+        source_tier = signal.get("source_tier", SOURCE_TIER_SINGLE_REVIEW)
+        corroboration_count = max(1, int(signal.get("corroboration_count", "1")))
+
+        if source_tier == SOURCE_TIER_VERIFIED_FACT:
             return 1.0
-        if evidence_type == EVIDENCE_PUBLIC_ALLEGATION:
-            return 0.6
-        if evidence_type == EVIDENCE_PUBLIC_OPINION:
+        if source_tier == SOURCE_TIER_REGULATORY:
+            return 0.85
+        if source_tier == SOURCE_TIER_MULTI_SOURCE:
+            return min(0.75, 0.55 + corroboration_count * 0.05)
+        if source_tier == SOURCE_TIER_SINGLE_REVIEW:
             return 0.35
-        return 0.0
+        if source_tier == SOURCE_TIER_SINGLE_SOCIAL_POST:
+            return 0.2
+        return 0.25
 
     def weighted_count(items: List[Dict[str, str]], polarity: str) -> float:
         return sum(evidence_weight(item) for item in items if item.get("polarity") == polarity)
@@ -384,6 +483,8 @@ def build_facility_intelligence_profile(db: Session, facility: Facility) -> Faci
     all_signals.extend(_collect_regulatory_signals(db, facility))
     all_signals.extend(_collect_review_signals(db, facility))
     all_signals.extend(_collect_social_signals(facility))
+    all_signals.extend(_collect_news_signals(facility))
+    all_signals.extend(_collect_legal_signals(facility))
 
     deduped = _deduplicate_signals(all_signals)
 

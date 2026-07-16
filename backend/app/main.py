@@ -7,7 +7,7 @@ from sqlalchemy import func, or_
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
@@ -524,6 +524,9 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
         )
 
     facilities = query.order_by(Facility.overall_optime_score.desc().nullslast(), Facility.id.asc()).all()
+
+    if facilities and db.query(FacilityIntelligenceProfile).count() == 0:
+        run_intelligence_collection(db)
 
     intelligence_profiles = {
         profile.facility_id: profile
