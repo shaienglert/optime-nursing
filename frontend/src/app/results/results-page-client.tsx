@@ -399,192 +399,199 @@ function buildRelaxedRecommendations(
       relaxedRequirement: "Language support may be partial",
       enabled: Boolean(languagePreference && languagePreference !== "English"),
       weight: 12,
-      category: "STRONG PREFERENCE",
-      score: (facility) => {
-        if (!languagePreference || languagePreference === "English") return 60;
-        return hasBadgeMatch(facility, [new RegExp(languagePreference, "i")]) ? 100 : 30;
-      },
-      rejectionReason: () => `${languagePreference} language support not verified`,
-    },
-    {
-      key: "culture",
-      originalRequirement: [
-        profile.culturalProfile.whatFeelsLikeHome.join(", "),
-        wantsJewishSetting ? "Jewish/faith-centered" : "",
-        profile.foodProfile.dietaryPreferences.join(", "),
-      ].filter(Boolean).join(" | ") || "Not specified",
-      relaxedRequirement: "Cultural alignment may be partial",
-      enabled: Boolean(religionImportant || wantsJewishSetting || profile.culturalProfile.whatFeelsLikeHome.length > 0 || profile.foodProfile.dietaryPreferences.length > 0),
-      weight: 14,
-      category: "STRONG PREFERENCE",
-      score: (facility) => {
-        const cultureTerms = profile.culturalProfile.whatFeelsLikeHome.map((item) => item.toLowerCase());
-        const dietaryTerms = profile.foodProfile.dietaryPreferences.map((item) => item.toLowerCase());
-        const matchesCulture = cultureTerms.length > 0 && cultureTerms.some((term) => hasBadgeMatch(facility, [new RegExp(term.split(" ")[0], "i")]));
-        const matchesDiet = dietaryTerms.length > 0 && dietaryTerms.some((term) => hasBadgeMatch(facility, [new RegExp(term.split(" ")[0], "i")]));
-        const matchesFaith = hasBadgeMatch(facility, [/jewish/i, /religious/i, /faith/i, /synagogue/i, /kosher/i, /hebrew/i]);
-        const scoreParts = [matchesCulture, matchesDiet, wantsJewishSetting || religionImportant ? matchesFaith : true];
-        const matched = scoreParts.filter(Boolean).length;
-        return Math.round((matched / scoreParts.length) * 100);
-      },
-      rejectionReason: () => "cultural alignment not strongly verified",
-    },
-    {
-      key: "distance",
-      originalRequirement: context.distance || "Not specified",
-      relaxedRequirement: "Distance preference may be partially met",
-      enabled: Boolean(context.distance),
-      weight: 9,
-      category: "STRONG PREFERENCE",
-      score: (facility) => hasBadgeMatch(facility, [/close to family/i, /family/i, /distance/i]) ? 90 : 45,
-      rejectionReason: () => "drive time preference not supported",
-    },
-    {
-      key: "continuum-of-care",
-      originalRequirement: profile.futureCareProfile.continuumOfCarePreference || "Not specified",
-      relaxedRequirement: "Continuum coverage may be partial",
-      enabled: profile.futureCareProfile.continuumOfCarePreference !== "Not important",
-      weight: 11,
-      category: "STRONG PREFERENCE",
-      score: (facility) => {
-        const hasAssisted = facility.careTypes.some((item) => item.toLowerCase().includes("assisted"));
-        const hasMemory = facility.careTypes.some((item) => item.toLowerCase().includes("memory"));
-        const hasSkilled = facility.careTypes.some((item) => item.toLowerCase().includes("skilled"));
-        const continuumCount = [hasAssisted, hasMemory, hasSkilled].filter(Boolean).length;
-        if (continuumCount >= 3) return 100;
-        if (continuumCount === 2) return 78;
-        if (continuumCount === 1) return 58;
-        return 42;
-      },
-      rejectionReason: () => "continuum of care preference only partially supported",
-    },
-  ];
+            <details className="rounded-3xl border border-[#d9decb] bg-[#f8fbf1] p-4 shadow-[0_12px_34px_-28px_rgba(54,84,32,0.35)]">
+              <summary className="cursor-pointer list-none text-sm font-semibold uppercase tracking-[0.16em] text-[#5c7340]">
+                Show recommendation diagnostics
+              </summary>
+              <div className="mt-4 space-y-6">
+                <article className="rounded-3xl border border-[#d9decb] bg-[#f8fbf1] p-6 shadow-[0_12px_34px_-28px_rgba(54,84,32,0.35)]">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5c7340]">Signal Classification Engine V1</p>
+                  <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Preference signal categories</h2>
+                  <div className="mt-4 overflow-x-auto rounded-2xl border border-[#dfe7cf] bg-white">
+                    <table className="min-w-full divide-y divide-[#e9efdd] text-sm text-[#425041]">
+                      <thead className="bg-[#f2f7e8] text-left text-xs uppercase tracking-[0.14em] text-[#6b775a]">
+                        <tr>
+                          <th className="px-4 py-3">Signal</th>
+                          <th className="px-4 py-3">Category</th>
+                          <th className="px-4 py-3">Value</th>
+                          <th className="px-4 py-3">Rationale</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#edf2e4]">
+                        {relaxedAvailability.signalClassifications.map((row) => (
+                          <tr key={`${row.signal}-${row.category}`}>
+                            <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.signal}</td>
+                            <td className="px-4 py-3">
+                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                row.category === "HARD REQUIREMENT"
+                                  ? "bg-[#fde7e2] text-[#a54c34]"
+                                  : row.category === "STRONG PREFERENCE"
+                                    ? "bg-[#edf3ea] text-[#4c6f5b]"
+                                    : row.category === "NICE TO HAVE"
+                                      ? "bg-[#e7eefb] text-[#3f5f8c]"
+                                      : "bg-[#f5f1e5] text-[#6f644e]"
+                              }`}>
+                                {row.category}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">{row.value}</td>
+                            <td className="px-4 py-3">{row.rationale}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-3 text-xs text-[#6a655b]">Engine rules: UNKNOWN SIGNAL and NICE TO HAVE never reject; STRONG PREFERENCE rarely rejects exact matching; only HARD REQUIREMENT can reject recommendation eligibility.</p>
+                </article>
 
-  const enabledSoft = softPreferences.filter((preference) => preference.enabled);
-  const softWeightTotal = enabledSoft.reduce((acc, preference) => acc + preference.weight, 0) || 1;
-  const BASE_WEIGHT = 0.7;
-  const SOFT_WEIGHT = 0.3;
+                <article className="rounded-3xl border border-[#d8dbe2] bg-[#f7f9fc] p-6 shadow-[0_12px_34px_-28px_rgba(36,49,72,0.45)]">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#44526b]">Recommendation Pipeline Debug</p>
+                  <div className="mt-3 overflow-x-auto rounded-2xl border border-[#d5dbe6] bg-white">
+                    <table className="min-w-full divide-y divide-[#e3e8f0] text-sm text-[#334155]">
+                      <tbody className="divide-y divide-[#eef2f7]">
+                        <tr><td className="px-4 py-3 font-medium">communities_loaded</td><td className="px-4 py-3">{relaxedAvailability.debug.communities_loaded}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium">exact_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.exact_matches}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium">soft_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.soft_matches}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium">fallback_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.fallback_matches}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium">rendered_results</td><td className="px-4 py-3">{relaxedAvailability.debug.rendered_results}</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </article>
 
-  const signalClassifications: SignalClassificationRow[] = [
-    { signal: "Care level", category: "HARD REQUIREMENT", value: context.care || "Not specified", rationale: "Clinical compatibility is mandatory." },
-    { signal: "Critical medical limitations", category: memoryNeedsMedical ? "HARD REQUIREMENT" : "UNKNOWN SIGNAL", value: context.memory || "Not specified", rationale: memoryNeedsMedical ? "Critical medical support must be available." : "No critical medical limitation explicitly required." },
-    { signal: "Strict budget", category: strictBudget ? "HARD REQUIREMENT" : "UNKNOWN SIGNAL", value: `$${context.budget.toLocaleString()}`, rationale: strictBudget ? "Budget marked as hard cap." : "Budget cap was not explicitly strict." },
-    { signal: "Critical safety requirements", category: requiresWheelchair || requiresCriticalSafety ? "HARD REQUIREMENT" : "UNKNOWN SIGNAL", value: requiresWheelchair || requiresCriticalSafety ? "Required" : "Not specified", rationale: requiresWheelchair || requiresCriticalSafety ? "Safety was explicitly marked mandatory." : "No critical safety requirement was explicitly marked." },
-    { signal: "Language", category: "STRONG PREFERENCE", value: languagePreference || "Not specified", rationale: "Language affects comfort and adjustment." },
-    { signal: "Culture", category: "STRONG PREFERENCE", value: [profile.culturalProfile.whatFeelsLikeHome.join(", "), profile.culturalProfile.religionImportance].filter(Boolean).join(" | ") || "Not specified", rationale: "Cultural continuity strongly affects belonging." },
-    { signal: "Family proximity", category: "STRONG PREFERENCE", value: context.distance || "Not specified", rationale: "Family proximity strongly impacts engagement." },
-    { signal: "Continuum of care", category: "STRONG PREFERENCE", value: profile.futureCareProfile.continuumOfCarePreference || "Not specified", rationale: "Continuum preference affects long-term fit." },
-    { signal: "Hobbies", category: "NICE TO HAVE", value: context.activity || "Not specified", rationale: "Hobby fit improves quality of life and never rejects." },
-    { signal: "Activities", category: baseFacilities.some(hasActivityData) ? "NICE TO HAVE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasActivityData) ? "Some data available" : "Not collected", rationale: baseFacilities.some(hasActivityData) ? "Activities are optional preference signals." : "Activity data unavailable." },
-    { signal: "Facilities", category: baseFacilities.some(hasFacilityData) ? "NICE TO HAVE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasFacilityData) ? "Amenities signals available" : "Not collected", rationale: baseFacilities.some(hasFacilityData) ? "Amenities are optional preference signals." : "Facilities data unavailable." },
-    { signal: "Luxury", category: baseFacilities.some(hasLuxurySignal) ? "NICE TO HAVE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasLuxurySignal) ? "Luxury signals available" : "Not collected", rationale: baseFacilities.some(hasLuxurySignal) ? "Luxury is optional and never rejects." : "Luxury data unavailable." },
-    { signal: "Drive time data", category: baseFacilities.some(hasDistanceData) ? "STRONG PREFERENCE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasDistanceData) ? "Partial distance proxies" : "Unavailable", rationale: baseFacilities.some(hasDistanceData) ? "Used to weight family proximity." : "Drive-time data unavailable." },
-  ];
+                <article className="rounded-3xl border border-[#e8ddcc] bg-[#fffaf2] p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Recommendation Filter Audit</p>
+                  <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Hard constraints vs soft preferences</h2>
+                  <p className="mt-2 text-sm text-[#5c5347]">Default rule applied: everything is SOFT_PREFERENCE unless explicitly mandatory.</p>
+                  <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e7dbc6] bg-white">
+                    <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                      <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                        <tr>
+                          <th className="px-4 py-3">Input field</th>
+                          <th className="px-4 py-3">Value</th>
+                          <th className="px-4 py-3">Classification</th>
+                          <th className="px-4 py-3">Why</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#efe6d8]">
+                        {relaxedAvailability.constraintAudit.map((row) => (
+                          <tr key={`${row.field}-${row.value}`}>
+                            <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.field}</td>
+                            <td className="px-4 py-3">{row.value}</td>
+                            <td className="px-4 py-3">{row.classification}</td>
+                            <td className="px-4 py-3">{row.reason}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </article>
 
-  const explainableByFacility: Record<number, ExplainableMatchingBreakdown> = {};
+                {relaxedAvailability.exactMatchAudit.length > 0 ? (
+                  <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Exact Match Audit</p>
+                    <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Rejected communities and reasons</h2>
+                    <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e7dbc6] bg-white">
+                      <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                        <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                          <tr>
+                            <th className="px-4 py-3">community_name</th>
+                            <th className="px-4 py-3">rejection_reason</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#efe6d8]">
+                          {relaxedAvailability.exactMatchAudit.slice(0, 100).map((row) => (
+                            <tr key={`${row.community_name}-${row.rejection_reason}`}>
+                              <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.community_name}</td>
+                              <td className="px-4 py-3">{row.rejection_reason}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </article>
+                ) : null}
 
-  const ranked = [...candidates]
-    .map((facility) => {
-      const baseScore = facility.optimeScore;
-      const hardFailures = hardConstraintFailures(facility);
-      const softRows = enabledSoft.map((preference) => {
-        const score = preference.score(facility);
-        const normalizedWeight = preference.weight / softWeightTotal;
-        const weightedScore = score * normalizedWeight;
-        const contributionToFinal = weightedScore * SOFT_WEIGHT;
-        return {
-          preference,
-          score,
-          normalizedWeight,
-          weightedScore,
-          contributionToFinal,
-        };
-      });
-      const softScore = softRows.reduce((acc, row) => acc + row.weightedScore, 0);
-      const softPenalty = softRows.reduce((acc, row) => {
-        if (row.score >= 70) return acc;
-        const gapPenalty = ((70 - row.score) / 100) * row.normalizedWeight * 100 * SOFT_WEIGHT;
-        return acc + gapPenalty;
-      }, 0);
-      const hardPenalty = Math.min(25, hardFailures.length * 8);
-      const combined = Math.max(0, Math.round(baseScore * BASE_WEIGHT + softScore * SOFT_WEIGHT - softPenalty - hardPenalty));
+                {relaxedAvailability.relaxations.length > 0 ? (
+                  <article className="rounded-3xl border border-[#e8ddcc] bg-[#fffaf2] p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Soft Preference Gaps</p>
+                    <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Best available communities returned; these preferences are not fully satisfied:</h2>
+                    <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e7dbc6] bg-white">
+                      <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                        <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                          <tr>
+                            <th className="px-4 py-3">Preference</th>
+                            <th className="px-4 py-3">Original requirement</th>
+                            <th className="px-4 py-3">Not fully satisfied note</th>
+                            <th className="px-4 py-3">Top-3 communities meeting this</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#efe6d8]">
+                          {relaxedAvailability.relaxations.map((item) => (
+                            <tr key={`${item.preference}-${item.originalRequirement}`}>
+                              <td className="px-4 py-3 font-medium text-[#2f2a24]">{item.preference}</td>
+                              <td className="px-4 py-3">{item.originalRequirement}</td>
+                              <td className="px-4 py-3">{item.relaxedRequirement}</td>
+                              <td className="px-4 py-3">{item.impactOnResultsCount}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </article>
+                ) : null}
 
-      const positiveContributors: ExplainableContributor[] = softRows
-        .filter((row) => row.score >= 70)
-        .map((row) => ({
-          signal: row.preference.key,
-          category: row.preference.category,
-          score: Math.round(row.score),
-          weight: row.preference.weight,
-          contribution: Number(row.contributionToFinal.toFixed(2)),
-          reason: `${row.preference.originalRequirement} is supported (${row.score.toFixed(0)}/100).`,
-          kind: "positive",
-        }));
+                <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5f7f6b]">Expert Advisor Mode</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-[#2f2a24]">Personal explanation</h2>
+                  <p className="mt-3 text-sm leading-7 text-[#554c41]">{personalAdvisorSummary}</p>
+                </article>
 
-      const negativeFromSoft: ExplainableContributor[] = softRows
-        .filter((row) => row.score < 70)
-        .map((row) => ({
-          signal: row.preference.key,
-          category: row.preference.category,
-          score: Math.round(row.score),
-          weight: row.preference.weight,
-          contribution: Number(((((70 - row.score) / 100) * row.normalizedWeight * 100 * SOFT_WEIGHT) * -1).toFixed(2)),
-          reason: row.preference.rejectionReason(facility) || row.preference.relaxedRequirement,
-          kind: "negative",
-        }));
+                <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.35)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5f7f6b]">Cultural Intelligence Scorecard</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-[#2f2a24]">Belonging and adjustment signals</h2>
+                  <p className="mt-2 text-sm text-[#5c5347]">
+                    These scores come from direct answers only and support mixed identities and multicultural households.
+                  </p>
 
-      const hardFailureContributors: ExplainableContributor[] = hardFailures.map((failure) => ({
-        signal: "hard-constraint-penalty",
-        category: "HARD REQUIREMENT",
-        score: 0,
-        weight: 100,
-        contribution: -hardPenalty,
-        reason: failure,
-        kind: "negative",
-      }));
+                  <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e7dbc6] bg-white">
+                    <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                      <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                        <tr>
+                          <th className="px-4 py-3">Output score</th>
+                          <th className="px-4 py-3">Value</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#efe6d8]">
+                        <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">language_match_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.language_fit_score}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">religious_fit_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.religious_fit_score}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">cultural_fit_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.cultural_fit_score}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">food_fit_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.food_fit_score}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">family_engagement_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.family_engagement_score}</td></tr>
+                        <tr><td className="px-4 py-3 font-medium text-[#2f2a24]">community_style_score</td><td className="px-4 py-3">{state.humanIntelligenceV2.scoringEngine.outputScores.community_style_score}</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
 
-      const uncertainty: string[] = [];
-      if (!facility.priceRange || midpointPrice(facility.priceRange) === null) {
-        uncertainty.push("Budget precision is uncertain because a reliable midpoint price is unavailable.");
-      }
-      if (!hasDistanceData(facility)) {
-        uncertainty.push("Family proximity is uncertain because drive-time evidence is missing.");
-      }
-      if (!hasActivityData(facility)) {
-        uncertainty.push("Activities/hobbies fit is uncertain because activity evidence is sparse.");
-      }
-      if (facility.matchBadges.length === 0) {
-        uncertainty.push("Amenity and cultural fit are uncertain because no badges were provided.");
-      }
-      if (!facility.scoreBreakdown || facility.scoreBreakdown.length === 0) {
-        uncertainty.push("Quality confidence is uncertain because detailed score breakdown is unavailable.");
-      }
-      if (uncertainty.length === 0) {
-        uncertainty.push("No high-risk uncertainty flags were detected from current structured data.");
-      }
+                  {state.humanIntelligenceV2.scoringEngine.recommendationImpacts.length > 0 ? (
+                    <div className="mt-4 rounded-2xl border border-[#e7dbc6] bg-[#fffdfa] p-4">
+                      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Recommendation impact</p>
+                      <ul className="mt-3 space-y-2 text-sm text-[#564d42]">
+                        {state.humanIntelligenceV2.scoringEngine.recommendationImpacts.map((impact) => (
+                          <li key={impact}>• {impact}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
 
-      const negativeContributors = [...hardFailureContributors, ...negativeFromSoft];
-
-      const topPositive = positiveContributors.slice(0, 2);
-      const topNegative = negativeContributors.slice(0, 2);
-      const tradeoffs: ExplainableTradeoff[] = [
-        {
-          benefit: topPositive[0]?.reason || "Strong care/fit signals available.",
-          cost: topNegative[0]?.reason || "No major explicit penalty detected.",
-          summary: "Best-fit strengths come with explicit costs that should be reviewed before deciding.",
-        },
-        {
-          benefit: topPositive[1]?.reason || "Preference alignment is moderate.",
-          cost: topNegative[1]?.reason || "Uncertainty remains in some lifestyle fields.",
-          summary: "Lifestyle wins may still require verification during tour and family discussion.",
-        },
-      ];
-
-      const weightBreakdown: ExplainableWeightRow[] = [
-        {
-          signal: "base_optime_score",
-          category: "HARD REQUIREMENT",
-          rawWeight: 70,
+                  {state.humanIntelligenceV2.scoringEngine.overallConfidence < state.humanIntelligenceV2.scoringEngine.confidenceThreshold ? (
+                    <p className="mt-4 text-sm text-[#8c5c40]">
+                      Confidence is below threshold; additional question asked: {state.humanIntelligenceV2.scoringEngine.additionalQuestionAsked || "How often do you expect to visit?"}
+                    </p>
+                  ) : null}
+                </article>
+              </div>
+            </details>
           normalizedWeight: 0.7,
           score: Math.round(baseScore),
           weightedScore: Number((baseScore * BASE_WEIGHT).toFixed(2)),
