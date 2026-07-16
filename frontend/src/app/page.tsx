@@ -648,21 +648,30 @@ export default function Home() {
   const [familyDecisionDynamics, setFamilyDecisionDynamics] = useState("");
   const [emergencySupportNetwork, setEmergencySupportNetwork] = useState("");
   const [coupleStayTogetherPreference, setCoupleStayTogetherPreference] = useState("");
+  const [coupleSameCareLevel, setCoupleSameCareLevel] = useState("");
+  const [temporarySeparationAcceptance, setTemporarySeparationAcceptance] = useState("");
   const [widowStatus, setWidowStatus] = useState("");
   const [lossTiming, setLossTiming] = useState("");
   const [socialActivityChangeSinceLoss, setSocialActivityChangeSinceLoss] = useState("");
   const [socialInteractionNeed, setSocialInteractionNeed] = useState("");
+  const [griefSupportInterest, setGriefSupportInterest] = useState("");
   const [religionImportance, setReligionImportance] = useState("");
   const [kosherRequirements, setKosherRequirements] = useState("");
   const [synagogueChurchAccess, setSynagogueChurchAccess] = useState("");
   const [holidayCelebrations, setHolidayCelebrations] = useState("");
   const [culturalIdentity, setCulturalIdentity] = useState("");
   const [israeliJewishCommunityPreference, setIsraeliJewishCommunityPreference] = useState("");
+  const [jewishProgrammingImportance, setJewishProgrammingImportance] = useState("");
+  const [churchAccessRequirement, setChurchAccessRequirement] = useState("");
+  const [christianServiceRequirement, setChristianServiceRequirement] = useState("");
+  const [halalMealsRequirement, setHalalMealsRequirement] = useState("");
+  const [prayerFacilityRequirement, setPrayerFacilityRequirement] = useState("");
   const [preferredSpokenLanguage, setPreferredSpokenLanguage] = useState("");
   const [nativeLanguage, setNativeLanguage] = useState("");
   const [medicalDiscussionLanguage, setMedicalDiscussionLanguage] = useState("");
   const [socialInteractionLanguage, setSocialInteractionLanguage] = useState("");
   const [languageNeedScope, setLanguageNeedScope] = useState("");
+  const [bilingualStaffRequired, setBilingualStaffRequired] = useState("");
   const [languagesUnderstood, setLanguagesUnderstood] = useState<string[]>([]);
   const [familyLanguages, setFamilyLanguages] = useState<string[]>([]);
   const [faithTraditions, setFaithTraditions] = useState<string[]>([]);
@@ -719,8 +728,8 @@ export default function Home() {
   const ctaText = useMemo(() => ctaCopy(relationship), [relationship]);
   const isFamilyStoryRelationship = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse"].includes(relationship);
   const isMotherOrGrandmother = ["Mom", "Grandma"].includes(relationship);
-  const shouldAskPartnerLossFollowUps = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse"].includes(relationship);
-  const shouldAskReligionFollowUps = importanceRank(religionImportance) > importanceRank("Medium");
+  const shouldAskPartnerLossFollowUps = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse"].includes(relationship) && relationship !== "Couple";
+  const shouldAskReligionFollowUps = importanceRank(religionImportance) > 0;
   const shouldAskGrandchildrenFollowUps = grandchildrenImportance === "Very important" || grandchildrenImportance === "High" || grandchildrenVisitsImportance === "Very important" || grandchildrenVisitsImportance === "High";
   const shouldAskLanguageFollowUps = preferredSpokenLanguage && preferredSpokenLanguage !== "English";
   const shouldAskMemoryFollowUps = memoryStatus !== "No" && memoryStatus !== "Not sure";
@@ -734,6 +743,9 @@ export default function Home() {
     socialInteractionNeed === "Somewhat less social" ||
     shouldAskLivingAloneFollowUps;
   const shouldAskRecentHospitalizationFollowUps = recentHospitalization === "Yes" || assistanceLevel === "Skilled nursing care";
+  const isJewishBranch = faithTraditions.includes("Jewish");
+  const isChristianBranch = faithTraditions.some((faith) => ["Catholic", "Protestant", "Orthodox Christian"].includes(faith));
+  const isMuslimBranch = faithTraditions.includes("Muslim");
 
   const adaptiveConfidence = useMemo(() => {
     const answeredSignals = [
@@ -787,20 +799,6 @@ export default function Home() {
   const additionalQuestion = useMemo(() => {
     if (adaptiveConfidence >= 72) {
       return null;
-    }
-
-    if (!religionImportance) {
-      return {
-        key: "religion_importance",
-        text: "How important is religious life?",
-      };
-    }
-
-    if (!visitFrequencyExpectation) {
-      return {
-        key: "visit_frequency",
-        text: "How often do you expect to visit?",
-      };
     }
 
     if (!socialInteractionFrequency) {
@@ -955,6 +953,8 @@ export default function Home() {
           lossTiming,
           socialActivityChangeSinceLoss,
           socialInteractionNeed,
+          temporarySeparationAcceptance,
+          griefSupportInterest,
         },
         culturalProfile: {
           religionImportance,
@@ -966,6 +966,12 @@ export default function Home() {
           culturalIdentity,
           israeliJewishCommunityPreference,
           whatFeelsLikeHome,
+          worshipAccessRequirement: synagogueChurchAccess,
+          jewishProgrammingImportance,
+          churchAccessRequirement,
+          christianServiceRequirement,
+          halalMealsRequirement,
+          prayerFacilityRequirement,
         },
         languageProfile: {
           preferredSpokenLanguage,
@@ -975,6 +981,7 @@ export default function Home() {
           languageNeedScope,
           languagesUnderstood,
           familyLanguages,
+          bilingualStaffRequired,
         },
         foodProfile: {
           dietaryPreferences,
@@ -1178,14 +1185,20 @@ export default function Home() {
         livingAloneDuration,
         visitFrequencyExpectation,
         religionImportance,
+        faithTraditions,
+        jewishProgrammingImportance,
+        churchAccessRequirement,
+        christianServiceRequirement,
+        halalMealsRequirement,
+        prayerFacilityRequirement,
         preferredSpokenLanguage,
         memoryStatus,
         nativeLanguage,
         socialInteractionLanguage,
         medicalDiscussionLanguage,
+        bilingualStaffRequired,
         languagesUnderstood,
         familyLanguages,
-        faithTraditions,
         religiousSupportNeeds,
         whatFeelsLikeHome,
         dietaryPreferences,
@@ -1359,7 +1372,7 @@ export default function Home() {
                 {isFamilyStoryRelationship ? (
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <p className="text-sm font-medium text-[#5e5346]">How long has {isMotherOrGrandmother ? "she" : relationshipLabel.toLowerCase()} lived alone?</p>
+                      <p className="text-sm font-medium text-[#5e5346]">How long has {relationshipLabel.toLowerCase()} lived alone?</p>
                       <div className="mt-3 flex flex-wrap gap-2.5">
                         {livingAloneOptions.map((option) => (
                           <OptionChip key={option} label={option} isActive={livingAloneDuration === option} onClick={() => setLivingAloneDuration(option)} />
@@ -1367,15 +1380,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#5e5346]">How often does family visit?</p>
-                      <div className="mt-3 flex flex-wrap gap-2.5">
-                        {visitExpectationOptions.map((option) => (
-                          <OptionChip key={option} label={option} isActive={visitFrequencyExpectation === option} onClick={() => setVisitFrequencyExpectation(option)} />
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#5e5346]">Does she miss social interaction?</p>
+                      <p className="text-sm font-medium text-[#5e5346]">Does {relationshipLabel.toLowerCase()} miss social interaction?</p>
                       <div className="mt-3 flex flex-wrap gap-2.5">
                         {socialChangeOptions.map((option) => (
                           <OptionChip key={option} label={option} isActive={socialInteractionNeed === option} onClick={() => setSocialInteractionNeed(option)} />
@@ -1387,14 +1392,6 @@ export default function Home() {
                       <div className="mt-3 flex flex-wrap gap-2.5">
                         {importanceOptions.map((option) => (
                           <OptionChip key={option} label={option} isActive={grandchildrenImportance === option} onClick={() => setGrandchildrenImportance(option)} />
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#5e5346]">Does religion play a role?</p>
-                      <div className="mt-3 flex flex-wrap gap-2.5">
-                        {religionImportanceOptions.map((option) => (
-                          <OptionChip key={option} label={option} isActive={religionImportance === option} onClick={() => setReligionImportance(option)} />
                         ))}
                       </div>
                     </div>
