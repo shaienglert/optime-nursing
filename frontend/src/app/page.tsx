@@ -1087,7 +1087,7 @@ export default function Home() {
             loneliness_risk_score: lonelinessRiskScorePreview,
           },
           recommendationImpacts: adaptiveSignals.map((signal) => signal.impactExplanation),
-          additionalQuestionAsked: additionalQuestion?.text || "",
+          additionalQuestionAsked: "",
         },
       },
     });
