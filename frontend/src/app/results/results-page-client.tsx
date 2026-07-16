@@ -461,6 +461,8 @@ function buildRelaxedRecommendations(
 
   const enabledSoft = softPreferences.filter((preference) => preference.enabled);
   const softWeightTotal = enabledSoft.reduce((acc, preference) => acc + preference.weight, 0) || 1;
+  const BASE_WEIGHT = 0.7;
+  const SOFT_WEIGHT = 0.3;
 
   const signalClassifications: SignalClassificationRow[] = [
     { signal: "Care level", category: "HARD REQUIREMENT", value: context.care || "Not specified", rationale: "Clinical compatibility is mandatory." },
@@ -478,11 +480,141 @@ function buildRelaxedRecommendations(
     { signal: "Drive time data", category: baseFacilities.some(hasDistanceData) ? "STRONG PREFERENCE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasDistanceData) ? "Partial distance proxies" : "Unavailable", rationale: baseFacilities.some(hasDistanceData) ? "Used to weight family proximity." : "Drive-time data unavailable." },
   ];
 
+  const explainableByFacility: Record<number, ExplainableMatchingBreakdown> = {};
+
   const ranked = [...candidates]
     .map((facility) => {
       const baseScore = facility.optimeScore;
-      const softScore = enabledSoft.reduce((acc, preference) => acc + (preference.score(facility) * preference.weight), 0) / softWeightTotal;
-      const combined = Math.round(baseScore * 0.7 + softScore * 0.3);
+      const hardFailures = hardConstraintFailures(facility);
+      const softRows = enabledSoft.map((preference) => {
+        const score = preference.score(facility);
+        const normalizedWeight = preference.weight / softWeightTotal;
+        const weightedScore = score * normalizedWeight;
+        const contributionToFinal = weightedScore * SOFT_WEIGHT;
+        return {
+          preference,
+          score,
+          normalizedWeight,
+          weightedScore,
+          contributionToFinal,
+        };
+      });
+      const softScore = softRows.reduce((acc, row) => acc + row.weightedScore, 0);
+      const hardPenalty = Math.min(25, hardFailures.length * 8);
+      const combined = Math.max(0, Math.round(baseScore * BASE_WEIGHT + softScore * SOFT_WEIGHT - hardPenalty));
+
+      const positiveContributors: ExplainableContributor[] = softRows
+        .filter((row) => row.score >= 70)
+        .map((row) => ({
+          signal: row.preference.key,
+          category: row.preference.category,
+          score: Math.round(row.score),
+          weight: row.preference.weight,
+          contribution: Number(row.contributionToFinal.toFixed(2)),
+          reason: `${row.preference.originalRequirement} is supported (${row.score.toFixed(0)}/100).`,
+          kind: "positive",
+        }));
+
+      const negativeFromSoft: ExplainableContributor[] = softRows
+        .filter((row) => row.score < 70)
+        .map((row) => ({
+          signal: row.preference.key,
+          category: row.preference.category,
+          score: Math.round(row.score),
+          weight: row.preference.weight,
+          contribution: Number(row.contributionToFinal.toFixed(2)),
+          reason: row.preference.rejectionReason(facility) || row.preference.relaxedRequirement,
+          kind: "negative",
+        }));
+
+      const hardFailureContributors: ExplainableContributor[] = hardFailures.map((failure) => ({
+        signal: "hard-constraint-penalty",
+        category: "HARD REQUIREMENT",
+        score: 0,
+        weight: 100,
+        contribution: -hardPenalty,
+        reason: failure,
+        kind: "negative",
+      }));
+
+      const uncertainty: string[] = [];
+      if (!facility.priceRange || midpointPrice(facility.priceRange) === null) {
+        uncertainty.push("Budget precision is uncertain because a reliable midpoint price is unavailable.");
+      }
+      if (!hasDistanceData(facility)) {
+        uncertainty.push("Family proximity is uncertain because drive-time evidence is missing.");
+      }
+      if (!hasActivityData(facility)) {
+        uncertainty.push("Activities/hobbies fit is uncertain because activity evidence is sparse.");
+      }
+      if (facility.matchBadges.length === 0) {
+        uncertainty.push("Amenity and cultural fit are uncertain because no badges were provided.");
+      }
+      if (!facility.scoreBreakdown || facility.scoreBreakdown.length === 0) {
+        uncertainty.push("Quality confidence is uncertain because detailed score breakdown is unavailable.");
+      }
+      if (uncertainty.length === 0) {
+        uncertainty.push("No high-risk uncertainty flags were detected from current structured data.");
+      }
+
+      const negativeContributors = [...hardFailureContributors, ...negativeFromSoft];
+
+      const topPositive = positiveContributors.slice(0, 2);
+      const topNegative = negativeContributors.slice(0, 2);
+      const tradeoffs: ExplainableTradeoff[] = [
+        {
+          benefit: topPositive[0]?.reason || "Strong care/fit signals available.",
+          cost: topNegative[0]?.reason || "No major explicit penalty detected.",
+          summary: "Best-fit strengths come with explicit costs that should be reviewed before deciding.",
+        },
+        {
+          benefit: topPositive[1]?.reason || "Preference alignment is moderate.",
+          cost: topNegative[1]?.reason || "Uncertainty remains in some lifestyle fields.",
+          summary: "Lifestyle wins may still require verification during tour and family discussion.",
+        },
+      ];
+
+      const weightBreakdown: ExplainableWeightRow[] = [
+        {
+          signal: "base_optime_score",
+          category: "HARD REQUIREMENT",
+          rawWeight: 70,
+          normalizedWeight: 0.7,
+          score: Math.round(baseScore),
+          weightedScore: Number((baseScore * BASE_WEIGHT).toFixed(2)),
+          contributionToFinal: Number((baseScore * BASE_WEIGHT).toFixed(2)),
+        },
+        ...softRows.map((row) => ({
+          signal: row.preference.key,
+          category: row.preference.category,
+          rawWeight: row.preference.weight,
+          normalizedWeight: Number(row.normalizedWeight.toFixed(4)),
+          score: Math.round(row.score),
+          weightedScore: Number(row.weightedScore.toFixed(2)),
+          contributionToFinal: Number(row.contributionToFinal.toFixed(2)),
+        })),
+      ];
+
+      const finalScore: ExplainableFinalScore = {
+        baseScore: Math.round(baseScore),
+        baseWeight: BASE_WEIGHT,
+        preferenceAggregate: Number(softScore.toFixed(2)),
+        preferenceWeight: SOFT_WEIGHT,
+        weightedBase: Number((baseScore * BASE_WEIGHT).toFixed(2)),
+        weightedPreferences: Number((softScore * SOFT_WEIGHT).toFixed(2)),
+        hardPenalty,
+        finalScore: combined,
+      };
+
+      explainableByFacility[facility.id] = {
+        positiveContributors,
+        negativeContributors,
+        tradeoffs,
+        uncertainty,
+        weightBreakdown,
+        finalScore,
+      };
+
       return { facility, combined, softScore };
     })
     .sort((left, right) => right.combined - left.combined || right.softScore - left.softScore || left.facility.id - right.facility.id)
@@ -536,7 +668,7 @@ function buildRelaxedRecommendations(
     rendered_results: recommendations.length,
   };
 
-  return { recommendations, relaxations, constraintAudit: auditRows, debug, exactMatchAudit, signalClassifications };
+  return { recommendations, relaxations, constraintAudit: auditRows, debug, exactMatchAudit, signalClassifications, explainableByFacility };
 }
 
 function buildResidentProfileSummary(
