@@ -44,6 +44,21 @@ export type CareType =
 
 export type CareTypeProbabilities = Record<CareType, number>;
 
+export type FacilityIntelligenceSnapshot = {
+  intelligence_confidence: number;
+  sources_used: string[];
+  positive_signals: string[];
+  negative_signals: string[];
+  family_satisfaction_index: number;
+  staff_stability_index: number;
+  regulatory_risk_index: number;
+  litigation_risk_index: number;
+  social_energy_index: number;
+  community_engagement_index: number;
+  reputation_index: number;
+  cultural_match_signals: number;
+};
+
 export type SearchFacility = Facility & {
   imageUrl: string;
   optimeScore: number;
@@ -54,6 +69,7 @@ export type SearchFacility = Facility & {
   careTypeConfidence: "HIGH" | "MEDIUM" | "LOW";
   careTypeConfidenceScore: number;
   careTypeProbabilities: CareTypeProbabilities;
+  intelligenceSnapshot?: FacilityIntelligenceSnapshot;
   matchBadges: string[];
   scoreBreakdown?: ScoreBreakdownItem[];
   searchTokens?: string[];
@@ -91,6 +107,18 @@ type BackendFacility = {
   safety_score?: number | null;
   overall_optime_score?: number | null;
   confidence_level?: string | null;
+  intelligence_confidence?: number | null;
+  intelligence_sources_used?: string[] | null;
+  intelligence_positive_signals?: string[] | null;
+  intelligence_negative_signals?: string[] | null;
+  family_satisfaction_index?: number | null;
+  staff_stability_index?: number | null;
+  regulatory_risk_index?: number | null;
+  litigation_risk_index?: number | null;
+  social_energy_index?: number | null;
+  community_engagement_index?: number | null;
+  reputation_index?: number | null;
+  cultural_match_signals?: number | null;
 };
 
 type BackendFacilityDetails = BackendFacility & {
@@ -699,6 +727,20 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
     careTypeConfidence: taxonomy.confidence,
     careTypeConfidenceScore: taxonomy.confidenceScore,
     careTypeProbabilities: taxonomy.probabilities,
+    intelligenceSnapshot: facility.intelligence_confidence !== null && facility.intelligence_confidence !== undefined ? {
+      intelligence_confidence: facility.intelligence_confidence,
+      sources_used: facility.intelligence_sources_used || [],
+      positive_signals: facility.intelligence_positive_signals || [],
+      negative_signals: facility.intelligence_negative_signals || [],
+      family_satisfaction_index: facility.family_satisfaction_index || 0,
+      staff_stability_index: facility.staff_stability_index || 0,
+      regulatory_risk_index: facility.regulatory_risk_index || 0,
+      litigation_risk_index: facility.litigation_risk_index || 0,
+      social_energy_index: facility.social_energy_index || 0,
+      community_engagement_index: facility.community_engagement_index || 0,
+      reputation_index: facility.reputation_index || 0,
+      cultural_match_signals: facility.cultural_match_signals || 0,
+    } : undefined,
     matchBadges: makeBadges(facility, taxonomy),
     scoreBreakdown: [
       {

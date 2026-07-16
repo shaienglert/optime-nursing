@@ -68,6 +68,18 @@ class FacilityListOut(BaseModel):
     safety_score: Optional[float] = None
     overall_optime_score: Optional[float] = None
     confidence_level: Optional[str] = None
+    intelligence_confidence: Optional[float] = None
+    intelligence_sources_used: List[str] = Field(default_factory=list)
+    intelligence_positive_signals: List[str] = Field(default_factory=list)
+    intelligence_negative_signals: List[str] = Field(default_factory=list)
+    family_satisfaction_index: Optional[float] = None
+    staff_stability_index: Optional[float] = None
+    regulatory_risk_index: Optional[float] = None
+    litigation_risk_index: Optional[float] = None
+    social_energy_index: Optional[float] = None
+    community_engagement_index: Optional[float] = None
+    reputation_index: Optional[float] = None
+    cultural_match_signals: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -511,7 +523,54 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
             )
         )
 
-    return query.order_by(Facility.overall_optime_score.desc().nullslast(), Facility.id.asc()).all()
+    facilities = query.order_by(Facility.overall_optime_score.desc().nullslast(), Facility.id.asc()).all()
+
+    intelligence_profiles = {
+        profile.facility_id: profile
+        for profile in db.query(FacilityIntelligenceProfile).filter(
+            FacilityIntelligenceProfile.facility_id.in_([facility.id for facility in facilities])
+        ).all()
+    }
+
+    payload: List[FacilityListOut] = []
+    for facility in facilities:
+        profile = intelligence_profiles.get(facility.id)
+        payload.append(
+            FacilityListOut(
+                id=facility.id,
+                cms_id=facility.cms_id,
+                name=facility.name,
+                city=facility.city,
+                state=facility.state,
+                address=facility.address,
+                zip_code=facility.zip_code,
+                phone=facility.phone,
+                overall_rating=facility.overall_rating,
+                staffing_rating=facility.staffing_rating,
+                quality_rating=facility.quality_rating,
+                inspection_rating=facility.inspection_rating,
+                beds=facility.beds,
+                medical_quality_score=facility.medical_quality_score,
+                staffing_score=facility.staffing_score,
+                safety_score=facility.safety_score,
+                overall_optime_score=facility.overall_optime_score,
+                confidence_level=facility.confidence_level,
+                intelligence_confidence=profile.intelligence_confidence if profile else None,
+                intelligence_sources_used=_parse_json_array(profile.sources_used) if profile else [],
+                intelligence_positive_signals=_parse_json_array(profile.positive_signals) if profile else [],
+                intelligence_negative_signals=_parse_json_array(profile.negative_signals) if profile else [],
+                family_satisfaction_index=profile.family_satisfaction_index if profile else None,
+                staff_stability_index=profile.staff_stability_index if profile else None,
+                regulatory_risk_index=profile.regulatory_risk_index if profile else None,
+                litigation_risk_index=profile.litigation_risk_index if profile else None,
+                social_energy_index=profile.social_energy_index if profile else None,
+                community_engagement_index=profile.community_engagement_index if profile else None,
+                reputation_index=profile.reputation_index if profile else None,
+                cultural_match_signals=profile.cultural_match_signals if profile else None,
+            )
+        )
+
+    return payload
 
 
 @app.get("/facilities/{id}", response_model=FacilityDetailsOut)
