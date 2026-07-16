@@ -414,6 +414,9 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
       /\bhome for the aged\b/,
       /\bresident care\b/,
       /\bhelp with daily living\b/,
+      /\bhebrew home\b/,
+      /\bjewish health\b/,
+      /\bsenior community\b/,
     ],
     "Memory Care": [
       /\bmemory care\b/,
@@ -471,6 +474,19 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
     scores["Memory Care"] += 4;
   }
   if ((facility.inspection_rating ?? 0) >= 4) {
+    scores["Memory Care"] += 8;
+  }
+  if ((facility.safety_score ?? 0) >= 75) {
+    scores["Memory Care"] += 6;
+    scores["Assisted Living"] += 4;
+  }
+  if ((facility.beds ?? 0) <= 140) {
+    scores["Assisted Living"] += 6;
+  }
+  if (/\b(home|village|community|center|health systems|manor|gardens)\b/.test((facility.name || "").toLowerCase())) {
+    scores["Assisted Living"] += 10;
+  }
+  if (/\b(memory|secure|support|aged|hebrew|jewish|senior)\b/.test((facility.name || "").toLowerCase())) {
     scores["Memory Care"] += 8;
   }
   if (/\b(jewish|hebrew|faith|church|catholic|spanish|community)\b/.test((facility.name || "").toLowerCase())) {

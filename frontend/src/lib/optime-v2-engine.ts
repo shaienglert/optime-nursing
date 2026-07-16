@@ -465,6 +465,10 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
     independentScore -= hospiceProbability * 50;
     if (careText.includes("independent")) independentScore += 8;
     if (careText.includes("active adult")) independentScore += 6;
+    if (facility.careTypes.includes("Skilled Nursing")) independentScore -= 40;
+    if (facility.careTypes.includes("Rehabilitation")) independentScore -= 35;
+    if (facility.careTypes.includes("Memory Care")) independentScore -= 20;
+    if (facility.careTypes.includes("UNKNOWN")) independentScore -= 15;
     return clamp(independentScore);
   }
 
@@ -501,9 +505,14 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
   score -= unknownProbability * 12;
 
   if (memory === "Mild memory issues" || memory === "Occasionally forgetful") {
-    score += memoryCareProbability * 30;
-    score += assistedLivingProbability * 15;
+    score += memoryCareProbability * 55;
+    score += assistedLivingProbability * 30;
     score += skilledNursingProbability * 5;
+    score -= rehabilitationProbability * 20;
+    score -= independentProbability * 12;
+    if (facility.careTypes.includes("Memory Care")) score += 30;
+    if (facility.careTypes.includes("Assisted Living")) score += 15;
+    if (facility.careTypes.includes("Skilled Nursing")) score += 5;
   }
 
   return clamp(score);
