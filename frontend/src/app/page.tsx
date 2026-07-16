@@ -2033,14 +2033,6 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Grandchildren visits importance</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {importanceOptions.map((option) => (
-                      <OptionChip key={option} label={option} isActive={grandchildrenVisitsImportance === option} onClick={() => setGrandchildrenVisitsImportance(option)} />
-                    ))}
-                  </div>
-                </div>
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>

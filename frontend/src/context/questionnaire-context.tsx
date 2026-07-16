@@ -348,14 +348,16 @@ const DEFAULT_STATE: QuestionnaireState = {
 type QuestionnaireContextValue = {
   state: QuestionnaireState;
   setState: (next: QuestionnaireState) => void;
+  resetState: () => void;
 };
 
 const QuestionnaireContext = createContext<QuestionnaireContextValue | undefined>(undefined);
 
 export function QuestionnaireProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<QuestionnaireState>(DEFAULT_STATE);
+  const resetState = () => setState(DEFAULT_STATE);
 
-  const value = useMemo(() => ({ state, setState }), [state]);
+  const value = useMemo(() => ({ state, setState, resetState }), [state]);
 
   return (
     <QuestionnaireContext.Provider value={value}>

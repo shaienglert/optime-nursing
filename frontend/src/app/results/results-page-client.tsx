@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
@@ -994,8 +994,9 @@ function buildMatchFactors(
 }
 
 export function ResultsPageClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const { state } = useQuestionnaire();
+  const { state, resetState } = useQuestionnaire();
   const [facilities, setFacilities] = useState<SearchFacility[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
@@ -1113,6 +1114,11 @@ export function ResultsPageClient() {
     }
   };
 
+  const startNewSearch = () => {
+    resetState();
+    router.replace("/");
+  };
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
       <section className="mx-auto max-w-7xl">
@@ -1120,6 +1126,19 @@ export function ResultsPageClient() {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">OPTIME Results</p>
           <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">Recommended communities for {relationship}</h1>
           <p className="mt-2 text-[#6b645a]">These communities best match what matters most to {relationship}.</p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={startNewSearch}
+              className="rounded-full bg-[#5f7f6b] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4d6756]"
+            >
+              New search
+            </button>
+            <Link href="/" className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] transition hover:bg-[#efe8db]">
+              Back to home
+            </Link>
+          </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
             {filters.map((filter) => (
