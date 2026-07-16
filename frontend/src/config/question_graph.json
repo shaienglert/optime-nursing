@@ -1,0 +1,165 @@
+[
+  {
+    "question_id": "Q_RELATIONSHIP",
+    "show_if": {},
+    "hide_if": {},
+    "writes_to": "relationship",
+    "next_questions": [
+      "Q_COUPLE_ASSISTANCE",
+      "Q_COUPLE_SAME_CARE",
+      "Q_COUPLE_STAY_TOGETHER",
+      "Q_COUPLE_TEMP_SEPARATION",
+      "Q_CONTINUUM_OF_CARE",
+      "Q_LOSS_STATUS",
+      "Q_LOSS_TIMING",
+      "Q_SOCIAL_CHANGE_SINCE_LOSS",
+      "Q_LONELINESS_CONCERN",
+      "Q_GRIEF_SUPPORT",
+      "Q_RELIGION_IMPORTANCE",
+      "Q_FAITH_TRADITION",
+      "Q_COMMUNITY_IMPORTANCE",
+      "Q_DIETARY_REQUIREMENTS",
+      "Q_WORSHIP_ACCESS",
+      "Q_KOSHER_MEALS",
+      "Q_SYNAGOGUE_ACCESS",
+      "Q_JEWISH_PROGRAMMING",
+      "Q_CHURCH_ACCESS",
+      "Q_CHRISTIAN_SERVICES",
+      "Q_HALAL_MEALS",
+      "Q_PRAYER_FACILITIES",
+      "Q_PRIMARY_LANGUAGE",
+      "Q_SOCIAL_LANGUAGE",
+      "Q_MEDICAL_LANGUAGE",
+      "Q_BILINGUAL_STAFF",
+      "Q_VISIT_FREQUENCY",
+      "Q_MIN_TRAVEL_TIME",
+      "Q_EMERGENCY_ACCESS_IMPORTANCE"
+    ]
+  },
+  {
+    "question_id": "Q_COUPLE_ASSISTANCE",
+    "show_if": { "relationship": "Couple" },
+    "hide_if": {},
+    "writes_to": "couple_assistance",
+    "next_questions": ["Q_COUPLE_SAME_CARE", "Q_COUPLE_STAY_TOGETHER", "Q_COUPLE_TEMP_SEPARATION", "Q_CONTINUUM_OF_CARE"]
+  },
+  {
+    "question_id": "Q_COUPLE_SAME_CARE",
+    "show_if": { "relationship": "Couple" },
+    "hide_if": {},
+    "writes_to": "couple_same_care_level",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_COUPLE_STAY_TOGETHER",
+    "show_if": { "relationship": "Couple" },
+    "hide_if": {},
+    "writes_to": "couple_stay_together_preference",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_COUPLE_TEMP_SEPARATION",
+    "show_if": { "relationship": "Couple" },
+    "hide_if": {},
+    "writes_to": "temporary_separation_acceptance",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_CONTINUUM_OF_CARE",
+    "show_if": { "relationship": "Couple" },
+    "hide_if": {},
+    "writes_to": "continuum_of_care_preference",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_LOSS_STATUS",
+    "show_if": {},
+    "hide_if": { "relationship": "Couple" },
+    "writes_to": "widow_status",
+    "next_questions": ["Q_LOSS_TIMING", "Q_SOCIAL_CHANGE_SINCE_LOSS", "Q_LONELINESS_CONCERN", "Q_GRIEF_SUPPORT"]
+  },
+  {
+    "question_id": "Q_LOSS_TIMING",
+    "show_if": { "widow_status": "Yes" },
+    "hide_if": { "relationship": "Couple" },
+    "writes_to": "loss_timing",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_SOCIAL_CHANGE_SINCE_LOSS",
+    "show_if": { "widow_status": "Yes" },
+    "hide_if": { "relationship": "Couple" },
+    "writes_to": "social_activity_change_since_loss",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_LONELINESS_CONCERN",
+    "show_if": { "widow_status": "Yes" },
+    "hide_if": { "relationship": "Couple" },
+    "writes_to": "loneliness_risk",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_GRIEF_SUPPORT",
+    "show_if": { "widow_status": "Yes" },
+    "hide_if": { "relationship": "Couple" },
+    "writes_to": "grief_support_interest",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_RELIGION_IMPORTANCE",
+    "show_if": {},
+    "hide_if": {},
+    "writes_to": "religion_importance",
+    "next_questions": ["Q_FAITH_TRADITION", "Q_COMMUNITY_IMPORTANCE", "Q_DIETARY_REQUIREMENTS", "Q_WORSHIP_ACCESS", "Q_KOSHER_MEALS", "Q_SYNAGOGUE_ACCESS", "Q_JEWISH_PROGRAMMING", "Q_CHURCH_ACCESS", "Q_CHRISTIAN_SERVICES", "Q_HALAL_MEALS", "Q_PRAYER_FACILITIES"]
+  },
+  {
+    "question_id": "Q_PRIMARY_LANGUAGE",
+    "show_if": {},
+    "hide_if": {},
+    "writes_to": "preferred_spoken_language",
+    "next_questions": ["Q_SOCIAL_LANGUAGE", "Q_MEDICAL_LANGUAGE", "Q_BILINGUAL_STAFF"]
+  },
+  {
+    "question_id": "Q_SOCIAL_LANGUAGE",
+    "show_if": { "preferred_spoken_language_not": "English" },
+    "hide_if": {},
+    "writes_to": "social_interaction_language",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_MEDICAL_LANGUAGE",
+    "show_if": { "preferred_spoken_language_not": "English" },
+    "hide_if": {},
+    "writes_to": "medical_discussion_language",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_BILINGUAL_STAFF",
+    "show_if": { "preferred_spoken_language_not": "English" },
+    "hide_if": {},
+    "writes_to": "bilingual_staff_required",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_VISIT_FREQUENCY",
+    "show_if": {},
+    "hide_if": {},
+    "writes_to": "family_visit_expectation",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_MIN_TRAVEL_TIME",
+    "show_if": {},
+    "hide_if": {},
+    "writes_to": "minimum_acceptable_travel_time",
+    "next_questions": []
+  },
+  {
+    "question_id": "Q_EMERGENCY_ACCESS_IMPORTANCE",
+    "show_if": {},
+    "hide_if": {},
+    "writes_to": "emergency_access_importance",
+    "next_questions": []
+  }
+]
