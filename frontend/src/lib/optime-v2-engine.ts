@@ -4,6 +4,18 @@ import { QUESTION_GRAPH } from "@/lib/questionnaire-graph";
 
 type SignalRole = "score contribution" | "explanation contribution" | "rejection rationale" | "missing information analysis";
 
+type PersonaType =
+  | "Independent Active Senior"
+  | "Independent Social Senior"
+  | "Independent Quiet Senior"
+  | "Early Memory Support"
+  | "Memory Care"
+  | "Assisted Living"
+  | "Skilled Nursing"
+  | "Rehabilitation"
+  | "High Clinical Complexity"
+  | "Family-Centered Senior";
+
 type PriorityScores = {
   careFit: number;
   lifestyleFit: number;
@@ -13,6 +25,17 @@ type PriorityScores = {
   financialFit: number;
   clinicalQuality: number;
   luxuryAmenities: number;
+};
+
+type WeightProfile = PriorityScores;
+
+type PersonaProfile = {
+  personaType: PersonaType;
+  rankingStrategy: string;
+  weights: WeightProfile;
+  activeWeights: Array<{ label: string; weight: number }>;
+  whySelected: string[];
+  whatWouldChangeThisRanking: string[];
 };
 
 type Contribution = {
@@ -112,17 +135,110 @@ export type EngineOutput = {
   accepted: RankedRecommendation[];
   rejected: RankedRecommendation[];
   qualityCheck: EngineQualityCheck;
+  persona: PersonaProfile;
 };
 
-const PRIORITY_WEIGHTS = {
-  careFit: 0.28,
-  lifestyleFit: 0.18,
-  socialFit: 0.15,
-  culturalFit: 0.12,
-  familyFit: 0.1,
-  financialFit: 0.08,
-  clinicalQuality: 0.06,
-  luxuryAmenities: 0.03,
+const PERSONA_WEIGHT_PROFILES: Record<PersonaType, WeightProfile> = {
+  "Independent Active Senior": {
+    careFit: 0.18,
+    lifestyleFit: 0.16,
+    socialFit: 0.14,
+    culturalFit: 0.06,
+    familyFit: 0.08,
+    financialFit: 0.12,
+    clinicalQuality: 0.1,
+    luxuryAmenities: 0.16,
+  },
+  "Independent Social Senior": {
+    careFit: 0.1,
+    lifestyleFit: 0.12,
+    socialFit: 0.22,
+    culturalFit: 0.05,
+    familyFit: 0.1,
+    financialFit: 0.1,
+    clinicalQuality: 0.05,
+    luxuryAmenities: 0.26,
+  },
+  "Independent Quiet Senior": {
+    careFit: 0.15,
+    lifestyleFit: 0.17,
+    socialFit: 0.07,
+    culturalFit: 0.08,
+    familyFit: 0.12,
+    financialFit: 0.12,
+    clinicalQuality: 0.13,
+    luxuryAmenities: 0.16,
+  },
+  "Early Memory Support": {
+    careFit: 0.22,
+    lifestyleFit: 0.09,
+    socialFit: 0.08,
+    culturalFit: 0.05,
+    familyFit: 0.1,
+    financialFit: 0.08,
+    clinicalQuality: 0.22,
+    luxuryAmenities: 0.16,
+  },
+  "Memory Care": {
+    careFit: 0.3,
+    lifestyleFit: 0.05,
+    socialFit: 0.05,
+    culturalFit: 0.05,
+    familyFit: 0.1,
+    financialFit: 0.05,
+    clinicalQuality: 0.25,
+    luxuryAmenities: 0.15,
+  },
+  "Assisted Living": {
+    careFit: 0.22,
+    lifestyleFit: 0.16,
+    socialFit: 0.14,
+    culturalFit: 0.08,
+    familyFit: 0.1,
+    financialFit: 0.1,
+    clinicalQuality: 0.1,
+    luxuryAmenities: 0.1,
+  },
+  "Skilled Nursing": {
+    careFit: 0.35,
+    lifestyleFit: 0.05,
+    socialFit: 0.05,
+    culturalFit: 0.05,
+    familyFit: 0.1,
+    financialFit: 0.05,
+    clinicalQuality: 0.25,
+    luxuryAmenities: 0.1,
+  },
+  Rehabilitation: {
+    careFit: 0.28,
+    lifestyleFit: 0.05,
+    socialFit: 0.05,
+    culturalFit: 0.05,
+    familyFit: 0.1,
+    financialFit: 0.05,
+    clinicalQuality: 0.32,
+    luxuryAmenities: 0.1,
+  },
+  "High Clinical Complexity": {
+    careFit: 0.25,
+    lifestyleFit: 0.04,
+    socialFit: 0.04,
+    culturalFit: 0.05,
+    familyFit: 0.08,
+    financialFit: 0.05,
+    clinicalQuality: 0.39,
+    luxuryAmenities: 0.1,
+  },
+  "Family-Centered Senior": {
+    careFit: 0.1,
+    lifestyleFit: 0.12,
+    socialFit: 0.08,
+    culturalFit: 0.06,
+    familyFit: 0.28,
+    financialFit: 0.12,
+    clinicalQuality: 0.08,
+    luxuryAmenities: 0.16,
+  },
 };
 
 function clamp(value: number, min = 0, max = 100): number {
