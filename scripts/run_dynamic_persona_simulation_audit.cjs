@@ -272,6 +272,23 @@ function inferExplicitCareTaxonomy(facility) {
     .filter((item, index) => item.probability >= 0.18 || (index === 0 && item.probability >= 0.12))
     .map((item) => item.type);
 
+  if (
+    careTypes.includes('Assisted Living') &&
+    !careTypes.includes('Independent Living') &&
+    probabilities['Independent Living'] >= 0.1 &&
+    probabilities['Skilled Nursing'] < 0.2 &&
+    probabilities.Rehabilitation < 0.2
+  ) {
+    careTypes.push('Independent Living');
+  }
+  if (
+    careTypes.includes('Independent Living') &&
+    !careTypes.includes('CCRC') &&
+    probabilities.CCRC >= 0.12
+  ) {
+    careTypes.push('CCRC');
+  }
+
   const dominantProbability = ranked[0]?.probability ?? 0;
   const confidenceScore = Math.round(dominantProbability * 100);
   const confidence = confidenceScore >= 70 ? 'HIGH' : confidenceScore >= 45 ? 'MEDIUM' : 'LOW';

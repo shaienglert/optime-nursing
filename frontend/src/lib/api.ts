@@ -503,6 +503,22 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
 
   const probabilities = normalizeProbabilities(scores);
   const careTypes = deriveCareTypesFromProbabilities(probabilities);
+  if (
+    careTypes.includes("Assisted Living") &&
+    !careTypes.includes("Independent Living") &&
+    probabilities["Independent Living"] >= 0.1 &&
+    probabilities["Skilled Nursing"] < 0.2 &&
+    probabilities.Rehabilitation < 0.2
+  ) {
+    careTypes.push("Independent Living");
+  }
+  if (
+    careTypes.includes("Independent Living") &&
+    !careTypes.includes("CCRC") &&
+    probabilities.CCRC >= 0.12
+  ) {
+    careTypes.push("CCRC");
+  }
   const dominantProbability = Math.max(...CARE_TYPE_ORDER.filter((type) => type !== "UNKNOWN").map((type) => probabilities[type]));
   const confidenceScore = Math.round(dominantProbability * 100);
   const confidence: CareTaxonomyResult["confidence"] = confidenceScore >= 70 ? "HIGH" : confidenceScore >= 45 ? "MEDIUM" : "LOW";

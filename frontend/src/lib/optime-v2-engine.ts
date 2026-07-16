@@ -309,6 +309,31 @@ function buildWeightEntries(weights: WeightProfile): Array<{ label: string; weig
     { label: "Lifestyle Fit", weight: weights.lifestyleFit },
     { label: "Social Fit", weight: weights.socialFit },
     { label: "Cultural Fit", weight: weights.culturalFit },
+
+function careTypeTotalAdjustment(facility: SearchFacility, state: QuestionnaireState): number {
+  let adjustment = 0;
+
+  if (state.assistanceLevel === "Fully independent") {
+    if (facility.careTypes.includes("Skilled Nursing")) adjustment -= 40;
+    if (facility.careTypes.includes("Rehabilitation")) adjustment -= 35;
+    if (facility.careTypes.includes("Memory Care")) adjustment -= 20;
+    if (facility.careTypes.includes("UNKNOWN")) adjustment -= 15;
+    if (facility.careTypes.includes("Independent Living")) adjustment += 20;
+    if (facility.careTypes.includes("Active Adult 55+")) adjustment += 18;
+    if (facility.careTypes.includes("CCRC")) adjustment += 12;
+  }
+
+  if (state.memoryStatus === "Mild memory issues" || state.memoryStatus === "Occasionally forgetful" || state.memoryStatus === "Significant memory issues") {
+    if (facility.careTypes.includes("Memory Care")) adjustment += 30;
+    if (facility.careTypes.includes("Assisted Living")) adjustment += 15;
+    if (facility.careTypes.includes("Skilled Nursing")) adjustment += 5;
+    if (facility.careTypes.includes("Independent Living")) adjustment -= 20;
+    if (facility.careTypes.includes("Active Adult 55+")) adjustment -= 20;
+    if (facility.careTypes.includes("Rehabilitation") && state.memoryStatus !== "Significant memory issues") adjustment -= 12;
+  }
+
+  return adjustment;
+}
     { label: "Family Fit", weight: weights.familyFit },
     { label: "Financial Fit", weight: weights.financialFit },
     { label: "Clinical Quality", weight: weights.clinicalQuality },
@@ -1377,7 +1402,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       luxuryAmenities,
     };
 
-    const totalScore = weightedTotal(priorityScores, persona.weights);
+    const totalScore = weightedTotal(priorityScores, persona.weights) + careTypeTotalAdjustment(facility, state);
 
     const hardRejectionReasons = collectHardRejectionReasons(facility, state);
     const contributions = summarizeContributions(priorityScores, persona.weights);
