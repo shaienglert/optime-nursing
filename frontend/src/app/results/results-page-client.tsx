@@ -64,216 +64,28 @@ type ExplanationTableRow = {
   label: string;
   evidence: string;
   score: number | string;
-}
-
+};
+  
 function buildRelaxedRecommendations(
-  facilities: SearchFacility[],
-  context: RelaxationContext,
+  rankedFacilities: SearchFacility[],
+  context: {
+    budget: number;
+    care: string;
+    memory: string;
+    activity: string;
+    distance: string;
+    notes: string;
+    profile: any;
+  },
 ): {
   recommendations: SearchFacility[];
   relaxations: RelaxationNotice[];
-  constraintAudit: ConstraintAuditRow[];
+  constraintAudit: any[];
   debug: RecommendationPipelineDebug;
   exactMatchAudit: ExactMatchAuditRow[];
-  signalClassifications: SignalClassificationRow[];
-  explainableByFacility: Record<number, ExplainableMatchingBreakdown>;
+  signalClassifications: any[];
+  explainableByFacility: { [key: string]: any };
 } {
-  const baseFacilities = facilities.filter((facility) => facility.matching_confidence !== "LOW");
-  const profile = context.profile;
-  const notesLower = context.notes.toLowerCase();
-  const auditRows = buildConstraintAudit(context);
-  const strictBudget = strictBudgetRequested(context.notes);
-  const requiresWheelchair = wheelchairMandatory(context.notes);
-  const requiresCriticalSafety = criticalSafetyRequired(context.notes);
-  const memoryNeedsMedical = context.memory.toLowerCase().includes("memory") || context.memory.toLowerCase().includes("significant");
-  const languagePreference = profile.languageProfile.preferredSpokenLanguage;
-  const religionImportant = ["Important", "Very important"].includes(profile.culturalProfile.religionImportance);
-  const wantsJewishSetting = profile.culturalProfile.israeliJewishCommunityPreference === "Yes" || notesLower.includes("jewish");
-  const hardConstraintFailures = (facility: SearchFacility): string[] => {
-    const failures: string[] = [];
-    const price = midpointPrice(facility.priceRange);
-    const careScore = careAlignmentScore(facility, context.care);
-
-    if (careScore < 80) {
-      failures.push(`care level mismatch (${context.care})`);
-    }
-    if (memoryNeedsMedical && !facility.careTypes.some((item) => item.toLowerCase().includes("memory"))) {
-      failures.push("critical medical limitation not supported (memory care)");
-    }
-    if (strictBudget && price !== null && price > context.budget) {
-      failures.push(`budget exceeds by $${Math.max(0, Math.round(price - context.budget)).toLocaleString()}`);
-    }
-    if (requiresWheelchair && !hasBadgeMatch(facility, [/wheelchair/i, /accessible/i, /accessibility/i, /ada/i, /mobility/i])) {
-      failures.push("critical safety requirement not verified (accessibility)");
-    }
-    if (requiresCriticalSafety && !hasBadgeMatch(facility, [/secure/i, /security/i, /fall/i, /monitor/i, /supervision/i, /memory/i])) {
-      failures.push("critical safety requirement not verified");
-    }
-
-    return failures;
-  };
-
-  const hardFiltered = baseFacilities.filter((facility) => hardConstraintFailures(facility).length === 0);
-
-  const candidates = hardFiltered.length > 0 ? hardFiltered : baseFacilities;
-
-  const hasActivityData = (facility: SearchFacility): boolean =>
-    hasBadgeMatch(facility, [/social/i, /active/i, /movie/i, /cinema/i, /film/i, /music/i, /garden/i, /swim/i, /art/i, /pet/i, /luxury/i, /program/i]);
-  const hasDistanceData = (facility: SearchFacility): boolean => hasBadgeMatch(facility, [/close to family/i, /family/i, /distance/i, /drive/i]);
-  const hasFacilityData = (facility: SearchFacility): boolean => hasBadgeMatch(facility, [/amenity/i, /facility/i, /pool/i, /gym/i, /garden/i, /library/i, /spa/i]);
-  const hasLuxurySignal = (facility: SearchFacility): boolean => hasBadgeMatch(facility, [/luxury/i, /premium/i, /upscale/i, /resort/i]);
-
-  const softPreferences: Array<{
-    key: string;
-    originalRequirement: string;
-    relaxedRequirement: string;
-    enabled: boolean;
-    weight: number;
-    category: SignalCategory;
-    score: (facility: SearchFacility) => number;
-    rejectionReason: (facility: SearchFacility) => string;
-  }> = [
-    {
-      key: "hobbies-activities",
-      originalRequirement: context.activity || "Not specified",
-      relaxedRequirement: "Activity mix differs from preference",
-      enabled: Boolean(context.activity),
-      weight: 10,
-      category: "NICE TO HAVE",
-      score: (facility) => {
-        if (!context.activity) return 60;
-        const normalized = context.activity.toLowerCase();
-        if (normalized.includes("social")) return hasBadgeMatch(facility, [/social/i, /active/i]) ? 100 : 35;
-        if (normalized.includes("religious")) return hasBadgeMatch(facility, [/religious/i, /faith/i, /synagogue/i, /jewish/i]) ? 100 : 30;
-        if (normalized.includes("music")) return hasBadgeMatch(facility, [/active/i, /program/i]) ? 85 : 45;
-        return 55;
-      },
-      rejectionReason: (facility) => {
-        const normalized = context.activity.toLowerCase();
-        if (normalized.includes("movie")) {
-          return hasBadgeMatch(facility, [/movie/i, /cinema/i, /film/i]) ? "" : "no movie activity";
-        }
-        if (normalized.includes("music")) {
-          return hasBadgeMatch(facility, [/music/i, /program/i]) ? "" : "no music activity signal";
-        }
-        if (normalized.includes("social")) {
-          return hasBadgeMatch(facility, [/social/i, /active/i]) ? "" : "no social activity signal";
-        }
-        return "activity preference not fully matched";
-      },
-    },
-    {
-      key: "facilities",
-      originalRequirement: "Preferred amenities",
-      relaxedRequirement: "Facility amenities may differ",
-      enabled: true,
-      weight: 7,
-      category: "NICE TO HAVE",
-      score: (facility) => hasFacilityData(facility) ? 90 : 55,
-      rejectionReason: () => "",
-    },
-    {
-      key: "luxury",
-      originalRequirement: "Luxury level",
-      relaxedRequirement: "Luxury signals may be limited",
-      enabled: true,
-      weight: 5,
-      category: "NICE TO HAVE",
-      score: (facility) => hasLuxurySignal(facility) ? 88 : 52,
-      rejectionReason: () => "",
-    },
-    {
-      key: "language",
-      originalRequirement: languagePreference || "Not specified",
-      relaxedRequirement: "Language support may be partial",
-      enabled: Boolean(languagePreference && languagePreference !== "English"),
-      weight: 12,
-            <details className="rounded-3xl border border-[#d9decb] bg-[#f8fbf1] p-4 shadow-[0_12px_34px_-28px_rgba(54,84,32,0.35)]">
-              <summary className="cursor-pointer list-none text-sm font-semibold uppercase tracking-[0.16em] text-[#5c7340]">
-                Show recommendation diagnostics
-              </summary>
-              <div className="mt-4 space-y-6">
-                <article className="rounded-3xl border border-[#d9decb] bg-[#f8fbf1] p-6 shadow-[0_12px_34px_-28px_rgba(54,84,32,0.35)]">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5c7340]">Signal Classification Engine V1</p>
-                  <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Preference signal categories</h2>
-                  <div className="mt-4 overflow-x-auto rounded-2xl border border-[#dfe7cf] bg-white">
-                    <table className="min-w-full divide-y divide-[#e9efdd] text-sm text-[#425041]">
-                      <thead className="bg-[#f2f7e8] text-left text-xs uppercase tracking-[0.14em] text-[#6b775a]">
-                        <tr>
-                          <th className="px-4 py-3">Signal</th>
-                          <th className="px-4 py-3">Category</th>
-                          <th className="px-4 py-3">Value</th>
-                          <th className="px-4 py-3">Rationale</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#edf2e4]">
-                        {relaxedAvailability.signalClassifications.map((row) => (
-                          <tr key={`${row.signal}-${row.category}`}>
-                            <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.signal}</td>
-                            <td className="px-4 py-3">
-                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                row.category === "HARD REQUIREMENT"
-                                  ? "bg-[#fde7e2] text-[#a54c34]"
-                                  : row.category === "STRONG PREFERENCE"
-                                    ? "bg-[#edf3ea] text-[#4c6f5b]"
-                                    : row.category === "NICE TO HAVE"
-                                      ? "bg-[#e7eefb] text-[#3f5f8c]"
-                                      : "bg-[#f5f1e5] text-[#6f644e]"
-                              }`}>
-                                {row.category}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">{row.value}</td>
-                            <td className="px-4 py-3">{row.rationale}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="mt-3 text-xs text-[#6a655b]">Engine rules: UNKNOWN SIGNAL and NICE TO HAVE never reject; STRONG PREFERENCE rarely rejects exact matching; only HARD REQUIREMENT can reject recommendation eligibility.</p>
-                </article>
-
-                <article className="rounded-3xl border border-[#d8dbe2] bg-[#f7f9fc] p-6 shadow-[0_12px_34px_-28px_rgba(36,49,72,0.45)]">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#44526b]">Recommendation Pipeline Debug</p>
-                  <div className="mt-3 overflow-x-auto rounded-2xl border border-[#d5dbe6] bg-white">
-                    <table className="min-w-full divide-y divide-[#e3e8f0] text-sm text-[#334155]">
-                      <tbody className="divide-y divide-[#eef2f7]">
-                        <tr><td className="px-4 py-3 font-medium">communities_loaded</td><td className="px-4 py-3">{relaxedAvailability.debug.communities_loaded}</td></tr>
-                        <tr><td className="px-4 py-3 font-medium">exact_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.exact_matches}</td></tr>
-                        <tr><td className="px-4 py-3 font-medium">soft_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.soft_matches}</td></tr>
-                        <tr><td className="px-4 py-3 font-medium">fallback_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.fallback_matches}</td></tr>
-                        <tr><td className="px-4 py-3 font-medium">rendered_results</td><td className="px-4 py-3">{relaxedAvailability.debug.rendered_results}</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </article>
-
-                <article className="rounded-3xl border border-[#e8ddcc] bg-[#fffaf2] p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Recommendation Filter Audit</p>
-                  <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Hard constraints vs soft preferences</h2>
-                  <p className="mt-2 text-sm text-[#5c5347]">Default rule applied: everything is SOFT_PREFERENCE unless explicitly mandatory.</p>
-                  <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e7dbc6] bg-white">
-                    <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
-                      <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
-                        <tr>
-                          <th className="px-4 py-3">Input field</th>
-                          <th className="px-4 py-3">Value</th>
-                          <th className="px-4 py-3">Classification</th>
-                          <th className="px-4 py-3">Why</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#efe6d8]">
-                        {relaxedAvailability.constraintAudit.map((row) => (
-                          <tr key={`${row.field}-${row.value}`}>
-                            <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.field}</td>
-                            <td className="px-4 py-3">{row.value}</td>
-                            <td className="px-4 py-3">{row.classification}</td>
-                            <td className="px-4 py-3">{row.reason}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
                 </article>
 
                 {relaxedAvailability.exactMatchAudit.length > 0 ? (
