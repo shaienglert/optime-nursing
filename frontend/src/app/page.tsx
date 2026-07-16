@@ -1525,48 +1525,108 @@ export default function Home() {
 
                 {shouldAskReligionFollowUps ? (
                   <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
-                    <h4 className="text-base font-semibold text-[#2f2a24]">Religion and Jewish life</h4>
+                    <h4 className="text-base font-semibold text-[#2f2a24]">Religion and spirituality</h4>
                     <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Kosher?</p>
+                        <p className="text-sm font-medium text-[#5e5346]">Which religion or tradition?</p>
                         <div className="mt-3 flex flex-wrap gap-2.5">
-                          {yesNoOptions.map((option) => (
-                            <OptionChip key={option} label={option} isActive={kosherRequirements === option} onClick={() => setKosherRequirements(option)} />
+                          {faithTraditionOptions.map((option) => (
+                            <OptionChip key={`followup-faith-${option}`} label={option} isActive={faithTraditions.includes(option)} onClick={() => setFaithTraditions((current) => toggleOption(current, option))} />
                           ))}
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Synagogue access?</p>
-                        <div className="mt-3 flex flex-wrap gap-2.5">
-                          {yesNoOptions.map((option) => (
-                            <OptionChip key={option} label={option} isActive={synagogueChurchAccess === option} onClick={() => setSynagogueChurchAccess(option)} />
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Religious services?</p>
+                        <p className="text-sm font-medium text-[#5e5346]">How important is religious community?</p>
                         <div className="mt-3 flex flex-wrap gap-2.5">
                           {importanceOptions.map((option) => (
-                            <OptionChip key={option} label={option} isActive={holidayCelebrations === option} onClick={() => setHolidayCelebrations(option)} />
+                            <OptionChip key={`community-importance-${option}`} label={option} isActive={holidayCelebrations === option} onClick={() => setHolidayCelebrations(option)} />
                           ))}
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Jewish community?</p>
+                        <p className="text-sm font-medium text-[#5e5346]">Dietary requirements?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {dietaryPreferenceOptions.map((option) => (
+                            <OptionChip key={`religion-diet-${option}`} label={option} isActive={dietaryPreferences.includes(option)} onClick={() => setDietaryPreferences((current) => toggleOption(current, option))} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Worship access requirements?</p>
                         <div className="mt-3 flex flex-wrap gap-2.5">
                           {yesNoOptions.map((option) => (
-                            <OptionChip key={option} label={option} isActive={israeliJewishCommunityPreference === option} onClick={() => setIsraeliJewishCommunityPreference(option)} />
+                            <OptionChip key={`worship-${option}`} label={option} isActive={synagogueChurchAccess === option} onClick={() => setSynagogueChurchAccess(option)} />
                           ))}
                         </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Holiday celebrations?</p>
-                        <div className="mt-3 flex flex-wrap gap-2.5">
-                          {importanceOptions.map((option) => (
-                            <OptionChip key={option} label={option} isActive={culturalIdentity === option} onClick={() => setCulturalIdentity(option)} />
-                          ))}
-                        </div>
-                      </div>
+                      {isJewishBranch ? (
+                        <>
+                          <div>
+                            <p className="text-sm font-medium text-[#5e5346]">Kosher meals?</p>
+                            <div className="mt-3 flex flex-wrap gap-2.5">
+                              {yesNoOptions.map((option) => (
+                                <OptionChip key={`kosher-${option}`} label={option} isActive={kosherRequirements === option} onClick={() => setKosherRequirements(option)} />
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-[#5e5346]">Synagogue access?</p>
+                            <div className="mt-3 flex flex-wrap gap-2.5">
+                              {yesNoOptions.map((option) => (
+                                <OptionChip key={`synagogue-${option}`} label={option} isActive={synagogueChurchAccess === option} onClick={() => setSynagogueChurchAccess(option)} />
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-[#5e5346]">Jewish programming importance?</p>
+                            <div className="mt-3 flex flex-wrap gap-2.5">
+                              {importanceOptions.map((option) => (
+                                <OptionChip key={`jewish-program-${option}`} label={option} isActive={jewishProgrammingImportance === option} onClick={() => setJewishProgrammingImportance(option)} />
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
+                      {isChristianBranch ? (
+                        <>
+                          <div>
+                            <p className="text-sm font-medium text-[#5e5346]">Church access requirement?</p>
+                            <div className="mt-3 flex flex-wrap gap-2.5">
+                              {yesNoOptions.map((option) => (
+                                <OptionChip key={`church-${option}`} label={option} isActive={churchAccessRequirement === option} onClick={() => setChurchAccessRequirement(option)} />
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-[#5e5346]">Christian services importance?</p>
+                            <div className="mt-3 flex flex-wrap gap-2.5">
+                              {importanceOptions.map((option) => (
+                                <OptionChip key={`christian-service-${option}`} label={option} isActive={christianServiceRequirement === option} onClick={() => setChristianServiceRequirement(option)} />
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
+                      {isMuslimBranch ? (
+                        <>
+                          <div>
+                            <p className="text-sm font-medium text-[#5e5346]">Halal meals?</p>
+                            <div className="mt-3 flex flex-wrap gap-2.5">
+                              {yesNoOptions.map((option) => (
+                                <OptionChip key={`halal-${option}`} label={option} isActive={halalMealsRequirement === option} onClick={() => setHalalMealsRequirement(option)} />
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-[#5e5346]">Prayer facilities required?</p>
+                            <div className="mt-3 flex flex-wrap gap-2.5">
+                              {yesNoOptions.map((option) => (
+                                <OptionChip key={`prayer-${option}`} label={option} isActive={prayerFacilityRequirement === option} onClick={() => setPrayerFacilityRequirement(option)} />
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
@@ -1611,6 +1671,18 @@ export default function Home() {
                         <p className="text-sm font-medium text-[#5e5346]">Preferred social interaction language</p>
                         <input value={socialInteractionLanguage} onChange={(event) => setSocialInteractionLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, Spanish..." />
                       </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Medical communication language</p>
+                        <input value={medicalDiscussionLanguage} onChange={(event) => setMedicalDiscussionLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, Spanish..." />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Is bilingual staff required?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {yesNoOptions.map((option) => (
+                            <OptionChip key={`bilingual-${option}`} label={option} isActive={bilingualStaffRequired === option} onClick={() => setBilingualStaffRequired(option)} />
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : null}
@@ -1632,14 +1704,6 @@ export default function Home() {
                         <div className="mt-3 flex flex-wrap gap-2.5">
                           {memorySafetyOptions.map((option) => (
                             <OptionChip key={option} label={option} isActive={secureMemoryNeighborhoodNeed === option} onClick={() => setSecureMemoryNeighborhoodNeed(option)} />
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Familiar language requirement?</p>
-                        <div className="mt-3 flex flex-wrap gap-2.5">
-                          {familiarLanguageRequirementOptions.map((option) => (
-                            <OptionChip key={option} label={option} isActive={familiarLanguageRequirement === option} onClick={() => setFamiliarLanguageRequirement(option)} />
                           ))}
                         </div>
                       </div>
@@ -1687,7 +1751,7 @@ export default function Home() {
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
               <h3 className="text-lg font-semibold text-[#2f2a24]">7. Social life and friendships</h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {!isFamilyStoryRelationship ? (
+                {!isFamilyStoryRelationship && relationship !== "Couple" ? (
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">How long has {relationshipLabel} lived alone?</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1741,16 +1805,6 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                {!isFamilyStoryRelationship ? (
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Expected visit frequency</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {visitExpectationOptions.map((option) => (
-                      <OptionChip key={option} label={option} isActive={visitFrequencyExpectation === option} onClick={() => setVisitFrequencyExpectation(option)} />
-                    ))}
-                  </div>
-                </div>
-                ) : null}
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Religion or faith importance</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1759,16 +1813,14 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                {!isFamilyStoryRelationship ? (
                 <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Preferred spoken language</p>
+                  <p className="text-sm font-medium text-[#5e5346]">Primary language</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
                     {languageOptions.map((option) => (
                       <OptionChip key={option} label={option} isActive={preferredSpokenLanguage === option} onClick={() => setPreferredSpokenLanguage(option)} />
                     ))}
                   </div>
                 </div>
-                ) : null}
                 <div>
                   <p className="text-sm font-medium text-[#5e5346]">Introvert or extrovert</p>
                   <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1785,20 +1837,6 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-              </div>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {!shouldAskLanguageFollowUps ? (
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Native language</p>
-                  <input value={nativeLanguage} onChange={(event) => setNativeLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, Spanish..." />
-                </div>
-                ) : null}
-                {!shouldAskLanguageFollowUps ? (
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Language for medical discussions</p>
-                  <input value={medicalDiscussionLanguage} onChange={(event) => setMedicalDiscussionLanguage(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="English, Hebrew, translated support..." />
-                </div>
-                ) : null}
               </div>
             </article>
 
