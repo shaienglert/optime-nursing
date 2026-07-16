@@ -8,6 +8,7 @@ type PersonaType =
   | "Independent Active Senior"
   | "Independent Social Senior"
   | "Independent Quiet Senior"
+  | "Cultural Family Senior"
   | "Early Memory Support"
   | "Memory Care"
   | "Assisted Living"
@@ -145,24 +146,24 @@ export type EngineOutput = {
 
 const PERSONA_WEIGHT_PROFILES: Record<PersonaType, WeightProfile> = {
   "Independent Active Senior": {
-    careFit: 0.18,
-    lifestyleFit: 0.16,
+    careFit: 0.14,
+    lifestyleFit: 0.22,
     socialFit: 0.14,
     culturalFit: 0.06,
     familyFit: 0.08,
     financialFit: 0.12,
-    clinicalQuality: 0.1,
+    clinicalQuality: 0.08,
     luxuryAmenities: 0.16,
   },
   "Independent Social Senior": {
-    careFit: 0.1,
-    lifestyleFit: 0.12,
-    socialFit: 0.22,
-    culturalFit: 0.05,
+    careFit: 0.12,
+    lifestyleFit: 0.2,
+    socialFit: 0.26,
+    culturalFit: 0.06,
     familyFit: 0.1,
     financialFit: 0.1,
     clinicalQuality: 0.05,
-    luxuryAmenities: 0.26,
+    luxuryAmenities: 0.11,
   },
   "Independent Quiet Senior": {
     careFit: 0.15,
@@ -174,15 +175,25 @@ const PERSONA_WEIGHT_PROFILES: Record<PersonaType, WeightProfile> = {
     clinicalQuality: 0.13,
     luxuryAmenities: 0.16,
   },
+  "Cultural Family Senior": {
+    careFit: 0.14,
+    lifestyleFit: 0.08,
+    socialFit: 0.12,
+    culturalFit: 0.24,
+    familyFit: 0.18,
+    financialFit: 0.08,
+    clinicalQuality: 0.06,
+    luxuryAmenities: 0.1,
+  },
   "Early Memory Support": {
-    careFit: 0.22,
+    careFit: 0.28,
     lifestyleFit: 0.09,
     socialFit: 0.08,
     culturalFit: 0.05,
-    familyFit: 0.1,
-    financialFit: 0.08,
+    familyFit: 0.14,
+    financialFit: 0.07,
     clinicalQuality: 0.22,
-    luxuryAmenities: 0.16,
+    luxuryAmenities: 0.07,
   },
   "Memory Care": {
     careFit: 0.3,
@@ -310,6 +321,8 @@ function detectPersonaType(state: QuestionnaireState): PersonaType {
   const memory = state.memoryStatus;
   const social = state.humanIntelligenceV2.socialProfile;
   const family = state.humanIntelligenceV2.familyProfile;
+  const cultural = state.humanIntelligenceV2.culturalProfile;
+  const language = state.humanIntelligenceV2.languageProfile;
   const interests = state.happinessPreferences.map((item) => item.toLowerCase());
   const notes = state.notes.toLowerCase();
 
@@ -318,6 +331,15 @@ function detectPersonaType(state: QuestionnaireState): PersonaType {
   if (/rehab|rehabilitation|post[- ]?hospital/.test(notes)) return "Rehabilitation";
   if (memory === "Mild memory issues" || memory === "Occasionally forgetful") return "Early Memory Support";
   if (assistance && assistance !== "Fully independent") return "Assisted Living";
+  if (
+    assistance === "Fully independent" &&
+    language.preferredSpokenLanguage &&
+    language.preferredSpokenLanguage !== "English" &&
+    (cultural.religionImportance === "High" || cultural.religionImportance === "Very high" || cultural.faithTraditions.length > 0) &&
+    (family.visitFrequencyExpectation === "Daily" || family.visitFrequencyExpectation === "Weekly" || family.involvedFamilyMembers === "5+")
+  ) {
+    return "Cultural Family Senior";
+  }
   if (family.visitFrequencyExpectation === "Daily" || family.involvedFamilyMembers === "5+" || family.grandchildrenImportance === "High") return "Family-Centered Senior";
   if (social.socialInteractionFrequency === "Daily" || social.newFriendsImportance === "High" || interests.some((item) => /social|activity|music|games/.test(item))) return "Independent Social Senior";
   if (social.socialInteractionFrequency === "Monthly or less" || social.newFriendsImportance === "Low" || interests.some((item) => /quiet|calm|peaceful/.test(item))) return "Independent Quiet Senior";
@@ -343,6 +365,11 @@ function buildPersonaProfile(state: QuestionnaireState): PersonaProfile {
       rankingStrategy: "Person-first calm-environment ranking.",
       whySelected: ["Fully independent profile.", "Prefers a quieter environment.", "Social stimulation should stay modest."],
       whatWouldChangeThisRanking: ["If social engagement becomes a priority, Social Fit would rise.", "If family involvement increases, Family Fit would become stronger.", "If clinical needs increase, Clinical Quality would rise."],
+    },
+    "Cultural Family Senior": {
+      rankingStrategy: "Cultural and family continuity ranking.",
+      whySelected: ["Language and faith cues are explicit.", "Family involvement is a primary decision driver.", "The score should reflect culture and belonging before amenities."],
+      whatWouldChangeThisRanking: ["If clinical needs rise, Care Fit and Clinical Quality would become dominant.", "If family access becomes less important, Social Fit would gain share.", "If language and faith needs relax, the engine would shift toward independence and lifestyle."],
     },
     "Early Memory Support": {
       rankingStrategy: "Memory-aware early support ranking.",
@@ -414,18 +441,23 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
   const careText = facility.careTypes.join(" ").toLowerCase();
 
   if (assistance === "Fully independent") {
-    let independentScore = 50;
+    let independentScore = facility.careTypes.includes("UNKNOWN") ? 35 : 45;
     if (careText.includes("independent")) independentScore += 50;
     if (careText.includes("active adult")) independentScore += 40;
+    if (careText.includes("ccrc")) independentScore += 28;
+    if (careText.includes("continuing care")) independentScore += 24;
     if (careText.includes("assisted living")) independentScore -= 20;
     if (careText.includes("memory care")) independentScore -= 60;
     if (careText.includes("skilled nursing")) independentScore -= 80;
+    if (careText.includes("rehabilitation")) independentScore -= 70;
+    if (careText.includes("hospice")) independentScore -= 90;
     return clamp(independentScore);
   }
 
   if (assistance === "Skilled nursing care") {
     let score = 35;
     if (careText.includes("skilled nursing")) score += 50;
+    if (careText.includes("rehabilitation")) score += 30;
     if (careText.includes("memory care")) score += 10;
     if (careText.includes("independent")) score -= 30;
     return clamp(score);
@@ -435,12 +467,16 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
     let score = 30;
     if (careText.includes("memory care")) score += 55;
     if (careText.includes("skilled nursing")) score += 15;
+    if (careText.includes("assisted living")) score += 12;
     if (!careText.includes("memory")) score -= 35;
     return clamp(score);
   }
 
-  let score = 55;
+  let score = facility.careTypes.includes("UNKNOWN") ? 45 : 55;
   if (careText.includes("assisted living")) score += 20;
+  if (careText.includes("memory care") && memory === "Mild memory issues") score += 18;
+  if (careText.includes("continuing care")) score += 12;
+  if (careText.includes("ccrc")) score += 10;
   if (careText.includes("skilled nursing") && assistance !== "24/7 support required") score -= 10;
   return clamp(score);
 }
@@ -952,7 +988,15 @@ function buildIntelligenceReport(
     missingIntelligence.push("No public social channel source is connected in the current search payload.");
   }
 
-  const confidencePenalty = Math.min(30, missingIntelligence.length * 3);
+  let careTaxonomyPenalty = 0;
+  if (facility.careTypes.includes("UNKNOWN")) {
+    missingIntelligence.push("Care taxonomy is unknown in the current dataset, so care-fit confidence is reduced.");
+    careTaxonomyPenalty = 10;
+  } else if (facility.careTypeConfidence === "MEDIUM") {
+    careTaxonomyPenalty = 4;
+  }
+
+  const confidencePenalty = Math.min(40, missingIntelligence.length * 3 + careTaxonomyPenalty);
   const adjustedConfidence = clamp(confidenceScore - confidencePenalty);
 
   const categoryRows: AuditCategoryRow[] = [

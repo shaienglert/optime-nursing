@@ -30,13 +30,26 @@ export type ScoreBreakdownItem = {
   dataSource: string[];
 };
 
+export type CareType =
+  | "Independent Living"
+  | "Active Adult 55+"
+  | "Assisted Living"
+  | "Memory Care"
+  | "Skilled Nursing"
+  | "Rehabilitation"
+  | "CCRC"
+  | "Continuing Care"
+  | "Hospice"
+  | "UNKNOWN";
+
 export type SearchFacility = Facility & {
   imageUrl: string;
   optimeScore: number;
   matchLabel: string;
   shortExplanation: string;
   priceRange: string;
-  careTypes: string[];
+  careTypes: CareType[];
+  careTypeConfidence: "HIGH" | "MEDIUM" | "LOW";
   matchBadges: string[];
   scoreBreakdown?: ScoreBreakdownItem[];
   searchTokens?: string[];
@@ -255,11 +268,97 @@ function makePriceRange(facility: BackendFacility): string {
   return `$${Math.round(base).toLocaleString()} - $${Math.round(high).toLocaleString()}/month`;
 }
 
-function makeCareTypes(facility: BackendFacility): string[] {
-  const careTypes: string[] = ["Assisted Living"];
-  if ((facility.quality_rating ?? 0) >= 4) careTypes.push("Skilled Nursing");
-  if ((facility.inspection_rating ?? 0) >= 4) careTypes.push("Memory Care");
-  return careTypes;
+type CareTaxonomyResult = {
+  careTypes: CareType[];
+  confidence: "HIGH" | "MEDIUM" | "LOW";
+};
+
+function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult {
+  const text = [
+    facility.name,
+    facility.address,
+    facility.city,
+    buildShortExplanation(facility),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const careTypes = new Set<CareType>();
+  let confidence: CareTaxonomyResult["confidence"] = "LOW";
+
+  const add = (type: CareType, nextConfidence: CareTaxonomyResult["confidence"]) => {
+    careTypes.add(type);
+    if (nextConfidence === "HIGH" || (nextConfidence === "MEDIUM" && confidence === "LOW")) {
+      confidence = nextConfidence;
+    }
+  };
+
+  if (/\b(independent living|independent senior|senior living|retirement living)\b/.test(text)) {
+    add("Independent Living", "HIGH");
+  }
+
+  if (/\b(active adult|55\+|55 plus|55 and older)\b/.test(text)) {
+    add("Active Adult 55+", "HIGH");
+  }
+
+  if (/\b(assisted living|assistance with daily living|alf)\b/.test(text)) {
+    add("Assisted Living", "HIGH");
+  }
+
+  if (/\b(memory care|memory support|alzheim|dementia|memory neighborhood)\b/.test(text)) {
+    add("Memory Care", "HIGH");
+  }
+
+  if (/\b(rehab|rehabilitation|therapy|post-acute|recovery)\b/.test(text)) {
+    add("Rehabilitation", "HIGH");
+  }
+
+  if (/\b(skilled nursing|nursing home|convalescent|extended care|health and rehab|nursing and rehabilitation|rehab care center|care center)\b/.test(text)) {
+    add("Skilled Nursing", "HIGH");
+  }
+
+  if (/\b(continuing care|continuum of care|life plan)\b/.test(text)) {
+    add("Continuing Care", "HIGH");
+  }
+
+  if (/\b(ccrc|retirement community|retirement village|village)\b/.test(text)) {
+    add("CCRC", careTypes.size === 0 ? "MEDIUM" : "HIGH");
+  }
+
+  if (/\b(hospice|palliative|end of life)\b/.test(text)) {
+    add("Hospice", "HIGH");
+  }
+
+  if ((careTypes.has("CCRC") || careTypes.has("Continuing Care")) && !careTypes.has("Independent Living")) {
+    add("Independent Living", "MEDIUM");
+  }
+
+  if (careTypes.size === 0) {
+    return {
+      careTypes: ["UNKNOWN"],
+      confidence: "LOW",
+    };
+  }
+
+  return {
+    careTypes: [...careTypes],
+    confidence,
+  };
+}
+
+function combineConfidence(
+  modelConfidence: Facility["matching_confidence"],
+  careTypeConfidence: CareTaxonomyResult["confidence"],
+): Facility["matching_confidence"] {
+  const rank: Record<Facility["matching_confidence"], number> = {
+    HIGH: 3,
+    MEDIUM: 2,
+    LOW: 1,
+    UNKNOWN: 0,
+  };
+
+  return rank[careTypeConfidence] < rank[modelConfidence] ? careTypeConfidence : modelConfidence;
 }
 
 function makeBadges(facility: BackendFacility): string[] {
@@ -395,15 +494,18 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
   const base = toFacility(facility);
   const gallery = GALLERY_SETS[facility.id % GALLERY_SETS.length];
   const optimeScore = Math.round(facility.overall_optime_score ?? 70);
+  const taxonomy = inferCareTaxonomy(facility);
 
   const result: SearchFacility = {
     ...base,
+    matching_confidence: combineConfidence(base.matching_confidence, taxonomy.confidence),
     imageUrl: gallery[0],
     optimeScore,
     matchLabel: scoreLabel(optimeScore),
     shortExplanation: buildShortExplanation(facility),
     priceRange: makePriceRange(facility),
-    careTypes: makeCareTypes(facility),
+    careTypes: taxonomy.careTypes,
+    careTypeConfidence: taxonomy.confidence,
     matchBadges: makeBadges(facility),
     scoreBreakdown: [
       {
