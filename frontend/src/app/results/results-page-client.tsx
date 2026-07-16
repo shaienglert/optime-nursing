@@ -38,6 +38,23 @@ function recommendationTitle(index: number): string {
   return `#${index + 1} Recommendation`;
 }
 
+function prettyCategoryLabel(name: string): string {
+  switch (name) {
+    case "Medical Fit":
+      return "Care Fit";
+    case "Family Proximity":
+      return "Family Proximity";
+    case "Cultural Fit":
+      return "Culture";
+    case "Clinical Quality":
+      return "Clinical";
+    case "Activities Fit":
+      return "Activities";
+    default:
+      return name;
+  }
+}
+
 function maxPointsForCategory(name: string): number {
   switch (name) {
     case "Medical Fit":
@@ -66,6 +83,11 @@ function pointsAwardedForCategory(name: string, points: number): number {
 
 function formatPoints(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
+}
+
+function normalizedContribution(points: number, totalPoints: number): string {
+  if (totalPoints <= 0) return "0.00%";
+  return `${((points / totalPoints) * 100).toFixed(2)}%`;
 }
 
 function hasRealAddressData(distanceProfile: ReturnType<typeof useQuestionnaire>["state"]["humanIntelligenceV2"]["distanceProfile"]): boolean {
@@ -325,6 +347,7 @@ export function ResultsPageClient() {
     const totalPointsAwarded = categoryRows.reduce((sum, row) => sum + row.finalContribution, 0) + report.audit.bonuses.reduce((sum, bonus) => sum + (bonus.applied ? bonus.value : 0), 0) - report.audit.penalties.reduce((sum, penalty) => sum + (penalty.applied ? penalty.value : 0), 0);
     const maximumPossiblePoints = categoryRows.reduce((sum, row) => sum + maxPointsForCategory(row.name), 0);
     const normalizedScore = maximumPossiblePoints > 0 ? Math.round((totalPointsAwarded / maximumPossiblePoints) * 100) : report.finalMatchScore;
+    const normalizedCategoryTotal = categoryRows.reduce((sum, row) => sum + row.finalContribution, 0);
     return (
       <article key={`compact-${facility.id}`} className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]">
         <div className="flex items-start justify-between gap-3">
@@ -342,9 +365,9 @@ export function ResultsPageClient() {
           <p className="font-semibold text-[#2f2a24]">Score composition</p>
           <div className="mt-2 space-y-1 text-xs sm:text-sm">
             {categoryRows.map((row) => (
-              <div key={`compact-audit-${facility.id}-${row.name}`} className="flex items-center justify-between gap-3">
-                <span>{row.name}</span>
-                <span>{formatPoints(pointsAwardedForCategory(row.name, row.finalContribution))} / {maxPointsForCategory(row.name)}</span>
+              <div key={`compact-audit-${facility.id}-${row.name}`} className="flex items-center justify-between gap-3 font-medium text-[#2f2a24]">
+                <span>{prettyCategoryLabel(row.name)}</span>
+                <span>{normalizedCategoryTotal > 0 ? normalizedContribution(row.finalContribution, normalizedCategoryTotal) : "0.00%"}</span>
               </div>
             ))}
             <div className="mt-2 border-t border-[#e7ddcd] pt-2">
@@ -491,6 +514,7 @@ export function ResultsPageClient() {
                                 <th className="px-3 py-2">Raw Score</th>
                                 <th className="px-3 py-2">Weight</th>
                                 <th className="px-3 py-2">Weighted Score</th>
+                                <th className="px-3 py-2">Normalized Weight Contribution</th>
                                 <th className="px-3 py-2">Final Contribution</th>
                               </tr>
                             </thead>
@@ -501,6 +525,7 @@ export function ResultsPageClient() {
                                   <td className="px-3 py-2">{row.rawScore}</td>
                                   <td className="px-3 py-2">{row.weight.toFixed(2)}</td>
                                   <td className="px-3 py-2">{row.weightedScore.toFixed(2)}</td>
+                                  <td className="px-3 py-2">{normalizedContribution(row.finalContribution, report.audit.categoryRows.reduce((sum, current) => sum + current.finalContribution, 0))}</td>
                                   <td className="px-3 py-2">{row.finalContribution.toFixed(2)}</td>
                                 </tr>
                               ))}
