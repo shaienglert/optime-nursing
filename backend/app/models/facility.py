@@ -52,6 +52,9 @@ class Facility(Base):
 	scores = relationship(
 		"OptimeScore", back_populates="facility", cascade="all, delete-orphan"
 	)
+	intelligence_profile = relationship(
+		"FacilityIntelligenceProfile", back_populates="facility", uselist=False, cascade="all, delete-orphan"
+	)
 
 
 class Staffing(Base):
@@ -209,3 +212,44 @@ class ResidentOutcome(Base):
 	relocated_within_24m = Column(Integer, nullable=False, default=0)
 	notes = Column(Text, nullable=True)
 	recorded_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class FacilityIntelligenceProfile(Base):
+	__tablename__ = "facility_intelligence_profiles"
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), unique=True, index=True, nullable=False)
+	last_updated = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+	sources_used = Column(Text, nullable=False, default="[]")
+	clinical_score = Column(Float, nullable=False, default=0.0)
+	family_score = Column(Float, nullable=False, default=0.0)
+	employee_score = Column(Float, nullable=False, default=0.0)
+	social_score = Column(Float, nullable=False, default=0.0)
+	reputation_score = Column(Float, nullable=False, default=0.0)
+	legal_risk_score = Column(Float, nullable=False, default=0.0)
+	regulatory_risk_score = Column(Float, nullable=False, default=0.0)
+	social_energy_index = Column(Float, nullable=False, default=0.0)
+	family_satisfaction_index = Column(Float, nullable=False, default=0.0)
+	staff_stability_index = Column(Float, nullable=False, default=0.0)
+	regulatory_risk_index = Column(Float, nullable=False, default=0.0)
+	litigation_risk_index = Column(Float, nullable=False, default=0.0)
+	cultural_match_signals = Column(Float, nullable=False, default=0.0)
+	activity_density_index = Column(Float, nullable=False, default=0.0)
+	community_engagement_index = Column(Float, nullable=False, default=0.0)
+	clinical_quality_index = Column(Float, nullable=False, default=0.0)
+	reputation_index = Column(Float, nullable=False, default=0.0)
+	intelligence_confidence = Column(Float, nullable=False, default=0.0)
+	positive_signals = Column(Text, nullable=False, default="[]")
+	negative_signals = Column(Text, nullable=False, default="[]")
+	unresolved_risks = Column(Text, nullable=False, default="[]")
+	intelligence_summary = Column(Text, nullable=False, default="")
+	update_frequency = Column(Text, nullable=False, default="{}")
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True),
+		server_default=func.now(),
+		onupdate=func.now(),
+		nullable=False,
+	)
+
+	facility = relationship("Facility", back_populates="intelligence_profile")
