@@ -798,20 +798,7 @@ export default function Home() {
     preferredEnvironment.length,
   ]);
 
-  const additionalQuestion = useMemo(() => {
-    if (adaptiveConfidence >= 72) {
-      return null;
-    }
-
-    if (!socialInteractionFrequency) {
-      return {
-        key: "social_activity",
-        text: "Does she enjoy social activities?",
-      };
-    }
-
-    return null;
-  }, [adaptiveConfidence, religionImportance, socialInteractionFrequency]);
+  const additionalQuestion: { key: string; text: string } | null = null;
 
   const questionAuditRows = useMemo(
     () =>
