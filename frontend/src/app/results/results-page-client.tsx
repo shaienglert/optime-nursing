@@ -185,13 +185,6 @@ function midpointPrice(priceRange: string): number | null {
   return (low + high) / 2;
 }
 
-function sizeBucket(beds?: number): "small" | "medium" | "large" | "unknown" {
-  if (!beds) return "unknown";
-  if (beds <= 55) return "small";
-  if (beds <= 120) return "medium";
-  return "large";
-}
-
 function hasBadgeMatch(facility: SearchFacility, expressions: RegExp[]): boolean {
   const haystack = [...facility.matchBadges, ...facility.careTypes].join(" ").toLowerCase();
   return expressions.some((expression) => expression.test(haystack));
@@ -208,25 +201,32 @@ function wheelchairMandatory(notes: string): boolean {
   return /(must|required|non[- ]negotiable|strict|mandatory)/i.test(notes);
 }
 
+function criticalSafetyRequired(notes: string): boolean {
+  if (!/safety|secure|security|fall|wandering|elopement|supervision/i.test(notes)) {
+    return false;
+  }
+  return /(must|required|non[- ]negotiable|strict|mandatory|critical)/i.test(notes);
+}
+
 function buildConstraintAudit(context: RelaxationContext): ConstraintAuditRow[] {
   const profile = context.profile;
   const strictBudget = strictBudgetRequested(context.notes);
   const memoryNeedsMedical = context.memory.toLowerCase().includes("memory") || context.memory.toLowerCase().includes("significant");
   const wheelchairIsHard = wheelchairMandatory(context.notes);
+  const safetyIsHard = criticalSafetyRequired(context.notes);
 
   return [
     { field: "Care level", value: context.care || "Not specified", classification: "HARD_CONSTRAINT", reason: "Clinical care compatibility is mandatory." },
-    { field: "State", value: "FL", classification: "HARD_CONSTRAINT", reason: "Current inventory scope is Florida communities." },
-    { field: "Medical requirements", value: context.memory || "Not specified", classification: memoryNeedsMedical ? "HARD_CONSTRAINT" : "SOFT_PREFERENCE", reason: memoryNeedsMedical ? "Memory-related clinical need requires compatible care type." : "No explicit medical requirement marked mandatory." },
-    { field: "Wheelchair accessibility", value: wheelchairIsHard ? "Mandatory from notes" : "Not marked mandatory", classification: wheelchairIsHard ? "HARD_CONSTRAINT" : "SOFT_PREFERENCE", reason: wheelchairIsHard ? "User notes marked accessibility as required." : "Defaults to soft unless explicitly mandatory." },
+    { field: "Critical medical limitations", value: context.memory || "Not specified", classification: memoryNeedsMedical ? "HARD_CONSTRAINT" : "SOFT_PREFERENCE", reason: memoryNeedsMedical ? "Critical medical requirements must be satisfied." : "No critical medical limitation was marked mandatory." },
+    { field: "Critical safety requirements", value: safetyIsHard ? "Mandatory from notes" : "Not marked mandatory", classification: safetyIsHard || wheelchairIsHard ? "HARD_CONSTRAINT" : "SOFT_PREFERENCE", reason: safetyIsHard || wheelchairIsHard ? "Safety requirement explicitly marked as required." : "No critical safety requirement was marked mandatory." },
     { field: "Maximum budget", value: `$${context.budget.toLocaleString()}`, classification: strictBudget ? "HARD_CONSTRAINT" : "SOFT_PREFERENCE", reason: strictBudget ? "User notes indicate strict budget cap." : "Budget treated as preference unless explicitly strict." },
-    { field: "Activities", value: context.activity || "Not specified", classification: "SOFT_PREFERENCE", reason: "Lifestyle preference contributes to score." },
-    { field: "Language", value: profile.languageProfile.preferredSpokenLanguage || "Not specified", classification: "SOFT_PREFERENCE", reason: "Language preference is weighted, not hard-filtered." },
-    { field: "Religion", value: profile.culturalProfile.religionImportance || "Not specified", classification: "SOFT_PREFERENCE", reason: "Religious fit is weighted preference." },
-    { field: "Community size", value: profile.personalityProfile.communitySizePreference || "Not specified", classification: "SOFT_PREFERENCE", reason: "Community size is a style preference." },
-    { field: "Distance", value: context.distance || "Not specified", classification: "SOFT_PREFERENCE", reason: "Distance is weighted unless explicitly mandatory." },
-    { field: "Food preferences", value: profile.foodProfile.dietaryPreferences.join(", ") || "Not specified", classification: "SOFT_PREFERENCE", reason: "Dietary fit contributes to scoring." },
-    { field: "Cultural preferences", value: profile.culturalProfile.whatFeelsLikeHome.join(", ") || "Not specified", classification: "SOFT_PREFERENCE", reason: "Cultural comfort dimensions are scored preferences." },
+    { field: "Language", value: profile.languageProfile.preferredSpokenLanguage || "Not specified", classification: "SOFT_PREFERENCE", reason: "Strong preference, affects ranking only." },
+    { field: "Culture", value: profile.culturalProfile.whatFeelsLikeHome.join(", ") || profile.culturalProfile.religionImportance || "Not specified", classification: "SOFT_PREFERENCE", reason: "Strong preference for belonging and identity fit." },
+    { field: "Family proximity", value: context.distance || "Not specified", classification: "SOFT_PREFERENCE", reason: "Strong preference, affects engagement and visits." },
+    { field: "Continuum of care", value: profile.futureCareProfile.continuumOfCarePreference || "Not specified", classification: "SOFT_PREFERENCE", reason: "Strong preference for long-term transition fit." },
+    { field: "Hobbies / Activities", value: context.activity || "Not specified", classification: "SOFT_PREFERENCE", reason: "Nice-to-have quality-of-life preference." },
+    { field: "Facilities", value: "Derived from badges", classification: "SOFT_PREFERENCE", reason: "Nice-to-have amenities preference." },
+    { field: "Luxury", value: "Derived from badges", classification: "SOFT_PREFERENCE", reason: "Nice-to-have comfort preference." },
   ];
 }
 
@@ -247,9 +247,9 @@ function buildRelaxedRecommendations(
   const auditRows = buildConstraintAudit(context);
   const strictBudget = strictBudgetRequested(context.notes);
   const requiresWheelchair = wheelchairMandatory(context.notes);
+  const requiresCriticalSafety = criticalSafetyRequired(context.notes);
   const memoryNeedsMedical = context.memory.toLowerCase().includes("memory") || context.memory.toLowerCase().includes("significant");
   const languagePreference = profile.languageProfile.preferredSpokenLanguage;
-  const sizePreference = profile.personalityProfile.communitySizePreference;
   const religionImportant = ["Important", "Very important"].includes(profile.culturalProfile.religionImportance);
   const wantsJewishSetting = profile.culturalProfile.israeliJewishCommunityPreference === "Yes" || notesLower.includes("jewish");
   const hardConstraintFailures = (facility: SearchFacility): string[] => {
@@ -260,17 +260,17 @@ function buildRelaxedRecommendations(
     if (careScore < 80) {
       failures.push(`care level mismatch (${context.care})`);
     }
-    if (facility.state !== "FL") {
-      failures.push("state mismatch");
-    }
     if (memoryNeedsMedical && !facility.careTypes.some((item) => item.toLowerCase().includes("memory"))) {
-      failures.push("missing memory care support");
+      failures.push("critical medical limitation not supported (memory care)");
     }
     if (strictBudget && price !== null && price > context.budget) {
       failures.push(`budget exceeds by $${Math.max(0, Math.round(price - context.budget)).toLocaleString()}`);
     }
     if (requiresWheelchair && !hasBadgeMatch(facility, [/wheelchair/i, /accessible/i, /accessibility/i, /ada/i, /mobility/i])) {
-      failures.push("wheelchair accessibility not verified");
+      failures.push("critical safety requirement not verified (accessibility)");
+    }
+    if (requiresCriticalSafety && !hasBadgeMatch(facility, [/secure/i, /security/i, /fall/i, /monitor/i, /supervision/i, /memory/i])) {
+      failures.push("critical safety requirement not verified");
     }
 
     return failures;
@@ -283,7 +283,8 @@ function buildRelaxedRecommendations(
   const hasActivityData = (facility: SearchFacility): boolean =>
     hasBadgeMatch(facility, [/social/i, /active/i, /movie/i, /cinema/i, /film/i, /music/i, /garden/i, /swim/i, /art/i, /pet/i, /luxury/i, /program/i]);
   const hasDistanceData = (facility: SearchFacility): boolean => hasBadgeMatch(facility, [/close to family/i, /family/i, /distance/i, /drive/i]);
-  const hasReviewData = (facility: SearchFacility): boolean => Boolean(facility.scoreBreakdown && facility.scoreBreakdown.length > 0);
+  const hasFacilityData = (facility: SearchFacility): boolean => hasBadgeMatch(facility, [/amenity/i, /facility/i, /pool/i, /gym/i, /garden/i, /library/i, /spa/i]);
+  const hasLuxurySignal = (facility: SearchFacility): boolean => hasBadgeMatch(facility, [/luxury/i, /premium/i, /upscale/i, /resort/i]);
 
   const softPreferences: Array<{
     key: string;
@@ -296,7 +297,7 @@ function buildRelaxedRecommendations(
     rejectionReason: (facility: SearchFacility) => string;
   }> = [
     {
-      key: "activities",
+      key: "hobbies-activities",
       originalRequirement: context.activity || "Not specified",
       relaxedRequirement: "Activity mix differs from preference",
       enabled: Boolean(context.activity),
@@ -325,6 +326,26 @@ function buildRelaxedRecommendations(
       },
     },
     {
+      key: "facilities",
+      originalRequirement: "Preferred amenities",
+      relaxedRequirement: "Facility amenities may differ",
+      enabled: true,
+      weight: 7,
+      category: "NICE TO HAVE",
+      score: (facility) => hasFacilityData(facility) ? 90 : 55,
+      rejectionReason: () => "",
+    },
+    {
+      key: "luxury",
+      originalRequirement: "Luxury level",
+      relaxedRequirement: "Luxury signals may be limited",
+      enabled: true,
+      weight: 5,
+      category: "NICE TO HAVE",
+      score: (facility) => hasLuxurySignal(facility) ? 88 : 52,
+      rejectionReason: () => "",
+    },
+    {
       key: "language",
       originalRequirement: languagePreference || "Not specified",
       relaxedRequirement: "Language support may be partial",
@@ -338,34 +359,27 @@ function buildRelaxedRecommendations(
       rejectionReason: () => `${languagePreference} language support not verified`,
     },
     {
-      key: "religion",
-      originalRequirement: wantsJewishSetting ? "Jewish/faith-centered" : profile.culturalProfile.religionImportance || "Not specified",
-      relaxedRequirement: "Faith alignment may be partial",
-      enabled: Boolean(religionImportant || wantsJewishSetting),
-      weight: 12,
+      key: "culture",
+      originalRequirement: [
+        profile.culturalProfile.whatFeelsLikeHome.join(", "),
+        wantsJewishSetting ? "Jewish/faith-centered" : "",
+        profile.foodProfile.dietaryPreferences.join(", "),
+      ].filter(Boolean).join(" | ") || "Not specified",
+      relaxedRequirement: "Cultural alignment may be partial",
+      enabled: Boolean(religionImportant || wantsJewishSetting || profile.culturalProfile.whatFeelsLikeHome.length > 0 || profile.foodProfile.dietaryPreferences.length > 0),
+      weight: 14,
       category: "STRONG PREFERENCE",
       score: (facility) => {
-        if (!religionImportant && !wantsJewishSetting) return 60;
-        return hasBadgeMatch(facility, [/jewish/i, /religious/i, /faith/i, /synagogue/i, /kosher/i, /hebrew/i]) ? 100 : 25;
+        const cultureTerms = profile.culturalProfile.whatFeelsLikeHome.map((item) => item.toLowerCase());
+        const dietaryTerms = profile.foodProfile.dietaryPreferences.map((item) => item.toLowerCase());
+        const matchesCulture = cultureTerms.length > 0 && cultureTerms.some((term) => hasBadgeMatch(facility, [new RegExp(term.split(" ")[0], "i")]));
+        const matchesDiet = dietaryTerms.length > 0 && dietaryTerms.some((term) => hasBadgeMatch(facility, [new RegExp(term.split(" ")[0], "i")]));
+        const matchesFaith = hasBadgeMatch(facility, [/jewish/i, /religious/i, /faith/i, /synagogue/i, /kosher/i, /hebrew/i]);
+        const scoreParts = [matchesCulture, matchesDiet, wantsJewishSetting || religionImportant ? matchesFaith : true];
+        const matched = scoreParts.filter(Boolean).length;
+        return Math.round((matched / scoreParts.length) * 100);
       },
-      rejectionReason: () => "religious support not verified",
-    },
-    {
-      key: "community-size",
-      originalRequirement: sizePreference || "Not specified",
-      relaxedRequirement: "Community size differs from preference",
-      enabled: Boolean(sizePreference && sizePreference !== "No preference"),
-      weight: 8,
-      category: "STRONG PREFERENCE",
-      score: (facility) => {
-        if (!sizePreference || sizePreference === "No preference") return 60;
-        const bucket = sizeBucket(facility.beds);
-        if (sizePreference === "Small community") return bucket === "small" ? 100 : 35;
-        if (sizePreference === "Medium community") return bucket === "medium" ? 100 : 45;
-        if (sizePreference === "Large community") return bucket === "large" ? 100 : 45;
-        return 55;
-      },
-      rejectionReason: () => `community size not aligned (${sizePreference})`,
+      rejectionReason: () => "cultural alignment not strongly verified",
     },
     {
       key: "distance",
@@ -378,55 +392,23 @@ function buildRelaxedRecommendations(
       rejectionReason: () => "drive time preference not supported",
     },
     {
-      key: "food",
-      originalRequirement: profile.foodProfile.dietaryPreferences.join(", ") || "Not specified",
-      relaxedRequirement: "Dietary preference fit may be partial",
-      enabled: profile.foodProfile.dietaryPreferences.length > 0,
-      weight: 9,
+      key: "continuum-of-care",
+      originalRequirement: profile.futureCareProfile.continuumOfCarePreference || "Not specified",
+      relaxedRequirement: "Continuum coverage may be partial",
+      enabled: profile.futureCareProfile.continuumOfCarePreference !== "Not important",
+      weight: 11,
       category: "STRONG PREFERENCE",
       score: (facility) => {
-        const foodTerms = profile.foodProfile.dietaryPreferences.map((item) => item.toLowerCase());
-        if (foodTerms.length === 0) return 60;
-        const matched = foodTerms.some((term) => hasBadgeMatch(facility, [new RegExp(term, "i")]));
-        return matched ? 95 : 40;
+        const hasAssisted = facility.careTypes.some((item) => item.toLowerCase().includes("assisted"));
+        const hasMemory = facility.careTypes.some((item) => item.toLowerCase().includes("memory"));
+        const hasSkilled = facility.careTypes.some((item) => item.toLowerCase().includes("skilled"));
+        const continuumCount = [hasAssisted, hasMemory, hasSkilled].filter(Boolean).length;
+        if (continuumCount >= 3) return 100;
+        if (continuumCount === 2) return 78;
+        if (continuumCount === 1) return 58;
+        return 42;
       },
-      rejectionReason: () => "dietary preference not verified",
-    },
-    {
-      key: "cultural",
-      originalRequirement: profile.culturalProfile.whatFeelsLikeHome.join(", ") || "Not specified",
-      relaxedRequirement: "Cultural comfort fit may be partial",
-      enabled: profile.culturalProfile.whatFeelsLikeHome.length > 0,
-      weight: 10,
-      category: "STRONG PREFERENCE",
-      score: (facility) => {
-        const terms = profile.culturalProfile.whatFeelsLikeHome.map((item) => item.toLowerCase());
-        if (terms.length === 0) return 60;
-        const matched = terms.some((term) => hasBadgeMatch(facility, [new RegExp(term.split(" ")[0], "i")]));
-        return matched ? 92 : 42;
-      },
-      rejectionReason: () => "cultural preference not fully matched",
-    },
-    {
-      key: "budget",
-      originalRequirement: `$${context.budget.toLocaleString()}`,
-      relaxedRequirement: strictBudget ? "Strict budget preserved as hard constraint" : "Budget range may be exceeded",
-      enabled: !strictBudget,
-      weight: 12,
-      category: "STRONG PREFERENCE",
-      score: (facility) => {
-        const price = midpointPrice(facility.priceRange);
-        if (price === null) return 60;
-        if (price <= context.budget) return 100;
-        if (price <= context.budget * 1.2) return 70;
-        if (price <= context.budget * 1.35) return 50;
-        return 20;
-      },
-      rejectionReason: (facility) => {
-        const price = midpointPrice(facility.priceRange);
-        if (price === null || price <= context.budget) return "";
-        return `budget exceeds by $${Math.round(price - context.budget).toLocaleString()}`;
-      },
+      rejectionReason: () => "continuum of care preference only partially supported",
     },
   ];
 
@@ -435,19 +417,18 @@ function buildRelaxedRecommendations(
 
   const signalClassifications: SignalClassificationRow[] = [
     { signal: "Care level", category: "HARD REQUIREMENT", value: context.care || "Not specified", rationale: "Clinical compatibility is mandatory." },
-    { signal: "Wheelchair accessibility", category: requiresWheelchair ? "HARD REQUIREMENT" : "UNKNOWN SIGNAL", value: requiresWheelchair ? "Required" : "Not explicitly required", rationale: requiresWheelchair ? "Explicitly mandatory in notes." : "Accessibility requirement not provided." },
-    { signal: "Memory care security", category: memoryNeedsMedical ? "HARD REQUIREMENT" : "UNKNOWN SIGNAL", value: context.memory || "Not specified", rationale: memoryNeedsMedical ? "Memory-related safety must be met." : "No strong memory-security requirement was provided." },
-    { signal: "Maximum budget", category: strictBudget ? "HARD REQUIREMENT" : "STRONG PREFERENCE", value: `$${context.budget.toLocaleString()}`, rationale: strictBudget ? "Budget marked strict by user." : "Budget is a ranking preference when not strict." },
-    { signal: "State / region", category: "HARD REQUIREMENT", value: "FL", rationale: "Current search scope is Florida inventory." },
+    { signal: "Critical medical limitations", category: memoryNeedsMedical ? "HARD REQUIREMENT" : "UNKNOWN SIGNAL", value: context.memory || "Not specified", rationale: memoryNeedsMedical ? "Critical medical support must be available." : "No critical medical limitation explicitly required." },
+    { signal: "Strict budget", category: strictBudget ? "HARD REQUIREMENT" : "UNKNOWN SIGNAL", value: `$${context.budget.toLocaleString()}`, rationale: strictBudget ? "Budget marked as hard cap." : "Budget cap was not explicitly strict." },
+    { signal: "Critical safety requirements", category: requiresWheelchair || requiresCriticalSafety ? "HARD REQUIREMENT" : "UNKNOWN SIGNAL", value: requiresWheelchair || requiresCriticalSafety ? "Required" : "Not specified", rationale: requiresWheelchair || requiresCriticalSafety ? "Safety was explicitly marked mandatory." : "No critical safety requirement was explicitly marked." },
     { signal: "Language", category: "STRONG PREFERENCE", value: languagePreference || "Not specified", rationale: "Language affects comfort and adjustment." },
-    { signal: "Religion", category: "STRONG PREFERENCE", value: profile.culturalProfile.religionImportance || "Not specified", rationale: "Religious continuity strongly affects belonging." },
+    { signal: "Culture", category: "STRONG PREFERENCE", value: [profile.culturalProfile.whatFeelsLikeHome.join(", "), profile.culturalProfile.religionImportance].filter(Boolean).join(" | ") || "Not specified", rationale: "Cultural continuity strongly affects belonging." },
     { signal: "Family proximity", category: "STRONG PREFERENCE", value: context.distance || "Not specified", rationale: "Family proximity strongly impacts engagement." },
-    { signal: "Community size", category: "STRONG PREFERENCE", value: sizePreference || "Not specified", rationale: "Community scale preference impacts fit." },
     { signal: "Continuum of care", category: "STRONG PREFERENCE", value: profile.futureCareProfile.continuumOfCarePreference || "Not specified", rationale: "Continuum preference affects long-term fit." },
-    { signal: "Activities", category: "NICE TO HAVE", value: context.activity || "Not specified", rationale: "Activities improve experience but should not reject." },
-    { signal: "Activity availability", category: baseFacilities.some(hasActivityData) ? "NICE TO HAVE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasActivityData) ? "Some data available" : "Not collected", rationale: baseFacilities.some(hasActivityData) ? "Availability is partial and optional." : "Activity availability not collected." },
-    { signal: "Drive time data", category: baseFacilities.some(hasDistanceData) ? "STRONG PREFERENCE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasDistanceData) ? "Partial distance proxies" : "Unavailable", rationale: baseFacilities.some(hasDistanceData) ? "Proximity data exists for weighting." : "Drive time unavailable." },
-    { signal: "Review data", category: baseFacilities.some(hasReviewData) ? "STRONG PREFERENCE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasReviewData) ? "Available" : "Missing", rationale: baseFacilities.some(hasReviewData) ? "Review/proxy quality signals exist." : "Missing review data should never reject." },
+    { signal: "Hobbies", category: "NICE TO HAVE", value: context.activity || "Not specified", rationale: "Hobby fit improves quality of life and never rejects." },
+    { signal: "Activities", category: baseFacilities.some(hasActivityData) ? "NICE TO HAVE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasActivityData) ? "Some data available" : "Not collected", rationale: baseFacilities.some(hasActivityData) ? "Activities are optional preference signals." : "Activity data unavailable." },
+    { signal: "Facilities", category: baseFacilities.some(hasFacilityData) ? "NICE TO HAVE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasFacilityData) ? "Amenities signals available" : "Not collected", rationale: baseFacilities.some(hasFacilityData) ? "Amenities are optional preference signals." : "Facilities data unavailable." },
+    { signal: "Luxury", category: baseFacilities.some(hasLuxurySignal) ? "NICE TO HAVE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasLuxurySignal) ? "Luxury signals available" : "Not collected", rationale: baseFacilities.some(hasLuxurySignal) ? "Luxury is optional and never rejects." : "Luxury data unavailable." },
+    { signal: "Drive time data", category: baseFacilities.some(hasDistanceData) ? "STRONG PREFERENCE" : "UNKNOWN SIGNAL", value: baseFacilities.some(hasDistanceData) ? "Partial distance proxies" : "Unavailable", rationale: baseFacilities.some(hasDistanceData) ? "Used to weight family proximity." : "Drive-time data unavailable." },
   ];
 
   const ranked = [...candidates]
@@ -486,14 +467,7 @@ function buildRelaxedRecommendations(
   const exactMatchAudit: ExactMatchAuditRow[] = [];
   const exactMatches = candidates.filter((facility) => {
     const hardFailures = hardConstraintFailures(facility);
-    const strongFailures = enabledSoft
-      .filter((preference) => preference.category === "STRONG PREFERENCE")
-      .filter((preference) => preference.score(facility) < 70)
-      .map((preference) => preference.rejectionReason(facility) || preference.relaxedRequirement)
-      .filter(Boolean);
-
-    const shouldRejectExact = hardFailures.length > 0 || strongFailures.length >= 2;
-    const reasons = shouldRejectExact ? [...hardFailures, ...strongFailures] : [];
+    const reasons = [...hardFailures];
     if (reasons.length > 0) {
       exactMatchAudit.push({
         community_name: facility.name,
