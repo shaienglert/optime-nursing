@@ -97,6 +97,11 @@ export type IntelligenceScoringReport = {
   confidenceScore: number;
   rankingPosition: number | null;
   rankingExplanation: string;
+  personaType: PersonaType;
+  rankingStrategy: string;
+  activeWeights: Array<{ label: string; weight: number }>;
+  whyWeightsSelected: string[];
+  whatWouldChangeThisRanking: string[];
   scoreBreakdown: ReportBreakdownItem[];
   positiveContributors: ReportContributor[];
   negativeContributors: ReportContributor[];
@@ -749,6 +754,7 @@ function buildReportBreakdown(
   facility: SearchFacility,
   state: QuestionnaireState,
   priorityScores: PriorityScores,
+  weights: WeightProfile,
   contributions: Contribution[],
 ): ReportBreakdownItem[] {
   const facilityText = joinedFacilityText(facility);
@@ -770,7 +776,7 @@ function buildReportBreakdown(
       maxScore: 100,
       source: "Facility care types + clinical quality signals",
       rationale: `Matches the requested care level of ${careNeed}.`,
-      weightedContribution: roundContribution(priorityScores.careFit * PRIORITY_WEIGHTS.careFit + priorityScores.clinicalQuality * PRIORITY_WEIGHTS.clinicalQuality),
+      weightedContribution: roundContribution(priorityScores.careFit * weights.careFit + priorityScores.clinicalQuality * weights.clinicalQuality),
     },
     {
       name: "Lifestyle Fit",
@@ -778,7 +784,7 @@ function buildReportBreakdown(
       maxScore: 100,
       source: "Preference matching against facility metadata",
       rationale: preferredActivities.length > 0 ? `Reflects alignment with ${preferredActivities[0]}.` : "No explicit lifestyle preference was provided.",
-      weightedContribution: roundContribution(priorityScores.lifestyleFit * PRIORITY_WEIGHTS.lifestyleFit),
+      weightedContribution: roundContribution(priorityScores.lifestyleFit * weights.lifestyleFit),
     },
     {
       name: "Social Fit",
@@ -786,7 +792,7 @@ function buildReportBreakdown(
       maxScore: 100,
       source: "Social and community cues in facility metadata",
       rationale: "Measures the community's social engagement signal against the stated social profile.",
-      weightedContribution: roundContribution(priorityScores.socialFit * PRIORITY_WEIGHTS.socialFit),
+      weightedContribution: roundContribution(priorityScores.socialFit * weights.socialFit),
     },
     {
       name: "Family Fit",
@@ -794,7 +800,7 @@ function buildReportBreakdown(
       maxScore: 100,
       source: "Distance and visit-frequency preferences",
       rationale: "Captures family access and visit cadence from the questionnaire.",
-      weightedContribution: roundContribution(priorityScores.familyFit * PRIORITY_WEIGHTS.familyFit),
+      weightedContribution: roundContribution(priorityScores.familyFit * weights.familyFit),
     },
     {
       name: "Cultural Fit",
@@ -802,7 +808,7 @@ function buildReportBreakdown(
       maxScore: 100,
       source: "Cultural and faith preferences + facility metadata",
       rationale: "Measures how closely the community aligns with identity and faith preferences.",
-      weightedContribution: roundContribution(priorityScores.culturalFit * PRIORITY_WEIGHTS.culturalFit),
+      weightedContribution: roundContribution(priorityScores.culturalFit * weights.culturalFit),
     },
     {
       name: "Language Fit",
@@ -918,7 +924,7 @@ function buildIntelligenceReport(
   positiveSignals: string[],
   negativeSignals: string[],
 ): IntelligenceScoringReport {
-  const scoreBreakdown = buildReportBreakdown(facility, state, priorityScores, contributions);
+  const scoreBreakdown = buildReportBreakdown(facility, state, priorityScores, persona.weights, contributions);
   const sourcesUsed = buildIntelligenceSourcesUsed(facility);
   const missingIntelligence = [...missingInformation];
   const facilityText = joinedFacilityText(facility);
@@ -952,41 +958,41 @@ function buildIntelligenceReport(
     {
       name: "Medical Fit",
       rawScore: priorityScores.careFit,
-      weight: PRIORITY_WEIGHTS.careFit,
-      weightedScore: roundContribution(priorityScores.careFit * PRIORITY_WEIGHTS.careFit),
-      finalContribution: roundContribution(priorityScores.careFit * PRIORITY_WEIGHTS.careFit),
+      weight: persona.weights.careFit,
+      weightedScore: roundContribution(priorityScores.careFit * persona.weights.careFit),
+      finalContribution: roundContribution(priorityScores.careFit * persona.weights.careFit),
       source: "Care type matching from the current questionnaire and facility care types",
     },
     {
       name: "Lifestyle Fit",
       rawScore: priorityScores.lifestyleFit,
-      weight: PRIORITY_WEIGHTS.lifestyleFit,
-      weightedScore: roundContribution(priorityScores.lifestyleFit * PRIORITY_WEIGHTS.lifestyleFit),
-      finalContribution: roundContribution(priorityScores.lifestyleFit * PRIORITY_WEIGHTS.lifestyleFit),
+      weight: persona.weights.lifestyleFit,
+      weightedScore: roundContribution(priorityScores.lifestyleFit * persona.weights.lifestyleFit),
+      finalContribution: roundContribution(priorityScores.lifestyleFit * persona.weights.lifestyleFit),
       source: "Activity preference matching against facility text",
     },
     {
       name: "Social Fit",
       rawScore: priorityScores.socialFit,
-      weight: PRIORITY_WEIGHTS.socialFit,
-      weightedScore: roundContribution(priorityScores.socialFit * PRIORITY_WEIGHTS.socialFit),
-      finalContribution: roundContribution(priorityScores.socialFit * PRIORITY_WEIGHTS.socialFit),
+      weight: persona.weights.socialFit,
+      weightedScore: roundContribution(priorityScores.socialFit * persona.weights.socialFit),
+      finalContribution: roundContribution(priorityScores.socialFit * persona.weights.socialFit),
       source: "Social and community cues in the current facility metadata",
     },
     {
       name: "Family Proximity",
       rawScore: priorityScores.familyFit,
-      weight: PRIORITY_WEIGHTS.familyFit,
-      weightedScore: roundContribution(priorityScores.familyFit * PRIORITY_WEIGHTS.familyFit),
-      finalContribution: roundContribution(priorityScores.familyFit * PRIORITY_WEIGHTS.familyFit),
+      weight: persona.weights.familyFit,
+      weightedScore: roundContribution(priorityScores.familyFit * persona.weights.familyFit),
+      finalContribution: roundContribution(priorityScores.familyFit * persona.weights.familyFit),
       source: `Distance and visit cadence; ${distanceEvaluation.note}`,
     },
     {
       name: "Cultural Fit",
       rawScore: priorityScores.culturalFit,
-      weight: PRIORITY_WEIGHTS.culturalFit,
-      weightedScore: roundContribution(priorityScores.culturalFit * PRIORITY_WEIGHTS.culturalFit),
-      finalContribution: roundContribution(priorityScores.culturalFit * PRIORITY_WEIGHTS.culturalFit),
+      weight: persona.weights.culturalFit,
+      weightedScore: roundContribution(priorityScores.culturalFit * persona.weights.culturalFit),
+      finalContribution: roundContribution(priorityScores.culturalFit * persona.weights.culturalFit),
       source: "Cultural, faith, language, and food preference matching",
     },
     {
@@ -1016,9 +1022,9 @@ function buildIntelligenceReport(
     {
       name: "Clinical Quality",
       rawScore: priorityScores.clinicalQuality,
-      weight: PRIORITY_WEIGHTS.clinicalQuality,
-      weightedScore: roundContribution(priorityScores.clinicalQuality * PRIORITY_WEIGHTS.clinicalQuality),
-      finalContribution: roundContribution(priorityScores.clinicalQuality * PRIORITY_WEIGHTS.clinicalQuality),
+      weight: persona.weights.clinicalQuality,
+      weightedScore: roundContribution(priorityScores.clinicalQuality * persona.weights.clinicalQuality),
+      finalContribution: roundContribution(priorityScores.clinicalQuality * persona.weights.clinicalQuality),
       source: "Facility clinical quality signals",
     },
     {
@@ -1154,7 +1160,7 @@ function buildIntelligenceReport(
   ];
 
   const audit: AuditFormula = {
-    executedFormula: "final_score = careFit*0.28 + lifestyleFit*0.18 + socialFit*0.15 + culturalFit*0.12 + familyFit*0.10 + financialFit*0.08 + clinicalQuality*0.06 + luxuryAmenities*0.03",
+    executedFormula: `final_score = ${persona.activeWeights.map((entry) => `${entry.label.replace(/\s+/g, "").toLowerCase()}*${entry.weight.toFixed(2)}`).join(" + ")}`,
     finalScore: Math.round(totalScore),
     categoryRows,
     bonuses,
@@ -1175,6 +1181,11 @@ function buildIntelligenceReport(
     confidenceScore: adjustedConfidence,
     rankingPosition: index + 1,
     rankingExplanation: buildRankingExplanation(accepted, index),
+    personaType: persona.personaType,
+    rankingStrategy: persona.rankingStrategy,
+    activeWeights: persona.activeWeights,
+    whyWeightsSelected: persona.whySelected,
+    whatWouldChangeThisRanking: persona.whatWouldChangeThisRanking,
     scoreBreakdown,
     positiveContributors: positiveContributors.length > 0 ? positiveContributors : contributions.slice(0, 3).map((item) => ({
       signal: item.label,
@@ -1261,6 +1272,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     key: signal.key,
     role: roleForSignalKey(signal.key),
   }));
+  const persona = buildPersonaProfile(state);
 
   const recommendations = facilities.map((facility) => {
     const careFit = scoreCareFit(facility, state);
@@ -1283,19 +1295,10 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       luxuryAmenities,
     };
 
-    const totalScore = clamp(
-      priorityScores.careFit * PRIORITY_WEIGHTS.careFit +
-        priorityScores.lifestyleFit * PRIORITY_WEIGHTS.lifestyleFit +
-        priorityScores.socialFit * PRIORITY_WEIGHTS.socialFit +
-        priorityScores.culturalFit * PRIORITY_WEIGHTS.culturalFit +
-        priorityScores.familyFit * PRIORITY_WEIGHTS.familyFit +
-        priorityScores.financialFit * PRIORITY_WEIGHTS.financialFit +
-        priorityScores.clinicalQuality * PRIORITY_WEIGHTS.clinicalQuality +
-        priorityScores.luxuryAmenities * PRIORITY_WEIGHTS.luxuryAmenities,
-    );
+    const totalScore = weightedTotal(priorityScores, persona.weights);
 
     const hardRejectionReasons = collectHardRejectionReasons(facility, state);
-    const contributions = summarizeContributions(priorityScores);
+    const contributions = summarizeContributions(priorityScores, persona.weights);
 
     const positives = contributions.slice(0, 3).map((item) => `${item.label} contributed strongly.`);
     const negatives = contributions.slice(-3).reverse().map((item) => `${item.label} is relatively weak for this person.`);
@@ -1388,5 +1391,6 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     accepted,
     rejected,
     qualityCheck,
+    persona,
   };
 }
