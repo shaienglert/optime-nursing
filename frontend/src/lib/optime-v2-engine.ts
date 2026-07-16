@@ -855,10 +855,10 @@ function buildIntelligenceReport(
     },
     {
       name: "strong social activity",
-      rawScore: socialMatchScore,
-      value: socialMatchScore >= 60 ? 7 : 0,
+      rawScore: priorityScores.socialFit,
+      value: priorityScores.socialFit >= 60 ? 7 : 0,
       source: "Current social fit score",
-      applied: socialMatchScore >= 60,
+      applied: priorityScores.socialFit >= 60,
     },
     {
       name: "excellent reviews",
