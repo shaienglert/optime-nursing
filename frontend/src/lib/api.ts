@@ -246,6 +246,26 @@ function scoreLabel(score: number): string {
   return "Consider Match";
 }
 
+function buildShortExplanation(facility: BackendFacility): string {
+  const quality = Math.round(facility.medical_quality_score ?? 0);
+  const staffing = Math.round(facility.staffing_score ?? 0);
+  const safety = Math.round(facility.safety_score ?? 0);
+
+  if (quality >= 85 && staffing >= 80) {
+    return "High-performing clinical and staffing profile with strong day-to-day support.";
+  }
+
+  if (safety >= 80) {
+    return "Safety and inspection indicators are strong for a more stable care environment.";
+  }
+
+  if ((facility.quality_rating ?? 0) >= 4 || (facility.overall_rating ?? 0) >= 4) {
+    return "Solid CMS-aligned quality performance with balanced medical and support signals.";
+  }
+
+  return "Balanced option for families looking for practical care support at this budget range.";
+}
+
 function normalizeSearchText(value: string): string {
   return value.normalize("NFKC").toLowerCase().trim();
 }
@@ -349,7 +369,7 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
     imageUrl: gallery[0],
     optimeScore,
     matchLabel: scoreLabel(optimeScore),
-    shortExplanation: "Recommendation derived from production CMS and inspection-based scoring.",
+    shortExplanation: buildShortExplanation(facility),
     priceRange: makePriceRange(facility),
     careTypes: makeCareTypes(facility),
     matchBadges: makeBadges(facility),

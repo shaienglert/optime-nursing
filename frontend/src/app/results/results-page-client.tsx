@@ -29,6 +29,39 @@ function highlightLabel(index: number): string {
   return "Worth Considering";
 }
 
+function confidenceCopy(confidence: SearchFacility["matching_confidence"]): string {
+  if (confidence === "HIGH") return "High confidence";
+  if (confidence === "MEDIUM") return "Good confidence";
+  if (confidence === "LOW") return "Lower confidence";
+  return "Confidence building";
+}
+
+function buildExplanationPoints(facility: SearchFacility): string[] {
+  const points: string[] = [];
+
+  if ((facility.overall_rating ?? 0) >= 4) {
+    points.push(`Strong overall quality rating (${facility.overall_rating}/5).`);
+  }
+
+  if ((facility.staffing_rating ?? 0) >= 4) {
+    points.push(`Staffing profile is above average (${facility.staffing_rating}/5).`);
+  }
+
+  if (facility.careTypes.length > 0) {
+    points.push(`Supports ${facility.careTypes.slice(0, 2).join(" and ")} care needs.`);
+  }
+
+  if (facility.matchBadges.length > 0) {
+    points.push(`Key fit areas: ${facility.matchBadges.slice(0, 2).join(" and ")}.`);
+  }
+
+  if (points.length === 0) {
+    points.push("Balanced choice across quality, staffing, and safety signals.");
+  }
+
+  return points.slice(0, 3);
+}
+
 function hasRealAddressData(distanceProfile: ReturnType<typeof useQuestionnaire>["state"]["humanIntelligenceV2"]["distanceProfile"]): boolean {
   return Boolean(
     distanceProfile.referenceLocations.parentCurrentHome ||
@@ -169,9 +202,20 @@ export function ResultsPageClient() {
                     </div>
                     <div className={`rounded-2xl px-3 py-2 text-center ${scoreBadgeStyle(facility.optimeScore)}`}>
                       <p className="text-2xl font-bold leading-none">{facility.optimeScore}</p>
-                      <p className="mt-1 text-xs font-semibold">{facility.matching_confidence}</p>
+                      <p className="mt-1 text-xs font-semibold">{confidenceCopy(facility.matching_confidence)}</p>
                     </div>
                   </div>
+
+                  <p className="mt-3 text-sm text-[#5f554a]">{facility.shortExplanation}</p>
+
+                  <ul className="mt-3 space-y-1 text-sm text-[#5d5448]">
+                    {buildExplanationPoints(facility).map((point) => (
+                      <li key={`${facility.id}-${point}`} className="flex items-start gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#6f9a86]" aria-hidden="true" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
 
                   <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
 
@@ -219,6 +263,7 @@ export function ResultsPageClient() {
                       <article key={`compact-${facility.id}`} className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]">
                         <h3 className="text-lg font-semibold text-[#2f2a24]">{facility.name}</h3>
                         <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
+                        <p className="mt-2 text-sm text-[#5f554a]">{facility.shortExplanation}</p>
                         <p className="mt-2 text-sm text-[#4f6f8f]">{facility.priceRange}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {facility.matchBadges.slice(0, 3).map((badge) => (
