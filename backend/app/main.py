@@ -1,4 +1,5 @@
 import os
+import json
 from statistics import mean
 from typing import Dict, List, Optional
 
@@ -10,11 +11,12 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
-from app.models.facility import AdaptiveQuestionResponse, Facility, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
+from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
 from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
 from app.services.cms_staffing_import import import_staffing_data
+from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.cms_service import (
     CMS_PROVIDER_DATASET_ID,
     clean_state,
@@ -182,6 +184,40 @@ class ValidationFeedbackOut(BaseModel):
     relocation_rate_24m: float
     average_scores_for_successful_adjustment: Dict[str, float]
     average_scores_for_unsuccessful_adjustment: Dict[str, float]
+
+
+class FacilityIntelligenceProfileOut(BaseModel):
+    facility_id: int
+    last_updated: str
+    sources_used: List[str]
+    clinical_score: float
+    family_score: float
+    employee_score: float
+    social_score: float
+    reputation_score: float
+    legal_risk_score: float
+    regulatory_risk_score: float
+    intelligence_confidence: float
+    positive_signals: List[str]
+    negative_signals: List[str]
+    unresolved_risks: List[str]
+    intelligence_summary: str
+    social_energy_index: float
+    family_satisfaction_index: float
+    staff_stability_index: float
+    regulatory_risk_index: float
+    litigation_risk_index: float
+    cultural_match_signals: float
+    activity_density_index: float
+    community_engagement_index: float
+    clinical_quality_index: float
+    reputation_index: float
+
+
+class IntelligenceRunSummaryOut(BaseModel):
+    processed: int
+    facility_ids: List[int]
+    update_frequency: Dict[str, str]
 
 
 
@@ -372,6 +408,48 @@ def _group_average_scores(db: Session, success_value: int) -> Dict[str, float]:
     }
 
 
+def _parse_json_array(raw: Optional[str]) -> List[str]:
+    if not raw:
+        return []
+    try:
+        value = json.loads(raw)
+        if isinstance(value, list):
+            return [str(item) for item in value]
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return []
+
+
+def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> FacilityIntelligenceProfileOut:
+    return FacilityIntelligenceProfileOut(
+        facility_id=profile.facility_id,
+        last_updated=(profile.last_updated.isoformat() if profile.last_updated else ""),
+        sources_used=_parse_json_array(profile.sources_used),
+        clinical_score=profile.clinical_score,
+        family_score=profile.family_score,
+        employee_score=profile.employee_score,
+        social_score=profile.social_score,
+        reputation_score=profile.reputation_score,
+        legal_risk_score=profile.legal_risk_score,
+        regulatory_risk_score=profile.regulatory_risk_score,
+        intelligence_confidence=profile.intelligence_confidence,
+        positive_signals=_parse_json_array(profile.positive_signals),
+        negative_signals=_parse_json_array(profile.negative_signals),
+        unresolved_risks=_parse_json_array(profile.unresolved_risks),
+        intelligence_summary=profile.intelligence_summary,
+        social_energy_index=profile.social_energy_index,
+        family_satisfaction_index=profile.family_satisfaction_index,
+        staff_stability_index=profile.staff_stability_index,
+        regulatory_risk_index=profile.regulatory_risk_index,
+        litigation_risk_index=profile.litigation_risk_index,
+        cultural_match_signals=profile.cultural_match_signals,
+        activity_density_index=profile.activity_density_index,
+        community_engagement_index=profile.community_engagement_index,
+        clinical_quality_index=profile.clinical_quality_index,
+        reputation_index=profile.reputation_index,
+    )
+
+
 @app.on_event("startup")
 def startup() -> None:
     # Phase 1 MVP re-initializes schema to guarantee model/table parity.
@@ -491,6 +569,45 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
             safety_components=safety_components,
         ),
     )
+
+
+@app.post("/intelligence/run", response_model=IntelligenceRunSummaryOut)
+async def run_intelligence(facility_id: Optional[int] = Query(default=None), db: Session = Depends(get_db)):
+    if facility_id is not None:
+        facility = db.query(Facility).filter(Facility.id == facility_id).first()
+        if not facility:
+            raise HTTPException(status_code=404, detail="Facility not found")
+
+    result = run_intelligence_collection(db, facility_id=facility_id)
+    return IntelligenceRunSummaryOut(
+        processed=int(result["processed"]),
+        facility_ids=[int(value) for value in result["facility_ids"]],
+        update_frequency={str(key): str(value) for key, value in result["update_frequency"].items()},
+    )
+
+
+@app.get("/intelligence/facilities/{id}", response_model=FacilityIntelligenceProfileOut)
+async def get_facility_intelligence_profile(id: int, db: Session = Depends(get_db)):
+    profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == id).first()
+    if not profile:
+        facility = db.query(Facility).filter(Facility.id == id).first()
+        if not facility:
+            raise HTTPException(status_code=404, detail="Facility not found")
+        run_intelligence_collection(db, facility_id=id)
+        profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == id).first()
+
+    if not profile:
+        raise HTTPException(status_code=500, detail="Intelligence profile generation failed")
+
+    return _to_intelligence_profile_out(profile)
+
+
+@app.get("/intelligence/schedule")
+async def intelligence_schedule():
+    return {
+        "update_frequency": UPDATE_FREQUENCY,
+        "policy": "Only publicly available information is used.",
+    }
 
 
 @app.post("/human-intelligence", response_model=HumanIntelligenceOut)

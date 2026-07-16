@@ -2,7 +2,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from statistics import mean
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -377,7 +377,7 @@ def build_facility_intelligence_profile(db: Session, facility: Facility) -> Faci
     )
 
 
-def run_intelligence_collection(db: Session, facility_id: int | None = None) -> Dict[str, object]:
+def run_intelligence_collection(db: Session, facility_id: Optional[int] = None) -> Dict[str, object]:
     if facility_id is not None:
         facilities = db.query(Facility).filter(Facility.id == facility_id).all()
     else:
