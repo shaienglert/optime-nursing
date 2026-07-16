@@ -722,6 +722,7 @@ export default function Home() {
   const [grandchildrenVisitsImportance, setGrandchildrenVisitsImportance] = useState("");
   const [optimizationStrategy, setOptimizationStrategy] = useState("Balanced location");
   const [notes, setNotes] = useState("");
+  const [showAuditMode, setShowAuditMode] = useState(false);
 
   const relationshipLabel = relationshipCopy(relationship);
 
@@ -754,7 +755,7 @@ export default function Home() {
       assistanceLevel,
       livingAloneDuration,
       socialInteractionFrequency,
-      visitFrequencyExpectation,
+      familyVisitExpectation || visitFrequencyExpectation,
       religionImportance,
       preferredSpokenLanguage,
       nativeLanguage,
@@ -780,6 +781,7 @@ export default function Home() {
     assistanceLevel,
     livingAloneDuration,
     socialInteractionFrequency,
+    familyVisitExpectation,
     visitFrequencyExpectation,
     religionImportance,
     preferredSpokenLanguage,
@@ -809,7 +811,19 @@ export default function Home() {
     }
 
     return null;
-  }, [adaptiveConfidence, religionImportance, visitFrequencyExpectation, socialInteractionFrequency]);
+  }, [adaptiveConfidence, religionImportance, socialInteractionFrequency]);
+
+  const questionAuditRows = useMemo(
+    () =>
+      buildVisibilityAudit(QUESTION_GRAPH, {
+        relationship,
+        widow_status: widowStatus,
+        religion_importance: religionImportance,
+        faith_traditions: faithTraditions,
+        preferred_spoken_language: preferredSpokenLanguage,
+      }),
+    [relationship, widowStatus, religionImportance, faithTraditions, preferredSpokenLanguage],
+  );
 
   const handleFindHome = () => {
     const distanceIntelligence = buildDistanceIntelligence({
@@ -870,7 +884,7 @@ export default function Home() {
             ? "Weekly"
             : familyInvolvementExpectation === "Monthly visits"
               ? "Monthly"
-              : visitFrequencyExpectation,
+              : (familyVisitExpectation || visitFrequencyExpectation),
     );
     const familyDecisionBoost = familyDecisionRole === "Shared decision" ? 12 : familyDecisionRole === "Family led" ? 8 : 6;
     const familyEngagementScore = clampScore(familyVisitBase * 0.82 + familyDecisionBoost + scoreFromImportance(grandchildrenImportance) * 0.12);
@@ -887,7 +901,7 @@ export default function Home() {
     const lonelinessRiskScorePreview = Math.round((
       scoreFromFrequency(socialInteractionFrequency) * 0.35 +
       scoreFromImportance(lonelinessRisk === "Very high" ? "Very high" : lonelinessRisk === "High" ? "High" : lonelinessRisk === "Moderate" ? "Medium" : "Low") * 0.45 +
-      scoreFromFrequency(visitFrequencyExpectation) * 0.2
+      scoreFromFrequency(familyVisitExpectation || visitFrequencyExpectation) * 0.2
     ));
 
     const transitionRiskScorePreview = Math.round((
@@ -943,7 +957,7 @@ export default function Home() {
         },
         familyProfile: {
           involvedFamilyMembers,
-          visitFrequencyExpectation,
+          visitFrequencyExpectation: familyVisitExpectation || visitFrequencyExpectation,
           grandchildrenPresence,
           grandchildrenImportance,
           familyDecisionDynamics,
@@ -1111,7 +1125,7 @@ export default function Home() {
     ));
 
     const familySupportScore = Math.round((
-      scoreFromFrequency(visitFrequencyExpectation) * 0.45 +
+      scoreFromFrequency(familyVisitExpectation || visitFrequencyExpectation) * 0.45 +
       scoreFromImportance(grandchildrenImportance) * 0.25 +
       scoreFromImportance(emergencySupportNetwork === "Strong" ? "Very high" : emergencySupportNetwork === "Moderate" ? "High" : emergencySupportNetwork === "Limited" ? "Medium" : "Low") * 0.3
     ));
@@ -1125,7 +1139,7 @@ export default function Home() {
     const lonelinessRiskScore = Math.round((
       scoreFromFrequency(socialInteractionFrequency) * 0.35 +
       scoreFromImportance(lonelinessRisk === "Very high" ? "Very high" : lonelinessRisk === "High" ? "High" : lonelinessRisk === "Moderate" ? "Medium" : "Low") * 0.45 +
-      scoreFromFrequency(visitFrequencyExpectation) * 0.2
+      scoreFromFrequency(familyVisitExpectation || visitFrequencyExpectation) * 0.2
     ));
 
     const transitionRiskScore = Math.round((
@@ -1183,7 +1197,7 @@ export default function Home() {
       transition_success_probability: clampScore(100 - transitionRiskScore * 0.58 + socialProfileScore * 0.24 + familyEngagementScore * 0.18),
       metadata_json: JSON.stringify({
         livingAloneDuration,
-        visitFrequencyExpectation,
+        visitFrequencyExpectation: familyVisitExpectation || visitFrequencyExpectation,
         religionImportance,
         faithTraditions,
         jewishProgrammingImportance,
@@ -1844,101 +1858,37 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-[#2f2a24]">9. Cultural intelligence profile (asked for everyone)</h3>
               <p className="mt-1 text-sm text-[#6c6358]">We never infer culture from name, ethnicity, or religion. We ask directly and support mixed identities.</p>
 
-              <div className="mt-4 grid gap-5 sm:grid-cols-2">
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Native language</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {languageCatalogOptions.map((option) => (
-                      <OptionChip key={`native-${option}`} label={option} isActive={nativeLanguage === option} onClick={() => setNativeLanguage(option)} />
-                    ))}
+              {shouldAskReligionFollowUps ? (
+                <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <p className="text-sm font-medium text-[#5e5346]">Faith traditions (select multiple)</p>
+                    <div className="mt-3 flex flex-wrap gap-2.5">
+                      {faithTraditionOptions.map((option) => (
+                        <OptionChip
+                          key={`faith-${option}`}
+                          label={option}
+                          isActive={faithTraditions.includes(option)}
+                          onClick={() => setFaithTraditions((current) => toggleOption(current, option))}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Preferred social language</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {languageCatalogOptions.map((option) => (
-                      <OptionChip key={`social-${option}`} label={option} isActive={socialInteractionLanguage === option} onClick={() => setSocialInteractionLanguage(option)} />
-                    ))}
+                  <div className="sm:col-span-2">
+                    <p className="text-sm font-medium text-[#5e5346]">Spiritual support needs (select multiple)</p>
+                    <div className="mt-3 flex flex-wrap gap-2.5">
+                      {religiousSupportNeedsOptions.map((option) => (
+                        <OptionChip
+                          key={`support-${option}`}
+                          label={option}
+                          isActive={religiousSupportNeeds.includes(option)}
+                          onClick={() => setReligiousSupportNeeds((current) => toggleOption(current, option))}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
-
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Preferred medical communication language</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {languageCatalogOptions.map((option) => (
-                      <OptionChip key={`medical-${option}`} label={option} isActive={medicalDiscussionLanguage === option} onClick={() => setMedicalDiscussionLanguage(option)} />
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Languages understood (select multiple)</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {languageCatalogOptions.map((option) => (
-                      <OptionChip
-                        key={`understood-${option}`}
-                        label={option}
-                        isActive={languagesUnderstood.includes(option)}
-                        onClick={() => setLanguagesUnderstood((current) => toggleOption(current, option))}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <p className="text-sm font-medium text-[#5e5346]">Languages spoken by family (select multiple)</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {languageCatalogOptions.map((option) => (
-                      <OptionChip
-                        key={`family-lang-${option}`}
-                        label={option}
-                        isActive={familyLanguages.includes(option)}
-                        onClick={() => setFamilyLanguages((current) => toggleOption(current, option))}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Religion importance</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {religionImportanceOptions.map((option) => (
-                      <OptionChip key={`religion-importance-${option}`} label={option} isActive={religionImportance === option} onClick={() => setReligionImportance(option)} />
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-[#5e5346]">Faith traditions (select multiple)</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {faithTraditionOptions.map((option) => (
-                      <OptionChip
-                        key={`faith-${option}`}
-                        label={option}
-                        isActive={faithTraditions.includes(option)}
-                        onClick={() => setFaithTraditions((current) => toggleOption(current, option))}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <p className="text-sm font-medium text-[#5e5346]">Spiritual support needs (select multiple)</p>
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {religiousSupportNeedsOptions.map((option) => (
-                      <OptionChip
-                        key={`support-${option}`}
-                        label={option}
-                        isActive={religiousSupportNeeds.includes(option)}
-                        onClick={() => setReligiousSupportNeeds((current) => toggleOption(current, option))}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
+              ) : null}
 
               <div className="mt-5 grid gap-5 sm:grid-cols-2">
                 <div>
@@ -2185,6 +2135,49 @@ export default function Home() {
                 ) : null}
               </article>
             ) : null}
+
+            <article className="rounded-2xl border border-[#d7dde8] bg-[#f8fbff] p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4b6688]">Audit Mode</p>
+                  <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">Adaptive visibility and source-of-truth audit</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAuditMode((current) => !current)}
+                  className="rounded-full border border-[#bfcddd] bg-white px-4 py-2 text-sm font-semibold text-[#405a7a] hover:bg-[#f0f6ff]"
+                >
+                  {showAuditMode ? "Hide audit" : "Show audit"}
+                </button>
+              </div>
+
+              {showAuditMode ? (
+                <div className="mt-4 overflow-x-auto rounded-2xl border border-[#d5e0ef] bg-white">
+                  <table className="min-w-full divide-y divide-[#e4ecf6] text-sm text-[#334155]">
+                    <thead className="bg-[#edf4fd] text-left text-xs uppercase tracking-[0.14em] text-[#5f738d]">
+                      <tr>
+                        <th className="px-4 py-3">question_id</th>
+                        <th className="px-4 py-3">visible</th>
+                        <th className="px-4 py-3">hidden_reason</th>
+                        <th className="px-4 py-3">writes_to</th>
+                        <th className="px-4 py-3">source_of_truth</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#edf2f8]">
+                      {questionAuditRows.map((row) => (
+                        <tr key={row.question_id}>
+                          <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.question_id}</td>
+                          <td className="px-4 py-3">{row.visible ? "true" : "false"}</td>
+                          <td className="px-4 py-3">{row.hidden_reason || ""}</td>
+                          <td className="px-4 py-3">{row.writes_to}</td>
+                          <td className="px-4 py-3">{row.source_of_truth ? "true" : "false"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+            </article>
           </div>
 
           <div className="mt-8">
