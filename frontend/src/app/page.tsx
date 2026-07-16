@@ -2091,38 +2091,6 @@ export default function Home() {
               <p className="mt-3 text-xs text-[#8b7f71]">Examples: Loves old movies, Must have Hebrew speaking staff, Wants a Jewish community, Doesn't like noisy environments, Loves gardening</p>
             </article>
 
-            {additionalQuestion ? (
-              <article className="rounded-2xl border border-[#d7c6a8] bg-[#fff6e6] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Confidence boost question</p>
-                <h3 className="mt-2 text-lg font-semibold text-[#2f2a24]">{additionalQuestion.text}</h3>
-                <p className="mt-1 text-sm text-[#6c6358]">We ask one extra question only when profile confidence is below threshold. Current confidence: {adaptiveConfidence}/100.</p>
-
-                {additionalQuestion.key === "religion_importance" ? (
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {religionImportanceOptions.map((option) => (
-                      <OptionChip key={`extra-religion-${option}`} label={option} isActive={religionImportance === option} onClick={() => setReligionImportance(option)} />
-                    ))}
-                  </div>
-                ) : null}
-
-                {additionalQuestion.key === "visit_frequency" ? (
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {visitExpectationOptions.map((option) => (
-                      <OptionChip key={`extra-visit-${option}`} label={option} isActive={visitFrequencyExpectation === option} onClick={() => setVisitFrequencyExpectation(option)} />
-                    ))}
-                  </div>
-                ) : null}
-
-                {additionalQuestion.key === "social_activity" ? (
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {socialInteractionOptions.map((option) => (
-                      <OptionChip key={`extra-social-${option}`} label={option} isActive={socialInteractionFrequency === option} onClick={() => setSocialInteractionFrequency(option)} />
-                    ))}
-                  </div>
-                ) : null}
-              </article>
-            ) : null}
-
             <article className="rounded-2xl border border-[#d7dde8] bg-[#f8fbff] p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
