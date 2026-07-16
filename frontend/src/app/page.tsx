@@ -1411,7 +1411,7 @@ export default function Home() {
                     <h4 className="text-base font-semibold text-[#2f2a24]">Couples decision tree</h4>
                     <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Do both people need to stay together?</p>
+                        <p className="text-sm font-medium text-[#5e5346]">Is staying together essential?</p>
                         <div className="mt-3 flex flex-wrap gap-2.5">
                           {coupleStayTogetherOptions.map((option) => (
                             <OptionChip key={option} label={option} isActive={coupleStayTogetherPreference === option} onClick={() => setCoupleStayTogetherPreference(option)} />
@@ -1419,10 +1419,26 @@ export default function Home() {
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-[#5e5346]">Which care balance matters most?</p>
+                        <p className="text-sm font-medium text-[#5e5346]">Do both need the same level of care?</p>
                         <div className="mt-3 flex flex-wrap gap-2.5">
-                          {coupleAssistanceOptions.map((option) => (
-                            <OptionChip key={`followup-${option}`} label={option} isActive={coupleAssistance === option} onClick={() => setCoupleAssistance(option)} />
+                          {yesNoOptions.map((option) => (
+                            <OptionChip key={`same-care-${option}`} label={option} isActive={coupleSameCareLevel === option} onClick={() => setCoupleSameCareLevel(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Would you accept temporary separation if one requires higher care?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {separationAcceptanceOptions.map((option) => (
+                            <OptionChip key={`separation-${option}`} label={option} isActive={temporarySeparationAcceptance === option} onClick={() => setTemporarySeparationAcceptance(option)} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[#5e5346]">Is future care continuity important?</p>
+                        <div className="mt-3 flex flex-wrap gap-2.5">
+                          {carePreferenceOptions.map((option) => (
+                            <OptionChip key={`couple-continuum-${option}`} label={option} isActive={continuumOfCarePreference === option} onClick={() => setContinuumOfCarePreference(option)} />
                           ))}
                         </div>
                       </div>
@@ -1442,18 +1458,18 @@ export default function Home() {
                           ))}
                         </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#5e5346]">How recent was the loss?</p>
-                        <div className="mt-3 flex flex-wrap gap-2.5">
-                          {lossTimingOptions.map((option) => (
-                            <OptionChip key={option} label={option} isActive={lossTiming === option} onClick={() => setLossTiming(option)} />
-                          ))}
-                        </div>
-                      </div>
                     </div>
 
                     {shouldAskWidowFollowUps ? (
                       <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <p className="text-sm font-medium text-[#5e5346]">How long ago was the loss?</p>
+                          <div className="mt-3 flex flex-wrap gap-2.5">
+                            {lossTimingOptions.map((option) => (
+                              <OptionChip key={option} label={option} isActive={lossTiming === option} onClick={() => setLossTiming(option)} />
+                            ))}
+                          </div>
+                        </div>
                         <div>
                           <p className="text-sm font-medium text-[#5e5346]">Has social activity changed since then?</p>
                           <div className="mt-3 flex flex-wrap gap-2.5">
@@ -1470,32 +1486,16 @@ export default function Home() {
                             ))}
                           </div>
                         </div>
+                        <div>
+                          <p className="text-sm font-medium text-[#5e5346]">Would grief support groups help?</p>
+                          <div className="mt-3 flex flex-wrap gap-2.5">
+                            {yesNoOptions.map((option) => (
+                              <OptionChip key={`grief-${option}`} label={option} isActive={griefSupportInterest === option} onClick={() => setGriefSupportInterest(option)} />
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     ) : null}
-                  </div>
-                ) : null}
-
-                {shouldAskLivingAloneFollowUps ? (
-                  <div className="mt-5 rounded-2xl border border-[#e8dcc9] bg-white p-4">
-                    <h4 className="text-base font-semibold text-[#2f2a24]">Living alone and daily support</h4>
-                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <p className="text-sm font-medium text-[#5e5346]">How worried are you about isolation from living alone?</p>
-                        <div className="mt-3 flex flex-wrap gap-2.5">
-                          {isolationConcernOptions.map((option) => (
-                            <OptionChip key={option} label={option} isActive={socialIsolationConcern === option} onClick={() => setSocialIsolationConcern(option)} />
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#5e5346]">How much outside prompting is needed for social engagement?</p>
-                        <div className="mt-3 flex flex-wrap gap-2.5">
-                          {importanceOptions.map((option) => (
-                            <OptionChip key={`prompt-${option}`} label={option} isActive={newFriendsImportance === option} onClick={() => setNewFriendsImportance(option)} />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 ) : null}
 
