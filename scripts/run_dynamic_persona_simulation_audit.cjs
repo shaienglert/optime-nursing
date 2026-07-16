@@ -70,10 +70,16 @@ function loadBackendFacilities() {
   const dbPath = path.join(repoRoot, 'optime_nursing.db');
   const pythonCode = [
     'import json, sqlite3, sys',
+    'sys.path.insert(0, r"' + path.join(repoRoot, 'backend').replace(/\\/g, '\\\\') + '")',
+    'from app.database import SessionLocal',
+    'from app.services.intelligence_agent import run_intelligence_collection',
+    'db = SessionLocal()',
+    'run_intelligence_collection(db)',
+    'db.close()',
     'conn = sqlite3.connect(sys.argv[1])',
     'conn.row_factory = sqlite3.Row',
     'cur = conn.cursor()',
-    'rows = cur.execute("select id, cms_id, name, city, state, address, zip_code, phone, overall_rating, staffing_rating, quality_rating, inspection_rating, beds, medical_quality_score, staffing_score, safety_score, overall_optime_score, confidence_level from facilities where state = ? order by overall_optime_score desc, id asc", ("FL",)).fetchall()',
+    'rows = cur.execute("select f.id, f.cms_id, f.name, f.city, f.state, f.address, f.zip_code, f.phone, f.overall_rating, f.staffing_rating, f.quality_rating, f.inspection_rating, f.beds, f.medical_quality_score, f.staffing_score, f.safety_score, f.overall_optime_score, f.confidence_level, p.intelligence_confidence, p.family_satisfaction_index, p.staff_stability_index, p.regulatory_risk_index, p.litigation_risk_index, p.social_energy_index, p.community_engagement_index, p.reputation_index, p.cultural_match_signals, p.sources_used as intelligence_sources_used, p.positive_signals as intelligence_positive_signals, p.negative_signals as intelligence_negative_signals from facilities f left join facility_intelligence_profiles p on p.facility_id = f.id where f.state = ? order by f.overall_optime_score desc, f.id asc", ("FL",)).fetchall()',
     'print(json.dumps([dict(row) for row in rows]))',
   ].join('\n');
   const result = spawnSync('python', ['-c', pythonCode, dbPath], {
@@ -395,6 +401,20 @@ function toSearchFacility(facility, mode) {
     careTypeConfidence: taxonomy.confidence,
     careTypeConfidenceScore: taxonomy.confidenceScore,
     careTypeProbabilities: taxonomy.probabilities,
+    intelligenceSnapshot: facility.intelligence_confidence !== null && facility.intelligence_confidence !== undefined ? {
+      intelligence_confidence: facility.intelligence_confidence,
+      sources_used: JSON.parse(facility.intelligence_sources_used || '[]'),
+      positive_signals: JSON.parse(facility.intelligence_positive_signals || '[]'),
+      negative_signals: JSON.parse(facility.intelligence_negative_signals || '[]'),
+      family_satisfaction_index: facility.family_satisfaction_index || 0,
+      staff_stability_index: facility.staff_stability_index || 0,
+      regulatory_risk_index: facility.regulatory_risk_index || 0,
+      litigation_risk_index: facility.litigation_risk_index || 0,
+      social_energy_index: facility.social_energy_index || 0,
+      community_engagement_index: facility.community_engagement_index || 0,
+      reputation_index: facility.reputation_index || 0,
+      cultural_match_signals: facility.cultural_match_signals || 0,
+    } : undefined,
     matchBadges: makeBadges(facility, taxonomy.careTypes),
     scoreBreakdown: [
       {

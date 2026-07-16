@@ -341,6 +341,42 @@ function careTypeTotalAdjustment(facility: SearchFacility, state: QuestionnaireS
   return adjustment;
 }
 
+const TRUSTED_INTELLIGENCE_SOURCES = ["CMS", "Medicare Care Compare", "State inspections", "AHCA", "Public court records"];
+
+function clampIntelligenceDelta(value: number, trusted: boolean): number {
+  const cap = trusted ? 15 : 10;
+  return clamp(value, -cap, cap);
+}
+
+function hasTrustedIntelligence(facility: SearchFacility): boolean {
+  return facility.intelligenceSnapshot?.sources_used.some((source) => TRUSTED_INTELLIGENCE_SOURCES.includes(source)) || false;
+}
+
+function applyIntelligenceOverlay(priorityScores: PriorityScores, facility: SearchFacility): PriorityScores {
+  const snapshot = facility.intelligenceSnapshot;
+  if (!snapshot) return priorityScores;
+
+  const trusted = hasTrustedIntelligence(facility);
+  const familyDelta = clampIntelligenceDelta((snapshot.family_satisfaction_index - 50) * 0.16, false);
+  const socialDelta = clampIntelligenceDelta((((snapshot.social_energy_index + snapshot.community_engagement_index) / 2) - 50) * 0.16, false);
+  const culturalDelta = clampIntelligenceDelta((snapshot.cultural_match_signals - 50) * 0.16, false);
+  const reputationDelta = clampIntelligenceDelta((snapshot.reputation_index - 50) * 0.12, false);
+  const staffDelta = clampIntelligenceDelta((snapshot.staff_stability_index - 50) * 0.14, false);
+  const trustedRiskDelta = clampIntelligenceDelta(
+    ((50 - snapshot.regulatory_risk_index) * 0.24) + ((50 - snapshot.litigation_risk_index) * 0.16),
+    trusted,
+  );
+
+  return {
+    ...priorityScores,
+    familyFit: clamp(priorityScores.familyFit + familyDelta),
+    socialFit: clamp(priorityScores.socialFit + socialDelta),
+    culturalFit: clamp(priorityScores.culturalFit + culturalDelta),
+    clinicalQuality: clamp(priorityScores.clinicalQuality + staffDelta + trustedRiskDelta),
+    lifestyleFit: clamp(priorityScores.lifestyleFit + reputationDelta),
+  };
+}
+
 function detectPersonaType(state: QuestionnaireState): PersonaType {
   const assistance = state.assistanceLevel;
   const memory = state.memoryStatus;
@@ -845,6 +881,7 @@ function roundContribution(value: number): number {
 function buildIntelligenceSourcesUsed(facility: SearchFacility): string[] {
   const sources = new Set<string>(["Questionnaire answers", "Facility metadata"]);
   facility.scoreBreakdown?.forEach((item) => item.dataSource.forEach((source) => sources.add(source)));
+  facility.intelligenceSnapshot?.sources_used.forEach((source) => sources.add(source));
   return [...sources];
 }
 
@@ -1391,7 +1428,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     const clinicalQuality = scoreClinicalQuality(facility);
     const luxuryAmenities = scoreLuxuryAmenities(facility);
 
-    const priorityScores: PriorityScores = {
+    const basePriorityScores: PriorityScores = {
       careFit,
       lifestyleFit,
       socialFit,
@@ -1401,6 +1438,8 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       clinicalQuality,
       luxuryAmenities,
     };
+
+    const priorityScores = applyIntelligenceOverlay(basePriorityScores, facility);
 
     const totalScore = weightedTotal(priorityScores, persona.weights) + careTypeTotalAdjustment(facility, state);
 
