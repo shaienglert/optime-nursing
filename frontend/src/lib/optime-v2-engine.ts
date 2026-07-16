@@ -309,6 +309,12 @@ function buildWeightEntries(weights: WeightProfile): Array<{ label: string; weig
     { label: "Lifestyle Fit", weight: weights.lifestyleFit },
     { label: "Social Fit", weight: weights.socialFit },
     { label: "Cultural Fit", weight: weights.culturalFit },
+    { label: "Family Fit", weight: weights.familyFit },
+    { label: "Financial Fit", weight: weights.financialFit },
+    { label: "Clinical Quality", weight: weights.clinicalQuality },
+    { label: "Luxury Amenities", weight: weights.luxuryAmenities },
+  ].sort((left, right) => right.weight - left.weight);
+}
 
 function careTypeTotalAdjustment(facility: SearchFacility, state: QuestionnaireState): number {
   let adjustment = 0;
@@ -333,12 +339,6 @@ function careTypeTotalAdjustment(facility: SearchFacility, state: QuestionnaireS
   }
 
   return adjustment;
-}
-    { label: "Family Fit", weight: weights.familyFit },
-    { label: "Financial Fit", weight: weights.financialFit },
-    { label: "Clinical Quality", weight: weights.clinicalQuality },
-    { label: "Luxury Amenities", weight: weights.luxuryAmenities },
-  ].sort((left, right) => right.weight - left.weight);
 }
 
 function detectPersonaType(state: QuestionnaireState): PersonaType {
