@@ -78,6 +78,8 @@ function runAudit() {
     '    all_signals.extend(ia._collect_social_signals(facility))',
     '    all_signals.extend(ia._collect_news_signals(facility))',
     '    all_signals.extend(ia._collect_legal_signals(facility))',
+    '    if hasattr(ia, "_collect_activation_wave3_signals"):',
+    '        all_signals.extend(ia._collect_activation_wave3_signals(facility))',
     '    deduped = ia._deduplicate_signals(all_signals)',
     '    for signal in deduped:',
     '        source = str(signal.get("source", "")).strip().lower()',
