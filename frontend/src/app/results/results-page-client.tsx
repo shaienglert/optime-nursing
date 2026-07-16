@@ -1338,6 +1338,7 @@ export function ResultsPageClient() {
                 distance,
                 notes,
               });
+              const explainable = relaxedAvailability.explainableByFacility[facility.id];
 
               const renderRows = (rows: ExplanationListItem[]) => (
                 <div className="overflow-x-auto rounded-2xl border border-[#e7dbc6]">
@@ -1362,6 +1363,151 @@ export function ResultsPageClient() {
 
               return (
                 <div key={`${facility.id}-${facility.imageUrl}`} className="space-y-4">
+                  {explainable ? (
+                    <article className="rounded-3xl border border-[#d7dfeb] bg-[#f7fbff] p-5 shadow-[0_16px_50px_-34px_rgba(45,74,112,0.35)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#3f5f8c]">Explainable Matching Engine V1</p>
+                      <h3 className="mt-2 text-xl font-semibold text-[#2f2a24]">Why this recommendation exists</h3>
+
+                      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                        <div className="overflow-hidden rounded-2xl border border-[#d9e2f0] bg-white">
+                          <div className="bg-[#ecf3fd] px-4 py-3 text-sm font-semibold text-[#2f4f73]">Positive contributors</div>
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-[#e4ebf5] text-sm text-[#34495f]">
+                              <thead className="bg-white text-left text-xs uppercase tracking-[0.14em] text-[#64748b]">
+                                <tr>
+                                  <th className="px-4 py-3">Signal</th>
+                                  <th className="px-4 py-3">Score</th>
+                                  <th className="px-4 py-3">Weight</th>
+                                  <th className="px-4 py-3">Contribution</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[#edf2f8]">
+                                {explainable.positiveContributors.length > 0 ? explainable.positiveContributors.map((row) => (
+                                  <tr key={`${facility.id}-pos-${row.signal}-${row.reason}`}>
+                                    <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.signal}</td>
+                                    <td className="px-4 py-3">{row.score}</td>
+                                    <td className="px-4 py-3">{row.weight}</td>
+                                    <td className="px-4 py-3">{row.contribution}</td>
+                                  </tr>
+                                )) : (
+                                  <tr><td className="px-4 py-3" colSpan={4}>No high-scoring positive contributors were detected.</td></tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        <div className="overflow-hidden rounded-2xl border border-[#efdccf] bg-white">
+                          <div className="bg-[#fef1ea] px-4 py-3 text-sm font-semibold text-[#8c5c40]">Negative contributors and penalties</div>
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-[#f0e4da] text-sm text-[#5b4d41]">
+                              <thead className="bg-white text-left text-xs uppercase tracking-[0.14em] text-[#8a7769]">
+                                <tr>
+                                  <th className="px-4 py-3">Signal</th>
+                                  <th className="px-4 py-3">Score</th>
+                                  <th className="px-4 py-3">Penalty/Contribution</th>
+                                  <th className="px-4 py-3">Why</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[#f4e9df]">
+                                {explainable.negativeContributors.length > 0 ? explainable.negativeContributors.map((row) => (
+                                  <tr key={`${facility.id}-neg-${row.signal}-${row.reason}`}>
+                                    <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.signal}</td>
+                                    <td className="px-4 py-3">{row.score}</td>
+                                    <td className="px-4 py-3">{row.contribution}</td>
+                                    <td className="px-4 py-3">{row.reason}</td>
+                                  </tr>
+                                )) : (
+                                  <tr><td className="px-4 py-3" colSpan={4}>No explicit penalties were applied for this community.</td></tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 overflow-hidden rounded-2xl border border-[#e4dcca] bg-white">
+                        <div className="bg-[#f5efe4] px-4 py-3 text-sm font-semibold text-[#3f372e]">Tradeoffs (never hidden)</div>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                            <thead className="bg-white text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                              <tr>
+                                <th className="px-4 py-3">Benefit</th>
+                                <th className="px-4 py-3">Cost</th>
+                                <th className="px-4 py-3">Summary</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#efe6d8]">
+                              {explainable.tradeoffs.map((row) => (
+                                <tr key={`${facility.id}-tradeoff-${row.summary}`}>
+                                  <td className="px-4 py-3">{row.benefit}</td>
+                                  <td className="px-4 py-3">{row.cost}</td>
+                                  <td className="px-4 py-3">{row.summary}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 overflow-hidden rounded-2xl border border-[#d9e2f0] bg-white">
+                        <div className="bg-[#ecf3fd] px-4 py-3 text-sm font-semibold text-[#2f4f73]">Weight breakdown</div>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-[#e4ebf5] text-sm text-[#34495f]">
+                            <thead className="bg-white text-left text-xs uppercase tracking-[0.14em] text-[#64748b]">
+                              <tr>
+                                <th className="px-4 py-3">Signal</th>
+                                <th className="px-4 py-3">Category</th>
+                                <th className="px-4 py-3">Raw weight</th>
+                                <th className="px-4 py-3">Normalized</th>
+                                <th className="px-4 py-3">Score</th>
+                                <th className="px-4 py-3">Weighted score</th>
+                                <th className="px-4 py-3">Contribution to final</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#edf2f8]">
+                              {explainable.weightBreakdown.map((row) => (
+                                <tr key={`${facility.id}-weight-${row.signal}-${row.rawWeight}`}>
+                                  <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.signal}</td>
+                                  <td className="px-4 py-3">{row.category}</td>
+                                  <td className="px-4 py-3">{row.rawWeight}</td>
+                                  <td className="px-4 py-3">{row.normalizedWeight}</td>
+                                  <td className="px-4 py-3">{row.score}</td>
+                                  <td className="px-4 py-3">{row.weightedScore}</td>
+                                  <td className="px-4 py-3">{row.contributionToFinal}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 overflow-hidden rounded-2xl border border-[#e4dcca] bg-white">
+                        <div className="bg-[#f5efe4] px-4 py-3 text-sm font-semibold text-[#3f372e]">Final score calculation</div>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                            <tbody className="divide-y divide-[#efe6d8]">
+                              <tr><td className="px-4 py-3 font-medium">Base score</td><td className="px-4 py-3">{explainable.finalScore.baseScore}</td><td className="px-4 py-3 font-medium">Base weight</td><td className="px-4 py-3">{explainable.finalScore.baseWeight}</td></tr>
+                              <tr><td className="px-4 py-3 font-medium">Preference aggregate</td><td className="px-4 py-3">{explainable.finalScore.preferenceAggregate}</td><td className="px-4 py-3 font-medium">Preference weight</td><td className="px-4 py-3">{explainable.finalScore.preferenceWeight}</td></tr>
+                              <tr><td className="px-4 py-3 font-medium">Weighted base</td><td className="px-4 py-3">{explainable.finalScore.weightedBase}</td><td className="px-4 py-3 font-medium">Weighted preferences</td><td className="px-4 py-3">{explainable.finalScore.weightedPreferences}</td></tr>
+                              <tr><td className="px-4 py-3 font-medium">Hard penalty</td><td className="px-4 py-3">-{explainable.finalScore.hardPenalty}</td><td className="px-4 py-3 font-medium">Final score</td><td className="px-4 py-3">{explainable.finalScore.finalScore}</td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <p className="px-4 py-3 text-xs text-[#6a655b]">Formula: final = (base_score x base_weight) + (preference_aggregate x preference_weight) - hard_penalty.</p>
+                      </div>
+
+                      <div className="mt-4 rounded-2xl border border-[#f0e4da] bg-[#fffaf7] p-4">
+                        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Uncertainty (never hidden)</p>
+                        <ul className="mt-2 space-y-2 text-sm text-[#5b4d41]">
+                          {explainable.uncertainty.map((item) => (
+                            <li key={`${facility.id}-unc-${item}`}>• {item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </article>
+                  ) : null}
+
                   <article className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5f7f6b]">Recommendation #{index + 1} explanation</p>
                     <p className="mt-3 text-sm text-[#5c5347]">Resident profile: {explanation.profileSummary}</p>
