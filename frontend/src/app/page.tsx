@@ -1371,22 +1371,6 @@ export default function Home() {
                 {isFamilyStoryRelationship ? (
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <p className="text-sm font-medium text-[#5e5346]">How long has {relationshipLabel.toLowerCase()} lived alone?</p>
-                      <div className="mt-3 flex flex-wrap gap-2.5">
-                        {livingAloneOptions.map((option) => (
-                          <OptionChip key={option} label={option} isActive={livingAloneDuration === option} onClick={() => setLivingAloneDuration(option)} />
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#5e5346]">Does {relationshipLabel.toLowerCase()} miss social interaction?</p>
-                      <div className="mt-3 flex flex-wrap gap-2.5">
-                        {socialChangeOptions.map((option) => (
-                          <OptionChip key={option} label={option} isActive={socialInteractionNeed === option} onClick={() => setSocialInteractionNeed(option)} />
-                        ))}
-                      </div>
-                    </div>
-                    <div>
                       <p className="text-sm font-medium text-[#5e5346]">Are grandchildren important?</p>
                       <div className="mt-3 flex flex-wrap gap-2.5">
                         {importanceOptions.map((option) => (
