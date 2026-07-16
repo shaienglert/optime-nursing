@@ -1129,11 +1129,6 @@ export function ResultsPageClient() {
     console.info("Recommendation Pipeline Debug", relaxedAvailability.debug);
   }, [isLoading, relaxedAvailability.debug]);
 
-  useEffect(() => {
-    if (isLoading || topRecommendations.length === 0) return;
-    recommendationsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [isLoading, topRecommendations.length]);
-
   const topRecommendations = useMemo(
     () => relaxedAvailability.recommendations.slice(0, TOP_RECOMMENDATION_COUNT),
     [relaxedAvailability.recommendations],
@@ -1142,6 +1137,11 @@ export function ResultsPageClient() {
     () => relaxedAvailability.recommendations.slice(TOP_RECOMMENDATION_COUNT),
     [relaxedAvailability.recommendations],
   );
+
+  useEffect(() => {
+    if (isLoading || topRecommendations.length === 0) return;
+    recommendationsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [isLoading, topRecommendations.length]);
 
   const personalAdvisorSummary = useMemo(() => {
     const profile = state.humanIntelligenceV2;
