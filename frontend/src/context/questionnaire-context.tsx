@@ -38,6 +38,8 @@ export type HumanIntelligenceV2 = {
     lossTiming: string;
     socialActivityChangeSinceLoss: string;
     socialInteractionNeed: string;
+    temporarySeparationAcceptance: string;
+    griefSupportInterest: string;
   };
   culturalProfile: {
     religionImportance: string;
@@ -49,6 +51,12 @@ export type HumanIntelligenceV2 = {
     culturalIdentity: string;
     israeliJewishCommunityPreference: string;
     whatFeelsLikeHome: string[];
+    worshipAccessRequirement: string;
+    jewishProgrammingImportance: string;
+    churchAccessRequirement: string;
+    christianServiceRequirement: string;
+    halalMealsRequirement: string;
+    prayerFacilityRequirement: string;
   };
   languageProfile: {
     preferredSpokenLanguage: string;
@@ -58,6 +66,7 @@ export type HumanIntelligenceV2 = {
     languageNeedScope: string;
     languagesUnderstood: string[];
     familyLanguages: string[];
+    bilingualStaffRequired: string;
   };
   foodProfile: {
     dietaryPreferences: string[];
@@ -202,6 +211,8 @@ const DEFAULT_STATE: QuestionnaireState = {
       lossTiming: "",
       socialActivityChangeSinceLoss: "",
       socialInteractionNeed: "",
+      temporarySeparationAcceptance: "",
+      griefSupportInterest: "",
     },
     culturalProfile: {
       religionImportance: "",
@@ -213,6 +224,12 @@ const DEFAULT_STATE: QuestionnaireState = {
       culturalIdentity: "",
       israeliJewishCommunityPreference: "",
       whatFeelsLikeHome: [],
+      worshipAccessRequirement: "",
+      jewishProgrammingImportance: "",
+      churchAccessRequirement: "",
+      christianServiceRequirement: "",
+      halalMealsRequirement: "",
+      prayerFacilityRequirement: "",
     },
     languageProfile: {
       preferredSpokenLanguage: "",
@@ -222,6 +239,7 @@ const DEFAULT_STATE: QuestionnaireState = {
       languageNeedScope: "",
       languagesUnderstood: [],
       familyLanguages: [],
+      bilingualStaffRequired: "",
     },
     foodProfile: {
       dietaryPreferences: [],
