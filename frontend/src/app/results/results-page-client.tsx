@@ -147,6 +147,52 @@ type SignalClassificationRow = {
   rationale: string;
 };
 
+type ExplainableContributor = {
+  signal: string;
+  category: SignalCategory;
+  score: number;
+  weight: number;
+  contribution: number;
+  reason: string;
+  kind: "positive" | "negative" | "uncertain";
+};
+
+type ExplainableTradeoff = {
+  benefit: string;
+  cost: string;
+  summary: string;
+};
+
+type ExplainableWeightRow = {
+  signal: string;
+  category: SignalCategory;
+  rawWeight: number;
+  normalizedWeight: number;
+  score: number;
+  weightedScore: number;
+  contributionToFinal: number;
+};
+
+type ExplainableFinalScore = {
+  baseScore: number;
+  baseWeight: number;
+  preferenceAggregate: number;
+  preferenceWeight: number;
+  weightedBase: number;
+  weightedPreferences: number;
+  hardPenalty: number;
+  finalScore: number;
+};
+
+type ExplainableMatchingBreakdown = {
+  positiveContributors: ExplainableContributor[];
+  negativeContributors: ExplainableContributor[];
+  tradeoffs: ExplainableTradeoff[];
+  uncertainty: string[];
+  weightBreakdown: ExplainableWeightRow[];
+  finalScore: ExplainableFinalScore;
+};
+
 type ExactMatchAuditRow = {
   community_name: string;
   rejection_reason: string;
@@ -240,6 +286,7 @@ function buildRelaxedRecommendations(
   debug: RecommendationPipelineDebug;
   exactMatchAudit: ExactMatchAuditRow[];
   signalClassifications: SignalClassificationRow[];
+  explainableByFacility: Record<number, ExplainableMatchingBreakdown>;
 } {
   const baseFacilities = facilities.filter((facility) => facility.matching_confidence !== "LOW");
   const profile = context.profile;
