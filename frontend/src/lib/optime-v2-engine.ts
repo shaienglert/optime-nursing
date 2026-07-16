@@ -274,6 +274,116 @@ function includesAny(text: string, terms: string[]): boolean {
   return terms.some((term) => text.includes(term.toLowerCase()));
 }
 
+function weightedTotal(scores: PriorityScores, weights: WeightProfile): number {
+  return clamp(
+    scores.careFit * weights.careFit +
+      scores.lifestyleFit * weights.lifestyleFit +
+      scores.socialFit * weights.socialFit +
+      scores.culturalFit * weights.culturalFit +
+      scores.familyFit * weights.familyFit +
+      scores.financialFit * weights.financialFit +
+      scores.clinicalQuality * weights.clinicalQuality +
+      scores.luxuryAmenities * weights.luxuryAmenities,
+  );
+}
+
+function buildWeightEntries(weights: WeightProfile): Array<{ label: string; weight: number }> {
+  return [
+    { label: "Care Fit", weight: weights.careFit },
+    { label: "Lifestyle Fit", weight: weights.lifestyleFit },
+    { label: "Social Fit", weight: weights.socialFit },
+    { label: "Cultural Fit", weight: weights.culturalFit },
+    { label: "Family Fit", weight: weights.familyFit },
+    { label: "Financial Fit", weight: weights.financialFit },
+    { label: "Clinical Quality", weight: weights.clinicalQuality },
+    { label: "Luxury Amenities", weight: weights.luxuryAmenities },
+  ].sort((left, right) => right.weight - left.weight);
+}
+
+function detectPersonaType(state: QuestionnaireState): PersonaType {
+  const assistance = state.assistanceLevel;
+  const memory = state.memoryStatus;
+  const social = state.humanIntelligenceV2.socialProfile;
+  const family = state.humanIntelligenceV2.familyProfile;
+  const interests = state.happinessPreferences.map((item) => item.toLowerCase());
+  const notes = state.notes.toLowerCase();
+
+  if (memory === "Significant memory issues") return "Memory Care";
+  if (assistance === "Skilled nursing care") return /rehab|rehabilitation|post[- ]?hospital/.test(notes) ? "Rehabilitation" : "Skilled Nursing";
+  if (/rehab|rehabilitation|post[- ]?hospital/.test(notes)) return "Rehabilitation";
+  if (memory === "Mild memory issues" || memory === "Occasionally forgetful") return "Early Memory Support";
+  if (assistance && assistance !== "Fully independent") return "Assisted Living";
+  if (family.visitFrequencyExpectation === "Daily" || family.involvedFamilyMembers === "5+" || family.grandchildrenImportance === "High") return "Family-Centered Senior";
+  if (social.socialInteractionFrequency === "Daily" || social.newFriendsImportance === "High" || interests.some((item) => /social|activity|music|games/.test(item))) return "Independent Social Senior";
+  if (social.socialInteractionFrequency === "Monthly or less" || social.newFriendsImportance === "Low" || interests.some((item) => /quiet|calm|peaceful/.test(item))) return "Independent Quiet Senior";
+  return /active|exercise|wellness/.test(interests.join(" ")) ? "Independent Active Senior" : "Independent Active Senior";
+}
+
+function buildPersonaProfile(state: QuestionnaireState): PersonaProfile {
+  const personaType = detectPersonaType(state);
+  const weights = PERSONA_WEIGHT_PROFILES[personaType];
+
+  const profiles: Record<PersonaType, Omit<PersonaProfile, "personaType" | "weights" | "activeWeights">> = {
+    "Independent Active Senior": {
+      rankingStrategy: "Person-first active lifestyle ranking.",
+      whySelected: ["Fully independent or lightly supported profile.", "Values activity, movement, and a full daily routine.", "Clinical needs are not the primary driver."],
+      whatWouldChangeThisRanking: ["If clinical needs increase, Clinical Quality and Care Fit would dominate.", "If social needs increase, Social Fit would rise.", "If family distance becomes primary, Family Fit would gain weight."],
+    },
+    "Independent Social Senior": {
+      rankingStrategy: "Person-first social lifestyle ranking.",
+      whySelected: ["Fully independent profile.", "Values frequent social interaction.", "Community activity matters more than clinical intensity."],
+      whatWouldChangeThisRanking: ["If clinical needs increase, Care Fit and Clinical Quality would dominate.", "If quiet preference grows, Social Fit would drop.", "If family proximity becomes mandatory, Family Fit would rise."],
+    },
+    "Independent Quiet Senior": {
+      rankingStrategy: "Person-first calm-environment ranking.",
+      whySelected: ["Fully independent profile.", "Prefers a quieter environment.", "Social stimulation should stay modest."],
+      whatWouldChangeThisRanking: ["If social engagement becomes a priority, Social Fit would rise.", "If family involvement increases, Family Fit would become stronger.", "If clinical needs increase, Clinical Quality would rise."],
+    },
+    "Early Memory Support": {
+      rankingStrategy: "Memory-aware early support ranking.",
+      whySelected: ["Memory concerns are present but not yet full memory care.", "Safety and day-to-day support matter more.", "Care needs are trending upward."],
+      whatWouldChangeThisRanking: ["If memory loss worsens, Memory Care would take over.", "If rehabilitation is needed, Clinical Quality would rise.", "If the person remains highly independent, Lifestyle Fit would gain share."],
+    },
+    "Memory Care": {
+      rankingStrategy: "Memory-first safety and support ranking.",
+      whySelected: ["Significant memory needs are present.", "Safety and supervision are critical.", "Care quality outweighs lifestyle preferences."],
+      whatWouldChangeThisRanking: ["If clinical complexity rises, Skilled Nursing or High Clinical Complexity would take priority.", "If family visits become the main concern, Family Fit would rise.", "If memory concerns ease, Lifestyle and Social Fit would gain weight."],
+    },
+    "Assisted Living": {
+      rankingStrategy: "Supportive independence ranking.",
+      whySelected: ["Some daily support is needed.", "Independence still matters.", "Balanced social and lifestyle fit is important."],
+      whatWouldChangeThisRanking: ["If skilled nursing is needed, Skilled Nursing would replace Assisted Living.", "If memory concerns deepen, Memory Care would dominate.", "If the person becomes more independent, Independence-oriented personas would take over."],
+    },
+    "Skilled Nursing": {
+      rankingStrategy: "Clinical support ranking.",
+      whySelected: ["Skilled nursing needs are explicit.", "Clinical quality and staffing should dominate.", "Family and lifestyle remain secondary."],
+      whatWouldChangeThisRanking: ["If rehabilitation is the main goal, Rehabilitation would outrank it.", "If clinical complexity becomes extreme, High Clinical Complexity would take over.", "If needs reduce, Assisted Living would become more appropriate."],
+    },
+    Rehabilitation: {
+      rankingStrategy: "Recovery-focused ranking.",
+      whySelected: ["Post-acute or rehab needs are present.", "Clinical quality and staffing are central.", "Short-term recovery matters more than amenities."],
+      whatWouldChangeThisRanking: ["If recovery stabilizes, Assisted Living or Independence personas would rise.", "If memory issues intensify, Memory Care would dominate.", "If clinical complexity increases, High Clinical Complexity would gain weight."],
+    },
+    "High Clinical Complexity": {
+      rankingStrategy: "High-acuity clinical ranking.",
+      whySelected: ["Clinical complexity is the primary driver.", "Staffing and safety are critical.", "Lifestyle preferences are secondary."],
+      whatWouldChangeThisRanking: ["If acuity decreases, Skilled Nursing or Assisted Living would become more relevant.", "If memory issues emerge, Memory Care would rise.", "If family proximity becomes the top need, Family Fit would increase."],
+    },
+    "Family-Centered Senior": {
+      rankingStrategy: "Family-access ranking.",
+      whySelected: ["Family visits and involvement are central.", "Proximity and communication matter most.", "Social fit should support shared family life."],
+      whatWouldChangeThisRanking: ["If clinical needs increase, Care Fit and Clinical Quality would rise.", "If independence becomes dominant, Independence-oriented personas would replace it.", "If distance stops mattering, Social and Lifestyle weights would increase."],
+    },
+  };
+
+  return {
+    personaType,
+    weights,
+    activeWeights: buildWeightEntries(weights),
+    ...profiles[personaType],
+  };
+}
+
 function parseDistancePoints(state: QuestionnaireState): { points: number; note: string } {
   const fromDriveTime = parseFirstNumber(state.humanIntelligenceV2.distanceProfile.driveTimes.normal);
   const fromLegacy = parseFirstNumber(state.distanceFromFamily);
@@ -610,16 +720,16 @@ function buildMissingInformation(state: QuestionnaireState, signalRoles: Array<{
   return missing.slice(0, 4);
 }
 
-function summarizeContributions(scores: PriorityScores): Contribution[] {
+function summarizeContributions(scores: PriorityScores, weights: WeightProfile): Contribution[] {
   const weighted = [
-    { label: "Care fit", value: scores.careFit * PRIORITY_WEIGHTS.careFit },
-    { label: "Lifestyle fit", value: scores.lifestyleFit * PRIORITY_WEIGHTS.lifestyleFit },
-    { label: "Social fit", value: scores.socialFit * PRIORITY_WEIGHTS.socialFit },
-    { label: "Cultural fit", value: scores.culturalFit * PRIORITY_WEIGHTS.culturalFit },
-    { label: "Family fit", value: scores.familyFit * PRIORITY_WEIGHTS.familyFit },
-    { label: "Financial fit", value: scores.financialFit * PRIORITY_WEIGHTS.financialFit },
-    { label: "Clinical quality", value: scores.clinicalQuality * PRIORITY_WEIGHTS.clinicalQuality },
-    { label: "Luxury amenities", value: scores.luxuryAmenities * PRIORITY_WEIGHTS.luxuryAmenities },
+    { label: "Care fit", value: scores.careFit * weights.careFit },
+    { label: "Lifestyle fit", value: scores.lifestyleFit * weights.lifestyleFit },
+    { label: "Social fit", value: scores.socialFit * weights.socialFit },
+    { label: "Cultural fit", value: scores.culturalFit * weights.culturalFit },
+    { label: "Family fit", value: scores.familyFit * weights.familyFit },
+    { label: "Financial fit", value: scores.financialFit * weights.financialFit },
+    { label: "Clinical quality", value: scores.clinicalQuality * weights.clinicalQuality },
+    { label: "Luxury amenities", value: scores.luxuryAmenities * weights.luxuryAmenities },
   ];
 
   return weighted.sort((a, b) => b.value - a.value);
