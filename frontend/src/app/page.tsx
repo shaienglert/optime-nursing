@@ -798,8 +798,6 @@ export default function Home() {
     preferredEnvironment.length,
   ]);
 
-  const additionalQuestion: { key: string; text: string } | null = null;
-
   const questionAuditRows = useMemo(
     () =>
       buildVisibilityAudit(QUESTION_GRAPH, {
