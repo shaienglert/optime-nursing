@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
+import { QUESTION_GRAPH, buildVisibilityAudit, validateQuestionGraph } from "@/lib/questionnaire-graph";
 import { persistAdaptiveQuestionSignal, persistHumanIntelligenceScores } from "@/lib/api";
+
+validateQuestionGraph(QUESTION_GRAPH);
 
 const relationshipOptions = ["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myself", "Couple", "Relative", "Friend"];
 
@@ -173,6 +176,8 @@ const memorySafetyOptions = ["Yes", "No", "Maybe"];
 const familiarLanguageRequirementOptions = ["Yes", "No", "Maybe"];
 
 const carePreferenceOptions = ["Not important", "Somewhat important", "Important", "Very important"];
+
+const separationAcceptanceOptions = ["Yes", "No", "Only temporary"];
 
 const distanceStrategyOptions = ["Closest to resident", "Closest to family", "Balanced location", "Emergency priority", "Family visit maximization"];
 
