@@ -130,6 +130,14 @@ type ConstraintAuditRow = {
   reason: string;
 };
 
+type RecommendationPipelineDebug = {
+  communities_loaded: number;
+  exact_matches: number;
+  soft_matches: number;
+  fallback_matches: number;
+  rendered_results: number;
+};
+
 type RelaxationContext = {
   budget: number;
   care: string;
@@ -211,7 +219,7 @@ function buildConstraintAudit(context: RelaxationContext): ConstraintAuditRow[] 
 function buildRelaxedRecommendations(
   facilities: SearchFacility[],
   context: RelaxationContext,
-) : { recommendations: SearchFacility[]; relaxations: RelaxationNotice[]; constraintAudit: ConstraintAuditRow[] } {
+): { recommendations: SearchFacility[]; relaxations: RelaxationNotice[]; constraintAudit: ConstraintAuditRow[]; debug: RecommendationPipelineDebug } {
   const baseFacilities = facilities.filter((facility) => facility.matching_confidence !== "LOW");
   const profile = context.profile;
   const notesLower = context.notes.toLowerCase();
@@ -386,7 +394,21 @@ function buildRelaxedRecommendations(
     });
   }
 
-  return { recommendations, relaxations, constraintAudit: auditRows };
+  const exactMatches = hardFiltered.filter((facility) =>
+    enabledSoft.every((preference) => preference.score(facility) >= 70),
+  ).length;
+  const softMatches = hardFiltered.length;
+  const fallbackMatches = exactMatches === 0 ? recommendations.length : 0;
+
+  const debug: RecommendationPipelineDebug = {
+    communities_loaded: facilities.length,
+    exact_matches: exactMatches,
+    soft_matches: softMatches,
+    fallback_matches: fallbackMatches,
+    rendered_results: recommendations.length,
+  };
+
+  return { recommendations, relaxations, constraintAudit: auditRows, debug };
 }
 
 function buildResidentProfileSummary(
@@ -772,6 +794,11 @@ export function ResultsPageClient() {
     };
   }, [textQuery]);
 
+  useEffect(() => {
+    if (isLoading) return;
+    console.info("Recommendation Pipeline Debug", relaxedAvailability.debug);
+  }, [isLoading, relaxedAvailability.debug]);
+
   const topRecommendations = useMemo(
     () => relaxedAvailability.recommendations.slice(0, TOP_RECOMMENDATION_COUNT),
     [relaxedAvailability.recommendations],
@@ -849,6 +876,21 @@ export function ResultsPageClient() {
 
         {!isLoading && relaxedAvailability.recommendations.length > 0 ? (
           <section className="mt-6 space-y-6">
+            <article className="rounded-3xl border border-[#d8dbe2] bg-[#f7f9fc] p-6 shadow-[0_12px_34px_-28px_rgba(36,49,72,0.45)]">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#44526b]">Recommendation Pipeline Debug</p>
+              <div className="mt-3 overflow-x-auto rounded-2xl border border-[#d5dbe6] bg-white">
+                <table className="min-w-full divide-y divide-[#e3e8f0] text-sm text-[#334155]">
+                  <tbody className="divide-y divide-[#eef2f7]">
+                    <tr><td className="px-4 py-3 font-medium">communities_loaded</td><td className="px-4 py-3">{relaxedAvailability.debug.communities_loaded}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium">exact_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.exact_matches}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium">soft_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.soft_matches}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium">fallback_matches</td><td className="px-4 py-3">{relaxedAvailability.debug.fallback_matches}</td></tr>
+                    <tr><td className="px-4 py-3 font-medium">rendered_results</td><td className="px-4 py-3">{relaxedAvailability.debug.rendered_results}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
             <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Recommendation Filter Audit</p>
               <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Hard constraints vs soft preferences</h2>
