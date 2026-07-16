@@ -64,24 +64,6 @@ type ExplanationTableRow = {
   label: string;
   evidence: string;
   score: number | string;
-  const strictBudget = strictBudgetRequested(context.notes);
-  const memoryNeedsMedical = context.memory.toLowerCase().includes("memory") || context.memory.toLowerCase().includes("significant");
-  const wheelchairIsHard = wheelchairMandatory(context.notes);
-  const safetyIsHard = criticalSafetyRequired(context.notes);
-
-  return [
-    { field: "Care level", value: context.care || "Not specified", classification: "HARD_CONSTRAINT", reason: "Clinical care compatibility is mandatory." },
-    { field: "Critical medical limitations", value: context.memory || "Not specified", classification: memoryNeedsMedical ? "HARD_CONSTRAINT" : "SOFT_PREFERENCE", reason: memoryNeedsMedical ? "Critical medical requirements must be satisfied." : "No critical medical limitation was marked mandatory." },
-    { field: "Critical safety requirements", value: safetyIsHard ? "Mandatory from notes" : "Not marked mandatory", classification: safetyIsHard || wheelchairIsHard ? "HARD_CONSTRAINT" : "SOFT_PREFERENCE", reason: safetyIsHard || wheelchairIsHard ? "Safety requirement explicitly marked as required." : "No critical safety requirement was marked mandatory." },
-    { field: "Maximum budget", value: `$${context.budget.toLocaleString()}`, classification: strictBudget ? "HARD_CONSTRAINT" : "SOFT_PREFERENCE", reason: strictBudget ? "User notes indicate strict budget cap." : "Budget treated as preference unless explicitly strict." },
-    { field: "Language", value: profile.languageProfile.preferredSpokenLanguage || "Not specified", classification: "SOFT_PREFERENCE", reason: "Strong preference, affects ranking only." },
-    { field: "Culture", value: profile.culturalProfile.whatFeelsLikeHome.join(", ") || profile.culturalProfile.religionImportance || "Not specified", classification: "SOFT_PREFERENCE", reason: "Strong preference for belonging and identity fit." },
-    { field: "Family proximity", value: context.distance || "Not specified", classification: "SOFT_PREFERENCE", reason: "Strong preference, affects engagement and visits." },
-    { field: "Continuum of care", value: profile.futureCareProfile.continuumOfCarePreference || "Not specified", classification: "SOFT_PREFERENCE", reason: "Strong preference for long-term transition fit." },
-    { field: "Hobbies / Activities", value: context.activity || "Not specified", classification: "SOFT_PREFERENCE", reason: "Nice-to-have quality-of-life preference." },
-    { field: "Facilities", value: "Derived from badges", classification: "SOFT_PREFERENCE", reason: "Nice-to-have amenities preference." },
-    { field: "Luxury", value: "Derived from badges", classification: "SOFT_PREFERENCE", reason: "Nice-to-have comfort preference." },
-  ];
 }
 
 function buildRelaxedRecommendations(
