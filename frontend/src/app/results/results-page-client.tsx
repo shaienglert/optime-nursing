@@ -93,7 +93,6 @@ export function ResultsPageClient() {
   const rankedFacilities = useMemo(
     () =>
       [...facilities]
-        .filter((facility) => facility.matching_confidence !== "LOW")
         .sort((left, right) => right.optimeScore - left.optimeScore || left.id - right.id),
     [facilities],
   );
