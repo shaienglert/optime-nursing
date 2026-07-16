@@ -1002,6 +1002,10 @@ export function ResultsPageClient() {
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
   const [savedIds, setSavedIds] = useState<number[]>([]);
   const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [dismissedFilters, setDismissedFilters] = useState<string[]>([]);
+
+  const searchKey = searchParams.toString();
+  const hasExplicitSearch = searchKey.length > 0;
 
   const selectedRelationship = searchParams.get("relationship") || state.relationship || "";
   const relationship = relationshipCopy(selectedRelationship);
@@ -1010,17 +1014,39 @@ export function ResultsPageClient() {
   const activity = (searchParams.get("activities") || state.happinessPreferences?.[0] || "Movies").split(",")[0];
   const memory = searchParams.get("memory") || state.memoryStatus || "Not sure";
   const budget = Number(searchParams.get("budget") || state.budget || 7000);
-  const distance = searchParams.get("distance") || state.distanceFromFamily || "Under 25 minutes";
   const notes = searchParams.get("notes") || state.notes || "";
   const textQuery = searchParams.get("q") || searchParams.get("search") || "";
 
-  const [filters, setFilters] = useState<string[]>([
-    `Age: ${age}`,
-    `Care: ${care}`,
-    `Activities: ${activity}`,
-    `Budget: $${budget.toLocaleString()}`,
-    `Distance: ${distance}`,
-  ]);
+  const hasRealAddresses = Boolean(
+    state.humanIntelligenceV2.distanceProfile.referenceLocations.parentCurrentHome ||
+    state.humanIntelligenceV2.distanceProfile.referenceLocations.primaryCaregiverHome ||
+    state.humanIntelligenceV2.distanceProfile.referenceLocations.secondaryFamilyHomes ||
+    state.humanIntelligenceV2.distanceProfile.referenceLocations.preferredHospital ||
+    state.humanIntelligenceV2.distanceProfile.referenceLocations.placeOfWorship ||
+    state.humanIntelligenceV2.distanceProfile.driveTimes.normal ||
+    state.humanIntelligenceV2.distanceProfile.driveTimes.rushHour ||
+    state.humanIntelligenceV2.distanceProfile.driveTimes.emergency,
+  );
+
+  const distance = hasRealAddresses
+    ? (searchParams.get("distance") || state.distanceFromFamily || "Under 25 minutes")
+    : "";
+
+  const visibleFilters = useMemo(() => {
+    const items: Array<{ label: string; disabled?: boolean }> = [];
+    if (!hasExplicitSearch || searchParams.get("age")) items.push({ label: `Age: ${age}` });
+    if (!hasExplicitSearch || searchParams.get("care")) items.push({ label: `Care: ${care}` });
+    if (!hasExplicitSearch || searchParams.get("activities")) items.push({ label: `Activities: ${activity}` });
+    if (!hasExplicitSearch || searchParams.get("budget")) items.push({ label: `Budget: $${budget.toLocaleString()}` });
+    items.push({ label: hasRealAddresses ? `Distance: ${distance || "Not specified"}` : "Distance: Not used", disabled: !hasRealAddresses });
+    return items;
+  }, [hasExplicitSearch, searchParams, age, care, activity, budget, distance, hasRealAddresses]);
+
+  useEffect(() => {
+    setDismissedFilters([]);
+  }, [searchKey, hasRealAddresses]);
+
+  const filters = visibleFilters.filter((filter) => !dismissedFilters.includes(filter.label));
 
   const rankedFacilities = useMemo(
     () =>
@@ -1039,9 +1065,44 @@ export function ResultsPageClient() {
         activity,
         distance,
         notes,
-        profile: state.humanIntelligenceV2,
+        profile: hasRealAddresses ? state.humanIntelligenceV2 : {
+          ...state.humanIntelligenceV2,
+          distanceProfile: {
+            ...state.humanIntelligenceV2.distanceProfile,
+            referenceLocations: {
+              parentCurrentHome: "",
+              primaryCaregiverHome: "",
+              secondaryFamilyHomes: "",
+              preferredHospital: "",
+              placeOfWorship: "",
+            },
+            driveTimes: { normal: "", rushHour: "", emergency: "" },
+            familyVisitExpectation: "",
+            familyGeographyModel: {
+              involvedFamilyMembers: "",
+              familyCenterOfGravity: "",
+              multiLocationOptimization: "",
+            },
+            emotionalDistanceFactors: {
+              emergencyAccessImportance: "",
+              spontaneousVisitsImportance: "",
+              grandchildrenVisitsImportance: "",
+            },
+            careLevelWeight: 0,
+            optimizationStrategy: "",
+            scores: {
+              family_distance_score: null,
+              visit_probability_score: null,
+              emergency_access_score: null,
+              grandchildren_access_score: null,
+              travel_burden_score: null,
+              family_engagement_score: null,
+            },
+            inferredConfidence: {},
+          },
+        },
       }),
-    [rankedFacilities, budget, care, memory, activity, distance, notes, state.humanIntelligenceV2],
+    [rankedFacilities, budget, care, memory, activity, distance, notes, state.humanIntelligenceV2, hasRealAddresses],
   );
 
   useEffect(() => {
@@ -1086,15 +1147,15 @@ export function ResultsPageClient() {
     const religion = profile.culturalProfile.religionImportance || "not specified";
     const hobbies = profile.socialProfile.hobbyParticipation.join(", ") || "not specified";
     const fear = profile.transitionRiskProfile.biggestFear || "not specified";
-    const proximity = profile.distanceProfile.familyVisitExpectation || distance;
+    const proximity = hasRealAddresses ? (profile.distanceProfile.familyVisitExpectation || distance || "not specified") : "not used yet";
     const scoreCard = profile.scoringEngine.outputScores;
     const culturalSignals = profile.scoringEngine.recommendationImpacts.slice(0, 3).join(" ") || "No additional high-impact cultural signals were detected.";
 
     return `${relationshipNarrative} profile shows ${age} age range, living alone for ${livingAlone}, with social rhythm ${social}. Preferred language is ${language}, religion importance is ${religion}, hobbies include ${hobbies}, and family proximity requirement is ${proximity}. Biggest transition fear is ${fear}. Loneliness risk appears ${lonelinessRisk}. Cultural intelligence outputs: language match ${scoreCard.language_fit_score}, religious fit ${scoreCard.religious_fit_score}, cultural fit ${scoreCard.cultural_fit_score}, food fit ${scoreCard.food_fit_score}, family engagement ${scoreCard.family_engagement_score}, community style ${scoreCard.community_style_score}. Recommendation impacts: ${culturalSignals}`;
-  }, [state.humanIntelligenceV2, relationship, age, distance]);
+  }, [state.humanIntelligenceV2, relationship, age, distance, hasRealAddresses]);
 
   const removeFilter = (value: string) => {
-    setFilters((current) => current.filter((item) => item !== value));
+    setDismissedFilters((current) => current.concat(value));
   };
 
   const toggleSaved = (id: number) => {
@@ -1143,12 +1204,17 @@ export function ResultsPageClient() {
           <div className="mt-5 flex flex-wrap gap-2">
             {filters.map((filter) => (
               <button
-                key={filter}
+                key={filter.label}
                 type="button"
-                onClick={() => removeFilter(filter)}
-                className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-3 py-1 text-sm text-[#534a3d] hover:bg-[#efe8db]"
+                onClick={() => removeFilter(filter.label)}
+                disabled={filter.disabled}
+                className={`rounded-full border px-3 py-1 text-sm ${
+                  filter.disabled
+                    ? "cursor-default border-[#d9d3c7] bg-[#f0ede6] text-[#8b8578]"
+                    : "border-[#d9cfbf] bg-[#f6f2ea] text-[#534a3d] hover:bg-[#efe8db]"
+                }`}
               >
-                {filter} x
+                {filter.label}{filter.disabled ? "" : " x"}
               </button>
             ))}
           </div>
