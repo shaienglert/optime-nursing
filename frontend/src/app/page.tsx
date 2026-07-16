@@ -192,6 +192,11 @@ const careLevelWeights: Record<string, number> = {
   "Skilled nursing care": 40,
 };
 
+function pickPrimaryAssistanceLevel(levels: string[]): string {
+  if (levels.length === 0) return "";
+  return [...levels].sort((left, right) => (careLevelWeights[right] || 0) - (careLevelWeights[left] || 0))[0];
+}
+
 type DistanceIntelligenceScores = {
   family_distance_score: number | null;
   visit_probability_score: number | null;
@@ -632,7 +637,7 @@ export default function Home() {
   const [gender, setGender] = useState("");
   const [coupleAssistance, setCoupleAssistance] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
-  const [assistanceLevel, setAssistanceLevel] = useState("");
+  const [assistanceLevels, setAssistanceLevels] = useState<string[]>([]);
   const [memoryStatus, setMemoryStatus] = useState("");
   const [happinessPreferences, setHappinessPreferences] = useState<string[]>([]);
   const [budget, setBudget] = useState(7000);
@@ -743,7 +748,8 @@ export default function Home() {
     socialInteractionNeed === "Much less social" ||
     socialInteractionNeed === "Somewhat less social" ||
     shouldAskLivingAloneFollowUps;
-  const shouldAskRecentHospitalizationFollowUps = recentHospitalization === "Yes" || assistanceLevel === "Skilled nursing care";
+  const primaryAssistanceLevel = useMemo(() => pickPrimaryAssistanceLevel(assistanceLevels), [assistanceLevels]);
+  const shouldAskRecentHospitalizationFollowUps = recentHospitalization === "Yes" || assistanceLevels.includes("Skilled nursing care");
   const isJewishBranch = faithTraditions.includes("Jewish");
   const isChristianBranch = faithTraditions.some((faith) => ["Catholic", "Protestant", "Orthodox Christian"].includes(faith));
   const isMuslimBranch = faithTraditions.includes("Muslim");
@@ -752,7 +758,7 @@ export default function Home() {
     const answeredSignals = [
       relationship,
       ageGroup,
-      assistanceLevel,
+      primaryAssistanceLevel,
       livingAloneDuration,
       socialInteractionFrequency,
       familyVisitExpectation || visitFrequencyExpectation,
@@ -778,7 +784,7 @@ export default function Home() {
   }, [
     relationship,
     ageGroup,
-    assistanceLevel,
+    primaryAssistanceLevel,
     livingAloneDuration,
     socialInteractionFrequency,
     familyVisitExpectation,
@@ -835,7 +841,7 @@ export default function Home() {
         spontaneousVisitsImportance,
         grandchildrenVisitsImportance,
       },
-      careLevelWeight: deriveCareLevelWeight(assistanceLevel, memoryStatus),
+      careLevelWeight: deriveCareLevelWeight(primaryAssistanceLevel, memoryStatus),
       optimizationStrategy,
       scores: {
         family_distance_score: null,
@@ -924,7 +930,7 @@ export default function Home() {
       gender,
       coupleAssistance,
       ageGroup,
-      assistanceLevel,
+      assistanceLevel: primaryAssistanceLevel,
       memoryStatus,
       happinessPreferences,
       budget,
@@ -1049,7 +1055,7 @@ export default function Home() {
             spontaneousVisitsImportance,
             grandchildrenVisitsImportance,
           },
-          careLevelWeight: deriveCareLevelWeight(assistanceLevel, memoryStatus),
+          careLevelWeight: deriveCareLevelWeight(primaryAssistanceLevel, memoryStatus),
           optimizationStrategy,
           scores: distanceIntelligence.scores,
           inferredConfidence: distanceIntelligence.inferredConfidence,
@@ -1095,7 +1101,7 @@ export default function Home() {
     if (gender) params.set("gender", gender);
     if (coupleAssistance) params.set("coupleAssistance", coupleAssistance);
     if (ageGroup) params.set("age", ageGroup);
-    if (assistanceLevel) params.set("care", assistanceLevel);
+    if (primaryAssistanceLevel) params.set("care", primaryAssistanceLevel);
     if (memoryStatus) params.set("memory", memoryStatus);
     if (happinessPreferences.length > 0) params.set("activities", happinessPreferences.join(","));
     params.set("budget", String(budget));
@@ -1191,6 +1197,7 @@ export default function Home() {
         halalMealsRequirement,
         prayerFacilityRequirement,
         preferredSpokenLanguage,
+        assistanceLevels,
         memoryStatus,
         nativeLanguage,
         socialInteractionLanguage,
@@ -1315,9 +1322,15 @@ export default function Home() {
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
               <h3 className="text-lg font-semibold text-[#2f2a24]">3. How much daily assistance is needed?</h3>
+              <p className="mt-1 text-sm text-[#6c6358]">Select all that apply.</p>
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {assistanceOptions.map((option) => (
-                  <OptionChip key={option} label={option} isActive={assistanceLevel === option} onClick={() => setAssistanceLevel(option)} />
+                  <OptionChip
+                    key={option}
+                    label={option}
+                    isActive={assistanceLevels.includes(option)}
+                    onClick={() => setAssistanceLevels((current) => toggleOption(current, option))}
+                  />
                 ))}
               </div>
             </article>
