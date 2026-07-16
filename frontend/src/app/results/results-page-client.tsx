@@ -180,6 +180,7 @@ type ExplainableFinalScore = {
   preferenceWeight: number;
   weightedBase: number;
   weightedPreferences: number;
+  softPenalty: number;
   hardPenalty: number;
   finalScore: number;
 };
@@ -500,8 +501,13 @@ function buildRelaxedRecommendations(
         };
       });
       const softScore = softRows.reduce((acc, row) => acc + row.weightedScore, 0);
+      const softPenalty = softRows.reduce((acc, row) => {
+        if (row.score >= 70) return acc;
+        const gapPenalty = ((70 - row.score) / 100) * row.normalizedWeight * 100 * SOFT_WEIGHT;
+        return acc + gapPenalty;
+      }, 0);
       const hardPenalty = Math.min(25, hardFailures.length * 8);
-      const combined = Math.max(0, Math.round(baseScore * BASE_WEIGHT + softScore * SOFT_WEIGHT - hardPenalty));
+      const combined = Math.max(0, Math.round(baseScore * BASE_WEIGHT + softScore * SOFT_WEIGHT - softPenalty - hardPenalty));
 
       const positiveContributors: ExplainableContributor[] = softRows
         .filter((row) => row.score >= 70)
@@ -522,7 +528,7 @@ function buildRelaxedRecommendations(
           category: row.preference.category,
           score: Math.round(row.score),
           weight: row.preference.weight,
-          contribution: Number(row.contributionToFinal.toFixed(2)),
+          contribution: Number(((((70 - row.score) / 100) * row.normalizedWeight * 100 * SOFT_WEIGHT) * -1).toFixed(2)),
           reason: row.preference.rejectionReason(facility) || row.preference.relaxedRequirement,
           kind: "negative",
         }));
@@ -602,6 +608,7 @@ function buildRelaxedRecommendations(
         preferenceWeight: SOFT_WEIGHT,
         weightedBase: Number((baseScore * BASE_WEIGHT).toFixed(2)),
         weightedPreferences: Number((softScore * SOFT_WEIGHT).toFixed(2)),
+        softPenalty: Number(softPenalty.toFixed(2)),
         hardPenalty,
         finalScore: combined,
       };
@@ -1490,11 +1497,12 @@ export function ResultsPageClient() {
                               <tr><td className="px-4 py-3 font-medium">Base score</td><td className="px-4 py-3">{explainable.finalScore.baseScore}</td><td className="px-4 py-3 font-medium">Base weight</td><td className="px-4 py-3">{explainable.finalScore.baseWeight}</td></tr>
                               <tr><td className="px-4 py-3 font-medium">Preference aggregate</td><td className="px-4 py-3">{explainable.finalScore.preferenceAggregate}</td><td className="px-4 py-3 font-medium">Preference weight</td><td className="px-4 py-3">{explainable.finalScore.preferenceWeight}</td></tr>
                               <tr><td className="px-4 py-3 font-medium">Weighted base</td><td className="px-4 py-3">{explainable.finalScore.weightedBase}</td><td className="px-4 py-3 font-medium">Weighted preferences</td><td className="px-4 py-3">{explainable.finalScore.weightedPreferences}</td></tr>
-                              <tr><td className="px-4 py-3 font-medium">Hard penalty</td><td className="px-4 py-3">-{explainable.finalScore.hardPenalty}</td><td className="px-4 py-3 font-medium">Final score</td><td className="px-4 py-3">{explainable.finalScore.finalScore}</td></tr>
+                              <tr><td className="px-4 py-3 font-medium">Soft penalties</td><td className="px-4 py-3">-{explainable.finalScore.softPenalty}</td><td className="px-4 py-3 font-medium">Hard penalty</td><td className="px-4 py-3">-{explainable.finalScore.hardPenalty}</td></tr>
+                              <tr><td className="px-4 py-3 font-medium">Final score</td><td className="px-4 py-3">{explainable.finalScore.finalScore}</td><td className="px-4 py-3" colSpan={2}></td></tr>
                             </tbody>
                           </table>
                         </div>
-                        <p className="px-4 py-3 text-xs text-[#6a655b]">Formula: final = (base_score x base_weight) + (preference_aggregate x preference_weight) - hard_penalty.</p>
+                        <p className="px-4 py-3 text-xs text-[#6a655b]">Formula: final = (base_score x base_weight) + (preference_aggregate x preference_weight) - soft_penalties - hard_penalty.</p>
                       </div>
 
                       <div className="mt-4 rounded-2xl border border-[#f0e4da] bg-[#fffaf7] p-4">
