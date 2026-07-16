@@ -941,6 +941,9 @@ function buildIntelligenceReport(
     },
   };
 
+  const positiveContributors = buildContributorRows(contributions, totalScore, "Weighted person-fit formula", true).slice(0, 4);
+  const negativeContributors = buildContributorRows(contributions, totalScore, "Lower weighted fit dimensions", false).slice(0, 3);
+
   return {
     finalMatchScore: Math.round(totalScore),
     confidenceScore: adjustedConfidence,
@@ -1074,6 +1077,32 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     const confidenceMatched = signalRoles.filter((signal) => signal.role !== "missing information analysis").length;
     const confidenceTotal = signalRoles.length || 1;
     const confidencePercent = Math.round((confidenceMatched / confidenceTotal) * 100);
+    const report: IntelligenceScoringReport = {
+      finalMatchScore: Math.round(totalScore),
+      confidenceScore: confidencePercent,
+      rankingPosition: null,
+      rankingExplanation: "",
+      scoreBreakdown: [],
+      positiveContributors: [],
+      negativeContributors: [],
+      intelligenceSourcesUsed: buildIntelligenceSourcesUsed(facility),
+      missingIntelligence: [],
+      humanNarrativeExplanation: "",
+      scoreTraceability: [],
+      audit: {
+        executedFormula: "final_score = careFit*0.28 + lifestyleFit*0.18 + socialFit*0.15 + culturalFit*0.12 + familyFit*0.10 + financialFit*0.08 + clinicalQuality*0.06 + luxuryAmenities*0.03",
+        finalScore: Math.round(totalScore),
+        categoryRows: [],
+        bonuses: [],
+        penalties: [],
+        confidence: {
+          confidenceScore: confidencePercent,
+          missingDataImpact: "",
+          sourceCoverage: "",
+          lastIntelligenceRefresh: new Date().toISOString(),
+        },
+      },
+    };
 
     return {
       facility,
@@ -1090,19 +1119,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       missingInformation: buildMissingInformation(state, signalRoles),
       hardRejectionReasons,
       contributionHighlights: contributions,
-      report: {
-        finalMatchScore: Math.round(totalScore),
-        confidenceScore: confidencePercent,
-        rankingPosition: null,
-        rankingExplanation: "",
-        scoreBreakdown: [],
-        positiveContributors: [],
-        negativeContributors: [],
-        intelligenceSourcesUsed: buildIntelligenceSourcesUsed(facility),
-        missingIntelligence: [],
-        humanNarrativeExplanation: "",
-        scoreTraceability: [],
-      },
+      report,
     };
   });
 
@@ -1130,7 +1147,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       item.priorityScores,
       item.contributionHighlights,
       item.totalScore,
-    confidencePercent,
+      item.report.confidenceScore,
       accepted,
       index,
       item.missingInformation,
