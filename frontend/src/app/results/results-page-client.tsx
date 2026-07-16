@@ -138,6 +138,11 @@ type RecommendationPipelineDebug = {
   rendered_results: number;
 };
 
+type ExactMatchAuditRow = {
+  community_name: string;
+  rejection_reason: string;
+};
+
 type RelaxationContext = {
   budget: number;
   care: string;
@@ -219,7 +224,13 @@ function buildConstraintAudit(context: RelaxationContext): ConstraintAuditRow[] 
 function buildRelaxedRecommendations(
   facilities: SearchFacility[],
   context: RelaxationContext,
-): { recommendations: SearchFacility[]; relaxations: RelaxationNotice[]; constraintAudit: ConstraintAuditRow[]; debug: RecommendationPipelineDebug } {
+): {
+  recommendations: SearchFacility[];
+  relaxations: RelaxationNotice[];
+  constraintAudit: ConstraintAuditRow[];
+  debug: RecommendationPipelineDebug;
+  exactMatchAudit: ExactMatchAuditRow[];
+} {
   const baseFacilities = facilities.filter((facility) => facility.matching_confidence !== "LOW");
   const profile = context.profile;
   const notesLower = context.notes.toLowerCase();
@@ -231,19 +242,31 @@ function buildRelaxedRecommendations(
   const sizePreference = profile.personalityProfile.communitySizePreference;
   const religionImportant = ["Important", "Very important"].includes(profile.culturalProfile.religionImportance);
   const wantsJewishSetting = profile.culturalProfile.israeliJewishCommunityPreference === "Yes" || notesLower.includes("jewish");
-  const hardFiltered = baseFacilities.filter((facility) => {
+  const hardConstraintFailures = (facility: SearchFacility): string[] => {
+    const failures: string[] = [];
     const price = midpointPrice(facility.priceRange);
-    const budgetMatch = strictBudget ? (price === null ? true : price <= context.budget) : true;
-    const careMatch = careAlignmentScore(facility, context.care) >= 80;
-    const medicalMatch = memoryNeedsMedical
-      ? facility.careTypes.some((item) => item.toLowerCase().includes("memory"))
-      : true;
-    const geographyMatch = facility.state === "FL";
-    const wheelchairMatch = requiresWheelchair
-      ? hasBadgeMatch(facility, [/wheelchair/i, /accessible/i, /accessibility/i, /ada/i, /mobility/i])
-      : true;
-    return medicalMatch && budgetMatch && careMatch && geographyMatch && wheelchairMatch;
-  });
+    const careScore = careAlignmentScore(facility, context.care);
+
+    if (careScore < 80) {
+      failures.push(`care level mismatch (${context.care})`);
+    }
+    if (facility.state !== "FL") {
+      failures.push("state mismatch");
+    }
+    if (memoryNeedsMedical && !facility.careTypes.some((item) => item.toLowerCase().includes("memory"))) {
+      failures.push("missing memory care support");
+    }
+    if (strictBudget && price !== null && price > context.budget) {
+      failures.push(`budget exceeds by $${Math.max(0, Math.round(price - context.budget)).toLocaleString()}`);
+    }
+    if (requiresWheelchair && !hasBadgeMatch(facility, [/wheelchair/i, /accessible/i, /accessibility/i, /ada/i, /mobility/i])) {
+      failures.push("wheelchair accessibility not verified");
+    }
+
+    return failures;
+  };
+
+  const hardFiltered = baseFacilities.filter((facility) => hardConstraintFailures(facility).length === 0);
 
   const candidates = hardFiltered.length > 0 ? hardFiltered : baseFacilities;
 
@@ -254,6 +277,7 @@ function buildRelaxedRecommendations(
     enabled: boolean;
     weight: number;
     score: (facility: SearchFacility) => number;
+    rejectionReason: (facility: SearchFacility) => string;
   }> = [
     {
       key: "activities",
@@ -269,6 +293,19 @@ function buildRelaxedRecommendations(
         if (normalized.includes("music")) return hasBadgeMatch(facility, [/active/i, /program/i]) ? 85 : 45;
         return 55;
       },
+      rejectionReason: (facility) => {
+        const normalized = context.activity.toLowerCase();
+        if (normalized.includes("movie")) {
+          return hasBadgeMatch(facility, [/movie/i, /cinema/i, /film/i]) ? "" : "no movie activity";
+        }
+        if (normalized.includes("music")) {
+          return hasBadgeMatch(facility, [/music/i, /program/i]) ? "" : "no music activity signal";
+        }
+        if (normalized.includes("social")) {
+          return hasBadgeMatch(facility, [/social/i, /active/i]) ? "" : "no social activity signal";
+        }
+        return "activity preference not fully matched";
+      },
     },
     {
       key: "language",
@@ -280,6 +317,7 @@ function buildRelaxedRecommendations(
         if (!languagePreference || languagePreference === "English") return 60;
         return hasBadgeMatch(facility, [new RegExp(languagePreference, "i")]) ? 100 : 30;
       },
+      rejectionReason: () => `${languagePreference} language support not verified`,
     },
     {
       key: "religion",
@@ -291,6 +329,7 @@ function buildRelaxedRecommendations(
         if (!religionImportant && !wantsJewishSetting) return 60;
         return hasBadgeMatch(facility, [/jewish/i, /religious/i, /faith/i, /synagogue/i, /kosher/i, /hebrew/i]) ? 100 : 25;
       },
+      rejectionReason: () => "religious support not verified",
     },
     {
       key: "community-size",
@@ -306,6 +345,7 @@ function buildRelaxedRecommendations(
         if (sizePreference === "Large community") return bucket === "large" ? 100 : 45;
         return 55;
       },
+      rejectionReason: () => `community size not aligned (${sizePreference})`,
     },
     {
       key: "distance",
@@ -314,6 +354,7 @@ function buildRelaxedRecommendations(
       enabled: Boolean(context.distance),
       weight: 9,
       score: (facility) => hasBadgeMatch(facility, [/close to family/i, /family/i, /distance/i]) ? 90 : 45,
+      rejectionReason: () => "drive time preference not supported",
     },
     {
       key: "food",
@@ -327,6 +368,7 @@ function buildRelaxedRecommendations(
         const matched = foodTerms.some((term) => hasBadgeMatch(facility, [new RegExp(term, "i")]));
         return matched ? 95 : 40;
       },
+      rejectionReason: () => "dietary preference not verified",
     },
     {
       key: "cultural",
@@ -340,6 +382,7 @@ function buildRelaxedRecommendations(
         const matched = terms.some((term) => hasBadgeMatch(facility, [new RegExp(term.split(" ")[0], "i")]));
         return matched ? 92 : 42;
       },
+      rejectionReason: () => "cultural preference not fully matched",
     },
     {
       key: "budget",
@@ -354,6 +397,11 @@ function buildRelaxedRecommendations(
         if (price <= context.budget * 1.2) return 70;
         if (price <= context.budget * 1.35) return 50;
         return 20;
+      },
+      rejectionReason: (facility) => {
+        const price = midpointPrice(facility.priceRange);
+        if (price === null || price <= context.budget) return "";
+        return `budget exceeds by $${Math.round(price - context.budget).toLocaleString()}`;
       },
     },
   ];
@@ -394,9 +442,26 @@ function buildRelaxedRecommendations(
     });
   }
 
-  const exactMatches = hardFiltered.filter((facility) =>
-    enabledSoft.every((preference) => preference.score(facility) >= 70),
-  ).length;
+  const exactMatchAudit: ExactMatchAuditRow[] = [];
+  const exactMatches = candidates.filter((facility) => {
+    const reasons: string[] = [];
+    const hardFailures = hardConstraintFailures(facility);
+    const softFailures = enabledSoft
+      .filter((preference) => preference.score(facility) < 70)
+      .map((preference) => preference.rejectionReason(facility) || preference.relaxedRequirement)
+      .filter(Boolean);
+
+    reasons.push(...hardFailures, ...softFailures);
+    if (reasons.length > 0) {
+      exactMatchAudit.push({
+        community_name: facility.name,
+        rejection_reason: reasons.join("; "),
+      });
+      return false;
+    }
+
+    return true;
+  }).length;
   const softMatches = hardFiltered.length;
   const fallbackMatches = exactMatches === 0 ? recommendations.length : 0;
 
@@ -408,7 +473,7 @@ function buildRelaxedRecommendations(
     rendered_results: recommendations.length,
   };
 
-  return { recommendations, relaxations, constraintAudit: auditRows, debug };
+  return { recommendations, relaxations, constraintAudit: auditRows, debug, exactMatchAudit };
 }
 
 function buildResidentProfileSummary(
@@ -922,6 +987,31 @@ export function ResultsPageClient() {
                 </table>
               </div>
             </article>
+
+            {relaxedAvailability.exactMatchAudit.length > 0 ? (
+              <article className="rounded-3xl border border-[#e8ddcc] bg-[#fffdfa] p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8c5c40]">Exact Match Audit</p>
+                <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Rejected communities and reasons</h2>
+                <div className="mt-4 overflow-x-auto rounded-2xl border border-[#e7dbc6] bg-white">
+                  <table className="min-w-full divide-y divide-[#eadfce] text-sm text-[#564d42]">
+                    <thead className="bg-[#f5efe4] text-left text-xs uppercase tracking-[0.14em] text-[#7a6f63]">
+                      <tr>
+                        <th className="px-4 py-3">community_name</th>
+                        <th className="px-4 py-3">rejection_reason</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#efe6d8]">
+                      {relaxedAvailability.exactMatchAudit.slice(0, 100).map((row) => (
+                        <tr key={`${row.community_name}-${row.rejection_reason}`}>
+                          <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.community_name}</td>
+                          <td className="px-4 py-3">{row.rejection_reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            ) : null}
 
             {relaxedAvailability.relaxations.length > 0 ? (
               <article className="rounded-3xl border border-[#e8ddcc] bg-[#fffaf2] p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
