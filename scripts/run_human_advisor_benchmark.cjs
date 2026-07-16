@@ -363,7 +363,7 @@ function buildAdvisorTop5(engineOutput, advisorProfile) {
   const rescored = pool.map((item) => ({
     item,
     advisorScore:
-      item.totalScore * 1.2 +
+      item.totalScore * 4 +
       advisorPriorityBonuses(item.priorityScores, advisorProfile.priorities) +
       advisorCareTypeAdjustment(item.facility.careTypes, advisorProfile.preferredCareTypes, advisorProfile.excludedCareTypes),
   }));
