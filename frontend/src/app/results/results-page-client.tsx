@@ -1048,6 +1048,11 @@ export function ResultsPageClient() {
 
         {!isLoading && relaxedAvailability.recommendations.length > 0 ? (
           <section className="mt-6 space-y-6">
+            <details className="rounded-3xl border border-[#d9decb] bg-[#f8fbf1] p-4 shadow-[0_12px_34px_-28px_rgba(54,84,32,0.35)]">
+              <summary className="cursor-pointer list-none text-sm font-semibold uppercase tracking-[0.16em] text-[#5c7340]">
+                Show recommendation diagnostics
+              </summary>
+              <div className="mt-4 space-y-6">
             <article className="rounded-3xl border border-[#d9decb] bg-[#f8fbf1] p-6 shadow-[0_12px_34px_-28px_rgba(54,84,32,0.35)]">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5c7340]">Signal Classification Engine V1</p>
               <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Preference signal categories</h2>
@@ -1585,6 +1590,8 @@ export function ResultsPageClient() {
                 </div>
               );
               })}
+              </div>
+            </details>
             </div>
 
             {remainingRecommendations.length > 0 ? (
