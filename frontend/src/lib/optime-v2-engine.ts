@@ -439,45 +439,73 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
   const assistance = state.assistanceLevel;
   const memory = state.memoryStatus;
   const careText = facility.careTypes.join(" ").toLowerCase();
+  const probabilities = facility.careTypeProbabilities;
+  const independentProbability = probabilities["Independent Living"];
+  const activeAdultProbability = probabilities["Active Adult 55+"];
+  const assistedLivingProbability = probabilities["Assisted Living"];
+  const memoryCareProbability = probabilities["Memory Care"];
+  const skilledNursingProbability = probabilities["Skilled Nursing"];
+  const rehabilitationProbability = probabilities.Rehabilitation;
+  const ccrcProbability = probabilities.CCRC;
+  const continuingCareProbability = probabilities["Continuing Care"];
+  const hospiceProbability = probabilities.Hospice;
+  const unknownProbability = probabilities.UNKNOWN;
 
   if (assistance === "Fully independent") {
-    let independentScore = facility.careTypes.includes("UNKNOWN") ? 35 : 45;
-    if (careText.includes("independent")) independentScore += 50;
-    if (careText.includes("active adult")) independentScore += 40;
-    if (careText.includes("ccrc")) independentScore += 28;
-    if (careText.includes("continuing care")) independentScore += 24;
-    if (careText.includes("assisted living")) independentScore -= 20;
-    if (careText.includes("memory care")) independentScore -= 60;
-    if (careText.includes("skilled nursing")) independentScore -= 80;
-    if (careText.includes("rehabilitation")) independentScore -= 70;
-    if (careText.includes("hospice")) independentScore -= 90;
+    let independentScore = 15;
+    independentScore += independentProbability * 95;
+    independentScore += activeAdultProbability * 90;
+    independentScore += ccrcProbability * 76;
+    independentScore += continuingCareProbability * 70;
+    independentScore += assistedLivingProbability * 40;
+    independentScore -= skilledNursingProbability * 40;
+    independentScore -= rehabilitationProbability * 35;
+    independentScore -= memoryCareProbability * 20;
+    independentScore -= unknownProbability * 15;
+    independentScore -= hospiceProbability * 50;
+    if (careText.includes("independent")) independentScore += 8;
+    if (careText.includes("active adult")) independentScore += 6;
     return clamp(independentScore);
   }
 
   if (assistance === "Skilled nursing care") {
-    let score = 35;
-    if (careText.includes("skilled nursing")) score += 50;
-    if (careText.includes("rehabilitation")) score += 30;
-    if (careText.includes("memory care")) score += 10;
-    if (careText.includes("independent")) score -= 30;
+    let score = 12;
+    score += skilledNursingProbability * 85;
+    score += rehabilitationProbability * 70;
+    score += memoryCareProbability * 10;
+    score += assistedLivingProbability * 8;
+    score -= independentProbability * 30;
+    score -= activeAdultProbability * 25;
     return clamp(score);
   }
 
   if (memory === "Significant memory issues") {
-    let score = 30;
-    if (careText.includes("memory care")) score += 55;
-    if (careText.includes("skilled nursing")) score += 15;
-    if (careText.includes("assisted living")) score += 12;
-    if (!careText.includes("memory")) score -= 35;
+    let score = 10;
+    score += memoryCareProbability * 95;
+    score += assistedLivingProbability * 50;
+    score += skilledNursingProbability * 25;
+    score -= independentProbability * 25;
+    score -= activeAdultProbability * 20;
+    if (!careText.includes("memory")) score -= 15;
     return clamp(score);
   }
 
-  let score = facility.careTypes.includes("UNKNOWN") ? 45 : 55;
-  if (careText.includes("assisted living")) score += 20;
-  if (careText.includes("memory care") && memory === "Mild memory issues") score += 18;
-  if (careText.includes("continuing care")) score += 12;
-  if (careText.includes("ccrc")) score += 10;
-  if (careText.includes("skilled nursing") && assistance !== "24/7 support required") score -= 10;
+  let score = 18;
+  score += assistedLivingProbability * 58;
+  score += memoryCareProbability * (memory === "Mild memory issues" || memory === "Occasionally forgetful" ? 30 : 8);
+  score += skilledNursingProbability * (memory === "Mild memory issues" || memory === "Occasionally forgetful" ? 5 : 10);
+  score += continuingCareProbability * 18;
+  score += ccrcProbability * 14;
+  score -= independentProbability * 10;
+  score -= activeAdultProbability * 10;
+  score -= unknownProbability * 12;
+
+  if (memory === "Mild memory issues" || memory === "Occasionally forgetful") {
+    score += memoryCareProbability * 30;
+    score += assistedLivingProbability * 15;
+    score += skilledNursingProbability * 5;
+  }
+
   return clamp(score);
 }
 

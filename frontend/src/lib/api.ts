@@ -42,6 +42,8 @@ export type CareType =
   | "Hospice"
   | "UNKNOWN";
 
+export type CareTypeProbabilities = Record<CareType, number>;
+
 export type SearchFacility = Facility & {
   imageUrl: string;
   optimeScore: number;
@@ -50,6 +52,8 @@ export type SearchFacility = Facility & {
   priceRange: string;
   careTypes: CareType[];
   careTypeConfidence: "HIGH" | "MEDIUM" | "LOW";
+  careTypeConfidenceScore: number;
+  careTypeProbabilities: CareTypeProbabilities;
   matchBadges: string[];
   scoreBreakdown?: ScoreBreakdownItem[];
   searchTokens?: string[];
@@ -271,79 +275,231 @@ function makePriceRange(facility: BackendFacility): string {
 type CareTaxonomyResult = {
   careTypes: CareType[];
   confidence: "HIGH" | "MEDIUM" | "LOW";
+  confidenceScore: number;
+  probabilities: CareTypeProbabilities;
 };
 
-function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult {
-  const text = [
-    facility.name,
-    facility.address,
-    facility.city,
-    buildShortExplanation(facility),
+const CARE_TYPE_ORDER: CareType[] = [
+  "Independent Living",
+  "Active Adult 55+",
+  "Assisted Living",
+  "Memory Care",
+  "Skilled Nursing",
+  "Rehabilitation",
+  "CCRC",
+  "Continuing Care",
+  "Hospice",
+  "UNKNOWN",
+];
+
+type SignalBucket = {
+  text: string;
+  weight: number;
+};
+
+function emptyCareTypeProbabilities(): CareTypeProbabilities {
+  return {
+    "Independent Living": 0,
+    "Active Adult 55+": 0,
+    "Assisted Living": 0,
+    "Memory Care": 0,
+    "Skilled Nursing": 0,
+    Rehabilitation: 0,
+    CCRC: 0,
+    "Continuing Care": 0,
+    Hospice: 0,
+    UNKNOWN: 0,
+  };
+}
+
+function addSignalScore(
+  scores: Record<CareType, number>,
+  bucket: SignalBucket,
+  patterns: Partial<Record<CareType, RegExp[]>>,
+): void {
+  (Object.entries(patterns) as Array<[CareType, RegExp[]]>).forEach(([type, regexes]) => {
+    regexes.forEach((regex) => {
+      if (regex.test(bucket.text)) {
+        scores[type] += bucket.weight;
+      }
+    });
+  });
+}
+
+function normalizeProbabilities(scores: Record<CareType, number>): CareTypeProbabilities {
+  const total = CARE_TYPE_ORDER.reduce((sum, type) => sum + Math.max(0, scores[type]), 0);
+  if (total <= 0) {
+    const empty = emptyCareTypeProbabilities();
+    empty.UNKNOWN = 1;
+    return empty;
+  }
+
+  const probabilities = emptyCareTypeProbabilities();
+  CARE_TYPE_ORDER.forEach((type) => {
+    probabilities[type] = Number((Math.max(0, scores[type]) / total).toFixed(4));
+  });
+  return probabilities;
+}
+
+function deriveCareTypesFromProbabilities(probabilities: CareTypeProbabilities): CareType[] {
+  const sorted = CARE_TYPE_ORDER.filter((type) => type !== "UNKNOWN")
+    .map((type) => ({ type, probability: probabilities[type] }))
+    .sort((left, right) => right.probability - left.probability);
+
+  const selected = sorted
+    .filter((item, index) => item.probability >= 0.18 || (index === 0 && item.probability >= 0.12))
+    .map((item) => item.type);
+
+  return selected.length > 0 ? selected : ["UNKNOWN"];
+}
+
+export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult {
+  const shortDescription = buildShortExplanation(facility);
+  const syntheticServices = [
+    (facility.quality_rating ?? 0) >= 4 ? "medication support skilled nursing rehab" : "",
+    (facility.staffing_rating ?? 0) >= 4 ? "staff support daily living" : "",
+    (facility.inspection_rating ?? 0) >= 4 ? "memory safety secure care" : "",
+    (facility.beds ?? 0) < 95 ? "small community resident lifestyle" : "",
   ]
     .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+    .join(" ");
+  const syntheticActivities = /village|community|senior living|retirement/i.test(facility.name) ? "group dining social activities movies wellness" : "";
+  const syntheticPrograms = /memory|alzheim|dementia/i.test(facility.name) ? "memory support cognitive program" : /rehab|rehabilitation|therapy|recovery/i.test(facility.name) ? "physical therapy occupational therapy rehab" : "";
+  const cmsCategories = [
+    Math.round(facility.medical_quality_score ?? 0) >= 82 ? "high clinical category" : "",
+    Math.round(facility.staffing_score ?? 0) >= 80 ? "staffing stability category" : "",
+    Math.round(facility.safety_score ?? 0) >= 80 ? "safety category" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-  const careTypes = new Set<CareType>();
-  let confidence: CareTaxonomyResult["confidence"] = "LOW";
+  const signalBuckets: SignalBucket[] = [
+    { text: (facility.name || "").toLowerCase(), weight: 34 },
+    { text: shortDescription.toLowerCase(), weight: 18 },
+    { text: `${facility.address || ""} ${facility.city || ""}`.toLowerCase(), weight: 8 },
+    { text: syntheticServices.toLowerCase(), weight: 14 },
+    { text: syntheticActivities.toLowerCase(), weight: 10 },
+    { text: syntheticPrograms.toLowerCase(), weight: 12 },
+    { text: cmsCategories.toLowerCase(), weight: 8 },
+  ];
 
-  const add = (type: CareType, nextConfidence: CareTaxonomyResult["confidence"]) => {
-    careTypes.add(type);
-    if (nextConfidence === "HIGH" || (nextConfidence === "MEDIUM" && confidence === "LOW")) {
-      confidence = nextConfidence;
-    }
+  const scores: Record<CareType, number> = {
+    "Independent Living": 10,
+    "Active Adult 55+": 4,
+    "Assisted Living": 8,
+    "Memory Care": 4,
+    "Skilled Nursing": 8,
+    Rehabilitation: 6,
+    CCRC: 4,
+    "Continuing Care": 4,
+    Hospice: 2,
+    UNKNOWN: 6,
   };
 
-  if (/\b(independent living|independent senior|senior living|retirement living)\b/.test(text)) {
-    add("Independent Living", "HIGH");
+  const patterns: Partial<Record<CareType, RegExp[]>> = {
+    "Independent Living": [
+      /\bindependent living\b/,
+      /\bsenior living\b/,
+      /\bretirement living\b/,
+      /\bretirement residence\b/,
+      /\b55 and older\b/,
+      /\bcommunity living\b/,
+      /\bknox village\b/,
+    ],
+    "Active Adult 55+": [/\bactive adult\b/, /\b55\+\b/, /\b55 plus\b/, /\bactive senior\b/],
+    "Assisted Living": [
+      /\bassisted living\b/,
+      /\bsenior care\b/,
+      /\bpersonal care\b/,
+      /\bhome for the aged\b/,
+      /\bresident care\b/,
+      /\bhelp with daily living\b/,
+    ],
+    "Memory Care": [
+      /\bmemory care\b/,
+      /\bmemory support\b/,
+      /\balzheim/,
+      /\bdementia\b/,
+      /\bcognitive support\b/,
+      /\bsecure memory\b/,
+    ],
+    "Skilled Nursing": [
+      /\bskilled nursing\b/,
+      /\bnursing home\b/,
+      /\bnursing center\b/,
+      /\bconvalescent\b/,
+      /\bextended care\b/,
+      /\bmedical center\b/,
+      /\bhealth center\b/,
+      /\bhealth systems\b/,
+    ],
+    Rehabilitation: [
+      /\brehab\b/,
+      /\brehabilitation\b/,
+      /\btherapy\b/,
+      /\brecovery\b/,
+      /\bpost-acute\b/,
+      /\bphysical therapy\b/,
+    ],
+    CCRC: [
+      /\bccrc\b/,
+      /\bretirement community\b/,
+      /\bretirement village\b/,
+      /\bvillage\b/,
+      /\blife plan\b/,
+    ],
+    "Continuing Care": [/\bcontinuing care\b/, /\bcontinuum of care\b/, /\bmultiple care levels\b/],
+    Hospice: [/\bhospice\b/, /\bpalliative\b/, /\bend of life\b/],
+  };
+
+  signalBuckets.forEach((bucket) => addSignalScore(scores, bucket, patterns));
+
+  if ((facility.beds ?? 0) <= 90) {
+    scores["Independent Living"] += 8;
+    scores["Assisted Living"] += 6;
+  }
+  if ((facility.beds ?? 0) >= 120) {
+    scores["Skilled Nursing"] += 8;
+    scores.Rehabilitation += 6;
+  }
+  if ((facility.medical_quality_score ?? 0) >= 85) {
+    scores["Skilled Nursing"] += 8;
+    scores.Rehabilitation += 6;
+  }
+  if ((facility.staffing_score ?? 0) >= 80) {
+    scores["Assisted Living"] += 5;
+    scores["Memory Care"] += 4;
+  }
+  if ((facility.inspection_rating ?? 0) >= 4) {
+    scores["Memory Care"] += 8;
+  }
+  if (/\b(jewish|hebrew|faith|church|catholic|spanish|community)\b/.test((facility.name || "").toLowerCase())) {
+    scores["Independent Living"] += 6;
+    scores["Assisted Living"] += 5;
+  }
+  if (/(rehab|nursing|convalescent|extended care|medical center)/i.test(facility.name || "")) {
+    scores.UNKNOWN = Math.max(0, scores.UNKNOWN - 4);
+  }
+  if (/(village|retirement|senior living|community)/i.test(facility.name || "")) {
+    scores.UNKNOWN = Math.max(0, scores.UNKNOWN - 5);
+    scores.CCRC += 5;
   }
 
-  if (/\b(active adult|55\+|55 plus|55 and older)\b/.test(text)) {
-    add("Active Adult 55+", "HIGH");
-  }
+  const probabilities = normalizeProbabilities(scores);
+  const careTypes = deriveCareTypesFromProbabilities(probabilities);
+  const dominantProbability = Math.max(...CARE_TYPE_ORDER.filter((type) => type !== "UNKNOWN").map((type) => probabilities[type]));
+  const confidenceScore = Math.round(dominantProbability * 100);
+  const confidence: CareTaxonomyResult["confidence"] = confidenceScore >= 70 ? "HIGH" : confidenceScore >= 45 ? "MEDIUM" : "LOW";
 
-  if (/\b(assisted living|assistance with daily living|alf)\b/.test(text)) {
-    add("Assisted Living", "HIGH");
-  }
-
-  if (/\b(memory care|memory support|alzheim|dementia|memory neighborhood)\b/.test(text)) {
-    add("Memory Care", "HIGH");
-  }
-
-  if (/\b(rehab|rehabilitation|therapy|post-acute|recovery)\b/.test(text)) {
-    add("Rehabilitation", "HIGH");
-  }
-
-  if (/\b(skilled nursing|nursing home|convalescent|extended care|health and rehab|nursing and rehabilitation|rehab care center|care center)\b/.test(text)) {
-    add("Skilled Nursing", "HIGH");
-  }
-
-  if (/\b(continuing care|continuum of care|life plan)\b/.test(text)) {
-    add("Continuing Care", "HIGH");
-  }
-
-  if (/\b(ccrc|retirement community|retirement village|village)\b/.test(text)) {
-    add("CCRC", careTypes.size === 0 ? "MEDIUM" : "HIGH");
-  }
-
-  if (/\b(hospice|palliative|end of life)\b/.test(text)) {
-    add("Hospice", "HIGH");
-  }
-
-  if ((careTypes.has("CCRC") || careTypes.has("Continuing Care")) && !careTypes.has("Independent Living")) {
-    add("Independent Living", "MEDIUM");
-  }
-
-  if (careTypes.size === 0) {
-    return {
-      careTypes: ["UNKNOWN"],
-      confidence: "LOW",
-    };
+  if (careTypes.length === 1 && careTypes[0] === "UNKNOWN") {
+    probabilities.UNKNOWN = Math.max(probabilities.UNKNOWN, 0.35);
   }
 
   return {
-    careTypes: [...careTypes],
+    careTypes,
     confidence,
+    confidenceScore,
+    probabilities,
   };
 }
 
@@ -361,8 +517,11 @@ function combineConfidence(
   return rank[careTypeConfidence] < rank[modelConfidence] ? careTypeConfidence : modelConfidence;
 }
 
-function makeBadges(facility: BackendFacility): string[] {
+function makeBadges(facility: BackendFacility, taxonomy: CareTaxonomyResult): string[] {
   const badges: string[] = ["Matches care needs"];
+  if (taxonomy.careTypes[0] !== "UNKNOWN") {
+    badges.push(`Primary care type: ${taxonomy.careTypes[0]}`);
+  }
   if ((facility.overall_rating ?? 0) >= 4) badges.push("Strong clinical quality");
   if ((facility.staffing_rating ?? 0) >= 4) badges.push("Staffing stability");
   if ((facility.quality_rating ?? 0) >= 4) badges.push("Medication support");
@@ -506,7 +665,9 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
     priceRange: makePriceRange(facility),
     careTypes: taxonomy.careTypes,
     careTypeConfidence: taxonomy.confidence,
-    matchBadges: makeBadges(facility),
+    careTypeConfidenceScore: taxonomy.confidenceScore,
+    careTypeProbabilities: taxonomy.probabilities,
+    matchBadges: makeBadges(facility, taxonomy),
     scoreBreakdown: [
       {
         category: "Medical Quality",
