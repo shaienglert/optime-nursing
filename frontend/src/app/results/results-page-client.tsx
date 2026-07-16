@@ -109,6 +109,7 @@ export function ResultsPageClient() {
 
   const renderFullCard = (recommendation: RankedRecommendation, index: number) => {
     const facility = recommendation.facility;
+    const report = recommendation.report;
 
     return (
       <article key={facility.id} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
@@ -119,60 +120,83 @@ export function ResultsPageClient() {
             <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
           </div>
           <div className={`rounded-2xl px-3 py-2 text-center ${scoreBadgeStyle(recommendation.totalScore)}`}>
-            <p className="text-2xl font-bold leading-none">{Math.round(recommendation.totalScore)}</p>
-            <p className="mt-1 text-xs font-semibold">Person fit score</p>
+            <p className="text-2xl font-bold leading-none">{report.finalMatchScore}</p>
+            <p className="mt-1 text-xs font-semibold">Final match score</p>
+            <p className="mt-1 text-[11px] font-medium opacity-90">Confidence {report.confidenceScore}/100</p>
+            <p className="mt-1 text-[11px] font-medium opacity-90">Rank #{report.rankingPosition ?? index + 1} of {Math.max(engineOutput.accepted.length, 1)}</p>
           </div>
         </div>
 
         <div className="mt-4 space-y-3 text-sm text-[#4f473d]">
           <section>
-            <p className="font-semibold text-[#2f2a24]">A. Why This Fits Your Person</p>
-            <p className="mt-1">{recommendation.whyThisFits}</p>
+            <p className="font-semibold text-[#2f2a24]">A. Final Score</p>
+            <p className="mt-1">Final Match Score: {report.finalMatchScore}/100</p>
+            <p>Confidence: {report.confidenceScore}/100</p>
+            <p>Ranking: #{report.rankingPosition ?? index + 1} of {engineOutput.accepted.length} communities evaluated</p>
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">B. What This Community Solves</p>
+            <p className="font-semibold text-[#2f2a24]">B. Score Breakdown</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {report.scoreBreakdown.map((item) => (
+                <div key={`${facility.id}-breakdown-${item.name}`} className="rounded-xl border border-[#e7ddcd] bg-[#fcfaf5] p-3">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="font-semibold text-[#2f2a24]">{item.name}</p>
+                    <p className="text-sm text-[#5f5548]">{item.score}/{item.maxScore}</p>
+                  </div>
+                  <p className="mt-1 text-xs text-[#6c655b]">{item.rationale}</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.08em] text-[#7b735f]">Source: {item.source}</p>
+                  <p className="mt-1 text-[11px] text-[#7b735f]">Traceable contribution: {item.weightedContribution.toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <p className="font-semibold text-[#2f2a24]">C. Positive Contributors</p>
             <ul className="mt-1 space-y-1">
-              {recommendation.solves.map((item) => (
-                <li key={`${facility.id}-solve-${item}`} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#6f9a86]" aria-hidden="true" />
-                  <span>{item}</span>
+              {report.positiveContributors.map((item) => (
+                <li key={`${facility.id}-positive-${item.signal}`} className="rounded-lg border border-[#e6efe4] bg-[#f7fbf7] p-3 text-sm text-[#46574d]">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold text-[#2f2a24]">{item.signal}</span>
+                    <span>{item.scoreContribution >= 0 ? "+" : ""}{item.scoreContribution}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-[#6c655b]">source: {item.source} | weight: {item.weight}</p>
                 </li>
               ))}
             </ul>
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">C. What This Community Does Not Solve</p>
+            <p className="font-semibold text-[#2f2a24]">D. Negative Contributors</p>
             <ul className="mt-1 space-y-1">
-              {recommendation.doesNotSolve.map((item) => (
-                <li key={`${facility.id}-not-${item}`} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#c18b7a]" aria-hidden="true" />
-                  <span>{item}</span>
+              {report.negativeContributors.map((item) => (
+                <li key={`${facility.id}-negative-${item.signal}`} className="rounded-lg border border-[#eeddd5] bg-[#fff9f7] p-3 text-sm text-[#5c4d49]">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold text-[#2f2a24]">{item.signal}</span>
+                    <span>{item.scoreContribution}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-[#6c655b]">source: {item.source} | weight: {item.weight}</p>
                 </li>
               ))}
             </ul>
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">D. Tradeoffs</p>
-            <p className="mt-1">{recommendation.tradeoff}</p>
+            <p className="font-semibold text-[#2f2a24]">E. Intelligence Sources Used</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {report.intelligenceSourcesUsed.map((source) => (
+                <span key={`${facility.id}-source-${source}`} className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 text-xs font-medium text-[#5f5548]">
+                  {source}
+                </span>
+              ))}
+            </div>
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">E. Why It Ranked Here</p>
-            <p className="mt-1">{recommendation.rankReason}</p>
-          </section>
-
-          <section>
-            <p className="font-semibold text-[#2f2a24]">F. Confidence Explanation</p>
-            <p className="mt-1">{recommendation.confidenceExplanation}</p>
-          </section>
-
-          <section>
-            <p className="font-semibold text-[#2f2a24]">G. Missing Information</p>
+            <p className="font-semibold text-[#2f2a24]">F. Missing Intelligence</p>
             <ul className="mt-1 space-y-1">
-              {recommendation.missingInformation.map((item) => (
+              {report.missingIntelligence.map((item) => (
                 <li key={`${facility.id}-missing-${item}`} className="flex items-start gap-2">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#8f8b7a]" aria-hidden="true" />
                   <span>{item}</span>
@@ -182,26 +206,33 @@ export function ResultsPageClient() {
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">Explainable Contributors</p>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              <div className="rounded-xl border border-[#e7ddcd] bg-[#fdfbf6] p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">Positive contributors</p>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {recommendation.positives.map((item) => (
-                    <li key={`${facility.id}-pos-${item}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-xl border border-[#ead9d2] bg-[#fffbf9] p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9d6d5f]">Negative contributors</p>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {recommendation.negatives.map((item) => (
-                    <li key={`${facility.id}-neg-${item}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            <p className="font-semibold text-[#2f2a24]">G. Human Narrative Explanation</p>
+            <p className="mt-1">{report.humanNarrativeExplanation}</p>
           </section>
+
+          <section>
+            <p className="font-semibold text-[#2f2a24]">H. Explain Ranking Position</p>
+            <p className="mt-1">{report.rankingExplanation}</p>
+          </section>
+
+          <section>
+            <p className="font-semibold text-[#2f2a24]">I. Score Traceability</p>
+            <ul className="mt-1 space-y-1">
+              {report.scoreTraceability.map((item) => (
+                <li key={`${facility.id}-trace-${item}`} className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#6f9a86]" aria-hidden="true" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-[#e7ddcd] bg-[#fdfbf6] p-4 text-sm text-[#5f5548]">
+          <p className="font-semibold text-[#2f2a24]">Why this community fits</p>
+          <p className="mt-1">{recommendation.whyThisFits}</p>
+          <p className="mt-2">{recommendation.rankReason}</p>
+          <p className="mt-2">{recommendation.tradeoff}</p>
         </div>
 
         <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>

@@ -20,6 +20,36 @@ type Contribution = {
   value: number;
 };
 
+type ReportContributor = {
+  signal: string;
+  source: string;
+  weight: number;
+  scoreContribution: number;
+};
+
+type ReportBreakdownItem = {
+  name: string;
+  score: number;
+  maxScore: number;
+  source: string;
+  rationale: string;
+  weightedContribution: number;
+};
+
+export type IntelligenceScoringReport = {
+  finalMatchScore: number;
+  confidenceScore: number;
+  rankingPosition: number | null;
+  rankingExplanation: string;
+  scoreBreakdown: ReportBreakdownItem[];
+  positiveContributors: ReportContributor[];
+  negativeContributors: ReportContributor[];
+  intelligenceSourcesUsed: string[];
+  missingIntelligence: string[];
+  humanNarrativeExplanation: string;
+  scoreTraceability: string[];
+};
+
 export type RankedRecommendation = {
   facility: SearchFacility;
   totalScore: number;
@@ -35,6 +65,7 @@ export type RankedRecommendation = {
   missingInformation: string[];
   hardRejectionReasons: string[];
   contributionHighlights: Contribution[];
+  report: IntelligenceScoringReport;
 };
 
 export type EngineQualityCheck = {
@@ -444,6 +475,247 @@ function summarizeContributions(scores: PriorityScores): Contribution[] {
   return weighted.sort((a, b) => b.value - a.value);
 }
 
+function roundContribution(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function buildIntelligenceSourcesUsed(facility: SearchFacility): string[] {
+  const sources = new Set<string>(["Questionnaire answers", "Facility metadata"]);
+  facility.scoreBreakdown?.forEach((item) => item.dataSource.forEach((source) => sources.add(source)));
+  return [...sources];
+}
+
+function buildReportBreakdown(
+  facility: SearchFacility,
+  state: QuestionnaireState,
+  priorityScores: PriorityScores,
+  contributions: Contribution[],
+): ReportBreakdownItem[] {
+  const facilityText = joinedFacilityText(facility);
+  const language = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage;
+  const preferredActivities = state.happinessPreferences;
+  const careNeed = state.assistanceLevel || "general support";
+  const futureCareCue = state.memoryStatus || state.humanIntelligenceV2.transitionRiskProfile.lonelinessRisk || "future care planning";
+  const staffingFit = facility.staffing_rating ? clamp(facility.staffing_rating * 20) : 50;
+  const regulatoryFit = facility.inspection_rating ? clamp(facility.inspection_rating * 20) : 50;
+  const reputationFit = facility.overall_rating ? clamp(facility.overall_rating * 20) : 50;
+  const languageFit = language ? (includesAny(facilityText, [language]) ? 92 : 48) : 50;
+  const activityFit = preferredActivities.length > 0 ? clamp(35 + preferredActivities.filter((activity) => includesAny(facilityText, [activity])).length * 18) : 50;
+  const futureCareFit = clamp((priorityScores.careFit * 0.65) + (priorityScores.clinicalQuality * 0.35));
+
+  return [
+    {
+      name: "Medical Fit",
+      score: Math.round(clamp((priorityScores.careFit * 0.7) + (priorityScores.clinicalQuality * 0.3))),
+      maxScore: 100,
+      source: "Facility care types + clinical quality signals",
+      rationale: `Matches the requested care level of ${careNeed}.`,
+      weightedContribution: roundContribution(priorityScores.careFit * PRIORITY_WEIGHTS.careFit + priorityScores.clinicalQuality * PRIORITY_WEIGHTS.clinicalQuality),
+    },
+    {
+      name: "Lifestyle Fit",
+      score: Math.round(priorityScores.lifestyleFit),
+      maxScore: 100,
+      source: "Preference matching against facility metadata",
+      rationale: preferredActivities.length > 0 ? `Reflects alignment with ${preferredActivities[0]}.` : "No explicit lifestyle preference was provided.",
+      weightedContribution: roundContribution(priorityScores.lifestyleFit * PRIORITY_WEIGHTS.lifestyleFit),
+    },
+    {
+      name: "Social Fit",
+      score: Math.round(priorityScores.socialFit),
+      maxScore: 100,
+      source: "Social and community cues in facility metadata",
+      rationale: "Measures the community's social engagement signal against the stated social profile.",
+      weightedContribution: roundContribution(priorityScores.socialFit * PRIORITY_WEIGHTS.socialFit),
+    },
+    {
+      name: "Family Fit",
+      score: Math.round(priorityScores.familyFit),
+      maxScore: 100,
+      source: "Distance and visit-frequency preferences",
+      rationale: "Captures family access and visit cadence from the questionnaire.",
+      weightedContribution: roundContribution(priorityScores.familyFit * PRIORITY_WEIGHTS.familyFit),
+    },
+    {
+      name: "Cultural Fit",
+      score: Math.round(priorityScores.culturalFit),
+      maxScore: 100,
+      source: "Cultural and faith preferences + facility metadata",
+      rationale: "Measures how closely the community aligns with identity and faith preferences.",
+      weightedContribution: roundContribution(priorityScores.culturalFit * PRIORITY_WEIGHTS.culturalFit),
+    },
+    {
+      name: "Language Fit",
+      score: Math.round(languageFit),
+      maxScore: 100,
+      source: language ? `Preferred language: ${language}` : "No language preference supplied",
+      rationale: language ? "Language support is inferred from the facility's searchable metadata." : "Missing language preference lowers confidence, not score.",
+      weightedContribution: 0,
+    },
+    {
+      name: "Activity Fit",
+      score: Math.round(activityFit),
+      maxScore: 100,
+      source: "Happiness preferences + facility activity cues",
+      rationale: preferredActivities.length > 0 ? `Looks for programming around ${preferredActivities[0]}.` : "No explicit activity preference was provided.",
+      weightedContribution: 0,
+    },
+    {
+      name: "Future Care Fit",
+      score: Math.round(futureCareFit),
+      maxScore: 100,
+      source: "Care level + future-care cues",
+      rationale: `Uses current care needs and future-care signal: ${futureCareCue}.`,
+      weightedContribution: 0,
+    },
+    {
+      name: "Employee Intelligence",
+      score: Math.round(staffingFit),
+      maxScore: 100,
+      source: "Facility staffing rating",
+      rationale: "Represents the strength of staffing signals available in the facility dataset.",
+      weightedContribution: 0,
+    },
+    {
+      name: "Regulatory Intelligence",
+      score: Math.round(regulatoryFit),
+      maxScore: 100,
+      source: "Facility inspection rating",
+      rationale: "Represents how strong the public regulatory signal looks in the current dataset.",
+      weightedContribution: 0,
+    },
+    {
+      name: "Legal Risk",
+      score: 0,
+      maxScore: 0,
+      source: "No legal record source in the current search payload",
+      rationale: "No hidden legal penalty is applied unless a hard rejection reason exists.",
+      weightedContribution: 0,
+    },
+    {
+      name: "Reputation Intelligence",
+      score: Math.round(reputationFit),
+      maxScore: 100,
+      source: "Facility overall rating and match badges",
+      rationale: "Combines the visible reputation signal available in the facility dataset.",
+      weightedContribution: 0,
+    },
+  ];
+}
+
+function buildContributorRows(contributions: Contribution[], totalScore: number, source: string, positive: boolean): ReportContributor[] {
+  return contributions.slice(positive ? 0 : -3).map((item) => ({
+    signal: item.label,
+    source,
+    weight: totalScore > 0 ? Number(((Math.abs(item.value) / totalScore) * 100).toFixed(2)) : 0,
+    scoreContribution: positive ? Math.round(item.value) : -Math.round(item.value),
+  }));
+}
+
+function buildHumanNarrative(facility: SearchFacility, state: QuestionnaireState): string {
+  const relationship = state.relationship ? state.relationship.toLowerCase() : "your loved one";
+  const careNeed = state.assistanceLevel ? state.assistanceLevel.toLowerCase() : "the current care need";
+  const socialNeed = state.humanIntelligenceV2.socialProfile.socialInteractionFrequency || "a specific social rhythm";
+  const activity = state.happinessPreferences[0];
+  const distance = state.humanIntelligenceV2.distanceProfile.driveTimes.normal || state.distanceFromFamily;
+  const distanceCopy = distance ? ` The distance signal is ${distance.toLowerCase()}.` : " Distance was not supplied, so it did not change the score.";
+
+  const activityCopy = activity ? ` The community's lifestyle cues were compared against ${activity.toLowerCase()}.` : " No single activity preference dominated the score.";
+
+  return `We prioritized this community because ${relationship} has ${careNeed} needs and prefers ${socialNeed.toLowerCase()} social interaction. ${facility.name} scored well on the strongest weighted fit dimensions, which kept it near the top of the ranking.${activityCopy}${distanceCopy}`;
+}
+
+function buildRankingExplanation(accepted: RankedRecommendation[], index: number): string {
+  const current = accepted[index];
+  const above = accepted[index - 1];
+  const below = accepted[index + 1];
+
+  if (!above && below) {
+    return `Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance.`;
+  }
+
+  if (above) {
+    return `Ranked #${index + 1} because it trails #${index} on ${current.contributionHighlights.at(-1)?.label.toLowerCase() || "its weakest fit dimension"}, but stays competitive on ${current.contributionHighlights[0]?.label.toLowerCase() || "its strongest fit dimension"}.`;
+  }
+
+  if (!below) {
+    return `Ranked #${index + 1} after higher-ranked options showed stronger weighted fit coverage.`;
+  }
+
+  return `Ranked #${index + 1} by the current weighted fit formula.`;
+}
+
+function buildIntelligenceReport(
+  facility: SearchFacility,
+  state: QuestionnaireState,
+  priorityScores: PriorityScores,
+  contributions: Contribution[],
+  totalScore: number,
+  confidenceScore: number,
+  accepted: RankedRecommendation[],
+  index: number,
+  missingInformation: string[],
+  positiveSignals: string[],
+  negativeSignals: string[],
+): IntelligenceScoringReport {
+  const scoreBreakdown = buildReportBreakdown(facility, state, priorityScores, contributions);
+  const sourcesUsed = buildIntelligenceSourcesUsed(facility);
+  const missingIntelligence = [...missingInformation];
+
+  if (!sourcesUsed.some((source) => /review|ratings?/i.test(source))) {
+    missingIntelligence.push("No public review source is connected in the current search payload.");
+  }
+
+  if (!sourcesUsed.some((source) => /indeed|glassdoor|linkedin/i.test(source))) {
+    missingIntelligence.push("No employee intelligence source is connected in the current search payload.");
+  }
+
+  if (!sourcesUsed.some((source) => /court|lawsuit|legal/i.test(source))) {
+    missingIntelligence.push("No legal source is connected in the current search payload.");
+  }
+
+  if (!sourcesUsed.some((source) => /facebook|instagram|social/i.test(source))) {
+    missingIntelligence.push("No public social channel source is connected in the current search payload.");
+  }
+
+  const confidencePenalty = Math.min(30, missingIntelligence.length * 3);
+  const adjustedConfidence = clamp(confidenceScore - confidencePenalty);
+
+  const positiveContributors = buildContributorRows(contributions, totalScore, "Weighted person-fit formula", true).slice(0, 4);
+  const negativeContributors = buildContributorRows(contributions, totalScore, "Lower weighted fit dimensions", false).slice(0, 3);
+  const traceability = [
+    `Final score = sum of weighted core fit components: ${contributions.map((item) => `${item.label}=${item.value.toFixed(2)}`).join(", ")}.`,
+    `Missing intelligence affects confidence only, never the score.`,
+    `No hidden bonuses or hidden penalties are applied in the ranking formula.`,
+  ];
+
+  return {
+    finalMatchScore: Math.round(totalScore),
+    confidenceScore: adjustedConfidence,
+    rankingPosition: index + 1,
+    rankingExplanation: buildRankingExplanation(accepted, index),
+    scoreBreakdown,
+    positiveContributors: positiveContributors.length > 0 ? positiveContributors : contributions.slice(0, 3).map((item) => ({
+      signal: item.label,
+      source: "Weighted person-fit formula",
+      weight: Number(item.value.toFixed(2)),
+      scoreContribution: Math.round(item.value),
+    })),
+    negativeContributors: negativeContributors.length > 0 ? negativeContributors : contributions.slice(-3).map((item) => ({
+      signal: item.label,
+      source: "Lower weighted fit dimensions",
+      weight: Number(item.value.toFixed(2)),
+      scoreContribution: -Math.round(item.value),
+    })),
+    intelligenceSourcesUsed: sourcesUsed,
+    missingIntelligence,
+    humanNarrativeExplanation: buildHumanNarrative(facility, state),
+    scoreTraceability: traceability
+      .concat(positiveSignals.length > 0 ? [`Positive signals observed: ${positiveSignals.slice(0, 3).join("; ")}.`] : [])
+      .concat(negativeSignals.length > 0 ? [`Negative signals observed: ${negativeSignals.slice(0, 3).join("; ")}.`] : []),
+  };
+}
+
 function buildQualityCheck(
   accepted: RankedRecommendation[],
   signalRoles: Array<{ key: string; role: SignalRole }>,
@@ -565,6 +837,19 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       missingInformation: buildMissingInformation(state, signalRoles),
       hardRejectionReasons,
       contributionHighlights: contributions,
+      report: {
+        finalMatchScore: Math.round(totalScore),
+        confidenceScore: confidencePercent,
+        rankingPosition: null,
+        rankingExplanation: "",
+        scoreBreakdown: [],
+        positiveContributors: [],
+        negativeContributors: [],
+        intelligenceSourcesUsed: buildIntelligenceSourcesUsed(facility),
+        missingIntelligence: [],
+        humanNarrativeExplanation: "",
+        scoreTraceability: [],
+      },
     };
   });
 
@@ -580,17 +865,25 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
 
     if (!above && below) {
       item.rankReason = `Ranked #1 because it leads in ${item.contributionHighlights[0].label.toLowerCase()} and beats #2 on person-first fit balance.`;
-      return;
-    }
-
-    if (above) {
+    } else if (above) {
       item.rankReason = `Ranked #${index + 1} because it trails #${index} mainly on ${item.contributionHighlights[item.contributionHighlights.length - 1].label.toLowerCase()}, but stays competitive on ${item.contributionHighlights[0].label.toLowerCase()}.`;
-      return;
-    }
-
-    if (!below) {
+    } else if (!below) {
       item.rankReason = `Ranked #${index + 1} after higher-ranked options showed stronger person-fit coverage.`;
     }
+
+    item.report = buildIntelligenceReport(
+      item.facility,
+      state,
+      item.priorityScores,
+      item.contributionHighlights,
+      item.totalScore,
+    confidencePercent,
+      accepted,
+      index,
+      item.missingInformation,
+      item.positives,
+      item.negatives,
+    );
   });
 
   const qualityCheck = buildQualityCheck(accepted, signalRoles);

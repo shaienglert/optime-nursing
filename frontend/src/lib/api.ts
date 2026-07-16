@@ -88,6 +88,38 @@ type BackendFacilityDetails = BackendFacility & {
   };
 };
 
+export type FacilityIntelligenceProfile = {
+  facility_id: number;
+  last_updated: string;
+  sources_used: string[];
+  clinical_score: number;
+  family_score: number;
+  employee_score: number;
+  social_score: number;
+  reputation_score: number;
+  legal_risk_score: number;
+  regulatory_risk_score: number;
+  intelligence_confidence: number;
+  verified_facts: string[];
+  public_allegations: string[];
+  public_opinions: string[];
+  missing_information: string[];
+  positive_signals: string[];
+  negative_signals: string[];
+  unresolved_risks: string[];
+  intelligence_summary: string;
+  social_energy_index: number;
+  family_satisfaction_index: number;
+  staff_stability_index: number;
+  regulatory_risk_index: number;
+  litigation_risk_index: number;
+  cultural_match_signals: number;
+  activity_density_index: number;
+  community_engagement_index: number;
+  clinical_quality_index: number;
+  reputation_index: number;
+};
+
 const FALLBACK_BACKEND_FACILITIES: BackendFacility[] = [
   {
     id: 91001,
@@ -516,6 +548,10 @@ export async function fetchFacilityDetails(id: string): Promise<FacilityDetailsD
       transit: "Public transportation",
     },
   };
+}
+
+export async function fetchFacilityIntelligenceProfile(id: string): Promise<FacilityIntelligenceProfile> {
+  return fetchJson<FacilityIntelligenceProfile>(`/intelligence/facilities/${id}`);
 }
 
 export type HumanIntelligenceScorePayload = {
