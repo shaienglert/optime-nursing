@@ -485,7 +485,6 @@ function buildRelaxedRecommendations(
 
   const exactMatchAudit: ExactMatchAuditRow[] = [];
   const exactMatches = candidates.filter((facility) => {
-    const reasons: string[] = [];
     const hardFailures = hardConstraintFailures(facility);
     const strongFailures = enabledSoft
       .filter((preference) => preference.category === "STRONG PREFERENCE")
@@ -493,7 +492,8 @@ function buildRelaxedRecommendations(
       .map((preference) => preference.rejectionReason(facility) || preference.relaxedRequirement)
       .filter(Boolean);
 
-    reasons.push(...hardFailures, ...strongFailures);
+    const shouldRejectExact = hardFailures.length > 0 || strongFailures.length >= 2;
+    const reasons = shouldRejectExact ? [...hardFailures, ...strongFailures] : [];
     if (reasons.length > 0) {
       exactMatchAudit.push({
         community_name: facility.name,
@@ -983,6 +983,46 @@ export function ResultsPageClient() {
 
         {!isLoading && relaxedAvailability.recommendations.length > 0 ? (
           <section className="mt-6 space-y-6">
+            <article className="rounded-3xl border border-[#d9decb] bg-[#f8fbf1] p-6 shadow-[0_12px_34px_-28px_rgba(54,84,32,0.35)]">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5c7340]">Signal Classification Engine V1</p>
+              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Preference signal categories</h2>
+              <div className="mt-4 overflow-x-auto rounded-2xl border border-[#dfe7cf] bg-white">
+                <table className="min-w-full divide-y divide-[#e9efdd] text-sm text-[#425041]">
+                  <thead className="bg-[#f2f7e8] text-left text-xs uppercase tracking-[0.14em] text-[#6b775a]">
+                    <tr>
+                      <th className="px-4 py-3">Signal</th>
+                      <th className="px-4 py-3">Category</th>
+                      <th className="px-4 py-3">Value</th>
+                      <th className="px-4 py-3">Rationale</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#edf2e4]">
+                    {relaxedAvailability.signalClassifications.map((row) => (
+                      <tr key={`${row.signal}-${row.category}`}>
+                        <td className="px-4 py-3 font-medium text-[#2f2a24]">{row.signal}</td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            row.category === "HARD REQUIREMENT"
+                              ? "bg-[#fde7e2] text-[#a54c34]"
+                              : row.category === "STRONG PREFERENCE"
+                                ? "bg-[#edf3ea] text-[#4c6f5b]"
+                                : row.category === "NICE TO HAVE"
+                                  ? "bg-[#e7eefb] text-[#3f5f8c]"
+                                  : "bg-[#f5f1e5] text-[#6f644e]"
+                          }`}>
+                            {row.category}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">{row.value}</td>
+                        <td className="px-4 py-3">{row.rationale}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-xs text-[#6a655b]">Engine rules: UNKNOWN SIGNAL and NICE TO HAVE never reject; STRONG PREFERENCE rarely rejects exact matching; only HARD REQUIREMENT can reject recommendation eligibility.</p>
+            </article>
+
             <article className="rounded-3xl border border-[#d8dbe2] bg-[#f7f9fc] p-6 shadow-[0_12px_34px_-28px_rgba(36,49,72,0.45)]">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#44526b]">Recommendation Pipeline Debug</p>
               <div className="mt-3 overflow-x-auto rounded-2xl border border-[#d5dbe6] bg-white">
