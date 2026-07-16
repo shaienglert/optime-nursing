@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { SearchFacility, fetchSearchFacilities } from "@/lib/api";
@@ -1003,6 +1003,7 @@ export function ResultsPageClient() {
   const [savedIds, setSavedIds] = useState<number[]>([]);
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [dismissedFilters, setDismissedFilters] = useState<string[]>([]);
+  const recommendationsRef = useRef<HTMLDivElement | null>(null);
 
   const searchKey = searchParams.toString();
   const hasExplicitSearch = searchKey.length > 0;
@@ -1127,6 +1128,11 @@ export function ResultsPageClient() {
     if (isLoading) return;
     console.info("Recommendation Pipeline Debug", relaxedAvailability.debug);
   }, [isLoading, relaxedAvailability.debug]);
+
+  useEffect(() => {
+    if (isLoading || topRecommendations.length === 0) return;
+    recommendationsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [isLoading, topRecommendations.length]);
 
   const topRecommendations = useMemo(
     () => relaxedAvailability.recommendations.slice(0, TOP_RECOMMENDATION_COUNT),
@@ -1419,7 +1425,8 @@ export function ResultsPageClient() {
               ) : null}
             </article>
 
-            {topRecommendations.map((facility, index) => {
+            <div ref={recommendationsRef} className="space-y-4">
+              {topRecommendations.map((facility, index) => {
               const explanation = buildPersonalizedExplanation(facility, {
                 relationship,
                 age,
@@ -1763,7 +1770,8 @@ export function ResultsPageClient() {
             </article>
                 </div>
               );
-            })}
+              })}
+            </div>
 
             {remainingRecommendations.length > 0 ? (
               <div className="space-y-4">
