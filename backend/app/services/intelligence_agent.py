@@ -8,6 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.models.facility import Facility, FacilityIntelligenceProfile, FacilityReview, Inspection, Staffing
 
+EVIDENCE_VERIFIED_FACT = "verified_fact"
+EVIDENCE_PUBLIC_ALLEGATION = "public_allegation"
+EVIDENCE_PUBLIC_OPINION = "public_opinion"
+
 UPDATE_FREQUENCY = {
     "news": "daily",
     "social_media": "daily",
@@ -78,6 +82,7 @@ def _normalize_signal(signal: Dict[str, str]) -> Dict[str, str]:
     normalized["category"] = normalized.get("category", "").strip().lower()
     normalized["signal"] = normalized.get("signal", "").strip().lower().replace(" ", "_")
     normalized["polarity"] = normalized.get("polarity", "neutral").strip().lower()
+    normalized["evidence_type"] = normalized.get("evidence_type", EVIDENCE_PUBLIC_OPINION).strip().lower()
     normalized["summary"] = normalized.get("summary", "").strip()
     normalized["key"] = _make_signal_key(normalized)
     return normalized
@@ -112,6 +117,7 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "category": "regulatory",
                 "signal": "deficiencies",
                 "polarity": "negative",
+                "evidence_type": EVIDENCE_VERIFIED_FACT,
                 "summary": f"{severe_deficiencies} severe deficiencies were identified.",
             }
         )
@@ -122,6 +128,7 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "category": "regulatory",
                 "signal": "deficiencies",
                 "polarity": "neutral",
+                "evidence_type": EVIDENCE_VERIFIED_FACT,
                 "summary": f"{deficiency_count} total deficiencies were identified.",
             }
         )
@@ -134,6 +141,7 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "category": "legal",
                 "signal": "fines",
                 "polarity": "negative",
+                "evidence_type": EVIDENCE_VERIFIED_FACT,
                 "summary": f"Publicly reported fines total ${fine_total:,.0f}.",
             }
         )
@@ -145,6 +153,7 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "category": "regulatory",
                 "signal": "staffing_reports",
                 "polarity": "positive",
+                "evidence_type": EVIDENCE_VERIFIED_FACT,
                 "summary": "Staffing rating is strong in recent reports.",
             }
         )
@@ -156,6 +165,7 @@ def _collect_regulatory_signals(db: Session, facility: Facility) -> List[Dict[st
                 "category": "regulatory",
                 "signal": "improved_ratings",
                 "polarity": "positive",
+                "evidence_type": EVIDENCE_VERIFIED_FACT,
                 "summary": "Quality rating is currently in a high tier.",
             }
         )
@@ -187,6 +197,7 @@ def _collect_review_signals(db: Session, facility: Facility) -> List[Dict[str, s
                     "category": "family_sentiment",
                     "signal": "family_satisfaction",
                     "polarity": polarity,
+                    "evidence_type": EVIDENCE_PUBLIC_OPINION,
                     "summary": f"Average family review rating is {avg_rating:.2f}/5 from {len(rows)} public reviews.",
                 }
             )
@@ -198,6 +209,7 @@ def _collect_review_signals(db: Session, facility: Facility) -> List[Dict[str, s
                     "category": "employee_intelligence",
                     "signal": "staff_stability",
                     "polarity": polarity,
+                    "evidence_type": EVIDENCE_PUBLIC_OPINION,
                     "summary": f"Average employee sentiment rating is {avg_rating:.2f}/5 from {len(rows)} public reviews.",
                 }
             )
@@ -216,6 +228,7 @@ def _collect_social_signals(facility: Facility) -> List[Dict[str, str]]:
                 "category": "social_signals",
                 "signal": "community_engagement",
                 "polarity": "positive",
+                "evidence_type": EVIDENCE_PUBLIC_OPINION,
                 "summary": "Community branding suggests active engagement programming.",
             }
         )
@@ -230,14 +243,27 @@ def _score_indexes(facility: Facility, signals: List[Dict[str, str]]) -> Dict[st
     regulatory_signals = [s for s in signals if s["category"] == "regulatory"]
     legal_signals = [s for s in signals if s["category"] == "legal"]
 
-    family_score = _clamp(55 + 15 * len([s for s in family_signals if s["polarity"] == "positive"]) - 12 * len([s for s in family_signals if s["polarity"] == "negative"]))
-    employee_score = _clamp(50 + 16 * len([s for s in employee_signals if s["polarity"] == "positive"]) - 14 * len([s for s in employee_signals if s["polarity"] == "negative"]))
-    social_score = _clamp(50 + 14 * len([s for s in social_signals if s["polarity"] == "positive"]))
+    def evidence_weight(signal: Dict[str, str]) -> float:
+        evidence_type = signal.get("evidence_type", EVIDENCE_PUBLIC_OPINION)
+        if evidence_type == EVIDENCE_VERIFIED_FACT:
+            return 1.0
+        if evidence_type == EVIDENCE_PUBLIC_ALLEGATION:
+            return 0.6
+        if evidence_type == EVIDENCE_PUBLIC_OPINION:
+            return 0.35
+        return 0.0
+
+    def weighted_count(items: List[Dict[str, str]], polarity: str) -> float:
+        return sum(evidence_weight(item) for item in items if item.get("polarity") == polarity)
+
+    family_score = _clamp(55 + 15 * weighted_count(family_signals, "positive") - 12 * weighted_count(family_signals, "negative"))
+    employee_score = _clamp(50 + 16 * weighted_count(employee_signals, "positive") - 14 * weighted_count(employee_signals, "negative"))
+    social_score = _clamp(50 + 14 * weighted_count(social_signals, "positive"))
 
     regulatory_risk = _clamp(
-        35 + 18 * len([s for s in regulatory_signals if s["polarity"] == "negative"]) - 12 * len([s for s in regulatory_signals if s["polarity"] == "positive"])
+        35 + 18 * weighted_count(regulatory_signals, "negative") - 12 * weighted_count(regulatory_signals, "positive")
     )
-    legal_risk = _clamp(30 + 20 * len([s for s in legal_signals if s["polarity"] == "negative"]))
+    legal_risk = _clamp(30 + 20 * weighted_count(legal_signals, "negative"))
 
     clinical_score = _clamp(float(facility.medical_quality_score or 0))
     reputation_score = _clamp((family_score * 0.5) + (social_score * 0.25) + (clinical_score * 0.25) - (legal_risk * 0.15))
@@ -277,7 +303,7 @@ def _score_indexes(facility: Facility, signals: List[Dict[str, str]]) -> Dict[st
     }
 
 
-def _build_narrative(indexes: Dict[str, float], positive_signals: List[str], negative_signals: List[str]) -> str:
+def _build_narrative(indexes: Dict[str, float], positive_signals: List[str], negative_signals: List[str], missing_information: List[str]) -> str:
     family_phrase = "strong family satisfaction" if indexes["family_satisfaction_index"] >= 65 else "mixed family satisfaction"
     social_phrase = "unusually high social engagement" if indexes["social_energy_index"] >= 65 else "moderate social engagement"
 
@@ -291,9 +317,11 @@ def _build_narrative(indexes: Dict[str, float], positive_signals: List[str], neg
     positive_note = f" Key positives: {', '.join(positive_signals[:2])}." if positive_signals else ""
     negative_note = f" Key concerns: {', '.join(negative_signals[:2])}." if negative_signals else ""
 
+    missing_note = f" Missing information: {', '.join(missing_information[:2])}." if missing_information else ""
+
     return (
         "During the last 12 months this community demonstrated "
-        f"{family_phrase} and {social_phrase}. However, {staffing_phrase} and {regulatory_phrase}.{positive_note}{negative_note}"
+        f"{family_phrase} and {social_phrase}. However, {staffing_phrase} and {regulatory_phrase}.{positive_note}{negative_note}{missing_note}"
     )
 
 
@@ -302,6 +330,10 @@ def _upsert_profile(
     facility: Facility,
     signals: List[Dict[str, str]],
     indexes: Dict[str, float],
+    verified_facts: List[str],
+    public_allegations: List[str],
+    public_opinions: List[str],
+    missing_information: List[str],
     positive_signals: List[str],
     negative_signals: List[str],
     unresolved_risks: List[str],
@@ -332,6 +364,10 @@ def _upsert_profile(
     profile.clinical_quality_index = indexes["clinical_quality_index"]
     profile.reputation_index = indexes["reputation_index"]
     profile.intelligence_confidence = indexes["intelligence_confidence"]
+    profile.verified_facts = json.dumps(verified_facts)
+    profile.public_allegations = json.dumps(public_allegations)
+    profile.public_opinions = json.dumps(public_opinions)
+    profile.missing_information = json.dumps(missing_information)
     profile.positive_signals = json.dumps(positive_signals)
     profile.negative_signals = json.dumps(negative_signals)
     profile.unresolved_risks = json.dumps(unresolved_risks)
@@ -351,25 +387,37 @@ def build_facility_intelligence_profile(db: Session, facility: Facility) -> Faci
 
     deduped = _deduplicate_signals(all_signals)
 
+    verified_facts = [signal["summary"] for signal in deduped if signal.get("evidence_type") == EVIDENCE_VERIFIED_FACT]
+    public_allegations = [signal["summary"] for signal in deduped if signal.get("evidence_type") == EVIDENCE_PUBLIC_ALLEGATION]
+    public_opinions = [signal["summary"] for signal in deduped if signal.get("evidence_type") == EVIDENCE_PUBLIC_OPINION]
+
     positive_signals = [signal["summary"] for signal in deduped if signal["polarity"] == "positive"]
     negative_signals = [signal["summary"] for signal in deduped if signal["polarity"] == "negative"]
 
-    unresolved_risks = []
+    missing_information = []
     if not any(signal["category"] == "legal" for signal in deduped):
-        unresolved_risks.append("Legal intelligence feed has no current public case snapshots.")
+        missing_information.append("No current public legal case snapshot is connected.")
     if not any(signal["category"] == "news" for signal in deduped):
-        unresolved_risks.append("News intelligence feed has not been connected yet.")
+        missing_information.append("No connected public news feed snapshot is available yet.")
     if not any(signal["category"] == "social_signals" for signal in deduped):
-        unresolved_risks.append("Official social channel activity has limited public signal coverage.")
+        missing_information.append("Official social channel activity coverage is incomplete.")
+
+    unresolved_risks = [
+        item for item in negative_signals if "deficienc" in item.lower() or "fine" in item.lower() or "lawsuit" in item.lower()
+    ]
 
     indexes = _score_indexes(facility, deduped)
-    narrative = _build_narrative(indexes, positive_signals, negative_signals)
+    narrative = _build_narrative(indexes, positive_signals, negative_signals, missing_information)
 
     return _upsert_profile(
         db=db,
         facility=facility,
         signals=deduped,
         indexes=indexes,
+        verified_facts=verified_facts,
+        public_allegations=public_allegations,
+        public_opinions=public_opinions,
+        missing_information=missing_information,
         positive_signals=positive_signals,
         negative_signals=negative_signals,
         unresolved_risks=unresolved_risks,
@@ -378,6 +426,8 @@ def build_facility_intelligence_profile(db: Session, facility: Facility) -> Faci
 
 
 def run_intelligence_collection(db: Session, facility_id: Optional[int] = None) -> Dict[str, object]:
+    # This table is fully derived and safe to rebuild to keep schema aligned without migrations.
+    FacilityIntelligenceProfile.__table__.drop(bind=db.bind, checkfirst=True)
     FacilityIntelligenceProfile.__table__.create(bind=db.bind, checkfirst=True)
 
     if facility_id is not None:

@@ -198,6 +198,10 @@ class FacilityIntelligenceProfileOut(BaseModel):
     legal_risk_score: float
     regulatory_risk_score: float
     intelligence_confidence: float
+    verified_facts: List[str]
+    public_allegations: List[str]
+    public_opinions: List[str]
+    missing_information: List[str]
     positive_signals: List[str]
     negative_signals: List[str]
     unresolved_risks: List[str]
@@ -433,6 +437,10 @@ def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> Facili
         legal_risk_score=profile.legal_risk_score,
         regulatory_risk_score=profile.regulatory_risk_score,
         intelligence_confidence=profile.intelligence_confidence,
+        verified_facts=_parse_json_array(profile.verified_facts),
+        public_allegations=_parse_json_array(profile.public_allegations),
+        public_opinions=_parse_json_array(profile.public_opinions),
+        missing_information=_parse_json_array(profile.missing_information),
         positive_signals=_parse_json_array(profile.positive_signals),
         negative_signals=_parse_json_array(profile.negative_signals),
         unresolved_risks=_parse_json_array(profile.unresolved_risks),
