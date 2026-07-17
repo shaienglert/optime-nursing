@@ -479,8 +479,11 @@ function summarizeTier(criteria: MatchQualityCriterion[], tier: MatchQualityTier
 
 function buildMatchQualityResult(facility: SearchFacility, state: QuestionnaireState, priorityScores: PriorityScores): MatchQualityResult {
   const futureCare = evaluateFutureCarePreference(facility, state);
+  const requiredCareScore = state.assistanceLevel === "Fully independent"
+    ? scoreIndependenceCriterion(facility, state)
+    : priorityScores.careFit;
   const mandatoryCriteria: MatchQualityCriterion[] = [
-    buildCriterion("Required care level", "MANDATORY", priorityScores.careFit, 70, "Required care support is mandatory.", "Care-fit model output"),
+    buildCriterion("Required care level", "MANDATORY", requiredCareScore, state.assistanceLevel === "Fully independent" ? 70 : 55, "Required care support is mandatory.", state.assistanceLevel === "Fully independent" ? "Independence-oriented care suitability" : "Care-fit model output"),
     buildCriterion("Budget affordability", "MANDATORY", priorityScores.financialFit, 70, "Budget affordability is mandatory.", "Financial-fit model output"),
   ];
 
