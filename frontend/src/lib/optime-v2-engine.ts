@@ -1726,10 +1726,15 @@ function buildVerificationChecklist(facility: SearchFacility, state: Questionnai
 function buildVerificationRequest(facility: SearchFacility, state: QuestionnaireState, checklist: VerificationChecklistItem[]): VerificationRequest {
   const unknownItems = checklist.filter((item) => item.state === "UNKNOWN");
   const limitedItems = checklist.filter((item) => item.state === "LIMITED");
-  const answeredItems = checklist.filter((item) => item.state === "YES" || item.state === "NO" || item.state === "LIMITED");
+  const yesCount = checklist.filter((item) => item.state === "YES").length;
+  const noCount = checklist.filter((item) => item.state === "NO").length;
+  const unknownCount = unknownItems.length;
+  const limitedCount = limitedItems.length;
   const total = checklist.length;
-  const visitReadinessScore = total > 0 ? Math.round((answeredItems.length / total) * 100) : 100;
-  const confidenceScore = visitReadinessScore;
+  const visitReadinessScore = total > 0 ? Math.round(((yesCount + noCount + limitedCount) / total) * 100) : 100;
+  const confidenceScore = (yesCount + noCount + unknownCount) > 0
+    ? Math.round(((yesCount + noCount) / (yesCount + noCount + unknownCount)) * 100)
+    : 100;
   const nextStepMessage = unknownItems.length === 0 ? "Ready to schedule visit" : "Verify remaining questions first";
 
   const bodyItems = unknownItems.map((item) => `□ ${item.label}`).join("\n");
@@ -1773,7 +1778,7 @@ function buildVerificationRequest(facility: SearchFacility, state: Questionnaire
     visitReadinessScore,
     confidenceScore,
     nextStepMessage,
-    items: [...unknownItems, ...limitedItems, ...answeredItems],
+    items: unknownItems,
   };
 }
 
