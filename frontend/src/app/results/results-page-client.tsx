@@ -820,6 +820,30 @@ export function ResultsPageClient() {
                         </section>
 
                         <section>
+                          <p className="font-semibold text-[#2f2a24]">Verification checklist</p>
+                          <div className="mt-2 space-y-2">
+                            {report.audit.verificationChecklist.map((item) => (
+                              <div key={`${recommendation.facility.id}-verification-${item.category}-${item.label}`} className={`rounded-xl border px-3 py-2 ${verificationStateStyle(item.state)}`}>
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <p className="font-semibold">{item.label}</p>
+                                  <span className="rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em]">{verificationStateLabel(item.state)}</span>
+                                </div>
+                                <p className="mt-1 text-xs opacity-90">{item.category}</p>
+                                <p className="mt-1 text-xs">{item.rationale}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
+
+                        <section>
+                          <p className="font-semibold text-[#2f2a24]">Facility verification request</p>
+                          <div className="mt-2 rounded-xl border border-[#d9e3ec] bg-white p-3 text-xs leading-6 text-[#4b6176]">
+                            <p className="font-semibold text-[#24425e]">{report.audit.verificationRequest.subject}</p>
+                            <p className="mt-2 whitespace-pre-wrap">{report.audit.verificationRequest.body}</p>
+                          </div>
+                        </section>
+
+                        <section>
                           <p className="font-semibold text-[#2f2a24]">Executed formula</p>
                           <p className="mt-1">{report.audit.executedFormula}</p>
                           <p className="mt-1">Final score = {report.audit.finalScore}/100</p>
