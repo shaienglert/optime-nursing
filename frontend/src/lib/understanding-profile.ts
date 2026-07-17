@@ -110,6 +110,7 @@ const DOMAIN_WEIGHTS: Record<DomainKey, number> = {
 };
 
 const CRITICAL_DOMAINS: DomainKey[] = ["careNeeds", "financialProfile", "familyProximity"];
+const DEFAULT_BUDGET = 7000;
 
 function clampScore(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -149,6 +150,24 @@ function signalStatus(value: string | number | string[] | undefined | null, trea
     return isNotImportantText(value) ? "NOT_IMPORTANT" : "PROVIDED";
   }
   return "UNKNOWN";
+}
+
+function isAnswered(value: string | number | string[] | undefined | null, defaultValue: string | number | undefined = undefined): boolean {
+  if (value === undefined || value === null) return false;
+
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  if (defaultValue !== undefined) {
+    return value !== defaultValue;
+  }
+
+  return true;
 }
 
 function signalStatusFromMultiple(values: Array<string | number | string[] | undefined | null>): CoverageState {
@@ -205,7 +224,7 @@ function calculateLegacyUnderstandingScore(inputs: UnderstandingInputs): number 
       inputs.preferredSocialIntensity,
       inputs.hobbyParticipation,
     ]),
-    financialProfile: countActiveSignals([inputs.budget]),
+    financialProfile: countActiveSignals([isAnswered(inputs.budget, DEFAULT_BUDGET) ? inputs.budget : undefined]),
     culturalPreferences: countActiveSignals([
       inputs.religionImportance,
       inputs.preferredSpokenLanguage,
@@ -265,7 +284,7 @@ function buildDomainAssessments(inputs: UnderstandingInputs): DomainAssessment[]
     signalStatus(inputs.hobbyParticipation),
   ];
 
-  const financialStatuses: CoverageState[] = [signalStatus(inputs.budget)];
+  const financialStatuses: CoverageState[] = [signalStatus(isAnswered(inputs.budget, DEFAULT_BUDGET) ? inputs.budget : undefined)];
 
   const culturalStatuses: CoverageState[] = [
     signalStatus(inputs.religionImportance),
