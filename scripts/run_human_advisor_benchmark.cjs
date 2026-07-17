@@ -542,4 +542,16 @@ function main() {
   }
 }
 
-main();
+module.exports = {
+  buildPersonas,
+  buildBenchmarkResults,
+  buildAdvisorTop5,
+  agreementPercentage,
+  benchmarkStatus,
+  advisorPriorityBonuses,
+  advisorCareTypeAdjustment,
+};
+
+if (require.main === module) {
+  main();
+}
