@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -55,6 +55,14 @@ class Facility(Base):
 	intelligence_profile = relationship(
 		"FacilityIntelligenceProfile", back_populates="facility", uselist=False, cascade="all, delete-orphan"
 	)
+	portal_users = relationship("FacilityUser", back_populates="facility", cascade="all, delete-orphan")
+	portal_capabilities = relationship("FacilityCapability", back_populates="facility", cascade="all, delete-orphan")
+	portal_photos = relationship("FacilityPhoto", back_populates="facility", cascade="all, delete-orphan")
+	portal_activity_categories = relationship("FacilityActivityCategory", back_populates="facility", cascade="all, delete-orphan")
+	verification_memory_records = relationship("FacilityVerificationMemory", back_populates="facility", cascade="all, delete-orphan")
+	verification_requests = relationship("FacilityVerificationRequest", back_populates="facility", cascade="all, delete-orphan")
+	verification_responses = relationship("FacilityVerificationResponse", back_populates="facility", cascade="all, delete-orphan")
+	profile_completeness = relationship("FacilityProfileCompleteness", back_populates="facility", uselist=False, cascade="all, delete-orphan")
 
 
 class Staffing(Base):
@@ -263,3 +271,203 @@ class FacilityIntelligenceProfile(Base):
 	)
 
 	facility = relationship("Facility", back_populates="intelligence_profile")
+
+
+class FacilityUser(Base):
+	__tablename__ = "facility_users"
+	__table_args__ = (
+		UniqueConstraint("facility_id", "email", name="uq_facility_users_facility_email"),
+		Index("ix_facility_users_facility_role", "facility_id", "role"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	email = Column(String(255), nullable=False)
+	password_hash = Column(String(255), nullable=False)
+	full_name = Column(String(255), nullable=True)
+	role = Column(String(40), nullable=False)  # admin, marketing, admissions, activities_coordinator
+	is_active = Column(Boolean, nullable=False, default=True)
+	last_login_at = Column(DateTime(timezone=True), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True),
+		server_default=func.now(),
+		onupdate=func.now(),
+		nullable=False,
+	)
+
+	facility = relationship("Facility", back_populates="portal_users")
+
+
+class FacilityCapability(Base):
+	__tablename__ = "facility_capabilities"
+	__table_args__ = (
+		UniqueConstraint("facility_id", "capability", name="uq_facility_capabilities_facility_capability"),
+		Index("ix_facility_capabilities_facility_value", "facility_id", "value"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	capability = Column(String(120), nullable=False)
+	value = Column(String(20), nullable=False, default="UNKNOWN")  # YES, NO, LIMITED, UNKNOWN
+	source = Column(String(60), nullable=False, default="provider_portal")
+	verified_at = Column(DateTime(timezone=True), nullable=True)
+	expires_at = Column(DateTime(timezone=True), nullable=True)
+	confidence = Column(Float, nullable=False, default=0.0)
+	verification_count = Column(Integer, nullable=False, default=0)
+	last_updated_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+	notes = Column(Text, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True),
+		server_default=func.now(),
+		onupdate=func.now(),
+		nullable=False,
+	)
+
+	facility = relationship("Facility", back_populates="portal_capabilities")
+
+
+class FacilityPhoto(Base):
+	__tablename__ = "facility_photos"
+	__table_args__ = (
+		Index("ix_facility_photos_facility_category", "facility_id", "category"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	category = Column(String(60), nullable=False)
+	url = Column(String(1000), nullable=False)
+	caption = Column(String(255), nullable=True)
+	source = Column(String(60), nullable=False, default="provider_portal")
+	uploaded_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+	uploaded_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	is_active = Column(Boolean, nullable=False, default=True)
+
+	facility = relationship("Facility", back_populates="portal_photos")
+
+
+class FacilityActivityCategory(Base):
+	__tablename__ = "facility_activity_categories"
+	__table_args__ = (
+		UniqueConstraint("facility_id", "category", name="uq_facility_activity_categories_facility_category"),
+		Index("ix_facility_activity_categories_facility_availability", "facility_id", "availability"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	category = Column(String(40), nullable=False)  # movie, music, lecture, gardening, exercise, religious, social
+	availability = Column(String(20), nullable=False, default="UNKNOWN")  # YES, NO, LIMITED, UNKNOWN
+	confidence = Column(Float, nullable=False, default=0.0)
+	import_source = Column(String(60), nullable=True)
+	last_imported_at = Column(DateTime(timezone=True), nullable=True)
+	updated_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+	updated_at = Column(
+		DateTime(timezone=True),
+		server_default=func.now(),
+		onupdate=func.now(),
+		nullable=False,
+	)
+
+	facility = relationship("Facility", back_populates="portal_activity_categories")
+
+
+class FacilityVerificationMemory(Base):
+	__tablename__ = "facility_verification_memory"
+	__table_args__ = (
+		UniqueConstraint("facility_id", "capability", name="uq_facility_verification_memory_facility_capability"),
+		Index("ix_facility_verification_memory_facility_confidence", "facility_id", "confidence"),
+		Index("ix_facility_verification_memory_expires_at", "expires_at"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	capability = Column(String(120), nullable=False)
+	value = Column(String(20), nullable=False)  # YES, NO, LIMITED, UNKNOWN
+	verification_source = Column(String(60), nullable=False)
+	verified_at = Column(DateTime(timezone=True), nullable=False)
+	expires_at = Column(DateTime(timezone=True), nullable=False)
+	confidence = Column(Float, nullable=False, default=0.0)
+	verification_count = Column(Integer, nullable=False, default=1)
+	conflict_count = Column(Integer, nullable=False, default=0)
+	last_request_id = Column(Integer, ForeignKey("facility_verification_requests.id"), nullable=True)
+	last_response_id = Column(Integer, ForeignKey("facility_verification_responses.id"), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True),
+		server_default=func.now(),
+		onupdate=func.now(),
+		nullable=False,
+	)
+
+	facility = relationship("Facility", back_populates="verification_memory_records")
+
+
+class FacilityVerificationRequest(Base):
+	__tablename__ = "facility_verification_requests"
+	__table_args__ = (
+		Index("ix_facility_verification_requests_facility_status", "facility_id", "status"),
+		Index("ix_facility_verification_requests_sent_at", "sent_at"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	requested_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+	channel = Column(String(40), nullable=False, default="provider_portal")
+	subject = Column(String(255), nullable=True)
+	body = Column(Text, nullable=True)
+	status = Column(String(30), nullable=False, default="sent")
+	sent_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	facility = relationship("Facility", back_populates="verification_requests")
+
+
+class FacilityVerificationResponse(Base):
+	__tablename__ = "facility_verification_responses"
+	__table_args__ = (
+		Index("ix_facility_verification_responses_request", "request_id"),
+		Index("ix_facility_verification_responses_facility_capability", "facility_id", "capability"),
+		Index("ix_facility_verification_responses_verified_at", "verified_at"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	request_id = Column(Integer, ForeignKey("facility_verification_requests.id"), index=True, nullable=False)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	responded_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+	capability = Column(String(120), nullable=False)
+	value = Column(String(20), nullable=False)  # YES, NO, LIMITED, UNKNOWN
+	source = Column(String(60), nullable=False, default="provider_portal")
+	verified_at = Column(DateTime(timezone=True), nullable=False)
+	expires_at = Column(DateTime(timezone=True), nullable=False)
+	confidence = Column(Float, nullable=False, default=0.0)
+	notes = Column(Text, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	facility = relationship("Facility", back_populates="verification_responses")
+
+
+class FacilityProfileCompleteness(Base):
+	__tablename__ = "facility_profile_completeness"
+	__table_args__ = (
+		UniqueConstraint("facility_id", name="uq_facility_profile_completeness_facility"),
+		Index("ix_facility_profile_completeness_overall", "overall_score"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	medical_completeness = Column(Float, nullable=False, default=0.0)
+	lifestyle_completeness = Column(Float, nullable=False, default=0.0)
+	dining_completeness = Column(Float, nullable=False, default=0.0)
+	photos_completeness = Column(Float, nullable=False, default=0.0)
+	activity_completeness = Column(Float, nullable=False, default=0.0)
+	overall_score = Column(Float, nullable=False, default=0.0)
+	calculated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	updated_at = Column(
+		DateTime(timezone=True),
+		server_default=func.now(),
+		onupdate=func.now(),
+		nullable=False,
+	)
+
+	facility = relationship("Facility", back_populates="profile_completeness")
