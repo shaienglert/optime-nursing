@@ -75,6 +75,37 @@ function buildGeographicCoverage(facilities) {
   };
 }
 
+function normalizeCounty(value) {
+  const county = String(value || '').trim();
+  if (!county) return '';
+  const withSuffix = county.toLowerCase().endsWith('county') ? county : `${county} County`;
+  return withSuffix
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function extractCountyFromAddress(address) {
+  const match = String(address || '').match(/([A-Za-z .'-]+?)\s+County/i);
+  if (!match) return '';
+  return normalizeCounty(match[1]);
+}
+
+function buildCountyCoverage(backendFacilities) {
+  const byCounty = new Map();
+
+  backendFacilities.forEach((facility) => {
+    const county =
+      normalizeCounty(facility.county)
+      || extractCountyFromAddress(facility.address)
+      || 'UNKNOWN';
+    byCounty.set(county, (byCounty.get(county) || 0) + 1);
+  });
+
+  return byCounty;
+}
+
 function main() {
   const backendFacilities = simulationHelpers.loadBackendFacilities();
   const facilities = backendFacilities.map((facility) => simulationHelpers.toSearchFacility(facility, 'post'));
@@ -82,6 +113,7 @@ function main() {
   const totalFacilities = facilities.length;
   const categoryStats = buildCategoryStats(facilities);
   const geography = buildGeographicCoverage(facilities);
+  const countyCoverage = buildCountyCoverage(backendFacilities);
 
   const categoryRows = TARGET_CATEGORIES.map((category) => {
     const entry = categoryStats.get(category);
@@ -141,6 +173,13 @@ function main() {
   reportLines.push('');
   reportLines.push('## Geographic Coverage');
   reportLines.push('');
+  reportLines.push('### County Coverage');
+  reportLines.push('');
+  reportLines.push(markdownTable(
+    ['County', 'Facility Count', 'Share'],
+    topNEntries(countyCoverage, countyCoverage.size).map(([county, count]) => [county, count, `${percentage(count, totalFacilities)}%`]),
+  ));
+  reportLines.push('');
   reportLines.push('### Top States by Facility Count');
   reportLines.push('');
   reportLines.push(markdownTable(
@@ -162,10 +201,24 @@ function main() {
   reportLines.push(`- Independent Living + Assisted Living + Active Adult >= 50%: **${threshold2Pass ? 'PASS' : 'FAIL'}**`);
   reportLines.push(`  - Combined share: ${independentGroupPct}%`);
   reportLines.push('');
+  reportLines.push('## Facility Classification');
+  reportLines.push('');
+  reportLines.push(markdownTable(
+    ['Facility', 'County', 'Categories'],
+    facilities
+      .map((facility, index) => {
+        const backend = backendFacilities[index] || {};
+        const county = normalizeCounty(backend.county) || extractCountyFromAddress(backend.address) || 'UNKNOWN';
+        return [facility.name, county, facility.careTypes.join('; ') || 'UNKNOWN'];
+      })
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+  ));
+  reportLines.push('');
   reportLines.push('## Notes');
   reportLines.push('');
   reportLines.push('- Facilities may belong to multiple categories; percentages are per-category coverage over total facilities and are not mutually exclusive.');
   reportLines.push('- Category assignment uses the post-taxonomy inference pipeline (`toSearchFacility(..., "post")`).');
+  reportLines.push('- County coverage uses `county` when available in source data; if missing, it attempts address-based extraction, else marks `UNKNOWN`.');
 
   const reportPath = path.join(repoRoot, 'reports', 'inventory_mix_report.md');
   fs.writeFileSync(reportPath, reportLines.join('\n'));
@@ -177,6 +230,7 @@ function main() {
   console.log(`INDEPENDENT_GROUP_PCT=${independentGroupPct}`);
   console.log(`CRITERIA_40=${threshold1Pass ? 'PASS' : 'FAIL'}`);
   console.log(`CRITERIA_50=${threshold2Pass ? 'PASS' : 'FAIL'}`);
+  console.log(`COUNTY_ROWS=${countyCoverage.size}`);
 }
 
 main();
