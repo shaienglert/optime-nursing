@@ -60,7 +60,7 @@ function evaluateScenario(name, output) {
   const top10 = accepted.slice(0, 10);
   const top5 = accepted.slice(0, 5);
 
-  if (name === 'Independent only') {
+  if (name === 'Independent communities only') {
     const violations = top10.filter((item) => {
       const facility = item.facility;
       const hasIndependent = hasAnyCareType(facility, ['Independent Living', 'Active Adult 55+']);
@@ -74,7 +74,7 @@ function evaluateScenario(name, output) {
     };
   }
 
-  if (name === 'Future support available') {
+  if (name === 'Independent today, support available later') {
     const standaloneClinicalTop10 = top10.filter((item) => isStandaloneClinicalCommunity(item.facility, 'Skilled Nursing') || isStandaloneClinicalCommunity(item.facility, 'Rehabilitation'));
     const independenceReadyTop5 = top5.filter((item) => hasAnyCareType(item.facility, ['Independent Living', 'Active Adult 55+', 'CCRC', 'Continuing Care'])).length;
     return {
@@ -97,7 +97,7 @@ function evaluateScenario(name, output) {
 function main() {
   const backendFacilities = loadBackendFacilities();
   const facilities = backendFacilities.map((facility) => toSearchFacility(facility, 'post'));
-  const scenarios = ['Independent only', 'Future support available', 'Full continuum of care'];
+  const scenarios = ['Independent communities only', 'Independent today, support available later', 'Full continuum of care on one campus'];
 
   const rows = [];
   const reportLines = ['# Future Care Preference UI Simulation', ''];
