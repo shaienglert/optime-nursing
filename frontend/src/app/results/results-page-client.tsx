@@ -474,7 +474,6 @@ export function ResultsPageClient() {
               <p><strong>Runtime trace:</strong> {report.scoreTraceability.join(" | ")}</p>
             </div>
           </details>
-          </section>
         </div>
 
         <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
