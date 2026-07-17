@@ -87,6 +87,8 @@ type FutureCarePreferenceEvaluation = {
   rejectionReasons: string[];
 };
 
+type CurrentCareNeed = "Fully Independent" | "Light Assistance" | "Memory Support" | "Complex Medical Needs";
+
 type ReportContributor = {
   signal: string;
   source: string;
@@ -399,6 +401,61 @@ function hasFamilyPriority(state: QuestionnaireState): boolean {
       state.humanIntelligenceV2.familyProfile.involvedFamilyMembers ||
       state.humanIntelligenceV2.familyCultureProfile.involvementExpectation,
   );
+}
+
+function resolveCurrentCareNeed(state: QuestionnaireState): CurrentCareNeed {
+  const assistance = state.assistanceLevel;
+  const memory = state.memoryStatus;
+  const notes = state.notes.toLowerCase();
+
+  if (assistance === "Skilled nursing care" || /rehab|rehabilitation|post[- ]?hospital|complex medical|high acuity/.test(notes)) {
+    return "Complex Medical Needs";
+  }
+
+  if (memory === "Significant memory issues") {
+    return "Memory Support";
+  }
+
+  if (assistance === "Fully independent") {
+    return "Fully Independent";
+  }
+
+  return "Light Assistance";
+}
+
+export function resolveAllowedCareTypes(currentCareNeed: CurrentCareNeed, futureCarePreference?: string): string[] {
+  if (currentCareNeed === "Fully Independent") {
+    if (futureCarePreference === "Independent communities only") {
+      return ["Independent Living", "Active Adult 55+"];
+    }
+
+    if (futureCarePreference === "Independent today, support available later") {
+      return ["Independent Living", "Active Adult 55+", "Assisted Living", "CCRC"];
+    }
+
+    if (futureCarePreference === "Full continuum of care on one campus") {
+      return ["Independent Living", "Assisted Living", "Memory Care", "CCRC"];
+    }
+
+    return ["Independent Living", "Active Adult 55+", "Assisted Living", "CCRC"];
+  }
+
+  if (currentCareNeed === "Light Assistance") {
+    return ["Assisted Living", "CCRC"];
+  }
+
+  if (currentCareNeed === "Memory Support") {
+    return ["Memory Care", "CCRC"];
+  }
+
+  return ["Skilled Nursing", "Rehabilitation"];
+}
+
+function supportsAllowedCareType(facility: SearchFacility, allowedCareTypes: string[]): boolean {
+  return facility.careTypes.some((careType) => {
+    if (allowedCareTypes.includes(careType)) return true;
+    return careType === "Continuing Care" && allowedCareTypes.includes("CCRC");
+  });
 }
 
 function scoreMemoryNeedCriterion(facility: SearchFacility, state: QuestionnaireState): number {
@@ -901,6 +958,15 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
   const continuingCareProbability = probabilities["Continuing Care"];
   const hospiceProbability = probabilities.Hospice;
   const unknownProbability = probabilities.UNKNOWN;
+  const currentCareNeed = resolveCurrentCareNeed(state);
+  const allowedCareTypes = resolveAllowedCareTypes(currentCareNeed, state.futureCarePreference);
+  const supportsAllowedCare = supportsAllowedCareType(facility, allowedCareTypes);
+  const allowedCoverage = allowedCareTypes.reduce((sum, careType) => {
+    if (careType === "CCRC") {
+      return sum + ccrcProbability + continuingCareProbability;
+    }
+    return sum + (probabilities[careType as keyof typeof probabilities] || 0);
+  }, 0);
 
   if (assistance === "Fully independent") {
     let independentScore = 15;
@@ -920,7 +986,7 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
     if (facility.careTypes.includes("Rehabilitation")) independentScore -= 35;
     if (facility.careTypes.includes("Memory Care")) independentScore -= 20;
     if (facility.careTypes.includes("UNKNOWN")) independentScore -= 15;
-    return clamp(independentScore);
+    return clamp(independentScore + (supportsAllowedCare ? 12 : -35) + (allowedCoverage * 18));
   }
 
   if (assistance === "Skilled nursing care") {
@@ -931,7 +997,7 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
     score += assistedLivingProbability * 8;
     score -= independentProbability * 30;
     score -= activeAdultProbability * 25;
-    return clamp(score);
+    return clamp(score + (supportsAllowedCare ? 12 : -35) + (allowedCoverage * 18));
   }
 
   if (memory === "Significant memory issues") {
@@ -942,7 +1008,7 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
     score -= independentProbability * 25;
     score -= activeAdultProbability * 20;
     if (!careText.includes("memory")) score -= 15;
-    return clamp(score);
+    return clamp(score + (supportsAllowedCare ? 12 : -35) + (allowedCoverage * 18));
   }
 
   let score = 18;
@@ -970,7 +1036,7 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
     if (facility.careTypes.includes("Skilled Nursing")) score += 5;
   }
 
-  return clamp(score);
+  return clamp(score + (supportsAllowedCare ? 12 : -35) + (allowedCoverage * 18));
 }
 
 function scoreLifestyleFit(facility: SearchFacility, state: QuestionnaireState): number {
@@ -1080,7 +1146,13 @@ function collectHardRejectionReasons(facility: SearchFacility, state: Questionna
   const careFit = state.assistanceLevel === "Fully independent" ? scoreIndependenceCriterion(facility, state) : scoreCareFit(facility, state);
   const financialFit = scoreFinancialFit(facility, state);
   const familyFit = scoreFamilyFit(state).score;
+  const currentCareNeed = resolveCurrentCareNeed(state);
+  const allowedCareTypes = resolveAllowedCareTypes(currentCareNeed, state.futureCarePreference);
   reasons.push(...evaluateFutureCarePreference(facility, state).rejectionReasons);
+
+  if (!supportsAllowedCareType(facility, allowedCareTypes)) {
+    reasons.push(`Care strategy mismatch: ${currentCareNeed} requires one of ${allowedCareTypes.join(", ")}.`);
+  }
 
   if (careFit < 30) {
     reasons.push("Required care level is not met for this community.");

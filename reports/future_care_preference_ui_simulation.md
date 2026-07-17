@@ -19,7 +19,7 @@
 ## Independent today, support available later
 
 - Verdict: **PASS**
-- Accepted results: **39**
+- Accepted results: **8**
 - Top result: **JOHN KNOX VILLAGE OF POMPANO BEACH**
 - Top result care types: **Independent Living, CCRC**
 - Validation note: Top 5 contained 5 independence-first or continuum options.
@@ -35,7 +35,7 @@
 ## Full continuum of care on one campus
 
 - Verdict: **PASS**
-- Accepted results: **39**
+- Accepted results: **8**
 - Top result: **JOHN KNOX VILLAGE OF POMPANO BEACH**
 - Top result care types: **Independent Living, CCRC**
 - Validation note: Top 5 contained 1 continuum-oriented communities.
