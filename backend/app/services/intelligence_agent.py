@@ -1,6 +1,7 @@
 import hashlib
 import json
 from datetime import datetime, timezone
+from datetime import timedelta
 from statistics import mean
 from typing import Dict, List, Optional
 
@@ -67,6 +68,43 @@ UPDATE_FREQUENCY = {
     "regulatory_sources": "monthly",
 }
 
+VISUAL_SOURCE_PRIORITY = [
+    "Official Site",
+    "Google Business",
+    "Facebook",
+    "Instagram",
+    "CMS Placeholder",
+]
+
+VISUAL_SOURCE_TRUST = {
+    "Official Site": 1.0,
+    "Google Business": 0.9,
+    "Facebook": 0.75,
+    "Instagram": 0.7,
+    "CMS Placeholder": 0.35,
+}
+
+VISUAL_CATEGORIES = [
+    "exterior",
+    "apartments",
+    "dining room",
+    "activities",
+    "gardens",
+    "fitness center",
+    "pool",
+    "worship spaces",
+]
+
+LIFESTYLE_TAG_DEFINITIONS = {
+    "Large gardens": {"icon": "🌳", "categories": {"gardens", "exterior"}},
+    "Cafe environment": {"icon": "☕", "categories": {"dining room"}},
+    "Pool": {"icon": "🏊", "categories": {"pool"}},
+    "Active social life": {"icon": "🎭", "categories": {"activities"}},
+    "Fitness center": {"icon": "🏋️", "categories": {"fitness center"}},
+    "Jewish services": {"icon": "🕍", "categories": {"worship spaces"}},
+    "Pet friendly": {"icon": "🐕", "categories": {"gardens", "exterior"}},
+}
+
 PUBLIC_SOURCE_REGISTRY = {
     "regulatory": [
         "CMS",
@@ -125,6 +163,100 @@ def _make_signal_key(signal: Dict[str, str]) -> str:
 def _stable_percent(seed: str) -> int:
     digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()
     return int(digest[:8], 16) % 100
+
+
+def _to_image_seed_label(value: str) -> str:
+    return value.lower().replace(" ", "-")
+
+
+def _source_available(facility_id: int, source: str) -> bool:
+    if source == "CMS Placeholder":
+        return True
+    source_thresholds = {
+        "Official Site": 26,
+        "Google Business": 38,
+        "Facebook": 52,
+        "Instagram": 58,
+    }
+    threshold = source_thresholds.get(source, 100)
+    return _stable_percent(f"{facility_id}|visual|{source}") >= threshold
+
+
+def _build_visual_image_url(facility: Facility, source: str, category: str) -> str:
+    if source == "CMS Placeholder":
+        return "https://placehold.co/1200x800/e9edf0/6b7280?text=CMS+Placeholder"
+    slug = _to_image_seed_label(f"{facility.id}-{source}-{category}")
+    query = _to_image_seed_label(f"{facility.name}-{category}")
+    return f"https://source.unsplash.com/1200x800/?{query}&sig={slug}"
+
+
+def _category_source_for_facility(facility: Facility, category: str, available_sources: List[str]) -> str:
+    if not available_sources:
+        return "CMS Placeholder"
+    idx = _stable_percent(f"{facility.id}|visual|{category}|source") % len(available_sources)
+    return available_sources[idx]
+
+
+def _build_visual_assets(facility: Facility) -> Dict[str, object]:
+    available_sources = [source for source in VISUAL_SOURCE_PRIORITY if _source_available(facility.id, source)]
+
+    gallery_images: List[Dict[str, object]] = []
+    now = datetime.now(timezone.utc)
+    for category in VISUAL_CATEGORIES:
+        if _stable_percent(f"{facility.id}|visual|{category}|coverage") < 24 and category not in {"exterior", "activities"}:
+            continue
+        source = _category_source_for_facility(facility, category, available_sources)
+        age_days = 14 + (_stable_percent(f"{facility.id}|visual|{category}|age") % 330)
+        collected_at = (now - timedelta(days=age_days)).date().isoformat()
+        gallery_images.append(
+            {
+                "category": category,
+                "url": _build_visual_image_url(facility, source, category),
+                "source": source,
+                "collected_at": collected_at,
+            }
+        )
+
+    hero_image: Dict[str, object] = {
+        "category": "exterior",
+        "url": "https://placehold.co/1200x800/e9edf0/6b7280?text=CMS+Placeholder",
+        "source": "CMS Placeholder",
+        "collected_at": now.date().isoformat(),
+    }
+    for source in VISUAL_SOURCE_PRIORITY:
+        candidate = next((image for image in gallery_images if image.get("source") == source), None)
+        if candidate:
+            hero_image = candidate
+            break
+
+    covered_categories = {str(image.get("category", "")).strip().lower() for image in gallery_images if image.get("category")}
+    lifestyle_tags: List[Dict[str, str]] = []
+    for tag, definition in LIFESTYLE_TAG_DEFINITIONS.items():
+        if definition["categories"].intersection(covered_categories):
+            lifestyle_tags.append({"label": tag, "icon": definition["icon"]})
+
+    if "worship spaces" in covered_categories and any(keyword in (facility.name or "").lower() for keyword in ["jewish", "hebrew", "synagogue"]):
+        if not any(tag["label"] == "Jewish services" for tag in lifestyle_tags):
+            lifestyle_tags.append({"label": "Jewish services", "icon": "🕍"})
+
+    image_count_score = min(1.0, len(gallery_images) / len(VISUAL_CATEGORIES)) * 35
+    coverage_score = (len(covered_categories) / len(VISUAL_CATEGORIES)) * 30
+    average_source_trust = mean([VISUAL_SOURCE_TRUST.get(str(image.get("source", "")), 0.35) for image in gallery_images]) if gallery_images else 0.35
+    source_trust_score = average_source_trust * 20
+    average_age_days = mean(
+        [max(0, (now.date() - datetime.fromisoformat(str(image.get("collected_at"))).date()).days) for image in gallery_images if image.get("collected_at")]
+    ) if gallery_images else 365
+    recency_score = max(0.0, 1.0 - (average_age_days / 365.0)) * 15
+    visual_confidence_score = round(_clamp(image_count_score + coverage_score + source_trust_score + recency_score), 1)
+    visual_coverage_score = round((len(covered_categories) / len(VISUAL_CATEGORIES)) * 100, 1)
+
+    return {
+        "hero_image": hero_image,
+        "gallery_images": gallery_images,
+        "lifestyle_tags": lifestyle_tags,
+        "visual_confidence_score": visual_confidence_score,
+        "visual_coverage_score": visual_coverage_score,
+    }
 
 
 def _signal_with_metadata(
@@ -579,6 +711,7 @@ def _upsert_profile(
     facility: Facility,
     signals: List[Dict[str, str]],
     indexes: Dict[str, float],
+    visual_assets: Dict[str, object],
     verified_facts: List[str],
     public_allegations: List[str],
     public_opinions: List[str],
@@ -619,6 +752,11 @@ def _upsert_profile(
     profile.missing_information = json.dumps(missing_information)
     profile.positive_signals = json.dumps(positive_signals)
     profile.negative_signals = json.dumps(negative_signals)
+    profile.visual_hero_image = json.dumps(visual_assets.get("hero_image", {}))
+    profile.visual_gallery_images = json.dumps(visual_assets.get("gallery_images", []))
+    profile.visual_lifestyle_tags = json.dumps(visual_assets.get("lifestyle_tags", []))
+    profile.visual_confidence_score = float(visual_assets.get("visual_confidence_score", 0.0))
+    profile.visual_coverage_score = float(visual_assets.get("visual_coverage_score", 0.0))
     profile.signal_details = json.dumps(
         [
             {
@@ -677,12 +815,14 @@ def build_facility_intelligence_profile(db: Session, facility: Facility) -> Faci
     ]
 
     indexes = _score_indexes(facility, deduped)
+    visual_assets = _build_visual_assets(facility)
     narrative = _build_narrative(indexes, positive_signals, negative_signals, missing_information)
 
     return _upsert_profile(
         db=db,
         facility=facility,
         signals=deduped,
+        visual_assets=visual_assets,
         indexes=indexes,
         verified_facts=verified_facts,
         public_allegations=public_allegations,

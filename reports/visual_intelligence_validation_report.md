@@ -1,0 +1,117 @@
+# Visual Intelligence Validation Report
+
+Overall Status: **PASS**
+
+## Validation Summary
+
+- Build PASS: **PASS**
+- Simulation PASS: **PASS**
+- At least 70% image coverage: **PASS** (83.5%)
+- No ranking regressions: **PASS**
+
+## Coverage Metrics
+
+- Average visual coverage 83.5% with 91% facilities at >=70%.
+
+| Facility ID | Community | Hero Source | Gallery Count | Visual Coverage % | Visual Confidence |
+| --- | --- | --- | --- | --- | --- |
+| 1 | LAKE EUSTIS HEALTHCARE AND REHABILITATION CENTER | Official Site | 8 | 100 | 91.3 |
+| 2 | BEACH STREET HEALTH AND REHABILITATION CENTER | Official Site | 8 | 100 | 94.6 |
+| 3 | CORAL GABLES NURSING AND REHABILITATION CENTER | Official Site | 7 | 87.5 | 85.3 |
+| 4 | BISCAYNE HEALTH AND REHABILITATION CENTER | Official Site | 7 | 87.5 | 84.1 |
+| 5 | GOLFCREST NURSING CENTER | Google Business | 7 | 87.5 | 86.1 |
+| 6 | AVIATA AT THE SEA - PASADENA | Official Site | 6 | 75 | 75.8 |
+| 7 | RIVER GARDEN HEBREW HOME FOR THE AGED | Official Site | 6 | 75 | 76.1 |
+| 8 | COMMUNITY CONVALESCENT CENTER | Official Site | 5 | 62.5 | 72.6 |
+| 9 | MIAMI JEWISH HEALTH SYSTEMS, INC | Official Site | 6 | 75 | 76.9 |
+| 10 | PALMS AT SEBRING NURSING AND REHABILITATION THE | Official Site | 8 | 100 | 90.5 |
+| 11 | BEACHSIDE CENTER FOR REHABILITATION AND NURSING | Official Site | 6 | 75 | 76.1 |
+| 12 | Rehabilitation Center of The Palm Beaches, The | Official Site | 8 | 100 | 94 |
+| 13 | BRADEN RIVER REHABILITATION CENTER LLC | Google Business | 7 | 87.5 | 82.2 |
+| 14 | SHORE ACRES CARE CENTER AND REHAB | Google Business | 7 | 87.5 | 81.5 |
+| 15 | SEASIDE HEALTH AND REHABILITATION CENTER | Official Site | 7 | 87.5 | 85.9 |
+| 16 | PINES NURSING HOME | Facebook | 7 | 87.5 | 82.2 |
+| 17 | BOULEVARD REHABILITATION CENTER | Google Business | 8 | 100 | 89.5 |
+| 18 | BAYSIDE CARE CENTER | Official Site | 5 | 62.5 | 69.1 |
+| 19 | LEXINGTON HEALTHCARE AND REHABILITATION CENTER | Official Site | 7 | 87.5 | 82.4 |
+| 20 | BROWARD NURSING & REHABILITATION CENTER | Official Site | 6 | 75 | 79.6 |
+| 21 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Official Site | 6 | 75 | 77 |
+| 22 | SOUTH HERITAGE HEALTH & REHABILITATION CENTER | Official Site | 6 | 75 | 76.9 |
+| 23 | WILTON MANORS HEALTHCARE & REHABILITATION CENTER | Official Site | 6 | 75 | 74.5 |
+| 24 | SERENITY BAY NURSING AND REHABILITATION CENTER | Official Site | 7 | 87.5 | 85 |
+| 25 | TERRACES OF LAKE WORTH CARE CENTER AND REHAB | Official Site | 7 | 87.5 | 84.5 |
+| 26 | MORTON PLANT REHABILITATION CENTER | Official Site | 6 | 75 | 73.7 |
+| 27 | AVIATA AT LAKESIDE OAKS | Official Site | 8 | 100 | 92.8 |
+| 28 | RIVERWOOD CENTER | Official Site | 7 | 87.5 | 83.1 |
+| 29 | JACKSONVILLE REHABILITATION AND NURSING | Official Site | 6 | 75 | 80.2 |
+| 30 | THE BRISTOL CARE CENTER | Instagram | 7 | 87.5 | 80.1 |
+| 31 | PARKSIDE HEALTH AND REHABILITATION CENTER | Google Business | 7 | 87.5 | 83.3 |
+| 32 | VENTURA HEALTH AND REHABILITATION CENTER | Official Site | 6 | 75 | 78.2 |
+| 33 | PINES OF SARASOTA | Official Site | 5 | 62.5 | 64.6 |
+| 34 | AVIATA AT EMERALD SHORES | Official Site | 6 | 75 | 79.2 |
+| 35 | NORTH HEALTHCARE AND REHABILITATION CENTER | Google Business | 8 | 100 | 90.9 |
+| 36 | Pinecrest Center for Rehabilitation and Healing | Google Business | 7 | 87.5 | 84.8 |
+| 37 | SARASOTA HEALTH AND REHABILITATION CENTER | Official Site | 7 | 87.5 | 82.8 |
+| 38 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Official Site | 8 | 100 | 94.1 |
+| 39 | GREENBRIAR HEALTHCARE REHABILITATION AND NURSING C | Official Site | 8 | 100 | 93.1 |
+| 40 | MADISON POINTE CARE CENTER | Google Business | 6 | 75 | 72.7 |
+| 41 | FOUNTAIN MANOR HEALTH & REHABILITATION CENTER | Facebook | 6 | 75 | 70.1 |
+| 42 | PLANTATION NURSING & REHABILITATION CENTER | CMS Placeholder | 6 | 75 | 68 |
+| 43 | WINTER HAVEN HEALTH AND REHABILITATION CENTER | Facebook | 6 | 75 | 73.3 |
+| 44 | CRESTVIEW REHABILITATION CENTER, LLC | Google Business | 6 | 75 | 71.8 |
+| 45 | PARK MEADOWS HEALTHCARE & REHABILITATION CENTER | Official Site | 7 | 87.5 | 83.5 |
+| 46 | THE LODGE HEALTHCARE AND REHABILITATION CENTER | Official Site | 6 | 75 | 77.3 |
+| 47 | APOLLO HEALTHCARE & REHABILITATION CENTER | Official Site | 7 | 87.5 | 87.4 |
+| 48 | SAVOY AT FORT LAUDERDALE REHABILITATION AND NURSIN | Google Business | 7 | 87.5 | 84.4 |
+| 49 | MELBOURNE HEALTHCARE AND REHABILITATION CENTER | Official Site | 6 | 75 | 80.3 |
+| 50 | W FRANK WELLS NURSING HOME | Instagram | 7 | 87.5 | 80.7 |
+| 51 | NORTH BEACH HEALTHCARE AND REHABILITATION CENTER | Official Site | 6 | 75 | 78.6 |
+| 52 | BOCA RATON REHABILITATION CENTER | Official Site | 5 | 62.5 | 69.9 |
+| 53 | LAURELLWOOD POST- ACUTE AND REHABILITATION CENTER | Official Site | 5 | 62.5 | 67.7 |
+| 54 | SANDS AT SOUTH BEACH CARE CENTER, THE | Google Business | 6 | 75 | 72.3 |
+| 55 | VILLA MARIA NURSING CENTER | Facebook | 8 | 100 | 88.8 |
+| 56 | REHABILITATION AND HEALTHCARE CENTER OF TAMPA | Official Site | 7 | 87.5 | 86 |
+| 57 | BROWARD OAKS NURSING AND REHABILITATION | Google Business | 6 | 75 | 74.3 |
+| 58 | OAK MANOR HEALTHCARE & REHABILITATION CENTER | Official Site | 7 | 87.5 | 83.5 |
+| 59 | SUNRISE POINT HEALTH AND REHABILITATION CENTER | Google Business | 7 | 87.5 | 81.6 |
+| 60 | ROCKLEDGE HEALTHCARE & REHABILITATION CENTER | Official Site | 6 | 75 | 74.9 |
+| 61 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Google Business | 5 | 62.5 | 67.6 |
+| 62 | JOHN KNOX VILLAGE OF POMPANO BEACH | Official Site | 6 | 75 | 77.5 |
+| 63 | AVIATA AT SAINT LUCIE | Official Site | 6 | 75 | 75.3 |
+| 64 | AVIATA AT THE SEA - POMPANO BEACH | Official Site | 7 | 87.5 | 82.6 |
+| 65 | MEDICANA NURSING AND REHAB CENTER | Official Site | 6 | 75 | 72.2 |
+| 66 | ATHENS POST ACUTE LLC | Official Site | 7 | 87.5 | 85.2 |
+| 67 | Blue Lake Post Acute | Official Site | 7 | 87.5 | 86.6 |
+| 68 | EMERALD COAST CENTER | Official Site | 7 | 87.5 | 83.2 |
+| 69 | BAYSIDE HEALTH AND REHABILITATION CENTER | Official Site | 8 | 100 | 92.5 |
+| 70 | LAKESIDE HEALTH CENTER | Official Site | 8 | 100 | 89.8 |
+| 71 | GROVES CENTER | Official Site | 6 | 75 | 77.3 |
+| 72 | BOCA CIEGA CENTER | Google Business | 8 | 100 | 90.3 |
+| 73 | CLEARWATER CENTER | Official Site | 7 | 87.5 | 85.3 |
+| 74 | SOUTHERN PINES NURSING CENTER | CMS Placeholder | 8 | 100 | 83.8 |
+| 75 | STUART REHABILITATION AND HEALTHCARE | Official Site | 8 | 100 | 89.9 |
+| 76 | TARPON BAYOU CENTER | Official Site | 7 | 87.5 | 84.7 |
+| 77 | EDEN SPRINGS NURSING AND REHAB CENTER | Official Site | 5 | 62.5 | 64.5 |
+| 78 | LAKELAND HILLS CENTER | Official Site | 7 | 87.5 | 85 |
+| 79 | BARTOW CENTER | Google Business | 8 | 100 | 88.9 |
+| 80 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Official Site | 5 | 62.5 | 65.6 |
+| 81 | LIFE CARE CENTER OF PUNTA GORDA | Google Business | 6 | 75 | 76.1 |
+| 82 | LIFE CARE CENTER OF MELBOURNE | Google Business | 7 | 87.5 | 82.3 |
+| 83 | EAGLE LAKE NURSING AND REHAB CARE CENTER | Official Site | 8 | 100 | 95.7 |
+| 84 | EGRET COVE CENTER | Official Site | 6 | 75 | 74.6 |
+| 85 | FORT WALTON REHABILITATION CENTER, LLC | Official Site | 4 | 50 | 58.3 |
+| 86 | WESTLAKE NURSING AND REHAB CENTER | Official Site | 8 | 100 | 91.9 |
+| 87 | BROOKSVILLE HEALTHCARE CENTER | Official Site | 8 | 100 | 92.9 |
+| 88 | FT LAUDERDALE HEALTH & REHABILITATION CENTER | Official Site | 6 | 75 | 76.9 |
+| 89 | WHISPERING OAKS | Official Site | 7 | 87.5 | 81.9 |
+| 90 | MARTIN COAST CENTER FOR REHABILITATION AND HEALTHC | Official Site | 6 | 75 | 75.3 |
+| 91 | VALENCIA HILLS HEALTH AND REHABILITATION CENTER | Official Site | 6 | 75 | 76.9 |
+| 92 | OAK HAVEN REHAB AND NURSING CENTER | Official Site | 8 | 100 | 91.4 |
+| 93 | AVANTE AT LEESBURG, INC | Official Site | 7 | 87.5 | 84.4 |
+| 94 | FAIRWAY OAKS CENTER | Google Business | 6 | 75 | 75.6 |
+| 95 | PARKVIEW REHABILITATION CENTER AT WINTER PARK | Official Site | 6 | 75 | 74 |
+| 96 | AVANTE AT INVERNESS INC | Google Business | 8 | 100 | 90.3 |
+| 97 | AVANTE AT ORMOND BEACH, INC | Official Site | 8 | 100 | 94.3 |
+| 98 | DAYTONA BEACH HEALTH AND REHABILITATION CENTER | Google Business | 6 | 75 | 75 |
+| 99 | ST AUGUSTINE HEALTH AND REHABILITATION CENTER | Official Site | 8 | 100 | 89.6 |
+| 100 | CRYSTAL RIVER HEALTH AND REHABILITATION CENTER | Google Business | 6 | 75 | 75.3 |

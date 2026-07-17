@@ -76,6 +76,26 @@ export type FacilityIntelligenceSnapshot = {
   cultural_match_signals: number;
 };
 
+export type VisualImageAsset = {
+  category: string;
+  url: string;
+  source: "Official Site" | "Google Business" | "Facebook" | "Instagram" | "CMS Placeholder";
+  collected_at: string;
+};
+
+export type VisualLifestyleTag = {
+  label: string;
+  icon: string;
+};
+
+export type FacilityVisualIntelligence = {
+  heroImage: VisualImageAsset;
+  galleryImages: VisualImageAsset[];
+  lifestyleTags: VisualLifestyleTag[];
+  visualConfidenceScore: number;
+  visualCoverageScore: number;
+};
+
 export type SearchFacility = Facility & {
   imageUrl: string;
   optimeScore: number;
@@ -88,6 +108,7 @@ export type SearchFacility = Facility & {
   careTypeProbabilities: CareTypeProbabilities;
   intelligenceSnapshot?: FacilityIntelligenceSnapshot;
   matchBadges: string[];
+  visualIntelligence: FacilityVisualIntelligence;
   scoreBreakdown?: ScoreBreakdownItem[];
   searchTokens?: string[];
 };
@@ -137,6 +158,11 @@ type BackendFacility = {
   community_engagement_index?: number | null;
   reputation_index?: number | null;
   cultural_match_signals?: number | null;
+  visual_hero_image?: Record<string, unknown> | null;
+  visual_gallery_images?: Array<Record<string, unknown>> | null;
+  visual_lifestyle_tags?: Array<Record<string, unknown>> | null;
+  visual_confidence_score?: number | null;
+  visual_coverage_score?: number | null;
 };
 
 type BackendFacilityDetails = BackendFacility & {
@@ -304,6 +330,92 @@ const GALLERY_SETS: string[][] = [
     "https://images.unsplash.com/photo-1430285561322-7808604715df?auto=format&fit=crop&w=1400&q=80",
   ],
 ];
+
+const CMS_PLACEHOLDER_IMAGE = "/cms-placeholder.svg";
+
+function pickVisualSource(value: unknown): VisualImageAsset["source"] {
+  if (value === "Official Site" || value === "Google Business" || value === "Facebook" || value === "Instagram" || value === "CMS Placeholder") {
+    return value;
+  }
+  return "CMS Placeholder";
+}
+
+function toVisualAsset(raw: Record<string, unknown> | null | undefined, fallbackCategory: string): VisualImageAsset {
+  const source = pickVisualSource(raw?.source);
+  const url = typeof raw?.url === "string" && raw.url.trim() ? raw.url : CMS_PLACEHOLDER_IMAGE;
+  return {
+    category: typeof raw?.category === "string" && raw.category.trim() ? raw.category : fallbackCategory,
+    url,
+    source,
+    collected_at: typeof raw?.collected_at === "string" && raw.collected_at.trim() ? raw.collected_at : "",
+  };
+}
+
+function sourcePriorityRank(source: VisualImageAsset["source"]): number {
+  switch (source) {
+    case "Official Site":
+      return 1;
+    case "Google Business":
+      return 2;
+    case "Facebook":
+      return 3;
+    case "Instagram":
+      return 4;
+    default:
+      return 5;
+  }
+}
+
+function buildFallbackVisualIntelligence(facilityId: number): FacilityVisualIntelligence {
+  const fallbackGallery = (GALLERY_SETS[facilityId % GALLERY_SETS.length] || []).map((url, index) => ({
+    category: ["exterior", "apartments", "dining room"][index] || "exterior",
+    url,
+    source: "CMS Placeholder" as const,
+    collected_at: "",
+  }));
+  const heroImage = fallbackGallery[0] || {
+    category: "exterior",
+    url: CMS_PLACEHOLDER_IMAGE,
+    source: "CMS Placeholder" as const,
+    collected_at: "",
+  };
+
+  return {
+    heroImage,
+    galleryImages: fallbackGallery,
+    lifestyleTags: [],
+    visualConfidenceScore: fallbackGallery.length > 0 ? 50 : 0,
+    visualCoverageScore: fallbackGallery.length > 0 ? 37.5 : 0,
+  };
+}
+
+function buildVisualIntelligence(facility: BackendFacility): FacilityVisualIntelligence {
+  const fallback = buildFallbackVisualIntelligence(facility.id);
+  const galleryRaw = Array.isArray(facility.visual_gallery_images) ? facility.visual_gallery_images : [];
+  const galleryImages = galleryRaw.map((item) => toVisualAsset(item, "exterior"));
+
+  const heroCandidate = toVisualAsset((facility.visual_hero_image || {}) as Record<string, unknown>, "exterior");
+  const heroFromPriority = [...galleryImages].sort((left, right) => sourcePriorityRank(left.source) - sourcePriorityRank(right.source))[0];
+  const heroImage = heroCandidate.url !== CMS_PLACEHOLDER_IMAGE ? heroCandidate : (heroFromPriority || fallback.heroImage);
+
+  const lifestyleTags = Array.isArray(facility.visual_lifestyle_tags)
+    ? facility.visual_lifestyle_tags
+      .filter((item) => item && typeof item === "object")
+      .map((item) => ({
+        label: typeof item.label === "string" ? item.label : "",
+        icon: typeof item.icon === "string" ? item.icon : "",
+      }))
+      .filter((item) => item.label)
+    : [];
+
+  return {
+    heroImage,
+    galleryImages: galleryImages.length > 0 ? galleryImages : fallback.galleryImages,
+    lifestyleTags,
+    visualConfidenceScore: Math.round(facility.visual_confidence_score ?? fallback.visualConfidenceScore),
+    visualCoverageScore: Math.round(facility.visual_coverage_score ?? fallback.visualCoverageScore),
+  };
+}
 
 function parseConfidence(value?: string | null): Facility["matching_confidence"] {
   const normalized = (value || "").toUpperCase();
@@ -762,6 +874,7 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
       cultural_match_signals: facility.cultural_match_signals || 0,
     } : undefined,
     matchBadges: makeBadges(facility, taxonomy),
+    visualIntelligence: buildVisualIntelligence(facility),
     scoreBreakdown: [
       {
         category: "Medical Quality",
@@ -871,7 +984,7 @@ export async function fetchFacilityById(id: string): Promise<Facility> {
 export async function fetchFacilityDetails(id: string): Promise<FacilityDetailsData> {
   const facility = await fetchJson<BackendFacilityDetails>(`/facilities/${id}`);
   const searchFacility = toSearchFacility(facility);
-  const gallery = GALLERY_SETS[facility.id % GALLERY_SETS.length];
+  const gallery = searchFacility.visualIntelligence.galleryImages.map((image) => image.url);
 
   return {
     ...searchFacility,

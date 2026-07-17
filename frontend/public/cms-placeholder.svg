@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="CMS placeholder image">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8edf1"/>
+      <stop offset="100%" stop-color="#d8e1e7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <g fill="#6b7280" font-family="Segoe UI, Arial, sans-serif" text-anchor="middle">
+    <text x="600" y="370" font-size="48" font-weight="700">CMS Placeholder</text>
+    <text x="600" y="425" font-size="26">Facility image unavailable from public sources</text>
+  </g>
+</svg>

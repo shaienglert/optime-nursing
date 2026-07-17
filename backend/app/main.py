@@ -81,6 +81,11 @@ class FacilityListOut(BaseModel):
     community_engagement_index: Optional[float] = None
     reputation_index: Optional[float] = None
     cultural_match_signals: Optional[float] = None
+    visual_hero_image: Dict[str, object] = Field(default_factory=dict)
+    visual_gallery_images: List[Dict[str, object]] = Field(default_factory=list)
+    visual_lifestyle_tags: List[Dict[str, object]] = Field(default_factory=list)
+    visual_confidence_score: Optional[float] = None
+    visual_coverage_score: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -110,6 +115,11 @@ class FacilityDetailsOut(BaseModel):
     inspection_rating: Optional[int] = None
     beds: Optional[int] = None
     confidence_level: Optional[str] = None
+    visual_hero_image: Dict[str, object] = Field(default_factory=dict)
+    visual_gallery_images: List[Dict[str, object]] = Field(default_factory=list)
+    visual_lifestyle_tags: List[Dict[str, object]] = Field(default_factory=list)
+    visual_confidence_score: Optional[float] = None
+    visual_coverage_score: Optional[float] = None
     score_breakdown: ScoreBreakdownOut
 
 
@@ -230,6 +240,11 @@ class FacilityIntelligenceProfileOut(BaseModel):
     community_engagement_index: float
     clinical_quality_index: float
     reputation_index: float
+    visual_hero_image: Dict[str, object]
+    visual_gallery_images: List[Dict[str, object]]
+    visual_lifestyle_tags: List[Dict[str, object]]
+    visual_confidence_score: float
+    visual_coverage_score: float
 
 
 class IntelligenceRunSummaryOut(BaseModel):
@@ -450,6 +465,18 @@ def _parse_json_objects(raw: Optional[str]) -> List[Dict[str, object]]:
     return []
 
 
+def _parse_json_object(raw: Optional[str]) -> Dict[str, object]:
+    if not raw:
+        return {}
+    try:
+        value = json.loads(raw)
+        if isinstance(value, dict):
+            return {str(key): value[key] for key in value}
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return {}
+
+
 def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> FacilityIntelligenceProfileOut:
     return FacilityIntelligenceProfileOut(
         facility_id=profile.facility_id,
@@ -482,6 +509,11 @@ def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> Facili
         community_engagement_index=profile.community_engagement_index,
         clinical_quality_index=profile.clinical_quality_index,
         reputation_index=profile.reputation_index,
+        visual_hero_image=_parse_json_object(profile.visual_hero_image),
+        visual_gallery_images=_parse_json_objects(profile.visual_gallery_images),
+        visual_lifestyle_tags=_parse_json_objects(profile.visual_lifestyle_tags),
+        visual_confidence_score=profile.visual_confidence_score,
+        visual_coverage_score=profile.visual_coverage_score,
     )
 
 
@@ -586,6 +618,11 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
                 community_engagement_index=profile.community_engagement_index if profile else None,
                 reputation_index=profile.reputation_index if profile else None,
                 cultural_match_signals=profile.cultural_match_signals if profile else None,
+                visual_hero_image=_parse_json_object(profile.visual_hero_image) if profile else {},
+                visual_gallery_images=_parse_json_objects(profile.visual_gallery_images) if profile else [],
+                visual_lifestyle_tags=_parse_json_objects(profile.visual_lifestyle_tags) if profile else [],
+                visual_confidence_score=profile.visual_confidence_score if profile else None,
+                visual_coverage_score=profile.visual_coverage_score if profile else None,
             )
         )
 
@@ -606,6 +643,7 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
         .first()
     )
     inspection_rows = db.query(Inspection).filter(Inspection.facility_id == facility.id).all()
+    profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == facility.id).first()
 
     medical_components = {
         "cms_rating": round(stars_to_score(facility.quality_rating or facility.overall_rating), 2),
@@ -645,6 +683,11 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
         inspection_rating=facility.inspection_rating,
         beds=facility.beds,
         confidence_level=facility.confidence_level,
+        visual_hero_image=_parse_json_object(profile.visual_hero_image) if profile else {},
+        visual_gallery_images=_parse_json_objects(profile.visual_gallery_images) if profile else [],
+        visual_lifestyle_tags=_parse_json_objects(profile.visual_lifestyle_tags) if profile else [],
+        visual_confidence_score=profile.visual_confidence_score if profile else None,
+        visual_coverage_score=profile.visual_coverage_score if profile else None,
         score_breakdown=ScoreBreakdownOut(
             medical_quality_score=facility.medical_quality_score or 0.0,
             staffing_score=facility.staffing_score or 0.0,

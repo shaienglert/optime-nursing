@@ -1349,74 +1349,52 @@ export default function Home() {
             <aside className="sticky top-4 z-30 rounded-2xl border border-[#d4e5df] bg-white/95 p-4 shadow-[0_14px_36px_-20px_rgba(25,85,73,0.48)] backdrop-blur">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4b6f6a]">OPTIME Understanding Profile V2</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4b6f6a]">OPTIME Understanding Journey</p>
                   <p className={`mt-1 text-base font-semibold ${understandingProfile.colorBand.textClass}`}>{understandingProfile.statusText}</p>
                 </div>
                 <div className="rounded-full border border-[#d8e6e2] bg-[#f3faf8] px-3 py-1 text-sm font-semibold text-[#2c5650]">
-                  Domains complete: {understandingProfile.completedDomainCount}/7
+                  Understanding score {understandingProfile.understandingScore}%
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <div className="rounded-xl border border-[#dce9e5] bg-[#f8fcfb] p-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#5f7e79]">Understanding Score</p>
-                  <p className={`mt-1 text-xl font-semibold ${understandingProfile.colorBand.textClass}`}>{understandingProfile.understandingScore}%</p>
-                  <div className={`mt-2 h-2.5 overflow-hidden rounded-full bg-[#e7efec] ring-1 ${understandingProfile.colorBand.ringClass}`}>
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${understandingProfile.colorBand.bgClass} transition-all duration-700 ease-out`}
-                      style={{ width: `${understandingProfile.understandingScore}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-[#dce9e5] bg-[#f8fcfb] p-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#5f7e79]">Recommendation Confidence</p>
-                  <p className="mt-1 text-xl font-semibold text-[#1e6f75]">{understandingProfile.recommendationConfidence}%</p>
-                  <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[#e7efec] ring-1 ring-[#b6d8d8]">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#76cbd2] to-[#1d8b98] transition-all duration-700 ease-out"
-                      style={{ width: `${understandingProfile.recommendationConfidence}%` }}
-                    />
-                  </div>
+              <div className="mt-4 rounded-xl border border-[#dce9e5] bg-[#f8fcfb] p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#5f7e79]">Understanding Score</p>
+                <p className={`mt-1 text-xl font-semibold ${understandingProfile.colorBand.textClass}`}>{understandingProfile.understandingScore}%</p>
+                <div className={`mt-2 h-2.5 overflow-hidden rounded-full bg-[#e7efec] ring-1 ${understandingProfile.colorBand.ringClass}`}>
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r ${understandingProfile.colorBand.bgClass} transition-all duration-700 ease-out`}
+                    style={{ width: `${understandingProfile.understandingScore}%` }}
+                  />
                 </div>
               </div>
 
               <div className="mt-4 rounded-xl border border-[#dbe7e4] bg-white p-3">
                 <div className="flex items-center gap-2 text-lg">
-                  <span>{understandingProfile.personIcon}</span>
                   {understandingProfile.journeyIcons.map((journeyIcon) => (
                     <span
                       key={journeyIcon.label}
                       title={journeyIcon.label}
-                      className={`inline-flex transition-all duration-500 ${journeyIcon.active ? "opacity-100 scale-100" : "opacity-35 scale-90 grayscale"}`}
+                      className={`inline-flex transition-all duration-500 ${journeyIcon.active ? "opacity-100 scale-100" : "opacity-40 scale-90 grayscale"}`}
                     >
                       {journeyIcon.icon}
                     </span>
                   ))}
                 </div>
                 <div className="relative mt-3">
-                  <div className="h-8 rounded-full border border-[#d7e4df] bg-[#f4faf8] px-4">
+                  <div className="h-10 rounded-full border border-[#d7e4df] bg-[#f4faf8] px-3">
                     <div className="relative h-full">
-                      <div className="absolute left-0 right-0 top-1/2 h-[2px] -translate-y-1/2 bg-[#bdd4cd]" />
+                      <div className="absolute left-8 right-20 top-1/2 h-[2px] -translate-y-1/2 bg-[#bdd4cd]" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 text-lg">🏠</div>
                       <div
                         className="absolute top-1/2 -translate-y-1/2 text-lg transition-all duration-700 ease-out"
-                        style={{ left: `calc(${understandingProfile.journeyProgressPercent}% - 12px)` }}
+                        style={{ left: `calc(16px + (${understandingProfile.journeyProgressPercent}% * (100% - 104px) / 100))` }}
                       >
                         {understandingProfile.personIcon}
                       </div>
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 text-lg">🏡</div>
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 text-lg">🏘️🌳☕🎭</div>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {understandingProfile.domains.map((domain) => (
-                  <div key={domain.key} className="rounded-xl border border-[#e3ece9] bg-white px-3 py-2 text-xs text-[#4d645e]">
-                    <p className="font-semibold text-[#2f4f48]">{domain.label}</p>
-                    <p className="mt-1">{domain.covered ? `Covered (${Math.round(domain.quality * 100)}% quality)` : "Missing"}{domain.isCritical && !domain.covered ? " - critical" : ""}</p>
-                  </div>
-                ))}
               </div>
             </aside>
 

@@ -111,6 +111,38 @@ function hasRealAddressData(distanceProfile: ReturnType<typeof useQuestionnaire>
   );
 }
 
+function visualConfidenceLabel(score: number): string {
+  if (score >= 80) return "High";
+  if (score >= 55) return "Medium";
+  return "Low";
+}
+
+function normalizeTagLabel(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function visualFitForFacility(facility: SearchFacility, state: ReturnType<typeof useQuestionnaire>["state"]): number {
+  const tags = new Set(facility.visualIntelligence.lifestyleTags.map((tag) => normalizeTagLabel(tag.label)));
+  let score = 52;
+
+  const activityPrefs = new Set((state.happinessPreferences || []).map((item) => item.toLowerCase()));
+  const environmentPrefs = new Set((state.humanIntelligenceV2.communityPreferenceProfile.preferredEnvironment || []).map((item) => item.toLowerCase()));
+  const socialProfile = state.humanIntelligenceV2.socialProfile;
+  const culturalProfile = state.humanIntelligenceV2.culturalProfile;
+
+  if (activityPrefs.has("social activities") && tags.has("active social life")) score += 12;
+  if (activityPrefs.has("outdoor activities") && tags.has("large gardens")) score += 12;
+  if (activityPrefs.has("good food") && tags.has("cafe environment")) score += 10;
+  if (activityPrefs.has("exercise and wellness") && tags.has("fitness center")) score += 10;
+  if (environmentPrefs.has("quiet community") && tags.has("active social life")) score -= 8;
+  if (environmentPrefs.has("quiet community") && tags.has("clinical setting")) score -= 16;
+  if ((socialProfile.socialInteractionFrequency || "").toLowerCase() === "daily" && tags.has("active social life")) score += 8;
+  if ((culturalProfile.faithTraditions || []).includes("Jewish") && tags.has("jewish services")) score += 10;
+  if (["Important", "Very important", "High", "Very high"].includes(state.humanIntelligenceV2.independenceProfile.petOwnershipImportance) && tags.has("pet friendly")) score += 8;
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
 export function ResultsPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -173,12 +205,37 @@ export function ResultsPageClient() {
     router.replace("/");
   };
 
+  const backToSearch = () => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/");
+  };
+
   const renderFullCard = (recommendation: RankedRecommendation, index: number) => {
     const facility = recommendation.facility;
     const report = recommendation.report;
+    const visualFitScore = visualFitForFacility(facility, state);
+    const visualConfidence = visualConfidenceLabel(facility.visualIntelligence.visualConfidenceScore);
 
     return (
       <article key={facility.id} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
+        <div className="mb-4 overflow-hidden rounded-2xl border border-[#e3d8c8] bg-[#f7f2e8]">
+          <img
+            src={facility.visualIntelligence.heroImage.url}
+            alt={`${facility.name} hero`}
+            className="h-52 w-full object-cover"
+            onError={(event) => {
+              event.currentTarget.src = "/cms-placeholder.svg";
+            }}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e3d8c8] bg-white px-3 py-2 text-xs text-[#6b6257]">
+            <span>Hero source: {facility.visualIntelligence.heroImage.source}</span>
+            <span>Coverage {facility.visualIntelligence.visualCoverageScore}%</span>
+          </div>
+        </div>
+
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="mb-2 inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(index)}</p>
@@ -215,6 +272,21 @@ export function ResultsPageClient() {
                 );
               })}
             </div>
+          </section>
+
+          <section>
+            <p className="font-semibold text-[#2f2a24]">Visual Match: {visualFitScore}%</p>
+            <p className="mt-1">Confidence: {visualConfidence} ({facility.visualIntelligence.visualConfidenceScore}/100)</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {facility.visualIntelligence.lifestyleTags.length > 0 ? facility.visualIntelligence.lifestyleTags.map((tag) => (
+                <span key={`${facility.id}-visual-tag-${tag.label}`} className="rounded-full border border-[#d7e5e2] bg-[#f4fbfa] px-3 py-1 text-xs font-semibold text-[#2f5f5a]">
+                  {tag.icon} {tag.label}
+                </span>
+              )) : <span className="text-sm text-[#6c655b]">No lifestyle tags detected yet.</span>}
+            </div>
+            <p className="mt-2 text-xs text-[#6c655b]">
+              Image sources: {Array.from(new Set([facility.visualIntelligence.heroImage.source, ...facility.visualIntelligence.galleryImages.map((image) => image.source)])).join(", ")}
+            </p>
           </section>
 
           <section>
@@ -376,6 +448,8 @@ export function ResultsPageClient() {
   const renderCompactCard = (recommendation: RankedRecommendation, index: number) => {
     const facility = recommendation.facility;
     const report = recommendation.report;
+    const visualFitScore = visualFitForFacility(facility, state);
+    const visualConfidence = visualConfidenceLabel(facility.visualIntelligence.visualConfidenceScore);
     const categoryRows = report.audit.categoryRows.filter((row) => ["Medical Fit", "Lifestyle Fit", "Social Fit", "Family Proximity", "Cultural Fit", "Activities Fit", "Clinical Quality"].includes(row.name));
     const totalPointsAwarded = categoryRows.reduce((sum, row) => sum + row.finalContribution, 0) + report.audit.bonuses.reduce((sum, bonus) => sum + (bonus.applied ? bonus.value : 0), 0) - report.audit.penalties.reduce((sum, penalty) => sum + (penalty.applied ? penalty.value : 0), 0);
     const maximumPossiblePoints = categoryRows.reduce((sum, row) => sum + maxPointsForCategory(row.name), 0);
@@ -383,6 +457,17 @@ export function ResultsPageClient() {
     const normalizedCategoryTotal = categoryRows.reduce((sum, row) => sum + row.finalContribution, 0);
     return (
       <article key={`compact-${facility.id}`} className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]">
+        <div className="mb-3 overflow-hidden rounded-xl border border-[#e3d8c8] bg-[#f7f2e8]">
+          <img
+            src={facility.visualIntelligence.heroImage.url}
+            alt={`${facility.name} hero`}
+            className="h-36 w-full object-cover"
+            onError={(event) => {
+              event.currentTarget.src = "/cms-placeholder.svg";
+            }}
+          />
+        </div>
+
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#6a6257]">{recommendationTitle(index)}</p>
@@ -425,6 +510,11 @@ export function ResultsPageClient() {
         </div>
 
         <p className="mt-3 text-sm text-[#5f554a]">{recommendation.tradeoff}</p>
+        <div className="mt-2 rounded-xl border border-[#d7e5e2] bg-[#f4fbfa] p-2 text-xs text-[#375f59]">
+          <p className="font-semibold">Visual Match: {visualFitScore}%</p>
+          <p>Confidence: {visualConfidence}</p>
+          <p className="mt-1">Detected lifestyle: {facility.visualIntelligence.lifestyleTags.slice(0, 4).map((tag) => tag.icon).join(" ") || "N/A"}</p>
+        </div>
         <p className="mt-2 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -458,14 +548,18 @@ export function ResultsPageClient() {
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               type="button"
+              onClick={backToSearch}
+              className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] transition hover:bg-[#efe8db]"
+            >
+              Back to search
+            </button>
+            <button
+              type="button"
               onClick={startNewSearch}
               className="rounded-full bg-[#5f7f6b] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4d6756]"
             >
               New search
             </button>
-            <Link href="/" className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] transition hover:bg-[#efe8db]">
-              Back to home
-            </Link>
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
