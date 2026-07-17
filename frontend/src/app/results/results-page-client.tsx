@@ -24,6 +24,20 @@ function scoreBadgeStyle(score: number): string {
   return "bg-[#f1caa4] text-[#7c4f23]";
 }
 
+function verificationStateStyle(state: string): string {
+  if (state === "YES") return "border-[#bcd9c0] bg-[#eef8f1] text-[#2f6d3e]";
+  if (state === "NO") return "border-[#e9c5bc] bg-[#fff3ef] text-[#8b4f3f]";
+  if (state === "LIMITED") return "border-[#e3d2a6] bg-[#fff8e9] text-[#8b6a2f]";
+  return "border-[#d7ddeb] bg-[#f2f6fb] text-[#4a647d]";
+}
+
+function verificationStateLabel(state: string): string {
+  if (state === "YES") return "Confirmed";
+  if (state === "NO") return "Not available";
+  if (state === "LIMITED") return "Limited";
+  return "Needs verification";
+}
+
 function highlightLabel(index: number): string {
   if (index === 0) return "Best Match";
   if (index === 1) return "Strong Alternative";
@@ -422,6 +436,7 @@ export function ResultsPageClient() {
 
   const renderTopRecommendation = (recommendation: RankedRecommendation, index: number) => {
     const facility = recommendation.facility;
+    const verification = recommendation.report.audit.verificationRequest;
 
     return (
       <section key={`top-${facility.id}`} className="space-y-4 rounded-3xl border border-[#e8ddcc] bg-[#fffdf9] p-5 shadow-[0_12px_40px_-28px_rgba(69,58,43,0.35)]">
@@ -434,6 +449,25 @@ export function ResultsPageClient() {
         <div className="rounded-2xl border border-[#e7ddcd] bg-white p-4">
           <p className="text-sm font-semibold text-[#2f2a24]">Personalized explanation</p>
           <p className="mt-1 text-sm text-[#5f5548]">{recommendation.whyThisFits}</p>
+        </div>
+
+        <div className="rounded-2xl border border-[#d9e3ec] bg-[#f6fbff] p-4 text-sm text-[#4a6076]">
+          <p className="font-semibold text-[#24425e]">Verification workflow</p>
+          <p className="mt-1">{verification.nextStepMessage}</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-[#d9e3ec] bg-white p-3">
+              <p className="text-xs uppercase tracking-[0.08em] text-[#6b7f93]">Unknown items</p>
+              <p className="mt-1 text-lg font-semibold text-[#24425e]">{verification.unknownCount}</p>
+            </div>
+            <div className="rounded-xl border border-[#d9e3ec] bg-white p-3">
+              <p className="text-xs uppercase tracking-[0.08em] text-[#6b7f93]">Visit readiness</p>
+              <p className="mt-1 text-lg font-semibold text-[#24425e]">{verification.visitReadinessScore}/100</p>
+            </div>
+            <div className="rounded-xl border border-[#d9e3ec] bg-white p-3">
+              <p className="text-xs uppercase tracking-[0.08em] text-[#6b7f93]">Confidence</p>
+              <p className="mt-1 text-lg font-semibold text-[#24425e]">{verification.confidenceScore}/100</p>
+            </div>
+          </div>
         </div>
 
         {renderFullCard(recommendation, index)}
