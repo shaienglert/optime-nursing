@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
 from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
+import app.models.clinical_evidence
 from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
