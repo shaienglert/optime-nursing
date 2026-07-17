@@ -1060,7 +1060,23 @@ function collectHardRejectionReasons(facility: SearchFacility, state: Questionna
   const reasons: string[] = [];
   const careText = facility.careTypes.join(" ").toLowerCase();
   const notes = state.notes.toLowerCase();
+  const careFit = scoreCareFit(facility, state);
+  const financialFit = scoreFinancialFit(facility, state);
+  const familyFit = scoreFamilyFit(state).score;
   reasons.push(...evaluateFutureCarePreference(facility, state).rejectionReasons);
+
+  if (careFit < 30) {
+    reasons.push("Required care level is not met for this community.");
+  }
+
+  const parsedBudget = parsePriceRange(facility.priceRange);
+  if (parsedBudget && parsedBudget.min > (state.budget || 0) && financialFit < 70) {
+    reasons.push("Budget affordability requirement is not met.");
+  }
+
+  if (hasDistanceConstraint(state) && familyFit < 30) {
+    reasons.push("Geographic radius requirement is not met.");
+  }
 
   const memoryRequired = state.memoryStatus === "Significant memory issues";
   if (memoryRequired && !careText.includes("memory care")) {
