@@ -2837,7 +2837,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       tradeoff: clinicalReasoning.narrative.verificationNeeded,
       whyThisFits: clinicalReasoning.narrative.whyThisCommunity,
       rankReason: "",
-      confidenceExplanation: `Confidence is ${confidenceScore >= 75 ? "high" : confidenceScore >= 55 ? "moderate" : "limited"} because ${verifiedYes + verifiedNo} requirements are verified and ${unknown} remain unknown.",
+      confidenceExplanation: `Confidence is ${confidenceScore >= 75 ? "high" : confidenceScore >= 55 ? "moderate" : "limited"} because ${verifiedYes + verifiedNo} requirements are verified and ${unknown} remain unknown.`,
       missingInformation: clinicalReasoning.narrative.unknownCapabilities,
       hardRejectionReasons,
       contributionHighlights: contributions,
