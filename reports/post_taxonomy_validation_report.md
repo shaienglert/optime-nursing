@@ -93,23 +93,23 @@ Quality Gate Status: **PASS**
 | 1 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 84.72 |
 | 2 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 84.24 |
 | 3 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 81.34 |
-| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living | 80.25 |
-| 5 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 79.66 |
-| 6 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living | 79.40 |
-| 7 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living | 79.11 |
-| 8 | BAYSIDE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 79.09 |
-| 9 | MADISON POINTE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 79.05 |
-| 10 | BARTOW CENTER | Assisted Living, Independent Living | 79.05 |
+| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living | 80.19 |
+| 5 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living | 78.91 |
+| 6 | W FRANK WELLS NURSING HOME | Skilled Nursing, Assisted Living | 78.87 |
+| 7 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living | 78.61 |
+| 8 | BAYSIDE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 78.59 |
+| 9 | MADISON POINTE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 78.56 |
+| 10 | EGRET COVE CENTER | Assisted Living, Skilled Nursing, Independent Living | 78.52 |
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 40% | 4 |
+| Independent Living | 30% | 3 |
 | Active Adult 55+ | 0% | 0 |
 | Assisted Living | 100% | 10 |
 | Memory Care | 20% | 2 |
-| Skilled Nursing | 50% | 5 |
+| Skilled Nursing | 70% | 7 |
 | Rehabilitation | 20% | 2 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
@@ -144,12 +144,12 @@ Social fit (-4); Luxury amenities (-3); Cultural fit (-2)
 | ATHENS POST ACUTE LLC | 26 | 2 | 24 | Assisted Living, Independent Living, Memory Care |
 | RIVER GARDEN HEBREW HOME FOR THE AGED | 1 | 3 | -2 | Assisted Living |
 | LAKESIDE HEALTH CENTER | 3 | 4 | -1 | Skilled Nursing, Assisted Living |
-| TARPON BAYOU CENTER | 85 | 5 | 80 | Assisted Living, Independent Living |
-| MIAMI JEWISH HEALTH SYSTEMS, INC | 65 | 6 | 59 | Skilled Nursing, Assisted Living |
+| MIAMI JEWISH HEALTH SYSTEMS, INC | 65 | 5 | 60 | Skilled Nursing, Assisted Living |
+| W FRANK WELLS NURSING HOME | 94 | 6 | 88 | Skilled Nursing, Assisted Living |
 | GOLFCREST NURSING CENTER | 31 | 7 | 24 | Skilled Nursing, Assisted Living |
 | BAYSIDE CARE CENTER | 32 | 8 | 24 | Assisted Living, Skilled Nursing, Rehabilitation |
 | MADISON POINTE CARE CENTER | 41 | 9 | 32 | Assisted Living, Skilled Nursing, Rehabilitation |
-| BARTOW CENTER | 88 | 10 | 78 | Assisted Living, Independent Living |
+| EGRET COVE CENTER | 89 | 10 | 79 | Assisted Living, Skilled Nursing, Independent Living |
 
 Persona Verdict: **PASS**
 
