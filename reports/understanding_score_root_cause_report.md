@@ -1,16 +1,16 @@
 # Understanding Score Root Cause Report
 
-Current score calculation (legacy): **70%**
-Expected score calculation (corrected): **87%**
-Delta explanation: corrected - legacy = **17%**
-Corrected score: **87%**
-Corrected recommendation confidence: **83%**
+Current score calculation (legacy): **79%**
+Expected score calculation (corrected): **100%**
+Delta explanation: corrected - legacy = **21%**
+Corrected score: **100%**
+Corrected recommendation confidence: **100%**
 
 ## Per-domain contribution report
 
 | Domain | Coverage Score | Reason | Penalty Applied | Intentional Omission | Coverage State |
 | --- | --- | --- | --- | --- | --- |
-| Care needs | 50 | Some care understanding signals are still unknown. | 13 | false | PROVIDED |
+| Care needs | 100 | All care understanding signals are answered. | 0 | false | PROVIDED |
 | Lifestyle | 100 | Lifestyle understanding is complete. | 0 | false | PROVIDED |
 | Social preferences | 100 | Social preference understanding is complete. | 0 | false | PROVIDED |
 | Financial profile | 100 | Budget information is provided. | 0 | false | PROVIDED |
@@ -22,10 +22,4 @@ Corrected recommendation confidence: **83%**
 
 - Inputs: all domains answered, distance intentionally ignored
 - Expected: Understanding Score >= 90
-- Actual: **87%**
-
-## Exact penalties responsible for remaining reduction
-
-| Domain | Penalty | Reason |
-| --- | --- | --- |
-| Care needs | 13 | Some care understanding signals are still unknown. |
+- Actual: **100%**
