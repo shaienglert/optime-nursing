@@ -50,7 +50,7 @@ type Contribution = {
   value: number;
 };
 
-type MatchQualityTier = "CRITICAL" | "IMPORTANT" | "OPTIONAL";
+type MatchQualityTier = "MANDATORY" | "CRITICAL" | "IMPORTANT" | "OPTIONAL";
 
 type MatchQualityCriterion = {
   name: string;
@@ -367,6 +367,10 @@ function buildCriterion(name: string, tier: MatchQualityTier, score: number, thr
   };
 }
 
+function confidenceMultiplier(confidenceScore: number): number {
+  return 0.7 + (clamp(confidenceScore) / 100) * 0.3;
+}
+
 function hasDistanceConstraint(state: QuestionnaireState): boolean {
   return Boolean(
     state.distanceFromFamily ||
@@ -472,49 +476,62 @@ function summarizeTier(criteria: MatchQualityCriterion[], tier: MatchQualityTier
 
 function buildMatchQualityResult(facility: SearchFacility, state: QuestionnaireState, priorityScores: PriorityScores): MatchQualityResult {
   const futureCare = evaluateFutureCarePreference(facility, state);
-  const criticalCriteria: MatchQualityCriterion[] = [
-    buildCriterion("Care level", "CRITICAL", priorityScores.careFit, 70, "Care level is a top-tier requirement.", "Care-fit model output"),
-    buildCriterion("Budget feasibility", "CRITICAL", priorityScores.financialFit, 70, "Budget must remain feasible for the recommendation to stay suitable.", "Financial-fit model output"),
+  const mandatoryCriteria: MatchQualityCriterion[] = [
+    buildCriterion("Required care level", "MANDATORY", priorityScores.careFit, 70, "Required care support is mandatory.", "Care-fit model output"),
+    buildCriterion("Budget affordability", "MANDATORY", priorityScores.financialFit, 70, "Budget affordability is mandatory.", "Financial-fit model output"),
   ];
+
+  const criticalCriteria: MatchQualityCriterion[] = [];
 
   if (state.assistanceLevel === "Fully independent") {
     criticalCriteria.push(buildCriterion("Independence level", "CRITICAL", scoreIndependenceCriterion(facility, state), 70, "Independence support is treated as critical for fully independent profiles.", futureCare.source || "Care taxonomy and future-care preference"));
   }
 
   if (state.memoryStatus && state.memoryStatus !== "No" && state.memoryStatus !== "Not sure") {
-    criticalCriteria.push(buildCriterion("Memory support needs", "CRITICAL", scoreMemoryNeedCriterion(facility, state), 70, "Memory support is critical when cognitive needs are present.", "Memory-support cues in facility care types"));
+    mandatoryCriteria.push(buildCriterion("Memory care requirement", "MANDATORY", scoreMemoryNeedCriterion(facility, state), 70, "Memory care support is mandatory when cognitive needs are present.", "Memory-support cues in facility care types"));
   }
 
   if (hasDistanceConstraint(state)) {
-    criticalCriteria.push(buildCriterion("Geographic constraints", "CRITICAL", priorityScores.familyFit, 60, "Travel burden and access constraints are treated as critical when supplied.", "Family-fit and distance model output"));
+    mandatoryCriteria.push(buildCriterion("Geographic radius", "MANDATORY", priorityScores.familyFit, 60, "Travel burden and geographic access constraints are mandatory when supplied.", "Family-fit and distance model output"));
+  }
+
+  criticalCriteria.push(buildCriterion("Social lifestyle importance", "CRITICAL", priorityScores.socialFit, 60, "Social lifestyle alignment is critical when community rhythm matters.", "Social-fit model output", Boolean(state.humanIntelligenceV2.socialProfile.socialInteractionFrequency || state.happinessPreferences.includes("Social activities") || state.humanIntelligenceV2.socialProfile.hobbyParticipation.length > 0)));
+  criticalCriteria.push(buildCriterion("Cultural or religious requirements", "CRITICAL", priorityScores.culturalFit, 60, "Cultural and religious requirements are critical when explicitly requested.", "Cultural-fit model output", hasCulturalConstraint(state)));
+  if (state.futureCarePreference && state.futureCarePreference !== "No preference") {
+    criticalCriteria.push(buildCriterion("Future care preference", "CRITICAL", futureCare.score, 60, "Future care planning is critical when explicitly requested.", futureCare.source));
   }
 
   const importantCriteria: MatchQualityCriterion[] = [
-    buildCriterion("Social activity preference", "IMPORTANT", priorityScores.socialFit, 60, "Social preferences matter, but they do not outweigh core care fit.", "Social-fit model output", Boolean(state.humanIntelligenceV2.socialProfile.socialInteractionFrequency || state.happinessPreferences.includes("Social activities") || state.humanIntelligenceV2.socialProfile.hobbyParticipation.length > 0)),
-    buildCriterion("Cultural fit", "IMPORTANT", priorityScores.culturalFit, 60, "Cultural continuity is meaningful when explicitly requested.", "Cultural-fit model output", hasCulturalConstraint(state)),
     buildCriterion("Family proximity", "IMPORTANT", priorityScores.familyFit, 60, "Family proximity affects suitability after critical care requirements are satisfied.", "Family-fit and distance model output", hasFamilyPriority(state)),
-    buildCriterion("Lifestyle fit", "IMPORTANT", priorityScores.lifestyleFit, 60, "Lifestyle fit shapes day-to-day quality once the critical basics are met.", "Lifestyle-fit model output", state.happinessPreferences.length > 0),
+    buildCriterion("Dining quality", "IMPORTANT", includesAny(joinedFacilityText(facility), ["dining", "restaurant", "chef", "cuisine", "food"]) ? 85 : 45, 60, "Dining quality matters, but it should not outweigh critical fit.", "Dining cues in facility metadata", state.happinessPreferences.includes("Good food") || state.humanIntelligenceV2.foodProfile.dietaryPreferences.length > 0),
+    buildCriterion("Activity intensity", "IMPORTANT", priorityScores.lifestyleFit, 60, "Activity intensity supports day-to-day satisfaction after core needs are met.", "Lifestyle-fit model output", state.happinessPreferences.length > 0),
+    buildCriterion("Outdoor environment", "IMPORTANT", includesAny(joinedFacilityText(facility), ["garden", "walking", "outdoor", "nature", "courtyard"]) ? 88 : 42, 60, "Outdoor environment is important when lifestyle preferences point to it.", "Outdoor environment cues in facility metadata", state.happinessPreferences.includes("Outdoor activities") || state.humanIntelligenceV2.communityPreferenceProfile.preferredEnvironment.includes("Quiet community")),
   ];
 
-  if (["Future support available", "Full continuum of care"].includes(state.futureCarePreference)) {
-    importantCriteria.push(buildCriterion("Future care availability", "IMPORTANT", futureCare.score, 60, "Future care availability is important when a future-care path was requested.", futureCare.source));
-  }
-
   const optionalCriteria = buildOptionalCriteria(facility, state, priorityScores);
-  const criteria = criticalCriteria.concat(importantCriteria, optionalCriteria);
+  const criteria = mandatoryCriteria.concat(criticalCriteria, importantCriteria, optionalCriteria);
 
-  const criticalSummary = summarizeTier(criteria, "CRITICAL", 100, 22);
-  const importantSummary = summarizeTier(criteria, "IMPORTANT", 85, 1.2);
-  const optionalSummary = summarizeTier(criteria, "OPTIONAL", 75, 0.25);
-  const tierSummaries = [criticalSummary, importantSummary, optionalSummary];
+  const mandatorySummary = summarizeTier(criteria, "MANDATORY", 100, 40);
+  const criticalSummary = summarizeTier(criteria, "CRITICAL", 85, 10);
+  const importantSummary = summarizeTier(criteria, "IMPORTANT", 80, 2.5);
+  const optionalSummary = summarizeTier(criteria, "OPTIONAL", 75, 0.5);
+  const tierSummaries = [mandatorySummary, criticalSummary, importantSummary, optionalSummary];
 
+  const confidenceScore = clamp(40 + (average(criteria.filter((item) => item.applicable).map((item) => item.score), 60) * 0.6));
   const baseScore =
-    criticalSummary.averageScore * 0.74 +
-    importantSummary.averageScore * 0.22 +
-    optionalSummary.averageScore * 0.04;
+    mandatorySummary.averageScore * 0.45 +
+    criticalSummary.averageScore * 0.3 +
+    importantSummary.averageScore * 0.2 +
+    optionalSummary.averageScore * 0.05;
 
-  const penalty = criticalSummary.mismatchPenalty + importantSummary.mismatchPenalty + optionalSummary.mismatchPenalty;
-  const score = clamp(baseScore - penalty);
+  const penalty = mandatorySummary.mismatchPenalty + criticalSummary.mismatchPenalty + importantSummary.mismatchPenalty + optionalSummary.mismatchPenalty;
+  let score = clamp((baseScore - penalty) * confidenceMultiplier(confidenceScore));
+
+  if (mandatorySummary.matched < mandatorySummary.total) {
+    score = 0;
+  } else if (criticalSummary.matched < criticalSummary.total) {
+    score = Math.min(score, 65);
+  }
 
   return {
     score,
@@ -1276,28 +1293,36 @@ function buildReportBreakdown(
 
   return [
     {
-      name: "Critical criteria matched",
+      name: "Mandatory criteria matched",
       score: matchQuality.tierSummaries[0]?.matched || 0,
       maxScore: matchQuality.tierSummaries[0]?.total || 0,
       source: "Tiered match quality model",
-      rationale: "Critical mismatches drive the largest penalties and may lead to rejection.",
+      rationale: "Mandatory mismatches trigger immediate rejection.",
       weightedContribution: roundContribution(matchQuality.tierSummaries[0]?.averageScore || 0),
     },
     {
-      name: "Important criteria matched",
+      name: "Critical criteria matched",
       score: matchQuality.tierSummaries[1]?.matched || 0,
       maxScore: matchQuality.tierSummaries[1]?.total || 0,
       source: "Tiered match quality model",
-      rationale: "Important preferences shape the score after critical fit is satisfied.",
+      rationale: "Critical mismatches drive large penalties and cap the maximum score.",
       weightedContribution: roundContribution(matchQuality.tierSummaries[1]?.averageScore || 0),
     },
     {
-      name: "Optional criteria matched",
+      name: "Important criteria matched",
       score: matchQuality.tierSummaries[2]?.matched || 0,
       maxScore: matchQuality.tierSummaries[2]?.total || 0,
       source: "Tiered match quality model",
-      rationale: "Optional preferences have minimal influence on match quality.",
+      rationale: "Important preferences shape the score after mandatory and critical fit are satisfied.",
       weightedContribution: roundContribution(matchQuality.tierSummaries[2]?.averageScore || 0),
+    },
+    {
+      name: "Optional criteria matched",
+      score: matchQuality.tierSummaries[3]?.matched || 0,
+      maxScore: matchQuality.tierSummaries[3]?.total || 0,
+      source: "Tiered match quality model",
+      rationale: "Optional preferences have minimal influence on match quality.",
+      weightedContribution: roundContribution(matchQuality.tierSummaries[3]?.averageScore || 0),
     },
     {
       name: "Medical Fit",
@@ -1706,7 +1731,7 @@ function buildIntelligenceReport(
 
   const traceability = [
     `Final score = tiered match quality model with critical, important, and optional criteria.`,
-    `Critical criteria matched: ${matchQuality.tierSummaries[0]?.matched || 0}/${matchQuality.tierSummaries[0]?.total || 0}; Important criteria matched: ${matchQuality.tierSummaries[1]?.matched || 0}/${matchQuality.tierSummaries[1]?.total || 0}; Optional criteria matched: ${matchQuality.tierSummaries[2]?.matched || 0}/${matchQuality.tierSummaries[2]?.total || 0}.`,
+    `Mandatory criteria matched: ${matchQuality.tierSummaries[0]?.matched || 0}/${matchQuality.tierSummaries[0]?.total || 0}; Critical criteria matched: ${matchQuality.tierSummaries[1]?.matched || 0}/${matchQuality.tierSummaries[1]?.total || 0}; Important criteria matched: ${matchQuality.tierSummaries[2]?.matched || 0}/${matchQuality.tierSummaries[2]?.total || 0}; Optional criteria matched: ${matchQuality.tierSummaries[3]?.matched || 0}/${matchQuality.tierSummaries[3]?.total || 0}.`,
     `Supporting fit signals: ${contributions.map((item) => `${item.label}=${item.value.toFixed(2)}`).join(", ")}.`,
     `Missing intelligence affects confidence only, never the score.`,
     `This score reflects how well the community matches what matters most to you, not how many features it offers.`,
