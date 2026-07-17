@@ -89,6 +89,25 @@ type FutureCarePreferenceEvaluation = {
 
 type CurrentCareNeed = "Fully Independent" | "Light Assistance" | "Memory Support" | "Complex Medical Needs";
 
+type VerificationState = "YES" | "NO" | "UNKNOWN" | "LIMITED";
+
+type VerificationChecklistItem = {
+  label: string;
+  state: VerificationState;
+  category: string;
+  rationale: string;
+};
+
+type VerificationRequest = {
+  subject: string;
+  body: string;
+  unknownCount: number;
+  visitReadinessScore: number;
+  confidenceScore: number;
+  nextStepMessage: string;
+  items: VerificationChecklistItem[];
+};
+
 type ReportContributor = {
   signal: string;
   source: string;
@@ -139,6 +158,9 @@ type AuditFormula = {
   tierSummaries: MatchQualityTierSummary[];
   matchQualityExplanation: string;
   confidence: AuditConfidence;
+  verificationChecklist: VerificationChecklistItem[];
+  verificationRequest: VerificationRequest;
+  verificationReadinessScore: number;
 };
 
 export type IntelligenceScoringReport = {
@@ -1394,6 +1416,8 @@ function buildReportBreakdown(
   const preferredActivities = state.happinessPreferences;
   const careNeed = state.assistanceLevel || "general support";
   const futureCarePreference = evaluateFutureCarePreference(facility, state);
+  const verificationChecklist = buildVerificationChecklist(facility, state);
+  const verificationRequest = buildVerificationRequest(facility, state, verificationChecklist);
   const futureCareCue = futureCarePreference.preference || state.memoryStatus || state.humanIntelligenceV2.transitionRiskProfile.lonelinessRisk || "future care planning";
   const staffingFit = facility.staffing_rating ? clamp(facility.staffing_rating * 20) : 50;
   const regulatoryFit = facility.inspection_rating ? clamp(facility.inspection_rating * 20) : 50;
@@ -1578,6 +1602,179 @@ function buildRankingExplanation(accepted: RankedRecommendation[], index: number
   }
 
   return `Ranked #${index + 1} by the current weighted fit formula.`;
+}
+
+function classifyVerificationState(value: boolean | null | undefined, limited = false): VerificationState {
+  if (value === true) return "YES";
+  if (value === false) return "NO";
+  return limited ? "LIMITED" : "UNKNOWN";
+}
+
+function buildVerificationChecklist(facility: SearchFacility, state: QuestionnaireState): VerificationChecklistItem[] {
+  const text = joinedFacilityText(facility);
+  const checklist: VerificationChecklistItem[] = [];
+  const hasFuturePreference = Boolean(state.futureCarePreference && state.futureCarePreference !== "No preference");
+
+  const activityItems = state.happinessPreferences.map((preference) => {
+    const matched = includesAny(text, [preference, preference.replace(" and ", " ")]);
+    return {
+      label: preference,
+      state: classifyVerificationState(matched ? true : null),
+      category: "Lifestyle",
+      rationale: matched
+        ? `Facility metadata explicitly mentions ${preference.toLowerCase()}.`
+        : `No reliable facility evidence currently confirms ${preference.toLowerCase()}.`,
+    };
+  });
+
+  checklist.push(...activityItems);
+
+  if (state.humanIntelligenceV2.foodProfile.dietaryPreferences.length > 0) {
+    state.humanIntelligenceV2.foodProfile.dietaryPreferences.forEach((preference) => {
+      const matched = includesAny(text, [preference]);
+      checklist.push({
+        label: preference,
+        state: classifyVerificationState(matched ? true : null),
+        category: "Dining",
+        rationale: matched
+          ? `Facility metadata explicitly mentions ${preference.toLowerCase()}.`
+          : `Dining information for ${preference.toLowerCase()} could not be confirmed from current metadata.`,
+      });
+    });
+  }
+
+  if (state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage) {
+    const language = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage;
+    const matched = includesAny(text, [language]);
+    checklist.push({
+      label: `${language} speaking staff`,
+      state: classifyVerificationState(matched ? true : null),
+      category: "Language",
+      rationale: matched
+        ? `Facility metadata explicitly mentions ${language.toLowerCase()} support.`
+        : `No reliable source currently confirms ${language.toLowerCase()} speaking staff.`,
+    });
+  }
+
+  if (state.humanIntelligenceV2.culturalProfile.faithTraditions.length > 0 || state.humanIntelligenceV2.culturalProfile.religionImportance) {
+    const needsHebrew = includesAny(`${state.humanIntelligenceV2.culturalProfile.culturalIdentity} ${state.humanIntelligenceV2.culturalProfile.faithTraditions.join(" ")}`, ["hebrew", "jewish"]);
+    if (needsHebrew) {
+      checklist.push({
+        label: "Hebrew speaking staff",
+        state: classifyVerificationState(includesAny(text, ["hebrew", "jewish"])
+          ? true
+          : null),
+        category: "Culture",
+        rationale: includesAny(text, ["hebrew", "jewish"])
+          ? "Community materials explicitly mention Hebrew or Jewish support."
+          : "Hebrew speaking staff was not explicitly confirmed in available facility data.",
+      });
+      checklist.push({
+        label: "Transportation to synagogue",
+        state: classifyVerificationState(null),
+        category: "Culture",
+        rationale: "No reliable facility evidence confirms transportation to synagogue.",
+      });
+    }
+  }
+
+  const kitchenetteHint = includesAny(text, ["kitchen", "kitchenette", "suite", "apartment"]);
+  checklist.push({
+    label: "Private kitchenette",
+    state: classifyVerificationState(
+      includesAny(text, ["kitchenette"]) ? true : facility.careTypes.includes("Skilled Nursing") || facility.careTypes.includes("Rehabilitation") ? false : kitchenetteHint ? null : null,
+      !includesAny(text, ["kitchenette"]) && (facility.careTypes.includes("Independent Living") || facility.careTypes.includes("Active Adult 55+") || facility.careTypes.includes("CCRC")),
+    ),
+    category: "Home features",
+    rationale: includesAny(text, ["kitchenette"])
+      ? "Kitchenette support is explicitly mentioned in the facility metadata."
+      : facility.careTypes.includes("Skilled Nursing") || facility.careTypes.includes("Rehabilitation")
+        ? "This care setting typically does not indicate private kitchenette availability."
+        : "No reliable source currently confirms kitchenette availability.",
+  });
+
+  if (hasFuturePreference) {
+    checklist.push({
+      label: `Future support: ${state.futureCarePreference}`,
+      state: classifyVerificationState(
+        state.futureCarePreference === "Independent communities only"
+          ? (facility.careTypes.some((careType) => careType === "Independent Living" || careType === "Active Adult 55+") && !facility.careTypes.some((careType) => careType === "Skilled Nursing" || careType === "Rehabilitation" || careType === "Memory Care"))
+          : state.futureCarePreference === "Independent today, support available later"
+            ? (facility.careTypes.some((careType) => careType === "Independent Living" || careType === "Active Adult 55+" || careType === "Assisted Living" || careType === "CCRC" || careType === "Continuing Care"))
+            : state.futureCarePreference === "Full continuum of care on one campus"
+              ? (facility.careTypes.some((careType) => careType === "CCRC" || careType === "Continuing Care"))
+              : null,
+      ),
+      category: "Future care",
+      rationale: `Future support compatibility was evaluated against ${state.futureCarePreference}.`,
+    });
+  }
+
+  const distanceMinutes = state.humanIntelligenceV2.distanceProfile.driveTimes.normal || state.distanceFromFamily;
+  if (distanceMinutes) {
+    checklist.push({
+      label: "Transportation and access",
+      state: classifyVerificationState(null),
+      category: "Access",
+      rationale: "No reliable facility evidence confirms transportation or access logistics.",
+    });
+  }
+
+  return checklist.filter((item) => item.state !== "NO" || item.category !== "Future care");
+}
+
+function buildVerificationRequest(facility: SearchFacility, state: QuestionnaireState, checklist: VerificationChecklistItem[]): VerificationRequest {
+  const unknownItems = checklist.filter((item) => item.state === "UNKNOWN");
+  const limitedItems = checklist.filter((item) => item.state === "LIMITED");
+  const answeredItems = checklist.filter((item) => item.state === "YES" || item.state === "NO" || item.state === "LIMITED");
+  const total = checklist.length;
+  const visitReadinessScore = total > 0 ? Math.round((answeredItems.length / total) * 100) : 100;
+  const confidenceScore = visitReadinessScore;
+  const nextStepMessage = unknownItems.length === 0 ? "Ready to schedule visit" : "Verify remaining questions first";
+
+  const bodyItems = unknownItems.map((item) => `□ ${item.label}`).join("\n");
+  const body = [
+    "Dear Admissions Team,",
+    "",
+    `A prospective resident was matched to your community through OPTIME (${facility.name}).`,
+    "",
+    "Before scheduling a visit, we would appreciate confirmation regarding the following items:",
+    "",
+    "Resident profile summary:",
+    "",
+    `- Age: ${state.ageGroup || "Not specified"}`,
+    `- Current care level: ${state.assistanceLevel || "Not specified"}`,
+    `- Future care preference: ${state.futureCarePreference || "No preference"}`,
+    `- Budget: $${Number(state.budget || 0).toLocaleString()}/month`,
+    `- Interests: ${(state.happinessPreferences || []).join(", ") || "Not specified"}`,
+    "",
+    "Please confirm availability of:",
+    "",
+    bodyItems || "□ No additional questions",
+    "",
+    "For each item please indicate:",
+    "",
+    "✅ Available",
+    "❌ Not available",
+    "⚠ Available with limitations",
+    "",
+    "Optional comments:",
+    "______________________",
+    "",
+    "Thank you.",
+  ].join("\n");
+
+  const subject = "Prospective Resident Match Verification Request";
+
+  return {
+    subject,
+    body,
+    unknownCount: unknownItems.length,
+    visitReadinessScore,
+    confidenceScore,
+    nextStepMessage,
+    items: [...unknownItems, ...limitedItems, ...answeredItems],
+  };
 }
 
 function buildIntelligenceReport(
@@ -1848,6 +2045,9 @@ function buildIntelligenceReport(
     `This score reflects how well the community matches what matters most to you, not how many features it offers.`,
   ];
 
+  const verificationChecklist = buildVerificationChecklist(facility, state);
+  const verificationRequest = buildVerificationRequest(facility, state, verificationChecklist);
+
   const audit: AuditFormula = {
     executedFormula: "final_score = tiered_match_quality(critical, important, optional) - mismatch_penalties",
     finalScore: Math.round(totalScore),
@@ -1863,6 +2063,9 @@ function buildIntelligenceReport(
       sourceCoverage: `${sourcesUsed.length} source bucket(s) connected`,
       lastIntelligenceRefresh: new Date().toISOString(),
     },
+    verificationChecklist,
+    verificationRequest,
+    verificationReadinessScore: verificationRequest.visitReadinessScore,
   };
 
   const positiveContributors = buildContributorRows(contributions, totalScore, "Weighted person-fit formula", true).slice(0, 4);
@@ -2048,6 +2251,17 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
           sourceCoverage: "",
           lastIntelligenceRefresh: new Date().toISOString(),
         },
+        verificationChecklist: [],
+        verificationRequest: {
+          subject: "Prospective Resident Match Verification Request",
+          body: "",
+          unknownCount: 0,
+          visitReadinessScore: 100,
+          confidenceScore: 100,
+          nextStepMessage: "Ready to schedule visit",
+          items: [],
+        },
+        verificationReadinessScore: 100,
       },
     };
 
