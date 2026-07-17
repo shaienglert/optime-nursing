@@ -1124,6 +1124,12 @@ function collectHardRejectionReasons(facility: SearchFacility, state: Questionna
   return reasons;
 }
 
+function hasMandatoryMismatch(matchQuality: MatchQualityResult): boolean {
+  const mandatorySummary = matchQuality.tierSummaries.find((summary) => summary.tier === "MANDATORY");
+  if (!mandatorySummary) return false;
+  return mandatorySummary.matched < mandatorySummary.total;
+}
+
 function flattenAnsweredSignals(input: unknown, prefix = ""): Array<{ key: string; value: string }> {
   if (input === null || input === undefined) return [];
 
@@ -1924,6 +1930,12 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     const totalScore = clamp(matchQuality.score);
 
     const hardRejectionReasons = collectHardRejectionReasons(facility, state);
+    if (hasMandatoryMismatch(matchQuality)) {
+      hardRejectionReasons.push("Mandatory fit requirements are not fully met for this community.");
+    }
+    if (totalScore <= 0) {
+      hardRejectionReasons.push("Final score did not clear the acceptance threshold.");
+    }
     const contributions = summarizeContributions(priorityScores, persona.weights);
 
     const positives = contributions.slice(0, 3).map((item) => `${item.label} contributed strongly.`);
