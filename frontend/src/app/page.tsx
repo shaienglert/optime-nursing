@@ -197,6 +197,8 @@ const futureCarePreferenceOptions = [
   },
 ];
 
+const DEFAULT_BUDGET = 7000;
+
 const separationAcceptanceOptions = ["Yes", "No", "Only temporary"];
 
 const distanceStrategyOptions = ["Closest to resident", "Closest to family", "Balanced location", "Emergency priority", "Family visit maximization"];
@@ -661,7 +663,7 @@ export default function Home() {
   const [futureCarePreference, setFutureCarePreference] = useState("");
   const [memoryStatus, setMemoryStatus] = useState("");
   const [happinessPreferences, setHappinessPreferences] = useState<string[]>([]);
-  const [budget, setBudget] = useState(7000);
+  const [budget, setBudget] = useState(DEFAULT_BUDGET);
   const [livingAloneDuration, setLivingAloneDuration] = useState("");
   const [socialInteractionFrequency, setSocialInteractionFrequency] = useState("");
   const [newFriendsImportance, setNewFriendsImportance] = useState("");
@@ -782,10 +784,12 @@ export default function Home() {
     }
   }, [shouldAskFutureCarePreference, futureCarePreference]);
 
+  const understandingBudget = budget > 0 && budget !== DEFAULT_BUDGET ? budget : 0;
+
   const legacyProfileUnderstanding = useMemo(() => {
     const careLevel = primaryAssistanceLevel ? 25 : 0;
     const futureCare = primaryAssistanceLevel === "Fully independent" ? (futureCarePreference ? 20 : 0) : 20;
-    const budgetQuality = budget > 0 ? 20 : 0;
+    const budgetQuality = understandingBudget > 0 ? 20 : 0;
     const lifestyle = (happinessPreferences.length > 0 || socialInteractionFrequency || preferredSocialIntensity) ? 15 : 0;
     const location = (familyVisitExpectation || visitFrequencyExpectation || normalDriveTime || parentCurrentHome || primaryCaregiverHome) ? 10 : 0;
     const culture = (religionImportance || preferredSpokenLanguage || faithTraditions.length > 0 || dietaryPreferences.length > 0) ? 10 : 0;
@@ -805,7 +809,7 @@ export default function Home() {
   }, [
     primaryAssistanceLevel,
     futureCarePreference,
-    budget,
+    understandingBudget,
     happinessPreferences.length,
     socialInteractionFrequency,
     preferredSocialIntensity,
@@ -825,7 +829,7 @@ export default function Home() {
     primaryAssistanceLevel,
     futureCarePreference,
     memoryStatus,
-    budget,
+    budget: understandingBudget,
     happinessPreferences,
     preferredEnvironment,
     socialInteractionFrequency,
@@ -857,7 +861,7 @@ export default function Home() {
     primaryAssistanceLevel,
     futureCarePreference,
     memoryStatus,
-    budget,
+    understandingBudget,
     happinessPreferences,
     preferredEnvironment,
     socialInteractionFrequency,
