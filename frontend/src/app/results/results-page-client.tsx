@@ -159,6 +159,8 @@ export function ResultsPageClient() {
   const topRecommendations = useMemo(() => engineOutput.accepted.slice(0, TOP_RECOMMENDATION_COUNT), [engineOutput]);
   const topAuditRecommendations = useMemo(() => engineOutput.accepted.slice(0, TOP_AUDIT_COUNT), [engineOutput]);
   const remainingRecommendations = useMemo(() => engineOutput.accepted.slice(TOP_RECOMMENDATION_COUNT), [engineOutput]);
+  const hasBestAvailableMatches = engineOutput.accepted.length > 0;
+  const belowConfidenceThresholdMode = !engineOutput.qualityCheck.passed && hasBestAvailableMatches;
 
   const startNewSearch = () => {
     resetState();
@@ -309,6 +311,11 @@ export function ResultsPageClient() {
               {badge}
             </span>
           ))}
+          {belowConfidenceThresholdMode ? (
+            <span className="rounded-full border border-[#e3cfa6] bg-[#fff6e7] px-3 py-1 text-xs font-semibold text-[#8a6330]">
+              Below confidence threshold
+            </span>
+          ) : null}
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -459,7 +466,7 @@ export function ResultsPageClient() {
 
         {!isLoading && !engineOutput.qualityCheck.passed ? (
           <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
-            <p className="text-xl font-semibold">Additional refinement required before recommendations can be trusted.</p>
+            <p className="text-xl font-semibold">Additional refinement required before recommendations can be fully trusted.</p>
             <p className="mt-3 text-sm">Quality checks failed on:</p>
             <ul className="mx-auto mt-2 max-w-3xl space-y-1 text-left text-sm">
               {engineOutput.qualityCheck.failures.map((failure) => (
@@ -469,6 +476,11 @@ export function ResultsPageClient() {
                 </li>
               ))}
             </ul>
+            {hasBestAvailableMatches ? (
+              <p className="mt-4 rounded-2xl border border-[#e3cfa6] bg-[#fff6e7] px-4 py-3 text-sm font-semibold text-[#8a6330]">
+                Showing best available matches below confidence threshold.
+              </p>
+            ) : null}
           </section>
         ) : null}
 
@@ -478,7 +490,7 @@ export function ResultsPageClient() {
           </section>
         ) : null}
 
-        {!isLoading && engineOutput.qualityCheck.passed && engineOutput.accepted.length > 0 ? (
+        {!isLoading && engineOutput.accepted.length > 0 ? (
           <section className="mt-6 space-y-6">
             <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Results Summary</p>
