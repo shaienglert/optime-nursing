@@ -51,7 +51,7 @@ Connect cross-agent intelligence into a single explainable structure that suppor
 - Conflicts create parallel conflict edges, not destructive updates.
 - Unknown values remain explicit and queryable.
 
-## Database Tables
+## Database Design
 
 ### Table: kg_entities
 
