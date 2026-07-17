@@ -3,7 +3,7 @@ import io
 import json
 import re
 from datetime import datetime, timezone
-from typing import Dict, Iterable, List, Set
+from typing import Dict, Iterable, List, Optional, Set
 
 from sqlalchemy.orm import Session
 
@@ -108,7 +108,7 @@ def import_activity_categories(
     facility_id: int,
     source_type: str,
     content: str,
-    updated_by_user_id: int | None = None,
+    updated_by_user_id: Optional[int] = None,
 ) -> Dict[str, object]:
     if source_type.strip().lower() not in {"google_calendar", "ics", "csv", "pdf"}:
         raise ValueError("source_type must be one of: google_calendar, ics, csv, pdf")

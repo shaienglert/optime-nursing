@@ -16,6 +16,7 @@ from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
 from app.services.cms_staffing_import import import_staffing_data
+from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_public_activity_categories, import_activity_categories
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.cms_service import (
     CMS_PROVIDER_DATASET_ID,
@@ -207,6 +208,26 @@ class ValidationFeedbackOut(BaseModel):
     relocation_rate_24m: float
     average_scores_for_successful_adjustment: Dict[str, float]
     average_scores_for_unsuccessful_adjustment: Dict[str, float]
+
+
+class ActivityImportIn(BaseModel):
+    source_type: str
+    content: str
+    updated_by_user_id: Optional[int] = None
+
+
+class ActivityCategoryOut(BaseModel):
+    category: str
+    availability: str
+    confidence: float
+
+
+class ActivityImportOut(BaseModel):
+    facility_id: int
+    source_type: str
+    imported_at: str
+    categories: List[ActivityCategoryOut]
+    privacy_policy: str
 
 
 class FacilityIntelligenceProfileOut(BaseModel):
@@ -869,3 +890,58 @@ async def get_validation_feedback(db: Session = Depends(get_db)):
         average_scores_for_successful_adjustment=_group_average_scores(db, 1),
         average_scores_for_unsuccessful_adjustment=_group_average_scores(db, 0),
     )
+
+
+@app.post("/provider/facilities/{facility_id}/activities/import", response_model=ActivityImportOut)
+async def import_facility_activities(
+    facility_id: int,
+    payload: ActivityImportIn,
+    db: Session = Depends(get_db),
+):
+    facility = db.query(Facility).filter(Facility.id == facility_id).first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="Facility not found")
+
+    source_type = (payload.source_type or "").strip().lower()
+    if source_type not in {"google_calendar", "ics", "csv", "pdf"}:
+        raise HTTPException(status_code=400, detail="source_type must be one of: google_calendar, ics, csv, pdf")
+
+    try:
+        result = import_activity_categories(
+            db=db,
+            facility_id=facility_id,
+            source_type=source_type,
+            content=payload.content,
+            updated_by_user_id=payload.updated_by_user_id,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return ActivityImportOut(
+        facility_id=int(result["facility_id"]),
+        source_type=str(result["source_type"]),
+        imported_at=str(result["imported_at"]),
+        categories=[ActivityCategoryOut(**item) for item in result["categories"]],
+        privacy_policy=str(result["privacy_policy"]),
+    )
+
+
+@app.get("/provider/facilities/{facility_id}/activities/categories", response_model=List[ActivityCategoryOut])
+async def get_facility_activity_categories(
+    facility_id: int,
+    db: Session = Depends(get_db),
+):
+    facility = db.query(Facility).filter(Facility.id == facility_id).first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="Facility not found")
+
+    return [ActivityCategoryOut(**item) for item in get_public_activity_categories(db, facility_id)]
+
+
+@app.get("/provider/activity-intelligence/policy")
+async def get_activity_intelligence_policy():
+    return {
+        "supported_imports": ["google_calendar", "ics", "csv", "pdf"],
+        "stored_public_categories": ALLOWED_ACTIVITY_CATEGORIES,
+        "privacy": "Exact schedules are never exposed publicly; only category-level availability and confidence are returned.",
+    }
