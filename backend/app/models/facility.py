@@ -1,8 +1,17 @@
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint
+from enum import Enum as PyEnum
+
+from sqlalchemy import Boolean, Column, DateTime, Enum as SAEnum, Float, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+
+
+class AnswerState(str, PyEnum):
+	YES = "YES"
+	NO = "NO"
+	UNKNOWN = "UNKNOWN"
+	LIMITED = "LIMITED"
 
 
 class Facility(Base):
@@ -309,7 +318,7 @@ class FacilityCapability(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
 	capability = Column(String(120), nullable=False)
-	value = Column(String(20), nullable=False, default="UNKNOWN")  # YES, NO, LIMITED, UNKNOWN
+	value = Column(SAEnum(AnswerState, name="answer_state_enum", native_enum=False), nullable=False, default=AnswerState.UNKNOWN)
 	source = Column(String(60), nullable=False, default="provider_portal")
 	verified_at = Column(DateTime(timezone=True), nullable=True)
 	expires_at = Column(DateTime(timezone=True), nullable=True)
@@ -357,7 +366,7 @@ class FacilityActivityCategory(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
 	category = Column(String(40), nullable=False)  # movie, music, lecture, gardening, exercise, religious, social
-	availability = Column(String(20), nullable=False, default="UNKNOWN")  # YES, NO, LIMITED, UNKNOWN
+	availability = Column(SAEnum(AnswerState, name="answer_state_enum", native_enum=False), nullable=False, default=AnswerState.UNKNOWN)
 	confidence = Column(Float, nullable=False, default=0.0)
 	import_source = Column(String(60), nullable=True)
 	last_imported_at = Column(DateTime(timezone=True), nullable=True)
@@ -383,7 +392,7 @@ class FacilityVerificationMemory(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
 	capability = Column(String(120), nullable=False)
-	value = Column(String(20), nullable=False)  # YES, NO, LIMITED, UNKNOWN
+	value = Column(SAEnum(AnswerState, name="answer_state_enum", native_enum=False), nullable=False)
 	verification_source = Column(String(60), nullable=False)
 	verified_at = Column(DateTime(timezone=True), nullable=False)
 	expires_at = Column(DateTime(timezone=True), nullable=False)
@@ -436,7 +445,7 @@ class FacilityVerificationResponse(Base):
 	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
 	responded_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
 	capability = Column(String(120), nullable=False)
-	value = Column(String(20), nullable=False)  # YES, NO, LIMITED, UNKNOWN
+	value = Column(SAEnum(AnswerState, name="answer_state_enum", native_enum=False), nullable=False)
 	source = Column(String(60), nullable=False, default="provider_portal")
 	verified_at = Column(DateTime(timezone=True), nullable=False)
 	expires_at = Column(DateTime(timezone=True), nullable=False)
