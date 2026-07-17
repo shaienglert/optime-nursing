@@ -1066,7 +1066,7 @@ function collectHardRejectionReasons(facility: SearchFacility, state: Questionna
   const reasons: string[] = [];
   const careText = facility.careTypes.join(" ").toLowerCase();
   const notes = state.notes.toLowerCase();
-  const careFit = scoreCareFit(facility, state);
+  const careFit = state.assistanceLevel === "Fully independent" ? scoreIndependenceCriterion(facility, state) : scoreCareFit(facility, state);
   const financialFit = scoreFinancialFit(facility, state);
   const familyFit = scoreFamilyFit(state).score;
   reasons.push(...evaluateFutureCarePreference(facility, state).rejectionReasons);
