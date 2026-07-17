@@ -1,7 +1,7 @@
 # Human Advisor Benchmark V1
 
-Benchmark Status: **GOOD**
-Average Agreement: **88%**
+Benchmark Status: **PASS**
+Average Agreement: **90%**
 
 ## Comparison
 
@@ -9,8 +9,8 @@ Average Agreement: **88%**
 | --- | --- | --- | --- | --- |
 | Independent social widow | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; CLEARWATER CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | 100% | None |
 | Independent introverted couple | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC; BARTOW CENTER | 100% | None |
-| Early memory concerns | AVIATA AT EMERALD SHORES; ATHENS POST ACUTE LLC; RIVER GARDEN HEBREW HOME FOR THE AGED; LAKESIDE HEALTH CENTER; TARPON BAYOU CENTER | AVIATA AT EMERALD SHORES; RIVER GARDEN HEBREW HOME FOR THE AGED; ATHENS POST ACUTE LLC; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | 80% | TARPON BAYOU CENTER |
-| Assisted living transition | RIVER GARDEN HEBREW HOME FOR THE AGED; TARPON BAYOU CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC; CLEARWATER CENTER; W FRANK WELLS NURSING HOME | RIVER GARDEN HEBREW HOME FOR THE AGED; TARPON BAYOU CENTER; CLEARWATER CENTER; BARTOW CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | 80% | W FRANK WELLS NURSING HOME |
+| Early memory concerns | AVIATA AT EMERALD SHORES; ATHENS POST ACUTE LLC; RIVER GARDEN HEBREW HOME FOR THE AGED; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | AVIATA AT EMERALD SHORES; RIVER GARDEN HEBREW HOME FOR THE AGED; ATHENS POST ACUTE LLC; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | 100% | None |
+| Assisted living transition | RIVER GARDEN HEBREW HOME FOR THE AGED; TARPON BAYOU CENTER; CLEARWATER CENTER; BARTOW CENTER; AVIATA AT THE SEA - PASADENA | RIVER GARDEN HEBREW HOME FOR THE AGED; TARPON BAYOU CENTER; CLEARWATER CENTER; BARTOW CENTER; AVIATA AT EMERALD SHORES | 80% | AVIATA AT THE SEA - PASADENA |
 | Skilled nursing needs | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | 100% | None |
 | Rehabilitation after hospitalization | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | WESTSIDE OAKS REHABILITATION & NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; OAK HAVEN REHAB AND NURSING CENTER; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | 100% | None |
 | Spanish speaking senior | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; AVIATA AT THE SEA - PASADENA | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | 80% | BARTOW CENTER |
@@ -198,13 +198,13 @@ Generated Persona Type: **Early Memory Support**
 | 1 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 84.72 |
 | 2 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 84.24 |
 | 3 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 81.34 |
-| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living | 80.25 |
-| 5 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 79.66 |
-| 6 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living | 79.40 |
-| 7 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living | 79.11 |
-| 8 | BAYSIDE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 79.09 |
-| 9 | MADISON POINTE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 79.05 |
-| 10 | BARTOW CENTER | Assisted Living, Independent Living | 79.05 |
+| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living | 80.19 |
+| 5 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living | 78.91 |
+| 6 | W FRANK WELLS NURSING HOME | Skilled Nursing, Assisted Living | 78.87 |
+| 7 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living | 78.61 |
+| 8 | BAYSIDE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 78.59 |
+| 9 | MADISON POINTE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 78.56 |
+| 10 | EGRET COVE CENTER | Assisted Living, Skilled Nursing, Independent Living | 78.52 |
 
 ### Score Explanation
 
@@ -214,11 +214,11 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 40% | 4 |
+| Independent Living | 30% | 3 |
 | Active Adult 55+ | 0% | 0 |
 | Assisted Living | 100% | 10 |
 | Memory Care | 20% | 2 |
-| Skilled Nursing | 50% | 5 |
+| Skilled Nursing | 70% | 7 |
 | Rehabilitation | 20% | 2 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
@@ -238,7 +238,7 @@ Expected exclusions: Independent Living, Active Adult 55+
 | 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living |
 | 5 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living |
 
-Agreement: **80%** (GOOD)
+Agreement: **100%** (PASS)
 
 ### Top Positive Contributors
 
@@ -250,9 +250,7 @@ Social fit (-4); Luxury amenities (-3); Cultural fit (-2)
 
 ### Disagreements
 
-| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
-| --- | --- | --- | --- | --- |
-| TARPON BAYOU CENTER | Care fit (20); Family fit (11); Clinical quality (10); Financial fit (7) | Advisor excludes Independent Living for this persona. | Care Fit (28%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+No disagreements in the top 5.
 
 ## Assisted living transition
 
@@ -277,14 +275,12 @@ Generated Persona Type: **Assisted Living**
 | --- | --- | --- | --- |
 | 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
 | 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 0.00 |
-| 3 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living | 0.00 |
-| 4 | CLEARWATER CENTER | Assisted Living, Independent Living | 0.00 |
-| 5 | W FRANK WELLS NURSING HOME | Skilled Nursing, Assisted Living | 0.00 |
-| 6 | BARTOW CENTER | Assisted Living, Independent Living | 0.00 |
-| 7 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living | 0.00 |
-| 8 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
-| 9 | EGRET COVE CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
-| 10 | FAIRWAY OAKS CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
+| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 0.00 |
+| 4 | BARTOW CENTER | Assisted Living, Independent Living | 0.00 |
+| 5 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 0.00 |
+| 6 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 0.00 |
+| 7 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 0.00 |
+| 8 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 0.00 |
 
 ### Score Explanation
 
@@ -294,11 +290,11 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 60% | 6 |
+| Independent Living | 88% | 7 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 100% | 10 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 60% | 6 |
+| Assisted Living | 100% | 8 |
+| Memory Care | 25% | 2 |
+| Skilled Nursing | 0% | 0 |
 | Rehabilitation | 0% | 0 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
@@ -316,13 +312,13 @@ Expected exclusions: Skilled Nursing, Hospice
 | 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
 | 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
 | 4 | BARTOW CENTER | Assisted Living, Independent Living |
-| 5 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living |
+| 5 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care |
 
 Agreement: **80%** (GOOD)
 
 ### Top Positive Contributors
 
-Care fit (10); Clinical quality (10); Financial fit (10); Social fit (6)
+Clinical quality (10); Care fit (10); Financial fit (10); Social fit (6)
 
 ### Top Negative Contributors
 
@@ -332,7 +328,7 @@ Lifestyle fit (-6); Cultural fit (-4); Luxury amenities (-4)
 
 | Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
 | --- | --- | --- | --- | --- |
-| W FRANK WELLS NURSING HOME | Financial fit (10); Care fit (8); Social fit (6); Family fit (6) | Advisor excludes Skilled Nursing for this persona. | Care Fit (22%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+| AVIATA AT THE SEA - PASADENA | Financial fit (10); Care fit (7); Social fit (6); Family fit (6) | Advisor would prioritize Assisted Living, CCRC over Assisted Living, Independent Living. | Care Fit (22%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
 
 ## Skilled nursing needs
 
@@ -751,7 +747,7 @@ Generated Persona Type: **Skilled Nursing**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 77.12 |
+| 1 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 76.59 |
 | 2 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
 | 3 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
 | 4 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 0.00 |

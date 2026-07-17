@@ -412,6 +412,8 @@ function scoreMemoryNeedCriterion(facility: SearchFacility, state: Questionnaire
   }
 
   if (facility.careTypes.includes("Memory Care")) return 92;
+  if (facility.careTypes.includes("Assisted Living") && facility.careTypes.includes("Skilled Nursing")) return 80;
+  if (facility.careTypes.includes("Assisted Living") && facility.careTypes.includes("Independent Living")) return 68;
   if (facility.careTypes.includes("Assisted Living")) return 82;
   if (facility.careTypes.includes("Skilled Nursing")) return 55;
   return 28;
@@ -946,12 +948,16 @@ function scoreCareFit(facility: SearchFacility, state: QuestionnaireState): numb
   let score = 18;
   score += assistedLivingProbability * 58;
   score += memoryCareProbability * (memory === "Mild memory issues" || memory === "Occasionally forgetful" ? 30 : 8);
-  score += skilledNursingProbability * (memory === "Mild memory issues" || memory === "Occasionally forgetful" ? 5 : 10);
+  score += skilledNursingProbability * (memory === "Mild memory issues" || memory === "Occasionally forgetful" ? 5 : -6);
   score += continuingCareProbability * 18;
   score += ccrcProbability * 14;
   score -= independentProbability * 10;
   score -= activeAdultProbability * 10;
   score -= unknownProbability * 12;
+
+  if (memory !== "Mild memory issues" && memory !== "Occasionally forgetful" && facility.careTypes.includes("Skilled Nursing")) {
+    score -= 10;
+  }
 
   if (memory === "Mild memory issues" || memory === "Occasionally forgetful") {
     score += memoryCareProbability * 55;
