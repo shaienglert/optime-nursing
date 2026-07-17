@@ -72,8 +72,11 @@ function loadBackendFacilities() {
   const pythonCode = [
     'import json, sqlite3, sys',
     'sys.path.insert(0, r"' + path.join(repoRoot, 'backend').replace(/\\/g, '\\\\') + '")',
+    'from app.database import Base, engine',
     'from app.database import SessionLocal',
     'from app.services.intelligence_agent import run_intelligence_collection',
+    'import app.models.facility',
+    'Base.metadata.create_all(bind=engine)',
     'db = SessionLocal()',
     'run_intelligence_collection(db)',
     'db.close()',
@@ -81,7 +84,17 @@ function loadBackendFacilities() {
     'conn.row_factory = sqlite3.Row',
     'cur = conn.cursor()',
     'rows = cur.execute("select f.id, f.cms_id, f.name, f.city, f.state, f.address, f.zip_code, f.phone, f.overall_rating, f.staffing_rating, f.quality_rating, f.inspection_rating, f.beds, f.medical_quality_score, f.staffing_score, f.safety_score, f.overall_optime_score, f.confidence_level, p.intelligence_confidence, p.family_satisfaction_index, p.staff_stability_index, p.regulatory_risk_index, p.litigation_risk_index, p.social_energy_index, p.community_engagement_index, p.reputation_index, p.cultural_match_signals, p.sources_used as intelligence_sources_used, p.positive_signals as intelligence_positive_signals, p.negative_signals as intelligence_negative_signals, p.signal_details as intelligence_signal_details from facilities f left join facility_intelligence_profiles p on p.facility_id = f.id where f.state = ? order by f.overall_optime_score desc, f.id asc", ("FL",)).fetchall()',
-    'print(json.dumps([dict(row) for row in rows]))',
+    'memory_rows = cur.execute("select facility_id, capability, value, verification_source, verified_at, expires_at, confidence, conflict_count from facility_verification_memory").fetchall()',
+    'memory_by_facility = {}',
+    'for item in memory_rows:',
+    '  payload = {"capability": item[1], "value": item[2], "verification_source": item[3], "verified_at": item[4], "expires_at": item[5], "confidence": item[6], "conflict_count": item[7]}',
+    '  memory_by_facility.setdefault(item[0], []).append(payload)',
+    'result = []',
+    'for row in rows:',
+    '  mapped = dict(row)',
+    '  mapped["verification_memory"] = memory_by_facility.get(mapped["id"], [])',
+    '  result.append(mapped)',
+    'print(json.dumps(result))',
   ].join('\n');
   const result = spawnSync(pythonPath, ['-c', pythonCode, dbPath], {
     cwd: repoRoot,
@@ -142,7 +155,7 @@ function deriveInventoryCapabilityStates(facility, careTypes, monthlyCostRange) 
   const independentTrack = careTypes.includes('Active Adult 55+') || careTypes.includes('Independent Living') || careTypes.includes('Assisted Living');
   const continuumLikely = careTypes.includes('CCRC') || careTypes.includes('Continuing Care') || (independentTrack && skilledOrRehab);
 
-  return {
+  const states = {
     care_types: careTypes,
     minimum_age: ageRange.minimum_age,
     maximum_age: ageRange.maximum_age,
@@ -168,6 +181,40 @@ function deriveInventoryCapabilityStates(facility, careTypes, monthlyCostRange) 
     walker_accessibility: capabilityFromText(text, /walker|mobility|accessible|ada/, /not accessible/, /limited accessibility/),
     wheelchair_accessibility: capabilityFromText(text, /wheelchair|accessible|ada/, /not wheelchair accessible/, /limited wheelchair access/),
   };
+
+  const memoryRows = Array.isArray(facility.verification_memory) ? facility.verification_memory : [];
+  memoryRows.forEach((memoryItem) => {
+    const key = String(memoryItem.capability || '').trim();
+    if (!key || !(key in states)) {
+      return;
+    }
+    const value = String(memoryItem.value || '').toUpperCase();
+    if (value === 'YES' || value === 'NO' || value === 'UNKNOWN' || value === 'LIMITED') {
+      // Provider-verified memory has highest priority over inferred capability state.
+      states[key] = value;
+    }
+  });
+
+  return states;
+}
+
+function memoryConfidencePenalty(facility) {
+  const memoryRows = Array.isArray(facility.verification_memory) ? facility.verification_memory : [];
+  if (memoryRows.length === 0) return 0;
+
+  const now = Date.now();
+  let penalty = 0;
+  memoryRows.forEach((row) => {
+    const expiresAt = row.expires_at ? Date.parse(row.expires_at) : NaN;
+    if (Number.isFinite(expiresAt) && expiresAt < now) {
+      // Expired records remain visible but reduce confidence.
+      penalty += 4;
+    }
+    const conflicts = Number(row.conflict_count || 0);
+    penalty += Math.min(8, conflicts * 2);
+  });
+
+  return Math.min(25, penalty);
 }
 
 function scoreLabel(score) {
@@ -469,6 +516,7 @@ function toSearchFacility(facility, mode) {
   const taxonomy = mode === 'legacy' ? inferLegacyCareTaxonomy(facility) : inferExplicitCareTaxonomy(facility);
   const monthlyCostRange = makePriceRange(facility);
   const inventoryCapabilities = deriveInventoryCapabilityStates(facility, taxonomy.careTypes, monthlyCostRange);
+  const confidencePenalty = memoryConfidencePenalty(facility);
   const result = {
     ...base,
     matching_confidence: combineConfidence(base.matching_confidence, taxonomy.confidence),
@@ -480,7 +528,7 @@ function toSearchFacility(facility, mode) {
     ...inventoryCapabilities,
     careTypes: taxonomy.careTypes,
     careTypeConfidence: taxonomy.confidence,
-    careTypeConfidenceScore: taxonomy.confidenceScore,
+    careTypeConfidenceScore: Math.max(0, taxonomy.confidenceScore - confidencePenalty),
     careTypeProbabilities: taxonomy.probabilities,
     intelligenceSnapshot: facility.intelligence_confidence !== null && facility.intelligence_confidence !== undefined ? {
       intelligence_confidence: facility.intelligence_confidence,

@@ -17,6 +17,7 @@ from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
 from app.services.cms_staffing_import import import_staffing_data
 from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_public_activity_categories, import_activity_categories
+from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.cms_service import (
     CMS_PROVIDER_DATASET_ID,
@@ -228,6 +229,46 @@ class ActivityImportOut(BaseModel):
     imported_at: str
     categories: List[ActivityCategoryOut]
     privacy_policy: str
+
+
+class ProviderAnswerIn(BaseModel):
+    capability_key: str
+    value: str
+    source: str = "PROVIDER_PORTAL"
+
+
+class ProviderPersistIn(BaseModel):
+    answers: List[ProviderAnswerIn]
+    verified_by_user_id: Optional[int] = None
+    verification_method: str = "provider_portal"
+    request_subject: Optional[str] = None
+    request_body: Optional[str] = None
+
+
+class ProviderPersistOut(BaseModel):
+    facility_id: int
+    request_id: int
+    persisted_answers: int
+    conflict_records: int
+
+
+class MemoryCapabilityOut(BaseModel):
+    capability_key: str
+    value: str
+    source: str
+    verified_at: str
+    expires_at: str
+    expired: bool
+    confidence: float
+    verification_count: int
+    conflict_count: int
+    status: str
+
+
+class FacilityMemoryOut(BaseModel):
+    facility_id: int
+    overall_confidence: float
+    capabilities: List[MemoryCapabilityOut]
 
 
 class FacilityIntelligenceProfileOut(BaseModel):
@@ -540,14 +581,23 @@ def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> Facili
 
 @app.on_event("startup")
 def startup() -> None:
-    # Phase 1 MVP re-initializes schema to guarantee model/table parity.
-    Base.metadata.drop_all(bind=engine)
+    # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         state = os.getenv("OPTIME_IMPORT_STATE", "FL")
         limit = env_int("OPTIME_IMPORT_LIMIT", 100)
-        app.state.import_summary = run_phase1_ingestion(db, state=state, limit=limit)
+        should_reingest = os.getenv("OPTIME_REINGEST_ON_STARTUP", "0") == "1"
+        has_facilities = (db.query(func.count(Facility.id)).scalar() or 0) > 0
+        if should_reingest or not has_facilities:
+            app.state.import_summary = run_phase1_ingestion(db, state=state, limit=limit)
+        else:
+            app.state.import_summary = {
+                "facilities_imported": int(db.query(func.count(Facility.id)).scalar() or 0),
+                "missing_records": 0,
+                "failed_mappings": 0,
+                "score_distributions": {},
+            }
     finally:
         db.close()
 
@@ -945,3 +995,55 @@ async def get_activity_intelligence_policy():
         "stored_public_categories": ALLOWED_ACTIVITY_CATEGORIES,
         "privacy": "Exact schedules are never exposed publicly; only category-level availability and confidence are returned.",
     }
+
+
+@app.post("/provider/facilities/{facility_id}/verification/persist", response_model=ProviderPersistOut)
+async def persist_provider_verification_answers(
+    facility_id: int,
+    payload: ProviderPersistIn,
+    db: Session = Depends(get_db),
+):
+    facility = db.query(Facility).filter(Facility.id == facility_id).first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="Facility not found")
+
+    result = apply_provider_verification_answers(
+        db=db,
+        facility_id=facility_id,
+        answers=[
+            {
+                "capability_key": item.capability_key,
+                "value": item.value,
+                "source": item.source,
+            }
+            for item in payload.answers
+        ],
+        verified_by_user_id=payload.verified_by_user_id,
+        verification_method=payload.verification_method,
+        request_subject=payload.request_subject,
+        request_body=payload.request_body,
+    )
+
+    return ProviderPersistOut(
+        facility_id=int(result["facility_id"]),
+        request_id=int(result["request_id"]),
+        persisted_answers=int(result["persisted_answers"]),
+        conflict_records=int(result["conflict_records"]),
+    )
+
+
+@app.get("/provider/facilities/{facility_id}/memory", response_model=FacilityMemoryOut)
+async def get_facility_memory(
+    facility_id: int,
+    db: Session = Depends(get_db),
+):
+    facility = db.query(Facility).filter(Facility.id == facility_id).first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="Facility not found")
+
+    memory = facility_memory_overlay(db, facility_id)
+    return FacilityMemoryOut(
+        facility_id=int(memory["facility_id"]),
+        overall_confidence=float(memory["overall_confidence"]),
+        capabilities=[MemoryCapabilityOut(**item) for item in memory["capabilities"]],
+    )
