@@ -421,12 +421,17 @@ function scoreIndependenceCriterion(facility: SearchFacility, state: Questionnai
   if (state.assistanceLevel !== "Fully independent") return 100;
 
   const futureCare = evaluateFutureCarePreference(facility, state);
+  const includesSkilled = facility.careTypes.includes("Skilled Nursing");
+  const includesRehab = facility.careTypes.includes("Rehabilitation");
+  const includesMemory = facility.careTypes.includes("Memory Care");
   if (state.futureCarePreference === "Independent only") {
     return futureCare.rejectionReasons.length === 0 ? 98 : 0;
   }
 
   if (facility.careTypes.includes("Independent Living") || facility.careTypes.includes("Active Adult 55+")) {
     if (facility.careTypes.includes("CCRC") || facility.careTypes.includes("Continuing Care")) return 96;
+    if (includesSkilled || includesRehab) return 68;
+    if (includesMemory) return 72;
     if (facility.careTypes.includes("Assisted Living")) return 84;
     return 92;
   }

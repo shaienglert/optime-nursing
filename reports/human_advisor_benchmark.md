@@ -7,16 +7,16 @@ Average Agreement: **88%**
 
 | Persona | OPTIME Top 5 | Advisor Expected Top 5 | Agreement % | Disagreement Reasons |
 | --- | --- | --- | --- | --- |
-| Independent social widow | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | JOHN KNOX VILLAGE OF POMPANO BEACH; CLEARWATER CENTER; AVIATA AT THE SEA - PASADENA; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | 100% | None |
-| Independent introverted couple | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | 100% | None |
+| Independent social widow | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; CLEARWATER CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | 100% | None |
+| Independent introverted couple | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC; BARTOW CENTER | 100% | None |
 | Early memory concerns | AVIATA AT EMERALD SHORES; ATHENS POST ACUTE LLC; RIVER GARDEN HEBREW HOME FOR THE AGED; LAKESIDE HEALTH CENTER; TARPON BAYOU CENTER | AVIATA AT EMERALD SHORES; RIVER GARDEN HEBREW HOME FOR THE AGED; ATHENS POST ACUTE LLC; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | 80% | TARPON BAYOU CENTER |
 | Assisted living transition | RIVER GARDEN HEBREW HOME FOR THE AGED; TARPON BAYOU CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC; CLEARWATER CENTER; W FRANK WELLS NURSING HOME | RIVER GARDEN HEBREW HOME FOR THE AGED; TARPON BAYOU CENTER; CLEARWATER CENTER; BARTOW CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | 80% | W FRANK WELLS NURSING HOME |
-| Skilled nursing needs | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; AVANTE AT ORMOND BEACH, INC | 80% | JACKSON MEMORIAL PERDUE MEDICAL CENTER |
-| Rehabilitation after hospitalization | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; AVANTE AT ORMOND BEACH, INC; VILLA MARIA NURSING CENTER; WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER | 80% | JACKSON MEMORIAL PERDUE MEDICAL CENTER |
-| Spanish speaking senior | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | 100% | None |
-| Jewish senior seeking Jewish programming | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; CLEARWATER CENTER | 80% | AVIATA AT THE SEA - PASADENA |
-| Family-centered senior | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | JOHN KNOX VILLAGE OF POMPANO BEACH; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; TARPON BAYOU CENTER; AVANTE AT LEESBURG, INC | 100% | None |
-| High clinical complexity senior | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; AVANTE AT ORMOND BEACH, INC; VILLA MARIA NURSING CENTER; WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER | 80% | JACKSON MEMORIAL PERDUE MEDICAL CENTER |
+| Skilled nursing needs | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | 100% | None |
+| Rehabilitation after hospitalization | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | WESTSIDE OAKS REHABILITATION & NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; OAK HAVEN REHAB AND NURSING CENTER; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | 100% | None |
+| Spanish speaking senior | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; AVIATA AT THE SEA - PASADENA | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | 80% | BARTOW CENTER |
+| Jewish senior seeking Jewish programming | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; AVIATA AT THE SEA - PASADENA | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; CLEARWATER CENTER | 80% | AVIATA AT THE SEA - PASADENA |
+| Family-centered senior | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; AVIATA AT THE SEA - PASADENA | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER | 80% | AVANTE AT LEESBURG, INC |
+| High clinical complexity senior | COMMUNITY CONVALESCENT CENTER; WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER | COMMUNITY CONVALESCENT CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; AVANTE AT ORMOND BEACH, INC; VILLA MARIA NURSING CENTER; WESTSIDE OAKS REHABILITATION & NURSING CENTER | 80% | OAK HAVEN REHAB AND NURSING CENTER |
 
 ## Independent social widow
 
@@ -39,13 +39,16 @@ Generated Persona Type: **Independent Social Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 0.00 |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 0.00 |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 0.00 |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 0.00 |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 0.00 |
-| 6 | BARTOW CENTER | Assisted Living, Independent Living | 0.00 |
-| 7 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 52.97 |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 49.86 |
+| 3 | BARTOW CENTER | Assisted Living, Independent Living | 49.86 |
+| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 49.23 |
+| 5 | CLEARWATER CENTER | Assisted Living, Independent Living | 49.23 |
+| 6 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 48.93 |
+| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 46.20 |
+| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 45.06 |
+| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
 
 ### Score Explanation
 
@@ -55,13 +58,13 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 86% | 6 |
+| Independent Living | 90% | 9 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 86% | 6 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 0% | 0 |
+| Assisted Living | 90% | 9 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 10% | 1 |
 | Rehabilitation | 0% | 0 |
-| CCRC | 14% | 1 |
+| CCRC | 10% | 1 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -74,9 +77,9 @@ Expected exclusions: Skilled Nursing, Rehabilitation, Hospice
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 3 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
+| 3 | BARTOW CENTER | Assisted Living, Independent Living |
+| 4 | CLEARWATER CENTER | Assisted Living, Independent Living |
 | 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
 
 Agreement: **100%** (PASS)
@@ -114,13 +117,16 @@ Generated Persona Type: **Independent Quiet Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 0.00 |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 0.00 |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 0.00 |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 0.00 |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 0.00 |
-| 6 | BARTOW CENTER | Assisted Living, Independent Living | 0.00 |
-| 7 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 58.29 |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 53.80 |
+| 3 | BARTOW CENTER | Assisted Living, Independent Living | 53.80 |
+| 4 | CLEARWATER CENTER | Assisted Living, Independent Living | 53.60 |
+| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 53.60 |
+| 6 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 53.29 |
+| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 49.21 |
+| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 48.50 |
+| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
 
 ### Score Explanation
 
@@ -130,13 +136,13 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 86% | 6 |
+| Independent Living | 90% | 9 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 86% | 6 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 0% | 0 |
+| Assisted Living | 90% | 9 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 10% | 1 |
 | Rehabilitation | 0% | 0 |
-| CCRC | 14% | 1 |
+| CCRC | 10% | 1 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -149,10 +155,10 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
 | 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 5 | BARTOW CENTER | Assisted Living, Independent Living |
 
 Agreement: **100%** (PASS)
 
@@ -195,10 +201,10 @@ Generated Persona Type: **Early Memory Support**
 | 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living | 80.25 |
 | 5 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 79.66 |
 | 6 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living | 79.40 |
-| 7 | W FRANK WELLS NURSING HOME | Skilled Nursing, Assisted Living | 0.00 |
-| 8 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Rehabilitation | 0.00 |
-| 9 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living | 0.00 |
-| 10 | PINES NURSING HOME | Skilled Nursing, Assisted Living | 0.00 |
+| 7 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living | 79.11 |
+| 8 | BAYSIDE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 79.09 |
+| 9 | MADISON POINTE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 79.05 |
+| 10 | BARTOW CENTER | Assisted Living, Independent Living | 79.05 |
 
 ### Score Explanation
 
@@ -208,12 +214,12 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 30% | 3 |
+| Independent Living | 40% | 4 |
 | Active Adult 55+ | 0% | 0 |
 | Assisted Living | 100% | 10 |
 | Memory Care | 20% | 2 |
-| Skilled Nursing | 60% | 6 |
-| Rehabilitation | 10% | 1 |
+| Skilled Nursing | 50% | 5 |
+| Rehabilitation | 20% | 2 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
@@ -349,12 +355,12 @@ Generated Persona Type: **Skilled Nursing**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
-| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
-| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 0.00 |
-| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 0.00 |
-| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 0.00 |
-| 6 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 0.00 |
+| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 79.52 |
+| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 79.42 |
+| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 78.89 |
+| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 77.75 |
+| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 77.13 |
+| 6 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 75.95 |
 | 7 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 0.00 |
 | 8 | SOUTHERN PINES NURSING CENTER | Skilled Nursing, Assisted Living | 0.00 |
 | 9 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation | 0.00 |
@@ -386,13 +392,13 @@ Expected exclusions: Independent Living, Active Adult 55+
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
-| 2 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
-| 3 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
-| 4 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing |
-| 5 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation |
+| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
+| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing |
+| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
+| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
+| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing |
 
-Agreement: **80%** (GOOD)
+Agreement: **100%** (PASS)
 
 ### Top Positive Contributors
 
@@ -404,9 +410,7 @@ Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
 
 ### Disagreements
 
-| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
-| --- | --- | --- | --- | --- |
-| JACKSON MEMORIAL PERDUE MEDICAL CENTER | Clinical quality (24); Care fit (21); Family fit (6); Financial fit (5) | Advisor would prioritize Skilled Nursing, Rehabilitation over Skilled Nursing. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+No disagreements in the top 5.
 
 ## Rehabilitation after hospitalization
 
@@ -429,12 +433,12 @@ Generated Persona Type: **Rehabilitation**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
-| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
-| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 0.00 |
-| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 0.00 |
-| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 0.00 |
-| 6 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 0.00 |
+| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 79.52 |
+| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 79.42 |
+| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 78.89 |
+| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 77.75 |
+| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 77.13 |
+| 6 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 75.95 |
 | 7 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 0.00 |
 | 8 | SOUTHERN PINES NURSING CENTER | Skilled Nursing, Assisted Living | 0.00 |
 | 9 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation | 0.00 |
@@ -466,13 +470,13 @@ Expected exclusions: Independent Living
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
-| 2 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation |
-| 3 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
-| 4 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
-| 5 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing |
+| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
+| 2 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
+| 3 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing |
+| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
+| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing |
 
-Agreement: **80%** (GOOD)
+Agreement: **100%** (PASS)
 
 ### Top Positive Contributors
 
@@ -484,9 +488,7 @@ Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
 
 ### Disagreements
 
-| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
-| --- | --- | --- | --- | --- |
-| JACKSON MEMORIAL PERDUE MEDICAL CENTER | Clinical quality (31); Care fit (17); Family fit (6); Financial fit (5) | Advisor would prioritize Rehabilitation, Skilled Nursing over Skilled Nursing. | Clinical Quality (32%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+No disagreements in the top 5.
 
 ## Spanish speaking senior
 
@@ -509,13 +511,16 @@ Generated Persona Type: **Independent Active Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 0.00 |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 0.00 |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 0.00 |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 0.00 |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 0.00 |
-| 6 | BARTOW CENTER | Assisted Living, Independent Living | 0.00 |
-| 7 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 58.92 |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 54.45 |
+| 3 | BARTOW CENTER | Assisted Living, Independent Living | 54.45 |
+| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 54.26 |
+| 5 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 54.25 |
+| 6 | CLEARWATER CENTER | Assisted Living, Independent Living | 54.25 |
+| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 49.86 |
+| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 49.46 |
+| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
 
 ### Score Explanation
 
@@ -525,13 +530,13 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 86% | 6 |
+| Independent Living | 90% | 9 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 86% | 6 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 0% | 0 |
+| Assisted Living | 90% | 9 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 10% | 1 |
 | Rehabilitation | 0% | 0 |
-| CCRC | 14% | 1 |
+| CCRC | 10% | 1 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -544,12 +549,12 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
+| 3 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
+| 4 | CLEARWATER CENTER | Assisted Living, Independent Living |
 | 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
 
-Agreement: **100%** (PASS)
+Agreement: **80%** (GOOD)
 
 ### Top Positive Contributors
 
@@ -561,7 +566,9 @@ Luxury amenities (-6); Family fit (-4); Cultural fit (-2)
 
 ### Disagreements
 
-No disagreements in the top 5.
+| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
+| --- | --- | --- | --- | --- |
+| BARTOW CENTER | Financial fit (11); Lifestyle fit (11); Social fit (6); Luxury amenities (6) | Advisor would prioritize Independent Living, CCRC, Assisted Living over Assisted Living, Independent Living. | Lifestyle Fit (22%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
 
 ## Jewish senior seeking Jewish programming
 
@@ -584,13 +591,16 @@ Generated Persona Type: **Independent Active Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 0.00 |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 0.00 |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 0.00 |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 0.00 |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 0.00 |
-| 6 | BARTOW CENTER | Assisted Living, Independent Living | 0.00 |
-| 7 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 62.41 |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 57.78 |
+| 3 | BARTOW CENTER | Assisted Living, Independent Living | 57.78 |
+| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 57.58 |
+| 5 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 57.57 |
+| 6 | CLEARWATER CENTER | Assisted Living, Independent Living | 57.57 |
+| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 53.03 |
+| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 52.62 |
+| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
 
 ### Score Explanation
 
@@ -600,13 +610,13 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 86% | 6 |
+| Independent Living | 90% | 9 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 86% | 6 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 0% | 0 |
+| Assisted Living | 90% | 9 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 10% | 1 |
 | Rehabilitation | 0% | 0 |
-| CCRC | 14% | 1 |
+| CCRC | 10% | 1 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -661,13 +671,16 @@ Generated Persona Type: **Family-Centered Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 0.00 |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 0.00 |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 0.00 |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 0.00 |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 0.00 |
-| 6 | BARTOW CENTER | Assisted Living, Independent Living | 0.00 |
-| 7 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 87.37 |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 82.02 |
+| 3 | BARTOW CENTER | Assisted Living, Independent Living | 82.02 |
+| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 81.36 |
+| 5 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 81.32 |
+| 6 | CLEARWATER CENTER | Assisted Living, Independent Living | 81.32 |
+| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 76.08 |
+| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 75.18 |
+| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
 
 ### Score Explanation
 
@@ -677,13 +690,13 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 86% | 6 |
+| Independent Living | 90% | 9 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 86% | 6 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 0% | 0 |
+| Assisted Living | 90% | 9 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 10% | 1 |
 | Rehabilitation | 0% | 0 |
-| CCRC | 14% | 1 |
+| CCRC | 10% | 1 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -696,12 +709,12 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
+| 3 | BARTOW CENTER | Assisted Living, Independent Living |
+| 4 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
+| 5 | CLEARWATER CENTER | Assisted Living, Independent Living |
 
-Agreement: **100%** (PASS)
+Agreement: **80%** (GOOD)
 
 ### Top Positive Contributors
 
@@ -713,7 +726,9 @@ Luxury amenities (-6); Social fit (-4); Cultural fit (-3)
 
 ### Disagreements
 
-No disagreements in the top 5.
+| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
+| --- | --- | --- | --- | --- |
+| AVANTE AT LEESBURG, INC | Family fit (23); Financial fit (11); Lifestyle fit (6); Luxury amenities (6) | Advisor would prioritize Independent Living, CCRC, Assisted Living over Assisted Living, Independent Living. | Family Fit (28%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
 
 ## High clinical complexity senior
 
@@ -736,12 +751,12 @@ Generated Persona Type: **Skilled Nursing**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
-| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
-| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 0.00 |
-| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 0.00 |
-| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 0.00 |
-| 6 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 0.00 |
+| 1 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 77.12 |
+| 2 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
+| 3 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
+| 4 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 0.00 |
+| 5 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 0.00 |
+| 6 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 0.00 |
 | 7 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 0.00 |
 | 8 | SOUTHERN PINES NURSING CENTER | Skilled Nursing, Assisted Living | 0.00 |
 | 9 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation | 0.00 |
@@ -749,7 +764,7 @@ Generated Persona Type: **Skilled Nursing**
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has skilled nursing care needs and prefers a specific social rhythm social interaction. WESTSIDE OAKS REHABILITATION & NURSING CENTER scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. Distance was not supplied, so it did not change the score.
+Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has skilled nursing care needs and prefers a specific social rhythm social interaction. COMMUNITY CONVALESCENT CENTER scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. Distance was not supplied, so it did not change the score.
 
 ### Care Type Distribution
 
@@ -773,17 +788,17 @@ Expected exclusions: Independent Living, Active Adult 55+
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
-| 2 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation |
-| 3 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
-| 4 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
-| 5 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing |
+| 1 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living |
+| 2 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
+| 3 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation |
+| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
+| 5 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
 
 Agreement: **80%** (GOOD)
 
 ### Top Positive Contributors
 
-Care fit (24); Clinical quality (14); Family fit (6); Financial fit (5)
+Care fit (20); Clinical quality (11); Family fit (6); Financial fit (5)
 
 ### Top Negative Contributors
 
@@ -793,4 +808,4 @@ Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
 
 | Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
 | --- | --- | --- | --- | --- |
-| JACKSON MEMORIAL PERDUE MEDICAL CENTER | Clinical quality (24); Care fit (21); Family fit (6); Financial fit (5) | Advisor would prioritize Skilled Nursing, Memory Care, Rehabilitation over Skilled Nursing. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+| OAK HAVEN REHAB AND NURSING CENTER | Care fit (24); Clinical quality (13); Family fit (6); Financial fit (5) | Advisor would prioritize Skilled Nursing, Memory Care, Rehabilitation over Rehabilitation, Skilled Nursing. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
