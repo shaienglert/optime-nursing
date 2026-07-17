@@ -183,7 +183,7 @@ function stoodOutBullets(recommendation: RankedRecommendation): string[] {
   if ((facility.lifestyleCapabilities || []).length > 0) {
     bullets.push("Supports a socially active daily routine.");
   }
-  if ((facility.medical_quality_score ?? 0) >= 80) {
+  if ((facility.quality_rating ?? 0) >= 4) {
     bullets.push("Shows strong clinical quality indicators.");
   }
   if (facility.continuum_of_care === "YES") {
