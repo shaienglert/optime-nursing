@@ -1,10 +1,10 @@
 # Post Taxonomy Validation Report
 
-Verdict: **FAIL**
+Verdict: **PASS**
 
 ## Summary
 
-- Persona A: **FAIL** - Top 10 contains less than 70% Independent Living, Active Adult, or CCRC.
+- Persona A: **PASS**
 - Persona B: **PASS**
 - Persona C: **PASS**
 - Persona D: **PASS**
@@ -19,24 +19,27 @@ Quality Gate Status: **PASS**
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 52.97 |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 49.86 |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living | 49.86 |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 49.23 |
-| 5 | CLEARWATER CENTER | Assisted Living, Independent Living | 49.23 |
-| 6 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 48.93 |
-| 7 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 2 | AVIATA AT THE SEA - POMPANO BEACH | Assisted Living, Skilled Nursing, Independent Living | 49.89 |
+| 3 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 49.87 |
+| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 49.86 |
+| 5 | EGRET COVE CENTER | Assisted Living, Skilled Nursing, Independent Living | 49.86 |
+| 6 | BARTOW CENTER | Assisted Living, Independent Living | 49.86 |
+| 7 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 49.23 |
+| 8 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 49.23 |
+| 9 | CLEARWATER CENTER | Assisted Living, Independent Living | 49.23 |
+| 10 | FAIRWAY OAKS CENTER | Assisted Living, Skilled Nursing, Independent Living | 49.21 |
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 86% | 6 |
+| Independent Living | 100% | 10 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 86% | 6 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 0% | 0 |
+| Assisted Living | 90% | 9 |
+| Memory Care | 10% | 1 |
+| Skilled Nursing | 40% | 4 |
 | Rehabilitation | 0% | 0 |
-| CCRC | 14% | 1 |
+| CCRC | 10% | 1 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 
@@ -66,15 +69,17 @@ Clinical quality (-4); Luxury amenities (-4); Cultural fit (-3)
 | Community | Before Rank | After Rank | Rank Change | After Care Types |
 | --- | --- | --- | --- | --- |
 | JOHN KNOX VILLAGE OF POMPANO BEACH | 1 | 1 | 0 | Independent Living, CCRC |
-| TARPON BAYOU CENTER | 9 | 2 | 7 | Assisted Living, Independent Living |
-| BARTOW CENTER | 14 | 3 | 11 | Assisted Living, Independent Living |
-| AVANTE AT LEESBURG, INC | 19 | 4 | 15 | Assisted Living, Independent Living |
-| CLEARWATER CENTER | 4 | 5 | -1 | Assisted Living, Independent Living |
-| AVIATA AT THE SEA - PASADENA | 21 | 6 | 15 | Assisted Living, Independent Living |
-| RIVER GARDEN HEBREW HOME FOR THE AGED | NR | 7 | NR | Assisted Living |
+| AVIATA AT THE SEA - POMPANO BEACH | 52 | 2 | 50 | Assisted Living, Skilled Nursing, Independent Living |
+| AVIATA AT EMERALD SHORES | 24 | 3 | 21 | Assisted Living, Independent Living, Memory Care |
+| TARPON BAYOU CENTER | 9 | 4 | 5 | Assisted Living, Independent Living |
+| EGRET COVE CENTER | 15 | 5 | 10 | Assisted Living, Skilled Nursing, Independent Living |
+| BARTOW CENTER | 14 | 6 | 8 | Assisted Living, Independent Living |
+| GROVES CENTER | 13 | 7 | 6 | Assisted Living, Skilled Nursing, Independent Living |
+| AVANTE AT LEESBURG, INC | 19 | 8 | 11 | Assisted Living, Independent Living |
+| CLEARWATER CENTER | 4 | 9 | -5 | Assisted Living, Independent Living |
+| FAIRWAY OAKS CENTER | 20 | 10 | 10 | Assisted Living, Skilled Nursing, Independent Living |
 
-Persona Verdict: **FAIL**
-- Top 10 contains less than 70% Independent Living, Active Adult, or CCRC.
+Persona Verdict: **PASS**
 
 ## Persona B
 
@@ -230,24 +235,27 @@ Quality Gate Status: **PASS**
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
 | 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 43.80 |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 41.20 |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living | 41.20 |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 40.77 |
-| 5 | CLEARWATER CENTER | Assisted Living, Independent Living | 40.76 |
-| 6 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 40.56 |
-| 7 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 2 | AVIATA AT THE SEA - POMPANO BEACH | Assisted Living, Skilled Nursing, Independent Living | 41.40 |
+| 3 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 41.20 |
+| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 41.20 |
+| 5 | EGRET COVE CENTER | Assisted Living, Skilled Nursing, Independent Living | 41.20 |
+| 6 | BARTOW CENTER | Assisted Living, Independent Living | 41.20 |
+| 7 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 40.77 |
+| 8 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 40.77 |
+| 9 | CLEARWATER CENTER | Assisted Living, Independent Living | 40.76 |
+| 10 | FAIRWAY OAKS CENTER | Assisted Living, Skilled Nursing, Independent Living | 40.57 |
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 86% | 6 |
+| Independent Living | 100% | 10 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 86% | 6 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 0% | 0 |
+| Assisted Living | 90% | 9 |
+| Memory Care | 10% | 1 |
+| Skilled Nursing | 40% | 4 |
 | Rehabilitation | 0% | 0 |
-| CCRC | 14% | 1 |
+| CCRC | 10% | 1 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 
@@ -277,11 +285,14 @@ Social fit (-4); Luxury amenities (-4); Lifestyle fit (-3)
 | Community | Before Rank | After Rank | Rank Change | After Care Types |
 | --- | --- | --- | --- | --- |
 | JOHN KNOX VILLAGE OF POMPANO BEACH | 1 | 1 | 0 | Independent Living, CCRC |
-| TARPON BAYOU CENTER | 9 | 2 | 7 | Assisted Living, Independent Living |
-| BARTOW CENTER | 14 | 3 | 11 | Assisted Living, Independent Living |
-| AVANTE AT LEESBURG, INC | 19 | 4 | 15 | Assisted Living, Independent Living |
-| CLEARWATER CENTER | 4 | 5 | -1 | Assisted Living, Independent Living |
-| AVIATA AT THE SEA - PASADENA | 21 | 6 | 15 | Assisted Living, Independent Living |
-| RIVER GARDEN HEBREW HOME FOR THE AGED | NR | 7 | NR | Assisted Living |
+| AVIATA AT THE SEA - POMPANO BEACH | 52 | 2 | 50 | Assisted Living, Skilled Nursing, Independent Living |
+| AVIATA AT EMERALD SHORES | 24 | 3 | 21 | Assisted Living, Independent Living, Memory Care |
+| TARPON BAYOU CENTER | 9 | 4 | 5 | Assisted Living, Independent Living |
+| EGRET COVE CENTER | 15 | 5 | 10 | Assisted Living, Skilled Nursing, Independent Living |
+| BARTOW CENTER | 14 | 6 | 8 | Assisted Living, Independent Living |
+| GROVES CENTER | 13 | 7 | 6 | Assisted Living, Skilled Nursing, Independent Living |
+| AVANTE AT LEESBURG, INC | 19 | 8 | 11 | Assisted Living, Independent Living |
+| CLEARWATER CENTER | 4 | 9 | -5 | Assisted Living, Independent Living |
+| FAIRWAY OAKS CENTER | 20 | 10 | 10 | Assisted Living, Skilled Nursing, Independent Living |
 
 Persona Verdict: **PASS**
