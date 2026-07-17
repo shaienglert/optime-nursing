@@ -50,6 +50,16 @@ type Contribution = {
   value: number;
 };
 
+type FutureCarePreferenceEvaluation = {
+  preference: string;
+  adjustment: number;
+  score: number;
+  explanation: string;
+  source: string;
+  contributorLabel: string;
+  rejectionReasons: string[];
+};
+
 type ReportContributor = {
   signal: string;
   source: string;
@@ -344,7 +354,114 @@ function careTypeTotalAdjustment(facility: SearchFacility, state: QuestionnaireS
     if (facility.careTypes.includes("Rehabilitation") && state.memoryStatus !== "Significant memory issues") adjustment -= 12;
   }
 
+  adjustment += evaluateFutureCarePreference(facility, state).adjustment;
+
   return adjustment;
+}
+
+function hasAnyCareType(facility: SearchFacility, expected: string[]): boolean {
+  return facility.careTypes.some((careType) => expected.includes(careType));
+}
+
+function isStandaloneClinicalCommunity(facility: SearchFacility, careType: "Skilled Nursing" | "Rehabilitation"): boolean {
+  const clinicalOnlyTypes = ["Skilled Nursing", "Rehabilitation", "Hospice", "UNKNOWN"];
+  return facility.careTypes.includes(careType) && facility.careTypes.every((item) => clinicalOnlyTypes.includes(item));
+}
+
+function isContinuumCampus(facility: SearchFacility): boolean {
+  const hasIndependent = hasAnyCareType(facility, ["Independent Living", "Active Adult 55+"]);
+  const hasContinuumLabel = hasAnyCareType(facility, ["CCRC", "Continuing Care"]);
+  const hasProgressiveSupport = hasAnyCareType(facility, ["Assisted Living", "Memory Care", "Skilled Nursing", "Rehabilitation"]);
+  return hasContinuumLabel || (hasIndependent && hasProgressiveSupport && facility.careTypes.length >= 3);
+}
+
+function evaluateFutureCarePreference(facility: SearchFacility, state: QuestionnaireState): FutureCarePreferenceEvaluation {
+  const preference = state.futureCarePreference;
+  const source = preference ? `Future care preference: ${preference}` : "Future care preference not selected";
+
+  if (state.assistanceLevel !== "Fully independent" || !preference || preference === "No preference") {
+    return {
+      preference,
+      adjustment: 0,
+      score: 50,
+      explanation: preference === "No preference" ? "No future-care filtering was applied." : "Future-care preference did not affect ranking.",
+      source,
+      contributorLabel: "Future care preference",
+      rejectionReasons: [],
+    };
+  }
+
+  const facilityText = [facility.name, facility.careTypes.join(" "), facility.matchBadges.join(" ")].join(" ").toLowerCase();
+  const hasIndependentOnlyMatch = hasAnyCareType(facility, ["Independent Living", "Active Adult 55+"]);
+  const hasContinuum = hasAnyCareType(facility, ["CCRC", "Continuing Care"]);
+  const continuumCampus = isContinuumCampus(facility);
+  const standaloneSkilledNursing = isStandaloneClinicalCommunity(facility, "Skilled Nursing");
+  const standaloneRehabilitation = isStandaloneClinicalCommunity(facility, "Rehabilitation");
+  const rejectionReasons: string[] = [];
+  let adjustment = 0;
+  let score = 50;
+  let explanation = "Future-care preference did not materially affect this ranking.";
+
+  if (preference === "Independent only") {
+    if (!hasIndependentOnlyMatch) {
+      rejectionReasons.push("Independent only preference requires communities designed for fully independent residents.");
+    }
+    if (facility.careTypes.includes("Skilled Nursing")) {
+      rejectionReasons.push("Independent only preference excludes communities that include skilled nursing care.");
+    }
+    if (facility.careTypes.includes("Rehabilitation") || facilityText.includes("post-acute")) {
+      rejectionReasons.push("Independent only preference excludes rehabilitation or post-acute communities.");
+    }
+    if (facility.careTypes.includes("Memory Care")) {
+      rejectionReasons.push("Independent only preference excludes memory care communities.");
+    }
+
+    adjustment = rejectionReasons.length === 0 ? (facility.careTypes.includes("Active Adult 55+") ? 18 : 14) : 0;
+    score = rejectionReasons.length === 0 ? 95 : 0;
+    explanation = rejectionReasons.length === 0
+      ? "Matched the Independent only preference because the community is designed for fully independent residents."
+      : rejectionReasons.join(" ");
+  }
+
+  if (preference === "Future support available") {
+    if (hasContinuum) adjustment += 18;
+    else if (hasIndependentOnlyMatch) adjustment += 10;
+    if (continuumCampus) adjustment += 8;
+    if (standaloneSkilledNursing) adjustment -= 18;
+    if (standaloneRehabilitation) adjustment -= 18;
+
+    score = clamp(60 + adjustment * 1.5);
+    if (adjustment > 0) {
+      explanation = hasContinuum
+        ? "Boosted because the community supports independent living now and offers future care progression on the same campus."
+        : "Boosted because the community supports independent living with some future care flexibility."
+    } else if (adjustment < 0) {
+      explanation = "Penalized because the facility reads like a standalone clinical setting rather than an independence-first campus with future support."
+    } else {
+      explanation = "No additional future-support boost or penalty applied."
+    }
+  }
+
+  if (preference === "Full continuum of care") {
+    if (hasContinuum) adjustment += 28;
+    else if (continuumCampus) adjustment += 20;
+    else if (hasIndependentOnlyMatch && facility.careTypes.includes("Assisted Living")) adjustment += 8;
+
+    score = clamp(55 + adjustment * 1.4);
+    explanation = adjustment > 0
+      ? "Boosted because the community offers a stronger continuum-of-care path on one campus."
+      : "No continuum-of-care boost was available for this community."
+  }
+
+  return {
+    preference,
+    adjustment,
+    score,
+    explanation,
+    source,
+    contributorLabel: `Future care preference: ${preference}`,
+    rejectionReasons,
+  };
 }
 
 const TRUSTED_INTELLIGENCE_SOURCES = ["CMS", "Medicare Care Compare", "State inspections", "AHCA", "Public court records"];
@@ -721,15 +838,7 @@ function collectHardRejectionReasons(facility: SearchFacility, state: Questionna
   const reasons: string[] = [];
   const careText = facility.careTypes.join(" ").toLowerCase();
   const notes = state.notes.toLowerCase();
-
-  if (state.assistanceLevel === "Fully independent") {
-    if (careText.includes("skilled nursing")) {
-      reasons.push("Fully independent profile excludes communities that require skilled nursing care.");
-    }
-    if (careText.includes("rehabilitation")) {
-      reasons.push("Fully independent profile excludes rehabilitation-focused communities.");
-    }
-  }
+  reasons.push(...evaluateFutureCarePreference(facility, state).rejectionReasons);
 
   const memoryRequired = state.memoryStatus === "Significant memory issues";
   if (memoryRequired && !careText.includes("memory care")) {
@@ -790,6 +899,7 @@ function flattenAnsweredSignals(input: unknown, prefix = ""): Array<{ key: strin
 function roleForSignalKey(key: string): SignalRole {
   const scoreSignals = [
     "assistanceLevel",
+    "futureCarePreference",
     "memoryStatus",
     "happinessPreferences",
     "budget",
@@ -821,11 +931,13 @@ function buildPersonalWhy(facility: SearchFacility, state: QuestionnaireState): 
   const livedAlone = state.humanIntelligenceV2.socialProfile.livingAloneDuration;
   const socialNeed = state.humanIntelligenceV2.socialProfile.socialInteractionFrequency;
   const topActivity = state.happinessPreferences[0];
+  const futureCare = state.futureCarePreference;
 
   const clauses: string[] = [];
   if (livedAlone) clauses.push(`has lived alone for ${livedAlone.toLowerCase()}`);
   if (socialNeed) clauses.push(`prefers ${socialNeed.toLowerCase()} social interaction`);
   if (topActivity) clauses.push(`values ${topActivity.toLowerCase()}`);
+  if (futureCare && futureCare !== "No preference") clauses.push(`wants a future-care path of ${futureCare.toLowerCase()}`);
 
   const context = clauses.length > 0 ? clauses.join(" and ") : "has specific personal priorities";
   return `Because ${who} ${context}, ${facility.name} is positioned to support daily routine fit rather than only clinical rankings.`;
@@ -889,6 +1001,10 @@ function buildTradeoff(priorityScores: PriorityScores): string {
 function buildMissingInformation(state: QuestionnaireState, signalRoles: Array<{ key: string; role: SignalRole }>): string[] {
   const missing: string[] = [];
 
+  if (state.assistanceLevel === "Fully independent" && !state.futureCarePreference) {
+    missing.push("Add the future care preference to clarify whether results should stay independence-only or include continuum options.");
+  }
+
   const language = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage;
   if (!language) missing.push("Tell us preferred spoken language to improve cultural matching precision.");
 
@@ -943,7 +1059,8 @@ function buildReportBreakdown(
   const language = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage;
   const preferredActivities = state.happinessPreferences;
   const careNeed = state.assistanceLevel || "general support";
-  const futureCareCue = state.memoryStatus || state.humanIntelligenceV2.transitionRiskProfile.lonelinessRisk || "future care planning";
+  const futureCarePreference = evaluateFutureCarePreference(facility, state);
+  const futureCareCue = futureCarePreference.preference || state.memoryStatus || state.humanIntelligenceV2.transitionRiskProfile.lonelinessRisk || "future care planning";
   const staffingFit = facility.staffing_rating ? clamp(facility.staffing_rating * 20) : 50;
   const regulatoryFit = facility.inspection_rating ? clamp(facility.inspection_rating * 20) : 50;
   const reputationFit = facility.overall_rating ? clamp(facility.overall_rating * 20) : 50;
@@ -1010,10 +1127,10 @@ function buildReportBreakdown(
     },
     {
       name: "Future Care Fit",
-      score: Math.round(futureCareFit),
+      score: Math.round(futureCarePreference.preference && futureCarePreference.preference !== "No preference" ? futureCarePreference.score : futureCareFit),
       maxScore: 100,
-      source: "Care level + future-care cues",
-      rationale: `Uses current care needs and future-care signal: ${futureCareCue}.`,
+      source: futureCarePreference.source,
+      rationale: `Uses current care needs and future-care signal: ${futureCareCue}. ${futureCarePreference.explanation}`,
       weightedContribution: 0,
     },
     {
@@ -1066,11 +1183,15 @@ function buildHumanNarrative(facility: SearchFacility, state: QuestionnaireState
   const socialNeed = state.humanIntelligenceV2.socialProfile.socialInteractionFrequency || "a specific social rhythm";
   const activity = state.happinessPreferences[0];
   const distance = state.humanIntelligenceV2.distanceProfile.driveTimes.normal || state.distanceFromFamily;
+  const futureCare = evaluateFutureCarePreference(facility, state);
   const distanceCopy = distance ? ` The distance signal is ${distance.toLowerCase()}.` : " Distance was not supplied, so it did not change the score.";
 
   const activityCopy = activity ? ` The community's lifestyle cues were compared against ${activity.toLowerCase()}.` : " No single activity preference dominated the score.";
+  const futureCareCopy = futureCare.preference && futureCare.preference !== "No preference"
+    ? ` Future care preference was set to ${futureCare.preference.toLowerCase()}, so ${futureCare.explanation.toLowerCase()}`
+    : "";
 
-  return `We prioritized this community because ${relationship} has ${careNeed} needs and prefers ${socialNeed.toLowerCase()} social interaction. ${facility.name} scored well on the strongest weighted fit dimensions, which kept it near the top of the ranking.${activityCopy}${distanceCopy}`;
+  return `We prioritized this community because ${relationship} has ${careNeed} needs and prefers ${socialNeed.toLowerCase()} social interaction. ${facility.name} scored well on the strongest weighted fit dimensions, which kept it near the top of the ranking.${activityCopy}${distanceCopy}${futureCareCopy}`;
 }
 
 function buildRankingExplanation(accepted: RankedRecommendation[], index: number): string {
@@ -1120,6 +1241,7 @@ function buildIntelligenceReport(
   const futureCareScore = Math.round(clamp((priorityScores.careFit * 0.65) + (priorityScores.clinicalQuality * 0.35)));
   const languageFitScore = languagePreference ? (includesAny(facilityText, [languagePreference]) ? 92 : 48) : 50;
   const activityFitScore = preferredActivities.length > 0 ? clamp(35 + preferredActivities.filter((activity) => includesAny(facilityText, [activity])).length * 18) : 50;
+  const futureCarePreference = evaluateFutureCarePreference(facility, state);
 
   if (!sourcesUsed.some((source) => /review|ratings?/i.test(source))) {
     missingIntelligence.push("No public review source is connected in the current search payload.");
@@ -1204,11 +1326,11 @@ function buildIntelligenceReport(
     },
     {
       name: "Future Care Fit",
-      rawScore: futureCareScore,
+      rawScore: futureCarePreference.preference && futureCarePreference.preference !== "No preference" ? futureCarePreference.score : futureCareScore,
       weight: 0,
       weightedScore: 0,
       finalContribution: 0,
-      source: "Future care signals affect narrative and confidence, not the current score formula",
+      source: futureCarePreference.source,
     },
     {
       name: "Clinical Quality",
@@ -1300,9 +1422,9 @@ function buildIntelligenceReport(
     {
       name: "continuum of care",
       rawScore: facility.careTypes.length,
-      value: facility.careTypes.length > 1 ? 4 : 0,
-      source: "Multiple care types in the current facility profile",
-      applied: facility.careTypes.length > 1,
+      value: futureCarePreference.adjustment > 0 ? futureCarePreference.adjustment : facility.careTypes.length > 1 ? 4 : 0,
+      source: futureCarePreference.preference && futureCarePreference.preference !== "No preference" ? futureCarePreference.explanation : "Multiple care types in the current facility profile",
+      applied: futureCarePreference.adjustment > 0 || facility.careTypes.length > 1,
     },
   ];
 
@@ -1342,6 +1464,13 @@ function buildIntelligenceReport(
       source: "Staff quality score derived from current facility metadata",
       applied: staffQualityScore < 60,
     },
+    {
+      name: "future care preference mismatch",
+      rawScore: futureCarePreference.score,
+      value: futureCarePreference.adjustment < 0 ? Math.abs(futureCarePreference.adjustment) : 0,
+      source: futureCarePreference.explanation,
+      applied: futureCarePreference.adjustment < 0,
+    },
   ];
 
   const traceability = [
@@ -1366,6 +1495,14 @@ function buildIntelligenceReport(
 
   const positiveContributors = buildContributorRows(contributions, totalScore, "Weighted person-fit formula", true).slice(0, 4);
   const negativeContributors = buildContributorRows(contributions, totalScore, "Lower weighted fit dimensions", false).slice(0, 3);
+  const futureCareContributor = futureCarePreference.preference && futureCarePreference.preference !== "No preference" && futureCarePreference.adjustment !== 0
+    ? {
+        signal: futureCarePreference.contributorLabel,
+        source: futureCarePreference.explanation,
+        weight: totalScore > 0 ? Number(((Math.abs(futureCarePreference.adjustment) / totalScore) * 100).toFixed(2)) : 0,
+        scoreContribution: futureCarePreference.adjustment,
+      }
+    : null;
 
   return {
     finalMatchScore: Math.round(totalScore),
@@ -1378,22 +1515,23 @@ function buildIntelligenceReport(
     whyWeightsSelected: persona.whySelected,
     whatWouldChangeThisRanking: persona.whatWouldChangeThisRanking,
     scoreBreakdown,
-    positiveContributors: positiveContributors.length > 0 ? positiveContributors : contributions.slice(0, 3).map((item) => ({
+    positiveContributors: (futureCareContributor && futureCareContributor.scoreContribution > 0 ? [futureCareContributor] : []).concat(positiveContributors.length > 0 ? positiveContributors : contributions.slice(0, 3).map((item) => ({
       signal: item.label,
       source: "Weighted person-fit formula",
       weight: Number(item.value.toFixed(2)),
       scoreContribution: Math.round(item.value),
-    })),
-    negativeContributors: negativeContributors.length > 0 ? negativeContributors : contributions.slice(-3).map((item) => ({
+    }))).slice(0, 4),
+    negativeContributors: (futureCareContributor && futureCareContributor.scoreContribution < 0 ? [futureCareContributor] : []).concat(negativeContributors.length > 0 ? negativeContributors : contributions.slice(-3).map((item) => ({
       signal: item.label,
       source: "Lower weighted fit dimensions",
       weight: Number(item.value.toFixed(2)),
       scoreContribution: -Math.round(item.value),
-    })),
+    }))).slice(0, 4),
     intelligenceSourcesUsed: sourcesUsed,
     missingIntelligence,
     humanNarrativeExplanation: buildHumanNarrative(facility, state),
     scoreTraceability: traceability
+      .concat(futureCarePreference.preference && futureCarePreference.preference !== "No preference" ? [`Future care preference: ${futureCarePreference.preference}. ${futureCarePreference.explanation}`] : [])
       .concat(positiveSignals.length > 0 ? [`Positive signals observed: ${positiveSignals.slice(0, 3).join("; ")}.`] : [])
       .concat(negativeSignals.length > 0 ? [`Negative signals observed: ${negativeSignals.slice(0, 3).join("; ")}.`] : []),
     audit,

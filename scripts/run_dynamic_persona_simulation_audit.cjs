@@ -450,6 +450,7 @@ function emptyState(overrides = {}) {
     coupleAssistance: '',
     ageGroup: '80-84',
     assistanceLevel: '',
+    futureCarePreference: '',
     memoryStatus: '',
     happinessPreferences: [],
     budget: 7000,

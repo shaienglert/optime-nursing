@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { QUESTION_GRAPH, buildVisibilityAudit, validateQuestionGraph } from "@/lib/questionnaire-graph";
@@ -176,6 +176,25 @@ const memorySafetyOptions = ["Yes", "No", "Maybe"];
 const familiarLanguageRequirementOptions = ["Yes", "No", "Maybe"];
 
 const carePreferenceOptions = ["Not important", "Somewhat important", "Important", "Very important"];
+
+const futureCarePreferenceOptions = [
+  {
+    label: "Independent only",
+    description: "Show only communities designed for fully independent residents.",
+  },
+  {
+    label: "Future support available",
+    description: "Show communities that are independent today but offer assisted living or nursing care later if needed.",
+  },
+  {
+    label: "Full continuum of care",
+    description: "Prefer communities offering a complete care journey in one campus, including independent living, assisted living, memory care and skilled nursing.",
+  },
+  {
+    label: "No preference",
+    description: "Do not filter communities based on future care availability.",
+  },
+];
 
 const separationAcceptanceOptions = ["Yes", "No", "Only temporary"];
 
@@ -638,6 +657,7 @@ export default function Home() {
   const [coupleAssistance, setCoupleAssistance] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
   const [assistanceLevels, setAssistanceLevels] = useState<string[]>([]);
+  const [futureCarePreference, setFutureCarePreference] = useState("");
   const [memoryStatus, setMemoryStatus] = useState("");
   const [happinessPreferences, setHappinessPreferences] = useState<string[]>([]);
   const [budget, setBudget] = useState(7000);
@@ -750,9 +770,16 @@ export default function Home() {
     shouldAskLivingAloneFollowUps;
   const primaryAssistanceLevel = useMemo(() => pickPrimaryAssistanceLevel(assistanceLevels), [assistanceLevels]);
   const shouldAskRecentHospitalizationFollowUps = recentHospitalization === "Yes" || assistanceLevels.includes("Skilled nursing care");
+  const shouldAskFutureCarePreference = primaryAssistanceLevel === "Fully independent";
   const isJewishBranch = faithTraditions.includes("Jewish");
   const isChristianBranch = faithTraditions.some((faith) => ["Catholic", "Protestant", "Orthodox Christian"].includes(faith));
   const isMuslimBranch = faithTraditions.includes("Muslim");
+
+  useEffect(() => {
+    if (!shouldAskFutureCarePreference && futureCarePreference) {
+      setFutureCarePreference("");
+    }
+  }, [shouldAskFutureCarePreference, futureCarePreference]);
 
   const adaptiveConfidence = useMemo(() => {
     const answeredSignals = [
@@ -808,12 +835,13 @@ export default function Home() {
     () =>
       buildVisibilityAudit(QUESTION_GRAPH, {
         relationship,
+        assistance_level: primaryAssistanceLevel,
         widow_status: widowStatus,
         religion_importance: religionImportance,
         faith_traditions: faithTraditions,
         preferred_spoken_language: preferredSpokenLanguage,
       }),
-    [relationship, widowStatus, religionImportance, faithTraditions, preferredSpokenLanguage],
+    [relationship, primaryAssistanceLevel, widowStatus, religionImportance, faithTraditions, preferredSpokenLanguage],
   );
 
   const handleFindHome = () => {
@@ -931,6 +959,7 @@ export default function Home() {
       coupleAssistance,
       ageGroup,
       assistanceLevel: primaryAssistanceLevel,
+      futureCarePreference,
       memoryStatus,
       happinessPreferences,
       budget,
@@ -1091,7 +1120,7 @@ export default function Home() {
             loneliness_risk_score: lonelinessRiskScorePreview,
           },
           recommendationImpacts: adaptiveSignals.map((signal) => signal.impactExplanation),
-          additionalQuestionAsked: "",
+          additionalQuestionAsked: shouldAskFutureCarePreference ? "How do you feel about future care options?" : "",
         },
       },
     });
@@ -1102,6 +1131,7 @@ export default function Home() {
     if (coupleAssistance) params.set("coupleAssistance", coupleAssistance);
     if (ageGroup) params.set("age", ageGroup);
     if (primaryAssistanceLevel) params.set("care", primaryAssistanceLevel);
+    if (futureCarePreference) params.set("futureCarePreference", futureCarePreference);
     if (memoryStatus) params.set("memory", memoryStatus);
     if (happinessPreferences.length > 0) params.set("activities", happinessPreferences.join(","));
     params.set("budget", String(budget));
@@ -1198,6 +1228,7 @@ export default function Home() {
         prayerFacilityRequirement,
         preferredSpokenLanguage,
         assistanceLevels,
+        future_care_preference: futureCarePreference,
         memoryStatus,
         nativeLanguage,
         socialInteractionLanguage,
@@ -1334,6 +1365,29 @@ export default function Home() {
                 ))}
               </div>
             </article>
+
+            {shouldAskFutureCarePreference ? (
+              <article className="rounded-2xl border border-[#dbe4d5] bg-[#f8fcf5] p-5">
+                <h3 className="text-lg font-semibold text-[#2f2a24]">3A. How do you feel about future care options?</h3>
+                <p className="mt-1 text-sm text-[#6c6358]">This follow-up appears only for fully independent profiles.</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {futureCarePreferenceOptions.map((option) => {
+                    const isActive = futureCarePreference === option.label;
+                    return (
+                      <button
+                        key={option.label}
+                        type="button"
+                        onClick={() => setFutureCarePreference(option.label)}
+                        className={`rounded-2xl border p-4 text-left transition ${isActive ? "border-[#6d8f72] bg-[#edf6ea] shadow-[0_10px_24px_-18px_rgba(76,111,91,0.55)]" : "border-[#d7decd] bg-white hover:border-[#b7c7b0] hover:bg-[#fbfdf8]"}`}
+                      >
+                        <p className="text-sm font-semibold text-[#2f2a24]">{option.label}</p>
+                        <p className="mt-1 text-sm text-[#625a4f]">{option.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </article>
+            ) : null}
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
               <h3 className="text-lg font-semibold text-[#2f2a24]">4. Are there memory or confusion issues?</h3>

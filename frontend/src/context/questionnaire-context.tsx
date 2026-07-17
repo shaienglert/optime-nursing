@@ -8,6 +8,7 @@ export type QuestionnaireState = {
   coupleAssistance: string;
   ageGroup: string;
   assistanceLevel: string;
+  futureCarePreference: string;
   memoryStatus: string;
   happinessPreferences: string[];
   budget: number;
@@ -184,6 +185,7 @@ const DEFAULT_STATE: QuestionnaireState = {
   coupleAssistance: "",
   ageGroup: "",
   assistanceLevel: "",
+  futureCarePreference: "",
   memoryStatus: "",
   happinessPreferences: [],
   budget: 7000,

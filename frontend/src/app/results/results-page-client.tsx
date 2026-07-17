@@ -119,6 +119,7 @@ export function ResultsPageClient() {
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
   const age = searchParams.get("age") || state.ageGroup || "80-84";
   const care = searchParams.get("care") || state.assistanceLevel || "Help with bathing";
+  const futureCarePreference = searchParams.get("futureCarePreference") || state.futureCarePreference || "";
   const activities = (searchParams.get("activities") || state.happinessPreferences?.[0] || "Movies").split(",")[0];
   const budget = Number(searchParams.get("budget") || state.budget || 7000);
   const textQuery = searchParams.get("q") || searchParams.get("search") || "";
@@ -130,11 +131,12 @@ export function ResultsPageClient() {
     () => [
       { label: `Age: ${age}`, disabled: false },
       { label: `Care: ${care}`, disabled: false },
+      ...(futureCarePreference ? [{ label: `Future care: ${futureCarePreference}`, disabled: false }] : []),
       { label: `Activities: ${activities}`, disabled: false },
       { label: `Budget: $${budget.toLocaleString()}`, disabled: false },
       { label: `Distance: ${distance}`, disabled: !hasAddresses },
     ],
-    [age, care, activities, budget, distance, hasAddresses],
+    [age, care, futureCarePreference, activities, budget, distance, hasAddresses],
   );
 
   useEffect(() => {
