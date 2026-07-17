@@ -91,7 +91,7 @@ type CurrentCareNeed = "Fully Independent" | "Light Assistance" | "Memory Suppor
 
 type VerificationState = "YES" | "NO" | "UNKNOWN" | "LIMITED";
 
-type VerificationSource = "FACILITY_RESPONSE" | "PHONE_CALL" | "EMAIL" | "ONSITE_VISIT" | "DOCUMENT_REVIEW" | "OTHER";
+type VerificationSource = "PROVIDER_PORTAL" | "FACILITY_RESPONSE" | "PHONE_CALL" | "EMAIL" | "ONSITE_VISIT" | "DOCUMENT_REVIEW" | "OTHER";
 
 type KnowledgeConfidenceLevel = "HIGH" | "MEDIUM" | "LOW";
 
@@ -122,6 +122,8 @@ type FacilityKnowledgeConflict = {
   detectedAt: string;
   previousSource: VerificationSource;
   incomingSource: VerificationSource;
+  requiresReview: boolean;
+  reviewStatus: "OPEN" | "RESOLVED";
 };
 
 type FacilityKnowledgeMemory = {
@@ -547,7 +549,9 @@ function applyFacilityKnowledgeResponse(
   const memory = getOrCreateFacilityKnowledgeMemory(facility.id);
   const current = memory.capabilities[capabilityKey];
 
-  if (current && new Date(current.verifiedAt).getTime() > new Date(verifiedAt).getTime()) {
+  const isIncomingOlder = Boolean(current && new Date(current.verifiedAt).getTime() > new Date(verifiedAt).getTime());
+  const shouldOverrideUnknown = Boolean(current && current.state === "UNKNOWN" && state !== "UNKNOWN");
+  if (isIncomingOlder && !shouldOverrideUnknown) {
     return;
   }
 
@@ -568,6 +572,8 @@ function applyFacilityKnowledgeResponse(
       detectedAt: verifiedAt,
       previousSource: current.source,
       incomingSource: source,
+      requiresReview: true,
+      reviewStatus: "OPEN",
     });
     if (memory.conflicts.length > 50) {
       memory.conflicts = memory.conflicts.slice(0, 50);
@@ -648,6 +654,44 @@ export function getFacilityKnowledgeMemoryStats(): {
     TOTAL_CONFLICTS: totalConflicts,
     TOTAL_HIGH_CONFIDENCE_CAPABILITIES: totalHighConfidenceCapabilities,
   };
+}
+
+export function getFacilityKnowledgeReviewQueue(): Array<{
+  facility_id: number;
+  capability_key: string;
+  detected_at: string;
+  previous_value: VerificationState;
+  incoming_value: VerificationState;
+  previous_source: VerificationSource;
+  incoming_source: VerificationSource;
+}> {
+  const queue: Array<{
+    facility_id: number;
+    capability_key: string;
+    detected_at: string;
+    previous_value: VerificationState;
+    incoming_value: VerificationState;
+    previous_source: VerificationSource;
+    incoming_source: VerificationSource;
+  }> = [];
+
+  facilityKnowledgeMemoryStore.forEach((memory) => {
+    memory.conflicts
+      .filter((conflict) => conflict.requiresReview && conflict.reviewStatus === "OPEN")
+      .forEach((conflict) => {
+        queue.push({
+          facility_id: memory.facilityId,
+          capability_key: conflict.key,
+          detected_at: conflict.detectedAt,
+          previous_value: conflict.previousState,
+          incoming_value: conflict.incomingState,
+          previous_source: conflict.previousSource,
+          incoming_source: conflict.incomingSource,
+        });
+      });
+  });
+
+  return queue.sort((a, b) => b.detected_at.localeCompare(a.detected_at));
 }
 
 function weightedTotal(scores: PriorityScores, weights: WeightProfile): number {
