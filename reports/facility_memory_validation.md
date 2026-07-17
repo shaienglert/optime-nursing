@@ -1,0 +1,29 @@
+# Facility Memory Validation
+
+## Rules Validation
+
+- Facility response overrides UNKNOWN: **PASS**
+- More recent verification overrides older verification: **PASS**
+- Expired verification lowers confidence: **PASS**
+
+## Totals
+
+- TOTAL_VERIFIED_CAPABILITIES: 60
+- TOTAL_EXPIRED_CAPABILITIES: 20
+- TOTAL_CONFLICTS: 20
+- TOTAL_HIGH_CONFIDENCE_CAPABILITIES: 20
+
+## Sample Facility Memory Coverage
+
+| Facility ID | Stored Capabilities | Conflicts | High Confidence | Expired | Facility Memory Confidence |
+| --- | --- | --- | --- | --- | --- |
+| 4 | 3 | 1 | 1 | 1 | 76 |
+| 3 | 3 | 1 | 1 | 1 | 76 |
+| 36 | 3 | 1 | 1 | 1 | 76 |
+| 41 | 3 | 1 | 1 | 1 | 76 |
+| 24 | 3 | 1 | 1 | 1 | 76 |
+| 51 | 3 | 1 | 1 | 1 | 76 |
+| 54 | 3 | 1 | 1 | 1 | 76 |
+| 9 | 3 | 1 | 1 | 1 | 76 |
+| 16 | 3 | 1 | 1 | 1 | 76 |
+| 55 | 3 | 1 | 1 | 1 | 76 |

@@ -91,6 +91,47 @@ type CurrentCareNeed = "Fully Independent" | "Light Assistance" | "Memory Suppor
 
 type VerificationState = "YES" | "NO" | "UNKNOWN" | "LIMITED";
 
+type VerificationSource = "FACILITY_RESPONSE" | "PHONE_CALL" | "EMAIL" | "ONSITE_VISIT" | "DOCUMENT_REVIEW" | "OTHER";
+
+type KnowledgeConfidenceLevel = "HIGH" | "MEDIUM" | "LOW";
+
+type FacilityKnowledgeCapability = {
+  key: string;
+  label: string;
+  capability: string;
+  state: VerificationState;
+  value: VerificationState;
+  source: VerificationSource;
+  verification_source: VerificationSource;
+  verifiedAt: string;
+  verified_at: string;
+  expiresAt: string;
+  expires_at: string;
+  confidenceLevel: KnowledgeConfidenceLevel;
+  confidence_level: KnowledgeConfidenceLevel;
+  verificationCount: number;
+  verification_count: number;
+  notes?: string;
+};
+
+type FacilityKnowledgeConflict = {
+  key: string;
+  label: string;
+  previousState: VerificationState;
+  incomingState: VerificationState;
+  detectedAt: string;
+  previousSource: VerificationSource;
+  incomingSource: VerificationSource;
+};
+
+type FacilityKnowledgeMemory = {
+  facilityId: number;
+  updatedAt: string;
+  confidenceScore: number;
+  capabilities: Record<string, FacilityKnowledgeCapability>;
+  conflicts: FacilityKnowledgeConflict[];
+};
+
 type VerificationChecklistItem = {
   label: string;
   state: VerificationState;
@@ -106,6 +147,13 @@ type VerificationRequest = {
   confidenceScore: number;
   nextStepMessage: string;
   items: VerificationChecklistItem[];
+};
+
+type VerificationResponseUpdateOptions = {
+  source?: VerificationSource;
+  notesByLabel?: Record<string, string>;
+  verifiedAt?: string;
+  expiresInDays?: number;
 };
 
 type RequirementPriority = "CRITICAL" | "IMPORTANT" | "PREFERENCE";
@@ -407,6 +455,199 @@ function joinedFacilityText(facility: SearchFacility): string {
 
 function includesAny(text: string, terms: string[]): boolean {
   return terms.some((term) => text.includes(term.toLowerCase()));
+}
+
+const FACILITY_KNOWLEDGE_TTL_DAYS = 90;
+const facilityKnowledgeMemoryStore = new Map<number, FacilityKnowledgeMemory>();
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function addDaysIso(startIso: string, days: number): string {
+  const date = new Date(startIso);
+  date.setDate(date.getDate() + days);
+  return date.toISOString();
+}
+
+function isExpired(expiresAt: string): boolean {
+  return new Date(expiresAt).getTime() <= Date.now();
+}
+
+function buildRequirementLabelMap(state: QuestionnaireState): Record<string, string> {
+  return buildClinicalRequirements(state).reduce<Record<string, string>>((acc, requirement) => {
+    acc[requirement.label] = requirement.key;
+    return acc;
+  }, {});
+}
+
+function computeKnowledgeConfidence(memory: FacilityKnowledgeMemory): number {
+  const capabilities = Object.values(memory.capabilities);
+  if (capabilities.length === 0) return 50;
+
+  const active = capabilities.filter((item) => !isExpired(item.expiresAt));
+  if (active.length === 0) return 40;
+
+  const known = active.filter((item) => item.state === "YES" || item.state === "NO").length;
+  const limited = active.filter((item) => item.state === "LIMITED").length;
+  const unknown = active.filter((item) => item.state === "UNKNOWN").length;
+  const conflictPenalty = Math.min(25, memory.conflicts.slice(0, 20).length * 4);
+  const raw = Math.round(((known + limited * 0.6) / Math.max(1, known + limited + unknown)) * 100) - conflictPenalty;
+  return clamp(raw, 0, 100);
+}
+
+function capabilityConfidenceLevel(
+  state: VerificationState,
+  verifiedAt: string,
+  expiresAt: string,
+  verificationCount: number,
+  hasConflict: boolean,
+): KnowledgeConfidenceLevel {
+  if (isExpired(expiresAt)) {
+    return "LOW";
+  }
+
+  const ageDays = Math.max(0, Math.floor((Date.now() - new Date(verifiedAt).getTime()) / (1000 * 60 * 60 * 24)));
+  let score = 0;
+  score += state === "YES" || state === "NO" ? 55 : 45;
+  score += Math.min(25, verificationCount * 5);
+  score += ageDays <= 30 ? 20 : ageDays <= 60 ? 10 : 0;
+  score -= hasConflict ? 25 : 0;
+
+  if (score >= 75) return "HIGH";
+  if (score >= 45) return "MEDIUM";
+  return "LOW";
+}
+
+function getOrCreateFacilityKnowledgeMemory(facilityId: number): FacilityKnowledgeMemory {
+  const existing = facilityKnowledgeMemoryStore.get(facilityId);
+  if (existing) return existing;
+
+  const created: FacilityKnowledgeMemory = {
+    facilityId,
+    updatedAt: nowIso(),
+    confidenceScore: 50,
+    capabilities: {},
+    conflicts: [],
+  };
+  facilityKnowledgeMemoryStore.set(facilityId, created);
+  return created;
+}
+
+function applyFacilityKnowledgeResponse(
+  facility: SearchFacility,
+  capabilityKey: string,
+  capabilityLabel: string,
+  state: VerificationState,
+  source: VerificationSource,
+  verifiedAt: string,
+  expiresAt: string,
+  notes?: string,
+): void {
+  const memory = getOrCreateFacilityKnowledgeMemory(facility.id);
+  const current = memory.capabilities[capabilityKey];
+
+  if (current && new Date(current.verifiedAt).getTime() > new Date(verifiedAt).getTime()) {
+    return;
+  }
+
+  const hasConflict = Boolean(
+    current
+    && !isExpired(current.expiresAt)
+    && current.state !== state
+    && current.state !== "UNKNOWN"
+    && state !== "UNKNOWN",
+  );
+
+  if (hasConflict) {
+    memory.conflicts.unshift({
+      key: capabilityKey,
+      label: capabilityLabel,
+      previousState: current.state,
+      incomingState: state,
+      detectedAt: verifiedAt,
+      previousSource: current.source,
+      incomingSource: source,
+    });
+    if (memory.conflicts.length > 50) {
+      memory.conflicts = memory.conflicts.slice(0, 50);
+    }
+  }
+
+  const verificationCount = (current?.verificationCount || 0) + 1;
+  const confidenceLevel = capabilityConfidenceLevel(state, verifiedAt, expiresAt, verificationCount, hasConflict);
+
+  memory.capabilities[capabilityKey] = {
+    key: capabilityKey,
+    capability: capabilityKey,
+    label: capabilityLabel,
+    state,
+    value: state,
+    source,
+    verification_source: source,
+    verifiedAt,
+    verified_at: verifiedAt,
+    expiresAt,
+    expires_at: expiresAt,
+    confidenceLevel,
+    confidence_level: confidenceLevel,
+    verificationCount,
+    verification_count: verificationCount,
+    notes,
+  };
+  memory.updatedAt = verifiedAt;
+  memory.confidenceScore = computeKnowledgeConfidence(memory);
+  facilityKnowledgeMemoryStore.set(facility.id, memory);
+}
+
+function getActiveKnowledgeCapability(facilityId: number, requirementKey: string): FacilityKnowledgeCapability | null {
+  const memory = facilityKnowledgeMemoryStore.get(facilityId);
+  if (!memory) return null;
+  const capability = memory.capabilities[requirementKey];
+  if (!capability || isExpired(capability.expiresAt)) return null;
+  return capability;
+}
+
+export function getFacilityKnowledgeMemory(facilityId: number): FacilityKnowledgeMemory | null {
+  return facilityKnowledgeMemoryStore.get(facilityId) || null;
+}
+
+export function resetFacilityKnowledgeMemory(): void {
+  facilityKnowledgeMemoryStore.clear();
+}
+
+export function getFacilityKnowledgeMemoryStats(): {
+  TOTAL_VERIFIED_CAPABILITIES: number;
+  TOTAL_EXPIRED_CAPABILITIES: number;
+  TOTAL_CONFLICTS: number;
+  TOTAL_HIGH_CONFIDENCE_CAPABILITIES: number;
+} {
+  let totalVerifiedCapabilities = 0;
+  let totalExpiredCapabilities = 0;
+  let totalConflicts = 0;
+  let totalHighConfidenceCapabilities = 0;
+
+  facilityKnowledgeMemoryStore.forEach((memory) => {
+    totalConflicts += memory.conflicts.length;
+    Object.values(memory.capabilities).forEach((capability) => {
+      if (capability.value === "YES" || capability.value === "NO" || capability.value === "LIMITED") {
+        totalVerifiedCapabilities += 1;
+      }
+      if (isExpired(capability.expiresAt)) {
+        totalExpiredCapabilities += 1;
+      }
+      if (capability.confidenceLevel === "HIGH" && !isExpired(capability.expiresAt)) {
+        totalHighConfidenceCapabilities += 1;
+      }
+    });
+  });
+
+  return {
+    TOTAL_VERIFIED_CAPABILITIES: totalVerifiedCapabilities,
+    TOTAL_EXPIRED_CAPABILITIES: totalExpiredCapabilities,
+    TOTAL_CONFLICTS: totalConflicts,
+    TOTAL_HIGH_CONFIDENCE_CAPABILITIES: totalHighConfidenceCapabilities,
+  };
 }
 
 function weightedTotal(scores: PriorityScores, weights: WeightProfile): number {
@@ -1855,6 +2096,15 @@ function buildClinicalRequirements(state: QuestionnaireState): ClinicalRequireme
 }
 
 function assessClinicalCapability(requirement: ClinicalRequirement, facility: SearchFacility): ClinicalCapabilityAssessment {
+  const memoryCapability = getActiveKnowledgeCapability(facility.id, requirement.key);
+  if (memoryCapability) {
+    return {
+      ...requirement,
+      state: memoryCapability.state,
+      evidence: `Verified via ${memoryCapability.source} on ${memoryCapability.verifiedAt}. Valid until ${memoryCapability.expiresAt}.`,
+    };
+  }
+
   const text = joinedFacilityText(facility);
   const careTypes = facility.careTypes.map((item) => item.toLowerCase());
   const isIndependentOnly = careTypes.length > 0
@@ -2171,20 +2421,40 @@ export function applyVerificationResponses(
   state: QuestionnaireState,
   checklist: VerificationChecklistItem[],
   responses: Record<string, VerificationState>,
+  options?: VerificationResponseUpdateOptions,
 ): {
   checklist: VerificationChecklistItem[];
   request: VerificationRequest;
 } {
+  const source = options?.source || "FACILITY_RESPONSE";
+  const verifiedAt = options?.verifiedAt || nowIso();
+  const expiresAt = addDaysIso(verifiedAt, options?.expiresInDays || FACILITY_KNOWLEDGE_TTL_DAYS);
+  const labelToRequirementKey = buildRequirementLabelMap(state);
+
   const updatedChecklist = checklist.map((item) => {
     const response = responses[item.label];
     if (!response || item.state !== "UNKNOWN") {
       return item;
     }
 
+    const requirementKey = labelToRequirementKey[item.label];
+    if (requirementKey) {
+      applyFacilityKnowledgeResponse(
+        facility,
+        requirementKey,
+        item.label,
+        response,
+        source,
+        verifiedAt,
+        expiresAt,
+        options?.notesByLabel?.[item.label],
+      );
+    }
+
     return {
       ...item,
       state: response,
-      rationale: `Facility response received: ${response}.`,
+      rationale: `Facility response received: ${response} via ${source} on ${verifiedAt}. Valid until ${expiresAt}.`,
     };
   });
 
