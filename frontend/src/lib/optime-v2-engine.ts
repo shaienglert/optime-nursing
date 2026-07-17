@@ -424,7 +424,7 @@ function scoreIndependenceCriterion(facility: SearchFacility, state: Questionnai
   const includesSkilled = facility.careTypes.includes("Skilled Nursing");
   const includesRehab = facility.careTypes.includes("Rehabilitation");
   const includesMemory = facility.careTypes.includes("Memory Care");
-  if (state.futureCarePreference === "Independent only") {
+  if (state.futureCarePreference === "Independent communities only") {
     return futureCare.rejectionReasons.length === 0 ? 98 : 0;
   }
 
@@ -635,7 +635,7 @@ function evaluateFutureCarePreference(facility: SearchFacility, state: Questionn
   let score = 50;
   let explanation = "Future-care preference did not materially affect this ranking.";
 
-  if (preference === "Independent only") {
+  if (preference === "Independent communities only") {
     if (!hasIndependentOnlyMatch) {
       rejectionReasons.push("Independent only preference requires communities designed for fully independent residents.");
     }
@@ -652,11 +652,11 @@ function evaluateFutureCarePreference(facility: SearchFacility, state: Questionn
     adjustment = rejectionReasons.length === 0 ? (facility.careTypes.includes("Active Adult 55+") ? 18 : 14) : 0;
     score = rejectionReasons.length === 0 ? 95 : 0;
     explanation = rejectionReasons.length === 0
-      ? "Matched the Independent only preference because the community is designed for fully independent residents."
+        ? "Matched the independent-communities-only preference because the community is designed for fully independent residents."
       : rejectionReasons.join(" ");
   }
 
-  if (preference === "Future support available") {
+      if (preference === "Independent today, support available later") {
     if (hasContinuum) adjustment += 18;
     else if (hasIndependentOnlyMatch) adjustment += 10;
     if (continuumCampus) adjustment += 8;
@@ -675,7 +675,7 @@ function evaluateFutureCarePreference(facility: SearchFacility, state: Questionn
     }
   }
 
-  if (preference === "Full continuum of care") {
+  if (preference === "Full continuum of care on one campus") {
     if (hasContinuum) adjustment += 28;
     else if (continuumCampus) adjustment += 20;
     else if (hasIndependentOnlyMatch && facility.careTypes.includes("Assisted Living")) adjustment += 8;
