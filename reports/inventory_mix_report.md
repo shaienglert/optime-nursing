@@ -11,17 +11,17 @@ Expand support across the full senior living journey categories.
 
 | Category | Facility Count | Inventory Share | States Covered | Cities Covered |
 | --- | --- | --- | --- | --- |
-| Active Adult 55+ | 0 | 0% | 0 | 0 |
-| Independent Living | 12 | 12% | 1 | 11 |
-| Assisted Living | 38 | 38% | 1 | 27 |
-| Memory Care | 2 | 2% | 1 | 2 |
-| Skilled Nursing | 35 | 35% | 1 | 29 |
-| Rehabilitation | 74 | 74% | 1 | 46 |
+| Active Adult 55+ | 3 | 3% | 1 | 3 |
+| Independent Living | 10 | 10% | 1 | 8 |
+| Assisted Living | 54 | 54% | 1 | 38 |
+| Memory Care | 4 | 4% | 1 | 4 |
+| Skilled Nursing | 50 | 50% | 1 | 38 |
+| Rehabilitation | 59 | 59% | 1 | 39 |
 | CCRC | 1 | 1% | 1 | 1 |
 
 ## Missing Categories
 
-- Active Adult 55+
+- None. All requested categories are represented.
 
 ## Geographic Coverage
 
@@ -54,9 +54,9 @@ Expand support across the full senior living journey categories.
 ## Success Criteria Validation
 
 - No single care category exceeds 40% of total inventory: **FAIL**
-  - Highest category: Rehabilitation (74%)
+  - Highest category: Rehabilitation (59%)
 - Independent Living + Assisted Living + Active Adult >= 50%: **PASS**
-  - Combined share: 50%
+  - Combined share: 67%
 
 ## Notes
 
