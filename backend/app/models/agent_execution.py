@@ -244,3 +244,23 @@ class RecommendationKnowledgeUsageLog(Base):
     decision = Column(String(24), nullable=False, default="USED")
     decision_reason = Column(Text, nullable=False, default="")
     logged_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class SupervisorIncidentLog(Base):
+    __tablename__ = "supervisor_incident_logs"
+    __table_args__ = (
+        Index("ix_supervisor_incident_logs_created", "created_at"),
+        Index("ix_supervisor_incident_logs_agent", "agent_key"),
+        Index("ix_supervisor_incident_logs_severity", "severity"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    incident_type = Column(String(64), nullable=False)
+    severity = Column(String(24), nullable=False, default="MEDIUM")
+    status = Column(String(24), nullable=False, default="OPEN")
+    agent_key = Column(String(80), nullable=True, index=True)
+    domain = Column(String(120), nullable=True)
+    summary = Column(Text, nullable=False)
+    details_json = Column(Text, nullable=False, default="{}")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)

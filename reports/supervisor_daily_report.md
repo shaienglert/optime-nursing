@@ -1,0 +1,21 @@
+# Supervisor Daily Report
+
+| Metric | Value |
+| --- | --- |
+| Total Agents | 11 |
+| Healthy Agents | 11 |
+| Degraded Agents | 0 |
+| Open Incidents | 0 |
+| Refresh Events | 11 |
+| Refresh Success Rate | 100.0% |
+| Average Knowledge Age (sec) | 0.0 |
+| Average Coverage | 90.0 |
+
+## Incident Severity Distribution
+
+| Severity | Count |
+| --- | --- |
+| CRITICAL | 0 |
+| HIGH | 0 |
+| MEDIUM | 0 |
+| LOW | 0 |

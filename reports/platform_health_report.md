@@ -1,0 +1,8 @@
+# Platform Health Report
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Knowledge Freshness | GREEN | 0 degraded agents |
+| Refresh Pipeline | GREEN | 11/11 successful events |
+| Policy Compliance | GREEN | 0 stale-not-allowed usages |
+| Supervisor Detection | QUIET | 0 open incidents |

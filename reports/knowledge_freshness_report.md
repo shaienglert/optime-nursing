@@ -1,0 +1,21 @@
+# Knowledge Freshness Report
+
+Generated at: **2026-07-17T21:36:06.476Z**
+Total agent snapshots: **11**
+
+| Freshness State | Count |
+| --- | --- |
+| FRESH | 11 |
+| REFRESHING | 0 |
+| STALE | 0 |
+| EXPIRED | 0 |
+| NEEDS_REVIEW | 0 |
+| ERROR | 0 |
+
+| Metric | Value |
+| --- | --- |
+| Average Knowledge Age (seconds) | 0.0 |
+| Average Coverage | 90.0 |
+| Average Confidence | 0.820 |
+| Expired Knowledge Entries | 0 |
+| Stale/Needs Review/Error Entries | 0 |

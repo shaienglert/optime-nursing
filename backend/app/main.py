@@ -34,6 +34,7 @@ from app.services.agent_knowledge_reports import (
     refresh_all_agent_reports,
     start_background_refresh_loop,
 )
+from app.services.chief_ai_supervisor import recent_incidents, run_supervisor_cycle, stale_usage_summary
 from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
@@ -816,6 +817,10 @@ def _to_agent_knowledge_report_summary(row: AgentKnowledgeReportSnapshot) -> Age
         evidence_count=int(row.evidence_count or 0),
         coverage=float(row.coverage or 0.0),
         health_status=row.health_status,
+        freshness_status=row.freshness_status,
+        knowledge_age_seconds=int(row.knowledge_age_seconds or 0),
+        ttl_seconds=int(row.ttl_seconds or 0),
+        pending_reviews=int(row.pending_reviews or 0),
         last_update=row.last_refreshed_at.isoformat() if row.last_refreshed_at else None,
         next_refresh_at=row.next_refresh_at.isoformat() if row.next_refresh_at else None,
     )
@@ -837,6 +842,16 @@ def _to_agent_knowledge_report(row: AgentKnowledgeReportSnapshot) -> AgentKnowle
         coverage=float(row.coverage or 0.0),
         api={str(k): str(v) for k, v in ((payload.get("api") or {}) if isinstance(payload.get("api"), dict) else {}).items()},
         health_status=row.health_status,
+        freshness_status=row.freshness_status,
+        knowledge_age_seconds=int(row.knowledge_age_seconds or 0),
+        last_successful_refresh=row.last_successful_refresh.isoformat() if row.last_successful_refresh else None,
+        last_refresh_attempt=row.last_refresh_attempt.isoformat() if row.last_refresh_attempt else None,
+        refresh_duration_ms=int(row.refresh_duration_ms or 0),
+        verified_until=row.verified_until.isoformat() if row.verified_until else None,
+        ttl_seconds=int(row.ttl_seconds or 0),
+        pending_changes=int(row.pending_changes or 0),
+        pending_reviews=int(row.pending_reviews or 0),
+        failed_refresh_count=int(row.failed_refresh_count or 0),
         refresh_status=row.refresh_status,
         next_refresh_at=row.next_refresh_at.isoformat() if row.next_refresh_at else None,
     )
@@ -1116,8 +1131,57 @@ async def search_agent_knowledge_reports(query: str = Query(..., min_length=2), 
 
 @app.post("/expert-agents/knowledge-reports/refresh", response_model=AgentKnowledgeRefreshOut)
 async def refresh_agent_knowledge_reports(db: Session = Depends(get_db)):
-    result = refresh_all_agent_reports(db)
+    result = refresh_all_agent_reports(db, refresh_mode="manual", force=True)
     return AgentKnowledgeRefreshOut(refreshed=int(result.get("refreshed", 0)), failures=int(result.get("failures", 0)))
+
+
+@app.get("/expert-agents/freshness/states")
+async def knowledge_freshness_states():
+    return {
+        "states": sorted(FRESHNESS_STATES),
+        "ttl_policy_seconds": TTL_POLICY_SECONDS,
+    }
+
+
+@app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut)
+async def supervisor_overview(db: Session = Depends(get_db)):
+    ensure_reports_available(db)
+    summary = compute_supervisor_metrics(db)
+    return KnowledgeSupervisorOut(**summary)
+
+
+@app.post("/supervisor/run-cycle")
+async def supervisor_run_cycle(db: Session = Depends(get_db)):
+    ensure_reports_available(db)
+    return run_supervisor_cycle(db)
+
+
+@app.get("/supervisor/incidents")
+async def supervisor_incidents(limit: int = Query(default=200, ge=1, le=1000), db: Session = Depends(get_db)):
+    return {"incidents": recent_incidents(db, limit=limit)}
+
+
+@app.get("/supervisor/stale-usage")
+async def supervisor_stale_usage(hours: int = Query(default=24, ge=1, le=24 * 30), db: Session = Depends(get_db)):
+    return stale_usage_summary(db, hours=hours)
+
+
+@app.post("/recommendation/knowledge-guard", response_model=RecommendationGuardCheckOut)
+async def recommendation_knowledge_guard(payload: RecommendationGuardCheckIn, db: Session = Depends(get_db)):
+    ensure_reports_available(db)
+    decisions: List[RecommendationGuardDecisionOut] = []
+    for agent_key in payload.agent_keys:
+        decision = recommendation_guard_decision(
+            db,
+            recommendation_key=payload.recommendation_key,
+            resident_key=payload.resident_key,
+            agent_key=agent_key,
+            min_confidence=float(payload.min_confidence),
+            allow_stale=bool(payload.allow_stale),
+        )
+        decisions.append(RecommendationGuardDecisionOut(**decision))
+
+    return RecommendationGuardCheckOut(recommendation_key=payload.recommendation_key, decisions=decisions)
 
 
 @app.post("/human-intelligence", response_model=HumanIntelligenceOut)
