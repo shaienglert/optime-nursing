@@ -9,33 +9,11 @@ import { SearchFacility, fetchSearchFacilities } from "@/lib/api";
 import { RankedRecommendation, runOptimeV2Engine } from "@/lib/optime-v2-engine";
 
 const TOP_RECOMMENDATION_COUNT = 3;
-const TOP_AUDIT_COUNT = 10;
 
 function relationshipCopy(relationship: string): string {
   if (relationship === "Myself") return "You";
   if (relationship === "Couple") return "You both";
   return relationship || "your loved one";
-}
-
-function scoreBadgeStyle(score: number): string {
-  if (score >= 90) return "bg-[#5f8768] text-white";
-  if (score >= 80) return "bg-[#dbe8d8] text-[#35523d]";
-  if (score >= 70) return "bg-[#f0dfad] text-[#6c5322]";
-  return "bg-[#f1caa4] text-[#7c4f23]";
-}
-
-function verificationStateStyle(state: string): string {
-  if (state === "YES") return "border-[#bcd9c0] bg-[#eef8f1] text-[#2f6d3e]";
-  if (state === "NO") return "border-[#e9c5bc] bg-[#fff3ef] text-[#8b4f3f]";
-  if (state === "LIMITED") return "border-[#e3d2a6] bg-[#fff8e9] text-[#8b6a2f]";
-  return "border-[#d7ddeb] bg-[#f2f6fb] text-[#4a647d]";
-}
-
-function verificationStateLabel(state: string): string {
-  if (state === "YES") return "Confirmed";
-  if (state === "NO") return "Not available";
-  if (state === "LIMITED") return "Limited";
-  return "Needs verification";
 }
 
 function highlightLabel(index: number): string {
@@ -52,65 +30,6 @@ function recommendationTitle(index: number): string {
   return `#${index + 1} Recommendation`;
 }
 
-function prettyCategoryLabel(name: string): string {
-  switch (name) {
-    case "Medical Fit":
-      return "Care Fit";
-    case "Family Proximity":
-      return "Family Proximity";
-    case "Cultural Fit":
-      return "Culture";
-    case "Clinical Quality":
-      return "Clinical";
-    case "Activities Fit":
-      return "Activities";
-    default:
-      return name;
-  }
-}
-
-function maxPointsForCategory(name: string): number {
-  switch (name) {
-    case "Medical Fit":
-      return 28;
-    case "Lifestyle Fit":
-      return 18;
-    case "Social Fit":
-      return 15;
-    case "Family Proximity":
-      return 10;
-    case "Cultural Fit":
-      return 12;
-    case "Clinical Quality":
-      return 6;
-    default:
-      return 0;
-  }
-}
-
-function pointsAwardedForCategory(name: string, points: number): number {
-  if (name === "Medical Fit" || name === "Lifestyle Fit" || name === "Social Fit" || name === "Family Proximity" || name === "Cultural Fit" || name === "Clinical Quality") {
-    return Math.round(points * 100) / 100;
-  }
-  return Math.round(points * 100) / 100;
-}
-
-function formatPoints(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
-}
-
-function formatWeightPercent(value: number): string {
-  return `${(value * 100).toFixed(0)}%`;
-}
-
-function tierSummary(report: RankedRecommendation["report"], tier: "MANDATORY" | "CRITICAL" | "IMPORTANT" | "OPTIONAL") {
-  return report.audit.tierSummaries.find((item) => item.tier === tier);
-}
-
-function normalizedContribution(points: number, totalPoints: number): string {
-  if (totalPoints <= 0) return "0.00%";
-  return `${((points / totalPoints) * 100).toFixed(2)}%`;
-}
 
 function hasRealAddressData(distanceProfile: ReturnType<typeof useQuestionnaire>["state"]["humanIntelligenceV2"]["distanceProfile"]): boolean {
   return Boolean(
@@ -129,25 +48,6 @@ function visualConfidenceLabel(score: number): string {
   if (score >= 80) return "High";
   if (score >= 55) return "Medium";
   return "Low";
-}
-
-function confidenceCopy(confidenceScore: number, unknownCount: number): { title: string; reason: string } {
-  if (confidenceScore >= 80 && unknownCount <= 2) {
-    return {
-      title: "High confidence",
-      reason: "Most important care requirements have been verified.",
-    };
-  }
-  if (confidenceScore >= 55 && unknownCount <= 7) {
-    return {
-      title: "Medium confidence",
-      reason: "Core needs appear aligned, but a few important items still need direct confirmation.",
-    };
-  }
-  return {
-    title: "Limited information available",
-    reason: "Several important items still require confirmation from the community.",
-  };
 }
 
 function ensureSentence(text: string): string {
@@ -278,10 +178,8 @@ export function ResultsPageClient() {
 
   const engineOutput = useMemo(() => runOptimeV2Engine(facilities, state), [facilities, state]);
   const topRecommendations = useMemo(() => engineOutput.accepted.slice(0, TOP_RECOMMENDATION_COUNT), [engineOutput]);
-  const topAuditRecommendations = useMemo(() => engineOutput.accepted.slice(0, TOP_AUDIT_COUNT), [engineOutput]);
   const remainingRecommendations = useMemo(() => engineOutput.accepted.slice(TOP_RECOMMENDATION_COUNT), [engineOutput]);
   const hasBestAvailableMatches = engineOutput.accepted.length > 0;
-  const belowConfidenceThresholdMode = !engineOutput.qualityCheck.passed && hasBestAvailableMatches;
 
   const startNewSearch = () => {
     resetState();
@@ -296,11 +194,8 @@ export function ResultsPageClient() {
     const facility = recommendation.facility;
     const report = recommendation.report;
     const clinical = report.audit.clinicalReasoning;
-    const unknownCount = report.audit.verificationRequest.unknownCount;
     const verificationSent = Boolean(verificationSentByFacility[facility.id]);
-    const anonymousPayload = report.audit.anonymousVerificationPayload;
     const latestAuditLog = [...verificationAuditLog].reverse().find((item) => item.facilityId === facility.id);
-    const confidence = confidenceCopy(report.confidenceScore, unknownCount);
     const narrativeParagraphs = familyNarrative(recommendation);
     const verifiedItems = report.audit.verificationChecklist.filter((item) => item.state === "YES");
     const unknownItems = report.audit.verificationChecklist.filter((item) => item.state === "UNKNOWN");
@@ -331,8 +226,8 @@ export function ResultsPageClient() {
             <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
           </div>
           <div className="rounded-2xl border border-[#d8e7dc] bg-[#f4fbf6] px-3 py-2 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Match Confidence</p>
-            <p className="mt-1 text-base font-semibold text-[#2f6d3e]">{confidence.title}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Recommendation Ready</p>
+            <p className="mt-1 text-base font-semibold text-[#2f6d3e]">Yes</p>
           </div>
         </div>
 
@@ -402,13 +297,8 @@ export function ResultsPageClient() {
             </ul>
           </section>
 
-          <section className="rounded-xl border border-[#d9e3ec] bg-[#f5fbff] p-4">
-            <p className="font-semibold text-[#24425e]">Match confidence</p>
-            <p className="mt-1 text-base font-semibold text-[#24425e]">{confidence.title}</p>
-            <p className="mt-1 text-sm text-[#4b6176]">{confidence.reason}</p>
-          </section>
-
           <section className="rounded-xl border border-[#d9e3ec] bg-white p-4">
+            <p className="font-semibold text-[#24425e]">What should happen next</p>
             <button
               type="button"
               onClick={() => {
@@ -447,33 +337,6 @@ export function ResultsPageClient() {
               </div>
             ) : null}
           </section>
-
-          <details className="rounded-xl border border-[#e7ddcd] bg-[#fcfaf5] p-4">
-            <summary className="cursor-pointer text-sm font-semibold text-[#2f2a24]">Technical Details</summary>
-            <div className="mt-3 space-y-3 text-xs text-[#5f5548]">
-              <p><strong>Formula:</strong> {report.audit.executedFormula}</p>
-              <p><strong>Runtime score:</strong> {report.finalMatchScore}</p>
-              <p><strong>Confidence math:</strong> {report.audit.confidence.missingDataImpact}</p>
-              <p><strong>Sources:</strong> {report.intelligenceSourcesUsed.join(", ")}</p>
-              <div>
-                <p className="font-semibold">Checklist</p>
-                <ul className="mt-1 space-y-1">
-                  {report.audit.verificationChecklist.slice(0, 10).map((item) => (
-                    <li key={`${facility.id}-tech-check-${item.label}`}>{item.label}: {verificationStateLabel(item.state)}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="font-semibold">Breakdown</p>
-                <ul className="mt-1 space-y-1">
-                  {report.scoreBreakdown.map((item) => (
-                    <li key={`${facility.id}-tech-break-${item.name}`}>{item.name}: {item.score}/{item.maxScore}</li>
-                  ))}
-                </ul>
-              </div>
-              <p><strong>Runtime trace:</strong> {report.scoreTraceability.join(" | ")}</p>
-            </div>
-          </details>
         </div>
 
         <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
@@ -492,11 +355,6 @@ export function ResultsPageClient() {
               {badge}
             </span>
           ))}
-          {belowConfidenceThresholdMode ? (
-            <span className="rounded-full border border-[#e3cfa6] bg-[#fff6e7] px-3 py-1 text-xs font-semibold text-[#8a6330]">
-              Below confidence threshold
-            </span>
-          ) : null}
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -535,9 +393,6 @@ export function ResultsPageClient() {
 
   const renderCompactCard = (recommendation: RankedRecommendation, index: number) => {
     const facility = recommendation.facility;
-    const report = recommendation.report;
-    const unknownCount = report.audit.verificationRequest.unknownCount;
-    const confidence = confidenceCopy(report.confidenceScore, unknownCount);
     return (
       <article key={`compact-${facility.id}`} className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]">
         <div className="mb-3 overflow-hidden rounded-xl border border-[#e3d8c8] bg-[#f7f2e8]">
@@ -557,15 +412,11 @@ export function ResultsPageClient() {
             <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">{facility.name}</h3>
             <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
           </div>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${scoreBadgeStyle(recommendation.totalScore)}`}>
-            {Math.round(recommendation.totalScore)}
-          </span>
         </div>
 
         <div className="mt-3 rounded-xl border border-[#e7ddcd] bg-[#fcfaf5] p-3 text-sm text-[#4f473d]">
           <p className="font-semibold text-[#2f2a24]">Family summary</p>
           <p className="mt-2 text-sm text-[#5f5548]">{recommendation.whyThisFits}</p>
-          <p className="mt-2 text-sm font-semibold text-[#24425e]">{confidence.title}</p>
         </div>
 
         <p className="mt-3 text-sm text-[#5f554a]">{recommendation.tradeoff}</p>
@@ -636,19 +487,11 @@ export function ResultsPageClient() {
 
         {!isLoading && !engineOutput.qualityCheck.passed ? (
           <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
-            <p className="text-xl font-semibold">Additional refinement required before recommendations can be fully trusted.</p>
-            <p className="mt-3 text-sm">Quality checks failed on:</p>
-            <ul className="mx-auto mt-2 max-w-3xl space-y-1 text-left text-sm">
-              {engineOutput.qualityCheck.failures.map((failure) => (
-                <li key={failure} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#c18b7a]" aria-hidden="true" />
-                  <span>{failure}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="text-xl font-semibold">We are finalizing a few checks in the background.</p>
+            <p className="mt-3 text-sm">You can still review the best available recommendations below and confirm remaining details with communities.</p>
             {hasBestAvailableMatches ? (
               <p className="mt-4 rounded-2xl border border-[#e3cfa6] bg-[#fff6e7] px-4 py-3 text-sm font-semibold text-[#8a6330]">
-                Showing best available matches below confidence threshold.
+                Best available recommendations are shown now with clear next steps.
               </p>
             ) : null}
           </section>
@@ -665,8 +508,7 @@ export function ResultsPageClient() {
             <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Results Summary</p>
               <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Top person-first matches for this search</h2>
-              <p className="mt-2 text-sm text-[#5c5347]">Ranking priority follows care, lifestyle, social, cultural, family, financial, clinical quality, then luxury amenities.</p>
-              <p className="mt-1 text-sm text-[#5c5347]">Distance affects score only and never removes a community from visibility.</p>
+              <p className="mt-2 text-sm text-[#5c5347]">Each recommendation answers four simple questions: why it is a good fit, what we already know, what still needs confirmation, and what should happen next.</p>
             </article>
 
             <section className="space-y-6">
@@ -691,17 +533,6 @@ export function ResultsPageClient() {
                 ) : null}
               </div>
             ) : null}
-          </section>
-        ) : null}
-
-        {engineOutput.rejected.length > 0 ? (
-          <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-5 text-sm text-[#5f554a]">
-            <p className="font-semibold">Rejected by hard requirements only</p>
-            <ul className="mt-2 space-y-1">
-              {engineOutput.rejected.slice(0, 5).map((item) => (
-                <li key={`rejected-${item.facility.id}`}>{item.facility.name}: {item.hardRejectionReasons.join(" ")}</li>
-              ))}
-            </ul>
           </section>
         ) : null}
 

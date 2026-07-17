@@ -6,12 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { FacilityDetailsData, fetchFacilityDetails } from "@/lib/api";
 
-function confidenceLabel(score: number): string {
-  if (score >= 80) return "High";
-  if (score >= 55) return "Medium";
-  return "Low";
-}
-
 export default function FacilityDetailPage() {
   const params = useParams<{ id: string }>();
   const facilityId = String(params?.id || "");
@@ -128,10 +122,9 @@ export default function FacilityDetailPage() {
         </section>
 
         <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Visual Intelligence</p>
-          <p className="mt-2 text-xl font-semibold text-[#2f2a24]">Visual Match context</p>
-          <p className="mt-1 text-sm text-[#5f5548]">Confidence: {confidenceLabel(facility.visualIntelligence.visualConfidenceScore)} ({facility.visualIntelligence.visualConfidenceScore}/100)</p>
-          <p className="text-sm text-[#5f5548]">Coverage: {facility.visualIntelligence.visualCoverageScore}%</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Community Snapshot</p>
+          <p className="mt-2 text-xl font-semibold text-[#2f2a24]">Photo and lifestyle highlights</p>
+          <p className="mt-1 text-sm text-[#5f5548]">These highlights help families quickly understand the community environment.</p>
 
           <div className="mt-3 flex flex-wrap gap-2">
             {facility.visualIntelligence.lifestyleTags.map((tag) => (
@@ -141,11 +134,6 @@ export default function FacilityDetailPage() {
             ))}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2 text-xs text-[#6c655b]">
-            {Array.from(new Set(facility.visualIntelligence.galleryImages.map((image) => image.source))).map((source) => (
-              <span key={source} className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1">{source}</span>
-            ))}
-          </div>
         </section>
       </section>
     </main>
