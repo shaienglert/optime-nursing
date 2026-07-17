@@ -373,10 +373,13 @@ function confidenceMultiplier(confidenceScore: number): number {
 
 function hasDistanceConstraint(state: QuestionnaireState): boolean {
   return Boolean(
-    state.distanceFromFamily ||
-      state.humanIntelligenceV2.distanceProfile.driveTimes.normal ||
-      state.humanIntelligenceV2.distanceProfile.familyVisitExpectation ||
-      state.humanIntelligenceV2.familyProfile.visitFrequencyExpectation,
+    state.humanIntelligenceV2.distanceProfile.driveTimes.normal ||
+      state.humanIntelligenceV2.distanceProfile.driveTimes.rushHour ||
+      state.humanIntelligenceV2.distanceProfile.driveTimes.emergency ||
+      state.humanIntelligenceV2.distanceProfile.referenceLocations.parentCurrentHome ||
+      state.humanIntelligenceV2.distanceProfile.referenceLocations.primaryCaregiverHome ||
+      state.humanIntelligenceV2.distanceProfile.referenceLocations.secondaryFamilyHomes ||
+      /\d+/.test(state.distanceFromFamily || ""),
   );
 }
 
