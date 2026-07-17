@@ -2700,7 +2700,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       matched: assessment.state === "YES",
       applicable: true,
       rationale: assessment.rationale,
-      source: assessment.evidence,
+      source: `state=${assessment.state}; evidence=${assessment.evidence}`,
     }));
 
     const tierSummaries: MatchQualityTierSummary[] = [
