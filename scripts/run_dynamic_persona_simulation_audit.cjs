@@ -162,15 +162,18 @@ function inferLegacyCareTaxonomy(facility) {
 
 function inferExplicitCareTaxonomy(facility) {
   const text = baseFacilityText(facility);
+  const explicitRehabSignal = /\brehab\b|\brehabilitation\b|\bpost-acute\b/.test(text);
+  const explicitClinicalSignal = /\bnursing\b|\bconvalescent\b|\bextended care\b|\bmedical center\b|\bhealth center\b/.test(text);
+  const explicitIndependentSignal = /\bindependent\b|\bretirement\b|\bactive adult\b|\b55\+\b|\b55 plus\b|\bvillage\b/.test(text);
   const shortDescription = buildShortExplanation(facility).toLowerCase();
   const syntheticServices = [
-    (facility.quality_rating ?? 0) >= 4 ? 'medication support skilled nursing rehab' : '',
+    (facility.quality_rating ?? 0) >= 4 ? 'medication support skilled nursing' : '',
     (facility.staffing_rating ?? 0) >= 4 ? 'staff support daily living' : '',
     (facility.inspection_rating ?? 0) >= 4 ? 'memory safety secure care' : '',
     (facility.beds ?? 0) < 95 ? 'small community resident lifestyle' : '',
   ].filter(Boolean).join(' ');
   const syntheticActivities = /village|community|senior living|retirement/i.test(facility.name) ? 'group dining social activities movies wellness' : '';
-  const syntheticPrograms = /memory|alzheim|dementia/i.test(facility.name) ? 'memory support cognitive program' : /rehab|rehabilitation|therapy|recovery/i.test(facility.name) ? 'physical therapy occupational therapy rehab' : '';
+  const syntheticPrograms = /memory|alzheim|dementia/i.test(facility.name) ? 'memory support cognitive program' : /rehab|rehabilitation|post-acute/i.test(facility.name) ? 'physical therapy occupational therapy rehab' : '';
   const cmsCategories = [
     Math.round(facility.medical_quality_score ?? 0) >= 82 ? 'high clinical category' : '',
     Math.round(facility.staffing_score ?? 0) >= 80 ? 'staffing stability category' : '',
@@ -189,11 +192,11 @@ function inferExplicitCareTaxonomy(facility) {
 
   const scores = {
     'Independent Living': 10,
-    'Active Adult 55+': 4,
+    'Active Adult 55+': 6,
     'Assisted Living': 8,
     'Memory Care': 4,
     'Skilled Nursing': 8,
-    Rehabilitation: 6,
+    Rehabilitation: 1,
     CCRC: 4,
     'Continuing Care': 4,
     Hospice: 2,
@@ -202,11 +205,11 @@ function inferExplicitCareTaxonomy(facility) {
 
   const patterns = {
     'Independent Living': [/\bindependent living\b/, /\bsenior living\b/, /\bretirement living\b/, /\bretirement residence\b/, /\b55 and older\b/, /\bcommunity living\b/, /\bknox village\b/],
-    'Active Adult 55+': [/\bactive adult\b/, /\b55\+\b/, /\b55 plus\b/, /\bactive senior\b/],
+    'Active Adult 55+': [/\bactive adult\b/, /\b55\+\b/, /\b55 plus\b/, /\bactive senior\b/, /\badult living\b/, /\b55 and older\b/],
     'Assisted Living': [/\bassisted living\b/, /\bsenior care\b/, /\bpersonal care\b/, /\bhome for the aged\b/, /\bresident care\b/, /\bhelp with daily living\b/, /\bhebrew home\b/, /\bjewish health\b/, /\bsenior community\b/],
     'Memory Care': [/\bmemory care\b/, /\bmemory support\b/, /\balzheim/, /\bdementia\b/, /\bcognitive support\b/, /\bsecure memory\b/],
     'Skilled Nursing': [/\bskilled nursing\b/, /\bnursing home\b/, /\bnursing center\b/, /\bconvalescent\b/, /\bextended care\b/, /\bmedical center\b/, /\bhealth center\b/, /\bhealth systems\b/],
-    Rehabilitation: [/\brehab\b/, /\brehabilitation\b/, /\btherapy\b/, /\brecovery\b/, /\bpost-acute\b/, /\bphysical therapy\b/],
+    Rehabilitation: [/\brehab\b/, /\brehabilitation\b/, /\bpost-acute\b/],
     CCRC: [/\bccrc\b/, /\bretirement community\b/, /\bretirement village\b/, /\bvillage\b/, /\blife plan\b/],
     'Continuing Care': [/\bcontinuing care\b/, /\bcontinuum of care\b/, /\bmultiple care levels\b/],
     Hospice: [/\bhospice\b/, /\bpalliative\b/, /\bend of life\b/],
@@ -228,11 +231,9 @@ function inferExplicitCareTaxonomy(facility) {
   }
   if ((facility.beds ?? 0) >= 120) {
     scores['Skilled Nursing'] += 8;
-    scores.Rehabilitation += 6;
   }
   if ((facility.medical_quality_score ?? 0) >= 85) {
     scores['Skilled Nursing'] += 8;
-    scores.Rehabilitation += 6;
   }
   if ((facility.staffing_score ?? 0) >= 80) {
     scores['Assisted Living'] += 5;
@@ -257,6 +258,17 @@ function inferExplicitCareTaxonomy(facility) {
   if (/\b(jewish|hebrew|faith|church|catholic|spanish|community)\b/.test((facility.name || '').toLowerCase())) {
     scores['Independent Living'] += 6;
     scores['Assisted Living'] += 5;
+  }
+
+  if (explicitRehabSignal) {
+    scores.Rehabilitation += 22;
+  } else {
+    scores.Rehabilitation = Math.max(0, scores.Rehabilitation - 4);
+  }
+
+  if (explicitIndependentSignal && !explicitClinicalSignal && !explicitRehabSignal) {
+    scores['Independent Living'] += 10;
+    scores['Active Adult 55+'] += 14;
   }
   if (/(rehab|nursing|convalescent|extended care|medical center)/i.test(facility.name || '')) {
     scores.UNKNOWN = Math.max(0, scores.UNKNOWN - 4);
@@ -294,6 +306,15 @@ function inferExplicitCareTaxonomy(facility) {
     probabilities.CCRC >= 0.12
   ) {
     careTypes.push('CCRC');
+  }
+  if (
+    careTypes.includes('Independent Living') &&
+    !careTypes.includes('Active Adult 55+') &&
+    probabilities['Active Adult 55+'] >= 0.08 &&
+    probabilities['Skilled Nursing'] < 0.2 &&
+    probabilities.Rehabilitation < 0.15
+  ) {
+    careTypes.push('Active Adult 55+');
   }
 
   const dominantProbability = ranked[0]?.probability ?? 0;

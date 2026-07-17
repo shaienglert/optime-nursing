@@ -639,8 +639,12 @@ function deriveCareTypesFromProbabilities(probabilities: CareTypeProbabilities):
 
 export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult {
   const shortDescription = buildShortExplanation(facility);
+  const baseText = `${facility.name || ""} ${facility.address || ""} ${facility.city || ""} ${shortDescription}`.toLowerCase();
+  const explicitRehabSignal = /\brehab\b|\brehabilitation\b|\bpost-acute\b/.test(baseText);
+  const explicitClinicalSignal = /\bnursing\b|\bconvalescent\b|\bextended care\b|\bmedical center\b|\bhealth center\b/.test(baseText);
+  const explicitIndependentSignal = /\bindependent\b|\bretirement\b|\bactive adult\b|\b55\+\b|\b55 plus\b|\bvillage\b/.test(baseText);
   const syntheticServices = [
-    (facility.quality_rating ?? 0) >= 4 ? "medication support skilled nursing rehab" : "",
+    (facility.quality_rating ?? 0) >= 4 ? "medication support skilled nursing" : "",
     (facility.staffing_rating ?? 0) >= 4 ? "staff support daily living" : "",
     (facility.inspection_rating ?? 0) >= 4 ? "memory safety secure care" : "",
     (facility.beds ?? 0) < 95 ? "small community resident lifestyle" : "",
@@ -648,7 +652,7 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
     .filter(Boolean)
     .join(" ");
   const syntheticActivities = /village|community|senior living|retirement/i.test(facility.name) ? "group dining social activities movies wellness" : "";
-  const syntheticPrograms = /memory|alzheim|dementia/i.test(facility.name) ? "memory support cognitive program" : /rehab|rehabilitation|therapy|recovery/i.test(facility.name) ? "physical therapy occupational therapy rehab" : "";
+  const syntheticPrograms = /memory|alzheim|dementia/i.test(facility.name) ? "memory support cognitive program" : /rehab|rehabilitation|post-acute/i.test(facility.name) ? "physical therapy occupational therapy rehab" : "";
   const cmsCategories = [
     Math.round(facility.medical_quality_score ?? 0) >= 82 ? "high clinical category" : "",
     Math.round(facility.staffing_score ?? 0) >= 80 ? "staffing stability category" : "",
@@ -669,11 +673,11 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
 
   const scores: Record<CareType, number> = {
     "Independent Living": 10,
-    "Active Adult 55+": 4,
+    "Active Adult 55+": 6,
     "Assisted Living": 8,
     "Memory Care": 4,
     "Skilled Nursing": 8,
-    Rehabilitation: 6,
+    Rehabilitation: 1,
     CCRC: 4,
     "Continuing Care": 4,
     Hospice: 2,
@@ -690,7 +694,7 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
       /\bcommunity living\b/,
       /\bknox village\b/,
     ],
-    "Active Adult 55+": [/\bactive adult\b/, /\b55\+\b/, /\b55 plus\b/, /\bactive senior\b/],
+    "Active Adult 55+": [/\bactive adult\b/, /\b55\+\b/, /\b55 plus\b/, /\bactive senior\b/, /\badult living\b/, /\b55 and older\b/],
     "Assisted Living": [
       /\bassisted living\b/,
       /\bsenior care\b/,
@@ -723,10 +727,7 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
     Rehabilitation: [
       /\brehab\b/,
       /\brehabilitation\b/,
-      /\btherapy\b/,
-      /\brecovery\b/,
       /\bpost-acute\b/,
-      /\bphysical therapy\b/,
     ],
     CCRC: [
       /\bccrc\b/,
@@ -747,11 +748,9 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
   }
   if ((facility.beds ?? 0) >= 120) {
     scores["Skilled Nursing"] += 8;
-    scores.Rehabilitation += 6;
   }
   if ((facility.medical_quality_score ?? 0) >= 85) {
     scores["Skilled Nursing"] += 8;
-    scores.Rehabilitation += 6;
   }
   if ((facility.staffing_score ?? 0) >= 80) {
     scores["Assisted Living"] += 5;
@@ -776,6 +775,17 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
   if (/\b(jewish|hebrew|faith|church|catholic|spanish|community)\b/.test((facility.name || "").toLowerCase())) {
     scores["Independent Living"] += 6;
     scores["Assisted Living"] += 5;
+  }
+
+  if (explicitRehabSignal) {
+    scores.Rehabilitation += 22;
+  } else {
+    scores.Rehabilitation = Math.max(0, scores.Rehabilitation - 4);
+  }
+
+  if (explicitIndependentSignal && !explicitClinicalSignal && !explicitRehabSignal) {
+    scores["Independent Living"] += 10;
+    scores["Active Adult 55+"] += 14;
   }
   if (/(rehab|nursing|convalescent|extended care|medical center)/i.test(facility.name || "")) {
     scores.UNKNOWN = Math.max(0, scores.UNKNOWN - 4);
@@ -802,6 +812,15 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
     probabilities.CCRC >= 0.12
   ) {
     careTypes.push("CCRC");
+  }
+  if (
+    careTypes.includes("Independent Living") &&
+    !careTypes.includes("Active Adult 55+") &&
+    probabilities["Active Adult 55+"] >= 0.08 &&
+    probabilities["Skilled Nursing"] < 0.2 &&
+    probabilities.Rehabilitation < 0.15
+  ) {
+    careTypes.push("Active Adult 55+");
   }
   const dominantProbability = Math.max(...CARE_TYPE_ORDER.filter((type) => type !== "UNKNOWN").map((type) => probabilities[type]));
   const confidenceScore = Math.round(dominantProbability * 100);
