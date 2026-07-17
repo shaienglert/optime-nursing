@@ -7,16 +7,6 @@ Intelligence Coverage: **100%**
 
 | Community | Rank With OSINT | Rank Without OSINT | Score Delta | Trusted Sources |
 | --- | --- | --- | --- | --- |
-| JOHN KNOX VILLAGE OF POMPANO BEACH | 1 | 1 | -1.76 | Yes |
-| AVIATA AT THE SEA - PASADENA | 2 | 2 | -0.14 | Yes |
-| CLEARWATER CENTER | 3 | 3 | -1.00 | Yes |
-| TARPON BAYOU CENTER | 4 | 5 | -1.00 | Yes |
-| AVANTE AT LEESBURG, INC | 5 | 4 | -0.63 | Yes |
-| BARTOW CENTER | 6 | 6 | -0.91 | Yes |
-| RIVER GARDEN HEBREW HOME FOR THE AGED | 7 | 7 | -1.70 | Yes |
-| AVIATA AT EMERALD SHORES | 8 | 8 | -1.36 | Yes |
-| ATHENS POST ACUTE LLC | 9 | 9 | 0.00 | Yes |
-| AVIATA AT THE SEA - POMPANO BEACH | 10 | 10 | -1.78 | Yes |
 
 ## Signal Coverage Sample
 

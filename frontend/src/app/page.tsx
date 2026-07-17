@@ -796,12 +796,6 @@ export default function Home() {
   const isChristianBranch = faithTraditions.some((faith) => ["Catholic", "Protestant", "Orthodox Christian"].includes(faith));
   const isMuslimBranch = faithTraditions.includes("Muslim");
 
-  useEffect(() => {
-    if (!shouldAskFutureCarePreference && futureCarePreference) {
-      setFutureCarePreference("");
-    }
-  }, [shouldAskFutureCarePreference, futureCarePreference]);
-
   const understandingBudget = isAnswered(budget, DEFAULT_BUDGET) ? budget : 0;
 
   const legacyProfileUnderstanding = useMemo(() => {
@@ -2258,7 +2252,7 @@ export default function Home() {
                 placeholder="Anything important to your family or loved one that we should consider during matching."
                 className="mt-4 min-h-32 w-full resize-y rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition placeholder:text-[#9f9384] focus:ring-2"
               />
-              <p className="mt-3 text-xs text-[#8b7f71]">Examples: Loves old movies, Must have Hebrew speaking staff, Wants a Jewish community, Doesn't like noisy environments, Loves gardening</p>
+              <p className="mt-3 text-xs text-[#8b7f71]">Examples: Loves old movies, Must have Hebrew speaking staff, Wants a Jewish community, Doesn&apos;t like noisy environments, Loves gardening</p>
             </article>
 
             <article className="rounded-2xl border border-[#d7dde8] bg-[#f8fbff] p-5">

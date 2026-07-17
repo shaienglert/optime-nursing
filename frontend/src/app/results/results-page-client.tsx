@@ -762,7 +762,7 @@ export function ResultsPageClient() {
 
         {!isLoading && engineOutput.qualityCheck.passed && engineOutput.accepted.length === 0 ? (
           <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
-            <p className="text-xl font-semibold">We couldn't find perfect matches, but we found nearby alternatives.</p>
+            <p className="text-xl font-semibold">We couldn&apos;t find perfect matches, but we found nearby alternatives.</p>
           </section>
         ) : null}
 
