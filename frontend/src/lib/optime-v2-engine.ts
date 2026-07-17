@@ -50,6 +50,33 @@ type Contribution = {
   value: number;
 };
 
+type MatchQualityTier = "CRITICAL" | "IMPORTANT" | "OPTIONAL";
+
+type MatchQualityCriterion = {
+  name: string;
+  tier: MatchQualityTier;
+  score: number;
+  matched: boolean;
+  applicable: boolean;
+  rationale: string;
+  source: string;
+};
+
+type MatchQualityTierSummary = {
+  tier: MatchQualityTier;
+  matched: number;
+  total: number;
+  averageScore: number;
+  mismatchPenalty: number;
+};
+
+type MatchQualityResult = {
+  score: number;
+  criteria: MatchQualityCriterion[];
+  tierSummaries: MatchQualityTierSummary[];
+  explanation: string;
+};
+
 type FutureCarePreferenceEvaluation = {
   preference: string;
   adjustment: number;
@@ -106,6 +133,9 @@ type AuditFormula = {
   categoryRows: AuditCategoryRow[];
   bonuses: AuditAdjustmentRow[];
   penalties: AuditAdjustmentRow[];
+  criteria: MatchQualityCriterion[];
+  tierSummaries: MatchQualityTierSummary[];
+  matchQualityExplanation: string;
   confidence: AuditConfidence;
 };
 
@@ -317,6 +347,181 @@ function weightedTotal(scores: PriorityScores, weights: WeightProfile): number {
       scores.clinicalQuality * weights.clinicalQuality +
       scores.luxuryAmenities * weights.luxuryAmenities,
   );
+}
+
+function average(values: number[], fallback: number): number {
+  if (values.length === 0) return fallback;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function buildCriterion(name: string, tier: MatchQualityTier, score: number, threshold: number, rationale: string, source: string, applicable = true): MatchQualityCriterion {
+  const normalized = clamp(score);
+  return {
+    name,
+    tier,
+    score: normalized,
+    matched: applicable ? normalized >= threshold : false,
+    applicable,
+    rationale,
+    source,
+  };
+}
+
+function hasDistanceConstraint(state: QuestionnaireState): boolean {
+  return Boolean(
+    state.distanceFromFamily ||
+      state.humanIntelligenceV2.distanceProfile.driveTimes.normal ||
+      state.humanIntelligenceV2.distanceProfile.familyVisitExpectation ||
+      state.humanIntelligenceV2.familyProfile.visitFrequencyExpectation,
+  );
+}
+
+function hasCulturalConstraint(state: QuestionnaireState): boolean {
+  return Boolean(
+    state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage ||
+      state.humanIntelligenceV2.culturalProfile.culturalIdentity ||
+      state.humanIntelligenceV2.culturalProfile.faithTraditions.length > 0 ||
+      state.humanIntelligenceV2.foodProfile.dietaryPreferences.length > 0,
+  );
+}
+
+function hasFamilyPriority(state: QuestionnaireState): boolean {
+  return Boolean(
+    state.humanIntelligenceV2.familyProfile.visitFrequencyExpectation ||
+      state.humanIntelligenceV2.distanceProfile.familyVisitExpectation ||
+      state.humanIntelligenceV2.familyProfile.involvedFamilyMembers ||
+      state.humanIntelligenceV2.familyCultureProfile.involvementExpectation,
+  );
+}
+
+function scoreMemoryNeedCriterion(facility: SearchFacility, state: QuestionnaireState): number {
+  const memory = state.memoryStatus;
+  if (memory === "No" || memory === "Not sure" || !memory) return 100;
+
+  if (memory === "Significant memory issues") {
+    if (facility.careTypes.includes("Memory Care")) return 96;
+    if (facility.careTypes.includes("Assisted Living")) return 62;
+    return 18;
+  }
+
+  if (facility.careTypes.includes("Memory Care")) return 92;
+  if (facility.careTypes.includes("Assisted Living")) return 82;
+  if (facility.careTypes.includes("Skilled Nursing")) return 55;
+  return 28;
+}
+
+function scoreIndependenceCriterion(facility: SearchFacility, state: QuestionnaireState): number {
+  if (state.assistanceLevel !== "Fully independent") return 100;
+
+  const futureCare = evaluateFutureCarePreference(facility, state);
+  if (state.futureCarePreference === "Independent only") {
+    return futureCare.rejectionReasons.length === 0 ? 98 : 0;
+  }
+
+  if (facility.careTypes.includes("Independent Living") || facility.careTypes.includes("Active Adult 55+")) {
+    if (facility.careTypes.includes("CCRC") || facility.careTypes.includes("Continuing Care")) return 96;
+    if (facility.careTypes.includes("Assisted Living")) return 84;
+    return 92;
+  }
+
+  if (facility.careTypes.includes("Assisted Living")) return 56;
+  if (facility.careTypes.includes("Memory Care")) return 24;
+  if (facility.careTypes.includes("Skilled Nursing") || facility.careTypes.includes("Rehabilitation")) return 6;
+  return 40;
+}
+
+function buildOptionalCriteria(facility: SearchFacility, state: QuestionnaireState, priorityScores: PriorityScores): MatchQualityCriterion[] {
+  const text = joinedFacilityText(facility);
+  const criteria: MatchQualityCriterion[] = [];
+
+  if (state.humanIntelligenceV2.communityPreferenceProfile.preferredEnvironment.includes("Luxury environment")) {
+    criteria.push(buildCriterion("Luxury amenities", "OPTIONAL", priorityScores.luxuryAmenities, 65, "Luxury is treated as a low-value optional preference.", "Luxury cues in facility metadata"));
+  }
+
+  if (["Important", "Very important"].includes(state.humanIntelligenceV2.independenceProfile.petOwnershipImportance)) {
+    criteria.push(buildCriterion("Pet friendliness", "OPTIONAL", includesAny(text, ["pet", "dog", "cat", "pet-friendly"]) ? 90 : 28, 60, "Pet support influences score minimally.", "Pet cues in facility metadata"));
+  }
+
+  if (state.happinessPreferences.includes("Good food") || state.humanIntelligenceV2.foodProfile.dietaryPreferences.length > 0) {
+    criteria.push(buildCriterion("Dining preferences", "OPTIONAL", includesAny(text, ["dining", "chef", "restaurant", "cuisine", "kosher", "halal"]) ? 88 : 34, 60, "Dining preferences are optional quality-of-life signals.", "Dining cues in facility metadata"));
+  }
+
+  if (state.happinessPreferences.includes("Exercise and wellness") || state.happinessPreferences.includes("Outdoor activities")) {
+    criteria.push(buildCriterion("Wellness amenities", "OPTIONAL", includesAny(text, ["fitness", "wellness", "pool", "spa", "garden", "walking", "golf"]) ? 90 : 35, 60, "Wellness amenities are optional and never outweigh core fit.", "Wellness cues in facility metadata"));
+  }
+
+  if (includesAny(state.notes.toLowerCase(), ["golf", "pool", "spa"])) {
+    criteria.push(buildCriterion("Specific amenity request", "OPTIONAL", includesAny(text, ["golf", "pool", "spa"]) ? 92 : 30, 60, "Specific amenity requests remain optional preferences.", "Amenity cues in facility metadata"));
+  }
+
+  return criteria;
+}
+
+function summarizeTier(criteria: MatchQualityCriterion[], tier: MatchQualityTier, fallbackAverage: number, mismatchPenaltyPerItem: number): MatchQualityTierSummary {
+  const applicable = criteria.filter((item) => item.tier === tier && item.applicable);
+  const matched = applicable.filter((item) => item.matched).length;
+  const mismatches = applicable.length - matched;
+  return {
+    tier,
+    matched,
+    total: applicable.length,
+    averageScore: Math.round(average(applicable.map((item) => item.score), fallbackAverage)),
+    mismatchPenalty: Number((mismatches * mismatchPenaltyPerItem).toFixed(2)),
+  };
+}
+
+function buildMatchQualityResult(facility: SearchFacility, state: QuestionnaireState, priorityScores: PriorityScores): MatchQualityResult {
+  const futureCare = evaluateFutureCarePreference(facility, state);
+  const criticalCriteria: MatchQualityCriterion[] = [
+    buildCriterion("Care level", "CRITICAL", priorityScores.careFit, 70, "Care level is a top-tier requirement.", "Care-fit model output"),
+    buildCriterion("Budget feasibility", "CRITICAL", priorityScores.financialFit, 70, "Budget must remain feasible for the recommendation to stay suitable.", "Financial-fit model output"),
+  ];
+
+  if (state.assistanceLevel === "Fully independent") {
+    criticalCriteria.push(buildCriterion("Independence level", "CRITICAL", scoreIndependenceCriterion(facility, state), 70, "Independence support is treated as critical for fully independent profiles.", futureCare.source || "Care taxonomy and future-care preference"));
+  }
+
+  if (state.memoryStatus && state.memoryStatus !== "No" && state.memoryStatus !== "Not sure") {
+    criticalCriteria.push(buildCriterion("Memory support needs", "CRITICAL", scoreMemoryNeedCriterion(facility, state), 70, "Memory support is critical when cognitive needs are present.", "Memory-support cues in facility care types"));
+  }
+
+  if (hasDistanceConstraint(state)) {
+    criticalCriteria.push(buildCriterion("Geographic constraints", "CRITICAL", priorityScores.familyFit, 60, "Travel burden and access constraints are treated as critical when supplied.", "Family-fit and distance model output"));
+  }
+
+  const importantCriteria: MatchQualityCriterion[] = [
+    buildCriterion("Social activity preference", "IMPORTANT", priorityScores.socialFit, 60, "Social preferences matter, but they do not outweigh core care fit.", "Social-fit model output", Boolean(state.humanIntelligenceV2.socialProfile.socialInteractionFrequency || state.happinessPreferences.includes("Social activities") || state.humanIntelligenceV2.socialProfile.hobbyParticipation.length > 0)),
+    buildCriterion("Cultural fit", "IMPORTANT", priorityScores.culturalFit, 60, "Cultural continuity is meaningful when explicitly requested.", "Cultural-fit model output", hasCulturalConstraint(state)),
+    buildCriterion("Family proximity", "IMPORTANT", priorityScores.familyFit, 60, "Family proximity affects suitability after critical care requirements are satisfied.", "Family-fit and distance model output", hasFamilyPriority(state)),
+    buildCriterion("Lifestyle fit", "IMPORTANT", priorityScores.lifestyleFit, 60, "Lifestyle fit shapes day-to-day quality once the critical basics are met.", "Lifestyle-fit model output", state.happinessPreferences.length > 0),
+  ];
+
+  if (["Future support available", "Full continuum of care"].includes(state.futureCarePreference)) {
+    importantCriteria.push(buildCriterion("Future care availability", "IMPORTANT", futureCare.score, 60, "Future care availability is important when a future-care path was requested.", futureCare.source));
+  }
+
+  const optionalCriteria = buildOptionalCriteria(facility, state, priorityScores);
+  const criteria = criticalCriteria.concat(importantCriteria, optionalCriteria);
+
+  const criticalSummary = summarizeTier(criteria, "CRITICAL", 100, 22);
+  const importantSummary = summarizeTier(criteria, "IMPORTANT", 85, 1.2);
+  const optionalSummary = summarizeTier(criteria, "OPTIONAL", 75, 0.25);
+  const tierSummaries = [criticalSummary, importantSummary, optionalSummary];
+
+  const baseScore =
+    criticalSummary.averageScore * 0.74 +
+    importantSummary.averageScore * 0.22 +
+    optionalSummary.averageScore * 0.04;
+
+  const penalty = criticalSummary.mismatchPenalty + importantSummary.mismatchPenalty + optionalSummary.mismatchPenalty;
+  const score = clamp(baseScore - penalty);
+
+  return {
+    score,
+    criteria,
+    tierSummaries,
+    explanation: "This score reflects how well the community matches what matters most to you, not how many features it offers.",
+  };
 }
 
 function buildWeightEntries(weights: WeightProfile): Array<{ label: string; weight: number }> {
@@ -1054,6 +1259,7 @@ function buildReportBreakdown(
   priorityScores: PriorityScores,
   weights: WeightProfile,
   contributions: Contribution[],
+  matchQuality: MatchQualityResult,
 ): ReportBreakdownItem[] {
   const facilityText = joinedFacilityText(facility);
   const language = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage;
@@ -1069,6 +1275,30 @@ function buildReportBreakdown(
   const futureCareFit = clamp((priorityScores.careFit * 0.65) + (priorityScores.clinicalQuality * 0.35));
 
   return [
+    {
+      name: "Critical criteria matched",
+      score: matchQuality.tierSummaries[0]?.matched || 0,
+      maxScore: matchQuality.tierSummaries[0]?.total || 0,
+      source: "Tiered match quality model",
+      rationale: "Critical mismatches drive the largest penalties and may lead to rejection.",
+      weightedContribution: roundContribution(matchQuality.tierSummaries[0]?.averageScore || 0),
+    },
+    {
+      name: "Important criteria matched",
+      score: matchQuality.tierSummaries[1]?.matched || 0,
+      maxScore: matchQuality.tierSummaries[1]?.total || 0,
+      source: "Tiered match quality model",
+      rationale: "Important preferences shape the score after critical fit is satisfied.",
+      weightedContribution: roundContribution(matchQuality.tierSummaries[1]?.averageScore || 0),
+    },
+    {
+      name: "Optional criteria matched",
+      score: matchQuality.tierSummaries[2]?.matched || 0,
+      maxScore: matchQuality.tierSummaries[2]?.total || 0,
+      source: "Tiered match quality model",
+      rationale: "Optional preferences have minimal influence on match quality.",
+      weightedContribution: roundContribution(matchQuality.tierSummaries[2]?.averageScore || 0),
+    },
     {
       name: "Medical Fit",
       score: Math.round(clamp((priorityScores.careFit * 0.7) + (priorityScores.clinicalQuality * 0.3))),
@@ -1191,7 +1421,7 @@ function buildHumanNarrative(facility: SearchFacility, state: QuestionnaireState
     ? ` Future care preference was set to ${futureCare.preference.toLowerCase()}, so ${futureCare.explanation.toLowerCase()}`
     : "";
 
-  return `We prioritized this community because ${relationship} has ${careNeed} needs and prefers ${socialNeed.toLowerCase()} social interaction. ${facility.name} scored well on the strongest weighted fit dimensions, which kept it near the top of the ranking.${activityCopy}${distanceCopy}${futureCareCopy}`;
+  return `We prioritized this community because ${relationship} has ${careNeed} needs and prefers ${socialNeed.toLowerCase()} social interaction. ${facility.name} scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers.${activityCopy}${distanceCopy}${futureCareCopy}`;
 }
 
 function buildRankingExplanation(accepted: RankedRecommendation[], index: number): string {
@@ -1227,8 +1457,9 @@ function buildIntelligenceReport(
   missingInformation: string[],
   positiveSignals: string[],
   negativeSignals: string[],
+  matchQuality: MatchQualityResult,
 ): IntelligenceScoringReport {
-  const scoreBreakdown = buildReportBreakdown(facility, state, priorityScores, persona.weights, contributions);
+  const scoreBreakdown = buildReportBreakdown(facility, state, priorityScores, persona.weights, contributions, matchQuality);
   const sourcesUsed = buildIntelligenceSourcesUsed(facility);
   const missingIntelligence = [...missingInformation];
   const facilityText = joinedFacilityText(facility);
@@ -1474,17 +1705,22 @@ function buildIntelligenceReport(
   ];
 
   const traceability = [
-    `Final score = sum of weighted core fit components: ${contributions.map((item) => `${item.label}=${item.value.toFixed(2)}`).join(", ")}.`,
+    `Final score = tiered match quality model with critical, important, and optional criteria.`,
+    `Critical criteria matched: ${matchQuality.tierSummaries[0]?.matched || 0}/${matchQuality.tierSummaries[0]?.total || 0}; Important criteria matched: ${matchQuality.tierSummaries[1]?.matched || 0}/${matchQuality.tierSummaries[1]?.total || 0}; Optional criteria matched: ${matchQuality.tierSummaries[2]?.matched || 0}/${matchQuality.tierSummaries[2]?.total || 0}.`,
+    `Supporting fit signals: ${contributions.map((item) => `${item.label}=${item.value.toFixed(2)}`).join(", ")}.`,
     `Missing intelligence affects confidence only, never the score.`,
-    `No hidden bonuses or hidden penalties are applied in the ranking formula.`,
+    `This score reflects how well the community matches what matters most to you, not how many features it offers.`,
   ];
 
   const audit: AuditFormula = {
-    executedFormula: `final_score = ${persona.activeWeights.map((entry) => `${entry.label.replace(/\s+/g, "").toLowerCase()}*${entry.weight.toFixed(2)}`).join(" + ")}`,
+    executedFormula: "final_score = tiered_match_quality(critical, important, optional) - mismatch_penalties",
     finalScore: Math.round(totalScore),
     categoryRows,
     bonuses,
     penalties,
+    criteria: matchQuality.criteria,
+    tierSummaries: matchQuality.tierSummaries,
+    matchQualityExplanation: matchQuality.explanation,
     confidence: {
       confidenceScore: adjustedConfidence,
       missingDataImpact: `${missingIntelligence.length} missing intelligence item(s); confidence reduced by ${confidencePenalty}`,
@@ -1626,8 +1862,8 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     };
 
     const priorityScores = applyIntelligenceOverlay(basePriorityScores, facility, mode);
-
-    const totalScore = weightedTotal(priorityScores, persona.weights) + careTypeTotalAdjustment(facility, state);
+    const matchQuality = buildMatchQualityResult(facility, state, priorityScores);
+    const totalScore = clamp(matchQuality.score);
 
     const hardRejectionReasons = collectHardRejectionReasons(facility, state);
     const contributions = summarizeContributions(priorityScores, persona.weights);
@@ -1656,11 +1892,14 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       humanNarrativeExplanation: "",
       scoreTraceability: [],
       audit: {
-        executedFormula: `final_score = ${persona.activeWeights.map((entry) => `${entry.label.replace(/\s+/g, "").toLowerCase()}*${entry.weight.toFixed(2)}`).join(" + ")}`,
+        executedFormula: "final_score = tiered_match_quality(critical, important, optional) - mismatch_penalties",
         finalScore: Math.round(totalScore),
         categoryRows: [],
         bonuses: [],
         penalties: [],
+        criteria: [],
+        tierSummaries: [],
+        matchQualityExplanation: "",
         confidence: {
           confidenceScore: confidencePercent,
           missingDataImpact: "",
@@ -1720,6 +1959,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       item.missingInformation,
       item.positives,
       item.negatives,
+      buildMatchQualityResult(item.facility, state, item.priorityScores),
     );
   });
 
