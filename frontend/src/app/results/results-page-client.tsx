@@ -89,6 +89,10 @@ function formatWeightPercent(value: number): string {
   return `${(value * 100).toFixed(0)}%`;
 }
 
+function tierSummary(report: RankedRecommendation["report"], tier: "MANDATORY" | "CRITICAL" | "IMPORTANT" | "OPTIONAL") {
+  return report.audit.tierSummaries.find((item) => item.tier === tier);
+}
+
 function normalizedContribution(points: number, totalPoints: number): string {
   if (totalPoints <= 0) return "0.00%";
   return `${((points / totalPoints) * 100).toFixed(2)}%`;
@@ -183,7 +187,7 @@ export function ResultsPageClient() {
           </div>
           <div className={`rounded-2xl px-3 py-2 text-center ${scoreBadgeStyle(recommendation.totalScore)}`}>
             <p className="text-2xl font-bold leading-none">{report.finalMatchScore}</p>
-            <p className="mt-1 text-xs font-semibold">Final match score</p>
+            <p className="mt-1 text-xs font-semibold">Match Quality</p>
             <p className="mt-1 text-[11px] font-medium opacity-90">Confidence {report.confidenceScore}/100</p>
             <p className="mt-1 text-[11px] font-medium opacity-90">Rank #{report.rankingPosition ?? index + 1} of {Math.max(engineOutput.accepted.length, 1)}</p>
           </div>
@@ -192,13 +196,29 @@ export function ResultsPageClient() {
         <div className="mt-4 space-y-3 text-sm text-[#4f473d]">
           <section>
             <p className="font-semibold text-[#2f2a24]">A. Final Score</p>
-            <p className="mt-1">Final Match Score: {report.finalMatchScore}/100</p>
+            <p className="mt-1">Match Quality: {report.finalMatchScore}/100</p>
             <p>Confidence: {report.confidenceScore}/100</p>
             <p>Ranking: #{report.rankingPosition ?? index + 1} of {engineOutput.accepted.length} communities evaluated</p>
+            <p className="mt-2 text-xs text-[#6c655b]">{report.audit.matchQualityExplanation}</p>
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">B. Score Breakdown</p>
+            <p className="font-semibold text-[#2f2a24]">B. Match Quality Summary</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {(["MANDATORY", "CRITICAL", "IMPORTANT", "OPTIONAL"] as const).map((tier) => {
+                const summary = tierSummary(report, tier);
+                return (
+                  <div key={`${facility.id}-${tier}`} className="rounded-xl border border-[#e7ddcd] bg-[#fcfaf5] p-3">
+                    <p className="font-semibold text-[#2f2a24]">{tier.charAt(0) + tier.slice(1).toLowerCase()} matched</p>
+                    <p className="mt-1 text-sm text-[#5f5548]">{summary?.matched ?? 0} / {summary?.total ?? 0}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section>
+            <p className="font-semibold text-[#2f2a24]">C. Score Breakdown</p>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               {report.scoreBreakdown.map((item) => (
                 <div key={`${facility.id}-breakdown-${item.name}`} className="rounded-xl border border-[#e7ddcd] bg-[#fcfaf5] p-3">
@@ -215,7 +235,7 @@ export function ResultsPageClient() {
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">C. Positive Contributors</p>
+            <p className="font-semibold text-[#2f2a24]">D. Positive Contributors</p>
             <ul className="mt-1 space-y-1">
               {report.positiveContributors.map((item) => (
                 <li key={`${facility.id}-positive-${item.signal}`} className="rounded-lg border border-[#e6efe4] bg-[#f7fbf7] p-3 text-sm text-[#46574d]">
@@ -230,7 +250,7 @@ export function ResultsPageClient() {
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">D. Negative Contributors</p>
+            <p className="font-semibold text-[#2f2a24]">E. Negative Contributors</p>
             <ul className="mt-1 space-y-1">
               {report.negativeContributors.map((item) => (
                 <li key={`${facility.id}-negative-${item.signal}`} className="rounded-lg border border-[#eeddd5] bg-[#fff9f7] p-3 text-sm text-[#5c4d49]">
@@ -245,7 +265,7 @@ export function ResultsPageClient() {
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">E. Intelligence Sources Used</p>
+            <p className="font-semibold text-[#2f2a24]">F. Intelligence Sources Used</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {report.intelligenceSourcesUsed.map((source) => (
                 <span key={`${facility.id}-source-${source}`} className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 text-xs font-medium text-[#5f5548]">
@@ -256,7 +276,7 @@ export function ResultsPageClient() {
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">F. Missing Intelligence</p>
+            <p className="font-semibold text-[#2f2a24]">G. Missing Intelligence</p>
             <ul className="mt-1 space-y-1">
               {report.missingIntelligence.map((item) => (
                 <li key={`${facility.id}-missing-${item}`} className="flex items-start gap-2">
@@ -268,17 +288,17 @@ export function ResultsPageClient() {
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">G. Human Narrative Explanation</p>
+            <p className="font-semibold text-[#2f2a24]">H. Human Narrative Explanation</p>
             <p className="mt-1">{report.humanNarrativeExplanation}</p>
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">H. Explain Ranking Position</p>
+            <p className="font-semibold text-[#2f2a24]">I. Explain Ranking Position</p>
             <p className="mt-1">{report.rankingExplanation}</p>
           </section>
 
           <section>
-            <p className="font-semibold text-[#2f2a24]">I. Score Traceability</p>
+            <p className="font-semibold text-[#2f2a24]">J. Score Traceability</p>
             <ul className="mt-1 space-y-1">
               {report.scoreTraceability.map((item) => (
                 <li key={`${facility.id}-trace-${item}`} className="flex items-start gap-2">
@@ -564,7 +584,7 @@ export function ResultsPageClient() {
                           <h3 className="text-lg font-semibold text-[#2f2a24]">{recommendation.facility.name}</h3>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-semibold text-[#2f2a24]">{report.finalMatchScore}/100</p>
+                          <p className="text-lg font-semibold text-[#2f2a24]">Match Quality {report.finalMatchScore}</p>
                           <p className="text-xs text-[#6c655b]">Confidence {report.confidenceScore}/100</p>
                         </div>
                       </summary>
@@ -595,6 +615,19 @@ export function ResultsPageClient() {
                               ))}
                             </tbody>
                           </table>
+                        </section>
+
+                        <section>
+                          <p className="font-semibold text-[#2f2a24]">Match quality tiers</p>
+                          <ul className="mt-2 space-y-1">
+                            {report.audit.tierSummaries.map((item) => (
+                              <li key={`${recommendation.facility.id}-tier-${item.tier}`} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#e7ddcd] bg-white p-3">
+                                <span>{item.tier.charAt(0) + item.tier.slice(1).toLowerCase()} matched</span>
+                                <span>{item.matched} / {item.total}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="mt-2 text-xs text-[#6c655b]">{report.audit.matchQualityExplanation}</p>
                         </section>
 
                         <section>

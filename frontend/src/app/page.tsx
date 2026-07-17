@@ -429,6 +429,11 @@ function ctaCopy(relationship: string): string {
   return "Find the right home";
 }
 
+function renderProfileMeter(score: number): string {
+  const filled = Math.max(0, Math.min(10, Math.round(score / 10)));
+  return `${"█".repeat(filled)}${"░".repeat(10 - filled)}`;
+}
+
 function scoreFromImportance(value: string): number {
   switch (value) {
     case "Very high":
@@ -781,54 +786,42 @@ export default function Home() {
     }
   }, [shouldAskFutureCarePreference, futureCarePreference]);
 
-  const adaptiveConfidence = useMemo(() => {
-    const answeredSignals = [
-      relationship,
-      ageGroup,
-      primaryAssistanceLevel,
-      livingAloneDuration,
-      socialInteractionFrequency,
-      familyVisitExpectation || visitFrequencyExpectation,
-      religionImportance,
-      preferredSpokenLanguage,
-      nativeLanguage,
-      medicalDiscussionLanguage,
-      familyInvolvementExpectation,
-      familyDecisionRole,
-    ].filter((value) => value && value.trim() !== "").length;
+  const profileUnderstanding = useMemo(() => {
+    const careLevel = primaryAssistanceLevel ? 25 : 0;
+    const futureCare = primaryAssistanceLevel === "Fully independent" ? (futureCarePreference ? 20 : 0) : 20;
+    const budgetQuality = budget > 0 ? 20 : 0;
+    const lifestyle = (happinessPreferences.length > 0 || socialInteractionFrequency || preferredSocialIntensity) ? 15 : 0;
+    const location = (familyVisitExpectation || visitFrequencyExpectation || normalDriveTime || parentCurrentHome || primaryCaregiverHome) ? 10 : 0;
+    const culture = (religionImportance || preferredSpokenLanguage || faithTraditions.length > 0 || dietaryPreferences.length > 0) ? 10 : 0;
+    const score = clampScore(careLevel + futureCare + budgetQuality + lifestyle + location + culture);
 
-    const multiSignals = [
-      languagesUnderstood.length,
-      familyLanguages.length,
-      faithTraditions.length,
-      religiousSupportNeeds.length,
-      whatFeelsLikeHome.length,
-      dietaryPreferences.length,
-      preferredEnvironment.length,
-    ].reduce((acc, value) => acc + (value > 0 ? 1 : 0), 0);
-
-    return clampScore(42 + answeredSignals * 3 + multiSignals * 4);
+    return {
+      score,
+      segments: [
+        { label: "Care level", value: careLevel },
+        { label: "Future care preference", value: futureCare },
+        { label: "Budget", value: budgetQuality },
+        { label: "Lifestyle", value: lifestyle },
+        { label: "Location", value: location },
+        { label: "Culture", value: culture },
+      ],
+    };
   }, [
-    relationship,
-    ageGroup,
     primaryAssistanceLevel,
-    livingAloneDuration,
+    futureCarePreference,
+    budget,
+    happinessPreferences.length,
     socialInteractionFrequency,
+    preferredSocialIntensity,
     familyVisitExpectation,
     visitFrequencyExpectation,
+    normalDriveTime,
+    parentCurrentHome,
+    primaryCaregiverHome,
     religionImportance,
     preferredSpokenLanguage,
-    nativeLanguage,
-    medicalDiscussionLanguage,
-    familyInvolvementExpectation,
-    familyDecisionRole,
-    languagesUnderstood.length,
-    familyLanguages.length,
     faithTraditions.length,
-    religiousSupportNeeds.length,
-    whatFeelsLikeHome.length,
     dietaryPreferences.length,
-    preferredEnvironment.length,
   ]);
 
   const questionAuditRows = useMemo(
@@ -951,7 +944,7 @@ export default function Home() {
       }
       return acc;
     }, {});
-    const overallConfidence = clampScore(Math.max(adaptiveConfidence, 62 + Math.min(24, adaptiveSignals.length * 3) + languageCoverage * 2));
+    const overallConfidence = clampScore(Math.max(profileUnderstanding.score, 62 + Math.min(24, adaptiveSignals.length * 3) + languageCoverage * 2));
 
     setState({
       relationship,
@@ -2177,6 +2170,20 @@ export default function Home() {
           </div>
 
           <div className="mt-8">
+            <div className="mb-5 rounded-2xl border border-[#dce6d6] bg-[#f6fbf4] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Understanding Profile</p>
+              <div className="mt-2 flex items-center justify-between gap-4">
+                <p className="text-lg font-semibold text-[#2f2a24]">{renderProfileMeter(profileUnderstanding.score)} {profileUnderstanding.score}%</p>
+                <p className="text-sm text-[#62584d]">Information quality, not question count</p>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {profileUnderstanding.segments.map((segment) => (
+                  <div key={segment.label} className="rounded-xl border border-[#e1eadc] bg-white px-3 py-2 text-sm text-[#51493f]">
+                    <span className="font-semibold text-[#2f2a24]">{segment.label}:</span> +{segment.value}%
+                  </div>
+                ))}
+              </div>
+            </div>
             <button
               type="button"
               onClick={handleFindHome}
