@@ -108,6 +108,53 @@ type VerificationRequest = {
   items: VerificationChecklistItem[];
 };
 
+type RequirementPriority = "CRITICAL" | "IMPORTANT" | "PREFERENCE";
+
+type RequirementDomain = "Medical" | "Lifestyle" | "Dietary" | "Social" | "Future care";
+
+type ClinicalRequirement = {
+  key: string;
+  label: string;
+  priority: RequirementPriority;
+  domain: RequirementDomain;
+  rationale: string;
+  verificationQuestion: string;
+};
+
+type ClinicalCapabilityAssessment = ClinicalRequirement & {
+  state: VerificationState;
+  evidence: string;
+};
+
+type ClinicalReasoningNarrative = {
+  whyThisCommunity: string;
+  medicalMatch: string;
+  lifestyleMatch: string;
+  dietaryMatch: string;
+  socialMatch: string;
+  futureCareMatch: string;
+  verificationNeeded: string;
+  verifiedCapabilities: string[];
+  unknownCapabilities: string[];
+  rejectedCapabilities: string[];
+  questionsForFacility: string[];
+};
+
+type AnonymousVerificationPayload = {
+  ageRange: string;
+  gender: string | null;
+  careLevel: string;
+  functionalLimitations: string[];
+  medicalNeeds: string[];
+  dietaryRequirements: string[];
+  lifestylePreferences: string[];
+  budgetRange: string;
+  moveInTimeframe: string;
+  geographicPreference: string;
+  unknownQuestions: string[];
+  noPersonalInfoShared: boolean;
+};
+
 type ReportContributor = {
   signal: string;
   source: string;
@@ -161,6 +208,8 @@ type AuditFormula = {
   verificationChecklist: VerificationChecklistItem[];
   verificationRequest: VerificationRequest;
   verificationReadinessScore: number;
+  clinicalReasoning: ClinicalReasoningNarrative;
+  anonymousVerificationPayload: AnonymousVerificationPayload;
 };
 
 export type IntelligenceScoringReport = {
@@ -1416,8 +1465,6 @@ function buildReportBreakdown(
   const preferredActivities = state.happinessPreferences;
   const careNeed = state.assistanceLevel || "general support";
   const futureCarePreference = evaluateFutureCarePreference(facility, state);
-  const verificationChecklist = buildVerificationChecklist(facility, state);
-  const verificationRequest = buildVerificationRequest(facility, state, verificationChecklist);
   const futureCareCue = futureCarePreference.preference || state.memoryStatus || state.humanIntelligenceV2.transitionRiskProfile.lonelinessRisk || "future care planning";
   const staffingFit = facility.staffing_rating ? clamp(facility.staffing_rating * 20) : 50;
   const regulatoryFit = facility.inspection_rating ? clamp(facility.inspection_rating * 20) : 50;
@@ -1604,123 +1651,453 @@ function buildRankingExplanation(accepted: RankedRecommendation[], index: number
   return `Ranked #${index + 1} by the current weighted fit formula.`;
 }
 
-function classifyVerificationState(value: boolean | null | undefined, limited = false): VerificationState {
-  if (value === true) return "YES";
-  if (value === false) return "NO";
-  return limited ? "LIMITED" : "UNKNOWN";
+function includesAnyInArray(values: string[], terms: string[]): boolean {
+  const text = values.join(" ").toLowerCase();
+  return includesAny(text, terms);
+}
+
+function buildClinicalRequirements(state: QuestionnaireState): ClinicalRequirement[] {
+  const notes = (state.notes || "").toLowerCase();
+  const dietary = state.humanIntelligenceV2.foodProfile.dietaryPreferences || [];
+  const activities = state.happinessPreferences || [];
+  const socialFrequency = (state.humanIntelligenceV2.socialProfile.socialInteractionFrequency || "").toLowerCase();
+
+  const hasStrokeHistory = includesAny(notes, ["stroke", "cva", "אירוע מוחי", "שבץ"]);
+  const hasSpeechDifficulty = includesAny(notes, ["speech", "aphasia", "communication", "מתקשה לדבר", "דיבור"]);
+  const usesWalker = includesAny(notes, ["walker", "הליכון"]);
+  const hasMobilityLimitations = usesWalker || includesAny(notes, ["mobility", "limited mobility", "מגבלות תנועה"]);
+  const needs24x7 = includesAny(notes, ["24/7", "24x7", "round the clock", "תמיכה רפואית צמודה"]) || includesAny((state.assistanceLevel || "").toLowerCase(), ["full assistance", "skilled", "medical"]);
+  const hasMemoryImpairment = (state.memoryStatus || "") !== "" && (state.memoryStatus || "") !== "No concerns";
+  const needsGlutenFree = includesAnyInArray(dietary.map((item) => item.toLowerCase()), ["gluten", "gluten free", "ללא גלוטן"]) || includesAny(notes, ["gluten", "celiac", "ללא גלוטן"]);
+
+  const requirements: ClinicalRequirement[] = [];
+  const pushRequirement = (item: ClinicalRequirement) => {
+    if (!requirements.some((existing) => existing.key === item.key)) {
+      requirements.push(item);
+    }
+  };
+
+  if (needs24x7) {
+    pushRequirement({
+      key: "licensed_nurses_24_7",
+      label: "Licensed nurses 24/7",
+      priority: "CRITICAL",
+      domain: "Medical",
+      rationale: "Continuous clinical supervision is required for safe daily care.",
+      verificationQuestion: "Does the community provide licensed nursing coverage 24/7?",
+    });
+    pushRequirement({
+      key: "skilled_nursing",
+      label: "Skilled nursing capability",
+      priority: "CRITICAL",
+      domain: "Medical",
+      rationale: "Higher-acuity care requires skilled nursing infrastructure.",
+      verificationQuestion: "Is skilled nursing support available for this resident profile?",
+    });
+  }
+
+  if (hasStrokeHistory) {
+    pushRequirement({
+      key: "neurological_rehabilitation",
+      label: "Neurological rehabilitation",
+      priority: "CRITICAL",
+      domain: "Medical",
+      rationale: "Stroke history requires structured neuro-rehabilitation support.",
+      verificationQuestion: "Does the community provide neurological rehabilitation for post-stroke residents?",
+    });
+    pushRequirement({
+      key: "speech_therapy",
+      label: "Speech therapy",
+      priority: "CRITICAL",
+      domain: "Medical",
+      rationale: "Communication recovery needs direct speech-language support.",
+      verificationQuestion: "Is speech therapy available onsite for post-stroke recovery?",
+    });
+    pushRequirement({
+      key: "occupational_therapy",
+      label: "Occupational therapy",
+      priority: "IMPORTANT",
+      domain: "Medical",
+      rationale: "Daily-function recovery after stroke often needs occupational therapy.",
+      verificationQuestion: "Is occupational therapy available for post-stroke functional recovery?",
+    });
+    pushRequirement({
+      key: "physical_therapy",
+      label: "Physical therapy",
+      priority: "IMPORTANT",
+      domain: "Medical",
+      rationale: "Mobility restoration requires ongoing physical therapy support.",
+      verificationQuestion: "Is physical therapy available and how often are sessions provided?",
+    });
+    pushRequirement({
+      key: "swallowing_assessment",
+      label: "Swallowing assessment support",
+      priority: "IMPORTANT",
+      domain: "Medical",
+      rationale: "Post-stroke care may require swallowing and aspiration risk management.",
+      verificationQuestion: "Can the community perform or coordinate swallowing assessments?",
+    });
+  }
+
+  if (hasSpeechDifficulty) {
+    pushRequirement({
+      key: "aphasia_support",
+      label: "Aphasia or communication support",
+      priority: "IMPORTANT",
+      domain: "Medical",
+      rationale: "Speech difficulty requires staff familiarity with communication support plans.",
+      verificationQuestion: "Does the community have experience supporting residents with aphasia or speech limitations?",
+    });
+  }
+
+  if (hasMobilityLimitations) {
+    pushRequirement({
+      key: "walker_accessibility",
+      label: "Walker accessibility",
+      priority: "CRITICAL",
+      domain: "Medical",
+      rationale: "Mobility limitations require safe walker-accessible design.",
+      verificationQuestion: "Is the environment consistently walker-accessible across daily pathways?",
+    });
+    pushRequirement({
+      key: "fall_prevention",
+      label: "Fall prevention protocol",
+      priority: "CRITICAL",
+      domain: "Medical",
+      rationale: "Fall prevention is essential when mobility is limited.",
+      verificationQuestion: "What fall prevention protocols are used for residents with walker dependence?",
+    });
+    pushRequirement({
+      key: "mobility_assistance",
+      label: "Mobility and transfer assistance",
+      priority: "IMPORTANT",
+      domain: "Medical",
+      rationale: "Transfer support helps maintain safety and dignity during daily routines.",
+      verificationQuestion: "Can staff provide transfer and mobility assistance as needed throughout the day?",
+    });
+  }
+
+  if (hasMemoryImpairment) {
+    pushRequirement({
+      key: "memory_support",
+      label: "Memory care or dementia programming",
+      priority: "CRITICAL",
+      domain: "Medical",
+      rationale: "Cognitive decline requires structured memory support.",
+      verificationQuestion: "Is memory care or structured dementia programming available?",
+    });
+  }
+
+  if (needsGlutenFree) {
+    pushRequirement({
+      key: "gluten_free_meals",
+      label: "Gluten-free meal capability",
+      priority: "CRITICAL",
+      domain: "Dietary",
+      rationale: "Dietary safety requires reliable gluten-free meal support.",
+      verificationQuestion: "Can the community support consistent gluten-free meals with safe kitchen protocols?",
+    });
+    pushRequirement({
+      key: "dietitian_support",
+      label: "Dietitian support",
+      priority: "IMPORTANT",
+      domain: "Dietary",
+      rationale: "Special diets are safer with dietitian oversight.",
+      verificationQuestion: "Is dietitian support available for special dietary plans such as gluten-free needs?",
+    });
+  }
+
+  if (activities.some((item) => item.toLowerCase() === "movies") || includesAny(notes, ["movies", "cinema", "סרטים"])) {
+    pushRequirement({
+      key: "movie_programming",
+      label: "Movie programming",
+      priority: "PREFERENCE",
+      domain: "Lifestyle",
+      rationale: "Movie activities help preserve familiar enjoyment and engagement.",
+      verificationQuestion: "Are movie activities or screenings offered regularly?",
+    });
+  }
+
+  if (activities.some((item) => item.toLowerCase().includes("music")) || includesAny(notes, ["music", "מוזיקה"])) {
+    pushRequirement({
+      key: "music_activities",
+      label: "Music activities",
+      priority: "PREFERENCE",
+      domain: "Lifestyle",
+      rationale: "Music-based activities support emotional wellbeing and daily engagement.",
+      verificationQuestion: "Are music activities or music therapy sessions available?",
+    });
+  }
+
+  if (includesAny(socialFrequency, ["daily", "frequent", "group"])) {
+    pushRequirement({
+      key: "group_activities",
+      label: "Group social activities",
+      priority: "IMPORTANT",
+      domain: "Social",
+      rationale: "Consistent social engagement helps reduce isolation risk.",
+      verificationQuestion: "What group activity options are available each week?",
+    });
+  }
+
+  if (state.futureCarePreference && state.futureCarePreference !== "No preference") {
+    pushRequirement({
+      key: "future_care_path",
+      label: `Future care pathway: ${state.futureCarePreference}`,
+      priority: "IMPORTANT",
+      domain: "Future care",
+      rationale: "Future care continuity preference should be supported by the care model.",
+      verificationQuestion: `How does the community support the requested future care pathway (${state.futureCarePreference})?`,
+    });
+  }
+
+  return requirements;
+}
+
+function assessClinicalCapability(requirement: ClinicalRequirement, facility: SearchFacility): ClinicalCapabilityAssessment {
+  const text = joinedFacilityText(facility);
+  const careTypes = facility.careTypes.map((item) => item.toLowerCase());
+  const isIndependentOnly = careTypes.length > 0
+    && careTypes.every((item) => item.includes("independent") || item.includes("active adult"));
+
+  const yes = (terms: string[]) => includesAny(text, terms);
+
+  let state: VerificationState = "UNKNOWN";
+  let evidence = "No reliable facility evidence currently confirms this capability.";
+
+  switch (requirement.key) {
+    case "licensed_nurses_24_7":
+      if (yes(["24/7", "24 hour", "around the clock", "nursing staff", "licensed nurse"])) {
+        state = "YES";
+        evidence = "Facility metadata mentions around-the-clock nursing coverage.";
+      } else if (isIndependentOnly) {
+        state = "NO";
+        evidence = "Care taxonomy indicates an independent-only model without clear 24/7 nursing services.";
+      }
+      break;
+    case "skilled_nursing":
+      if (careTypes.some((item) => item.includes("skilled") || item.includes("rehab") || item.includes("nursing"))) {
+        state = "YES";
+        evidence = "Care taxonomy includes skilled nursing or rehabilitation services.";
+      } else if (isIndependentOnly) {
+        state = "NO";
+        evidence = "Care taxonomy does not indicate skilled nursing capability.";
+      }
+      break;
+    case "neurological_rehabilitation":
+      if (yes(["neurological", "stroke", "neuro", "rehabilitation", "post-acute"])) {
+        state = "YES";
+        evidence = "Facility metadata includes neurological or rehabilitation language.";
+      } else if (isIndependentOnly) {
+        state = "NO";
+        evidence = "Independent-only care model does not indicate neurological rehabilitation services.";
+      }
+      break;
+    case "speech_therapy":
+      if (yes(["speech therapy", "speech-language", "slp", "aphasia"])) {
+        state = "YES";
+        evidence = "Facility metadata explicitly references speech therapy support.";
+      }
+      break;
+    case "occupational_therapy":
+      if (yes(["occupational therapy", "ot ", "activities of daily living"])) {
+        state = "YES";
+        evidence = "Facility metadata references occupational therapy services.";
+      }
+      break;
+    case "physical_therapy":
+      if (yes(["physical therapy", "pt ", "rehabilitation"])) {
+        state = "YES";
+        evidence = "Facility metadata references physical therapy services.";
+      }
+      break;
+    case "swallowing_assessment":
+      if (yes(["swallow", "dysphagia", "speech-language", "nutrition support"])) {
+        state = "LIMITED";
+        evidence = "Related clinical terms are present but swallowing scope is not fully explicit.";
+      }
+      break;
+    case "aphasia_support":
+      if (yes(["aphasia", "communication support", "speech-language"])) {
+        state = "LIMITED";
+        evidence = "Communication support is mentioned, but aphasia specialization is not fully explicit.";
+      }
+      break;
+    case "walker_accessibility":
+      if (yes(["accessible", "accessibility", "walker", "mobility support", "ada"])) {
+        state = "YES";
+        evidence = "Facility metadata indicates accessibility and mobility support cues.";
+      } else if (yes(["stairs only", "not accessible"])) {
+        state = "NO";
+        evidence = "Facility text includes non-accessibility cues.";
+      }
+      break;
+    case "fall_prevention":
+      if (yes(["fall prevention", "fall risk", "safety monitoring", "mobility safety"])) {
+        state = "YES";
+        evidence = "Facility metadata references fall prevention or safety monitoring.";
+      }
+      break;
+    case "mobility_assistance":
+      if (yes(["transfer assistance", "mobility assistance", "assistance with walking", "care assistance"])) {
+        state = "YES";
+        evidence = "Facility metadata references daily mobility assistance support.";
+      }
+      break;
+    case "memory_support":
+      if (careTypes.some((item) => item.includes("memory"))) {
+        state = "YES";
+        evidence = "Care taxonomy includes memory support capability.";
+      } else if (isIndependentOnly) {
+        state = "NO";
+        evidence = "Care taxonomy does not indicate memory-focused services.";
+      }
+      break;
+    case "gluten_free_meals":
+      if (yes(["gluten free", "special diet", "dietary accommodations", "dietitian"])) {
+        state = "LIMITED";
+        evidence = "Dietary accommodation cues exist, but dedicated gluten-free protocols are not fully explicit.";
+      }
+      break;
+    case "dietitian_support":
+      if (yes(["dietitian", "nutrition", "dietary support"])) {
+        state = "YES";
+        evidence = "Facility metadata references dietitian or nutrition support.";
+      }
+      break;
+    case "movie_programming":
+      if (yes(["movie", "cinema", "theater room", "film"])) {
+        state = "YES";
+        evidence = "Facility metadata references movie or cinema programming.";
+      }
+      break;
+    case "music_activities":
+      if (yes(["music", "live performance", "music therapy", "concert"])) {
+        state = "YES";
+        evidence = "Facility metadata references music activities or programming.";
+      }
+      break;
+    case "group_activities":
+      if (yes(["group activities", "social calendar", "community events", "activity program"])) {
+        state = "YES";
+        evidence = "Facility metadata references group social programming.";
+      }
+      break;
+    case "future_care_path":
+      if (careTypes.some((item) => item.includes("ccrc") || item.includes("continuing care"))) {
+        state = "YES";
+        evidence = "Care taxonomy indicates continuum-style future care coverage.";
+      } else if (isIndependentOnly) {
+        state = "LIMITED";
+        evidence = "Current taxonomy suggests limited future-care escalation options.";
+      }
+      break;
+    default:
+      break;
+  }
+
+  return {
+    ...requirement,
+    state,
+    evidence,
+  };
+}
+
+function buildClinicalReasoning(
+  facility: SearchFacility,
+  state: QuestionnaireState,
+): {
+  assessments: ClinicalCapabilityAssessment[];
+  narrative: ClinicalReasoningNarrative;
+  anonymousPayload: AnonymousVerificationPayload;
+} {
+  const requirements = buildClinicalRequirements(state);
+  const assessments = requirements.map((requirement) => assessClinicalCapability(requirement, facility));
+
+  const verified = assessments.filter((item) => item.state === "YES");
+  const unknown = assessments.filter((item) => item.state === "UNKNOWN");
+  const rejected = assessments.filter((item) => item.state === "NO");
+
+  const medicalVerified = verified.filter((item) => item.domain === "Medical").map((item) => item.label);
+  const lifestyleVerified = verified.filter((item) => item.domain === "Lifestyle").map((item) => item.label);
+  const dietaryVerified = verified.filter((item) => item.domain === "Dietary").map((item) => item.label);
+  const socialVerified = verified.filter((item) => item.domain === "Social").map((item) => item.label);
+  const futureCareVerified = verified.filter((item) => item.domain === "Future care").map((item) => item.label);
+
+  const medicalNeeds = assessments.filter((item) => item.domain === "Medical").map((item) => item.label);
+  const dietaryNeeds = assessments.filter((item) => item.domain === "Dietary").map((item) => item.label);
+  const lifestyleNeeds = assessments.filter((item) => item.domain === "Lifestyle").map((item) => item.label);
+  const socialNeeds = assessments.filter((item) => item.domain === "Social").map((item) => item.label);
+
+  const whyThisCommunity = [
+    `After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified ${facility.name} as one of the strongest matches.`,
+    "The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.",
+  ].join(" ");
+
+  const narrative: ClinicalReasoningNarrative = {
+    whyThisCommunity,
+    medicalMatch: medicalNeeds.length > 0
+      ? `Because the resident profile requires ${medicalNeeds.join(", ").toLowerCase()}, we prioritized communities experienced in complex clinical support. Confirmed in this community: ${medicalVerified.length > 0 ? medicalVerified.join(", ") : "none yet"}.`
+      : "No additional medical capability translation was required from the current profile.",
+    lifestyleMatch: lifestyleNeeds.length > 0
+      ? `Maintaining quality of life remains important. Confirmed lifestyle alignment currently includes: ${lifestyleVerified.length > 0 ? lifestyleVerified.join(", ") : "none yet"}.`
+      : "No explicit lifestyle preferences were captured in this profile.",
+    dietaryMatch: dietaryNeeds.length > 0
+      ? `Dietary flexibility was reviewed because of stated restrictions. Confirmed dietary capability: ${dietaryVerified.length > 0 ? dietaryVerified.join(", ") : "none yet"}.`
+      : "No specific dietary restrictions were provided.",
+    socialMatch: socialNeeds.length > 0
+      ? `Social engagement needs were translated into operational requirements. Confirmed social capability: ${socialVerified.length > 0 ? socialVerified.join(", ") : "none yet"}.`
+      : "No specific social-program requirements were identified.",
+    futureCareMatch: state.futureCarePreference && state.futureCarePreference !== "No preference"
+      ? `Future care preference was considered (${state.futureCarePreference}). Confirmed future-care alignment: ${futureCareVerified.length > 0 ? futureCareVerified.join(", ") : "none yet"}.`
+      : "Future care pathway preference was not constrained in this profile.",
+    verificationNeeded: unknown.length > 0
+      ? `Additional clarification is recommended regarding: ${unknown.map((item) => item.label).join(", ")}.`
+      : "No open verification items remain for this recommendation.",
+    verifiedCapabilities: verified.map((item) => item.label),
+    unknownCapabilities: unknown.map((item) => item.label),
+    rejectedCapabilities: rejected.map((item) => item.label),
+    questionsForFacility: unknown.map((item) => item.verificationQuestion),
+  };
+
+  const moveInTimeframe = state.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed
+    ? "30-60 days"
+    : "Flexible";
+  const geographicPreference = state.referenceLocationValue || state.distanceFromFamily || "Not specified";
+
+  const anonymousPayload: AnonymousVerificationPayload = {
+    ageRange: state.ageGroup || "Not specified",
+    gender: state.gender || null,
+    careLevel: state.assistanceLevel || "Not specified",
+    functionalLimitations: [
+      includesAny((state.notes || "").toLowerCase(), ["walker", "mobility", "הליכון", "מגבלות תנועה"]) ? "Mobility limitation / walker use" : "",
+      includesAny((state.notes || "").toLowerCase(), ["speech", "aphasia", "מתקשה לדבר"]) ? "Speech or communication difficulty" : "",
+    ].filter(Boolean),
+    medicalNeeds: medicalNeeds,
+    dietaryRequirements: dietaryNeeds,
+    lifestylePreferences: lifestyleNeeds,
+    budgetRange: `Up to $${Number(state.budget || 0).toLocaleString()}/month`,
+    moveInTimeframe,
+    geographicPreference,
+    unknownQuestions: narrative.questionsForFacility,
+    noPersonalInfoShared: true,
+  };
+
+  return {
+    assessments,
+    narrative,
+    anonymousPayload,
+  };
 }
 
 function buildVerificationChecklist(facility: SearchFacility, state: QuestionnaireState): VerificationChecklistItem[] {
-  const text = joinedFacilityText(facility);
-  const checklist: VerificationChecklistItem[] = [];
-  const hasFuturePreference = Boolean(state.futureCarePreference && state.futureCarePreference !== "No preference");
-
-  const activityItems = state.happinessPreferences.map((preference) => {
-    const matched = includesAny(text, [preference, preference.replace(" and ", " ")]);
-    return {
-      label: preference,
-      state: classifyVerificationState(matched ? true : null),
-      category: "Lifestyle",
-      rationale: matched
-        ? `Facility metadata explicitly mentions ${preference.toLowerCase()}.`
-        : `No reliable facility evidence currently confirms ${preference.toLowerCase()}.`,
-    };
-  });
-
-  checklist.push(...activityItems);
-
-  if (state.humanIntelligenceV2.foodProfile.dietaryPreferences.length > 0) {
-    state.humanIntelligenceV2.foodProfile.dietaryPreferences.forEach((preference) => {
-      const matched = includesAny(text, [preference]);
-      checklist.push({
-        label: preference,
-        state: classifyVerificationState(matched ? true : null),
-        category: "Dining",
-        rationale: matched
-          ? `Facility metadata explicitly mentions ${preference.toLowerCase()}.`
-          : `Dining information for ${preference.toLowerCase()} could not be confirmed from current metadata.`,
-      });
-    });
-  }
-
-  if (state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage) {
-    const language = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage;
-    const matched = includesAny(text, [language]);
-    checklist.push({
-      label: `${language} speaking staff`,
-      state: classifyVerificationState(matched ? true : null),
-      category: "Language",
-      rationale: matched
-        ? `Facility metadata explicitly mentions ${language.toLowerCase()} support.`
-        : `No reliable source currently confirms ${language.toLowerCase()} speaking staff.`,
-    });
-  }
-
-  if (state.humanIntelligenceV2.culturalProfile.faithTraditions.length > 0 || state.humanIntelligenceV2.culturalProfile.religionImportance) {
-    const needsHebrew = includesAny(`${state.humanIntelligenceV2.culturalProfile.culturalIdentity} ${state.humanIntelligenceV2.culturalProfile.faithTraditions.join(" ")}`, ["hebrew", "jewish"]);
-    if (needsHebrew) {
-      checklist.push({
-        label: "Hebrew speaking staff",
-        state: classifyVerificationState(includesAny(text, ["hebrew", "jewish"])
-          ? true
-          : null),
-        category: "Culture",
-        rationale: includesAny(text, ["hebrew", "jewish"])
-          ? "Community materials explicitly mention Hebrew or Jewish support."
-          : "Hebrew speaking staff was not explicitly confirmed in available facility data.",
-      });
-      checklist.push({
-        label: "Transportation to synagogue",
-        state: classifyVerificationState(null),
-        category: "Culture",
-        rationale: "No reliable facility evidence confirms transportation to synagogue.",
-      });
-    }
-  }
-
-  const kitchenetteHint = includesAny(text, ["kitchen", "kitchenette", "suite", "apartment"]);
-  checklist.push({
-    label: "Private kitchenette",
-    state: classifyVerificationState(
-      includesAny(text, ["kitchenette"]) ? true : facility.careTypes.includes("Skilled Nursing") || facility.careTypes.includes("Rehabilitation") ? false : kitchenetteHint ? null : null,
-      !includesAny(text, ["kitchenette"]) && (facility.careTypes.includes("Independent Living") || facility.careTypes.includes("Active Adult 55+") || facility.careTypes.includes("CCRC")),
-    ),
-    category: "Home features",
-    rationale: includesAny(text, ["kitchenette"])
-      ? "Kitchenette support is explicitly mentioned in the facility metadata."
-      : facility.careTypes.includes("Skilled Nursing") || facility.careTypes.includes("Rehabilitation")
-        ? "This care setting typically does not indicate private kitchenette availability."
-        : "No reliable source currently confirms kitchenette availability.",
-  });
-
-  if (hasFuturePreference) {
-    checklist.push({
-      label: `Future support: ${state.futureCarePreference}`,
-      state: classifyVerificationState(
-        state.futureCarePreference === "Independent communities only"
-          ? (facility.careTypes.some((careType) => careType === "Independent Living" || careType === "Active Adult 55+") && !facility.careTypes.some((careType) => careType === "Skilled Nursing" || careType === "Rehabilitation" || careType === "Memory Care"))
-          : state.futureCarePreference === "Independent today, support available later"
-            ? (facility.careTypes.some((careType) => careType === "Independent Living" || careType === "Active Adult 55+" || careType === "Assisted Living" || careType === "CCRC" || careType === "Continuing Care"))
-            : state.futureCarePreference === "Full continuum of care on one campus"
-              ? (facility.careTypes.some((careType) => careType === "CCRC" || careType === "Continuing Care"))
-              : null,
-      ),
-      category: "Future care",
-      rationale: `Future support compatibility was evaluated against ${state.futureCarePreference}.`,
-    });
-  }
-
-  const distanceMinutes = state.humanIntelligenceV2.distanceProfile.driveTimes.normal || state.distanceFromFamily;
-  if (distanceMinutes) {
-    checklist.push({
-      label: "Transportation and access",
-      state: classifyVerificationState(null),
-      category: "Access",
-      rationale: "No reliable facility evidence confirms transportation or access logistics.",
-    });
-  }
-
-  return checklist.filter((item) => item.state !== "NO" || item.category !== "Future care");
+  const reasoning = buildClinicalReasoning(facility, state);
+  return reasoning.assessments.map((assessment) => ({
+    label: assessment.label,
+    state: assessment.state,
+    category: assessment.domain,
+    rationale: assessment.evidence,
+  }));
 }
 
 function buildVerificationRequest(facility: SearchFacility, state: QuestionnaireState, checklist: VerificationChecklistItem[]): VerificationRequest {
@@ -1741,17 +2118,21 @@ function buildVerificationRequest(facility: SearchFacility, state: Questionnaire
   const body = [
     "Dear Admissions Team,",
     "",
-    `A prospective resident was matched to your community through OPTIME (${facility.name}).`,
+    `OPTIME matched your community (${facility.name}) to an anonymous prospective resident profile and would appreciate clarification regarding several items before recommending an in-person visit.`,
     "",
-    "Before scheduling a visit, we would appreciate confirmation regarding the following items:",
+    "Before scheduling a visit, please help verify the following open items:",
     "",
-    "Resident profile summary:",
+    "Anonymous resident profile summary:",
     "",
     `- Age: ${state.ageGroup || "Not specified"}`,
+    `- Gender: ${state.gender || "Optional / not provided"}`,
     `- Current care level: ${state.assistanceLevel || "Not specified"}`,
-    `- Future care preference: ${state.futureCarePreference || "No preference"}`,
     `- Budget: $${Number(state.budget || 0).toLocaleString()}/month`,
-    `- Interests: ${(state.happinessPreferences || []).join(", ") || "Not specified"}`,
+    `- Medical needs: ${buildClinicalRequirements(state).filter((item) => item.domain === "Medical").map((item) => item.label).join(", ") || "Not specified"}`,
+    `- Functional limitations: ${includesAny((state.notes || "").toLowerCase(), ["walker", "mobility", "הליכון", "מגבלות תנועה"]) ? "Mobility limitation / walker use" : "Not specified"}`,
+    `- Dietary requirements: ${(state.humanIntelligenceV2.foodProfile.dietaryPreferences || []).join(", ") || "Not specified"}`,
+    `- Lifestyle interests: ${(state.happinessPreferences || []).join(", ") || "Not specified"}`,
+    `- Geographic preference: ${state.referenceLocationValue || state.distanceFromFamily || "Not specified"}`,
     "",
     "Please confirm availability of:",
     "",
@@ -1766,6 +2147,9 @@ function buildVerificationRequest(facility: SearchFacility, state: Questionnaire
     "Optional comments:",
     "______________________",
     "",
+    "No resident or family contact information has been shared.",
+    "If the family chooses to proceed later, OPTIME will request consent before releasing contact details.",
+    "",
     "Thank you.",
   ].join("\n");
 
@@ -1779,6 +2163,34 @@ function buildVerificationRequest(facility: SearchFacility, state: Questionnaire
     confidenceScore,
     nextStepMessage,
     items: unknownItems,
+  };
+}
+
+export function applyVerificationResponses(
+  facility: SearchFacility,
+  state: QuestionnaireState,
+  checklist: VerificationChecklistItem[],
+  responses: Record<string, VerificationState>,
+): {
+  checklist: VerificationChecklistItem[];
+  request: VerificationRequest;
+} {
+  const updatedChecklist = checklist.map((item) => {
+    const response = responses[item.label];
+    if (!response || item.state !== "UNKNOWN") {
+      return item;
+    }
+
+    return {
+      ...item,
+      state: response,
+      rationale: `Facility response received: ${response}.`,
+    };
+  });
+
+  return {
+    checklist: updatedChecklist,
+    request: buildVerificationRequest(facility, state, updatedChecklist),
   };
 }
 
@@ -2052,6 +2464,7 @@ function buildIntelligenceReport(
 
   const verificationChecklist = buildVerificationChecklist(facility, state);
   const verificationRequest = buildVerificationRequest(facility, state, verificationChecklist);
+  const clinicalReasoning = buildClinicalReasoning(facility, state);
 
   const audit: AuditFormula = {
     executedFormula: "final_score = tiered_match_quality(critical, important, optional) - mismatch_penalties",
@@ -2071,6 +2484,8 @@ function buildIntelligenceReport(
     verificationChecklist,
     verificationRequest,
     verificationReadinessScore: verificationRequest.visitReadinessScore,
+    clinicalReasoning: clinicalReasoning.narrative,
+    anonymousVerificationPayload: clinicalReasoning.anonymousPayload,
   };
 
   const positiveContributors = buildContributorRows(contributions, totalScore, "Weighted person-fit formula", true).slice(0, 4);
@@ -2267,6 +2682,33 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
           items: [],
         },
         verificationReadinessScore: 100,
+        clinicalReasoning: {
+          whyThisCommunity: "",
+          medicalMatch: "",
+          lifestyleMatch: "",
+          dietaryMatch: "",
+          socialMatch: "",
+          futureCareMatch: "",
+          verificationNeeded: "",
+          verifiedCapabilities: [],
+          unknownCapabilities: [],
+          rejectedCapabilities: [],
+          questionsForFacility: [],
+        },
+        anonymousVerificationPayload: {
+          ageRange: "Not specified",
+          gender: null,
+          careLevel: "Not specified",
+          functionalLimitations: [],
+          medicalNeeds: [],
+          dietaryRequirements: [],
+          lifestylePreferences: [],
+          budgetRange: "Up to $0/month",
+          moveInTimeframe: "Flexible",
+          geographicPreference: "Not specified",
+          unknownQuestions: [],
+          noPersonalInfoShared: true,
+        },
       },
     };
 

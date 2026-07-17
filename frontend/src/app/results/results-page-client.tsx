@@ -165,6 +165,13 @@ export function ResultsPageClient() {
   const [facilities, setFacilities] = useState<SearchFacility[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
+  const [verificationSentByFacility, setVerificationSentByFacility] = useState<Record<number, boolean>>({});
+  const [verificationAuditLog, setVerificationAuditLog] = useState<Array<{
+    facilityId: number;
+    timestamp: string;
+    sharedFields: string[];
+    consent: boolean;
+  }>>([]);
 
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
   const age = searchParams.get("age") || state.ageGroup || "80-84";
@@ -226,6 +233,11 @@ export function ResultsPageClient() {
   const renderFullCard = (recommendation: RankedRecommendation, index: number) => {
     const facility = recommendation.facility;
     const report = recommendation.report;
+    const clinical = report.audit.clinicalReasoning;
+    const unknownCount = report.audit.verificationRequest.unknownCount;
+    const verificationSent = Boolean(verificationSentByFacility[facility.id]);
+    const anonymousPayload = report.audit.anonymousVerificationPayload;
+    const latestAuditLog = [...verificationAuditLog].reverse().find((item) => item.facilityId === facility.id);
     const visualFitScore = visualFitForFacility(facility, state);
     const visualConfidence = visualConfidenceLabel(facility.visualIntelligence.visualConfidenceScore);
 
@@ -261,6 +273,111 @@ export function ResultsPageClient() {
         </div>
 
         <div className="mt-4 space-y-3 text-sm text-[#4f473d]">
+          <section className="rounded-xl border border-[#d6e4ef] bg-[#f5fbff] p-4">
+            <p className="font-semibold text-[#24425e]">Why OPTIME selected this community</p>
+            <p className="mt-2 text-sm text-[#3f5f79]">{clinical.whyThisCommunity}</p>
+
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              <div className="rounded-lg border border-[#d9e3ec] bg-white p-3">
+                <p className="font-semibold text-[#2f2a24]">Medical Match</p>
+                <p className="mt-1 text-xs text-[#5f5548]">{clinical.medicalMatch}</p>
+              </div>
+              <div className="rounded-lg border border-[#d9e3ec] bg-white p-3">
+                <p className="font-semibold text-[#2f2a24]">Lifestyle Match</p>
+                <p className="mt-1 text-xs text-[#5f5548]">{clinical.lifestyleMatch}</p>
+              </div>
+              <div className="rounded-lg border border-[#d9e3ec] bg-white p-3">
+                <p className="font-semibold text-[#2f2a24]">Dietary Match</p>
+                <p className="mt-1 text-xs text-[#5f5548]">{clinical.dietaryMatch}</p>
+              </div>
+              <div className="rounded-lg border border-[#d9e3ec] bg-white p-3">
+                <p className="font-semibold text-[#2f2a24]">Social Match</p>
+                <p className="mt-1 text-xs text-[#5f5548]">{clinical.socialMatch}</p>
+              </div>
+              <div className="rounded-lg border border-[#d9e3ec] bg-white p-3 lg:col-span-2">
+                <p className="font-semibold text-[#2f2a24]">Future Care Match</p>
+                <p className="mt-1 text-xs text-[#5f5548]">{clinical.futureCareMatch}</p>
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="rounded-lg border border-[#dce8d5] bg-[#f6fcf2] p-3">
+                <p className="font-semibold text-[#2f6d3e]">Verified capabilities</p>
+                {clinical.verifiedCapabilities.length > 0 ? (
+                  <ul className="mt-2 space-y-1 text-xs text-[#2f6d3e]">
+                    {clinical.verifiedCapabilities.slice(0, 7).map((item) => (
+                      <li key={`${facility.id}-verified-${item}`}>✔ {item}</li>
+                    ))}
+                  </ul>
+                ) : <p className="mt-2 text-xs text-[#5f5548]">No capabilities are fully verified yet.</p>}
+              </div>
+              <div className="rounded-lg border border-[#e8deca] bg-[#fffaf0] p-3">
+                <p className="font-semibold text-[#8a6a2f]">Verification Needed</p>
+                <p className="mt-1 text-xs text-[#6f6148]">{clinical.verificationNeeded}</p>
+                {clinical.unknownCapabilities.length > 0 ? (
+                  <ul className="mt-2 space-y-1 text-xs text-[#7a6847]">
+                    {clinical.unknownCapabilities.slice(0, 7).map((item) => (
+                      <li key={`${facility.id}-unknown-${item}`}>❓ {item}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </div>
+
+            {unknownCount > 0 ? (
+              <div className="mt-3 rounded-lg border border-[#d9e3ec] bg-white p-3">
+                <p className="font-semibold text-[#2f2a24]">Automatic Facility Verification</p>
+                <p className="mt-1 text-xs text-[#5f5548]">To reduce uncertainty before scheduling a visit, OPTIME can contact the community on your behalf to verify open questions. No personal information will be shared.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerificationSentByFacility((current) => ({
+                      ...current,
+                      [facility.id]: true,
+                    }));
+                    setVerificationAuditLog((current) => [
+                      ...current,
+                      {
+                        facilityId: facility.id,
+                        timestamp: new Date().toISOString(),
+                        sharedFields: [
+                          "Age range",
+                          "Gender (optional)",
+                          "Care level",
+                          "Functional limitations",
+                          "Medical needs",
+                          "Dietary requirements",
+                          "Lifestyle interests",
+                          "Budget range",
+                          "Move-in timeframe",
+                          "Geographic area",
+                        ],
+                        consent: false,
+                      },
+                    ]);
+                  }}
+                  className="mt-3 rounded-full border border-[#b9cddd] bg-[#f2f8fd] px-4 py-2 text-xs font-semibold text-[#2b5677] hover:bg-[#e5f1fa]"
+                >
+                  Verify unanswered questions with facility
+                </button>
+                {verificationSent ? (
+                  <div className="mt-2 rounded-lg border border-[#c9dfcf] bg-[#f1faf3] p-2 text-xs text-[#2f6d3e]">
+                    <p className="font-semibold">Verification request sent anonymously.</p>
+                    <p>No personal information has been shared with this facility.</p>
+                    {latestAuditLog ? (
+                      <p className="mt-1 text-[#3f6a48]">Audit log: {latestAuditLog.timestamp} | Consent to share contact info: {latestAuditLog.consent ? "YES" : "NO"}</p>
+                    ) : null}
+                  </div>
+                ) : null}
+                <div className="mt-2 rounded-lg border border-[#e7ddcd] bg-[#fcfaf5] p-2 text-[11px] text-[#5f5548]">
+                  <p className="font-semibold text-[#2f2a24]">Anonymous profile fields sent</p>
+                  <p className="mt-1">Age: {anonymousPayload.ageRange} | Care level: {anonymousPayload.careLevel} | Budget: {anonymousPayload.budgetRange}</p>
+                  <p className="mt-1">Move-in: {anonymousPayload.moveInTimeframe} | Region: {anonymousPayload.geographicPreference}</p>
+                </div>
+              </div>
+            ) : null}
+          </section>
+
           <section>
             <p className="font-semibold text-[#2f2a24]">A. Final Score</p>
             <p className="mt-1">Match Quality: {report.finalMatchScore}/100</p>
@@ -390,6 +507,19 @@ export function ResultsPageClient() {
               ))}
             </ul>
           </section>
+
+          {report.audit.clinicalReasoning.questionsForFacility.length > 0 ? (
+            <section>
+              <p className="font-semibold text-[#2f2a24]">K. Questions OPTIME will send to facility</p>
+              <ul className="mt-2 space-y-1">
+                {report.audit.clinicalReasoning.questionsForFacility.map((question) => (
+                  <li key={`${facility.id}-question-${question}`} className="rounded-lg border border-[#e7ddcd] bg-[#fcfaf5] px-3 py-2 text-xs text-[#5f5548]">
+                    - {question}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </div>
 
         <div className="mt-4 rounded-2xl border border-[#e7ddcd] bg-[#fdfbf6] p-4 text-sm text-[#5f5548]">
