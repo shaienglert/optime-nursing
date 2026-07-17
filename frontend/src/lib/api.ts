@@ -105,7 +105,17 @@ export type SearchFacility = Facility & {
   price: number;
   minAge: number;
   maxAge: number;
+  entryAgeRange: {
+    min: number;
+    max: number;
+  };
   careTypes: CareType[];
+  medicalCapabilities: string[];
+  rehabilitationCapabilities: string[];
+  lifestyleCapabilities: string[];
+  diningCapabilities: string[];
+  housingCapabilities: string[];
+  continuumOfCareAvailable: boolean;
   careTypeConfidence: "HIGH" | "MEDIUM" | "LOW";
   careTypeConfidenceScore: number;
   careTypeProbabilities: CareTypeProbabilities;
@@ -456,6 +466,94 @@ function deriveAgeRange(careTypes: CareType[]): { minAge: number; maxAge: number
   }
 
   return { minAge: 55, maxAge: 120 };
+}
+
+function deriveCapabilities(facility: BackendFacility, careTypes: CareType[]): {
+  medicalCapabilities: string[];
+  rehabilitationCapabilities: string[];
+  lifestyleCapabilities: string[];
+  diningCapabilities: string[];
+  housingCapabilities: string[];
+  continuumOfCareAvailable: boolean;
+} {
+  const text = [facility.name || "", facility.address || "", buildShortExplanation(facility)].join(" ").toLowerCase();
+
+  const medicalCapabilities = new Set<string>();
+  const rehabilitationCapabilities = new Set<string>();
+  const lifestyleCapabilities = new Set<string>();
+  const diningCapabilities = new Set<string>();
+  const housingCapabilities = new Set<string>();
+
+  if (careTypes.includes("Skilled Nursing")) {
+    medicalCapabilities.add("24/7 nursing support");
+    medicalCapabilities.add("medication management");
+    medicalCapabilities.add("clinical supervision");
+  }
+
+  if (careTypes.includes("Assisted Living")) {
+    medicalCapabilities.add("daily living support");
+    medicalCapabilities.add("medication reminders");
+  }
+
+  if (careTypes.includes("Memory Care")) {
+    medicalCapabilities.add("memory support programming");
+    medicalCapabilities.add("dementia-informed care");
+  }
+
+  if (careTypes.includes("Rehabilitation") || /rehab|rehabilitation|recovery|therapy/.test(text)) {
+    rehabilitationCapabilities.add("physical therapy");
+    rehabilitationCapabilities.add("occupational therapy");
+  }
+
+  if (/speech|aphasia|language/.test(text)) {
+    rehabilitationCapabilities.add("speech therapy");
+  }
+
+  if (/neurolog|stroke|post-acute/.test(text)) {
+    rehabilitationCapabilities.add("neurological rehabilitation");
+  }
+
+  if (/movie|cinema|theater/.test(text)) {
+    lifestyleCapabilities.add("movie programming");
+  }
+  if (/music|concert|performance/.test(text)) {
+    lifestyleCapabilities.add("music activities");
+  }
+  if (/social|community|group|engagement/.test(text)) {
+    lifestyleCapabilities.add("group social activities");
+  }
+  if (/fitness|wellness|garden|outdoor/.test(text)) {
+    lifestyleCapabilities.add("wellness and active lifestyle options");
+  }
+
+  if (/dining|food|restaurant|chef/.test(text)) {
+    diningCapabilities.add("special meal accommodations");
+  }
+  if (/kosher|halal|diet/.test(text)) {
+    diningCapabilities.add("dietary support");
+  }
+  diningCapabilities.add("meal service available");
+
+  if (/accessible|ada|mobility|wheelchair/.test(text) || careTypes.includes("Skilled Nursing") || careTypes.includes("Rehabilitation")) {
+    housingCapabilities.add("accessible mobility layout");
+  }
+  if (/private|suite|apartment|residence/.test(text)) {
+    housingCapabilities.add("private or semi-private room options");
+  }
+  housingCapabilities.add("on-site support environment");
+
+  const hasIndependent = careTypes.includes("Active Adult 55+") || careTypes.includes("Independent Living");
+  const hasProgressiveCare = careTypes.includes("Assisted Living") || careTypes.includes("Memory Care") || careTypes.includes("Skilled Nursing") || careTypes.includes("Rehabilitation");
+  const continuumOfCareAvailable = careTypes.includes("CCRC") || careTypes.includes("Continuing Care") || (hasIndependent && hasProgressiveCare);
+
+  return {
+    medicalCapabilities: [...medicalCapabilities],
+    rehabilitationCapabilities: [...rehabilitationCapabilities],
+    lifestyleCapabilities: [...lifestyleCapabilities],
+    diningCapabilities: [...diningCapabilities],
+    housingCapabilities: [...housingCapabilities],
+    continuumOfCareAvailable,
+  };
 }
 
 type CareTaxonomyResult = {
@@ -872,6 +970,8 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
   const gallery = GALLERY_SETS[facility.id % GALLERY_SETS.length];
   const optimeScore = Math.round(facility.overall_optime_score ?? 70);
   const taxonomy = inferCareTaxonomy(facility);
+  const ageRange = deriveAgeRange(taxonomy.careTypes);
+  const capabilities = deriveCapabilities(facility, taxonomy.careTypes);
 
   const result: SearchFacility = {
     ...base,
@@ -882,8 +982,18 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
     shortExplanation: buildShortExplanation(facility),
     priceRange: makePriceRange(facility),
     price: makeDerivedPrice(makePriceRange(facility)),
-    ...deriveAgeRange(taxonomy.careTypes),
+    ...ageRange,
+    entryAgeRange: {
+      min: ageRange.minAge,
+      max: ageRange.maxAge,
+    },
     careTypes: taxonomy.careTypes,
+    medicalCapabilities: capabilities.medicalCapabilities,
+    rehabilitationCapabilities: capabilities.rehabilitationCapabilities,
+    lifestyleCapabilities: capabilities.lifestyleCapabilities,
+    diningCapabilities: capabilities.diningCapabilities,
+    housingCapabilities: capabilities.housingCapabilities,
+    continuumOfCareAvailable: capabilities.continuumOfCareAvailable,
     careTypeConfidence: taxonomy.confidence,
     careTypeConfidenceScore: taxonomy.confidenceScore,
     careTypeProbabilities: taxonomy.probabilities,
