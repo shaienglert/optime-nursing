@@ -191,7 +191,56 @@ class AgentKnowledgeReportSnapshot(Base):
     coverage = Column(Float, nullable=False, default=0.0)
     average_confidence = Column(Float, nullable=False, default=0.0)
     health_status = Column(String(24), nullable=False, default="HEALTHY")
+    freshness_status = Column(String(24), nullable=False, default="FRESH")
+    knowledge_age_seconds = Column(Integer, nullable=False, default=0)
+    last_successful_refresh = Column(DateTime(timezone=True), nullable=True)
+    last_refresh_attempt = Column(DateTime(timezone=True), nullable=True)
+    refresh_duration_ms = Column(Integer, nullable=False, default=0)
+    verified_until = Column(DateTime(timezone=True), nullable=True)
+    ttl_seconds = Column(Integer, nullable=False, default=3600)
+    pending_changes = Column(Integer, nullable=False, default=0)
+    pending_reviews = Column(Integer, nullable=False, default=0)
+    failed_refresh_count = Column(Integer, nullable=False, default=0)
     last_refreshed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     next_refresh_at = Column(DateTime(timezone=True), nullable=True)
     refresh_status = Column(String(24), nullable=False, default="READY")
     refresh_error = Column(Text, nullable=True)
+
+
+class AgentKnowledgeRefreshEvent(Base):
+    __tablename__ = "agent_knowledge_refresh_events"
+    __table_args__ = (
+        Index("ix_agent_knowledge_refresh_events_agent_time", "agent_key", "started_at"),
+        Index("ix_agent_knowledge_refresh_events_status", "status"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    agent_key = Column(String(80), nullable=False, index=True)
+    refresh_mode = Column(String(32), nullable=False, default="scheduled")
+    status = Column(String(24), nullable=False, default="SUCCESS")
+    started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+    duration_ms = Column(Integer, nullable=False, default=0)
+    error_message = Column(Text, nullable=True)
+
+
+class RecommendationKnowledgeUsageLog(Base):
+    __tablename__ = "recommendation_knowledge_usage_logs"
+    __table_args__ = (
+        Index("ix_recommendation_knowledge_usage_logs_rec", "recommendation_key"),
+        Index("ix_recommendation_knowledge_usage_logs_agent", "agent_key"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    recommendation_key = Column(String(120), nullable=False, index=True)
+    resident_key = Column(String(120), nullable=True, index=True)
+    agent_key = Column(String(80), nullable=False, index=True)
+    freshness_status = Column(String(24), nullable=False)
+    health_status = Column(String(24), nullable=False)
+    verification_status = Column(String(24), nullable=False, default="VERIFIED")
+    confidence = Column(Float, nullable=False, default=0.0)
+    used_stale = Column(Integer, nullable=False, default=0)
+    policy_allowed = Column(Integer, nullable=False, default=1)
+    decision = Column(String(24), nullable=False, default="USED")
+    decision_reason = Column(Text, nullable=False, default="")
+    logged_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

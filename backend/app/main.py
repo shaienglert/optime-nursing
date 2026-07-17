@@ -17,14 +17,20 @@ import app.models.clinical_evidence
 import app.models.agent_execution
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
+    AgentKnowledgeRefreshEvent,
     AgentKnowledgeReportSnapshot,
+    RecommendationKnowledgeUsageLog,
     AgentVersionSnapshot,
     AgentWorker,
     RecommendationAgentVersionTrace,
 )
 from app.services.agent_knowledge_reports import (
     AGENT_REPORT_DEFS,
+    FRESHNESS_STATES,
+    TTL_POLICY_SECONDS,
+    compute_supervisor_metrics,
     ensure_reports_available,
+    recommendation_guard_decision,
     refresh_all_agent_reports,
     start_background_refresh_loop,
 )
@@ -459,6 +465,16 @@ class AgentKnowledgeReportOut(BaseModel):
     coverage: float
     api: Dict[str, str] = Field(default_factory=dict)
     health_status: str
+    freshness_status: str
+    knowledge_age_seconds: int
+    last_successful_refresh: Optional[str] = None
+    last_refresh_attempt: Optional[str] = None
+    refresh_duration_ms: int
+    verified_until: Optional[str] = None
+    ttl_seconds: int
+    pending_changes: int
+    pending_reviews: int
+    failed_refresh_count: int
     refresh_status: str
     next_refresh_at: Optional[str] = None
 
@@ -471,6 +487,10 @@ class AgentKnowledgeReportSummaryOut(BaseModel):
     evidence_count: int
     coverage: float
     health_status: str
+    freshness_status: str
+    knowledge_age_seconds: int
+    ttl_seconds: int
+    pending_reviews: int
     last_update: Optional[str] = None
     next_refresh_at: Optional[str] = None
 
@@ -483,6 +503,41 @@ class AgentKnowledgeSearchOut(BaseModel):
 class AgentKnowledgeRefreshOut(BaseModel):
     refreshed: int
     failures: int
+
+
+class RecommendationGuardCheckIn(BaseModel):
+    recommendation_key: str
+    resident_key: Optional[str] = None
+    agent_keys: List[str]
+    min_confidence: float = 0.65
+    allow_stale: bool = True
+
+
+class RecommendationGuardDecisionOut(BaseModel):
+    agent_key: str
+    decision: str
+    reason: str
+    used_stale: bool
+    policy_allowed: bool
+    freshness: Optional[str] = None
+
+
+class RecommendationGuardCheckOut(BaseModel):
+    recommendation_key: str
+    decisions: List[RecommendationGuardDecisionOut]
+
+
+class KnowledgeSupervisorOut(BaseModel):
+    fresh_agents: int
+    stale_agents: int
+    expired_knowledge: int
+    failed_refreshes: int
+    knowledge_age: int
+    pending_reviews: int
+    refresh_queue: int
+    refresh_success_rate: float
+    average_knowledge_freshness: float
+    alerts: List[str]
 
 
 
