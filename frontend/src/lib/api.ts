@@ -102,6 +102,9 @@ export type SearchFacility = Facility & {
   matchLabel: string;
   shortExplanation: string;
   priceRange: string;
+  price: number;
+  minAge: number;
+  maxAge: number;
   careTypes: CareType[];
   careTypeConfidence: "HIGH" | "MEDIUM" | "LOW";
   careTypeConfidenceScore: number;
@@ -429,6 +432,30 @@ function makePriceRange(facility: BackendFacility): string {
   const base = facility.beds ? 3800 + Math.min(2200, facility.beds * 15) : 4200;
   const high = base + 2400;
   return `$${Math.round(base).toLocaleString()} - $${Math.round(high).toLocaleString()}/month`;
+}
+
+function makeDerivedPrice(priceRange: string): number {
+  const match = priceRange.match(/\$([\d,]+)\s*-\s*\$([\d,]+)/);
+  if (!match) return 0;
+  const low = Number(match[1].replace(/,/g, ""));
+  const high = Number(match[2].replace(/,/g, ""));
+  return Math.round((low + high) / 2);
+}
+
+function deriveAgeRange(careTypes: CareType[]): { minAge: number; maxAge: number } {
+  if (careTypes.some((careType) => careType === "Skilled Nursing" || careType === "Rehabilitation" || careType === "Hospice")) {
+    return { minAge: 65, maxAge: 120 };
+  }
+
+  if (careTypes.some((careType) => careType === "Memory Care")) {
+    return { minAge: 60, maxAge: 120 };
+  }
+
+  if (careTypes.some((careType) => careType === "Active Adult 55+" || careType === "Independent Living" || careType === "Assisted Living" || careType === "CCRC" || careType === "Continuing Care")) {
+    return { minAge: 55, maxAge: 120 };
+  }
+
+  return { minAge: 55, maxAge: 120 };
 }
 
 type CareTaxonomyResult = {
@@ -854,6 +881,8 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
     matchLabel: scoreLabel(optimeScore),
     shortExplanation: buildShortExplanation(facility),
     priceRange: makePriceRange(facility),
+    price: makeDerivedPrice(makePriceRange(facility)),
+    ...deriveAgeRange(taxonomy.careTypes),
     careTypes: taxonomy.careTypes,
     careTypeConfidence: taxonomy.confidence,
     careTypeConfidenceScore: taxonomy.confidenceScore,
