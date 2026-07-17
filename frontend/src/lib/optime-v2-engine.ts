@@ -309,6 +309,20 @@ export type EngineQualityCheck = {
 export type EngineOutput = {
   accepted: RankedRecommendation[];
   rejected: RankedRecommendation[];
+  displayedRecommendations: RankedRecommendation[];
+  rejectionSummary: {
+    totalFacilities: number;
+    accepted: number;
+    rejected: number;
+    rejectedByBudget: number;
+    rejectedByCare: number;
+    rejectedByActivities: number;
+    rejectedByFutureCare: number;
+    rejectedByDistance: number;
+    rejectedByVerification: number;
+    rejectedByUnknown: number;
+    topRejectionReason: string;
+  };
   qualityCheck: EngineQualityCheck;
   persona: PersonaProfile;
 };
@@ -2894,6 +2908,62 @@ function buildQualityCheck(
   };
 }
 
+function summarizeRejections(recommendations: RankedRecommendation[]) {
+  const counts = {
+    rejectedByBudget: 0,
+    rejectedByCare: 0,
+    rejectedByActivities: 0,
+    rejectedByFutureCare: 0,
+    rejectedByDistance: 0,
+    rejectedByVerification: 0,
+    rejectedByUnknown: 0,
+  };
+
+  const reasonFrequency = new Map<string, number>();
+
+  for (const recommendation of recommendations) {
+    const reasons = recommendation.hardRejectionReasons.length > 0 ? recommendation.hardRejectionReasons : ["Unknown rejection reason."];
+    const bucketFlags = {
+      budget: false,
+      care: false,
+      activities: false,
+      futureCare: false,
+      distance: false,
+      verification: false,
+      unknown: reasons.length === 0,
+    };
+
+    for (const reason of reasons) {
+      const normalized = reason.toLowerCase();
+      reasonFrequency.set(reason, (reasonFrequency.get(reason) || 0) + 1);
+
+      if (/budget|afford|price|cost/.test(normalized)) bucketFlags.budget = true;
+      if (/care level|care strategy|memory care|required medical support|skilled nursing|support availability|clinical/.test(normalized)) bucketFlags.care = true;
+      if (/activities|lifestyle|social|programming|outdoor/.test(normalized)) bucketFlags.activities = true;
+      if (/future care|continuum|independent only|support available later|future-support/.test(normalized)) bucketFlags.futureCare = true;
+      if (/distance|geographic|radius|travel/.test(normalized)) bucketFlags.distance = true;
+      if (/verification|confirm|unknown|not explicitly indicate|not confirmed|readiness/.test(normalized)) bucketFlags.verification = true;
+    }
+
+    if (bucketFlags.budget) counts.rejectedByBudget += 1;
+    if (bucketFlags.care) counts.rejectedByCare += 1;
+    if (bucketFlags.activities) counts.rejectedByActivities += 1;
+    if (bucketFlags.futureCare) counts.rejectedByFutureCare += 1;
+    if (bucketFlags.distance) counts.rejectedByDistance += 1;
+    if (bucketFlags.verification) counts.rejectedByVerification += 1;
+    if (bucketFlags.unknown) counts.rejectedByUnknown += 1;
+  }
+
+  const topRejectionReason = Array.from(reasonFrequency.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([reason, count]) => `${reason} (${count})`)[0] || "None";
+
+  return {
+    ...counts,
+    topRejectionReason,
+  };
+}
+
 export function runOptimeV2Engine(facilities: SearchFacility[], state: QuestionnaireState, options?: EngineRunOptions): EngineOutput {
   const mode: EngineRunMode = options?.mode || "production";
   const answeredSignals = flattenAnsweredSignals(state);
@@ -3171,6 +3241,22 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     });
 
   const rejected = recommendations.filter((recommendation) => recommendation.hardRejectionReasons.length > 0 || recommendation.totalScore <= 0);
+  const fallbackRecommendations = recommendations
+    .slice()
+    .sort((a, b) => {
+      const satisfiedA = a.report.audit.verificationChecklist.filter((item) => item.state === "YES").length;
+      const satisfiedB = b.report.audit.verificationChecklist.filter((item) => item.state === "YES").length;
+      const totalA = a.report.audit.verificationChecklist.filter((item) => item.state !== "UNKNOWN").length;
+      const totalB = b.report.audit.verificationChecklist.filter((item) => item.state !== "UNKNOWN").length;
+      const scoreA = a.totalScore + satisfiedA * 2 + totalA;
+      const scoreB = b.totalScore + satisfiedB * 2 + totalB;
+      return scoreB - scoreA
+        || b.priorityScores.clinicalQuality - a.priorityScores.clinicalQuality
+        || b.priorityScores.familyFit - a.priorityScores.familyFit
+        || b.priorityScores.culturalFit - a.priorityScores.culturalFit;
+    });
+
+  const displayedRecommendations = accepted.length > 0 ? accepted : fallbackRecommendations;
 
   accepted.forEach((item, index) => {
     item.rankReason = index === 0
@@ -3186,6 +3272,13 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
   return {
     accepted,
     rejected,
+    displayedRecommendations,
+    rejectionSummary: {
+      totalFacilities: recommendations.length,
+      accepted: accepted.length,
+      rejected: rejected.length,
+      ...summarizeRejections(rejected),
+    },
     qualityCheck,
     persona,
   };

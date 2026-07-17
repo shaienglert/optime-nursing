@@ -1,0 +1,14 @@
+# Knowledge Graph Growth
+
+| Metric | Value |
+| --- | --- |
+| Graph Agent | Knowledge Graph Agent |
+| Knowledge Objects | 20 |
+| Evidence Objects | 25 |
+| Relationships Added | 20 |
+| Relationships Removed | 0 |
+| Average Confidence | 0.820 |
+
+## Relationship Growth Source
+
+No raw graph-edge table is present in the local database, so relationship growth is measured through the prepared Knowledge Graph Agent snapshot and its evidence-backed knowledge count.

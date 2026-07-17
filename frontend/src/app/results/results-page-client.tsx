@@ -177,9 +177,11 @@ export function ResultsPageClient() {
   }, [textQuery]);
 
   const engineOutput = useMemo(() => runOptimeV2Engine(facilities, state), [facilities, state]);
-  const topRecommendations = useMemo(() => engineOutput.accepted.slice(0, TOP_RECOMMENDATION_COUNT), [engineOutput]);
-  const remainingRecommendations = useMemo(() => engineOutput.accepted.slice(TOP_RECOMMENDATION_COUNT), [engineOutput]);
-  const hasBestAvailableMatches = engineOutput.accepted.length > 0;
+  const visibleRecommendations = useMemo(() => engineOutput.displayedRecommendations, [engineOutput]);
+  const topRecommendations = useMemo(() => visibleRecommendations.slice(0, TOP_RECOMMENDATION_COUNT), [visibleRecommendations]);
+  const remainingRecommendations = useMemo(() => visibleRecommendations.slice(TOP_RECOMMENDATION_COUNT), [visibleRecommendations]);
+  const hasExactMatches = engineOutput.accepted.length > 0;
+  const hasVisibleRecommendations = visibleRecommendations.length > 0;
 
   const startNewSearch = () => {
     resetState();
@@ -487,11 +489,11 @@ export function ResultsPageClient() {
 
         {!isLoading && !engineOutput.qualityCheck.passed ? (
           <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
-            <p className="text-xl font-semibold">We are finalizing a few checks in the background.</p>
-            <p className="mt-3 text-sm">You can still review the best available recommendations below and confirm remaining details with communities.</p>
-            {hasBestAvailableMatches ? (
+            <p className="text-xl font-semibold">No exact match passed every hard requirement.</p>
+            <p className="mt-3 text-sm">Showing the closest verified matches ranked by satisfied requirements. You can relax one or more requirements to refine the list.</p>
+            {hasVisibleRecommendations ? (
               <p className="mt-4 rounded-2xl border border-[#e3cfa6] bg-[#fff6e7] px-4 py-3 text-sm font-semibold text-[#8a6330]">
-                Best available recommendations are shown now with clear next steps.
+                Closest verified matches are shown now with the highest satisfied-requirement score.
               </p>
             ) : null}
           </section>
@@ -503,13 +505,33 @@ export function ResultsPageClient() {
           </section>
         ) : null}
 
-        {!isLoading && engineOutput.accepted.length > 0 ? (
+        {!isLoading && hasVisibleRecommendations ? (
           <section className="mt-6 space-y-6">
             <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Results Summary</p>
-              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Top person-first matches for this search</h2>
-              <p className="mt-2 text-sm text-[#5c5347]">Each recommendation answers four simple questions: why it is a good fit, what we already know, what still needs confirmation, and what should happen next.</p>
+              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">{hasExactMatches ? "Top person-first matches for this search" : "Closest verified matches for this search"}</h2>
+              <p className="mt-2 text-sm text-[#5c5347]">
+                {hasExactMatches
+                  ? "Each recommendation answers four simple questions: why it is a good fit, what we already know, what still needs confirmation, and what should happen next."
+                  : "These recommendations are ranked by satisfied requirements and verified fit, with unsatisfied hard requirements called out clearly."}
+              </p>
             </article>
+
+            {!hasExactMatches ? (
+              <article className="rounded-3xl border border-[#e8ddcc] bg-[#fffaf0] p-6 text-sm text-[#5f554a]">
+                <p className="font-semibold text-[#7a5a2f]">Hard requirements that remain unsatisfied</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>Budget: {engineOutput.rejectionSummary.rejectedByBudget}</div>
+                  <div>Care: {engineOutput.rejectionSummary.rejectedByCare}</div>
+                  <div>Activities: {engineOutput.rejectionSummary.rejectedByActivities}</div>
+                  <div>Future care: {engineOutput.rejectionSummary.rejectedByFutureCare}</div>
+                  <div>Distance: {engineOutput.rejectionSummary.rejectedByDistance}</div>
+                  <div>Verification: {engineOutput.rejectionSummary.rejectedByVerification}</div>
+                  <div>Unknown: {engineOutput.rejectionSummary.rejectedByUnknown}</div>
+                  <div className="sm:col-span-2 lg:col-span-3">Top rejection reason: {engineOutput.rejectionSummary.topRejectionReason}</div>
+                </div>
+              </article>
+            ) : null}
 
             <section className="space-y-6">
               {topRecommendations.map((recommendation, index) => renderTopRecommendation(recommendation, index))}
@@ -536,7 +558,7 @@ export function ResultsPageClient() {
           </section>
         ) : null}
 
-        <div className="py-10 text-center text-sm text-[#6d655b]">{isLoading ? "Loading communities..." : "End of recommendations"}</div>
+        <div className="py-10 text-center text-sm text-[#6d655b]">{isLoading ? "Loading communities..." : hasVisibleRecommendations ? "End of recommendations" : "No communities available"}</div>
       </section>
     </main>
   );
