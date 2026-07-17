@@ -122,3 +122,76 @@ class AgentMetricSnapshot(Base):
     errors = Column(Integer, nullable=False, default=0)
     confidence_change = Column(Float, nullable=False, default=0.0)
     coverage = Column(Float, nullable=False, default=0.0)
+
+
+class AgentVersionSnapshot(Base):
+    __tablename__ = "agent_version_snapshots"
+    __table_args__ = (
+        UniqueConstraint("agent_key", name="uq_agent_version_snapshots_agent_key"),
+        Index("ix_agent_version_snapshots_updated", "updated_at"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    agent_key = Column(String(80), nullable=False, index=True)
+    agent_name = Column(String(120), nullable=False)
+    domain = Column(String(120), nullable=False)
+    agent_version = Column(String(40), nullable=False)
+    knowledge_version = Column(String(40), nullable=False)
+    model_version = Column(String(80), nullable=False)
+    prompt_version = Column(String(80), nullable=True)
+    evidence_version = Column(String(40), nullable=False)
+    schema_version = Column(String(40), nullable=False)
+    api_version = Column(String(40), nullable=False)
+    health_status = Column(String(24), nullable=False, default="HEALTHY")
+    average_confidence = Column(Float, nullable=False, default=0.0)
+    last_learning_date = Column(DateTime(timezone=True), nullable=True)
+    next_scheduled_update = Column(DateTime(timezone=True), nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class RecommendationAgentVersionTrace(Base):
+    __tablename__ = "recommendation_agent_version_traces"
+    __table_args__ = (
+        Index("ix_recommendation_agent_version_traces_key", "recommendation_key"),
+        Index("ix_recommendation_agent_version_traces_agent", "agent_key"),
+        UniqueConstraint("recommendation_key", "agent_key", name="uq_recommendation_agent_version_trace"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    recommendation_key = Column(String(120), nullable=False, index=True)
+    resident_key = Column(String(120), nullable=True, index=True)
+    facility_id = Column(Integer, ForeignKey("facilities.id"), nullable=True, index=True)
+    agent_key = Column(String(80), nullable=False, index=True)
+    agent_version = Column(String(40), nullable=False)
+    knowledge_version = Column(String(40), nullable=False)
+    model_version = Column(String(80), nullable=False)
+    prompt_version = Column(String(80), nullable=True)
+    evidence_version = Column(String(40), nullable=False)
+    schema_version = Column(String(40), nullable=False)
+    api_version = Column(String(40), nullable=False)
+    contribution_scope = Column(String(120), nullable=False, default="knowledge")
+    contribution_summary = Column(Text, nullable=False, default="")
+    contributed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class AgentKnowledgeReportSnapshot(Base):
+    __tablename__ = "agent_knowledge_report_snapshots"
+    __table_args__ = (
+        UniqueConstraint("agent_key", name="uq_agent_knowledge_report_snapshots_agent_key"),
+        Index("ix_agent_knowledge_report_snapshots_next_refresh", "next_refresh_at"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    agent_key = Column(String(80), nullable=False, index=True)
+    agent_name = Column(String(120), nullable=False)
+    domain = Column(String(120), nullable=False)
+    report_json = Column(Text, nullable=False, default="{}")
+    knowledge_count = Column(Integer, nullable=False, default=0)
+    evidence_count = Column(Integer, nullable=False, default=0)
+    coverage = Column(Float, nullable=False, default=0.0)
+    average_confidence = Column(Float, nullable=False, default=0.0)
+    health_status = Column(String(24), nullable=False, default="HEALTHY")
+    last_refreshed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    next_refresh_at = Column(DateTime(timezone=True), nullable=True)
+    refresh_status = Column(String(24), nullable=False, default="READY")
+    refresh_error = Column(Text, nullable=True)

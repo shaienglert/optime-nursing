@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime
 from statistics import mean
 from typing import Dict, List, Optional
 
@@ -13,6 +14,20 @@ from sqlalchemy.orm import Session
 from app.database import Base, SessionLocal, engine
 from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
 import app.models.clinical_evidence
+import app.models.agent_execution
+from app.models.agent_execution import (
+    AgentKnowledgeRecord,
+    AgentKnowledgeReportSnapshot,
+    AgentVersionSnapshot,
+    AgentWorker,
+    RecommendationAgentVersionTrace,
+)
+from app.services.agent_knowledge_reports import (
+    AGENT_REPORT_DEFS,
+    ensure_reports_available,
+    refresh_all_agent_reports,
+    start_background_refresh_loop,
+)
 from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
@@ -431,6 +446,45 @@ class IntelligenceRunSummaryOut(BaseModel):
     update_frequency: Dict[str, str]
 
 
+class AgentKnowledgeReportOut(BaseModel):
+    agent_key: str
+    agent_name: str
+    domain: str
+    mission: Optional[str] = None
+    topics_covered: List[str] = Field(default_factory=list)
+    knowledge_base: Dict[str, object] = Field(default_factory=dict)
+    last_update: Optional[str] = None
+    confidence: float
+    evidence_count: int
+    coverage: float
+    api: Dict[str, str] = Field(default_factory=dict)
+    health_status: str
+    refresh_status: str
+    next_refresh_at: Optional[str] = None
+
+
+class AgentKnowledgeReportSummaryOut(BaseModel):
+    agent_key: str
+    agent_name: str
+    domain: str
+    confidence: float
+    evidence_count: int
+    coverage: float
+    health_status: str
+    last_update: Optional[str] = None
+    next_refresh_at: Optional[str] = None
+
+
+class AgentKnowledgeSearchOut(BaseModel):
+    query: str
+    matched_agents: List[AgentKnowledgeReportSummaryOut]
+
+
+class AgentKnowledgeRefreshOut(BaseModel):
+    refreshed: int
+    failures: int
+
+
 
 def get_db():
     db = SessionLocal()
@@ -695,6 +749,44 @@ def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> Facili
     )
 
 
+_AGENT_REPORT_DEF_BY_KEY = {str(item["agent_key"]): item for item in AGENT_REPORT_DEFS}
+
+
+def _to_agent_knowledge_report_summary(row: AgentKnowledgeReportSnapshot) -> AgentKnowledgeReportSummaryOut:
+    return AgentKnowledgeReportSummaryOut(
+        agent_key=row.agent_key,
+        agent_name=row.agent_name,
+        domain=row.domain,
+        confidence=float(row.average_confidence or 0.0),
+        evidence_count=int(row.evidence_count or 0),
+        coverage=float(row.coverage or 0.0),
+        health_status=row.health_status,
+        last_update=row.last_refreshed_at.isoformat() if row.last_refreshed_at else None,
+        next_refresh_at=row.next_refresh_at.isoformat() if row.next_refresh_at else None,
+    )
+
+
+def _to_agent_knowledge_report(row: AgentKnowledgeReportSnapshot) -> AgentKnowledgeReportOut:
+    payload = _parse_json_object(row.report_json)
+    defn = _AGENT_REPORT_DEF_BY_KEY.get(row.agent_key, {})
+    return AgentKnowledgeReportOut(
+        agent_key=row.agent_key,
+        agent_name=row.agent_name,
+        domain=row.domain,
+        mission=str(payload.get("mission") or defn.get("mission") or ""),
+        topics_covered=[str(item) for item in (payload.get("topics_covered") or defn.get("topics") or [])],
+        knowledge_base=payload.get("knowledge_base") if isinstance(payload.get("knowledge_base"), dict) else {},
+        last_update=row.last_refreshed_at.isoformat() if row.last_refreshed_at else None,
+        confidence=float(row.average_confidence or 0.0),
+        evidence_count=int(row.evidence_count or 0),
+        coverage=float(row.coverage or 0.0),
+        api={str(k): str(v) for k, v in ((payload.get("api") or {}) if isinstance(payload.get("api"), dict) else {}).items()},
+        health_status=row.health_status,
+        refresh_status=row.refresh_status,
+        next_refresh_at=row.next_refresh_at.isoformat() if row.next_refresh_at else None,
+    )
+
+
 @app.on_event("startup")
 def startup() -> None:
     # Preserve provider memory and verification history across restarts.
@@ -715,8 +807,14 @@ def startup() -> None:
                 "failed_mappings": 0,
                 "score_distributions": {},
             }
+
+        # Prepared knowledge reports must always be instantly retrievable.
+        ensure_reports_available(db)
     finally:
         db.close()
+
+    # Refresh reports continuously in background so user requests never wait on research.
+    start_background_refresh_loop()
 
 
 @app.get("/")
@@ -925,6 +1023,46 @@ async def intelligence_schedule():
         "update_frequency": UPDATE_FREQUENCY,
         "policy": "Only publicly available information is used.",
     }
+
+
+@app.get("/expert-agents/knowledge-reports", response_model=List[AgentKnowledgeReportSummaryOut])
+async def list_agent_knowledge_reports(db: Session = Depends(get_db)):
+    ensure_reports_available(db)
+    rows = db.query(AgentKnowledgeReportSnapshot).order_by(AgentKnowledgeReportSnapshot.agent_name.asc()).all()
+    return [_to_agent_knowledge_report_summary(row) for row in rows]
+
+
+@app.get("/expert-agents/{agent_key}/knowledge-report", response_model=AgentKnowledgeReportOut)
+async def get_agent_knowledge_report(agent_key: str, db: Session = Depends(get_db)):
+    ensure_reports_available(db)
+    row = db.query(AgentKnowledgeReportSnapshot).filter(AgentKnowledgeReportSnapshot.agent_key == agent_key).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Agent knowledge report not found")
+    return _to_agent_knowledge_report(row)
+
+
+@app.get("/expert-agents/knowledge-reports/search", response_model=AgentKnowledgeSearchOut)
+async def search_agent_knowledge_reports(query: str = Query(..., min_length=2), db: Session = Depends(get_db)):
+    ensure_reports_available(db)
+    term = query.strip().lower()
+    rows = db.query(AgentKnowledgeReportSnapshot).all()
+
+    matched: List[AgentKnowledgeReportSummaryOut] = []
+    for row in rows:
+        payload = _parse_json_object(row.report_json)
+        topics = [str(item).lower() for item in (payload.get("topics_covered") or [])]
+        mission = str(payload.get("mission") or "").lower()
+        haystack = " ".join([row.agent_name.lower(), row.domain.lower(), mission] + topics)
+        if term in haystack:
+            matched.append(_to_agent_knowledge_report_summary(row))
+
+    return AgentKnowledgeSearchOut(query=query, matched_agents=matched)
+
+
+@app.post("/expert-agents/knowledge-reports/refresh", response_model=AgentKnowledgeRefreshOut)
+async def refresh_agent_knowledge_reports(db: Session = Depends(get_db)):
+    result = refresh_all_agent_reports(db)
+    return AgentKnowledgeRefreshOut(refreshed=int(result.get("refreshed", 0)), failures=int(result.get("failures", 0)))
 
 
 @app.post("/human-intelligence", response_model=HumanIntelligenceOut)
