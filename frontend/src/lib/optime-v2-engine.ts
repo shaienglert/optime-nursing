@@ -722,6 +722,15 @@ function collectHardRejectionReasons(facility: SearchFacility, state: Questionna
   const careText = facility.careTypes.join(" ").toLowerCase();
   const notes = state.notes.toLowerCase();
 
+  if (state.assistanceLevel === "Fully independent") {
+    if (careText.includes("skilled nursing")) {
+      reasons.push("Fully independent profile excludes communities that require skilled nursing care.");
+    }
+    if (careText.includes("rehabilitation")) {
+      reasons.push("Fully independent profile excludes rehabilitation-focused communities.");
+    }
+  }
+
   const memoryRequired = state.memoryStatus === "Significant memory issues";
   if (memoryRequired && !careText.includes("memory care")) {
     reasons.push("Memory care is required but this community does not explicitly indicate memory care support.");
