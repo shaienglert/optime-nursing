@@ -88,7 +88,7 @@ function clampScore(value: number): number {
 }
 
 function countActiveSignals(values: Array<string | number | string[] | undefined | null>): number {
-  return values.reduce((count, value) => {
+  return values.reduce<number>((count, value) => {
     if (Array.isArray(value)) {
       return count + (value.length > 0 ? 1 : 0);
     }
