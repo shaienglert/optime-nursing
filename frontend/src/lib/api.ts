@@ -98,6 +98,15 @@ export type FacilityVisualIntelligence = {
 
 export type CapabilityState = "YES" | "NO" | "UNKNOWN" | "LIMITED";
 
+export type ProfileCompletenessBreakdown = {
+  medical: number;
+  rehabilitation: number;
+  dining: number;
+  activities: number;
+  photos: number;
+  housing: number;
+};
+
 export type SearchFacility = Facility & {
   imageUrl: string;
   optimeScore: number;
@@ -136,6 +145,8 @@ export type SearchFacility = Facility & {
   continuum_of_care: CapabilityState;
   walker_accessibility: CapabilityState;
   wheelchair_accessibility: CapabilityState;
+  profileCompletenessByCategory: ProfileCompletenessBreakdown;
+  profileCompletenessScore: number;
   medicalCapabilities: string[];
   rehabilitationCapabilities: string[];
   lifestyleCapabilities: string[];
@@ -659,6 +670,99 @@ function deriveInventoryCapabilityStates(
   };
 }
 
+function isKnownState(value: CapabilityState): boolean {
+  return value === "YES" || value === "NO" || value === "LIMITED";
+}
+
+function knownStatePercentage(values: CapabilityState[]): number {
+  if (values.length === 0) return 0;
+  const known = values.filter((value) => isKnownState(value)).length;
+  return Math.round((known / values.length) * 100);
+}
+
+function deriveProfileCompleteness(
+  inventory: {
+    speech_therapy: CapabilityState;
+    physical_therapy: CapabilityState;
+    occupational_therapy: CapabilityState;
+    memory_program: CapabilityState;
+    gluten_free_meals: CapabilityState;
+    kosher_meals: CapabilityState;
+    movie_program: CapabilityState;
+    music_program: CapabilityState;
+    gardening_program: CapabilityState;
+    religious_services: CapabilityState;
+    transportation: CapabilityState;
+    pool: CapabilityState;
+    fitness_center: CapabilityState;
+    kitchenette: CapabilityState;
+    private_apartment: CapabilityState;
+    pets_allowed: CapabilityState;
+  },
+  visual: FacilityVisualIntelligence,
+): { profileCompletenessByCategory: ProfileCompletenessBreakdown; profileCompletenessScore: number } {
+  const medical = knownStatePercentage([
+    inventory.speech_therapy,
+    inventory.physical_therapy,
+    inventory.occupational_therapy,
+    inventory.memory_program,
+  ]);
+
+  const rehabilitation = knownStatePercentage([
+    inventory.speech_therapy,
+    inventory.physical_therapy,
+    inventory.occupational_therapy,
+  ]);
+
+  const dining = knownStatePercentage([
+    inventory.gluten_free_meals,
+    inventory.kosher_meals,
+  ]);
+
+  const activities = knownStatePercentage([
+    inventory.movie_program,
+    inventory.music_program,
+    inventory.gardening_program,
+    inventory.religious_services,
+    inventory.transportation,
+    inventory.pool,
+    inventory.fitness_center,
+  ]);
+
+  const housing = knownStatePercentage([
+    inventory.kitchenette,
+    inventory.private_apartment,
+    inventory.pets_allowed,
+  ]);
+
+  const photoCategories = new Set(
+    (visual.galleryImages || [])
+      .map((item) => String(item.category || "").toLowerCase().trim())
+      .filter(Boolean),
+  );
+  const requiredPhotoCategories = ["apartments", "dining room", "activities", "gardens", "pool", "fitness center"];
+  const coveredPhotoCategories = requiredPhotoCategories.filter((category) => photoCategories.has(category)).length;
+  const photos = Math.round((coveredPhotoCategories / requiredPhotoCategories.length) * 100);
+
+  const profileCompletenessByCategory: ProfileCompletenessBreakdown = {
+    medical,
+    rehabilitation,
+    dining,
+    activities,
+    photos,
+    housing,
+  };
+
+  const profileCompletenessScore = Math.round(
+    (medical + rehabilitation + dining + activities + photos + housing) / 6,
+  );
+
+  return {
+    profileCompletenessByCategory,
+    profileCompletenessScore,
+  };
+}
+
 type CareTaxonomyResult = {
   careTypes: CareType[];
   confidence: "HIGH" | "MEDIUM" | "LOW";
@@ -1101,6 +1205,8 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
   const monthlyCostRange = makePriceRange(facility);
   const capabilities = deriveCapabilities(facility, taxonomy.careTypes);
   const inventoryCapabilities = deriveInventoryCapabilityStates(facility, taxonomy.careTypes, ageRange, monthlyCostRange);
+  const visualIntelligence = buildVisualIntelligence(facility);
+  const completeness = deriveProfileCompleteness(inventoryCapabilities, visualIntelligence);
 
   const result: SearchFacility = {
     ...base,
@@ -1118,6 +1224,8 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
     },
     careTypes: taxonomy.careTypes,
     ...inventoryCapabilities,
+    profileCompletenessByCategory: completeness.profileCompletenessByCategory,
+    profileCompletenessScore: completeness.profileCompletenessScore,
     medicalCapabilities: capabilities.medicalCapabilities,
     rehabilitationCapabilities: capabilities.rehabilitationCapabilities,
     lifestyleCapabilities: capabilities.lifestyleCapabilities,
@@ -1143,7 +1251,7 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
       cultural_match_signals: facility.cultural_match_signals || 0,
     } : undefined,
     matchBadges: makeBadges(facility, taxonomy),
-    visualIntelligence: buildVisualIntelligence(facility),
+    visualIntelligence,
     scoreBreakdown: [
       {
         category: "Medical Quality",

@@ -3154,8 +3154,18 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     .sort((a, b) => {
       const preferenceBonusA = a.report.audit.clinicalReasoning.verifiedCapabilities.filter((item) => a.report.audit.clinicalReasoning.questionsForFacility.every((q) => !q.toLowerCase().includes(item.toLowerCase()))).length;
       const preferenceBonusB = b.report.audit.clinicalReasoning.verifiedCapabilities.filter((item) => b.report.audit.clinicalReasoning.questionsForFacility.every((q) => !q.toLowerCase().includes(item.toLowerCase()))).length;
-      return b.totalScore - a.totalScore
-        || preferenceBonusB - preferenceBonusA
+      const fitDelta = b.totalScore - a.totalScore;
+      if (fitDelta !== 0) {
+        return fitDelta;
+      }
+
+      // Completeness acts only as tie-breaker when fit is equivalent.
+      const completenessTieBreak = (b.facility.profileCompletenessScore || 0) - (a.facility.profileCompletenessScore || 0);
+      if (completenessTieBreak !== 0) {
+        return completenessTieBreak;
+      }
+
+      return preferenceBonusB - preferenceBonusA
         || b.priorityScores.clinicalQuality - a.priorityScores.clinicalQuality
         || b.priorityScores.familyFit - a.priorityScores.familyFit;
     });
