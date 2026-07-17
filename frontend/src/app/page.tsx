@@ -219,6 +219,24 @@ function pickPrimaryAssistanceLevel(levels: string[]): string {
   return [...levels].sort((left, right) => (careLevelWeights[right] || 0) - (careLevelWeights[left] || 0))[0];
 }
 
+function isAnswered(value: unknown, defaultValue: unknown = undefined): boolean {
+  if (value === undefined || value === null) return false;
+
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  if (defaultValue !== undefined) {
+    return value !== defaultValue;
+  }
+
+  return true;
+}
+
 type DistanceIntelligenceScores = {
   family_distance_score: number | null;
   visit_probability_score: number | null;
@@ -784,7 +802,7 @@ export default function Home() {
     }
   }, [shouldAskFutureCarePreference, futureCarePreference]);
 
-  const understandingBudget = budget > 0 && budget !== DEFAULT_BUDGET ? budget : 0;
+  const understandingBudget = isAnswered(budget, DEFAULT_BUDGET) ? budget : 0;
 
   const legacyProfileUnderstanding = useMemo(() => {
     const careLevel = primaryAssistanceLevel ? 25 : 0;
