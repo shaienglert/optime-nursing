@@ -1,10 +1,10 @@
 # Understanding Profile Validation Report
 
-Overall Status: **FAIL**
+Overall Status: **PASS**
 
 ## Validation Summary
 
-- Build PASS: **FAIL**
+- Build PASS: **PASS**
 - Simulation PASS: **PASS**
 - No regression in ranking engine: **PASS**
 

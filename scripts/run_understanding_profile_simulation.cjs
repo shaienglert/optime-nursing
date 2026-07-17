@@ -9,8 +9,14 @@ require('./run_dynamic_persona_simulation_audit.cjs');
 const { calculateUnderstandingProfile } = require(path.join(repoRoot, 'frontend', 'src', 'lib', 'understanding-profile.ts'));
 
 function runCommand(label, command, args, cwd) {
-  const commandName = process.platform === 'win32' && command === 'npm' ? 'npm.cmd' : command;
-  const result = spawnSync(commandName, args, {
+  const isWindowsNpm = process.platform === 'win32' && command === 'npm';
+  const result = isWindowsNpm
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', ['npm', ...args].join(' ')], {
+      cwd,
+      encoding: 'utf8',
+      maxBuffer: 20 * 1024 * 1024,
+    })
+    : spawnSync(command, args, {
     cwd,
     encoding: 'utf8',
     maxBuffer: 20 * 1024 * 1024,
