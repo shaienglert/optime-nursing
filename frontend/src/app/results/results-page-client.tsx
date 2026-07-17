@@ -206,10 +206,6 @@ export function ResultsPageClient() {
   };
 
   const backToSearch = () => {
-    if (window.history.length > 1) {
-      router.back();
-      return;
-    }
     router.push("/");
   };
 
