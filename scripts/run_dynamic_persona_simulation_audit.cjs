@@ -118,6 +118,58 @@ function makePriceRange(facility) {
   return `$${Math.round(base).toLocaleString()} - $${Math.round(high).toLocaleString()}/month`;
 }
 
+function deriveAgeRange(careTypes) {
+  if (careTypes.some((careType) => careType === 'Skilled Nursing' || careType === 'Rehabilitation' || careType === 'Hospice')) {
+    return { minimum_age: 65, maximum_age: 120 };
+  }
+  if (careTypes.some((careType) => careType === 'Memory Care')) {
+    return { minimum_age: 60, maximum_age: 120 };
+  }
+  return { minimum_age: 55, maximum_age: 120 };
+}
+
+function capabilityFromText(text, positive, negative, limited) {
+  if (limited && limited.test(text)) return 'LIMITED';
+  if (positive.test(text)) return 'YES';
+  if (negative && negative.test(text)) return 'NO';
+  return 'UNKNOWN';
+}
+
+function deriveInventoryCapabilityStates(facility, careTypes, monthlyCostRange) {
+  const text = [facility.name || '', facility.address || '', buildShortExplanation(facility)].join(' ').toLowerCase();
+  const ageRange = deriveAgeRange(careTypes);
+  const skilledOrRehab = careTypes.includes('Skilled Nursing') || careTypes.includes('Rehabilitation');
+  const independentTrack = careTypes.includes('Active Adult 55+') || careTypes.includes('Independent Living') || careTypes.includes('Assisted Living');
+  const continuumLikely = careTypes.includes('CCRC') || careTypes.includes('Continuing Care') || (independentTrack && skilledOrRehab);
+
+  return {
+    care_types: careTypes,
+    minimum_age: ageRange.minimum_age,
+    maximum_age: ageRange.maximum_age,
+    monthly_cost_range: monthlyCostRange,
+    private_apartment: capabilityFromText(text, /private|apartment|residence|suite/, /ward|shared-only/),
+    kitchenette: capabilityFromText(text, /kitchenette|full kitchen|kitchen/, /no kitchen|kitchen not available/, /shared kitchen/),
+    pets_allowed: capabilityFromText(text, /pet[- ]?friendly|pets? allowed/, /no pets?|pets? not allowed/, /pets? with restrictions/),
+    transportation: capabilityFromText(text, /transport|shuttle|scheduled rides?/, /no transport/, /limited transport|transportation with limits/),
+    pool: capabilityFromText(text, /pool|aquatic/, /no pool/),
+    fitness_center: capabilityFromText(text, /fitness|gym|wellness center/, /no fitness|no gym/),
+    movie_program: capabilityFromText(text, /movie|cinema|theater/, /no movie/),
+    music_program: capabilityFromText(text, /music|concert|choir|performance/, /no music/),
+    gardening_program: capabilityFromText(text, /garden|gardening|horticulture/, /no gardening/),
+    religious_services: capabilityFromText(text, /religious|chapel|worship|faith|church|synagogue/, /no religious services/),
+    kosher_meals: capabilityFromText(text, /kosher/, /no kosher/, /limited kosher/),
+    gluten_free_meals: capabilityFromText(text, /gluten[- ]?free|celiac/, /no gluten[- ]?free/, /limited gluten[- ]?free/),
+    hebrew_support: capabilityFromText(text, /hebrew|jewish|israeli/, /no hebrew support/, /limited hebrew/),
+    speech_therapy: skilledOrRehab ? capabilityFromText(text, /speech|aphasia|language therapy/, /no speech therapy/, /limited speech therapy/) : 'UNKNOWN',
+    physical_therapy: skilledOrRehab ? capabilityFromText(text, /physical therapy|pt\b|rehab/, /no physical therapy/, /limited physical therapy/) : 'UNKNOWN',
+    occupational_therapy: skilledOrRehab ? capabilityFromText(text, /occupational therapy|ot\b/, /no occupational therapy/, /limited occupational therapy/) : 'UNKNOWN',
+    memory_program: careTypes.includes('Memory Care') ? 'YES' : capabilityFromText(text, /memory care|memory support|dementia|alzheim/, /no memory care/, /limited memory support/),
+    continuum_of_care: continuumLikely ? 'YES' : capabilityFromText(text, /continuum of care|continuing care|life plan/, /single level only/, /limited continuum/),
+    walker_accessibility: capabilityFromText(text, /walker|mobility|accessible|ada/, /not accessible/, /limited accessibility/),
+    wheelchair_accessibility: capabilityFromText(text, /wheelchair|accessible|ada/, /not wheelchair accessible/, /limited wheelchair access/),
+  };
+}
+
 function scoreLabel(score) {
   if (score >= 90) return 'Excellent Match';
   if (score >= 80) return 'Great Match';
@@ -415,6 +467,8 @@ function toSearchFacility(facility, mode) {
   const base = toFacility(facility);
   const optimeScore = Math.round(facility.overall_optime_score ?? 70);
   const taxonomy = mode === 'legacy' ? inferLegacyCareTaxonomy(facility) : inferExplicitCareTaxonomy(facility);
+  const monthlyCostRange = makePriceRange(facility);
+  const inventoryCapabilities = deriveInventoryCapabilityStates(facility, taxonomy.careTypes, monthlyCostRange);
   const result = {
     ...base,
     matching_confidence: combineConfidence(base.matching_confidence, taxonomy.confidence),
@@ -422,7 +476,8 @@ function toSearchFacility(facility, mode) {
     optimeScore,
     matchLabel: scoreLabel(optimeScore),
     shortExplanation: buildShortExplanation(facility),
-    priceRange: makePriceRange(facility),
+    priceRange: monthlyCostRange,
+    ...inventoryCapabilities,
     careTypes: taxonomy.careTypes,
     careTypeConfidence: taxonomy.confidence,
     careTypeConfidenceScore: taxonomy.confidenceScore,
