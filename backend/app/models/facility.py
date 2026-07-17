@@ -72,6 +72,10 @@ class Facility(Base):
 	verification_requests = relationship("FacilityVerificationRequest", back_populates="facility", cascade="all, delete-orphan")
 	verification_responses = relationship("FacilityVerificationResponse", back_populates="facility", cascade="all, delete-orphan")
 	profile_completeness = relationship("FacilityProfileCompleteness", back_populates="facility", uselist=False, cascade="all, delete-orphan")
+	domain_allowlist = relationship("FacilityDomainAllowlist", back_populates="facility", cascade="all, delete-orphan")
+	identity_challenges = relationship("ProviderIdentityChallenge", back_populates="facility", cascade="all, delete-orphan")
+	license_records = relationship("FacilityLicenseRecord", back_populates="facility", cascade="all, delete-orphan")
+	audit_logs = relationship("FacilityAuditLog", back_populates="facility", cascade="all, delete-orphan")
 
 
 class Staffing(Base):
@@ -296,6 +300,12 @@ class FacilityUser(Base):
 	full_name = Column(String(255), nullable=True)
 	role = Column(String(40), nullable=False)  # admin, marketing, admissions, activities_coordinator
 	is_active = Column(Boolean, nullable=False, default=True)
+	is_verified = Column(Boolean, nullable=False, default=False)
+	verification_sent_at = Column(DateTime(timezone=True), nullable=True)
+	verification_completed_at = Column(DateTime(timezone=True), nullable=True)
+	verification_method = Column(String(40), nullable=True)
+	verified_badge = Column(Boolean, nullable=False, default=False)
+	next_reverification_due_at = Column(DateTime(timezone=True), nullable=True)
 	last_login_at = Column(DateTime(timezone=True), nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 	updated_at = Column(
@@ -306,6 +316,93 @@ class FacilityUser(Base):
 	)
 
 	facility = relationship("Facility", back_populates="portal_users")
+
+
+class FacilityDomainAllowlist(Base):
+	__tablename__ = "facility_domain_allowlist"
+	__table_args__ = (
+		UniqueConstraint("facility_id", "domain", name="uq_facility_domain_allowlist_facility_domain"),
+		Index("ix_facility_domain_allowlist_facility_active", "facility_id", "is_active"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	domain = Column(String(255), nullable=False)
+	is_parent_org = Column(Boolean, nullable=False, default=False)
+	is_active = Column(Boolean, nullable=False, default=True)
+	manual_approval_required = Column(Boolean, nullable=False, default=False)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	facility = relationship("Facility", back_populates="domain_allowlist")
+
+
+class ProviderIdentityChallenge(Base):
+	__tablename__ = "provider_identity_challenges"
+	__table_args__ = (
+		Index("ix_provider_identity_challenges_user_status", "user_id", "status"),
+		Index("ix_provider_identity_challenges_expires_at", "expires_at"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	user_id = Column(Integer, ForeignKey("facility_users.id"), index=True, nullable=False)
+	email = Column(String(255), nullable=False)
+	code_hash = Column(String(255), nullable=False)
+	verification_method = Column(String(40), nullable=False, default="EMAIL_OTP")
+	verification_sent_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+	verification_completed_at = Column(DateTime(timezone=True), nullable=True)
+	expires_at = Column(DateTime(timezone=True), nullable=False)
+	status = Column(String(30), nullable=False, default="PENDING")
+	attempt_count = Column(Integer, nullable=False, default=0)
+	ip_address = Column(String(120), nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	facility = relationship("Facility", back_populates="identity_challenges")
+
+
+class FacilityLicenseRecord(Base):
+	__tablename__ = "facility_license_records"
+	__table_args__ = (
+		Index("ix_facility_license_records_facility_status", "facility_id", "status"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	cms_provider_id = Column(String(40), nullable=True)
+	ahca_license_number = Column(String(80), nullable=True)
+	medicare_provider_number = Column(String(80), nullable=True)
+	legal_name = Column(String(255), nullable=True)
+	legal_address = Column(String(255), nullable=True)
+	domain = Column(String(255), nullable=True)
+	status = Column(String(40), nullable=False, default="PENDING")
+	verified_at = Column(DateTime(timezone=True), nullable=True)
+	verification_notes = Column(Text, nullable=True)
+	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+	facility = relationship("Facility", back_populates="license_records")
+
+
+class FacilityAuditLog(Base):
+	__tablename__ = "facility_audit_logs"
+	__table_args__ = (
+		Index("ix_facility_audit_logs_facility_timestamp", "facility_id", "timestamp"),
+		Index("ix_facility_audit_logs_reverted", "is_reverted"),
+	)
+
+	id = Column(Integer, primary_key=True, index=True)
+	facility_id = Column(Integer, ForeignKey("facilities.id"), index=True, nullable=False)
+	user_id = Column(Integer, ForeignKey("facility_users.id"), index=True, nullable=False)
+	field_name = Column(String(120), nullable=False)
+	old_value = Column(Text, nullable=True)
+	new_value = Column(Text, nullable=True)
+	timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+	ip_address = Column(String(120), nullable=True)
+	user_role = Column(String(40), nullable=False)
+	is_reverted = Column(Boolean, nullable=False, default=False)
+	reverted_at = Column(DateTime(timezone=True), nullable=True)
+	reverted_by_user_id = Column(Integer, ForeignKey("facility_users.id"), nullable=True)
+
+	facility = relationship("Facility", back_populates="audit_logs")
 
 
 class FacilityCapability(Base):

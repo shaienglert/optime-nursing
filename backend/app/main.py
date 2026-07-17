@@ -18,6 +18,18 @@ from app.services.cms_quality_import import import_quality_data
 from app.services.cms_staffing_import import import_staffing_data
 from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_public_activity_categories, import_activity_categories
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
+from app.services.schema_migrations import ensure_provider_identity_schema
+from app.services.provider_identity import (
+    apply_facility_field_update,
+    complete_email_verification,
+    invite_staff_member,
+    request_role_change,
+    revert_audit_change,
+    role_can_edit_category,
+    run_annual_reverification,
+    start_email_verification,
+    validate_license_ownership,
+)
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.cms_service import (
     CMS_PROVIDER_DATASET_ID,
@@ -269,6 +281,109 @@ class FacilityMemoryOut(BaseModel):
     facility_id: int
     overall_confidence: float
     capabilities: List[MemoryCapabilityOut]
+
+
+class IdentityRegistrationStartIn(BaseModel):
+    email: str
+    full_name: Optional[str] = None
+    role: str
+    ip_address: Optional[str] = None
+
+
+class IdentityRegistrationStartOut(BaseModel):
+    facility_id: int
+    user_id: int
+    email: str
+    verification_sent_at: str
+    verification_method: str
+    debug_verification_code: str
+
+
+class IdentityVerificationCompleteIn(BaseModel):
+    email: str
+    code: str
+
+
+class IdentityVerificationCompleteOut(BaseModel):
+    facility_id: int
+    user_id: int
+    verification_completed_at: str
+    verification_method: str
+
+
+class LicenseValidationIn(BaseModel):
+    cms_provider_id: Optional[str] = None
+    ahca_license_number: Optional[str] = None
+    medicare_provider_number: Optional[str] = None
+    legal_name: Optional[str] = None
+    legal_address: Optional[str] = None
+    domain: Optional[str] = None
+
+
+class LicenseValidationOut(BaseModel):
+    facility_id: int
+    status: str
+    name_match: bool
+    address_match: bool
+    domain_allowed: bool
+    provider_match: bool
+
+
+class AccessCheckIn(BaseModel):
+    role: str
+    category: str
+
+
+class AccessCheckOut(BaseModel):
+    allowed: bool
+
+
+class FieldUpdateIn(BaseModel):
+    user_id: int
+    field_name: str
+    new_value: Optional[str] = None
+    category: str
+    ip_address: Optional[str] = None
+
+
+class FieldUpdateOut(BaseModel):
+    facility_id: int
+    audit_id: int
+    field_name: str
+    old_value: Optional[str] = None
+    new_value: Optional[str] = None
+
+
+class RevertAuditIn(BaseModel):
+    reverted_by_user_id: int
+    ip_address: Optional[str] = None
+
+
+class RevertAuditOut(BaseModel):
+    facility_id: int
+    reverted_audit_id: int
+    reversal_audit_id: int
+
+
+class StaffInviteIn(BaseModel):
+    inviter_user_id: int
+    email: str
+    full_name: Optional[str] = None
+    role: str
+    ip_address: Optional[str] = None
+
+
+class RoleChangeIn(BaseModel):
+    actor_user_id: int
+    target_user_id: int
+    new_role: str
+
+
+class RoleChangeOut(BaseModel):
+    facility_id: int
+    target_user_id: int
+    old_role: str
+    new_role: str
 
 
 class FacilityIntelligenceProfileOut(BaseModel):
@@ -583,6 +698,7 @@ def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> Facili
 def startup() -> None:
     # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
+    ensure_provider_identity_schema(engine)
     db = SessionLocal()
     try:
         state = os.getenv("OPTIME_IMPORT_STATE", "FL")
@@ -1047,3 +1163,169 @@ async def get_facility_memory(
         overall_confidence=float(memory["overall_confidence"]),
         capabilities=[MemoryCapabilityOut(**item) for item in memory["capabilities"]],
     )
+
+
+@app.post("/provider/facilities/{facility_id}/identity/register/start", response_model=IdentityRegistrationStartOut)
+async def provider_identity_register_start(
+    facility_id: int,
+    payload: IdentityRegistrationStartIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = start_email_verification(
+            db=db,
+            facility_id=facility_id,
+            email=payload.email,
+            full_name=payload.full_name,
+            role=payload.role,
+            ip_address=payload.ip_address,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return IdentityRegistrationStartOut(**result)
+
+
+@app.post("/provider/facilities/{facility_id}/identity/register/verify", response_model=IdentityVerificationCompleteOut)
+async def provider_identity_register_verify(
+    facility_id: int,
+    payload: IdentityVerificationCompleteIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = complete_email_verification(
+            db=db,
+            facility_id=facility_id,
+            email=payload.email,
+            code=payload.code,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return IdentityVerificationCompleteOut(**result)
+
+
+@app.post("/provider/facilities/{facility_id}/identity/license/validate", response_model=LicenseValidationOut)
+async def provider_identity_license_validate(
+    facility_id: int,
+    payload: LicenseValidationIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = validate_license_ownership(
+            db=db,
+            facility_id=facility_id,
+            cms_provider_id=payload.cms_provider_id,
+            ahca_license_number=payload.ahca_license_number,
+            medicare_provider_number=payload.medicare_provider_number,
+            legal_name=payload.legal_name,
+            legal_address=payload.legal_address,
+            domain=payload.domain,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return LicenseValidationOut(**result)
+
+
+@app.post("/provider/identity/access-check", response_model=AccessCheckOut)
+async def provider_identity_access_check(payload: AccessCheckIn):
+    return AccessCheckOut(allowed=role_can_edit_category(payload.role, payload.category))
+
+
+@app.post("/provider/facilities/{facility_id}/identity/field-update", response_model=FieldUpdateOut)
+async def provider_identity_field_update(
+    facility_id: int,
+    payload: FieldUpdateIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = apply_facility_field_update(
+            db=db,
+            facility_id=facility_id,
+            user_id=payload.user_id,
+            field_name=payload.field_name,
+            new_value=payload.new_value,
+            category=payload.category,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return FieldUpdateOut(**result)
+
+
+@app.post("/provider/facilities/{facility_id}/identity/audit/{audit_id}/revert", response_model=RevertAuditOut)
+async def provider_identity_revert_audit(
+    facility_id: int,
+    audit_id: int,
+    payload: RevertAuditIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = revert_audit_change(
+            db=db,
+            facility_id=facility_id,
+            audit_id=audit_id,
+            reverted_by_user_id=payload.reverted_by_user_id,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return RevertAuditOut(**result)
+
+
+@app.post("/provider/facilities/{facility_id}/identity/staff/invite", response_model=IdentityRegistrationStartOut)
+async def provider_identity_staff_invite(
+    facility_id: int,
+    payload: StaffInviteIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = invite_staff_member(
+            db=db,
+            facility_id=facility_id,
+            inviter_user_id=payload.inviter_user_id,
+            email=payload.email,
+            full_name=payload.full_name,
+            role=payload.role,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return IdentityRegistrationStartOut(**result)
+
+
+@app.post("/provider/facilities/{facility_id}/identity/role/change", response_model=RoleChangeOut)
+async def provider_identity_role_change(
+    facility_id: int,
+    payload: RoleChangeIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = request_role_change(
+            db=db,
+            facility_id=facility_id,
+            actor_user_id=payload.actor_user_id,
+            target_user_id=payload.target_user_id,
+            new_role=payload.new_role,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return RoleChangeOut(**result)
+
+
+@app.post("/provider/identity/reverification/run")
+async def provider_identity_reverification_run(db: Session = Depends(get_db)):
+    return run_annual_reverification(db)
