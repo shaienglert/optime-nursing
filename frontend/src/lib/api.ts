@@ -96,6 +96,8 @@ export type FacilityVisualIntelligence = {
   visualCoverageScore: number;
 };
 
+export type CapabilityState = "YES" | "NO" | "UNKNOWN" | "LIMITED";
+
 export type SearchFacility = Facility & {
   imageUrl: string;
   optimeScore: number;
@@ -110,6 +112,30 @@ export type SearchFacility = Facility & {
     max: number;
   };
   careTypes: CareType[];
+  care_types: CareType[];
+  minimum_age: number;
+  maximum_age: number;
+  monthly_cost_range: string;
+  private_apartment: CapabilityState;
+  kitchenette: CapabilityState;
+  pets_allowed: CapabilityState;
+  transportation: CapabilityState;
+  pool: CapabilityState;
+  fitness_center: CapabilityState;
+  movie_program: CapabilityState;
+  music_program: CapabilityState;
+  gardening_program: CapabilityState;
+  religious_services: CapabilityState;
+  kosher_meals: CapabilityState;
+  gluten_free_meals: CapabilityState;
+  hebrew_support: CapabilityState;
+  speech_therapy: CapabilityState;
+  physical_therapy: CapabilityState;
+  occupational_therapy: CapabilityState;
+  memory_program: CapabilityState;
+  continuum_of_care: CapabilityState;
+  walker_accessibility: CapabilityState;
+  wheelchair_accessibility: CapabilityState;
   medicalCapabilities: string[];
   rehabilitationCapabilities: string[];
   lifestyleCapabilities: string[];
@@ -556,6 +582,83 @@ function deriveCapabilities(facility: BackendFacility, careTypes: CareType[]): {
   };
 }
 
+function capabilityFromText(
+  text: string,
+  positive: RegExp,
+  negative?: RegExp,
+  limited?: RegExp,
+): CapabilityState {
+  if (limited && limited.test(text)) return "LIMITED";
+  if (positive.test(text)) return "YES";
+  if (negative && negative.test(text)) return "NO";
+  return "UNKNOWN";
+}
+
+function deriveInventoryCapabilityStates(
+  facility: BackendFacility,
+  careTypes: CareType[],
+  ageRange: { minAge: number; maxAge: number },
+  priceRange: string,
+): {
+  care_types: CareType[];
+  minimum_age: number;
+  maximum_age: number;
+  monthly_cost_range: string;
+  private_apartment: CapabilityState;
+  kitchenette: CapabilityState;
+  pets_allowed: CapabilityState;
+  transportation: CapabilityState;
+  pool: CapabilityState;
+  fitness_center: CapabilityState;
+  movie_program: CapabilityState;
+  music_program: CapabilityState;
+  gardening_program: CapabilityState;
+  religious_services: CapabilityState;
+  kosher_meals: CapabilityState;
+  gluten_free_meals: CapabilityState;
+  hebrew_support: CapabilityState;
+  speech_therapy: CapabilityState;
+  physical_therapy: CapabilityState;
+  occupational_therapy: CapabilityState;
+  memory_program: CapabilityState;
+  continuum_of_care: CapabilityState;
+  walker_accessibility: CapabilityState;
+  wheelchair_accessibility: CapabilityState;
+} {
+  const text = [facility.name || "", facility.address || "", buildShortExplanation(facility)].join(" ").toLowerCase();
+
+  const skilledOrRehab = careTypes.includes("Skilled Nursing") || careTypes.includes("Rehabilitation");
+  const independentTrack = careTypes.includes("Active Adult 55+") || careTypes.includes("Independent Living") || careTypes.includes("Assisted Living");
+  const continuumLikely = careTypes.includes("CCRC") || careTypes.includes("Continuing Care") || (independentTrack && skilledOrRehab);
+
+  return {
+    care_types: careTypes,
+    minimum_age: ageRange.minAge,
+    maximum_age: ageRange.maxAge,
+    monthly_cost_range: priceRange,
+    private_apartment: capabilityFromText(text, /private|apartment|residence|suite/, /ward|shared-only/),
+    kitchenette: capabilityFromText(text, /kitchenette|full kitchen|kitchen/, /no kitchen|kitchen not available/, /shared kitchen/),
+    pets_allowed: capabilityFromText(text, /pet[- ]?friendly|pets? allowed/, /no pets?|pets? not allowed/, /pets? with restrictions/),
+    transportation: capabilityFromText(text, /transport|shuttle|scheduled rides?/, /no transport/, /limited transport|transportation with limits/),
+    pool: capabilityFromText(text, /pool|aquatic/, /no pool/),
+    fitness_center: capabilityFromText(text, /fitness|gym|wellness center/, /no fitness|no gym/),
+    movie_program: capabilityFromText(text, /movie|cinema|theater/, /no movie/),
+    music_program: capabilityFromText(text, /music|concert|choir|performance/, /no music/),
+    gardening_program: capabilityFromText(text, /garden|gardening|horticulture/, /no gardening/),
+    religious_services: capabilityFromText(text, /religious|chapel|worship|faith|church|synagogue/, /no religious services/),
+    kosher_meals: capabilityFromText(text, /kosher/, /no kosher/, /limited kosher/),
+    gluten_free_meals: capabilityFromText(text, /gluten[- ]?free|celiac/, /no gluten[- ]?free/, /limited gluten[- ]?free/),
+    hebrew_support: capabilityFromText(text, /hebrew|jewish|israeli/, /no hebrew support/, /limited hebrew/),
+    speech_therapy: skilledOrRehab ? capabilityFromText(text, /speech|aphasia|language therapy/, /no speech therapy/, /limited speech therapy/) : "UNKNOWN",
+    physical_therapy: skilledOrRehab ? capabilityFromText(text, /physical therapy|pt\b|rehab/, /no physical therapy/, /limited physical therapy/) : "UNKNOWN",
+    occupational_therapy: skilledOrRehab ? capabilityFromText(text, /occupational therapy|ot\b/, /no occupational therapy/, /limited occupational therapy/) : "UNKNOWN",
+    memory_program: careTypes.includes("Memory Care") ? "YES" : capabilityFromText(text, /memory care|memory support|dementia|alzheim/, /no memory care/, /limited memory support/),
+    continuum_of_care: continuumLikely ? "YES" : capabilityFromText(text, /continuum of care|continuing care|life plan/, /single level only/, /limited continuum/),
+    walker_accessibility: capabilityFromText(text, /walker|mobility|accessible|ada/, /not accessible/, /limited accessibility/),
+    wheelchair_accessibility: capabilityFromText(text, /wheelchair|accessible|ada/, /not wheelchair accessible/, /limited wheelchair access/),
+  };
+}
+
 type CareTaxonomyResult = {
   careTypes: CareType[];
   confidence: "HIGH" | "MEDIUM" | "LOW";
@@ -995,7 +1098,9 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
   const optimeScore = Math.round(facility.overall_optime_score ?? 70);
   const taxonomy = inferCareTaxonomy(facility);
   const ageRange = deriveAgeRange(taxonomy.careTypes);
+  const monthlyCostRange = makePriceRange(facility);
   const capabilities = deriveCapabilities(facility, taxonomy.careTypes);
+  const inventoryCapabilities = deriveInventoryCapabilityStates(facility, taxonomy.careTypes, ageRange, monthlyCostRange);
 
   const result: SearchFacility = {
     ...base,
@@ -1004,14 +1109,15 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
     optimeScore,
     matchLabel: scoreLabel(optimeScore),
     shortExplanation: buildShortExplanation(facility),
-    priceRange: makePriceRange(facility),
-    price: makeDerivedPrice(makePriceRange(facility)),
+    priceRange: monthlyCostRange,
+    price: makeDerivedPrice(monthlyCostRange),
     ...ageRange,
     entryAgeRange: {
       min: ageRange.minAge,
       max: ageRange.maxAge,
     },
     careTypes: taxonomy.careTypes,
+    ...inventoryCapabilities,
     medicalCapabilities: capabilities.medicalCapabilities,
     rehabilitationCapabilities: capabilities.rehabilitationCapabilities,
     lifestyleCapabilities: capabilities.lifestyleCapabilities,
