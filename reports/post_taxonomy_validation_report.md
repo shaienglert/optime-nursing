@@ -1,11 +1,11 @@
 # Post Taxonomy Validation Report
 
-Verdict: **FAIL**
+Verdict: **PASS**
 
 ## Summary
 
 - Persona A: **PASS**
-- Persona B: **FAIL** - Top 10 contains less than 60% Memory Care or Assisted Living.
+- Persona B: **PASS**
 - Persona C: **PASS**
 - Persona D: **PASS**
 
@@ -88,17 +88,25 @@ Quality Gate Status: **PASS**
 | --- | --- | --- | --- |
 | 1 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 85.25 |
 | 2 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 84.76 |
+| 3 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 84.09 |
+| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living | 82.47 |
+| 5 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living | 81.63 |
+| 6 | BAYSIDE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 81.30 |
+| 7 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living | 81.30 |
+| 8 | MADISON POINTE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 81.27 |
+| 9 | W FRANK WELLS NURSING HOME | Skilled Nursing, Assisted Living | 81.15 |
+| 10 | EGRET COVE CENTER | Assisted Living, Skilled Nursing, Independent Living | 80.81 |
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 100% | 2 |
+| Independent Living | 30% | 3 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 100% | 2 |
-| Memory Care | 100% | 2 |
-| Skilled Nursing | 0% | 0 |
-| Rehabilitation | 0% | 0 |
+| Assisted Living | 100% | 10 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 70% | 7 |
+| Rehabilitation | 20% | 2 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
@@ -130,9 +138,16 @@ Social fit (-4); Luxury amenities (-3); Cultural fit (-2)
 | --- | --- | --- | --- | --- |
 | AVIATA AT EMERALD SHORES | 9 | 1 | 8 | Assisted Living, Independent Living, Memory Care |
 | ATHENS POST ACUTE LLC | 26 | 2 | 24 | Assisted Living, Independent Living, Memory Care |
+| RIVER GARDEN HEBREW HOME FOR THE AGED | 1 | 3 | -2 | Assisted Living |
+| LAKESIDE HEALTH CENTER | 3 | 4 | -1 | Skilled Nursing, Assisted Living |
+| MIAMI JEWISH HEALTH SYSTEMS, INC | 86 | 5 | 81 | Skilled Nursing, Assisted Living |
+| BAYSIDE CARE CENTER | 44 | 6 | 38 | Assisted Living, Skilled Nursing, Rehabilitation |
+| GOLFCREST NURSING CENTER | 43 | 7 | 36 | Skilled Nursing, Assisted Living |
+| MADISON POINTE CARE CENTER | 53 | 8 | 45 | Assisted Living, Skilled Nursing, Rehabilitation |
+| W FRANK WELLS NURSING HOME | 62 | 9 | 53 | Skilled Nursing, Assisted Living |
+| EGRET COVE CENTER | 37 | 10 | 27 | Assisted Living, Skilled Nursing, Independent Living |
 
-Persona Verdict: **FAIL**
-- Top 10 contains less than 60% Memory Care or Assisted Living.
+Persona Verdict: **PASS**
 
 ## Persona C
 
