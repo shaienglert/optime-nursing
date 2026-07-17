@@ -1,6 +1,6 @@
 # Future Care Preference UI Simulation
 
-## Independent only
+## Independent communities only
 
 - Verdict: **PASS**
 - Accepted results: **6**
@@ -10,40 +10,40 @@
 
 | Rank | Facility | Care Types | Score | Future Care Contributor |
 | --- | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 94.01 | 14 \| Matched the Independent only preference because the community is designed for fully independent residents. |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 78.83 | 14 \| Matched the Independent only preference because the community is designed for fully independent residents. |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 77.48 | 14 \| Matched the Independent only preference because the community is designed for fully independent residents. |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 77.44 | 14 \| Matched the Independent only preference because the community is designed for fully independent residents. |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 77.30 | 14 \| Matched the Independent only preference because the community is designed for fully independent residents. |
+| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 61.08 | 14 \| Matched the independent-communities-only preference because the community is designed for fully independent residents. |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 61.06 | 14 \| Matched the independent-communities-only preference because the community is designed for fully independent residents. |
+| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 60.88 | 14 \| Matched the independent-communities-only preference because the community is designed for fully independent residents. |
+| 4 | BARTOW CENTER | Assisted Living, Independent Living | 60.87 | 14 \| Matched the independent-communities-only preference because the community is designed for fully independent residents. |
+| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 60.86 | 14 \| Matched the independent-communities-only preference because the community is designed for fully independent residents. |
 
-## Future support available
+## Independent today, support available later
 
 - Verdict: **PASS**
-- Accepted results: **100**
+- Accepted results: **39**
 - Top result: **JOHN KNOX VILLAGE OF POMPANO BEACH**
 - Top result care types: **Independent Living, CCRC**
 - Validation note: Top 5 contained 5 independence-first or continuum options.
 
 | Rank | Facility | Care Types | Score | Future Care Contributor |
 | --- | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 106.01 | 26 \| Boosted because the community supports independent living now and offers future care progression on the same campus. |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 74.83 | 10 \| Boosted because the community supports independent living with some future care flexibility. |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 73.48 | 10 \| Boosted because the community supports independent living with some future care flexibility. |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 73.44 | 10 \| Boosted because the community supports independent living with some future care flexibility. |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 73.30 | 10 \| Boosted because the community supports independent living with some future care flexibility. |
+| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 60.94 | 26 \| Boosted because the community supports independent living now and offers future care progression on the same campus. |
+| 2 | CLEARWATER CENTER | Assisted Living, Independent Living | 53.90 | 10 \| Boosted because the community supports independent living with some future care flexibility. |
+| 3 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 53.80 | 10 \| Boosted because the community supports independent living with some future care flexibility. |
+| 4 | BARTOW CENTER | Assisted Living, Independent Living | 53.61 | 10 \| Boosted because the community supports independent living with some future care flexibility. |
+| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 53.60 | 10 \| Boosted because the community supports independent living with some future care flexibility. |
 
-## Full continuum of care
+## Full continuum of care on one campus
 
 - Verdict: **PASS**
-- Accepted results: **100**
+- Accepted results: **39**
 - Top result: **JOHN KNOX VILLAGE OF POMPANO BEACH**
 - Top result care types: **Independent Living, CCRC**
 - Validation note: Top 5 contained 1 continuum-oriented communities.
 
 | Rank | Facility | Care Types | Score | Future Care Contributor |
 | --- | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 108.01 | 28 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
-| 2 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 72.83 | 8 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 71.48 | 8 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
-| 4 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 71.44 | 8 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 71.30 | 8 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
+| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 60.28 | 28 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
+| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 53.09 | 8 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
+| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 52.90 | 8 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
+| 4 | BARTOW CENTER | Assisted Living, Independent Living | 52.89 | 8 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
+| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 52.60 | 8 \| Boosted because the community offers a stronger continuum-of-care path on one campus. |
