@@ -2599,6 +2599,23 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
   }));
   const persona = buildPersonaProfile(state);
 
+  const miamiDadeCities = new Set([
+    "MIAMI",
+    "MIAMI BEACH",
+    "NORTH MIAMI",
+    "NORTH MIAMI BEACH",
+    "HIALEAH",
+    "DORAL",
+    "AVENTURA",
+    "HOMESTEAD",
+    "CORAL GABLES",
+    "SWEETWATER",
+    "MIAMI GARDENS",
+    "PINECREST",
+    "PALMETTO BAY",
+    "KEY BISCAYNE",
+  ]);
+
   const recommendations = facilities.map((facility) => {
     const careFit = scoreCareFit(facility, state);
     const lifestyleFit = scoreLifestyleFit(facility, state);
@@ -2619,112 +2636,209 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       clinicalQuality,
       luxuryAmenities,
     };
-
     const priorityScores = applyIntelligenceOverlay(basePriorityScores, facility, mode);
-    const matchQuality = buildMatchQualityResult(facility, state, priorityScores);
-    const totalScore = clamp(matchQuality.score);
 
-    const hardRejectionReasons = collectHardRejectionReasons(facility, state);
-    if (hasMandatoryMismatch(matchQuality)) {
-      hardRejectionReasons.push("Mandatory fit requirements are not fully met for this community.");
+    const clinicalReasoning = buildClinicalReasoning(facility, state);
+    const assessments = clinicalReasoning.assessments;
+    const verificationChecklist = assessments.map((assessment) => ({
+      label: assessment.label,
+      state: assessment.state,
+      category: assessment.domain,
+      rationale: assessment.evidence,
+    }));
+    const verificationRequest = buildVerificationRequest(facility, state, verificationChecklist);
+
+    const hardRejectionReasons: string[] = [];
+
+    const currentCareNeed = resolveCurrentCareNeed(state);
+    const allowedCareTypes = resolveAllowedCareTypes(currentCareNeed, state.futureCarePreference);
+    if (!supportsAllowedCareType(facility, allowedCareTypes)) {
+      hardRejectionReasons.push("Required care level is not available for this facility.");
     }
-    if (totalScore <= 0) {
+
+    const criticalNo = assessments.filter((assessment) => assessment.priority === "CRITICAL" && assessment.state === "NO");
+    criticalNo.forEach((assessment) => {
+      hardRejectionReasons.push(`Required medical support unavailable: ${assessment.label}.`);
+    });
+
+    const budget = Number(state.budget || 0);
+    if (budget > 0 && facility.price > budget * 1.2) {
+      hardRejectionReasons.push(`Budget outside allowed tolerance: estimated $${facility.price.toLocaleString()}/month exceeds the budget guardrail.`);
+    }
+
+    const locationHint = `${state.referenceLocationValue || ""} ${state.notes || ""}`.toLowerCase();
+    if (locationHint.includes("miami-dade") && !miamiDadeCities.has(String(facility.city || "").toUpperCase())) {
+      hardRejectionReasons.push("Geographic requirement is not feasible for this facility.");
+    }
+
+    const scoredRequirements = assessments.filter((assessment) => assessment.priority === "CRITICAL" || assessment.priority === "IMPORTANT");
+    const verifiedYes = scoredRequirements.filter((assessment) => assessment.state === "YES").length;
+    const verifiedNo = scoredRequirements.filter((assessment) => assessment.state === "NO").length;
+    const unknown = scoredRequirements.filter((assessment) => assessment.state === "UNKNOWN" || assessment.state === "LIMITED").length;
+    const matchScore = verifiedYes + verifiedNo > 0 ? Math.round((verifiedYes / (verifiedYes + verifiedNo)) * 100) : 0;
+    const confidenceScore = verifiedYes + verifiedNo + unknown > 0 ? Math.round(((verifiedYes + verifiedNo) / (verifiedYes + verifiedNo + unknown)) * 100) : 100;
+
+    if (matchScore <= 0) {
       hardRejectionReasons.push("Final score did not clear the acceptance threshold.");
     }
-    const contributions = summarizeContributions(priorityScores, persona.weights);
 
-    const positives = contributions.slice(0, 3).map((item) => `${item.label} contributed strongly.`);
-    const negatives = contributions.slice(-3).reverse().map((item) => `${item.label} is relatively weak for this person.`);
+    const preferenceYes = assessments.filter((assessment) => assessment.priority === "PREFERENCE" && assessment.state === "YES").length;
 
-    const confidenceMatched = signalRoles.filter((signal) => signal.role !== "missing information analysis").length;
-    const confidenceTotal = signalRoles.length || 1;
-    const confidencePercent = Math.round((confidenceMatched / confidenceTotal) * 100);
+    const positives = assessments
+      .filter((assessment) => assessment.state === "YES")
+      .slice(0, 4)
+      .map((assessment) => `${assessment.label} is verified.`);
+    const negatives = assessments
+      .filter((assessment) => assessment.state === "NO")
+      .slice(0, 4)
+      .map((assessment) => `${assessment.label} is currently unavailable.`);
+
+    const criteria: MatchQualityCriterion[] = assessments.map((assessment) => ({
+      name: assessment.label,
+      tier: assessment.priority === "CRITICAL" ? "MANDATORY" : assessment.priority === "IMPORTANT" ? "IMPORTANT" : "OPTIONAL",
+      score: assessment.state === "YES" ? 100 : assessment.state === "NO" ? 0 : 50,
+      matched: assessment.state === "YES",
+      applicable: true,
+      rationale: assessment.rationale,
+      source: assessment.evidence,
+    }));
+
+    const tierSummaries: MatchQualityTierSummary[] = [
+      {
+        tier: "MANDATORY",
+        matched: assessments.filter((assessment) => assessment.priority === "CRITICAL" && assessment.state === "YES").length,
+        total: assessments.filter((assessment) => assessment.priority === "CRITICAL").length,
+        averageScore: assessments.filter((assessment) => assessment.priority === "CRITICAL").length > 0
+          ? Math.round(average(assessments.filter((assessment) => assessment.priority === "CRITICAL").map((assessment) => assessment.state === "YES" ? 100 : assessment.state === "NO" ? 0 : 50), 50))
+          : 100,
+        mismatchPenalty: 0,
+      },
+      {
+        tier: "CRITICAL",
+        matched: 0,
+        total: 0,
+        averageScore: 100,
+        mismatchPenalty: 0,
+      },
+      {
+        tier: "IMPORTANT",
+        matched: assessments.filter((assessment) => assessment.priority === "IMPORTANT" && assessment.state === "YES").length,
+        total: assessments.filter((assessment) => assessment.priority === "IMPORTANT").length,
+        averageScore: assessments.filter((assessment) => assessment.priority === "IMPORTANT").length > 0
+          ? Math.round(average(assessments.filter((assessment) => assessment.priority === "IMPORTANT").map((assessment) => assessment.state === "YES" ? 100 : assessment.state === "NO" ? 0 : 50), 50))
+          : 100,
+        mismatchPenalty: 0,
+      },
+      {
+        tier: "OPTIONAL",
+        matched: assessments.filter((assessment) => assessment.priority === "PREFERENCE" && assessment.state === "YES").length,
+        total: assessments.filter((assessment) => assessment.priority === "PREFERENCE").length,
+        averageScore: assessments.filter((assessment) => assessment.priority === "PREFERENCE").length > 0
+          ? Math.round(average(assessments.filter((assessment) => assessment.priority === "PREFERENCE").map((assessment) => assessment.state === "YES" ? 100 : assessment.state === "NO" ? 0 : 50), 50))
+          : 100,
+        mismatchPenalty: 0,
+      },
+    ];
+
+    const scoreBreakdown: ReportBreakdownItem[] = [
+      {
+        name: "Critical requirements",
+        score: verifiedYes,
+        maxScore: Math.max(verifiedYes + verifiedNo, 1),
+        source: "Deterministic checklist",
+        rationale: "Critical and important verified capabilities drive the match score.",
+        weightedContribution: matchScore,
+      },
+      {
+        name: "Preference bonus",
+        score: preferenceYes,
+        maxScore: Math.max(assessments.filter((assessment) => assessment.priority === "PREFERENCE").length, 1),
+        source: "Deterministic checklist",
+        rationale: "Preference matches affect ranking order only.",
+        weightedContribution: preferenceYes,
+      },
+      {
+        name: "Confidence",
+        score: confidenceScore,
+        maxScore: 100,
+        source: "Checklist evidence coverage",
+        rationale: "UNKNOWN items reduce confidence only and are never treated as NO.",
+        weightedContribution: confidenceScore,
+      },
+    ];
+
     const report: IntelligenceScoringReport = {
-      finalMatchScore: Math.round(totalScore),
-      confidenceScore: confidencePercent,
+      finalMatchScore: matchScore,
+      confidenceScore,
       rankingPosition: null,
       rankingExplanation: "",
       personaType: persona.personaType,
-      rankingStrategy: persona.rankingStrategy,
+      rankingStrategy: "Deterministic checklist: hard filters, verified capability matching, and preference bonuses.",
       activeWeights: persona.activeWeights,
       whyWeightsSelected: persona.whySelected,
       whatWouldChangeThisRanking: persona.whatWouldChangeThisRanking,
-      scoreBreakdown: [],
-      positiveContributors: [],
-      negativeContributors: [],
+      scoreBreakdown,
+      positiveContributors: assessments.filter((assessment) => assessment.state === "YES").slice(0, 4).map((assessment) => ({
+        signal: assessment.label,
+        source: "Deterministic checklist",
+        weight: 0,
+        scoreContribution: 1,
+      })),
+      negativeContributors: assessments.filter((assessment) => assessment.state === "NO").slice(0, 4).map((assessment) => ({
+        signal: assessment.label,
+        source: "Deterministic checklist",
+        weight: 0,
+        scoreContribution: -1,
+      })),
       intelligenceSourcesUsed: buildIntelligenceSourcesUsed(facility),
-      missingIntelligence: [],
-      humanNarrativeExplanation: "",
-      scoreTraceability: [],
+      missingIntelligence: clinicalReasoning.narrative.unknownCapabilities,
+      humanNarrativeExplanation: clinicalReasoning.narrative.whyThisCommunity,
+      scoreTraceability: [
+        `Match Score = verified_yes / (verified_yes + verified_no) = ${verifiedYes} / ${verifiedYes + verifiedNo || 1}`,
+        `UNKNOWN items excluded from match score (${unknown} unknown item(s)); they affect confidence only.`,
+      ],
       audit: {
-        executedFormula: "final_score = tiered_match_quality(critical, important, optional) - mismatch_penalties",
-        finalScore: Math.round(totalScore),
+        executedFormula: "match_score = verified_yes / (verified_yes + verified_no)",
+        finalScore: matchScore,
         categoryRows: [],
-        bonuses: [],
+        bonuses: [{ name: "Preference yes", rawScore: preferenceYes, value: preferenceYes, source: "Preference checklist", applied: preferenceYes > 0 }],
         penalties: [],
-        criteria: [],
-        tierSummaries: [],
-        matchQualityExplanation: "",
+        criteria,
+        tierSummaries,
+        matchQualityExplanation: "Deterministic checklist model: unknown items are never treated as unavailable.",
         confidence: {
-          confidenceScore: confidencePercent,
-          missingDataImpact: "",
-          sourceCoverage: "",
+          confidenceScore,
+          missingDataImpact: `${unknown} unknown checklist item(s) reduce confidence only.`,
+          sourceCoverage: `${buildIntelligenceSourcesUsed(facility).length} source bucket(s) connected`,
           lastIntelligenceRefresh: new Date().toISOString(),
         },
-        verificationChecklist: [],
-        verificationRequest: {
-          subject: "Prospective Resident Match Verification Request",
-          body: "",
-          unknownCount: 0,
-          visitReadinessScore: 100,
-          confidenceScore: 100,
-          nextStepMessage: "Ready to schedule visit",
-          items: [],
-        },
-        verificationReadinessScore: 100,
-        clinicalReasoning: {
-          whyThisCommunity: "",
-          medicalMatch: "",
-          lifestyleMatch: "",
-          dietaryMatch: "",
-          socialMatch: "",
-          futureCareMatch: "",
-          verificationNeeded: "",
-          verifiedCapabilities: [],
-          unknownCapabilities: [],
-          rejectedCapabilities: [],
-          questionsForFacility: [],
-        },
-        anonymousVerificationPayload: {
-          ageRange: "Not specified",
-          gender: null,
-          careLevel: "Not specified",
-          functionalLimitations: [],
-          medicalNeeds: [],
-          dietaryRequirements: [],
-          lifestylePreferences: [],
-          budgetRange: "Up to $0/month",
-          moveInTimeframe: "Flexible",
-          geographicPreference: "Not specified",
-          unknownQuestions: [],
-          noPersonalInfoShared: true,
-        },
+        verificationChecklist,
+        verificationRequest,
+        verificationReadinessScore: verificationRequest.visitReadinessScore,
+        clinicalReasoning: clinicalReasoning.narrative,
+        anonymousVerificationPayload: clinicalReasoning.anonymousPayload,
       },
     };
 
+    const contributions = [
+      { label: "Checklist Match", value: matchScore },
+      { label: "Preference Bonus", value: preferenceYes },
+      { label: "Clinical Quality", value: priorityScores.clinicalQuality },
+    ];
+
     return {
       facility,
-      totalScore,
+      totalScore: matchScore,
       priorityScores,
       positives,
       negatives,
-      solves: buildSolves(state, facility),
-      doesNotSolve: buildNotSolved(state, facility),
-      tradeoff: buildTradeoff(priorityScores),
-      whyThisFits: buildPersonalWhy(facility, state),
+      solves: clinicalReasoning.narrative.verifiedCapabilities,
+      doesNotSolve: clinicalReasoning.narrative.rejectedCapabilities,
+      tradeoff: clinicalReasoning.narrative.verificationNeeded,
+      whyThisFits: clinicalReasoning.narrative.whyThisCommunity,
       rankReason: "",
-      confidenceExplanation: `Confidence is ${confidencePercent >= 75 ? "high" : confidencePercent >= 55 ? "moderate" : "limited"} because ${confidenceMatched} of ${confidenceTotal} captured preferences are directly modeled.`,
-      missingInformation: buildMissingInformation(state, signalRoles),
+      confidenceExplanation: `Confidence is ${confidenceScore >= 75 ? "high" : confidenceScore >= 55 ? "moderate" : "limited"} because ${verifiedYes + verifiedNo} requirements are verified and ${unknown} remain unknown.",
+      missingInformation: clinicalReasoning.narrative.unknownCapabilities,
       hardRejectionReasons,
       contributionHighlights: contributions,
       report,
@@ -2732,38 +2846,25 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
   });
 
   const accepted = recommendations
-    .filter((recommendation) => recommendation.hardRejectionReasons.length === 0)
-    .sort((a, b) => b.totalScore - a.totalScore || b.priorityScores.careFit - a.priorityScores.careFit || b.priorityScores.socialFit - a.priorityScores.socialFit);
+    .filter((recommendation) => recommendation.hardRejectionReasons.length === 0 && recommendation.totalScore > 0)
+    .sort((a, b) => {
+      const preferenceBonusA = a.report.audit.clinicalReasoning.verifiedCapabilities.filter((item) => a.report.audit.clinicalReasoning.questionsForFacility.every((q) => !q.toLowerCase().includes(item.toLowerCase()))).length;
+      const preferenceBonusB = b.report.audit.clinicalReasoning.verifiedCapabilities.filter((item) => b.report.audit.clinicalReasoning.questionsForFacility.every((q) => !q.toLowerCase().includes(item.toLowerCase()))).length;
+      return b.totalScore - a.totalScore
+        || preferenceBonusB - preferenceBonusA
+        || b.priorityScores.clinicalQuality - a.priorityScores.clinicalQuality
+        || b.priorityScores.familyFit - a.priorityScores.familyFit;
+    });
 
-  const rejected = recommendations.filter((recommendation) => recommendation.hardRejectionReasons.length > 0);
+  const rejected = recommendations.filter((recommendation) => recommendation.hardRejectionReasons.length > 0 || recommendation.totalScore <= 0);
 
   accepted.forEach((item, index) => {
-    const above = accepted[index - 1];
-    const below = accepted[index + 1];
+    item.rankReason = index === 0
+      ? "Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment."
+      : `Ranked #${index + 1} after comparing verified requirement coverage and confidence.`;
 
-    if (!above && below) {
-      item.rankReason = `Ranked #1 because it leads in ${item.contributionHighlights[0].label.toLowerCase()} and beats #2 on person-first fit balance.`;
-    } else if (above) {
-      item.rankReason = `Ranked #${index + 1} because it trails #${index} mainly on ${item.contributionHighlights[item.contributionHighlights.length - 1].label.toLowerCase()}, but stays competitive on ${item.contributionHighlights[0].label.toLowerCase()}.`;
-    } else if (!below) {
-      item.rankReason = `Ranked #${index + 1} after higher-ranked options showed stronger person-fit coverage.`;
-    }
-
-    item.report = buildIntelligenceReport(
-      item.facility,
-      state,
-      item.priorityScores,
-      persona,
-      item.contributionHighlights,
-      item.totalScore,
-      item.report.confidenceScore,
-      accepted,
-      index,
-      item.missingInformation,
-      item.positives,
-      item.negatives,
-      buildMatchQualityResult(item.facility, state, item.priorityScores),
-    );
+    item.report.rankingPosition = index + 1;
+    item.report.rankingExplanation = item.rankReason;
   });
 
   const qualityCheck = buildQualityCheck(accepted, signalRoles);

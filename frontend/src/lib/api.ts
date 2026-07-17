@@ -822,6 +822,11 @@ export function inferCareTaxonomy(facility: BackendFacility): CareTaxonomyResult
   ) {
     careTypes.push("Active Adult 55+");
   }
+
+  if (!explicitRehabSignal && careTypes.includes("Rehabilitation")) {
+    const index = careTypes.indexOf("Rehabilitation");
+    careTypes.splice(index, 1);
+  }
   const dominantProbability = Math.max(...CARE_TYPE_ORDER.filter((type) => type !== "UNKNOWN").map((type) => probabilities[type]));
   const confidenceScore = Math.round(dominantProbability * 100);
   const confidence: CareTaxonomyResult["confidence"] = confidenceScore >= 70 ? "HIGH" : confidenceScore >= 45 ? "MEDIUM" : "LOW";

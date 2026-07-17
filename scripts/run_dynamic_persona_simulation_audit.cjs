@@ -317,6 +317,10 @@ function inferExplicitCareTaxonomy(facility) {
     careTypes.push('Active Adult 55+');
   }
 
+  if (!explicitRehabSignal && careTypes.includes('Rehabilitation')) {
+    careTypes.splice(careTypes.indexOf('Rehabilitation'), 1);
+  }
+
   const dominantProbability = ranked[0]?.probability ?? 0;
   const confidenceScore = Math.round(dominantProbability * 100);
   const confidence = confidenceScore >= 70 ? 'HIGH' : confidenceScore >= 45 ? 'MEDIUM' : 'LOW';
