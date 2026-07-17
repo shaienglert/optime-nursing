@@ -23,12 +23,12 @@
 
 ## Deterministic Formula Validation (Rank #1)
 
-- verified_yes: 0
+- verified_yes: 3
 - verified_no: 0
-- unknown: 13
-- computed score: 0
+- unknown: 10
+- computed score: 100
 - reported score: 100
-- formula check: **FAIL**
+- formula check: **PASS**
 - unknown excluded from score: **PASS**
 
 ## Rank #1 Full Narrative
