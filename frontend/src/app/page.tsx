@@ -179,15 +179,15 @@ const carePreferenceOptions = ["Not important", "Somewhat important", "Important
 
 const futureCarePreferenceOptions = [
   {
-    label: "Independent only",
+    label: "Independent communities only",
     description: "Show only communities designed for fully independent residents.",
   },
   {
-    label: "Future support available",
+    label: "Independent today, support available later",
     description: "Show communities that are independent today but offer assisted living or nursing care later if needed.",
   },
   {
-    label: "Full continuum of care",
+    label: "Full continuum of care on one campus",
     description: "Prefer communities offering a complete care journey in one campus, including independent living, assisted living, memory care and skilled nursing.",
   },
   {
@@ -1113,7 +1113,7 @@ export default function Home() {
             loneliness_risk_score: lonelinessRiskScorePreview,
           },
           recommendationImpacts: adaptiveSignals.map((signal) => signal.impactExplanation),
-          additionalQuestionAsked: shouldAskFutureCarePreference ? "How do you feel about future care options?" : "",
+          additionalQuestionAsked: shouldAskFutureCarePreference ? "When thinking about the future, which approach feels right for you?" : "",
         },
       },
     });
@@ -1361,7 +1361,7 @@ export default function Home() {
 
             {shouldAskFutureCarePreference ? (
               <article className="rounded-2xl border border-[#dbe4d5] bg-[#f8fcf5] p-5">
-                <h3 className="text-lg font-semibold text-[#2f2a24]">3A. How do you feel about future care options?</h3>
+                <h3 className="text-lg font-semibold text-[#2f2a24]">3A. When thinking about the future, which approach feels right for you?</h3>
                 <p className="mt-1 text-sm text-[#6c6358]">This follow-up appears only for fully independent profiles.</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {futureCarePreferenceOptions.map((option) => {
