@@ -768,6 +768,7 @@ export default function Home() {
   const [grandchildrenVisitsImportance, setGrandchildrenVisitsImportance] = useState("");
   const [optimizationStrategy, setOptimizationStrategy] = useState("Balanced location");
   const [notes, setNotes] = useState("");
+  const [medicalDocumentsAvailable, setMedicalDocumentsAvailable] = useState(false);
   const [showAuditMode, setShowAuditMode] = useState(false);
 
   const relationshipLabel = relationshipCopy(relationship);
@@ -868,6 +869,9 @@ export default function Home() {
     distancePreference: familyVisitExpectation || visitFrequencyExpectation,
     languagePreferenceImportance: preferredSpokenLanguage,
     petPreferenceImportance: petOwnershipImportance,
+    personalityStyle: introvertExtrovert,
+    additionalContextNotes: notes,
+    medicalDocumentsAvailable,
   }), [
     relationship,
     primaryAssistanceLevel,
@@ -897,6 +901,9 @@ export default function Home() {
     secureMemoryNeighborhoodNeed,
     familiarLanguageRequirement,
     petOwnershipImportance,
+    introvertExtrovert,
+    notes,
+    medicalDocumentsAvailable,
     familyVisitExpectation,
     visitFrequencyExpectation,
     preferredSpokenLanguage,
@@ -1310,6 +1317,7 @@ export default function Home() {
         religiousSupportNeeds,
         whatFeelsLikeHome,
         dietaryPreferences,
+        medicalDocumentsAvailable,
         familyInvolvementExpectation,
         familyDecisionRole,
         preferredEnvironment,
@@ -1375,12 +1383,12 @@ export default function Home() {
                   <p className={`mt-1 text-base font-semibold ${understandingProfile.colorBand.textClass}`}>{understandingProfile.statusText}</p>
                 </div>
                 <div className="rounded-full border border-[#d8e6e2] bg-[#f3faf8] px-3 py-1 text-sm font-semibold text-[#2c5650]">
-                  Understanding score {understandingProfile.understandingScore}%
+                  Recommendation readiness {understandingProfile.understandingScore}%
                 </div>
               </div>
 
               <div className="mt-4 rounded-xl border border-[#dce9e5] bg-[#f8fcfb] p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#5f7e79]">Understanding Score</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#5f7e79]">Recommendation Readiness</p>
                 <p className={`mt-1 text-xl font-semibold ${understandingProfile.colorBand.textClass}`}>{understandingProfile.understandingScore}%</p>
                 <div className={`mt-2 h-2.5 overflow-hidden rounded-full bg-[#e7efec] ring-1 ${understandingProfile.colorBand.ringClass}`}>
                   <div
@@ -1388,6 +1396,18 @@ export default function Home() {
                     style={{ width: `${understandingProfile.understandingScore}%` }}
                   />
                 </div>
+                {understandingProfile.understandingScore >= 85 && understandingProfile.understandingScore < 100 ? (
+                  <p className="mt-3 rounded-lg border border-[#c9ded8] bg-[#eef9f5] px-3 py-2 text-sm text-[#2f6257]">
+                    We already have enough information to make strong recommendations.
+                  </p>
+                ) : null}
+                {understandingProfile.understandingScore >= 85 ? (
+                  <p className="mt-2 text-sm font-medium text-[#2f6257]">
+                    Great job! Your recommendations are ready.
+                    <br />
+                    Adding more details may help us personalize them even further.
+                  </p>
+                ) : null}
               </div>
 
               <div className="mt-4 rounded-xl border border-[#dbe7e4] bg-white p-3">
@@ -2245,14 +2265,30 @@ export default function Home() {
             </article>
 
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
-              <h3 className="text-lg font-semibold text-[#2f2a24]">12. Anything else we should know?</h3>
+              <h3 className="text-lg font-semibold text-[#2f2a24]">12. Tell us anything else that would help us find the perfect community.</h3>
+              <div className="mt-4 rounded-xl border border-[#e3d8c7] bg-[#fff8ef] p-4">
+                <p className="text-sm font-medium text-[#5e5346]">Medical documents available (optional)</p>
+                <div className="mt-3 flex flex-wrap gap-2.5">
+                  <OptionChip label="Yes, we can share" isActive={medicalDocumentsAvailable} onClick={() => setMedicalDocumentsAvailable(true)} />
+                  <OptionChip label="Not right now" isActive={!medicalDocumentsAvailable} onClick={() => setMedicalDocumentsAvailable(false)} />
+                </div>
+              </div>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="Anything important to your family or loved one that we should consider during matching."
-                className="mt-4 min-h-32 w-full resize-y rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition placeholder:text-[#9f9384] focus:ring-2"
+                placeholder="Share any additional details that help us personalize recommendations."
+                className="mt-4 min-h-44 w-full resize-y rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition placeholder:text-[#9f9384] focus:ring-2"
               />
-              <p className="mt-3 text-xs text-[#8b7f71]">Examples: Loves old movies, Must have Hebrew speaking staff, Wants a Jewish community, Doesn&apos;t like noisy environments, Loves gardening</p>
+              <div className="mt-3 text-xs text-[#8b7f71]">
+                <p>Examples:</p>
+                <p>- What makes your loved one happy?</p>
+                <p>- Favorite hobbies?</p>
+                <p>- Foods they enjoy?</p>
+                <p>- Personality?</p>
+                <p>- Daily routine?</p>
+                <p>- Religious or cultural preferences?</p>
+                <p>- Anything else we should know?</p>
+              </div>
             </article>
 
             <article className="rounded-2xl border border-[#d7dde8] bg-[#f8fbff] p-5">

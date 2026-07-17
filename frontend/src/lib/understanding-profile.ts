@@ -39,6 +39,9 @@ export type UnderstandingInputs = {
   distancePreference?: string;
   languagePreferenceImportance?: string;
   petPreferenceImportance?: string;
+  personalityStyle?: string;
+  additionalContextNotes?: string;
+  medicalDocumentsAvailable?: boolean;
 };
 
 export type CoverageState = "UNKNOWN" | "NOT_IMPORTANT" | "PROVIDED";
@@ -95,6 +98,8 @@ export type UnderstandingDiagnostics = {
   correctedUnderstandingScore: number;
   correctedRecommendationConfidence: number;
   delta: number;
+  requiredInputsComplete: boolean;
+  optionalBoost: number;
   domainContributions: UnderstandingDomainContribution[];
   penalties: Array<{ domainName: string; penaltyApplied: number; reason: string }>;
 };
@@ -204,6 +209,27 @@ function countActiveSignals(values: Array<string | number | string[] | undefined
 function qualityFromSignals(signalCount: number): number {
   if (signalCount <= 0) return 0;
   return Math.min(1, 0.45 + (signalCount - 1) * 0.18);
+}
+
+function computeOptionalBoost(inputs: UnderstandingInputs): number {
+  const notes = (inputs.additionalContextNotes || "").trim();
+  const lifestyleDetailCount = inputs.happinessPreferences.length + inputs.preferredEnvironment.length + inputs.whatFeelsLikeHome.length;
+
+  let boost = 0;
+
+  if (notes.length >= 20) boost += 3;
+  if (notes.length >= 80) boost += 2;
+  if (lifestyleDetailCount >= 5) boost += 3;
+  if (inputs.hobbyParticipation.length >= 2) boost += 2;
+  if ((inputs.personalityStyle || "").trim().length > 0 && !isNotImportantText(inputs.personalityStyle || "")) boost += 2;
+  if (inputs.medicalDocumentsAvailable) boost += 3;
+
+  return Math.min(15, boost);
+}
+
+function hasRequiredInputsComplete(inputs: UnderstandingInputs, domains: DomainAssessment[]): boolean {
+  const criticalDomainsComplete = CRITICAL_DOMAINS.every((key) => (domains.find((domain) => domain.key === key)?.coverageScore ?? 0) >= 100);
+  return Boolean(inputs.relationship && inputs.primaryAssistanceLevel) && criticalDomainsComplete;
 }
 
 function calculateLegacyUnderstandingScore(inputs: UnderstandingInputs): number {
@@ -447,12 +473,19 @@ function buildDomainAssessments(inputs: UnderstandingInputs): DomainAssessment[]
 export function calculateUnderstandingDiagnostics(inputs: UnderstandingInputs): UnderstandingDiagnostics {
   const legacyUnderstandingScore = calculateLegacyUnderstandingScore(inputs);
   const domains = buildDomainAssessments(inputs);
-  const correctedUnderstandingScore = clampScore(domains.reduce((sum, domain) => sum + domain.weight * domain.quality, 0));
+  const coreRichnessScore = clampScore(domains.reduce((sum, domain) => sum + domain.weight * domain.quality, 0));
+  const requiredInputsComplete = hasRequiredInputsComplete(inputs, domains);
+  const optionalBoost = computeOptionalBoost(inputs);
+  const readinessBase = Math.round(coreRichnessScore * 0.85);
+  let correctedUnderstandingScore = clampScore(readinessBase + optionalBoost);
+  if (requiredInputsComplete) {
+    correctedUnderstandingScore = Math.max(85, correctedUnderstandingScore);
+  }
   const completedDomainCount = domains.filter((domain) => domain.coverageScore >= 100).length;
   const criticalCoverageRate = CRITICAL_DOMAINS.filter((key) => (domains.find((domain) => domain.key === key)?.coverageScore ?? 0) >= 100).length / CRITICAL_DOMAINS.length;
   const domainCoverageRate = completedDomainCount / domains.length;
   const correctedRecommendationConfidence = clampScore(
-    correctedUnderstandingScore * 0.6 + domainCoverageRate * 20 + criticalCoverageRate * 20,
+    correctedUnderstandingScore * 0.7 + domainCoverageRate * 15 + criticalCoverageRate * 15,
   );
 
   const domainContributions: UnderstandingDomainContribution[] = domains.map((domain) => ({
@@ -469,6 +502,8 @@ export function calculateUnderstandingDiagnostics(inputs: UnderstandingInputs): 
     correctedUnderstandingScore,
     correctedRecommendationConfidence,
     delta: correctedUnderstandingScore - legacyUnderstandingScore,
+    requiredInputsComplete,
+    optionalBoost,
     domainContributions,
     penalties: domainContributions
       .filter((domain) => domain.penaltyApplied > 0)
@@ -477,10 +512,10 @@ export function calculateUnderstandingDiagnostics(inputs: UnderstandingInputs): 
 }
 
 function statusFromScore(score: number): string {
-  if (score < 30) return "Getting to know you";
-  if (score < 60) return "Building your lifestyle profile";
-  if (score < 85) return "Understanding what matters most";
-  return "Ready for advisor-level recommendations";
+  if (score < 55) return "Building your recommendation profile";
+  if (score < 85) return "Strong profile in progress";
+  if (score < 100) return "Recommendations are ready";
+  return "Highly personalized recommendation profile";
 }
 
 function colorBandFromScore(score: number): UnderstandingProfile["colorBand"] {
