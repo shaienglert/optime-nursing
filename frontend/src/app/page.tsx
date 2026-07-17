@@ -849,6 +849,9 @@ export default function Home() {
     secureMemoryNeighborhoodNeed,
     familiarLanguageRequirement,
     petOwnershipImportance,
+    distancePreference: familyVisitExpectation || visitFrequencyExpectation,
+    languagePreferenceImportance: preferredSpokenLanguage,
+    petPreferenceImportance: petOwnershipImportance,
   }), [
     relationship,
     primaryAssistanceLevel,
@@ -878,6 +881,9 @@ export default function Home() {
     secureMemoryNeighborhoodNeed,
     familiarLanguageRequirement,
     petOwnershipImportance,
+    familyVisitExpectation,
+    visitFrequencyExpectation,
+    preferredSpokenLanguage,
   ]);
 
   const questionAuditRows = useMemo(

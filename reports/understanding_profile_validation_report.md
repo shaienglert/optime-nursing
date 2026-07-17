@@ -1,22 +1,28 @@
 # Understanding Profile Validation Report
 
-Overall Status: **PASS**
+Overall Status: **FAIL**
 
 ## Validation Summary
 
 - Build PASS: **PASS**
-- Simulation PASS: **PASS**
+- Simulation PASS: **FAIL**
 - No regression in ranking engine: **PASS**
 
 ## Understanding Simulation Checks
 
 | Check | Verdict | Note |
 | --- | --- | --- |
-| Critical-domain penalty check | PASS | Care-complete score 42% vs missing-care score 34% |
+| Critical-domain penalty check | FAIL | Care-complete score 38% vs missing-care score 66% |
 | Status text range mapping | PASS | Low=Getting to know you; High=Ready for advisor-level recommendations |
 | Color progression mapping | PASS | Low=Red; High=Blue-green |
 | Journey icon and couple visualization | PASS | Person=👵👴; Active journey icons=6 |
-| Recommendation confidence separated from understanding score | PASS | Understanding=87%; Confidence=93% |
+| Recommendation confidence separated from understanding score | FAIL | Understanding=100%; Confidence=100% |
+| Validation example: all domains answered with distance intentionally ignored | FAIL | Corrected understanding score=87% |
+| Distance not used does not reduce understanding score | PASS | Family proximity coverage=100; intentional_omission=true |
+| Distance not used does not reduce recommendation confidence | PASS | Ignored distance confidence=83% vs explicit distance=83% |
+| No religion preference gets full understanding credit | PASS | Cultural coverage=100; state=PROVIDED |
+| No language preference gets full understanding credit | PASS | Cultural coverage=100; language no-preference counted as NOT_IMPORTANT |
+| No pet preference gets full understanding credit | PASS | Lifestyle coverage=100; state=PROVIDED |
 
 ## Regression Guard Checks
 
