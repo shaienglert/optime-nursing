@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
+import { calculateUnderstandingProfile } from "@/lib/understanding-profile";
 import { QUESTION_GRAPH, buildVisibilityAudit, validateQuestionGraph } from "@/lib/questionnaire-graph";
 import { persistAdaptiveQuestionSignal, persistHumanIntelligenceScores } from "@/lib/api";
 
@@ -429,11 +430,6 @@ function ctaCopy(relationship: string): string {
   return "Find the right home";
 }
 
-function renderProfileMeter(score: number): string {
-  const filled = Math.max(0, Math.min(10, Math.round(score / 10)));
-  return `${"█".repeat(filled)}${"░".repeat(10 - filled)}`;
-}
-
 function scoreFromImportance(value: string): number {
   switch (value) {
     case "Very high":
@@ -786,7 +782,7 @@ export default function Home() {
     }
   }, [shouldAskFutureCarePreference, futureCarePreference]);
 
-  const profileUnderstanding = useMemo(() => {
+  const legacyProfileUnderstanding = useMemo(() => {
     const careLevel = primaryAssistanceLevel ? 25 : 0;
     const futureCare = primaryAssistanceLevel === "Fully independent" ? (futureCarePreference ? 20 : 0) : 20;
     const budgetQuality = budget > 0 ? 20 : 0;
@@ -822,6 +818,66 @@ export default function Home() {
     preferredSpokenLanguage,
     faithTraditions.length,
     dietaryPreferences.length,
+  ]);
+
+  const understandingProfile = useMemo(() => calculateUnderstandingProfile({
+    relationship,
+    primaryAssistanceLevel,
+    futureCarePreference,
+    memoryStatus,
+    budget,
+    happinessPreferences,
+    preferredEnvironment,
+    socialInteractionFrequency,
+    newFriendsImportance,
+    preferredSocialIntensity,
+    hobbyParticipation,
+    religionImportance,
+    preferredSpokenLanguage,
+    faithTraditions,
+    dietaryPreferences,
+    whatFeelsLikeHome,
+    familyVisitExpectation,
+    visitFrequencyExpectation,
+    normalDriveTime,
+    parentCurrentHome,
+    primaryCaregiverHome,
+    familyCenterOfGravity,
+    agingInPlaceImportance,
+    avoidFutureMovesPreference,
+    continuumOfCarePreference,
+    secureMemoryNeighborhoodNeed,
+    familiarLanguageRequirement,
+    petOwnershipImportance,
+  }), [
+    relationship,
+    primaryAssistanceLevel,
+    futureCarePreference,
+    memoryStatus,
+    budget,
+    happinessPreferences,
+    preferredEnvironment,
+    socialInteractionFrequency,
+    newFriendsImportance,
+    preferredSocialIntensity,
+    hobbyParticipation,
+    religionImportance,
+    preferredSpokenLanguage,
+    faithTraditions,
+    dietaryPreferences,
+    whatFeelsLikeHome,
+    familyVisitExpectation,
+    visitFrequencyExpectation,
+    normalDriveTime,
+    parentCurrentHome,
+    primaryCaregiverHome,
+    familyCenterOfGravity,
+    agingInPlaceImportance,
+    avoidFutureMovesPreference,
+    continuumOfCarePreference,
+    secureMemoryNeighborhoodNeed,
+    familiarLanguageRequirement,
+    petOwnershipImportance,
   ]);
 
   const questionAuditRows = useMemo(
@@ -944,7 +1000,7 @@ export default function Home() {
       }
       return acc;
     }, {});
-    const overallConfidence = clampScore(Math.max(profileUnderstanding.score, 62 + Math.min(24, adaptiveSignals.length * 3) + languageCoverage * 2));
+    const overallConfidence = clampScore(Math.max(legacyProfileUnderstanding.score, 62 + Math.min(24, adaptiveSignals.length * 3) + languageCoverage * 2));
 
     setState({
       relationship,
@@ -1290,6 +1346,80 @@ export default function Home() {
           </section>
 
           <div className="mt-6 grid gap-5">
+            <aside className="sticky top-4 z-30 rounded-2xl border border-[#d4e5df] bg-white/95 p-4 shadow-[0_14px_36px_-20px_rgba(25,85,73,0.48)] backdrop-blur">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4b6f6a]">OPTIME Understanding Profile V2</p>
+                  <p className={`mt-1 text-base font-semibold ${understandingProfile.colorBand.textClass}`}>{understandingProfile.statusText}</p>
+                </div>
+                <div className="rounded-full border border-[#d8e6e2] bg-[#f3faf8] px-3 py-1 text-sm font-semibold text-[#2c5650]">
+                  Domains complete: {understandingProfile.completedDomainCount}/7
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-[#dce9e5] bg-[#f8fcfb] p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#5f7e79]">Understanding Score</p>
+                  <p className={`mt-1 text-xl font-semibold ${understandingProfile.colorBand.textClass}`}>{understandingProfile.understandingScore}%</p>
+                  <div className={`mt-2 h-2.5 overflow-hidden rounded-full bg-[#e7efec] ring-1 ${understandingProfile.colorBand.ringClass}`}>
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${understandingProfile.colorBand.bgClass} transition-all duration-700 ease-out`}
+                      style={{ width: `${understandingProfile.understandingScore}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#dce9e5] bg-[#f8fcfb] p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#5f7e79]">Recommendation Confidence</p>
+                  <p className="mt-1 text-xl font-semibold text-[#1e6f75]">{understandingProfile.recommendationConfidence}%</p>
+                  <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[#e7efec] ring-1 ring-[#b6d8d8]">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#76cbd2] to-[#1d8b98] transition-all duration-700 ease-out"
+                      style={{ width: `${understandingProfile.recommendationConfidence}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-[#dbe7e4] bg-white p-3">
+                <div className="flex items-center gap-2 text-lg">
+                  <span>{understandingProfile.personIcon}</span>
+                  {understandingProfile.journeyIcons.map((journeyIcon) => (
+                    <span
+                      key={journeyIcon.label}
+                      title={journeyIcon.label}
+                      className={`inline-flex transition-all duration-500 ${journeyIcon.active ? "opacity-100 scale-100" : "opacity-35 scale-90 grayscale"}`}
+                    >
+                      {journeyIcon.icon}
+                    </span>
+                  ))}
+                </div>
+                <div className="relative mt-3">
+                  <div className="h-8 rounded-full border border-[#d7e4df] bg-[#f4faf8] px-4">
+                    <div className="relative h-full">
+                      <div className="absolute left-0 right-0 top-1/2 h-[2px] -translate-y-1/2 bg-[#bdd4cd]" />
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 text-lg transition-all duration-700 ease-out"
+                        style={{ left: `calc(${understandingProfile.journeyProgressPercent}% - 12px)` }}
+                      >
+                        {understandingProfile.personIcon}
+                      </div>
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 text-lg">🏡</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {understandingProfile.domains.map((domain) => (
+                  <div key={domain.key} className="rounded-xl border border-[#e3ece9] bg-white px-3 py-2 text-xs text-[#4d645e]">
+                    <p className="font-semibold text-[#2f4f48]">{domain.label}</p>
+                    <p className="mt-1">{domain.covered ? `Covered (${Math.round(domain.quality * 100)}% quality)` : "Missing"}{domain.isCritical && !domain.covered ? " - critical" : ""}</p>
+                  </div>
+                ))}
+              </div>
+            </aside>
+
             <article className="rounded-2xl border border-[#e7ddcd] bg-[#fffefb] p-5">
               <h3 className="text-lg font-semibold text-[#2f2a24]">1. Who are you searching for?</h3>
               <div className="mt-4 flex flex-wrap gap-2.5">
@@ -2170,20 +2300,6 @@ export default function Home() {
           </div>
 
           <div className="mt-8">
-            <div className="mb-5 rounded-2xl border border-[#dce6d6] bg-[#f6fbf4] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Understanding Profile</p>
-              <div className="mt-2 flex items-center justify-between gap-4">
-                <p className="text-lg font-semibold text-[#2f2a24]">{renderProfileMeter(profileUnderstanding.score)} {profileUnderstanding.score}%</p>
-                <p className="text-sm text-[#62584d]">Information quality, not question count</p>
-              </div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {profileUnderstanding.segments.map((segment) => (
-                  <div key={segment.label} className="rounded-xl border border-[#e1eadc] bg-white px-3 py-2 text-sm text-[#51493f]">
-                    <span className="font-semibold text-[#2f2a24]">{segment.label}:</span> +{segment.value}%
-                  </div>
-                ))}
-              </div>
-            </div>
             <button
               type="button"
               onClick={handleFindHome}
