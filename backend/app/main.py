@@ -54,6 +54,12 @@ from app.services.provider_identity import (
     validate_license_ownership,
 )
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
+from app.services.executive_report_service import (
+    compare_latest_vs_previous,
+    get_executive_report_history,
+    get_latest_executive_report,
+    start_executive_report_scheduler,
+)
 from app.services.cms_service import (
     CMS_PROVIDER_DATASET_ID,
     clean_state,
@@ -885,6 +891,8 @@ def startup() -> None:
 
     # Refresh reports continuously in background so user requests never wait on research.
     start_background_refresh_loop()
+    # Trigger daily executive intelligence report at 08:00 local server time.
+    start_executive_report_scheduler()
 
 
 @app.get("/")
@@ -1587,3 +1595,21 @@ async def provider_identity_role_change(
 @app.post("/provider/identity/reverification/run")
 async def provider_identity_reverification_run(db: Session = Depends(get_db)):
     return run_annual_reverification(db)
+
+
+@app.get("/executive-report/latest")
+async def executive_report_latest():
+    latest = get_latest_executive_report()
+    if not latest:
+        raise HTTPException(status_code=404, detail="No executive report generated yet")
+    return latest
+
+
+@app.get("/executive-report/history")
+async def executive_report_history(limit: int = Query(default=30, ge=1, le=365)):
+    return {"reports": get_executive_report_history(limit=limit)}
+
+
+@app.get("/executive-report/compare")
+async def executive_report_compare():
+    return compare_latest_vs_previous()
