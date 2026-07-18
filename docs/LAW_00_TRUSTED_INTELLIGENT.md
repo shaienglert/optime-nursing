@@ -37,6 +37,7 @@ If a new feature does not improve Trust or Institutional Intelligence, it does n
 Law 00 is operationalized by:
 
 - Primary Mission: `docs/PRIMARY_MISSION_FLORIDA_DATABASE.md`
+- Discovery Mission: `docs/DISCOVERY_MISSION.md`
 - Command Canon 001-020: see `docs/COMMAND_CANON_001_020.md`
 - Decision Psychology Command Canon DP-001 to DP-018: see `docs/COMMAND_DP_001_018.md`
 - Expert Coordination Command Canon EXP-001 to EXP-015: see `docs/COMMAND_EXP_001_015.md`
