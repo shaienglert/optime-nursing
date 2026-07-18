@@ -4,12 +4,20 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { useQuestionnaire } from "@/context/questionnaire-context";
+import { QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { SearchFacility, fetchSearchFacilities } from "@/lib/api";
 import { RankedRecommendation, runOptimeV2Engine } from "@/lib/optime-v2-engine";
 import { clearSearchSession } from "@/lib/search-session";
 
 const TOP_RECOMMENDATION_COUNT = 3;
+
+type RelaxationOverrides = {
+  adjustBudget: boolean;
+  expandDistance: boolean;
+  allowAssistedLiving: boolean;
+  includeCommunitiesWithoutMemoryCare: boolean;
+  removeActivityPreference: boolean;
+};
 
 function relationshipCopy(relationship: string): string {
   if (relationship === "Myself") return "You";
@@ -56,6 +64,78 @@ function ensureSentence(text: string): string {
   if (!value) return "";
   if (/[.!?]$/.test(value)) return value;
   return `${value}.`;
+}
+
+function formatReviewDate(value: string | undefined): string {
+  if (!value) return "Recently reviewed";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Recently reviewed";
+  return parsed.toLocaleDateString();
+}
+
+function buildBestAvailableSummary(summary: ReturnType<typeof runOptimeV2Engine>["rejectionSummary"]): string {
+  const messages: string[] = [];
+  if (summary.rejectedByCare > 0) {
+    messages.push(`${summary.rejectedByCare} communities came close but offer a different level of daily support than requested.`);
+  }
+  if (summary.rejectedByBudget > 0) {
+    messages.push(`${summary.rejectedByBudget} communities exceeded the budget that was marked as mandatory.`);
+  }
+  if (summary.rejectedByDistance > 0) {
+    messages.push(`${summary.rejectedByDistance} communities were outside the distance range that was marked as mandatory.`);
+  }
+  if (summary.rejectedByVerification > 0) {
+    messages.push(`${summary.rejectedByVerification} communities still need extra confirmation on a required detail.`);
+  }
+
+  if (messages.length === 0) {
+    return "No community matched every requirement. These communities provide the closest overall fit based on what has been verified so far.";
+  }
+
+  return `${messages.slice(0, 2).join(" ")} These communities provide the closest overall fit based on what has been verified so far.`;
+}
+
+function deriveEngineState(baseState: QuestionnaireState, overrides: RelaxationOverrides): QuestionnaireState {
+  const next = JSON.parse(JSON.stringify(baseState)) as QuestionnaireState;
+
+  if (overrides.adjustBudget) {
+    const currentBudget = Number(next.budget || 0);
+    next.budget = Math.round(Math.max(currentBudget * 1.25, currentBudget + 1500));
+    next.notes = next.notes.replace(/strict budget|hard budget|must stay under|budget is mandatory/gi, "").trim();
+  }
+
+  if (overrides.expandDistance) {
+    next.distanceFromFamily = "";
+    next.referenceLocationValue = "";
+    next.humanIntelligenceV2.distanceProfile.referenceLocations.parentCurrentHome = "";
+    next.humanIntelligenceV2.distanceProfile.referenceLocations.primaryCaregiverHome = "";
+    next.humanIntelligenceV2.distanceProfile.referenceLocations.secondaryFamilyHomes = "";
+    next.humanIntelligenceV2.distanceProfile.referenceLocations.preferredHospital = "";
+    next.humanIntelligenceV2.distanceProfile.referenceLocations.placeOfWorship = "";
+    next.humanIntelligenceV2.distanceProfile.driveTimes.normal = "";
+    next.humanIntelligenceV2.distanceProfile.driveTimes.rushHour = "";
+    next.humanIntelligenceV2.distanceProfile.driveTimes.emergency = "";
+    next.notes = next.notes.replace(/distance is mandatory|must be within|only in miami-dade|stay in miami-dade|only in palm beach|must stay close/gi, "").trim();
+  }
+
+  if (overrides.allowAssistedLiving) {
+    if (next.assistanceLevel === "Skilled nursing care") {
+      next.assistanceLevel = "Light assistance";
+    }
+    if (next.futureCarePreference === "Independent communities only") {
+      next.futureCarePreference = "Independent today, support available later";
+    }
+  }
+
+  if (overrides.includeCommunitiesWithoutMemoryCare && next.memoryStatus === "Significant memory issues") {
+    next.memoryStatus = "Mild memory issues";
+  }
+
+  if (overrides.removeActivityPreference) {
+    next.happinessPreferences = [];
+  }
+
+  return next;
 }
 
 function familyNarrative(recommendation: RankedRecommendation): string[] {
@@ -128,6 +208,13 @@ export function ResultsPageClient() {
   const [facilities, setFacilities] = useState<SearchFacility[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
+  const [relaxationOverrides, setRelaxationOverrides] = useState<RelaxationOverrides>({
+    adjustBudget: false,
+    expandDistance: false,
+    allowAssistedLiving: false,
+    includeCommunitiesWithoutMemoryCare: false,
+    removeActivityPreference: false,
+  });
   const [verificationSentByFacility, setVerificationSentByFacility] = useState<Record<number, boolean>>({});
   const [verificationAuditLog, setVerificationAuditLog] = useState<Array<{
     facilityId: number;
@@ -177,7 +264,8 @@ export function ResultsPageClient() {
     };
   }, [textQuery]);
 
-  const engineOutput = useMemo(() => runOptimeV2Engine(facilities, state), [facilities, state]);
+  const engineState = useMemo(() => deriveEngineState(state, relaxationOverrides), [state, relaxationOverrides]);
+  const engineOutput = useMemo(() => runOptimeV2Engine(facilities, engineState), [facilities, engineState]);
   const visibleRecommendations = useMemo(() => engineOutput.displayedRecommendations, [engineOutput]);
   const topRecommendations = useMemo(() => visibleRecommendations.slice(0, TOP_RECOMMENDATION_COUNT), [visibleRecommendations]);
   const remainingRecommendations = useMemo(() => visibleRecommendations.slice(TOP_RECOMMENDATION_COUNT), [visibleRecommendations]);
@@ -205,6 +293,8 @@ export function ResultsPageClient() {
     const unknownItems = report.audit.verificationChecklist.filter((item) => item.state === "UNKNOWN");
     const noItems = report.audit.verificationChecklist.filter((item) => item.state === "NO");
     const standout = stoodOutBullets(recommendation);
+    const visitQuestions = report.audit.clinicalReasoning.questionsForFacility.slice(0, 4);
+    const reviewDate = formatReviewDate(report.audit.confidence.lastIntelligenceRefresh);
 
     return (
       <article key={facility.id} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
@@ -230,10 +320,25 @@ export function ResultsPageClient() {
             <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
           </div>
           <div className="rounded-2xl border border-[#d8e7dc] bg-[#f4fbf6] px-3 py-2 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Recommendation Ready</p>
-            <p className="mt-1 text-base font-semibold text-[#2f6d3e]">Yes</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Overall match</p>
+            <p className="mt-1 text-base font-semibold text-[#2f6d3e]">{Math.max(1, Math.round(recommendation.totalScore))}%</p>
           </div>
         </div>
+
+        <section className="mt-4 grid gap-3 rounded-xl border border-[#d9e3ec] bg-white p-4 text-sm text-[#4f473d] sm:grid-cols-3">
+          <div>
+            <p className="font-semibold text-[#2f2a24]">Confidence</p>
+            <p className="mt-1">{visualConfidenceLabel(report.confidenceScore)} confidence</p>
+          </div>
+          <div>
+            <p className="font-semibold text-[#2f2a24]">Verification date</p>
+            <p className="mt-1">{reviewDate}</p>
+          </div>
+          <div>
+            <p className="font-semibold text-[#2f2a24]">Overall fit</p>
+            <p className="mt-1">{recommendation.rankReason || "One of the strongest available options for this search."}</p>
+          </div>
+        </section>
 
         <div className="mt-4 space-y-3 text-sm text-[#4f473d]">
           <section className="rounded-xl border border-[#d6e4ef] bg-[#f5fbff] p-4">
@@ -278,7 +383,7 @@ export function ResultsPageClient() {
 
           {noItems.length > 0 ? (
             <section className="rounded-xl border border-[#f0c9bf] bg-[#fff3ef] p-4">
-              <p className="font-semibold text-[#8b4f3f]">Not currently available</p>
+              <p className="font-semibold text-[#8b4f3f]">Things to consider</p>
               <ul className="mt-2 space-y-2 text-sm text-[#8b4f3f]">
                 {noItems.slice(0, 6).map((item) => (
                   <li key={`${facility.id}-not-available-${item.label}`} className="rounded-lg border border-[#e9c5bc] bg-[#fff3ef] px-3 py-2">
@@ -303,6 +408,16 @@ export function ResultsPageClient() {
 
           <section className="rounded-xl border border-[#d9e3ec] bg-white p-4">
             <p className="font-semibold text-[#24425e]">What should happen next</p>
+            {visitQuestions.length > 0 ? (
+              <ul className="mt-2 space-y-2 text-sm text-[#5f5548]">
+                {visitQuestions.map((question) => (
+                  <li key={`${facility.id}-visit-${question}`} className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#6f9a86]" aria-hidden="true" />
+                    <span>{question}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <button
               type="button"
               onClick={() => {
@@ -489,21 +604,15 @@ export function ResultsPageClient() {
           </div>
         </header>
 
-        {!isLoading && !engineOutput.qualityCheck.passed ? (
+        {!isLoading && facilities.length > 0 && !hasExactMatches ? (
           <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
-            <p className="text-xl font-semibold">No exact match passed every hard requirement.</p>
-            <p className="mt-3 text-sm">Showing the closest verified matches ranked by satisfied requirements. You can relax one or more requirements to refine the list.</p>
+            <p className="text-xl font-semibold">Best Available Communities</p>
+            <p className="mt-3 text-sm">No community matched every requirement. These communities provide the closest overall fit.</p>
             {hasVisibleRecommendations ? (
               <p className="mt-4 rounded-2xl border border-[#e3cfa6] bg-[#fff6e7] px-4 py-3 text-sm font-semibold text-[#8a6330]">
-                Closest verified matches are shown now with the highest satisfied-requirement score.
+                {buildBestAvailableSummary(engineOutput.rejectionSummary)}
               </p>
             ) : null}
-          </section>
-        ) : null}
-
-        {!isLoading && engineOutput.qualityCheck.passed && engineOutput.accepted.length === 0 ? (
-          <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
-            <p className="text-xl font-semibold">We couldn&apos;t find perfect matches, but we found nearby alternatives.</p>
           </section>
         ) : null}
 
@@ -511,26 +620,35 @@ export function ResultsPageClient() {
           <section className="mt-6 space-y-6">
             <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Results Summary</p>
-              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">{hasExactMatches ? "Top person-first matches for this search" : "Closest verified matches for this search"}</h2>
+              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">{hasExactMatches ? "Recommended Communities" : "Best Available Communities"}</h2>
               <p className="mt-2 text-sm text-[#5c5347]">
                 {hasExactMatches
                   ? "Each recommendation answers four simple questions: why it is a good fit, what we already know, what still needs confirmation, and what should happen next."
-                  : "These recommendations are ranked by satisfied requirements and verified fit, with unsatisfied hard requirements called out clearly."}
+                  : "These communities are the strongest available options based on verified fit, trade-offs, and what still needs confirmation."}
               </p>
             </article>
 
             {!hasExactMatches ? (
               <article className="rounded-3xl border border-[#e8ddcc] bg-[#fffaf0] p-6 text-sm text-[#5f554a]">
-                <p className="font-semibold text-[#7a5a2f]">Hard requirements that remain unsatisfied</p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  <div>Budget: {engineOutput.rejectionSummary.rejectedByBudget}</div>
-                  <div>Care: {engineOutput.rejectionSummary.rejectedByCare}</div>
-                  <div>Activities: {engineOutput.rejectionSummary.rejectedByActivities}</div>
-                  <div>Future care: {engineOutput.rejectionSummary.rejectedByFutureCare}</div>
-                  <div>Distance: {engineOutput.rejectionSummary.rejectedByDistance}</div>
-                  <div>Verification: {engineOutput.rejectionSummary.rejectedByVerification}</div>
-                  <div>Unknown: {engineOutput.rejectionSummary.rejectedByUnknown}</div>
-                  <div className="sm:col-span-2 lg:col-span-3">Top rejection reason: {engineOutput.rejectionSummary.topRejectionReason}</div>
+                <p className="font-semibold text-[#7a5a2f]">Things to consider</p>
+                <p className="mt-2 leading-6">{buildBestAvailableSummary(engineOutput.rejectionSummary)}</p>
+                <p className="mt-4 font-semibold text-[#7a5a2f]">Adjust your search</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setRelaxationOverrides((current) => ({ ...current, adjustBudget: !current.adjustBudget }))} className={`rounded-full border px-4 py-2 text-sm font-semibold ${relaxationOverrides.adjustBudget ? "border-[#5f7f6b] bg-[#e9f1e7] text-[#30563e]" : "border-[#d9cfbf] bg-white text-[#534a3d] hover:bg-[#efe8db]"}`}>
+                    Adjust Budget
+                  </button>
+                  <button type="button" onClick={() => setRelaxationOverrides((current) => ({ ...current, expandDistance: !current.expandDistance }))} className={`rounded-full border px-4 py-2 text-sm font-semibold ${relaxationOverrides.expandDistance ? "border-[#5f7f6b] bg-[#e9f1e7] text-[#30563e]" : "border-[#d9cfbf] bg-white text-[#534a3d] hover:bg-[#efe8db]"}`}>
+                    Expand Distance
+                  </button>
+                  <button type="button" onClick={() => setRelaxationOverrides((current) => ({ ...current, allowAssistedLiving: !current.allowAssistedLiving }))} className={`rounded-full border px-4 py-2 text-sm font-semibold ${relaxationOverrides.allowAssistedLiving ? "border-[#5f7f6b] bg-[#e9f1e7] text-[#30563e]" : "border-[#d9cfbf] bg-white text-[#534a3d] hover:bg-[#efe8db]"}`}>
+                    Allow Assisted Living
+                  </button>
+                  <button type="button" onClick={() => setRelaxationOverrides((current) => ({ ...current, includeCommunitiesWithoutMemoryCare: !current.includeCommunitiesWithoutMemoryCare }))} className={`rounded-full border px-4 py-2 text-sm font-semibold ${relaxationOverrides.includeCommunitiesWithoutMemoryCare ? "border-[#5f7f6b] bg-[#e9f1e7] text-[#30563e]" : "border-[#d9cfbf] bg-white text-[#534a3d] hover:bg-[#efe8db]"}`}>
+                    Include Communities Without Memory Care
+                  </button>
+                  <button type="button" onClick={() => setRelaxationOverrides((current) => ({ ...current, removeActivityPreference: !current.removeActivityPreference }))} className={`rounded-full border px-4 py-2 text-sm font-semibold ${relaxationOverrides.removeActivityPreference ? "border-[#5f7f6b] bg-[#e9f1e7] text-[#30563e]" : "border-[#d9cfbf] bg-white text-[#534a3d] hover:bg-[#efe8db]"}`}>
+                    Remove Activity Preference
+                  </button>
                 </div>
               </article>
             ) : null}

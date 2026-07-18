@@ -1,0 +1,9 @@
+# Family Experience Report
+
+| Experience Element | Status | Evidence |
+| --- | --- | --- |
+| Overall match shown on card | PASS | Each recommendation card displays an overall match summary. |
+| Confidence shown on card | PASS | Each recommendation card shows family-facing confidence language. |
+| Verification date shown on card | PASS | Each recommendation card shows a review date. |
+| Recommended next questions shown | PASS | Card includes next-step questions for visits or verification. |
+| Smart relaxation options available | PASS | Results can be adjusted immediately without restarting the search. |

@@ -1509,57 +1509,90 @@ function scoreLuxuryAmenities(facility: SearchFacility): number {
   return clamp(score);
 }
 
+function hasStrictBudgetRequirement(state: QuestionnaireState): boolean {
+  const notes = state.notes.toLowerCase();
+  return notes.includes("strict budget")
+    || notes.includes("hard budget")
+    || notes.includes("must stay under")
+    || notes.includes("budget is mandatory")
+    || notes.includes("תקציב קשיח");
+}
+
+function hasMandatoryDistanceRequirement(state: QuestionnaireState): boolean {
+  const notes = state.notes.toLowerCase();
+  return notes.includes("distance is mandatory")
+    || notes.includes("must be within")
+    || notes.includes("only in miami-dade")
+    || notes.includes("stay in miami-dade")
+    || notes.includes("only in palm beach")
+    || notes.includes("must stay close");
+}
+
+function hasMandatoryLanguageRequirement(state: QuestionnaireState): boolean {
+  const preferredLanguage = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage;
+  const notes = state.notes.toLowerCase();
+  if (!preferredLanguage || preferredLanguage === "English") {
+    return false;
+  }
+
+  return state.humanIntelligenceV2.languageProfile.bilingualStaffRequired === "Yes"
+    || state.humanIntelligenceV2.futureCareProfile.familiarLanguageRequirement === "Yes"
+    || notes.includes("language is mandatory")
+    || notes.includes("must speak")
+    || notes.includes("required language");
+}
+
+function supportsMandatoryLanguage(facility: SearchFacility, state: QuestionnaireState): boolean {
+  const preferredLanguage = state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage.trim().toLowerCase();
+  if (!preferredLanguage) {
+    return true;
+  }
+
+  return includesAny(joinedFacilityText(facility), [preferredLanguage]);
+}
+
 function collectHardRejectionReasons(facility: SearchFacility, state: QuestionnaireState): string[] {
   const reasons: string[] = [];
   const careText = facility.careTypes.join(" ").toLowerCase();
-  const notes = state.notes.toLowerCase();
-  const careFit = state.assistanceLevel === "Fully independent" ? scoreIndependenceCriterion(facility, state) : scoreCareFit(facility, state);
-  const financialFit = scoreFinancialFit(facility, state);
   const familyFit = scoreFamilyFit(state).score;
   const currentCareNeed = resolveCurrentCareNeed(state);
-  const allowedCareTypes = resolveAllowedCareTypes(currentCareNeed, state.futureCarePreference);
-  reasons.push(...evaluateFutureCarePreference(facility, state).rejectionReasons);
+  const allowedCareTypes = resolveAllowedCareTypes(currentCareNeed);
 
   if (!supportsAllowedCareType(facility, allowedCareTypes)) {
-    reasons.push(`Care strategy mismatch: ${currentCareNeed} requires one of ${allowedCareTypes.join(", ")}.`);
+    reasons.push(`This community does not provide the required level of daily support (${currentCareNeed}).`);
   }
 
-  if (careFit < 30) {
-    reasons.push("Required care level is not met for this community.");
+  if (hasStrictBudgetRequirement(state)) {
+    const parsedBudget = parsePriceRange(facility.priceRange);
+    if (parsedBudget && parsedBudget.min > (state.budget || 0)) {
+      reasons.push("This community is outside the monthly budget that was marked as mandatory.");
+    }
   }
 
-  const parsedBudget = parsePriceRange(facility.priceRange);
-  if (parsedBudget && parsedBudget.min > (state.budget || 0) && financialFit < 70) {
-    reasons.push("Budget affordability requirement is not met.");
-  }
-
-  if (hasDistanceConstraint(state) && familyFit < 30) {
-    reasons.push("Geographic radius requirement is not met.");
+  if (hasMandatoryDistanceRequirement(state) && hasDistanceConstraint(state) && familyFit < 30) {
+    reasons.push("This community falls outside the distance range that was marked as mandatory.");
   }
 
   const memoryRequired = state.memoryStatus === "Significant memory issues";
   if (memoryRequired && !careText.includes("memory care")) {
-    reasons.push("Memory care is required but this community does not explicitly indicate memory care support.");
+    reasons.push("Memory care is required, and this community does not clearly offer it.");
   }
 
   const skilledRequired = state.assistanceLevel === "Skilled nursing care";
   if (skilledRequired && !careText.includes("skilled nursing")) {
-    reasons.push("Skilled nursing is required but this community does not explicitly indicate skilled nursing support.");
+    reasons.push("Skilled nursing is required, and this community does not clearly offer it.");
   }
 
-  const budgetStrict = notes.includes("strict budget") || notes.includes("hard budget") || notes.includes("must stay under") || notes.includes("תקציב קשיח");
-  if (budgetStrict) {
-    const parsed = parsePriceRange(facility.priceRange);
-    if (parsed && parsed.min > (state.budget || 0)) {
-      reasons.push("Strict budget requirement is not met.");
-    }
+  if (hasMandatoryLanguageRequirement(state) && !supportsMandatoryLanguage(facility, state)) {
+    reasons.push(`This community does not clearly support the required language preference (${state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage}).`);
   }
 
+  const notes = state.notes.toLowerCase();
   const wheelchairRequired = notes.includes("wheelchair") || notes.includes("accessible") || notes.includes("נגישות") || notes.includes("כיסא גלגלים");
   if (wheelchairRequired) {
     const text = joinedFacilityText(facility);
     if (!includesAny(text, ["wheelchair", "accessible", "accessibility"])) {
-      reasons.push("Wheelchair accessibility is marked as required but is not confirmed for this community.");
+      reasons.push("Wheelchair accessibility was marked as required but is not clearly confirmed for this community.");
     }
   }
 
@@ -2874,10 +2907,6 @@ function buildQualityCheck(
     failures.push("At least one answer is not mapped to score, explanation, rejection, or missing information analysis.");
   }
 
-  if (accepted.length === 0) {
-    failures.push("No recommendations remained after hard requirement checks.");
-  }
-
   if (accepted.length > 0) {
     const top = accepted[0];
     if (top.priorityScores.careFit < 30) {
@@ -2894,10 +2923,6 @@ function buildQualityCheck(
 
     if (!accepted.some((item) => item.whyThisFits.toLowerCase().includes("because"))) {
       failures.push("Personal explanation is too generic.");
-    }
-
-    if (accepted.some((item) => item.hardRejectionReasons.some((reason) => reason.toLowerCase().includes("distance")))) {
-      failures.push("Distance is incorrectly used as a hard rejection rule.");
     }
   }
 
@@ -3025,24 +3050,34 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     const hardRejectionReasons: string[] = [];
 
     const currentCareNeed = resolveCurrentCareNeed(state);
-    const allowedCareTypes = resolveAllowedCareTypes(currentCareNeed, state.futureCarePreference);
+    const allowedCareTypes = resolveAllowedCareTypes(currentCareNeed);
     if (!supportsAllowedCareType(facility, allowedCareTypes)) {
-      hardRejectionReasons.push("Required care level is not available for this facility.");
+      hardRejectionReasons.push("This community does not provide the required level of daily support.");
     }
 
     const criticalNo = assessments.filter((assessment) => assessment.priority === "CRITICAL" && assessment.state === "NO");
     criticalNo.forEach((assessment) => {
-      hardRejectionReasons.push(`Required medical support unavailable: ${assessment.label}.`);
+      hardRejectionReasons.push(`This community is missing a required clinical capability: ${assessment.label}.`);
     });
 
-    const budget = Number(state.budget || 0);
-    if (budget > 0 && facility.price > budget * 1.2) {
-      hardRejectionReasons.push(`Budget outside allowed tolerance: estimated $${facility.price.toLocaleString()}/month exceeds the budget guardrail.`);
+    if (hasStrictBudgetRequirement(state)) {
+      const parsedBudget = parsePriceRange(facility.priceRange);
+      if (parsedBudget && parsedBudget.min > (state.budget || 0)) {
+        hardRejectionReasons.push("This community is outside the monthly budget that was marked as mandatory.");
+      }
     }
 
     const locationHint = `${state.referenceLocationValue || ""} ${state.notes || ""}`.toLowerCase();
-    if (locationHint.includes("miami-dade") && !miamiDadeCities.has(String(facility.city || "").toUpperCase())) {
-      hardRejectionReasons.push("Geographic requirement is not feasible for this facility.");
+    if (hasMandatoryDistanceRequirement(state)) {
+      if (locationHint.includes("miami-dade") && !miamiDadeCities.has(String(facility.city || "").toUpperCase())) {
+        hardRejectionReasons.push("This community is outside the location range that was marked as mandatory.");
+      } else if (hasDistanceConstraint(state) && family.score < 30) {
+        hardRejectionReasons.push("This community falls outside the distance range that was marked as mandatory.");
+      }
+    }
+
+    if (hasMandatoryLanguageRequirement(state) && !supportsMandatoryLanguage(facility, state)) {
+      hardRejectionReasons.push(`This community does not clearly support the required language preference (${state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage}).`);
     }
 
     const scoredRequirements = assessments.filter((assessment) => assessment.priority === "CRITICAL" || assessment.priority === "IMPORTANT");
@@ -3051,10 +3086,6 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     const unknown = scoredRequirements.filter((assessment) => assessment.state === "UNKNOWN" || assessment.state === "LIMITED").length;
     const matchScore = verifiedYes + verifiedNo > 0 ? Math.round((verifiedYes / (verifiedYes + verifiedNo)) * 100) : 0;
     const confidenceScore = verifiedYes + verifiedNo + unknown > 0 ? Math.round(((verifiedYes + verifiedNo) / (verifiedYes + verifiedNo + unknown)) * 100) : 100;
-
-    if (matchScore <= 0) {
-      hardRejectionReasons.push("Final score did not clear the acceptance threshold.");
-    }
 
     const preferenceYes = assessments.filter((assessment) => assessment.priority === "PREFERENCE" && assessment.state === "YES").length;
 
@@ -3220,7 +3251,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
   });
 
   const accepted = recommendations
-    .filter((recommendation) => recommendation.hardRejectionReasons.length === 0 && recommendation.totalScore > 0)
+    .filter((recommendation) => recommendation.hardRejectionReasons.length === 0)
     .sort((a, b) => {
       const preferenceBonusA = a.report.audit.clinicalReasoning.verifiedCapabilities.filter((item) => a.report.audit.clinicalReasoning.questionsForFacility.every((q) => !q.toLowerCase().includes(item.toLowerCase()))).length;
       const preferenceBonusB = b.report.audit.clinicalReasoning.verifiedCapabilities.filter((item) => b.report.audit.clinicalReasoning.questionsForFacility.every((q) => !q.toLowerCase().includes(item.toLowerCase()))).length;
@@ -3240,7 +3271,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
         || b.priorityScores.familyFit - a.priorityScores.familyFit;
     });
 
-  const rejected = recommendations.filter((recommendation) => recommendation.hardRejectionReasons.length > 0 || recommendation.totalScore <= 0);
+  const rejected = recommendations.filter((recommendation) => recommendation.hardRejectionReasons.length > 0);
   const fallbackRecommendations = recommendations
     .slice()
     .sort((a, b) => {
@@ -3267,7 +3298,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     item.report.rankingExplanation = item.rankReason;
   });
 
-  const qualityCheck = buildQualityCheck(accepted, signalRoles);
+  const qualityCheck = buildQualityCheck(displayedRecommendations, signalRoles);
 
   return {
     accepted,

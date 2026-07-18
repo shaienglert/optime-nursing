@@ -1,0 +1,7 @@
+# UI Language Review
+
+| Language Review Item | Status | Notes |
+| --- | --- | --- |
+| Best Available Communities copy present | PASS | Family-facing fallback copy is present. |
+| Technical threshold language removed | PASS | No banned internal-engine phrases found in results UI. |
+| Natural-language trade-off summary present | PASS | Trade-offs are presented as family-facing considerations. |
