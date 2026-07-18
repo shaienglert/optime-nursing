@@ -1,7 +1,7 @@
 # MASTER_BOOK_COMPLETENESS_REPORT
 
-- Total chapters required: 32
-- Total chapters generated: 32
+- Total chapters required: 33
+- Total chapters generated: 33
 - Missing chapters: 0
 
 ## Missing Chapters
@@ -12,6 +12,8 @@
 
 - TODO files: none detected by repository scan.
 - API modular route files: backend/app/api/facilities.py exists but is empty.
+- Decision Psychology Research: documented in docs/master-book/15_DECISION_PSYCHOLOGY.md and backed by reports/fear_research_program.md plus data/fear_research_catalog.json.
+- Outcome Framework: documented in docs/master-book/32_OUTCOME_FRAMEWORK.md and backed by reports/real_world_outcome_validation.md.
 
 ## Inconsistent Documentation
 
@@ -26,6 +28,8 @@
 
 - Discovery completion to 67/67 counties not yet achieved in latest statewide inventory report.
 - Some generated executive/agent surfaces show placeholder values and need regeneration from canonical data.
+- Decision Psychology Research chapter gap: closed.
+- Outcome Framework chapter gap: closed.
 
 ## Missing Knowledge Centers
 
