@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { calculateUnderstandingProfile } from "@/lib/understanding-profile";
 import { QUESTION_GRAPH, buildVisibilityAudit, validateQuestionGraph } from "@/lib/questionnaire-graph";
 import { persistAdaptiveQuestionSignal, persistHumanIntelligenceScores } from "@/lib/api";
+import { SEARCH_DRAFT_SESSION_KEY, loadSessionJson, saveSessionJson } from "@/lib/search-session";
 
 validateQuestionGraph(QUESTION_GRAPH);
 
@@ -671,7 +672,8 @@ function buildAdaptiveSignals(input: CulturalSignalsInput): Array<{
 
 export default function Home() {
   const router = useRouter();
-  const { setState } = useQuestionnaire();
+  const { setState, state: questionnaireState } = useQuestionnaire();
+  const hasRestoredDraft = useRef(false);
 
   const [relationship, setRelationship] = useState("");
   const [gender, setGender] = useState("");
@@ -921,6 +923,331 @@ export default function Home() {
       }),
     [relationship, primaryAssistanceLevel, widowStatus, religionImportance, faithTraditions, preferredSpokenLanguage],
   );
+
+  useEffect(() => {
+    if (hasRestoredDraft.current) {
+      return;
+    }
+
+    const draft = loadSessionJson<Record<string, unknown>>(SEARCH_DRAFT_SESSION_KEY);
+    const source = draft || null;
+    if (!source) {
+      hasRestoredDraft.current = true;
+      return;
+    }
+
+    setRelationship(String(source.relationship || ""));
+    setGender(String(source.gender || ""));
+    setCoupleAssistance(String(source.coupleAssistance || ""));
+    setAgeGroup(String(source.ageGroup || ""));
+    setAssistanceLevels(Array.isArray(source.assistanceLevels) ? source.assistanceLevels.map(String) : []);
+    setFutureCarePreference(String(source.futureCarePreference || ""));
+    setMemoryStatus(String(source.memoryStatus || ""));
+    setHappinessPreferences(Array.isArray(source.happinessPreferences) ? source.happinessPreferences.map(String) : []);
+    setBudget(Number(source.budget || DEFAULT_BUDGET));
+    setLivingAloneDuration(String(source.livingAloneDuration || ""));
+    setSocialInteractionFrequency(String(source.socialInteractionFrequency || ""));
+    setNewFriendsImportance(String(source.newFriendsImportance || ""));
+    setHobbyParticipation(Array.isArray(source.hobbyParticipation) ? source.hobbyParticipation.map(String) : []);
+    setPreferredSocialIntensity(String(source.preferredSocialIntensity || ""));
+    setInvolvedFamilyMembers(String(source.involvedFamilyMembers || ""));
+    setVisitFrequencyExpectation(String(source.visitFrequencyExpectation || ""));
+    setGrandchildrenPresence(String(source.grandchildrenPresence || ""));
+    setGrandchildrenImportance(String(source.grandchildrenImportance || ""));
+    setFamilyDecisionDynamics(String(source.familyDecisionDynamics || ""));
+    setEmergencySupportNetwork(String(source.emergencySupportNetwork || ""));
+    setCoupleStayTogetherPreference(String(source.coupleStayTogetherPreference || ""));
+    setCoupleSameCareLevel(String(source.coupleSameCareLevel || ""));
+    setTemporarySeparationAcceptance(String(source.temporarySeparationAcceptance || ""));
+    setWidowStatus(String(source.widowStatus || ""));
+    setLossTiming(String(source.lossTiming || ""));
+    setSocialActivityChangeSinceLoss(String(source.socialActivityChangeSinceLoss || ""));
+    setSocialInteractionNeed(String(source.socialInteractionNeed || ""));
+    setGriefSupportInterest(String(source.griefSupportInterest || ""));
+    setReligionImportance(String(source.religionImportance || ""));
+    setKosherRequirements(String(source.kosherRequirements || ""));
+    setSynagogueChurchAccess(String(source.synagogueChurchAccess || ""));
+    setHolidayCelebrations(String(source.holidayCelebrations || ""));
+    setCulturalIdentity(String(source.culturalIdentity || ""));
+    setIsraeliJewishCommunityPreference(String(source.israeliJewishCommunityPreference || ""));
+    setJewishProgrammingImportance(String(source.jewishProgrammingImportance || ""));
+    setChurchAccessRequirement(String(source.churchAccessRequirement || ""));
+    setChristianServiceRequirement(String(source.christianServiceRequirement || ""));
+    setHalalMealsRequirement(String(source.halalMealsRequirement || ""));
+    setPrayerFacilityRequirement(String(source.prayerFacilityRequirement || ""));
+    setPreferredSpokenLanguage(String(source.preferredSpokenLanguage || ""));
+    setNativeLanguage(String(source.nativeLanguage || ""));
+    setMedicalDiscussionLanguage(String(source.medicalDiscussionLanguage || ""));
+    setSocialInteractionLanguage(String(source.socialInteractionLanguage || ""));
+    setLanguageNeedScope(String(source.languageNeedScope || ""));
+    setBilingualStaffRequired(String(source.bilingualStaffRequired || ""));
+    setLanguagesUnderstood(Array.isArray(source.languagesUnderstood) ? source.languagesUnderstood.map(String) : []);
+    setFamilyLanguages(Array.isArray(source.familyLanguages) ? source.familyLanguages.map(String) : []);
+    setFaithTraditions(Array.isArray(source.faithTraditions) ? source.faithTraditions.map(String) : []);
+    setReligiousSupportNeeds(Array.isArray(source.religiousSupportNeeds) ? source.religiousSupportNeeds.map(String) : []);
+    setWhatFeelsLikeHome(Array.isArray(source.whatFeelsLikeHome) ? source.whatFeelsLikeHome.map(String) : []);
+    setDietaryPreferences(Array.isArray(source.dietaryPreferences) ? source.dietaryPreferences.map(String) : []);
+    setFamilyInvolvementExpectation(String(source.familyInvolvementExpectation || ""));
+    setFamilyDecisionRole(String(source.familyDecisionRole || ""));
+    setPreferredEnvironment(Array.isArray(source.preferredEnvironment) ? source.preferredEnvironment.map(String) : []);
+    setIntrovertExtrovert(String(source.introvertExtrovert || ""));
+    setCommunitySizePreference(String(source.communitySizePreference || ""));
+    setPrivacyImportance(String(source.privacyImportance || ""));
+    setStructureFlexibilityPreference(String(source.structureFlexibilityPreference || ""));
+    setIndependenceInterests(Array.isArray(source.independenceInterests) ? source.independenceInterests.map(String) : []);
+    setDrivingImportance(String(source.drivingImportance || ""));
+    setCookingImportance(String(source.cookingImportance || ""));
+    setAbilityToLeaveIndependently(String(source.abilityToLeaveIndependently || ""));
+    setPetOwnershipImportance(String(source.petOwnershipImportance || ""));
+    setHostingFamilyImportance(String(source.hostingFamilyImportance || ""));
+    setBiggestFear(String(source.biggestFear || ""));
+    setAttitudeTowardMove(String(source.attitudeTowardMove || ""));
+    setPreviousMoves(String(source.previousMoves || ""));
+    setBereavementStatus(String(source.bereavementStatus || ""));
+    setLonelinessRisk(String(source.lonelinessRisk || ""));
+    setSocialIsolationConcern(String(source.socialIsolationConcern || ""));
+    setRecentHospitalization(String(source.recentHospitalization || ""));
+    setHospitalizationRecency(String(source.hospitalizationRecency || ""));
+    setPostHospitalRehabNeed(String(source.postHospitalRehabNeed || ""));
+    setWanderingConcerns(String(source.wanderingConcerns || ""));
+    setAgingInPlaceImportance(String(source.agingInPlaceImportance || ""));
+    setAvoidFutureMovesPreference(String(source.avoidFutureMovesPreference || ""));
+    setContinuumOfCarePreference(String(source.continuumOfCarePreference || ""));
+    setSecureMemoryNeighborhoodNeed(String(source.secureMemoryNeighborhoodNeed || ""));
+    setFamiliarLanguageRequirement(String(source.familiarLanguageRequirement || ""));
+    setParentCurrentHome(String(source.parentCurrentHome || ""));
+    setPrimaryCaregiverHome(String(source.primaryCaregiverHome || ""));
+    setSecondaryFamilyHomes(String(source.secondaryFamilyHomes || ""));
+    setPreferredHospital(String(source.preferredHospital || ""));
+    setPlaceOfWorship(String(source.placeOfWorship || ""));
+    setNormalDriveTime(String(source.normalDriveTime || ""));
+    setRushHourDriveTime(String(source.rushHourDriveTime || ""));
+    setEmergencyDriveTime(String(source.emergencyDriveTime || ""));
+    setFamilyVisitExpectation(String(source.familyVisitExpectation || ""));
+    setFamilyCenterOfGravity(String(source.familyCenterOfGravity || ""));
+    setMultiLocationOptimization(String(source.multiLocationOptimization || ""));
+    setEmergencyAccessImportance(String(source.emergencyAccessImportance || ""));
+    setSpontaneousVisitsImportance(String(source.spontaneousVisitsImportance || ""));
+    setGrandchildrenVisitsImportance(String(source.grandchildrenVisitsImportance || ""));
+    setOptimizationStrategy(String(source.optimizationStrategy || "Balanced location"));
+    setNotes(String(source.notes || ""));
+    setMedicalDocumentsAvailable(Boolean(source.medicalDocumentsAvailable));
+
+    hasRestoredDraft.current = true;
+  }, [questionnaireState]);
+
+  useEffect(() => {
+    if (!hasRestoredDraft.current) {
+      return;
+    }
+
+    saveSessionJson(SEARCH_DRAFT_SESSION_KEY, {
+      relationship,
+      gender,
+      coupleAssistance,
+      ageGroup,
+      assistanceLevels,
+      futureCarePreference,
+      memoryStatus,
+      happinessPreferences,
+      budget,
+      livingAloneDuration,
+      socialInteractionFrequency,
+      newFriendsImportance,
+      hobbyParticipation,
+      preferredSocialIntensity,
+      involvedFamilyMembers,
+      visitFrequencyExpectation,
+      grandchildrenPresence,
+      grandchildrenImportance,
+      familyDecisionDynamics,
+      emergencySupportNetwork,
+      coupleStayTogetherPreference,
+      coupleSameCareLevel,
+      temporarySeparationAcceptance,
+      widowStatus,
+      lossTiming,
+      socialActivityChangeSinceLoss,
+      socialInteractionNeed,
+      griefSupportInterest,
+      religionImportance,
+      kosherRequirements,
+      synagogueChurchAccess,
+      holidayCelebrations,
+      culturalIdentity,
+      israeliJewishCommunityPreference,
+      jewishProgrammingImportance,
+      churchAccessRequirement,
+      christianServiceRequirement,
+      halalMealsRequirement,
+      prayerFacilityRequirement,
+      preferredSpokenLanguage,
+      nativeLanguage,
+      medicalDiscussionLanguage,
+      socialInteractionLanguage,
+      languageNeedScope,
+      bilingualStaffRequired,
+      languagesUnderstood,
+      familyLanguages,
+      faithTraditions,
+      religiousSupportNeeds,
+      whatFeelsLikeHome,
+      dietaryPreferences,
+      familyInvolvementExpectation,
+      familyDecisionRole,
+      preferredEnvironment,
+      introvertExtrovert,
+      communitySizePreference,
+      privacyImportance,
+      structureFlexibilityPreference,
+      independenceInterests,
+      drivingImportance,
+      cookingImportance,
+      abilityToLeaveIndependently,
+      petOwnershipImportance,
+      hostingFamilyImportance,
+      biggestFear,
+      attitudeTowardMove,
+      previousMoves,
+      bereavementStatus,
+      lonelinessRisk,
+      socialIsolationConcern,
+      recentHospitalization,
+      hospitalizationRecency,
+      postHospitalRehabNeed,
+      wanderingConcerns,
+      agingInPlaceImportance,
+      avoidFutureMovesPreference,
+      continuumOfCarePreference,
+      secureMemoryNeighborhoodNeed,
+      familiarLanguageRequirement,
+      parentCurrentHome,
+      primaryCaregiverHome,
+      secondaryFamilyHomes,
+      preferredHospital,
+      placeOfWorship,
+      normalDriveTime,
+      rushHourDriveTime,
+      emergencyDriveTime,
+      familyVisitExpectation,
+      familyCenterOfGravity,
+      multiLocationOptimization,
+      emergencyAccessImportance,
+      spontaneousVisitsImportance,
+      grandchildrenVisitsImportance,
+      optimizationStrategy,
+      notes,
+      medicalDocumentsAvailable,
+      recommendationReadiness: understandingProfile.understandingScore,
+      aiUnderstanding: understandingProfile.statusText,
+      extractedResidentProfile: {
+        relationship,
+        primaryAssistanceLevel,
+        futureCarePreference,
+        memoryStatus,
+        budget,
+      },
+    });
+  }, [
+    relationship,
+    gender,
+    coupleAssistance,
+    ageGroup,
+    assistanceLevels,
+    futureCarePreference,
+    memoryStatus,
+    happinessPreferences,
+    budget,
+    livingAloneDuration,
+    socialInteractionFrequency,
+    newFriendsImportance,
+    hobbyParticipation,
+    preferredSocialIntensity,
+    involvedFamilyMembers,
+    visitFrequencyExpectation,
+    grandchildrenPresence,
+    grandchildrenImportance,
+    familyDecisionDynamics,
+    emergencySupportNetwork,
+    coupleStayTogetherPreference,
+    coupleSameCareLevel,
+    temporarySeparationAcceptance,
+    widowStatus,
+    lossTiming,
+    socialActivityChangeSinceLoss,
+    socialInteractionNeed,
+    griefSupportInterest,
+    religionImportance,
+    kosherRequirements,
+    synagogueChurchAccess,
+    holidayCelebrations,
+    culturalIdentity,
+    israeliJewishCommunityPreference,
+    jewishProgrammingImportance,
+    churchAccessRequirement,
+    christianServiceRequirement,
+    halalMealsRequirement,
+    prayerFacilityRequirement,
+    preferredSpokenLanguage,
+    nativeLanguage,
+    medicalDiscussionLanguage,
+    socialInteractionLanguage,
+    languageNeedScope,
+    bilingualStaffRequired,
+    languagesUnderstood,
+    familyLanguages,
+    faithTraditions,
+    religiousSupportNeeds,
+    whatFeelsLikeHome,
+    dietaryPreferences,
+    familyInvolvementExpectation,
+    familyDecisionRole,
+    preferredEnvironment,
+    introvertExtrovert,
+    communitySizePreference,
+    privacyImportance,
+    structureFlexibilityPreference,
+    independenceInterests,
+    drivingImportance,
+    cookingImportance,
+    abilityToLeaveIndependently,
+    petOwnershipImportance,
+    hostingFamilyImportance,
+    biggestFear,
+    attitudeTowardMove,
+    previousMoves,
+    bereavementStatus,
+    lonelinessRisk,
+    socialIsolationConcern,
+    recentHospitalization,
+    hospitalizationRecency,
+    postHospitalRehabNeed,
+    wanderingConcerns,
+    agingInPlaceImportance,
+    avoidFutureMovesPreference,
+    continuumOfCarePreference,
+    secureMemoryNeighborhoodNeed,
+    familiarLanguageRequirement,
+    parentCurrentHome,
+    primaryCaregiverHome,
+    secondaryFamilyHomes,
+    preferredHospital,
+    placeOfWorship,
+    normalDriveTime,
+    rushHourDriveTime,
+    emergencyDriveTime,
+    familyVisitExpectation,
+    familyCenterOfGravity,
+    multiLocationOptimization,
+    emergencyAccessImportance,
+    spontaneousVisitsImportance,
+    grandchildrenVisitsImportance,
+    optimizationStrategy,
+    notes,
+    medicalDocumentsAvailable,
+    understandingProfile,
+    primaryAssistanceLevel,
+  ]);
 
   const handleFindHome = () => {
     const distanceIntelligence = buildDistanceIntelligence({

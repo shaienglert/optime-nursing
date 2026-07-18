@@ -1,6 +1,8 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+
+import { QUESTIONNAIRE_SESSION_KEY, loadSessionJson, removeSessionKey, saveSessionJson } from "@/lib/search-session";
 
 export type QuestionnaireState = {
   relationship: string;
@@ -356,8 +358,16 @@ type QuestionnaireContextValue = {
 const QuestionnaireContext = createContext<QuestionnaireContextValue | undefined>(undefined);
 
 export function QuestionnaireProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<QuestionnaireState>(DEFAULT_STATE);
-  const resetState = () => setState(DEFAULT_STATE);
+  const [state, setState] = useState<QuestionnaireState>(() => loadSessionJson<QuestionnaireState>(QUESTIONNAIRE_SESSION_KEY) || DEFAULT_STATE);
+
+  useEffect(() => {
+    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, state);
+  }, [state]);
+
+  const resetState = () => {
+    removeSessionKey(QUESTIONNAIRE_SESSION_KEY);
+    setState(DEFAULT_STATE);
+  };
 
   const value = useMemo(() => ({ state, setState, resetState }), [state]);
 
