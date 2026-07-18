@@ -26,6 +26,7 @@ The method is governed by:
 - Decision Psychology Command Canon DP-001 to DP-018: `docs/COMMAND_DP_001_018.md`
 - Expert Coordination Command Canon EXP-001 to EXP-015: `docs/COMMAND_EXP_001_015.md`
 - Database Command Canon DB-001 to DB-010: `docs/COMMAND_DB_001_010.md`
+- Discovery Agent Constitution D-001 to D-020: `docs/COMMAND_D_001_020_DISCOVERY_AGENT.md`
 
 ### Foundation 1
 Institutional Knowledge
