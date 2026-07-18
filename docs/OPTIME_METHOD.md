@@ -24,6 +24,7 @@ The method is governed by:
 - Law 00: `docs/LAW_00_TRUSTED_INTELLIGENT.md`
 - Command Canon 001-020: `docs/COMMAND_CANON_001_020.md`
 - Decision Psychology Command Canon DP-001 to DP-018: `docs/COMMAND_DP_001_018.md`
+- Expert Coordination Command Canon EXP-001 to EXP-015: `docs/COMMAND_EXP_001_015.md`
 
 ### Foundation 1
 Institutional Knowledge
