@@ -1,0 +1,14 @@
+# Verification Pipeline
+
+Information Discovered -> Source Identification -> Source Authentication -> Evidence Collection -> Fact Extraction -> Conflict Detection -> Domain Validation -> Freshness Validation -> Audit Registration -> Recommendation Eligibility -> Verified Fact
+
+| Step | Purpose |
+| --- | --- |
+| Source Identification | Attach a named origin to every fact. |
+| Source Authentication | Classify the source into a trust level and verification type. |
+| Evidence Collection | Persist evidence and supporting trace references. |
+| Fact Extraction | Transform raw material into structured knowledge values. |
+| Conflict Detection | Block contradictory facts from silent overwrite. |
+| Freshness Validation | Enforce expiration and review cadence before recommendation use. |
+| Audit Registration | Store facts used, evidence references, decision rules, reviewer, and model version. |
+| Recommendation Eligibility | Only recommendation-eligible verified facts may enter the decision framework. |

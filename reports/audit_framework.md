@@ -1,9 +1,12 @@
 # Audit Framework
 
-| Audit Check | Rule |
+| Audit Requirement | Implementation |
 | --- | --- |
-| Supporting evidence present | Every recommendation dimension must include supporting evidence. |
-| Trade-offs structured | Trade-offs must originate from structured package fields. |
-| Unknowns identified | Unknowns and verification tasks must remain explicit. |
-| Unsupported language removed | Internal engine language is forbidden in the package. |
-| Verified facts consistent | Each dimension must provide grounded reasoning and evidence. |
+| Facts Used | RecommendationVerificationAudit.facts_used_json |
+| Knowledge Object IDs | RecommendationVerificationAudit.knowledge_object_ids_json |
+| Evidence References | RecommendationVerificationAudit.evidence_references_json |
+| Decision Rules Applied | RecommendationVerificationAudit.decision_rules_applied_json |
+| Professional Judgment Used | RecommendationVerificationAudit.professional_judgment_json |
+| Timestamp | RecommendationVerificationAudit.created_at |
+| Model Version | RecommendationVerificationAudit.model_version |
+| Reviewer | RecommendationVerificationAudit.reviewer |

@@ -1,10 +1,10 @@
 # Knowledge Object Schema
 
-| Schema Element | Purpose |
+| Schema Field | Purpose |
 | --- | --- |
-| KnowledgeObject.object_key | Stable unique identifier for reusable knowledge. |
-| topic / entity_type / entity_key | Canonical location of the fact inside the fabric. |
-| relationship / fact_value | Structured expression of the fact. |
-| evidence_key | Link to supporting evidence. |
-| verification_status / freshness_status / confidence | Trust envelope for consumption. |
-| owner_agent / reviewer / history | Governance and accountability. |
+| title / category / property_name / fact_value | Human-readable and structured representation of the fact. |
+| source_name / source_type / source_reference | Traceability to the originating source. |
+| trust_level / verification_type / verification_status | Trust and verification envelope. |
+| published_at / observed_at / verified_at / review_date / expiration_date | Freshness and lifecycle controls. |
+| conflict_status / recommendation_eligible / audit_history_json | Recommendation gating and audit trace. |
+| version / owner_agent / verified_by / reviewer | Governance, accountability, and reproducibility. |
