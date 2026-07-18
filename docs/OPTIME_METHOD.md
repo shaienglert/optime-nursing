@@ -53,6 +53,108 @@ Continuous Learning
 
 Yesterday's knowledge is never enough.
 
+## The OPTIME Brain
+The OPTIME Brain consists of five layers.
+
+### Layer 1
+Research
+
+Collect everything.
+
+### Layer 2
+Knowledge
+
+Organize everything.
+
+### Layer 3
+Understanding
+
+Understand relationships.
+
+### Layer 4
+Professional Judgment
+
+Learn how experts make decisions.
+
+### Layer 5
+Wisdom
+
+Continuously improve recommendations from outcomes.
+
+## Research
+The Research Layer never stops.
+
+It continuously discovers:
+
+- Providers
+- Clinical Evidence
+- Research Papers
+- Government Data
+- Provider Changes
+- Regulations
+- Pricing
+- Activities
+- Rehabilitation Programs
+- Family Experiences
+
+## Knowledge
+Everything becomes structured.
+
+Nothing remains as documents.
+
+Everything becomes reusable knowledge.
+
+## Understanding
+The Brain understands relationships.
+
+Example:
+
+Stroke
+
+↓
+
+Mobility Decline
+
+↓
+
+Higher Fall Risk
+
+↓
+
+Need Daily PT
+
+↓
+
+Certain Communities Become Better Matches
+
+No LLM invented this.
+
+The Institute understands it.
+
+## Professional Judgment
+This is the most valuable layer.
+
+Professional Judgment asks:
+
+- What matters most?
+- What matters less?
+- What creates risk?
+- What creates quality of life?
+- What would an experienced geriatrician notice?
+- What would an experienced discharge planner notice?
+- What would an experienced nursing director notice?
+
+## Wisdom
+Knowledge says:
+
+"This community has physical therapy."
+
+Wisdom says:
+
+"For this resident, physical therapy is less important than daily cognitive engagement because the family's primary goal is preserving social interaction."
+
+That distinction is wisdom.
+
 ## The Knowledge Pyramid
 
 Advisor
@@ -110,6 +212,107 @@ Every Center continuously publishes:
 - Common Mistakes
 - Open Questions
 
+## Knowledge Maturity Model
+Every Knowledge Center must become measurably smarter every day.
+
+Learning is not measured by activity.
+
+Learning is measured by mastery.
+
+### Level 1
+Aware
+
+Basic terminology.
+
+Basic concepts.
+
+Basic providers.
+
+### Level 2
+Knowledgeable
+
+Verified facts.
+
+Clinical understanding.
+
+Provider understanding.
+
+Research indexed.
+
+### Level 3
+Expert
+
+Relationships understood.
+
+Trade-offs understood.
+
+Best practices understood.
+
+Decision patterns identified.
+
+### Level 4
+Authority
+
+Able to explain.
+
+Able to compare.
+
+Able to detect conflicts.
+
+Able to predict missing information.
+
+Able to identify uncommon cases.
+
+### Level 5
+Reference Standard
+
+Considered one of the world's best knowledge repositories for this domain.
+
+Continuously cited internally.
+
+Continuously verified.
+
+Continuously expanded.
+
+## Curriculum And Mastery
+Every Center has a curriculum.
+
+Example: Center for Parkinson's
+
+Curriculum:
+
+- Disease
+- Progression
+- Motor Symptoms
+- Non-Motor Symptoms
+- Medication
+- Falls
+- Nutrition
+- Speech
+- Activities
+- Family Education
+- Provider Programs
+- Research
+- Outcomes
+
+Every topic has a mastery score.
+
+Example:
+
+- Coverage: 91%
+- Verification: 98%
+- Freshness: 94%
+- Knowledge Depth: 87%
+- Decision Impact: 93%
+
+## The Knowledge Map
+Every topic is color coded.
+
+- Green: Mastered
+- Yellow: Needs Improvement
+- Orange: Insufficient Knowledge
+- Red: Critical Knowledge Gap
+
 ## The Expert Mind
 Before every recommendation the Institute asks:
 
@@ -127,6 +330,12 @@ The Advisor never thinks alone.
 
 The Advisor represents the knowledge of the entire Institute.
 
+The Advisor never invents.
+
+The Advisor never guesses.
+
+The Advisor speaks only after the Brain has reached a conclusion.
+
 ## The Trust Model
 Families should never wonder:
 
@@ -135,6 +344,61 @@ Families should never wonder:
 Families should think:
 
 "This sounds like a team of experts reviewed our case."
+
+## The Learning Loop
+Every completed recommendation teaches the Brain.
+
+Family Feedback
+
+↓
+
+Move-in Decision
+
+↓
+
+Resident Outcome
+
+↓
+
+Satisfaction
+
+↓
+
+Knowledge Update
+
+↓
+
+Better Judgment
+
+↓
+
+Better Future Recommendations
+
+Every night, every Center asks:
+
+- What don't I know?
+- What changed today?
+- What research was published?
+- What providers changed?
+- What evidence became outdated?
+- What questions could not be answered today?
+
+Those become tomorrow's learning plan.
+
+## The Daily Exam
+Every Center must pass an exam every day.
+
+Questions are generated automatically.
+
+Examples:
+
+- Explain Parkinson's progression.
+- Compare two rehabilitation approaches.
+- Recommend activities for moderate dementia.
+- Identify missing information.
+- Resolve conflicting evidence.
+
+If a Center fails, knowledge gaps are opened automatically.
 
 ## The Long-Term Goal
 The Institute becomes smarter.

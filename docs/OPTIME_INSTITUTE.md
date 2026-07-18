@@ -40,6 +40,8 @@ Every recommendation is merely a by-product of that knowledge.
 
 The OPTIME Method defines how knowledge becomes expertise, how expertise becomes reasoning, and how reasoning becomes trusted recommendations.
 
+The OPTIME Brain is the internal model that turns research into knowledge, knowledge into understanding, understanding into professional judgment, and judgment into wisdom.
+
 The Institute continuously builds expertise in every discipline that influences senior living decisions.
 
 Knowledge is never finished.
@@ -141,6 +143,33 @@ Responsibilities:
 - set verification standards
 - monitor quality
 - maintain neutrality
+
+## Weekly Grand Rounds
+Once a week, all Centers review difficult cases together.
+
+Participants include:
+
+- Clinical
+- Psychology
+- Activities
+- Nutrition
+- Provider Intelligence
+- Family Decision Science
+- Rehabilitation
+
+Every difficult case improves shared knowledge.
+
+## Monthly Board Review
+The Knowledge Council evaluates:
+
+- Coverage
+- Freshness
+- Accuracy
+- Consistency
+- Decision Quality
+- Knowledge Growth
+- Knowledge Gaps Closed
+- Knowledge Gaps Created
 
 ## The Knowledge Standard
 Knowledge is accepted only after:
@@ -306,6 +335,19 @@ The primary institutional metrics are:
 - knowledge coverage
 - decision accuracy
 - family trust
+
+## The Ultimate KPI
+Institutional Expertise.
+
+Not:
+
+- tokens
+- requests
+- responses
+
+But:
+
+How much closer did OPTIME move toward becoming the world's leading Senior Living authority?
 
 ## Long-Term Vision
 People will not say:
