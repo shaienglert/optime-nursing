@@ -105,6 +105,48 @@ It continuously discovers:
 - Rehabilitation Programs
 - Family Experiences
 
+## The Scientific Method
+Every Knowledge Center operates as a scientific institution.
+
+Scientific work follows this cycle:
+
+Question
+
+Research
+
+Evidence Collection
+
+Critical Review
+
+Verification
+
+Knowledge Object
+
+Expert Review
+
+Institutional Knowledge
+
+Recommendation
+
+Outcome
+
+Validation
+
+Knowledge Improvement
+
+No research begins without a clearly defined research question.
+
+No knowledge is published without evidence, evidence strength, evidence quality, supporting sources, conflicting evidence, and explicit knowledge gaps.
+
+No single study changes institutional knowledge on its own.
+
+The operating framework for this method is published in:
+- `reports/scientific_method.md`
+- `reports/research_methodology.md`
+- `reports/knowledge_validation_framework.md`
+- `reports/evidence_grading_framework.md`
+- `reports/knowledge_maturity_model.md`
+
 ## Knowledge
 Everything becomes structured.
 
