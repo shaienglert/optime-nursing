@@ -1,5 +1,12 @@
 # OPTIME Mission
 
+## Primary Mission
+Build and maintain a complete,
+verified,
+and continuously updated database
+of every eligible Senior Living community
+in Florida.
+
 OPTIME exists for one purpose:
 
 To become the world's most trusted independent authority on Senior Living decisions.
@@ -35,3 +42,5 @@ Because OPTIME itself became smarter.
 The most valuable asset of OPTIME is not AI.
 
 It is institutional knowledge.
+
+See also: `docs/PRIMARY_MISSION_FLORIDA_DATABASE.md`
