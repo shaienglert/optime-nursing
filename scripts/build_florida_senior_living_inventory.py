@@ -17,6 +17,10 @@ from urllib.request import Request, urlopen
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_JSON = REPO_ROOT / "database" / "florida_senior_living_inventory.json"
 OUTPUT_DOC = REPO_ROOT / "reports" / "florida_discovery_inventory.md"
+DISCOVERY_REPORT_DIR = REPO_ROOT / "reports" / "discovery"
+DISCOVERY_REPORT_MD = DISCOVERY_REPORT_DIR / "discovery_report.md"
+COUNTY_PROGRESS_MD = DISCOVERY_REPORT_DIR / "county_progress.md"
+DATABASE_STATISTICS_MD = DISCOVERY_REPORT_DIR / "database_statistics.md"
 CMS_CACHE = REPO_ROOT / "backend" / "app" / "data" / "provider_information.csv"
 CMS_PROVIDER_DATASET_ID = "4pq5-n9py"
 
@@ -579,7 +583,212 @@ def render_summary(records: List[Dict[str, object]], meta: Dict[str, object]) ->
     return "\n".join(lines) + "\n"
 
 
+def canonical_key(record: Dict[str, object]) -> str:
+    return "|".join(
+        [
+            normalize_name(record.get("community_name")),
+            normalize_name(record.get("county")),
+            normalize_city(record.get("city")),
+            normalize_name(record.get("address")),
+        ]
+    )
+
+
+def load_previous_payload() -> Optional[Dict[str, object]]:
+    if not OUTPUT_JSON.exists():
+        return None
+    try:
+        payload = json.loads(OUTPUT_JSON.read_text(encoding="utf8"))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    return payload
+
+
+def compute_cycle_deltas(current_records: List[Dict[str, object]], previous_payload: Optional[Dict[str, object]]) -> Dict[str, int]:
+    if not previous_payload:
+        verified_now = sum(1 for r in current_records if r.get("verification_status") == "verified")
+        return {
+            "communities_added": len(current_records),
+            "communities_verified_delta": verified_now,
+            "communities_updated": 0,
+            "closed_communities": 0,
+        }
+
+    previous_records = previous_payload.get("records")
+    if not isinstance(previous_records, list):
+        previous_records = []
+
+    prev_map = {
+        canonical_key(r): r
+        for r in previous_records
+        if isinstance(r, dict)
+    }
+    curr_map = {
+        canonical_key(r): r
+        for r in current_records
+        if isinstance(r, dict)
+    }
+
+    added_keys = set(curr_map.keys()) - set(prev_map.keys())
+    closed_keys = set(prev_map.keys()) - set(curr_map.keys())
+
+    updated = 0
+    tracked_fields = [
+        "phone",
+        "website",
+        "state_license_number",
+        "license_profile_url",
+        "parent_company",
+        "primary_community_type",
+        "source_status",
+    ]
+    for key in set(curr_map.keys()) & set(prev_map.keys()):
+        curr = curr_map[key]
+        prev = prev_map[key]
+        if any((curr.get(field) or "") != (prev.get(field) or "") for field in tracked_fields):
+            updated += 1
+
+    verified_now = sum(1 for r in current_records if r.get("verification_status") == "verified")
+    verified_prev = sum(1 for r in previous_records if isinstance(r, dict) and r.get("verification_status") == "verified")
+
+    return {
+        "communities_added": len(added_keys),
+        "communities_verified_delta": max(0, verified_now - verified_prev),
+        "communities_updated": updated,
+        "closed_communities": len(closed_keys),
+    }
+
+
+def render_discovery_report(records: List[Dict[str, object]], meta: Dict[str, object], deltas: Dict[str, int]) -> str:
+    verified_total = sum(1 for record in records if record.get("verification_status") == "verified")
+    pending_total = len(records) - verified_total
+    counties_completed = int(meta.get("seniorly", {}).get("counties_attempted") or 0)
+    counties_total = len(FLORIDA_COUNTIES)
+    counties_remaining = max(0, counties_total - counties_completed)
+    coverage_pct = round((counties_completed / counties_total) * 100.0, 1) if counties_total else 0.0
+    next_county = meta.get("counties_missing", [None])[0] if meta.get("counties_missing") else None
+
+    lines = [
+        "# Discovery Report",
+        "",
+        f"- Generated at (UTC): {meta['generated_at_utc']}",
+        "",
+        "## Executive Summary",
+        "",
+        f"- Counties Completed: **{counties_completed}**",
+        f"- Counties Remaining: **{counties_remaining}**",
+        f"- Communities Added: **{deltas['communities_added']}**",
+        f"- Communities Verified: **{deltas['communities_verified_delta']}**",
+        f"- Communities Updated: **{deltas['communities_updated']}**",
+        f"- Duplicates Removed: **{meta['duplicate_merges']}**",
+        f"- Closed Communities: **{deltas['closed_communities']}**",
+        f"- Coverage Percentage: **{coverage_pct}%**",
+        f"- Remaining Gaps: **{len(meta['counties_missing'])} counties without discovered records**",
+        f"- Next County: **{next_county or 'NONE'}**",
+        "",
+        "## Discovery Totals",
+        "",
+        f"- Total Communities in Database: **{len(records)}**",
+        f"- Verified Communities: **{verified_total}**",
+        f"- Pending Verification: **{pending_total}**",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def render_county_progress(records: List[Dict[str, object]], meta: Dict[str, object]) -> str:
+    counts = count_by(records, "county")
+    attempted = set(FLORIDA_COUNTIES[: int(meta.get("seniorly", {}).get("counties_attempted") or 0)])
+
+    lines = [
+        "# County Progress",
+        "",
+        f"- Generated at (UTC): {meta['generated_at_utc']}",
+        "",
+        "| County | Processed In Cycle | Communities Found | Status |",
+        "| --- | --- | --- | --- |",
+    ]
+    for county in FLORIDA_COUNTIES:
+        processed = "YES" if county in attempted else "NO"
+        found = counts.get(county, 0)
+        if processed == "NO":
+            status = "NOT_PROCESSED"
+        elif found == 0:
+            status = "PROCESSED_NO_COMMUNITIES_FOUND"
+        else:
+            status = "PROCESSED_WITH_COMMUNITIES"
+        lines.append(f"| {county} | {processed} | {found} | {status} |")
+    return "\n".join(lines) + "\n"
+
+
+def render_database_statistics(records: List[Dict[str, object]], meta: Dict[str, object]) -> str:
+    verification_counts = count_by(records, "verification_status")
+    source_status_counts = count_by(records, "source_status")
+    care_type_counts = count_care_types(records)
+
+    missing_fields = {
+        "community_name": sum(1 for r in records if not r.get("community_name")),
+        "address": sum(1 for r in records if not r.get("address")),
+        "county": sum(1 for r in records if not r.get("county")),
+        "city": sum(1 for r in records if not r.get("city")),
+        "state": sum(1 for r in records if not r.get("state")),
+        "zip_code": sum(1 for r in records if not r.get("zip_code")),
+        "phone": sum(1 for r in records if not r.get("phone")),
+        "website": sum(1 for r in records if not r.get("website")),
+        "state_license_number": sum(1 for r in records if not r.get("state_license_number")),
+        "care_type": sum(1 for r in records if not r.get("primary_community_type")),
+        "ownership": sum(1 for r in records if not r.get("ownership_type") and not r.get("parent_company")),
+    }
+
+    lines = [
+        "# Database Statistics",
+        "",
+        f"- Generated at (UTC): {meta['generated_at_utc']}",
+        f"- Total Records: {len(records)}",
+        f"- Duplicate Merges: {meta['duplicate_merges']}",
+        "",
+        "## Verification Status",
+        "",
+    ]
+    lines.extend([f"- {k}: {v}" for k, v in verification_counts.items()])
+
+    lines.extend([
+        "",
+        "## Source Status",
+        "",
+    ])
+    lines.extend([f"- {k}: {v}" for k, v in source_status_counts.items()])
+
+    lines.extend([
+        "",
+        "## Care Types",
+        "",
+    ])
+    lines.extend([f"- {k}: {v}" for k, v in care_type_counts.items()])
+
+    lines.extend([
+        "",
+        "## Missing Information",
+        "",
+        "| Field | Missing Count |",
+        "| --- | --- |",
+    ])
+    for field, count in missing_fields.items():
+        lines.append(f"| {field} | {count} |")
+
+    return "\n".join(lines) + "\n"
+
+
+def write_discovery_reports(records: List[Dict[str, object]], meta: Dict[str, object], deltas: Dict[str, int]) -> None:
+    DISCOVERY_REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    DISCOVERY_REPORT_MD.write_text(render_discovery_report(records, meta, deltas), encoding="utf8")
+    COUNTY_PROGRESS_MD.write_text(render_county_progress(records, meta), encoding="utf8")
+    DATABASE_STATISTICS_MD.write_text(render_database_statistics(records, meta), encoding="utf8")
+
+
 def main() -> None:
+    previous_payload = load_previous_payload()
     seniorly_records, seniorly_meta = build_seniorly_records()
     cms_records = build_cms_records()
     merged_records, duplicate_merges = merge_records(seniorly_records, cms_records)
@@ -618,14 +827,25 @@ def main() -> None:
         "records": merged_records,
     }
 
+    deltas = compute_cycle_deltas(merged_records, previous_payload)
+
     OUTPUT_JSON.write_text(json.dumps(payload, indent=2), encoding="utf8")
     OUTPUT_DOC.write_text(render_summary(merged_records, meta), encoding="utf8")
+    write_discovery_reports(merged_records, meta, deltas)
 
     print(f"Wrote {OUTPUT_JSON}")
     print(f"Wrote {OUTPUT_DOC}")
+    print(f"Wrote {DISCOVERY_REPORT_MD}")
+    print(f"Wrote {COUNTY_PROGRESS_MD}")
+    print(f"Wrote {DATABASE_STATISTICS_MD}")
     print(f"FL_COUNTIES_COVERED={meta['counties_covered']}")
     print(f"FL_COUNTIES_TOTAL={meta['counties_total']}")
+    print(f"FL_COUNTIES_PROCESSED={meta['seniorly']['counties_attempted']}")
     print(f"RECORD_COUNT={meta['record_count']}")
+    print(f"COMMUNITIES_ADDED={deltas['communities_added']}")
+    print(f"COMMUNITIES_VERIFIED_DELTA={deltas['communities_verified_delta']}")
+    print(f"COMMUNITIES_UPDATED={deltas['communities_updated']}")
+    print(f"CLOSED_COMMUNITIES={deltas['closed_communities']}")
     print(f"DUPLICATE_MERGES={meta['duplicate_merges']}")
     print(f"SAMPLE_MODE={int(meta['seniorly']['sample_mode'])}")
 
