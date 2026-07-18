@@ -32,3 +32,9 @@ The mission of every component in OPTIME is to increase one or both of these:
 2. Institutional Intelligence
 
 If a new feature does not improve Trust or Institutional Intelligence, it does not belong in OPTIME.
+
+## Operational Doctrine
+Law 00 is operationalized by:
+
+- Command Canon 001-020: see `docs/COMMAND_CANON_001_020.md`
+- Decision Psychology Command Canon DP-001 to DP-018: see `docs/COMMAND_DP_001_018.md`

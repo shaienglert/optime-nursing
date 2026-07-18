@@ -10,6 +10,12 @@ All product decisions are evaluated against two required outcomes:
 
 If a feature does not improve one or both, it does not belong in OPTIME.
 
+## Command Canon
+The institutional command canon is mandatory doctrine for all OPTIME decisions:
+
+- Command 001-020: see `docs/COMMAND_CANON_001_020.md`
+- Decision Psychology Command DP-001 to DP-018: see `docs/COMMAND_DP_001_018.md`
+
 ## Principle 1: Outcome-Only Optimization
 The recommendation engine optimizes only for the user's outcome.
 

@@ -20,6 +20,11 @@ Only then become the world's best advisor.
 
 ## The Five Foundations
 
+The method is governed by:
+- Law 00: `docs/LAW_00_TRUSTED_INTELLIGENT.md`
+- Command Canon 001-020: `docs/COMMAND_CANON_001_020.md`
+- Decision Psychology Command Canon DP-001 to DP-018: `docs/COMMAND_DP_001_018.md`
+
 ### Foundation 1
 Institutional Knowledge
 
