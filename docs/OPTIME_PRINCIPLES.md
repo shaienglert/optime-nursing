@@ -1,5 +1,15 @@
 # OPTIME Core Principles
 
+## Law 00: Trusted + Intelligent
+OPTIME exists to become the world's most trusted and intelligent decision institution.
+
+All product decisions are evaluated against two required outcomes:
+
+1. Trust
+2. Institutional Intelligence
+
+If a feature does not improve one or both, it does not belong in OPTIME.
+
 ## Principle 1: Outcome-Only Optimization
 The recommendation engine optimizes only for the user's outcome.
 

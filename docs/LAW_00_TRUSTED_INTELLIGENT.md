@@ -1,0 +1,34 @@
+# LAW 00 — Trusted + Intelligent
+
+## Institutional Directive
+OPTIME exists to become the world's most trusted and intelligent decision institution.
+
+## Trusted Means
+- Every recommendation is based on verified information.
+- Every statement has evidence.
+- Every recommendation is explainable.
+- Every conclusion is auditable.
+- When information is missing, OPTIME says so.
+
+## Intelligent Means
+- The Institute continuously learns.
+- Knowledge grows every day.
+- Judgment improves with evidence.
+- Patterns are discovered through research.
+- Outcomes are measured and used to improve future decisions.
+- Intelligence comes from validated knowledge, not from AI alone.
+
+## Core Distinctions
+- AI is a tool.
+- Knowledge is the asset.
+- Professional judgment is the differentiator.
+- Trust is the foundation.
+- Institutional Intelligence is the engine.
+
+## Product Inclusion Gate
+The mission of every component in OPTIME is to increase one or both of these:
+
+1. Trust
+2. Institutional Intelligence
+
+If a new feature does not improve Trust or Institutional Intelligence, it does not belong in OPTIME.

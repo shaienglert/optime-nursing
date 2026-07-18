@@ -1,0 +1,3677 @@
+{
+  "generatedAt": "2026-07-18T05:01:41.780Z",
+  "mission": "Discover real fears, concerns, and decision drivers before building questionnaire items.",
+  "sourceMatrix": [
+    [
+      "Peer-reviewed research",
+      "REQUIRED"
+    ],
+    [
+      "Psychology journals",
+      "REQUIRED"
+    ],
+    [
+      "Gerontology journals",
+      "REQUIRED"
+    ],
+    [
+      "Social work journals",
+      "REQUIRED"
+    ],
+    [
+      "Sociology of aging",
+      "REQUIRED"
+    ],
+    [
+      "Transition-to-care research",
+      "REQUIRED"
+    ],
+    [
+      "CMS publications",
+      "ACTIVE"
+    ],
+    [
+      "AARP reports",
+      "REQUIRED"
+    ],
+    [
+      "NIH research",
+      "REQUIRED"
+    ],
+    [
+      "Alzheimer's Association",
+      "REQUIRED"
+    ],
+    [
+      "Family caregiver organizations",
+      "REQUIRED"
+    ],
+    [
+      "Hospital discharge planners",
+      "REQUIRED"
+    ],
+    [
+      "Geriatric psychologists",
+      "REQUIRED"
+    ],
+    [
+      "Social workers",
+      "REQUIRED"
+    ],
+    [
+      "Admissions directors",
+      "REQUIRED"
+    ],
+    [
+      "Senior Living consultants",
+      "REQUIRED"
+    ],
+    [
+      "Residents",
+      "ACTIVE"
+    ],
+    [
+      "Family members",
+      "ACTIVE"
+    ],
+    [
+      "Online caregiver communities",
+      "ACTIVE"
+    ],
+    [
+      "Reviews",
+      "ACTIVE"
+    ],
+    [
+      "Complaints",
+      "ACTIVE"
+    ],
+    [
+      "Success stories",
+      "ACTIVE"
+    ]
+  ],
+  "top100Fears": [
+    {
+      "id": "fear-001",
+      "name": "Fear of cognitive decline accelerating after move",
+      "category": "Psychological",
+      "description": "Fear of cognitive decline accelerating after move. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-002",
+      "name": "Fear of depression and loss of joy",
+      "category": "Psychological",
+      "description": "Fear of depression and loss of joy. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-003",
+      "name": "Fear of confusion in unfamiliar settings",
+      "category": "Psychological",
+      "description": "Fear of confusion in unfamiliar settings. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-004",
+      "name": "Fear of being treated as a diagnosis not a person",
+      "category": "Psychological",
+      "description": "Fear of being treated as a diagnosis not a person. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-005",
+      "name": "Fear of losing emotional stability during transition",
+      "category": "Psychological",
+      "description": "Fear of losing emotional stability during transition. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-006",
+      "name": "Fear of anxiety without trusted support",
+      "category": "Psychological",
+      "description": "Fear of anxiety without trusted support. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-007",
+      "name": "Fear of feeling abandoned",
+      "category": "Psychological",
+      "description": "Fear of feeling abandoned. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-008",
+      "name": "Fear of grief resurfacing in isolation",
+      "category": "Psychological",
+      "description": "Fear of grief resurfacing in isolation. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-009",
+      "name": "Fear of identity erosion",
+      "category": "Psychological",
+      "description": "Fear of identity erosion. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-010",
+      "name": "Fear of being unable to adapt to a new routine",
+      "category": "Psychological",
+      "description": "Fear of being unable to adapt to a new routine. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-011",
+      "name": "Fear of loneliness",
+      "category": "Social",
+      "description": "Fear of loneliness. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-012",
+      "name": "Fear of not making friends",
+      "category": "Social",
+      "description": "Fear of not making friends. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-013",
+      "name": "Fear of social exclusion",
+      "category": "Social",
+      "description": "Fear of social exclusion. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-014",
+      "name": "Fear of being ignored in group activities",
+      "category": "Social",
+      "description": "Fear of being ignored in group activities. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-015",
+      "name": "Fear of losing community belonging",
+      "category": "Social",
+      "description": "Fear of losing community belonging. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-016",
+      "name": "Fear of language-based social isolation",
+      "category": "Social",
+      "description": "Fear of language-based social isolation. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-017",
+      "name": "Fear of cultural mismatch in daily life",
+      "category": "Social",
+      "description": "Fear of cultural mismatch in daily life. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-018",
+      "name": "Fear of having no meaningful conversations",
+      "category": "Social",
+      "description": "Fear of having no meaningful conversations. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-019",
+      "name": "Fear of reduced family visits",
+      "category": "Social",
+      "description": "Fear of reduced family visits. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-020",
+      "name": "Fear of social withdrawal becoming permanent",
+      "category": "Social",
+      "description": "Fear of social withdrawal becoming permanent. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-021",
+      "name": "Fear of medication errors",
+      "category": "Medical",
+      "description": "Fear of medication errors. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-022",
+      "name": "Fear of delayed medical response",
+      "category": "Medical",
+      "description": "Fear of delayed medical response. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-023",
+      "name": "Fear of unmanaged chronic conditions",
+      "category": "Medical",
+      "description": "Fear of unmanaged chronic conditions. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-024",
+      "name": "Fear of avoidable hospitalization",
+      "category": "Medical",
+      "description": "Fear of avoidable hospitalization. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-025",
+      "name": "Fear of poor care coordination",
+      "category": "Medical",
+      "description": "Fear of poor care coordination. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-026",
+      "name": "Fear of untreated pain",
+      "category": "Medical",
+      "description": "Fear of untreated pain. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-027",
+      "name": "Fear of missed rehabilitation opportunities",
+      "category": "Medical",
+      "description": "Fear of missed rehabilitation opportunities. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-028",
+      "name": "Fear of preventable falls",
+      "category": "Medical",
+      "description": "Fear of preventable falls. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-029",
+      "name": "Fear of infection control gaps",
+      "category": "Medical",
+      "description": "Fear of infection control gaps. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-030",
+      "name": "Fear of decline due to under-monitoring",
+      "category": "Medical",
+      "description": "Fear of decline due to under-monitoring. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-031",
+      "name": "Fear of hidden fees",
+      "category": "Financial",
+      "description": "Fear of hidden fees. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-032",
+      "name": "Fear of unaffordable future care",
+      "category": "Financial",
+      "description": "Fear of unaffordable future care. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-033",
+      "name": "Fear of rapid pricing increases",
+      "category": "Financial",
+      "description": "Fear of rapid pricing increases. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-034",
+      "name": "Fear of paying for services not received",
+      "category": "Financial",
+      "description": "Fear of paying for services not received. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-035",
+      "name": "Fear of financial pressure on family",
+      "category": "Financial",
+      "description": "Fear of financial pressure on family. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-036",
+      "name": "Fear of exhausting savings too early",
+      "category": "Financial",
+      "description": "Fear of exhausting savings too early. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-037",
+      "name": "Fear of unclear contract terms",
+      "category": "Financial",
+      "description": "Fear of unclear contract terms. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-038",
+      "name": "Fear of billing disputes",
+      "category": "Financial",
+      "description": "Fear of billing disputes. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-039",
+      "name": "Fear of move-in incentives masking long-term cost",
+      "category": "Financial",
+      "description": "Fear of move-in incentives masking long-term cost. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-040",
+      "name": "Fear of losing flexibility due to cost lock-in",
+      "category": "Financial",
+      "description": "Fear of losing flexibility due to cost lock-in. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-041",
+      "name": "Fear of family disagreement over care decisions",
+      "category": "Family",
+      "description": "Fear of family disagreement over care decisions. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-042",
+      "name": "Fear of guilt after placement",
+      "category": "Family",
+      "description": "Fear of guilt after placement. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-043",
+      "name": "Fear of communication breakdown with staff",
+      "category": "Family",
+      "description": "Fear of communication breakdown with staff. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-044",
+      "name": "Fear of not being informed about incidents",
+      "category": "Family",
+      "description": "Fear of not being informed about incidents. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-045",
+      "name": "Fear of sibling conflict over decisions",
+      "category": "Family",
+      "description": "Fear of sibling conflict over decisions. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-046",
+      "name": "Fear of losing the family's role in care",
+      "category": "Family",
+      "description": "Fear of losing the family's role in care. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-047",
+      "name": "Fear of emergency coordination failures",
+      "category": "Family",
+      "description": "Fear of emergency coordination failures. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-048",
+      "name": "Fear of family burnout",
+      "category": "Family",
+      "description": "Fear of family burnout. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-049",
+      "name": "Fear of being blamed for outcomes",
+      "category": "Family",
+      "description": "Fear of being blamed for outcomes. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-050",
+      "name": "Fear of poor alignment on priorities",
+      "category": "Family",
+      "description": "Fear of poor alignment on priorities. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MEDIUM",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 4,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-051",
+      "name": "Fear of wandering-related incidents",
+      "category": "Safety",
+      "description": "Fear of wandering-related incidents. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-052",
+      "name": "Fear of falls in private spaces",
+      "category": "Safety",
+      "description": "Fear of falls in private spaces. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-053",
+      "name": "Fear of delayed emergency response",
+      "category": "Safety",
+      "description": "Fear of delayed emergency response. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-054",
+      "name": "Fear of nighttime supervision gaps",
+      "category": "Safety",
+      "description": "Fear of nighttime supervision gaps. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-055",
+      "name": "Fear of unsafe transfers",
+      "category": "Safety",
+      "description": "Fear of unsafe transfers. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-056",
+      "name": "Fear of elopement risk",
+      "category": "Safety",
+      "description": "Fear of elopement risk. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-057",
+      "name": "Fear of neglect signs being missed",
+      "category": "Safety",
+      "description": "Fear of neglect signs being missed. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-058",
+      "name": "Fear of abuse not being detected",
+      "category": "Safety",
+      "description": "Fear of abuse not being detected. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-059",
+      "name": "Fear of poor environmental safety",
+      "category": "Safety",
+      "description": "Fear of poor environmental safety. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-060",
+      "name": "Fear of staffing shortages during critical hours",
+      "category": "Safety",
+      "description": "Fear of staffing shortages during critical hours. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-061",
+      "name": "Fear of losing autonomy",
+      "category": "Identity",
+      "description": "Fear of losing autonomy. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-062",
+      "name": "Fear of losing personal routines",
+      "category": "Identity",
+      "description": "Fear of losing personal routines. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-063",
+      "name": "Fear of being unable to practice faith traditions",
+      "category": "Identity",
+      "description": "Fear of being unable to practice faith traditions. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-064",
+      "name": "Fear of language identity loss",
+      "category": "Identity",
+      "description": "Fear of language identity loss. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-065",
+      "name": "Fear of losing personal dignity",
+      "category": "Identity",
+      "description": "Fear of losing personal dignity. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-066",
+      "name": "Fear of becoming dependent for every decision",
+      "category": "Identity",
+      "description": "Fear of becoming dependent for every decision. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-067",
+      "name": "Fear of not feeling at home",
+      "category": "Identity",
+      "description": "Fear of not feeling at home. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-068",
+      "name": "Fear of losing purpose",
+      "category": "Identity",
+      "description": "Fear of losing purpose. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-069",
+      "name": "Fear of losing privacy",
+      "category": "Identity",
+      "description": "Fear of losing privacy. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-070",
+      "name": "Fear of becoming invisible",
+      "category": "Identity",
+      "description": "Fear of becoming invisible. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-071",
+      "name": "Fear of a failed first 90 days",
+      "category": "Transition",
+      "description": "Fear of a failed first 90 days. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-072",
+      "name": "Fear of second move due to mismatch",
+      "category": "Transition",
+      "description": "Fear of second move due to mismatch. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-073",
+      "name": "Fear of poor onboarding",
+      "category": "Transition",
+      "description": "Fear of poor onboarding. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-074",
+      "name": "Fear of abrupt adjustment without support",
+      "category": "Transition",
+      "description": "Fear of abrupt adjustment without support. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-075",
+      "name": "Fear of move stress worsening health",
+      "category": "Transition",
+      "description": "Fear of move stress worsening health. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-076",
+      "name": "Fear of unclear transition expectations",
+      "category": "Transition",
+      "description": "Fear of unclear transition expectations. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-077",
+      "name": "Fear of family support decaying after move-in",
+      "category": "Transition",
+      "description": "Fear of family support decaying after move-in. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-078",
+      "name": "Fear of disrupted routines",
+      "category": "Transition",
+      "description": "Fear of disrupted routines. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-079",
+      "name": "Fear of unmet expectations",
+      "category": "Transition",
+      "description": "Fear of unmet expectations. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-080",
+      "name": "Fear of no recovery plan after setbacks",
+      "category": "Transition",
+      "description": "Fear of no recovery plan after setbacks. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "HIGH",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 5,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-081",
+      "name": "Fear of no access to faith services",
+      "category": "Spiritual",
+      "description": "Fear of no access to faith services. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-082",
+      "name": "Fear of spiritual isolation",
+      "category": "Spiritual",
+      "description": "Fear of spiritual isolation. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-083",
+      "name": "Fear of rituals not being respected",
+      "category": "Spiritual",
+      "description": "Fear of rituals not being respected. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-084",
+      "name": "Fear of moral distress without guidance",
+      "category": "Spiritual",
+      "description": "Fear of moral distress without guidance. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-085",
+      "name": "Fear of no community around beliefs",
+      "category": "Spiritual",
+      "description": "Fear of no community around beliefs. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-086",
+      "name": "Fear of holiday disconnection",
+      "category": "Spiritual",
+      "description": "Fear of holiday disconnection. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-087",
+      "name": "Fear of end-of-life preferences ignored",
+      "category": "Spiritual",
+      "description": "Fear of end-of-life preferences ignored. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-088",
+      "name": "Fear of lack of chaplaincy support",
+      "category": "Spiritual",
+      "description": "Fear of lack of chaplaincy support. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-089",
+      "name": "Fear of values mismatch",
+      "category": "Spiritual",
+      "description": "Fear of values mismatch. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-090",
+      "name": "Fear of no meaning-making support",
+      "category": "Spiritual",
+      "description": "Fear of no meaning-making support. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Resident and family",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": true,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-091",
+      "name": "Fear of licensing non-compliance",
+      "category": "Legal",
+      "description": "Fear of licensing non-compliance. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-092",
+      "name": "Fear of unresolved complaints",
+      "category": "Legal",
+      "description": "Fear of unresolved complaints. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-093",
+      "name": "Fear of weak incident transparency",
+      "category": "Legal",
+      "description": "Fear of weak incident transparency. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-094",
+      "name": "Fear of guardianship confusion",
+      "category": "Legal",
+      "description": "Fear of guardianship confusion. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-095",
+      "name": "Fear of contract disputes",
+      "category": "Legal",
+      "description": "Fear of contract disputes. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-096",
+      "name": "Fear of rights not being protected",
+      "category": "Legal",
+      "description": "Fear of rights not being protected. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-097",
+      "name": "Fear of unresolved deficiency patterns",
+      "category": "Legal",
+      "description": "Fear of unresolved deficiency patterns. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-098",
+      "name": "Fear of non-reporting of critical events",
+      "category": "Legal",
+      "description": "Fear of non-reporting of critical events. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-099",
+      "name": "Fear of legal exposure for family decisions",
+      "category": "Legal",
+      "description": "Fear of legal exposure for family decisions. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    },
+    {
+      "id": "fear-100",
+      "name": "Fear of policy contradictions",
+      "category": "Legal",
+      "description": "Fear of policy contradictions. This concern appears in transition and placement decisions and can materially affect match quality and adjustment outcomes.",
+      "frequency": "MODERATE",
+      "population": "Family and resident",
+      "supportingEvidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ],
+      "severity": 3,
+      "canCommunityReduce": false,
+      "canFamilyReduce": true,
+      "canOptimeMeasure": true,
+      "canOptimeMatchAgainst": true
+    }
+  ],
+  "top50DecisionDrivers": [
+    {
+      "driver": "Fear of medication errors",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of delayed medical response",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of unmanaged chronic conditions",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of avoidable hospitalization",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of poor care coordination",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of untreated pain",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of missed rehabilitation opportunities",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of preventable falls",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of infection control gaps",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of decline due to under-monitoring",
+      "category": "Medical",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of wandering-related incidents",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of falls in private spaces",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of delayed emergency response",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of nighttime supervision gaps",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of unsafe transfers",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of elopement risk",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of neglect signs being missed",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of abuse not being detected",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of poor environmental safety",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of staffing shortages during critical hours",
+      "category": "Safety",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of a failed first 90 days",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of second move due to mismatch",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of poor onboarding",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of abrupt adjustment without support",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of move stress worsening health",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of unclear transition expectations",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of family support decaying after move-in",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of disrupted routines",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of unmet expectations",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of no recovery plan after setbacks",
+      "category": "Transition",
+      "impactScore": 10,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of cognitive decline accelerating after move",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of depression and loss of joy",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of confusion in unfamiliar settings",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of being treated as a diagnosis not a person",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of losing emotional stability during transition",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of anxiety without trusted support",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of feeling abandoned",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of grief resurfacing in isolation",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of identity erosion",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of being unable to adapt to a new routine",
+      "category": "Psychological",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of hidden fees",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of unaffordable future care",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of rapid pricing increases",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of paying for services not received",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of financial pressure on family",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of exhausting savings too early",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of unclear contract terms",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of billing disputes",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of move-in incentives masking long-term cost",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    },
+    {
+      "driver": "Fear of losing flexibility due to cost lock-in",
+      "category": "Financial",
+      "impactScore": 4,
+      "evidence": [
+        "knowledge/failure_factors.json",
+        "knowledge/transition_patterns.json",
+        "knowledge/social_integration_model.json",
+        "knowledge/loneliness_risk_model.json",
+        "knowledge/success_factors.json"
+      ]
+    }
+  ],
+  "top50SuccessfulAdaptationFactors": [
+    {
+      "rank": 1,
+      "factor": "Family involvement level",
+      "evidenceLevel": "HIGH",
+      "sourceType": "Family interview; Care team notes; Outcome tracking"
+    },
+    {
+      "rank": 2,
+      "factor": "Travel time from family",
+      "evidenceLevel": "HIGH",
+      "sourceType": "Mapping APIs; Family reference address"
+    },
+    {
+      "rank": 3,
+      "factor": "Language compatibility",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "Community website; Staff listings; Intake form"
+    },
+    {
+      "rank": 4,
+      "factor": "Cultural compatibility",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "Community website; Activities; Family input; Reviews"
+    },
+    {
+      "rank": 5,
+      "factor": "Staff warmth and responsiveness",
+      "evidenceLevel": "HIGH",
+      "sourceType": "Google; Caring; A Place for Mom; Seniorly"
+    },
+    {
+      "rank": 6,
+      "factor": "Staff continuity",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "Indeed; Glassdoor; Staffing disclosures"
+    },
+    {
+      "rank": 7,
+      "factor": "Leadership continuity",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "Website; Leadership pages; Filings"
+    },
+    {
+      "rank": 8,
+      "factor": "Continuum of care availability",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "Community profile; Official website; Care program pages"
+    },
+    {
+      "rank": 9,
+      "factor": "Activity participation quality",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "Reviews; Resident testimonials; Activities calendar"
+    },
+    {
+      "rank": 10,
+      "factor": "Community engagement",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "Reviews; Community updates; Outcome tracking"
+    },
+    {
+      "rank": 11,
+      "factor": "CMS safety and staffing performance",
+      "evidenceLevel": "HIGH",
+      "sourceType": "CMS Care Compare; CMS Provider Database"
+    },
+    {
+      "rank": 12,
+      "factor": "Food quality and wellness support",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "Reviews; Dining pages; Program calendars"
+    },
+    {
+      "rank": 13,
+      "factor": "Protective adaptation response for fear of social exclusion",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 14,
+      "factor": "Protective adaptation response for fear of being ignored in group activities",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 15,
+      "factor": "Protective adaptation response for fear of losing community belonging",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 16,
+      "factor": "Protective adaptation response for fear of language-based social isolation",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 17,
+      "factor": "Protective adaptation response for fear of cultural mismatch in daily life",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 18,
+      "factor": "Protective adaptation response for fear of having no meaningful conversations",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 19,
+      "factor": "Protective adaptation response for fear of reduced family visits",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 20,
+      "factor": "Protective adaptation response for fear of social withdrawal becoming permanent",
+      "evidenceLevel": "MODERATE",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 21,
+      "factor": "Protective adaptation response for fear of medication errors",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 22,
+      "factor": "Protective adaptation response for fear of delayed medical response",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 23,
+      "factor": "Protective adaptation response for fear of unmanaged chronic conditions",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 24,
+      "factor": "Protective adaptation response for fear of avoidable hospitalization",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 25,
+      "factor": "Protective adaptation response for fear of poor care coordination",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 26,
+      "factor": "Protective adaptation response for fear of untreated pain",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 27,
+      "factor": "Protective adaptation response for fear of missed rehabilitation opportunities",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 28,
+      "factor": "Protective adaptation response for fear of preventable falls",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 29,
+      "factor": "Protective adaptation response for fear of infection control gaps",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 30,
+      "factor": "Protective adaptation response for fear of decline due to under-monitoring",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 31,
+      "factor": "Protective adaptation response for fear of hidden fees",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 32,
+      "factor": "Protective adaptation response for fear of unaffordable future care",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 33,
+      "factor": "Protective adaptation response for fear of rapid pricing increases",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 34,
+      "factor": "Protective adaptation response for fear of paying for services not received",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 35,
+      "factor": "Protective adaptation response for fear of financial pressure on family",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 36,
+      "factor": "Protective adaptation response for fear of exhausting savings too early",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 37,
+      "factor": "Protective adaptation response for fear of unclear contract terms",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 38,
+      "factor": "Protective adaptation response for fear of billing disputes",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 39,
+      "factor": "Protective adaptation response for fear of move-in incentives masking long-term cost",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 40,
+      "factor": "Protective adaptation response for fear of losing flexibility due to cost lock-in",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 41,
+      "factor": "Protective adaptation response for fear of family disagreement over care decisions",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 42,
+      "factor": "Protective adaptation response for fear of guilt after placement",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 43,
+      "factor": "Protective adaptation response for fear of communication breakdown with staff",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 44,
+      "factor": "Protective adaptation response for fear of not being informed about incidents",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 45,
+      "factor": "Protective adaptation response for fear of sibling conflict over decisions",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 46,
+      "factor": "Protective adaptation response for fear of losing the family's role in care",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 47,
+      "factor": "Protective adaptation response for fear of emergency coordination failures",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 48,
+      "factor": "Protective adaptation response for fear of family burnout",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 49,
+      "factor": "Protective adaptation response for fear of being blamed for outcomes",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 50,
+      "factor": "Protective adaptation response for fear of poor alignment on priorities",
+      "evidenceLevel": "HIGH",
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    }
+  ],
+  "top50FailedTransitionCauses": [
+    {
+      "rank": 2,
+      "cause": "Low family involvement",
+      "domain": "Family engagement",
+      "impact": 5,
+      "sourceType": "Family interview; Care team notes"
+    },
+    {
+      "rank": 5,
+      "cause": "Loneliness indicators",
+      "domain": "Loneliness prevention",
+      "impact": 5,
+      "sourceType": "Reviews; Family feedback; Care notes"
+    },
+    {
+      "rank": 6,
+      "cause": "Understaffing and burnout",
+      "domain": "Staff stability",
+      "impact": 5,
+      "sourceType": "Indeed; Glassdoor; CMS staffing trends; Reviews"
+    },
+    {
+      "rank": 8,
+      "cause": "No continuum of care",
+      "domain": "Continuum of care",
+      "impact": 5,
+      "sourceType": "Care level listings; Official website; Program pages"
+    },
+    {
+      "rank": 10,
+      "cause": "Regulatory and staffing weakness",
+      "domain": "Resident outcomes",
+      "impact": 5,
+      "sourceType": "CMS Care Compare; CMS Provider Database; State inspections"
+    },
+    {
+      "rank": 1,
+      "cause": "Long family travel time",
+      "domain": "Family engagement",
+      "impact": 4,
+      "sourceType": "Mapping APIs; Family interview"
+    },
+    {
+      "rank": 7,
+      "cause": "Leadership turnover",
+      "domain": "Leadership stability",
+      "impact": 4,
+      "sourceType": "Website; Filings; Leadership history"
+    },
+    {
+      "rank": 9,
+      "cause": "Weak social programming",
+      "domain": "Social integration",
+      "impact": 4,
+      "sourceType": "Activities calendar; Reviews; Website"
+    },
+    {
+      "rank": 3,
+      "cause": "Language mismatch",
+      "domain": "Language matching",
+      "impact": 3,
+      "sourceType": "Intake form; Community website; Staff listings"
+    },
+    {
+      "rank": 4,
+      "cause": "Cultural mismatch",
+      "domain": "Cultural matching",
+      "impact": 3,
+      "sourceType": "Family input; Activities; Community website; Reviews"
+    },
+    {
+      "rank": 11,
+      "cause": "Unmanaged fear of loneliness during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 12,
+      "cause": "Unmanaged fear of not making friends during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 13,
+      "cause": "Unmanaged fear of social exclusion during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 14,
+      "cause": "Unmanaged fear of being ignored in group activities during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 15,
+      "cause": "Unmanaged fear of losing community belonging during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 16,
+      "cause": "Unmanaged fear of language-based social isolation during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 17,
+      "cause": "Unmanaged fear of cultural mismatch in daily life during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 18,
+      "cause": "Unmanaged fear of having no meaningful conversations during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 19,
+      "cause": "Unmanaged fear of reduced family visits during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 20,
+      "cause": "Unmanaged fear of social withdrawal becoming permanent during transition",
+      "domain": "Social",
+      "impact": 3,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 21,
+      "cause": "Unmanaged fear of medication errors during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 22,
+      "cause": "Unmanaged fear of delayed medical response during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 23,
+      "cause": "Unmanaged fear of unmanaged chronic conditions during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 24,
+      "cause": "Unmanaged fear of avoidable hospitalization during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 25,
+      "cause": "Unmanaged fear of poor care coordination during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 26,
+      "cause": "Unmanaged fear of untreated pain during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 27,
+      "cause": "Unmanaged fear of missed rehabilitation opportunities during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 28,
+      "cause": "Unmanaged fear of preventable falls during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 29,
+      "cause": "Unmanaged fear of infection control gaps during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 30,
+      "cause": "Unmanaged fear of decline due to under-monitoring during transition",
+      "domain": "Medical",
+      "impact": 5,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 31,
+      "cause": "Unmanaged fear of hidden fees during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 32,
+      "cause": "Unmanaged fear of unaffordable future care during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 33,
+      "cause": "Unmanaged fear of rapid pricing increases during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 34,
+      "cause": "Unmanaged fear of paying for services not received during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 35,
+      "cause": "Unmanaged fear of financial pressure on family during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 36,
+      "cause": "Unmanaged fear of exhausting savings too early during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 37,
+      "cause": "Unmanaged fear of unclear contract terms during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 38,
+      "cause": "Unmanaged fear of billing disputes during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 39,
+      "cause": "Unmanaged fear of move-in incentives masking long-term cost during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 40,
+      "cause": "Unmanaged fear of losing flexibility due to cost lock-in during transition",
+      "domain": "Financial",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 41,
+      "cause": "Unmanaged fear of family disagreement over care decisions during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 42,
+      "cause": "Unmanaged fear of guilt after placement during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 43,
+      "cause": "Unmanaged fear of communication breakdown with staff during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 44,
+      "cause": "Unmanaged fear of not being informed about incidents during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 45,
+      "cause": "Unmanaged fear of sibling conflict over decisions during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 46,
+      "cause": "Unmanaged fear of losing the family's role in care during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 47,
+      "cause": "Unmanaged fear of emergency coordination failures during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 48,
+      "cause": "Unmanaged fear of family burnout during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 49,
+      "cause": "Unmanaged fear of being blamed for outcomes during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    },
+    {
+      "rank": 50,
+      "cause": "Unmanaged fear of poor alignment on priorities during transition",
+      "domain": "Family",
+      "impact": 4,
+      "sourceType": "knowledge/failure_factors.json; knowledge/transition_patterns.json; knowledge/social_integration_model.json; knowledge/loneliness_risk_model.json; knowledge/success_factors.json"
+    }
+  ],
+  "top50FamilyConcerns": [
+    {
+      "rank": 1,
+      "concern": "Fear of hidden fees",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 2,
+      "concern": "Fear of unaffordable future care",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 3,
+      "concern": "Fear of rapid pricing increases",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 4,
+      "concern": "Fear of paying for services not received",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 5,
+      "concern": "Fear of financial pressure on family",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 6,
+      "concern": "Fear of exhausting savings too early",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 7,
+      "concern": "Fear of unclear contract terms",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 8,
+      "concern": "Fear of billing disputes",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 9,
+      "concern": "Fear of move-in incentives masking long-term cost",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 10,
+      "concern": "Fear of losing flexibility due to cost lock-in",
+      "category": "Financial",
+      "severity": 4
+    },
+    {
+      "rank": 11,
+      "concern": "Fear of family disagreement over care decisions",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 12,
+      "concern": "Fear of guilt after placement",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 13,
+      "concern": "Fear of communication breakdown with staff",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 14,
+      "concern": "Fear of not being informed about incidents",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 15,
+      "concern": "Fear of sibling conflict over decisions",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 16,
+      "concern": "Fear of losing the family's role in care",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 17,
+      "concern": "Fear of emergency coordination failures",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 18,
+      "concern": "Fear of family burnout",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 19,
+      "concern": "Fear of being blamed for outcomes",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 20,
+      "concern": "Fear of poor alignment on priorities",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 21,
+      "concern": "Fear of a failed first 90 days",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 22,
+      "concern": "Fear of second move due to mismatch",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 23,
+      "concern": "Fear of poor onboarding",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 24,
+      "concern": "Fear of abrupt adjustment without support",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 25,
+      "concern": "Fear of move stress worsening health",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 26,
+      "concern": "Fear of unclear transition expectations",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 27,
+      "concern": "Fear of family support decaying after move-in",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 28,
+      "concern": "Fear of disrupted routines",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 29,
+      "concern": "Fear of unmet expectations",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 30,
+      "concern": "Fear of no recovery plan after setbacks",
+      "category": "Transition",
+      "severity": 5
+    },
+    {
+      "rank": 31,
+      "concern": "Fear of licensing non-compliance",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 32,
+      "concern": "Fear of unresolved complaints",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 33,
+      "concern": "Fear of weak incident transparency",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 34,
+      "concern": "Fear of guardianship confusion",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 35,
+      "concern": "Fear of contract disputes",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 36,
+      "concern": "Fear of rights not being protected",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 37,
+      "concern": "Fear of unresolved deficiency patterns",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 38,
+      "concern": "Fear of non-reporting of critical events",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 39,
+      "concern": "Fear of legal exposure for family decisions",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 40,
+      "concern": "Fear of policy contradictions",
+      "category": "Legal",
+      "severity": 3
+    },
+    {
+      "rank": 41,
+      "concern": "Family concern: fear of family disagreement over care decisions",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 42,
+      "concern": "Family concern: fear of guilt after placement",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 43,
+      "concern": "Family concern: fear of communication breakdown with staff",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 44,
+      "concern": "Family concern: fear of not being informed about incidents",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 45,
+      "concern": "Family concern: fear of sibling conflict over decisions",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 46,
+      "concern": "Family concern: fear of losing the family's role in care",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 47,
+      "concern": "Family concern: fear of emergency coordination failures",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 48,
+      "concern": "Family concern: fear of family burnout",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 49,
+      "concern": "Family concern: fear of being blamed for outcomes",
+      "category": "Family",
+      "severity": 4
+    },
+    {
+      "rank": 50,
+      "concern": "Family concern: fear of poor alignment on priorities",
+      "category": "Family",
+      "severity": 4
+    }
+  ],
+  "coverage": {
+    "categoriesCovered": [
+      "Psychological",
+      "Social",
+      "Medical",
+      "Financial",
+      "Family",
+      "Safety",
+      "Identity",
+      "Transition",
+      "Spiritual",
+      "Legal"
+    ],
+    "totalFears": 100,
+    "totalDecisionDrivers": 50,
+    "totalAdaptationFactors": 50,
+    "totalFailureCauses": 50,
+    "totalFamilyConcerns": 50
+  },
+  "questionnaireGate": {
+    "readyToBuildAssessment": false,
+    "reason": "External literature and practitioner interview collection must be completed and linked to each question before questionnaire launch."
+  }
+}
