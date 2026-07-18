@@ -1,0 +1,16 @@
+# Agent KPI Dashboard
+
+| Agent | Key KPIs | Daily Targets |
+| --- | --- | --- |
+| Clinical Knowledge Agent | Knowledge growth; Evidence growth; Coverage; Confidence; Accuracy | knowledgeObjectsPerDay=>= 10; evidencePerDay=>= 15; providerUpdatesPerDay=N/A; relationshipsPerDay=>= 8; coverageGrowthPerDay=>= 1% |
+| Provider Intelligence Agent | Provider growth; Coverage; Duplicate rate; Verification success; Refresh success | knowledgeObjectsPerDay=>= 12; evidencePerDay=>= 12; providerUpdatesPerDay=>= 20; relationshipsPerDay=>= 10; coverageGrowthPerDay=>= 1 county |
+| Clinical Evidence Agent | Evidence growth; Coverage; Confidence; Duplicate rate; Refresh success | knowledgeObjectsPerDay=>= 8; evidencePerDay=>= 20; providerUpdatesPerDay=N/A; relationshipsPerDay=>= 10; coverageGrowthPerDay=>= 1 topic cluster |
+| Activities Intelligence Agent | Knowledge growth; Evidence growth; Coverage; Confidence; Refresh success | knowledgeObjectsPerDay=>= 10; evidencePerDay=>= 10; providerUpdatesPerDay=>= 12; relationshipsPerDay=>= 8; coverageGrowthPerDay=>= 1 provider segment |
+| Nutrition Intelligence Agent | Knowledge growth; Evidence growth; Coverage; Confidence; Refresh success | knowledgeObjectsPerDay=>= 8; evidencePerDay=>= 8; providerUpdatesPerDay=>= 10; relationshipsPerDay=>= 6; coverageGrowthPerDay=>= 1 diet-support segment |
+| Outcome Learning Agent | Knowledge growth; Evidence growth; Accuracy; Learning progress; Coverage | knowledgeObjectsPerDay=>= 8; evidencePerDay=>= 8; providerUpdatesPerDay=N/A; relationshipsPerDay=>= 6; coverageGrowthPerDay=>= 1 cohort segment |
+| Knowledge Graph Agent | Knowledge graph growth; Coverage; Confidence; Duplicate rate; Refresh success | knowledgeObjectsPerDay=>= 8; evidencePerDay=>= 5; providerUpdatesPerDay=N/A; relationshipsPerDay=>= 12; coverageGrowthPerDay=>= 1 ontology cluster |
+| Data Quality & Trust Agent | Coverage; Confidence; Duplicate rate; Refresh success; Discovery success | knowledgeObjectsPerDay=>= 6; evidencePerDay=>= 6; providerUpdatesPerDay=>= 10 quality reviews; relationshipsPerDay=>= 6; coverageGrowthPerDay=>= 1 quality segment |
+| Narrative Intelligence Agent | Accuracy; Response time; Coverage; Confidence; Learning progress | knowledgeObjectsPerDay=>= 4; evidencePerDay=>= 4 narrative references; providerUpdatesPerDay=N/A; relationshipsPerDay=>= 4; coverageGrowthPerDay=>= 1 explanation pattern |
+| Matching Improvement Agent | Recommendation quality; Accuracy; Learning progress; Coverage; Confidence | knowledgeObjectsPerDay=>= 6; evidencePerDay=>= 6; providerUpdatesPerDay=N/A; relationshipsPerDay=>= 5; coverageGrowthPerDay=>= 1 ranking issue family |
+| Competitive Intelligence Agent | Coverage growth; Discovery success; Learning progress; Response time; Confidence | knowledgeObjectsPerDay=>= 5; evidencePerDay=>= 5; providerUpdatesPerDay=>= 3 prioritized discovery campaigns; relationshipsPerDay=>= 4; coverageGrowthPerDay=>= 1 geography priority update |
+| Chief AI Supervisor | Agent health; Knowledge growth; Provider growth; Coverage growth; Evidence growth | knowledgeObjectsPerDay=>= 1 readiness cycle; evidencePerDay=>= 1 validation bundle; providerUpdatesPerDay=>= 1 budget reprioritization when needed; relationshipsPerDay=>= 1 supervisory linkage set; coverageGrowthPerDay=>= maintain zero idle agents |
