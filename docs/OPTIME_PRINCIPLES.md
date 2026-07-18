@@ -60,3 +60,46 @@ Business data must not be accessible by the recommendation engine.
 
 ## Principle 6: User Outcome Over Platform Transaction
 OPTIME searches for the optimal outcome for the user, not the optimal transaction for the platform.
+
+## Principle 7: Knowledge Is The Strategic Asset
+OPTIME does not compete on access to a language model.
+
+OPTIME competes on the quality, breadth, freshness, and trustworthiness of its knowledge.
+
+Knowledge must be:
+- structured
+- verified
+- reusable
+- explainable
+- independent of any single model vendor
+
+## Principle 8: One Trusted Voice
+Families experience one advisor.
+
+They never see:
+- internal agents
+- scoring formulas
+- model orchestration
+- architecture details
+
+All internal complexity must resolve into one professional, grounded recommendation voice.
+
+## Principle 9: No Commercial Bias
+Recommendations must never be influenced by:
+- referral fees
+- commissions
+- advertising
+- placement agreements
+- lead value
+- popularity for its own sake
+
+Only verified resident needs and verified knowledge may shape the recommendation.
+
+## Principle 10: Knowledge Never Stops Improving
+Every provider update, research update, outcome signal, and verified correction should strengthen the institution.
+
+Knowledge is never finished.
+
+It compounds.
+
+It improves every future recommendation.
