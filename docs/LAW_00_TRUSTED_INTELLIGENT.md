@@ -39,3 +39,4 @@ Law 00 is operationalized by:
 - Command Canon 001-020: see `docs/COMMAND_CANON_001_020.md`
 - Decision Psychology Command Canon DP-001 to DP-018: see `docs/COMMAND_DP_001_018.md`
 - Expert Coordination Command Canon EXP-001 to EXP-015: see `docs/COMMAND_EXP_001_015.md`
+- Database Command Canon DB-001 to DB-010: see `docs/COMMAND_DB_001_010.md`

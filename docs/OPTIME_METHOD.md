@@ -25,6 +25,7 @@ The method is governed by:
 - Command Canon 001-020: `docs/COMMAND_CANON_001_020.md`
 - Decision Psychology Command Canon DP-001 to DP-018: `docs/COMMAND_DP_001_018.md`
 - Expert Coordination Command Canon EXP-001 to EXP-015: `docs/COMMAND_EXP_001_015.md`
+- Database Command Canon DB-001 to DB-010: `docs/COMMAND_DB_001_010.md`
 
 ### Foundation 1
 Institutional Knowledge

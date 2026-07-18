@@ -16,6 +16,7 @@ The institutional command canon is mandatory doctrine for all OPTIME decisions:
 - Command 001-020: see `docs/COMMAND_CANON_001_020.md`
 - Decision Psychology Command DP-001 to DP-018: see `docs/COMMAND_DP_001_018.md`
 - Expert Coordination Command EXP-001 to EXP-015: see `docs/COMMAND_EXP_001_015.md`
+- Database Command DB-001 to DB-010: see `docs/COMMAND_DB_001_010.md`
 
 ## Principle 1: Outcome-Only Optimization
 The recommendation engine optimizes only for the user's outcome.
