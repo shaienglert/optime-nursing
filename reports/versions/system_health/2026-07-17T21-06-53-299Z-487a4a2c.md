@@ -1,0 +1,30 @@
+# System Health
+
+## Health Checks
+
+| Check | Status | Details |
+| --- | --- | --- |
+| Knowledge Graph Integrity | PASS | nodes=803, edges=17264 |
+| Evidence Coverage | FAIL | clinical_evidence=0, guidelines=0, references=0 |
+| Matching Coverage | PASS | scored_facilities=100/100 |
+| Questionnaire Coverage | PASS | facility_questionnaire_v1 is available in backend models |
+| Provider Coverage | PASS | facilities_with_provider_users=1 |
+| API Failures | PASS | api_failures_detected=0 |
+| Synchronization Issues | PASS | issues=0 |
+
+## Validation Gates
+
+- No duplicate facilities: **PASS**
+- No contradictory verified data: **PASS** (unresolved=0)
+- No expired clinical evidence: **PASS**
+- No missing critical fields: **PASS**
+- No orphan database records: **PASS**
+
+## Success Metrics
+
+- Average Facility Data Quality: **75.5**
+- Average Verification Coverage: **35.0**
+- Average Source Trust Score: **61.1**
+- Facilities Requiring Review: **0**
+- Conflicts Detected: **1**
+- Conflicts Resolved: **1**

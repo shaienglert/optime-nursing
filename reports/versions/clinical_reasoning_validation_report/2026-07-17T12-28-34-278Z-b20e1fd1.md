@@ -1,0 +1,79 @@
+# Clinical Reasoning + Anonymous Verification Validation Report
+
+Date: 2026-07-17
+
+## Execution Results
+
+- `npm run build` (from `frontend`): PASS
+- `node scripts/run_dynamic_persona_simulation_audit.cjs` (from repo root): PASS
+  - Generated `reports/post_taxonomy_validation_report.md` with `Verdict: PASS`
+
+## Requirement Validation
+
+### 1. Medical reasoning generated correctly
+Status: PASS
+
+Evidence:
+- Clinical requirements are translated from medical facts (stroke, 24/7 support, walker, speech issues) in `buildClinicalRequirements`.
+- Medical narrative section is generated in `clinicalReasoning.medicalMatch`.
+
+### 2. Lifestyle reasoning generated correctly
+Status: PASS
+
+Evidence:
+- Lifestyle requirements are translated (movies, music) in `buildClinicalRequirements`.
+- Lifestyle narrative section is generated in `clinicalReasoning.lifestyleMatch`.
+
+### 3. Dietary reasoning generated correctly
+Status: PASS
+
+Evidence:
+- Dietary requirements (gluten-free, dietitian support) are translated in `buildClinicalRequirements`.
+- Dietary narrative section is generated in `clinicalReasoning.dietaryMatch`.
+
+### 4. Unknown items appear only in verification section
+Status: PASS
+
+Evidence:
+- Unknown list is rendered under `Verification Needed` and verification-related sections.
+- Verification request body is built from unknown items only.
+
+### 5. Unknown items never appear as verified capabilities
+Status: PASS
+
+Evidence:
+- `verifiedCapabilities` are populated only from `state === "YES"`.
+- `unknownCapabilities` are populated only from `state === "UNKNOWN"`.
+
+### 6. Anonymous verification payload contains no personal information
+Status: PASS
+
+Evidence:
+- Payload fields include only age range, optional gender, care level, functional limitations, medical needs, dietary/lifestyle, budget, move-in timeframe, and geography.
+- `noPersonalInfoShared: true` is explicitly set.
+
+### 7. Verification button appears only when UNKNOWN > 0
+Status: PASS
+
+Evidence:
+- UI renders the button only inside `unknownCount > 0` conditional.
+
+### 8. No resident name, email or phone appears in verification payload
+Status: PASS
+
+Evidence:
+- Anonymous payload schema has no name/email/phone fields.
+- Verification request text explicitly states no resident/family contact information is shared.
+
+## Outcome Summary
+
+- BUILD: PASS
+- NARRATIVE: PASS
+- VERIFICATION: PASS
+- PRIVACY: PASS
+
+## Primary Evidence Locations
+
+- `frontend/src/lib/optime-v2-engine.ts`
+- `frontend/src/app/results/results-page-client.tsx`
+- `reports/post_taxonomy_validation_report.md`

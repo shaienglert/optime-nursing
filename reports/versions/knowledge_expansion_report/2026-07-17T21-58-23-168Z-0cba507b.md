@@ -1,0 +1,20 @@
+# Knowledge Expansion Report
+
+The knowledge registry is updated from prepared snapshots and refreshed evidence-backed agent reports.
+
+| Metric | Value |
+| --- | --- |
+| Total Agents | 11 |
+| Most Active Agent | Clinical Knowledge Agent |
+| Least Active Agent | Data Quality & Trust Agent |
+| Top Growing Domains | Activity and engagement fit; Clinical care requirements; Freshness, consistency, and provenance; Family/public experience signals; Cross-domain relationship graph |
+
+## Top Growing Domains
+
+| Domain | Agent | Knowledge Objects | Evidence Objects |
+| --- | --- | --- | --- |
+| Activity and engagement fit | Activities Intelligence Agent | 20 | 25 |
+| Clinical care requirements | Clinical Knowledge Agent | 20 | 25 |
+| Freshness, consistency, and provenance | Data Quality & Trust Agent | 20 | 25 |
+| Family/public experience signals | Family Experience Intelligence Agent | 20 | 25 |
+| Cross-domain relationship graph | Knowledge Graph Agent | 20 | 25 |

@@ -1,0 +1,9 @@
+# Recommendation Engine Validation
+
+| Check | Status | Evidence |
+| --- | --- | --- |
+| Score threshold removed | PASS | Recommendation engine no longer rejects providers for failing an internal score threshold. |
+| Accepted list uses only true hard requirements | PASS | Accepted providers are filtered by mandatory requirement failures only. |
+| Rejected list not score-gated | PASS | Rejection is limited to genuine mandatory requirement failures. |
+| Best available communities shown | PASS | Results page shows a best-available fallback instead of an empty page. |
+| Community cards remain visible | PASS | Cards render whenever providers exist. |

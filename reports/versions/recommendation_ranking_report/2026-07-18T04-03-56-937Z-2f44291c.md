@@ -1,0 +1,7 @@
+# Recommendation Ranking Report
+
+| Ranking Principle | Status | Details |
+| --- | --- | --- |
+| Hard requirements determine eligibility | PASS | Only mandatory support and explicitly mandatory constraints remove providers. |
+| Scores determine ranking | PASS | Scores remain ranking signals and are not used as hidden rejection gates. |
+| Best available fallback when no perfect match exists | PASS | Families still receive the strongest available options with trade-offs. |

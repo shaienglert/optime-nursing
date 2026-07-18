@@ -10,7 +10,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Tuple
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
@@ -63,10 +63,31 @@ def env_int(name: str) -> Optional[int]:
         return None
 
 
-def fetch_html(url: str) -> str:
+def fetch_html(url: str, retries: int = 3, timeout: int = 30) -> str:
     request = Request(url, headers=HEADERS)
-    with urlopen(request, timeout=30) as response:
-        return response.read().decode("utf8", errors="ignore")
+    last_error: Optional[Exception] = None
+    for attempt in range(retries + 1):
+        try:
+            with urlopen(request, timeout=timeout) as response:
+                return response.read().decode("utf8", errors="ignore")
+        except HTTPError as error:
+            last_error = error
+            if error.code in {429, 500, 502, 503, 504} and attempt < retries:
+                continue
+            raise
+        except URLError as error:
+            last_error = error
+            if attempt < retries:
+                continue
+            raise
+        except TimeoutError as error:
+            last_error = error
+            if attempt < retries:
+                continue
+            raise
+    if last_error:
+        raise last_error
+    raise RuntimeError(f"Unable to fetch URL: {url}")
 
 
 def parse_jsonld_objects(html: str) -> List[object]:
@@ -352,11 +373,16 @@ def build_seniorly_records() -> Tuple[List[Dict[str, object]], Dict[str, object]
         detail_urls = detail_urls[:detail_limit]
 
     max_workers = min(16, max(4, len(detail_urls) or 1))
+    failed_detail_fetches = 0
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(extract_detail, url): url for url in detail_urls}
         for future in as_completed(futures):
             url = futures[future]
-            detail = future.result()
+            try:
+                detail = future.result()
+            except Exception:
+                failed_detail_fetches += 1
+                continue
             record = records_by_url[url]
             for key, value in detail.items():
                 if key == "community_type":
@@ -406,6 +432,7 @@ def build_seniorly_records() -> Tuple[List[Dict[str, object]], Dict[str, object]
         "counties_attempted": len(counties),
         "seniorly_urls_discovered": len(records_by_url),
         "seniorly_records_built": len(records),
+        "failed_detail_fetches": failed_detail_fetches,
         "sample_mode": bool(county_limit or detail_limit),
     }
 
@@ -501,7 +528,16 @@ def merge_records(seniorly_records: List[Dict[str, object]], cms_records: List[D
         community_types = sorted(set(record.get("community_types") or []))
         record["community_types"] = community_types
         record["primary_community_type"] = record.get("primary_community_type") or (community_types[0] if community_types else None)
+        record["official_name"] = record.get("community_name")
+        record["care_type"] = record.get("primary_community_type")
+        record["contact_information"] = {
+            "phone": record.get("phone"),
+            "website": record.get("website"),
+        }
+        record["source_list"] = sorted(set(record.get("source_refs") or []))
     final_records.sort(key=lambda item: (str(item.get("county") or ""), str(item.get("city") or ""), str(item.get("community_name") or "")))
+    for index, record in enumerate(final_records, start=1):
+        record["optime_id"] = f"OPTIME-FL-{index:06d}"
     return final_records, duplicate_merges
 
 

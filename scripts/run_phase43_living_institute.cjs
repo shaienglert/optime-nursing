@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const cp = require('child_process');
 
 const repoRoot = path.join(__dirname, '..');
 const reportsDir = path.join(repoRoot, 'reports');
@@ -522,6 +523,13 @@ function main() {
   writeReport('executive_summary.md', executiveSummary);
   writeReport('knowledge_growth_dashboard.md', knowledgeGrowthDashboard);
   writeReport('orchestrator_report.md', orchestratorReport);
+
+  try {
+    cp.execSync('node .\\scripts\\run_report_registry.cjs', { cwd: repoRoot, stdio: 'pipe' });
+  } catch (error) {
+    const msg = (error && error.message) ? error.message : 'Unknown report registry error';
+    console.error(`REPORT_REGISTRY_WARNING=${msg}`);
+  }
 
   console.log('Wrote 8 reports');
   console.log(`TOTAL_AGENTS=${agents.length}`);

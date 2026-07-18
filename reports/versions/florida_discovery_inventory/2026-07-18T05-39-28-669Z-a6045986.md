@@ -1,0 +1,82 @@
+# Florida Discovery Inventory
+
+- Generated at (UTC): 2026-07-18T05:39:28+00:00
+- Records: 713
+- Florida counties covered: 64 / 67
+- Duplicate merges performed: 1
+
+## Communities By County
+
+- Pinellas: 65
+- Miami-Dade: 54
+- Palm Beach: 54
+- Orange: 36
+- Duval: 34
+- Broward: 33
+- Hillsborough: 30
+- Sarasota: 30
+- Volusia: 29
+- Alachua: 28
+- Polk: 25
+- Brevard: 21
+- Lee: 20
+- Pasco: 18
+- Lake: 17
+- Escambia: 16
+- Clay: 12
+- Manatee: 12
+- Collier: 11
+- Marion: 11
+- Osceola: 10
+- Seminole: 10
+- Citrus: 9
+- St. Lucie: 9
+- Charlotte: 8
+- Leon: 8
+- Okaloosa: 8
+- St. Johns: 8
+- Hernando: 6
+- Indian River: 6
+- Martin: 6
+- Bay: 5
+- Highlands: 5
+- Columbia: 4
+- Jackson: 4
+- Santa Rosa: 4
+- Sumter: 4
+- Madison: 3
+- Putnam: 3
+- Suwannee: 3
+- Baker: 2
+- Bradford: 2
+- Calhoun: 2
+- Flagler: 2
+- Gilchrist: 2
+- Hendry: 2
+- Monroe: 2
+- Nassau: 2
+- Walton: 2
+- Washington: 2
+- De Soto: 1
+- Dixie: 1
+- Franklin: 1
+- Gadsden: 1
+- Gulf: 1
+- Hamilton: 1
+- Hardee: 1
+- Holmes: 1
+- Jefferson: 1
+- Lafayette: 1
+- Levy: 1
+- Okeechobee: 1
+- Taylor: 1
+- Wakulla: 1
+
+## Communities By Care Type
+
+- Skilled Nursing: 694
+- Continuing Care Retirement Communities (CCRC): 65
+- Assisted Living: 15
+- Memory Care: 5
+- Independent Living: 3
+- Continuing Care Retirement Community: 2

@@ -1,0 +1,10 @@
+# Source Trust Framework
+
+| Trust Level | Examples | Recommendation Use |
+| --- | --- | --- |
+| LEVEL A | Government, CMS, state regulators, licensing agencies, inspection authorities, court records, official registries | Directly eligible when fresh and conflict-free |
+| LEVEL B | Official provider documents, provider website, official policies, signed agreements, official communications | Eligible after provider and domain validation |
+| LEVEL C | Independent organizations, professional associations, academic publications, peer reviewed research, accreditation bodies | Eligible with professional review and evidence mapping |
+| LEVEL D | Media, news, resident reviews, family reviews, forums, social media | Never sufficient alone; supporting context only |
+
+AI is never considered evidence and never considered a source.

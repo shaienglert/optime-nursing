@@ -1,0 +1,23 @@
+# Simulation Summary
+
+- Total Simulations: **100**
+- Medical profile coverage: **stroke, diabetes, mild_dementia, parkinsons, copd, cardiac, renal, fall_risk**
+- Functional profile coverage: **independent, light_assist, adl_assist, mobility_support, speech_support, 24_7_support**
+- Lifestyle profile coverage: **movies, music, gardening, exercise, faith, quiet, social, pet_friendly**
+- Simulations with recommendation improvement: **100/100**
+
+## Agent Participation Frequency
+
+| Agent | Participated In Simulations |
+| --- | --- |
+| Clinical Knowledge Agent | 100 |
+| Senior Living Research Agent | 100 |
+| Resident Needs Intelligence Agent | 100 |
+| Provider Intelligence Agent | 100 |
+| Activities Intelligence Agent | 94 |
+| Nutrition Intelligence Agent | 61 |
+| Family Experience Intelligence Agent | 79 |
+| Outcome Learning Agent | 100 |
+| Matching Improvement Agent | 100 |
+| Knowledge Graph Agent | 100 |
+| Data Quality & Trust Agent | 100 |

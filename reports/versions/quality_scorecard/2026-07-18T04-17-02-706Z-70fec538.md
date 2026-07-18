@@ -1,0 +1,13 @@
+# Quality Scorecard
+
+| Metric | Average Score |
+| --- | --- |
+| Decision Completeness | 100 |
+| Evidence Coverage | 85 |
+| Explanation Quality | 67 |
+| Personalization | 70 |
+| Grounding | 100 |
+| Readability | 90 |
+| Transparency | 58.3 |
+| Actionability | 70 |
+| Overall | 80.4 |

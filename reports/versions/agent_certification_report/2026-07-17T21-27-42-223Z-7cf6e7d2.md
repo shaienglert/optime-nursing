@@ -1,0 +1,20 @@
+# Agent Certification Report
+
+Simulations executed: **100**
+Latest real case replay anchor: **rwov1-028**
+
+| Agent | Certification | Checks Passed | Health | API Pass | Avg Latency (ms) | Evidence Quality | Recommendation Improvements | Failed Checks |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Clinical Knowledge Agent | CERTIFIED | 9/9 | 99.5% | 98.2% | 150 | 83.7% | 100 | - |
+| Senior Living Research Agent | CERTIFIED | 9/9 | 99.5% | 98.2% | 151 | 82.6% | 100 | - |
+| Resident Needs Intelligence Agent | CERTIFIED | 9/9 | 99.5% | 98.2% | 150 | 82.8% | 100 | - |
+| Provider Intelligence Agent | CERTIFIED | 9/9 | 99.5% | 98.2% | 151 | 83.0% | 100 | - |
+| Activities Intelligence Agent | CERTIFIED | 9/9 | 99.4% | 98.2% | 150 | 83.0% | 94 | - |
+| Nutrition Intelligence Agent | CERTIFIED | 9/9 | 99.1% | 98.3% | 146 | 83.8% | 61 | - |
+| Family Experience Intelligence Agent | CERTIFIED | 9/9 | 99.3% | 98.3% | 149 | 81.9% | 79 | - |
+| Outcome Learning Agent | CERTIFIED | 9/9 | 99.5% | 98.3% | 147 | 82.8% | 100 | - |
+| Matching Improvement Agent | CERTIFIED | 9/9 | 99.5% | 98.1% | 158 | 82.9% | 100 | - |
+| Knowledge Graph Agent | CERTIFIED | 9/9 | 99.5% | 98.2% | 151 | 83.5% | 100 | - |
+| Data Quality & Trust Agent | CERTIFIED | 9/9 | 99.5% | 98.2% | 154 | 84.1% | 100 | - |
+
+Certification rule: Agent is certified only if all health, knowledge, API, learning, evidence, performance, integration, contribution, recovery, and logging requirements pass.

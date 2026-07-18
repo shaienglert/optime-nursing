@@ -1,0 +1,50 @@
+# Phase 7 Agent Platform Simulation
+
+## Scenario
+
+- 80-year-old
+- Stroke
+- Walker
+- Speech difficulty
+- Gluten free
+- Preferences: Movies, Music
+- 24/7 support
+
+## Ranked Results
+
+| Rank | Community | Final Match Score | Confidence |
+| --- | --- | --- | --- |
+| 1 | BISCAYNE HEALTH AND REHABILITATION CENTER | 95 | 87 |
+| 2 | MORTON PLANT REHABILITATION CENTER | 89 | 81 |
+| 3 | TERRACES OF LAKE WORTH CARE CENTER AND REHAB | 76 | 75 |
+
+## Agent Contribution Breakdown For Rank #1
+
+| Agent | Contribution |
+| --- | --- |
+| Clinical Knowledge Agent | 100 |
+| Senior Living Research Agent | 86 |
+| Resident Needs Intelligence Agent | 100 |
+| Provider Intelligence Agent | 90 |
+| Activities Intelligence Agent | 100 |
+| Nutrition Intelligence Agent | 100 |
+| Family Experience Intelligence Agent | 80 |
+| Outcome Learning Agent | 81 |
+| Matching Improvement Agent | 92 |
+| Knowledge Graph Agent | 94 |
+
+## Final Recommendation Narrative
+
+Top recommendation: **BISCAYNE HEALTH AND REHABILITATION CENTER**
+
+- Strongest clinical match for stroke recovery needs with 24/7 support.
+- Meets gluten-free and texture-sensitive nutrition support requirements.
+- Aligns with resident quality-of-life preferences for movies and music.
+- Family communication and responsiveness signals support care continuity confidence.
+- Outcome learning indicates durable 90- and 180-day stability for similar residents.
+
+## Rule Enforcement
+
+- Verified facts overwritten by agents: **NO**
+- Unknown fields converted to verified without evidence: **NO**
+- Agent platform behavior: confidence + questions + narrative + rule recommendations

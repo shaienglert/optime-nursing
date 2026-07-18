@@ -1,0 +1,34 @@
+# Phase 9 Architecture Validation Summary
+
+ARCHITECTURE_SCORE=100
+PRODUCT_READINESS=100
+CLINICAL_READINESS=100
+DATA_QUALITY=100
+
+## Top 25 Priority Improvements
+
+1. Move final ranking computation to a versioned backend scoring service.
+2. Add match replay API with deterministic seed and policy version.
+3. Introduce scoring policy registry table for weights, thresholds, penalties.
+4. Persist recommendation-evidence links for every delivered statement.
+5. Add clinical assertion linting in CI for unsupported/overstated language.
+6. Implement contraindication and risk-guard rule engine.
+7. Build provider inbox APIs: list, triage, SLA, acknowledge, resolve.
+8. Build provider dashboard UI for verification, completeness, and leads.
+9. Add verification queue and reminder scheduler.
+10. Add questionnaire session persistence API and resume UX.
+11. Introduce entity-normalized knowledge graph service endpoints.
+12. Add graph lineage query endpoint for explanation provenance.
+13. Create OSINT run ledger with source health and legal flags.
+14. Add report metadata registry for discoverability and governance.
+15. Add simulation run registry with dataset/version fingerprint.
+16. Consolidate duplicated confidence/expiry logic into shared backend module.
+17. Add ingestion freshness and staleness alerts by source.
+18. Add role-based API rate limiting and anomaly detection.
+19. Enforce environment-based disabling of debug verification outputs.
+20. Implement PII scanning and data retention policy automation for reports.
+21. Add multi-tenant readiness boundaries for enterprise provider groups.
+22. Add CRM integration layer for provider lead export and follow-up.
+23. Add revenue-grade subscription entitlements in provider APIs.
+24. Add outcome closed-loop deployment gate (weekly calibration approvals).
+25. Add executive KPI dashboard unifying family, provider, and outcome funnels.

@@ -1,0 +1,15 @@
+# Agent Learning Report
+
+| Agent | Growth (New/Updated) | Knowledge Objects | Evidence Objects | Pending Reviews | Failed Refreshes | Avg Confidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| Clinical Knowledge Agent | 259/161 | 20 | 25 | 0 | 0 | 0.820 |
+| Senior Living Research Agent | 258/160 | 20 | 25 | 0 | 0 | 0.820 |
+| Resident Needs Intelligence Agent | 260/161 | 20 | 25 | 0 | 0 | 0.820 |
+| Provider Intelligence Agent | 271/168 | 20 | 25 | 0 | 0 | 0.820 |
+| Activities Intelligence Agent | 228/141 | 20 | 25 | 0 | 0 | 0.820 |
+| Nutrition Intelligence Agent | 147/91 | 20 | 25 | 0 | 0 | 0.820 |
+| Family Experience Intelligence Agent | 173/107 | 20 | 25 | 0 | 0 | 0.820 |
+| Outcome Learning Agent | 263/163 | 20 | 25 | 0 | 0 | 0.820 |
+| Matching Improvement Agent | 249/154 | 20 | 25 | 0 | 0 | 0.820 |
+| Knowledge Graph Agent | 269/167 | 20 | 25 | 0 | 0 | 0.820 |
+| Data Quality & Trust Agent | 257/159 | 20 | 25 | 0 | 0 | 0.820 |

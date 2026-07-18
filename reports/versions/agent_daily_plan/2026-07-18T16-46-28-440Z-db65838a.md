@@ -1,0 +1,21 @@
+# Agent Daily Plan
+
+| Agent | Daily Mission 1 | Daily Mission 2 | Daily Mission 3 | Weekly Queue Anchor | Monthly Queue Anchor |
+| --- | --- | --- | --- | --- | --- |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Activity and engagement fit. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Supervisory governance. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Evidence repository. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Review new domain research and evidence. | Publish updated knowledge objects and evidence links. | Detect stale or low-confidence knowledge for refresh. | Run weekly synthesis for Clinical care requirements. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Competitive and market intelligence. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Freshness, consistency, and provenance. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Family experience and support intelligence. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Cross-domain relationship graph. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Deterministic ranking policy upgrades. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Improve explanation quality and trust clarity. | Map narratives to verified evidence objects. | Flag weak explanations for source-agent follow-up. | Run weekly synthesis for Narrative intelligence. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Review new domain research and evidence. | Publish updated knowledge objects and evidence links. | Detect stale or low-confidence knowledge for refresh. | Run weekly synthesis for Dietary and nutrition support. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Collect and analyze outcome signals. | Update calibration and risk/benefit knowledge. | Identify high-impact learning opportunities. | Run weekly synthesis for Outcome-based calibration. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Discover new communities and provider profile changes. | Detect ownership, licensing, and service changes. | Submit all material changes to verification queue. | Run weekly synthesis for Provider verified capabilities. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Resident needs and profile intelligence. | Run monthly knowledge audit and maturity review. |
+| UNPROVEN_AGENT | Execute highest-priority knowledge growth task. | Produce measurable institutional output. | Close highest-priority knowledge gap. | Run weekly synthesis for Senior living research intelligence. | Run monthly knowledge audit and maturity review. |
+
+- Queue policy: on task completion, start next highest-priority queue item immediately.

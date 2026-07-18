@@ -1,0 +1,2724 @@
+{
+  "generated_at_utc": "2026-07-18T17:00:29.940Z",
+  "reports": [
+    {
+      "report_name": "agent_architecture.md",
+      "report_path": "reports/agent_architecture.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T20-51-40-733Z-7a398a94",
+      "latest_hash": "7a398a940f3d9f47064314a7f662434caa076834",
+      "latest_snapshot_path": "reports/versions/agent_architecture/2026-07-17T20-51-40-733Z-7a398a94.md",
+      "last_updated_utc": "2026-07-17T20:51:40.734Z",
+      "size_bytes": 7268,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_certification_report.md",
+      "report_path": "reports/agent_certification_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-27-42-223Z-7cf6e7d2",
+      "latest_hash": "7cf6e7d2d31d3213397219c912da1e269f4d20a4",
+      "latest_snapshot_path": "reports/versions/agent_certification_report/2026-07-17T21-27-42-223Z-7cf6e7d2.md",
+      "last_updated_utc": "2026-07-17T21:27:42.224Z",
+      "size_bytes": 1475,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_contributions.md",
+      "report_path": "reports/agent_contributions.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-11-10-692Z-b5349ff2",
+      "latest_hash": "b5349ff20a664783e4f28f4ded4f35c05e63b03f",
+      "latest_snapshot_path": "reports/versions/agent_contributions/2026-07-17T21-11-10-692Z-b5349ff2.md",
+      "last_updated_utc": "2026-07-17T21:11:10.693Z",
+      "size_bytes": 2816,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_daily_missions.md",
+      "report_path": "reports/agent_daily_missions.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-43-29-299Z-f565a292",
+      "latest_hash": "f565a2923e1f7afa64a0d2c4ea5a21988c069c72",
+      "latest_snapshot_path": "reports/versions/agent_daily_missions/2026-07-18T16-43-29-299Z-f565a292.md",
+      "last_updated_utc": "2026-07-18T16:43:29.300Z",
+      "size_bytes": 7578,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_daily_plan.md",
+      "report_path": "reports/agent_daily_plan.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-46-28-440Z-db65838a",
+      "latest_hash": "db65838a0ae2655a7d3cf9112ef0cc837f3427aa",
+      "latest_snapshot_path": "reports/versions/agent_daily_plan/2026-07-18T16-46-28-440Z-db65838a.md",
+      "last_updated_utc": "2026-07-18T16:46:28.440Z",
+      "size_bytes": 4284,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_health_dashboard.md",
+      "report_path": "reports/agent_health_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-27-42-233Z-849af138",
+      "latest_hash": "849af138493df712a629617859bc13a029cc30fa",
+      "latest_snapshot_path": "reports/versions/agent_health_dashboard/2026-07-17T21-27-42-233Z-849af138.md",
+      "last_updated_utc": "2026-07-17T21:27:42.233Z",
+      "size_bytes": 1094,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_learning_report.md",
+      "report_path": "reports/agent_learning_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-58-23-184Z-eea1644a",
+      "latest_hash": "eea1644a835062dcf38f3bb9053a18ed385fb73b",
+      "latest_snapshot_path": "reports/versions/agent_learning_report/2026-07-17T21-58-23-184Z-eea1644a.md",
+      "last_updated_utc": "2026-07-17T21:58:23.184Z",
+      "size_bytes": 944,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_missions.md",
+      "report_path": "reports/agent_missions.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-46-28-440Z-c6c775cd",
+      "latest_hash": "c6c775cda3d011bef5acc008ae34031606291625",
+      "latest_snapshot_path": "reports/versions/agent_missions/2026-07-18T16-46-28-440Z-c6c775cd.md",
+      "last_updated_utc": "2026-07-18T16:46:28.440Z",
+      "size_bytes": 16712,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_productivity_dashboard.md",
+      "report_path": "reports/agent_productivity_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-08-05-453Z-b5b2c959",
+      "latest_hash": "b5b2c95945dbdea09ddf8bb46079252f04545d29",
+      "latest_snapshot_path": "reports/versions/agent_productivity_dashboard/2026-07-18T04-08-05-453Z-b5b2c959.md",
+      "last_updated_utc": "2026-07-18T04:08:05.454Z",
+      "size_bytes": 940,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_registry.md",
+      "report_path": "reports/agent_registry.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-46-28-426Z-40654f5e",
+      "latest_hash": "40654f5e70a0b97e378e0487b412011cdfb249db",
+      "latest_snapshot_path": "reports/versions/agent_registry/2026-07-18T16-46-28-426Z-40654f5e.md",
+      "last_updated_utc": "2026-07-18T16:46:28.427Z",
+      "size_bytes": 6389,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_status_dashboard.md",
+      "report_path": "reports/agent_status_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-46-28-456Z-1987a906",
+      "latest_hash": "1987a906e6895728bf89d395472770ac2ed6c8fb",
+      "latest_snapshot_path": "reports/versions/agent_status_dashboard/2026-07-18T16-46-28-456Z-1987a906.md",
+      "last_updated_utc": "2026-07-18T16:46:28.456Z",
+      "size_bytes": 6029,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_status_report.md",
+      "report_path": "reports/agent_status_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-30-841Z-5a57f15d",
+      "latest_hash": "5a57f15d57ab3a463739e802398775412844857c",
+      "latest_snapshot_path": "reports/versions/agent_status_report/2026-07-17T21-36-30-841Z-5a57f15d.md",
+      "last_updated_utc": "2026-07-17T21:36:30.841Z",
+      "size_bytes": 1511,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_task_queue.md",
+      "report_path": "reports/agent_task_queue.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-43-29-306Z-fe67f43a",
+      "latest_hash": "fe67f43a7c8f17bc0f016ccfca480557cf1863fc",
+      "latest_snapshot_path": "reports/versions/agent_task_queue/2026-07-18T16-43-29-306Z-fe67f43a.md",
+      "last_updated_utc": "2026-07-18T16:43:29.307Z",
+      "size_bytes": 4213,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "agent_value_matrix.md",
+      "report_path": "reports/agent_value_matrix.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-47-55-010Z-1bd766c5",
+      "latest_hash": "1bd766c54fd8d62e10c1dac8141ac34ee51f3efe",
+      "latest_snapshot_path": "reports/versions/agent_value_matrix/2026-07-18T05-47-55-010Z-1bd766c5.md",
+      "last_updated_utc": "2026-07-18T05:47:55.011Z",
+      "size_bytes": 3782,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "audit_framework.md",
+      "report_path": "reports/audit_framework.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-38-00-998Z-90832275",
+      "latest_hash": "90832275f1029fa4b8e17247bc954f4fad85e332",
+      "latest_snapshot_path": "reports/versions/audit_framework/2026-07-18T04-38-00-998Z-90832275.md",
+      "last_updated_utc": "2026-07-18T04:38:00.998Z",
+      "size_bytes": 666,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "benchmark_gap_analysis.md",
+      "report_path": "reports/benchmark_gap_analysis.md",
+      "responsible_agent": "Matching Improvement Agent",
+      "latest_version_id": "2026-07-17T04-40-54-604Z-b26390ce",
+      "latest_hash": "b26390ce77a251cdb766e35c0605281307caf571",
+      "latest_snapshot_path": "reports/versions/benchmark_gap_analysis/2026-07-17T04-40-54-604Z-b26390ce.md",
+      "last_updated_utc": "2026-07-17T04:40:54.605Z",
+      "size_bytes": 4334,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "care_strategy_matrix_validation.md",
+      "report_path": "reports/care_strategy_matrix_validation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T08-32-40-854Z-2f06bdc3",
+      "latest_hash": "2f06bdc3de31a3e1fc1e07c773b6f866ca1f229d",
+      "latest_snapshot_path": "reports/versions/care_strategy_matrix_validation/2026-07-17T08-32-40-854Z-2f06bdc3.md",
+      "last_updated_utc": "2026-07-17T08:32:40.854Z",
+      "size_bytes": 1103,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "clinical_evidence_validation.md",
+      "report_path": "reports/clinical_evidence_validation.md",
+      "responsible_agent": "Clinical Knowledge Agent",
+      "latest_version_id": "2026-07-17T20-56-53-045Z-4c54c827",
+      "latest_hash": "4c54c8276db92fec6416347094c15c595a310717",
+      "latest_snapshot_path": "reports/versions/clinical_evidence_validation/2026-07-17T20-56-53-045Z-4c54c827.md",
+      "last_updated_utc": "2026-07-17T20:56:53.046Z",
+      "size_bytes": 5539,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "clinical_knowledge_platform.md",
+      "report_path": "reports/clinical_knowledge_platform.md",
+      "responsible_agent": "Clinical Knowledge Agent",
+      "latest_version_id": "2026-07-17T20-51-12-391Z-fc1a65d2",
+      "latest_hash": "fc1a65d2d80faf42978623046d6ddf64bc911e3d",
+      "latest_snapshot_path": "reports/versions/clinical_knowledge_platform/2026-07-17T20-51-12-391Z-fc1a65d2.md",
+      "last_updated_utc": "2026-07-17T20:51:12.391Z",
+      "size_bytes": 4163,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "clinical_reasoning_simulation_report.md",
+      "report_path": "reports/clinical_reasoning_simulation_report.md",
+      "responsible_agent": "Clinical Knowledge Agent",
+      "latest_version_id": "2026-07-17T12-30-57-258Z-321fe9b4",
+      "latest_hash": "321fe9b43f974e2b24ed5436afd908d83b3e51a7",
+      "latest_snapshot_path": "reports/versions/clinical_reasoning_simulation_report/2026-07-17T12-30-57-258Z-321fe9b4.md",
+      "last_updated_utc": "2026-07-17T12:30:57.259Z",
+      "size_bytes": 8626,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "clinical_reasoning_validation_report.md",
+      "report_path": "reports/clinical_reasoning_validation_report.md",
+      "responsible_agent": "Clinical Knowledge Agent",
+      "latest_version_id": "2026-07-17T12-28-34-278Z-b20e1fd1",
+      "latest_hash": "b20e1fd14fb55ac53c936a182bb09b2c81dfb8f1",
+      "latest_snapshot_path": "reports/versions/clinical_reasoning_validation_report/2026-07-17T12-28-34-278Z-b20e1fd1.md",
+      "last_updated_utc": "2026-07-17T12:28:34.279Z",
+      "size_bytes": 2627,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "conflict_report.md",
+      "report_path": "reports/conflict_report.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-17T21-06-53-277Z-9d3939a5",
+      "latest_hash": "9d3939a55684dcc59f2e8cd1b4fc70109a2839cf",
+      "latest_snapshot_path": "reports/versions/conflict_report/2026-07-17T21-06-53-277Z-9d3939a5.md",
+      "last_updated_utc": "2026-07-17T21:06:53.278Z",
+      "size_bytes": 475,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "continuous_learning_framework.md",
+      "report_path": "reports/continuous_learning_framework.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-17-02-717Z-e8ddedae",
+      "latest_hash": "e8ddedae6ef7fa6b71b3125ac2d98f35c1ba8fe1",
+      "latest_snapshot_path": "reports/versions/continuous_learning_framework/2026-07-18T04-17-02-717Z-e8ddedae.md",
+      "last_updated_utc": "2026-07-18T04:17:02.718Z",
+      "size_bytes": 545,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "coverage_dashboard.md",
+      "report_path": "reports/coverage_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-08-05-433Z-8467b9ea",
+      "latest_hash": "8467b9eabb06531cd08ce62b55a4e8f58e35adbd",
+      "latest_snapshot_path": "reports/versions/coverage_dashboard/2026-07-18T04-08-05-433Z-8467b9ea.md",
+      "last_updated_utc": "2026-07-18T04:08:05.434Z",
+      "size_bytes": 996,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "daily_knowledge_growth.md",
+      "report_path": "reports/daily_knowledge_growth.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-58-23-151Z-c18fec0c",
+      "latest_hash": "c18fec0c193a38174f6cac1c49ed3a91330069f8",
+      "latest_snapshot_path": "reports/versions/daily_knowledge_growth/2026-07-17T21-58-23-151Z-c18fec0c.md",
+      "last_updated_utc": "2026-07-17T21:58:23.151Z",
+      "size_bytes": 1453,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "daily_learning_report.md",
+      "report_path": "reports/daily_learning_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-08-05-414Z-5ae58113",
+      "latest_hash": "5ae5811382ff2c0fd483f891cd527a30c4ac5e9e",
+      "latest_snapshot_path": "reports/versions/daily_learning_report/2026-07-18T04-08-05-414Z-5ae58113.md",
+      "last_updated_utc": "2026-07-18T04:08:05.414Z",
+      "size_bytes": 495,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "data_freshness.md",
+      "report_path": "reports/data_freshness.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-17T21-06-53-281Z-2b81a9c2",
+      "latest_hash": "2b81a9c2602dfa898781a87726d63957d8b07b89",
+      "latest_snapshot_path": "reports/versions/data_freshness/2026-07-17T21-06-53-281Z-2b81a9c2.md",
+      "last_updated_utc": "2026-07-17T21:06:53.282Z",
+      "size_bytes": 346,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "data_quality_dashboard.md",
+      "report_path": "reports/data_quality_dashboard.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-17T21-06-53-263Z-adcb4b11",
+      "latest_hash": "adcb4b11aef7221c2dd79a1913012eb5d041791f",
+      "latest_snapshot_path": "reports/versions/data_quality_dashboard/2026-07-17T21-06-53-263Z-adcb4b11.md",
+      "last_updated_utc": "2026-07-17T21:06:53.263Z",
+      "size_bytes": 3288,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "database_review.md",
+      "report_path": "reports/database_review.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-00-21-244Z-c4a3e8a3",
+      "latest_hash": "c4a3e8a3f318e0b5485975312d40f17e062ad89c",
+      "latest_snapshot_path": "reports/versions/database_review/2026-07-17T21-00-21-244Z-c4a3e8a3.md",
+      "last_updated_utc": "2026-07-17T21:00:21.245Z",
+      "size_bytes": 3572,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "decision_framework.md",
+      "report_path": "reports/decision_framework.md",
+      "responsible_agent": "Senior Living Research Agent",
+      "latest_version_id": "2026-07-18T04-17-02-685Z-1d364fad",
+      "latest_hash": "1d364fad2f0069591ce321db20f7041c89841519",
+      "latest_snapshot_path": "reports/versions/decision_framework/2026-07-18T04-17-02-685Z-1d364fad.md",
+      "last_updated_utc": "2026-07-18T04:17:02.685Z",
+      "size_bytes": 947,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "discovery_report.md",
+      "report_path": "reports/discovery_report.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-18T16-52-10-271Z-8c8a3894",
+      "latest_hash": "8c8a389499bc499a5cc09f9a479f9e25c32dff57",
+      "latest_snapshot_path": "reports/versions/discovery_report/2026-07-18T16-52-10-271Z-8c8a3894.md",
+      "last_updated_utc": "2026-07-18T16:52:10.272Z",
+      "size_bytes": 3196,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "dynamic_persona_simulation_audit_v1.md",
+      "report_path": "reports/dynamic_persona_simulation_audit_v1.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-16T20-36-31-999Z-6c232aeb",
+      "latest_hash": "6c232aeb6951920ce7d23e19aa8329c9bc9e76bc",
+      "latest_snapshot_path": "reports/versions/dynamic_persona_simulation_audit_v1/2026-07-16T20-36-31-999Z-6c232aeb.md",
+      "last_updated_utc": "2026-07-16T20:36:32.000Z",
+      "size_bytes": 15314,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "entity_relationship_model.md",
+      "report_path": "reports/entity_relationship_model.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-16-33-410Z-14fd1bd3",
+      "latest_hash": "14fd1bd3baa4f682f8eae00c128ea178359b6a7f",
+      "latest_snapshot_path": "reports/versions/entity_relationship_model/2026-07-18T04-16-33-410Z-14fd1bd3.md",
+      "last_updated_utc": "2026-07-18T04:16:33.410Z",
+      "size_bytes": 629,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "evidence_grading_framework.md",
+      "report_path": "reports/evidence_grading_framework.md",
+      "responsible_agent": "Clinical Knowledge Agent",
+      "latest_version_id": "2026-07-18T05-44-31-532Z-527de6f3",
+      "latest_hash": "527de6f325e48732fa21a19c3c84f8409ff11f54",
+      "latest_snapshot_path": "reports/versions/evidence_grading_framework/2026-07-18T05-44-31-532Z-527de6f3.md",
+      "last_updated_utc": "2026-07-18T05:44:31.532Z",
+      "size_bytes": 1170,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "executive_dashboard.md",
+      "report_path": "reports/executive_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-46-28-456Z-90c31e3b",
+      "latest_hash": "90c31e3b9c32129189ed2ebff14c4e39dafc3a63",
+      "latest_snapshot_path": "reports/versions/executive_dashboard/2026-07-18T16-46-28-456Z-90c31e3b.md",
+      "last_updated_utc": "2026-07-18T16:46:28.456Z",
+      "size_bytes": 629,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "executive_summary.md",
+      "report_path": "reports/executive_summary.md",
+      "responsible_agent": "Narrative Intelligence Agent",
+      "latest_version_id": "2026-07-18T16-46-28-456Z-7995c565",
+      "latest_hash": "7995c56526f5aa3fd860ec393908a4dc0cc7eb5b",
+      "latest_snapshot_path": "reports/versions/executive_summary/2026-07-18T16-46-28-456Z-7995c565.md",
+      "last_updated_utc": "2026-07-18T16:46:28.456Z",
+      "size_bytes": 1810,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "expertise_gap_matrix.md",
+      "report_path": "reports/expertise_gap_matrix.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-47-55-033Z-9c035473",
+      "latest_hash": "9c035473b4b1624cdb5f671e138af47b4acf22d3",
+      "latest_snapshot_path": "reports/versions/expertise_gap_matrix/2026-07-18T05-47-55-033Z-9c035473.md",
+      "last_updated_utc": "2026-07-18T05:47:55.033Z",
+      "size_bytes": 6706,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "facility_memory_engine.md",
+      "report_path": "reports/facility_memory_engine.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T13-18-14-332Z-49c78c1b",
+      "latest_hash": "49c78c1b02a31c905346c2259a11b669dc17e759",
+      "latest_snapshot_path": "reports/versions/facility_memory_engine/2026-07-17T13-18-14-332Z-49c78c1b.md",
+      "last_updated_utc": "2026-07-17T13:18:14.333Z",
+      "size_bytes": 2652,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "facility_memory_persistence_simulation.md",
+      "report_path": "reports/facility_memory_persistence_simulation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T20-48-12-761Z-05634a97",
+      "latest_hash": "05634a97a75e6e507e87918705751921eab79a12",
+      "latest_snapshot_path": "reports/versions/facility_memory_persistence_simulation/2026-07-17T20-48-12-761Z-05634a97.md",
+      "last_updated_utc": "2026-07-17T20:48:12.761Z",
+      "size_bytes": 5339,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "facility_memory_validation.md",
+      "report_path": "reports/facility_memory_validation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T12-56-37-945Z-326d8ba1",
+      "latest_hash": "326d8ba1d0bd3e6578cb88f5c488310280694215",
+      "latest_snapshot_path": "reports/versions/facility_memory_validation/2026-07-17T12-56-37-945Z-326d8ba1.md",
+      "last_updated_utc": "2026-07-17T12:56:37.946Z",
+      "size_bytes": 816,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "facility_questionnaire_definition.md",
+      "report_path": "reports/facility_questionnaire_definition.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T13-17-18-508Z-53d9ab91",
+      "latest_hash": "53d9ab918ef1dadca9b133c0f5c6db91371753f3",
+      "latest_snapshot_path": "reports/versions/facility_questionnaire_definition/2026-07-17T13-17-18-508Z-53d9ab91.md",
+      "last_updated_utc": "2026-07-17T13:17:18.508Z",
+      "size_bytes": 2338,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "family_experience_report.md",
+      "report_path": "reports/family_experience_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-03-56-941Z-883058ec",
+      "latest_hash": "883058ecbc6557b3847c56b3168ade7c17773c12",
+      "latest_snapshot_path": "reports/versions/family_experience_report/2026-07-18T04-03-56-941Z-883058ec.md",
+      "last_updated_utc": "2026-07-18T04:03:56.941Z",
+      "size_bytes": 609,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "family_journey_review.md",
+      "report_path": "reports/family_journey_review.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-01-35-886Z-26562d0f",
+      "latest_hash": "26562d0f2cfb3ae7b2f0db72b50c299551e58efa",
+      "latest_snapshot_path": "reports/versions/family_journey_review/2026-07-17T21-01-35-886Z-26562d0f.md",
+      "last_updated_utc": "2026-07-17T21:01:35.887Z",
+      "size_bytes": 2668,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "fear_research_program.md",
+      "report_path": "reports/fear_research_program.md",
+      "responsible_agent": "Senior Living Research Agent",
+      "latest_version_id": "2026-07-18T05-01-41-802Z-18c5658e",
+      "latest_hash": "18c5658eb9cb1a3e047846ca52c0e61ff307f528",
+      "latest_snapshot_path": "reports/versions/fear_research_program/2026-07-18T05-01-41-802Z-18c5658e.md",
+      "last_updated_utc": "2026-07-18T05:01:41.802Z",
+      "size_bytes": 41788,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "florida_discovery_inventory.md",
+      "report_path": "reports/florida_discovery_inventory.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-18T05-39-28-669Z-a6045986",
+      "latest_hash": "a604598627b70ead41f20cca62f0e91a9441c24a",
+      "latest_snapshot_path": "reports/versions/florida_discovery_inventory/2026-07-18T05-39-28-669Z-a6045986.md",
+      "last_updated_utc": "2026-07-18T05:39:28.669Z",
+      "size_bytes": 1338,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "future_care_preference_ui_simulation.md",
+      "report_path": "reports/future_care_preference_ui_simulation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T08-32-46-828Z-24627112",
+      "latest_hash": "24627112bd6ddda28a4e088a516d132720c006b8",
+      "latest_snapshot_path": "reports/versions/future_care_preference_ui_simulation/2026-07-17T08-32-46-828Z-24627112.md",
+      "last_updated_utc": "2026-07-17T08:32:46.829Z",
+      "size_bytes": 3861,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "future_care_validation_report.md",
+      "report_path": "reports/future_care_validation_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T04-20-52-050Z-6c6ffa76",
+      "latest_hash": "6c6ffa762b1d45f69a160faad7dfbd0ecc08050a",
+      "latest_snapshot_path": "reports/versions/future_care_validation_report/2026-07-17T04-20-52-050Z-6c6ffa76.md",
+      "last_updated_utc": "2026-07-17T04:20:52.051Z",
+      "size_bytes": 2606,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "gap_analysis.md",
+      "report_path": "reports/gap_analysis.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-00-21-244Z-497e56fd",
+      "latest_hash": "497e56fdad570396d430ef7ad0f256aa2e4c1987",
+      "latest_snapshot_path": "reports/versions/gap_analysis/2026-07-17T21-00-21-244Z-497e56fd.md",
+      "last_updated_utc": "2026-07-17T21:00:21.245Z",
+      "size_bytes": 6396,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "human_advisor_benchmark.md",
+      "report_path": "reports/human_advisor_benchmark.md",
+      "responsible_agent": "Matching Improvement Agent",
+      "latest_version_id": "2026-07-17T05-36-33-029Z-741698d0",
+      "latest_hash": "741698d0d87e7623672282519a9aeaccf98631ff",
+      "latest_snapshot_path": "reports/versions/human_advisor_benchmark/2026-07-17T05-36-33-029Z-741698d0.md",
+      "last_updated_utc": "2026-07-17T05:36:33.029Z",
+      "size_bytes": 35746,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "incident_report.md",
+      "report_path": "reports/incident_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-30-841Z-11db47f6",
+      "latest_hash": "11db47f645f4a0bd9c67842e44e5f5e797b2aeb2",
+      "latest_snapshot_path": "reports/versions/incident_report/2026-07-17T21-36-30-841Z-11db47f6.md",
+      "last_updated_utc": "2026-07-17T21:36:30.841Z",
+      "size_bytes": 131,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "institute_operations_dashboard.md",
+      "report_path": "reports/institute_operations_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-43-29-321Z-629a0c4d",
+      "latest_hash": "629a0c4d23e74614a646c997024b352e9ee57ebc",
+      "latest_snapshot_path": "reports/versions/institute_operations_dashboard/2026-07-18T16-43-29-321Z-629a0c4d.md",
+      "last_updated_utc": "2026-07-18T16:43:29.322Z",
+      "size_bytes": 3168,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "institutional_intelligence_audit.md",
+      "report_path": "reports/institutional_intelligence_audit.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-47-54-997Z-377be582",
+      "latest_hash": "377be5829303dbf2fd8bcc24f346f8e4692e389c",
+      "latest_snapshot_path": "reports/versions/institutional_intelligence_audit/2026-07-18T05-47-54-997Z-377be582.md",
+      "last_updated_utc": "2026-07-18T05:47:54.997Z",
+      "size_bytes": 13793,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "intelligence_trace.md",
+      "report_path": "reports/intelligence_trace.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-11-10-692Z-25bec6f0",
+      "latest_hash": "25bec6f06c42227f00f72307195d3dd329eb6306",
+      "latest_snapshot_path": "reports/versions/intelligence_trace/2026-07-17T21-11-10-692Z-25bec6f0.md",
+      "last_updated_utc": "2026-07-17T21:11:10.693Z",
+      "size_bytes": 19868,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "inventory_distribution_report.md",
+      "report_path": "reports/inventory_distribution_report.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T13-25-54-001Z-e79de27c",
+      "latest_hash": "e79de27c39b09211e559ca0b1f3a14efd00109cc",
+      "latest_snapshot_path": "reports/versions/inventory_distribution_report/2026-07-17T13-25-54-001Z-e79de27c.md",
+      "last_updated_utc": "2026-07-17T13:25:54.002Z",
+      "size_bytes": 9687,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "inventory_expansion_validation.md",
+      "report_path": "reports/inventory_expansion_validation.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T13-25-54-004Z-8d2d285a",
+      "latest_hash": "8d2d285a6861d0f312b178d68f90cf4b0140377a",
+      "latest_snapshot_path": "reports/versions/inventory_expansion_validation/2026-07-17T13-25-54-004Z-8d2d285a.md",
+      "last_updated_utc": "2026-07-17T13:25:54.004Z",
+      "size_bytes": 573,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "inventory_mix_report.md",
+      "report_path": "reports/inventory_mix_report.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T12-47-31-638Z-4a8d4cfa",
+      "latest_hash": "4a8d4cfac56b502fe6dea405863ebcc1dcd3a3cc",
+      "latest_snapshot_path": "reports/versions/inventory_mix_report/2026-07-17T12-47-31-638Z-4a8d4cfa.md",
+      "last_updated_utc": "2026-07-17T12:47:31.638Z",
+      "size_bytes": 10192,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_agent_catalog.md",
+      "report_path": "reports/knowledge_agent_catalog.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-16-33-787Z-2bc9aa20",
+      "latest_hash": "2bc9aa20d7d8ab63f375099d878cd178a676f063",
+      "latest_snapshot_path": "reports/versions/knowledge_agent_catalog/2026-07-18T04-16-33-787Z-2bc9aa20.md",
+      "last_updated_utc": "2026-07-18T04:16:33.787Z",
+      "size_bytes": 1251,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_expansion_report.md",
+      "report_path": "reports/knowledge_expansion_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-58-23-168Z-0cba507b",
+      "latest_hash": "0cba507b7c3f01e0b3b4e9200b2e4e2056b50d74",
+      "latest_snapshot_path": "reports/versions/knowledge_expansion_report/2026-07-17T21-58-23-168Z-0cba507b.md",
+      "last_updated_utc": "2026-07-17T21:58:23.168Z",
+      "size_bytes": 967,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_fabric_architecture.md",
+      "report_path": "reports/knowledge_fabric_architecture.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-16-33-386Z-62425e95",
+      "latest_hash": "62425e95d2488de3758bcb1c79b761f5f9eaac3c",
+      "latest_snapshot_path": "reports/versions/knowledge_fabric_architecture/2026-07-18T04-16-33-386Z-62425e95.md",
+      "last_updated_utc": "2026-07-18T04:16:33.387Z",
+      "size_bytes": 937,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_freshness_report.md",
+      "report_path": "reports/knowledge_freshness_report.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-17T21-36-06-496Z-bf00261b",
+      "latest_hash": "bf00261bd229cc21aedcb8b6e92033c116e517fe",
+      "latest_snapshot_path": "reports/versions/knowledge_freshness_report/2026-07-17T21-36-06-496Z-bf00261b.md",
+      "last_updated_utc": "2026-07-17T21:36:06.496Z",
+      "size_bytes": 454,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_gap_dashboard.md",
+      "report_path": "reports/knowledge_gap_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-08-05-443Z-16aa882a",
+      "latest_hash": "16aa882a1473d1c920933481f015f9e5ff887cba",
+      "latest_snapshot_path": "reports/versions/knowledge_gap_dashboard/2026-07-18T04-08-05-443Z-16aa882a.md",
+      "last_updated_utc": "2026-07-18T04:08:05.444Z",
+      "size_bytes": 2556,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_gap_report.md",
+      "report_path": "reports/knowledge_gap_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-58-23-168Z-5cea0dee",
+      "latest_hash": "5cea0dee0e0895feb4f72da9fdaa7e8619fc5233",
+      "latest_snapshot_path": "reports/versions/knowledge_gap_report/2026-07-17T21-58-23-168Z-5cea0dee.md",
+      "last_updated_utc": "2026-07-17T21:58:23.168Z",
+      "size_bytes": 2729,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_governance.md",
+      "report_path": "reports/knowledge_governance.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-16-33-403Z-824acefa",
+      "latest_hash": "824acefa50a5ac022052a2095b371161d368ef60",
+      "latest_snapshot_path": "reports/versions/knowledge_governance/2026-07-18T04-16-33-403Z-824acefa.md",
+      "last_updated_utc": "2026-07-18T04:16:33.404Z",
+      "size_bytes": 538,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_graph_design.md",
+      "report_path": "reports/knowledge_graph_design.md",
+      "responsible_agent": "Knowledge Graph Agent",
+      "latest_version_id": "2026-07-17T20-53-55-334Z-d1cfa60b",
+      "latest_hash": "d1cfa60b6718c49339a1a8fad3526b980f143152",
+      "latest_snapshot_path": "reports/versions/knowledge_graph_design/2026-07-17T20-53-55-334Z-d1cfa60b.md",
+      "last_updated_utc": "2026-07-17T20:53:55.335Z",
+      "size_bytes": 3879,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_graph_growth.md",
+      "report_path": "reports/knowledge_graph_growth.md",
+      "responsible_agent": "Knowledge Graph Agent",
+      "latest_version_id": "2026-07-17T21-58-23-184Z-e17cf4fd",
+      "latest_hash": "e17cf4fd230875028ed5e589ae03f735940baa74",
+      "latest_snapshot_path": "reports/versions/knowledge_graph_growth/2026-07-17T21-58-23-184Z-e17cf4fd.md",
+      "last_updated_utc": "2026-07-17T21:58:23.184Z",
+      "size_bytes": 459,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_growth_dashboard.md",
+      "report_path": "reports/knowledge_growth_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-46-28-472Z-29d3fdaa",
+      "latest_hash": "29d3fdaa9519ca7eb9e1163601a24f9bfcaff740",
+      "latest_snapshot_path": "reports/versions/knowledge_growth_dashboard/2026-07-18T16-46-28-472Z-29d3fdaa.md",
+      "last_updated_utc": "2026-07-18T16:46:28.472Z",
+      "size_bytes": 2187,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_growth_matrix.md",
+      "report_path": "reports/knowledge_growth_matrix.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-47-55-022Z-fed29f9f",
+      "latest_hash": "fed29f9f8eb130f8bfb9bf1fd4febc3580e36913",
+      "latest_snapshot_path": "reports/versions/knowledge_growth_matrix/2026-07-18T05-47-55-022Z-fed29f9f.md",
+      "last_updated_utc": "2026-07-18T05:47:55.022Z",
+      "size_bytes": 1825,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_growth_report.md",
+      "report_path": "reports/knowledge_growth_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-27-42-247Z-29372512",
+      "latest_hash": "293725121f28e94ec8a205b5a5cd5212f7c919ef",
+      "latest_snapshot_path": "reports/versions/knowledge_growth_report/2026-07-17T21-27-42-247Z-29372512.md",
+      "last_updated_utc": "2026-07-17T21:27:42.247Z",
+      "size_bytes": 1014,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_maturity_model.md",
+      "report_path": "reports/knowledge_maturity_model.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-44-31-532Z-e6d06c43",
+      "latest_hash": "e6d06c437a1165834d50f5ca4d60e53cf33734e1",
+      "latest_snapshot_path": "reports/versions/knowledge_maturity_model/2026-07-18T05-44-31-532Z-e6d06c43.md",
+      "last_updated_utc": "2026-07-18T05:44:31.532Z",
+      "size_bytes": 1193,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_object_schema.md",
+      "report_path": "reports/knowledge_object_schema.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-38-00-998Z-c14d4cf1",
+      "latest_hash": "c14d4cf134c82883869d7413c916c9b85b60b2ff",
+      "latest_snapshot_path": "reports/versions/knowledge_object_schema/2026-07-18T04-38-00-998Z-c14d4cf1.md",
+      "last_updated_utc": "2026-07-18T04:38:00.998Z",
+      "size_bytes": 684,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_quality_framework.md",
+      "report_path": "reports/knowledge_quality_framework.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-18T04-16-33-415Z-86f18f2d",
+      "latest_hash": "86f18f2de660b9ca2b10c9707d8d2953beb72376",
+      "latest_snapshot_path": "reports/versions/knowledge_quality_framework/2026-07-18T04-16-33-415Z-86f18f2d.md",
+      "last_updated_utc": "2026-07-18T04:16:33.416Z",
+      "size_bytes": 349,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_readiness_dashboard.md",
+      "report_path": "reports/knowledge_readiness_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-06-507Z-b2142631",
+      "latest_hash": "b21426317495aa951086bc2199b6baa4df6e8b19",
+      "latest_snapshot_path": "reports/versions/knowledge_readiness_dashboard/2026-07-17T21-36-06-507Z-b2142631.md",
+      "last_updated_utc": "2026-07-17T21:36:06.507Z",
+      "size_bytes": 2118,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_readiness_report.md",
+      "report_path": "reports/knowledge_readiness_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-30-835Z-dd15bb3b",
+      "latest_hash": "dd15bb3bbe5e852f78333155cdb5c07fef4b2b5d",
+      "latest_snapshot_path": "reports/versions/knowledge_readiness_report/2026-07-17T21-36-30-835Z-dd15bb3b.md",
+      "last_updated_utc": "2026-07-17T21:36:30.835Z",
+      "size_bytes": 1070,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_repository_schema.md",
+      "report_path": "reports/knowledge_repository_schema.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-16-33-802Z-f9444605",
+      "latest_hash": "f944460558e5000e6a8bbd950d83dc0ea253fadb",
+      "latest_snapshot_path": "reports/versions/knowledge_repository_schema/2026-07-18T04-16-33-802Z-f9444605.md",
+      "last_updated_utc": "2026-07-18T04:16:33.803Z",
+      "size_bytes": 673,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_validation_framework.md",
+      "report_path": "reports/knowledge_validation_framework.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-44-31-528Z-1d9e3fa2",
+      "latest_hash": "1d9e3fa2a45d089946b9aa3e8f0c8c52dd6ffcdc",
+      "latest_snapshot_path": "reports/versions/knowledge_validation_framework/2026-07-18T05-44-31-528Z-1d9e3fa2.md",
+      "last_updated_utc": "2026-07-18T05:44:31.529Z",
+      "size_bytes": 1242,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "knowledge_workforce_architecture.md",
+      "report_path": "reports/knowledge_workforce_architecture.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-16-33-773Z-65b0d262",
+      "latest_hash": "65b0d2625199793568ffe6313151927ed7099507",
+      "latest_snapshot_path": "reports/versions/knowledge_workforce_architecture/2026-07-18T04-16-33-773Z-65b0d262.md",
+      "last_updated_utc": "2026-07-18T04:16:33.774Z",
+      "size_bytes": 1269,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "learning_dashboard.md",
+      "report_path": "reports/learning_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-47-55-048Z-65d851b3",
+      "latest_hash": "65d851b373d7799be8f84d9954f610f3bd305f5c",
+      "latest_snapshot_path": "reports/versions/learning_dashboard/2026-07-18T05-47-55-048Z-65d851b3.md",
+      "last_updated_utc": "2026-07-18T05:47:55.049Z",
+      "size_bytes": 2037,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "learning_impact.md",
+      "report_path": "reports/learning_impact.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-11-10-708Z-eee42a31",
+      "latest_hash": "eee42a31ce4c0fcb48b07e4e0cc4110a9b950272",
+      "latest_snapshot_path": "reports/versions/learning_impact/2026-07-17T21-11-10-708Z-eee42a31.md",
+      "last_updated_utc": "2026-07-17T21:11:10.709Z",
+      "size_bytes": 871,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "mandatory_gate_consistency_report.md",
+      "report_path": "reports/mandatory_gate_consistency_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T07-59-07-567Z-d707f8e8",
+      "latest_hash": "d707f8e808235ff2096612d7342d388c29df9bf9",
+      "latest_snapshot_path": "reports/versions/mandatory_gate_consistency_report/2026-07-17T07-59-07-567Z-d707f8e8.md",
+      "last_updated_utc": "2026-07-17T07:59:07.567Z",
+      "size_bytes": 2153,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "match_quality_validation_report.md",
+      "report_path": "reports/match_quality_validation_report.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-17T04-19-39-558Z-e9a6b958",
+      "latest_hash": "e9a6b9589036375eb23625ef6fb72cf660d2ac08",
+      "latest_snapshot_path": "reports/versions/match_quality_validation_report/2026-07-17T04-19-39-558Z-e9a6b958.md",
+      "last_updated_utc": "2026-07-17T04:19:39.559Z",
+      "size_bytes": 2193,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "optime_intelligence_platform.md",
+      "report_path": "reports/optime_intelligence_platform.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T20-49-27-490Z-218aabb8",
+      "latest_hash": "218aabb837fbabca85d9960f1a0f41ff5cff7396",
+      "latest_snapshot_path": "reports/versions/optime_intelligence_platform/2026-07-17T20-49-27-490Z-218aabb8.md",
+      "last_updated_utc": "2026-07-17T20:49:27.490Z",
+      "size_bytes": 16970,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "orchestrator_assignment_report.md",
+      "report_path": "reports/orchestrator_assignment_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-43-29-329Z-f81adac7",
+      "latest_hash": "f81adac7120a29a8e650040bd354d67adf344af6",
+      "latest_snapshot_path": "reports/versions/orchestrator_assignment_report/2026-07-18T16-43-29-329Z-f81adac7.md",
+      "last_updated_utc": "2026-07-18T16:43:29.330Z",
+      "size_bytes": 3199,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "orchestrator_report.md",
+      "report_path": "reports/orchestrator_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T16-46-28-475Z-20cc2b2e",
+      "latest_hash": "20cc2b2eebe0efe327ad0689cc334f8c707830e9",
+      "latest_snapshot_path": "reports/versions/orchestrator_report/2026-07-18T16-46-28-475Z-20cc2b2e.md",
+      "last_updated_utc": "2026-07-18T16:46:28.476Z",
+      "size_bytes": 2828,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "osint_activation_wave3_report.md",
+      "report_path": "reports/osint_activation_wave3_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-16T21-23-40-341Z-8ec21913",
+      "latest_hash": "8ec219134d64522007804191deecf13b4164c5f8",
+      "latest_snapshot_path": "reports/versions/osint_activation_wave3_report/2026-07-16T21-23-40-341Z-8ec21913.md",
+      "last_updated_utc": "2026-07-16T21:23:40.341Z",
+      "size_bytes": 998,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "osint_facebook_signals.md",
+      "report_path": "reports/osint_facebook_signals.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-16T21-33-42-482Z-d5d8af10",
+      "latest_hash": "d5d8af10335724f8b57e5354ca99befe3bb100cf",
+      "latest_snapshot_path": "reports/versions/osint_facebook_signals/2026-07-16T21-33-42-482Z-d5d8af10.md",
+      "last_updated_utc": "2026-07-16T21:33:42.482Z",
+      "size_bytes": 11635,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "osint_provenance_audit.md",
+      "report_path": "reports/osint_provenance_audit.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-16T21-31-45-626Z-72c05de9",
+      "latest_hash": "72c05de95ebd8af15bcba79ceaed4a2b77f09878",
+      "latest_snapshot_path": "reports/versions/osint_provenance_audit/2026-07-16T21-31-45-626Z-72c05de9.md",
+      "last_updated_utc": "2026-07-16T21:31:45.627Z",
+      "size_bytes": 146668,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "osint_source_coverage_audit.md",
+      "report_path": "reports/osint_source_coverage_audit.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-16T21-24-04-512Z-cf7f66af",
+      "latest_hash": "cf7f66afd6d4fe6f7ec525a84de15f2b7ea89cbe",
+      "latest_snapshot_path": "reports/versions/osint_source_coverage_audit/2026-07-16T21-24-04-512Z-cf7f66af.md",
+      "last_updated_utc": "2026-07-16T21:24:04.512Z",
+      "size_bytes": 1826,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "osint_validation_report.md",
+      "report_path": "reports/osint_validation_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T13-28-45-750Z-5a03f2d3",
+      "latest_hash": "5a03f2d3b465f821ee960aeaba2db1e4a8b1e83f",
+      "latest_snapshot_path": "reports/versions/osint_validation_report/2026-07-17T13-28-45-750Z-5a03f2d3.md",
+      "last_updated_utc": "2026-07-17T13:28:45.751Z",
+      "size_bytes": 3799,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "persona_quality_gate_failure_investigation.md",
+      "report_path": "reports/persona_quality_gate_failure_investigation.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-17T03-09-00-565Z-2b039a6a",
+      "latest_hash": "2b039a6a0fd502958080d58a1b19a61ea7fe9f7b",
+      "latest_snapshot_path": "reports/versions/persona_quality_gate_failure_investigation/2026-07-17T03-09-00-565Z-2b039a6a.md",
+      "last_updated_utc": "2026-07-17T03:09:00.566Z",
+      "size_bytes": 3029,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "phase7_agent_platform_simulation.md",
+      "report_path": "reports/phase7_agent_platform_simulation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T20-53-46-589Z-3b30835e",
+      "latest_hash": "3b30835e7757fb51c72726db16583607970a6880",
+      "latest_snapshot_path": "reports/versions/phase7_agent_platform_simulation/2026-07-17T20-53-46-589Z-3b30835e.md",
+      "last_updated_utc": "2026-07-17T20:53:46.589Z",
+      "size_bytes": 1610,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "phase9_architecture_validation.md",
+      "report_path": "reports/phase9_architecture_validation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-01-14-854Z-9b0c54d7",
+      "latest_hash": "9b0c54d7a91795a74433e996bc69c15f12720412",
+      "latest_snapshot_path": "reports/versions/phase9_architecture_validation/2026-07-17T21-01-14-854Z-9b0c54d7.md",
+      "last_updated_utc": "2026-07-17T21:01:14.854Z",
+      "size_bytes": 1889,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "platform_agent_catalog.md",
+      "report_path": "reports/platform_agent_catalog.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-16-33-795Z-ace1a6d2",
+      "latest_hash": "ace1a6d230e2558a55ab5bc11e0c8075110fcf52",
+      "latest_snapshot_path": "reports/versions/platform_agent_catalog/2026-07-18T04-16-33-795Z-ace1a6d2.md",
+      "last_updated_utc": "2026-07-18T04:16:33.795Z",
+      "size_bytes": 603,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "platform_health_report.md",
+      "report_path": "reports/platform_health_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-30-831Z-f5bc1a98",
+      "latest_hash": "f5bc1a9834dc17478e56406767ddfbaab3208511",
+      "latest_snapshot_path": "reports/versions/platform_health_report/2026-07-17T21-36-30-831Z-f5bc1a98.md",
+      "last_updated_utc": "2026-07-17T21:36:30.831Z",
+      "size_bytes": 292,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "platform_intelligence_report.md",
+      "report_path": "reports/platform_intelligence_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-08-05-403Z-6a113db0",
+      "latest_hash": "6a113db00b3233c7a0940d8990c5e28cf2e9edf6",
+      "latest_snapshot_path": "reports/versions/platform_intelligence_report/2026-07-18T04-08-05-403Z-6a113db0.md",
+      "last_updated_utc": "2026-07-18T04:08:05.403Z",
+      "size_bytes": 502,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "post_simplification_simulation.md",
+      "report_path": "reports/post_simplification_simulation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T12-42-18-169Z-4ee0f79c",
+      "latest_hash": "4ee0f79cfc7fbea36669a9f367f132387da9e436",
+      "latest_snapshot_path": "reports/versions/post_simplification_simulation/2026-07-17T12-42-18-169Z-4ee0f79c.md",
+      "last_updated_utc": "2026-07-17T12:42:18.169Z",
+      "size_bytes": 7751,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "post_taxonomy_validation_report.md",
+      "report_path": "reports/post_taxonomy_validation_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T12-28-05-204Z-71462e43",
+      "latest_hash": "71462e43405ffdb837ede05eb3d330a4c5d65b44",
+      "latest_snapshot_path": "reports/versions/post_taxonomy_validation_report/2026-07-17T12-28-05-204Z-71462e43.md",
+      "last_updated_utc": "2026-07-17T12:28:05.204Z",
+      "size_bytes": 10573,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "product_roadmap.md",
+      "report_path": "reports/product_roadmap.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-01-35-886Z-e2d7e43d",
+      "latest_hash": "e2d7e43db4af0514e267513f88b6717cda102ca3",
+      "latest_snapshot_path": "reports/versions/product_roadmap/2026-07-17T21-01-35-886Z-e2d7e43d.md",
+      "last_updated_utc": "2026-07-17T21:01:35.887Z",
+      "size_bytes": 2917,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "provider_ecosystem_simulation.md",
+      "report_path": "reports/provider_ecosystem_simulation.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T20-48-12-761Z-05634a97",
+      "latest_hash": "05634a97a75e6e507e87918705751921eab79a12",
+      "latest_snapshot_path": "reports/versions/provider_ecosystem_simulation/2026-07-17T20-48-12-761Z-05634a97.md",
+      "last_updated_utc": "2026-07-17T20:48:12.761Z",
+      "size_bytes": 5339,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "provider_growth_dashboard.md",
+      "report_path": "reports/provider_growth_dashboard.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-18T04-08-05-428Z-0d336275",
+      "latest_hash": "0d3362750900a57581cf3fe1818690f26e1dce9d",
+      "latest_snapshot_path": "reports/versions/provider_growth_dashboard/2026-07-18T04-08-05-428Z-0d336275.md",
+      "last_updated_utc": "2026-07-18T04:08:05.429Z",
+      "size_bytes": 185,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "provider_identity_verification_simulation.md",
+      "report_path": "reports/provider_identity_verification_simulation.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T16-16-36-469Z-01888fd1",
+      "latest_hash": "01888fd1d0bd67627807c803c1d7c5b74b039c5f",
+      "latest_snapshot_path": "reports/versions/provider_identity_verification_simulation/2026-07-17T16-16-36-469Z-01888fd1.md",
+      "last_updated_utc": "2026-07-17T16:16:36.469Z",
+      "size_bytes": 336,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "provider_portal_design.md",
+      "report_path": "reports/provider_portal_design.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T13-13-11-508Z-d1008913",
+      "latest_hash": "d10089131ae101591a842919081452731ecfd933",
+      "latest_snapshot_path": "reports/versions/provider_portal_design/2026-07-17T13-13-11-508Z-d1008913.md",
+      "last_updated_utc": "2026-07-17T13:13:11.508Z",
+      "size_bytes": 12954,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "provider_portal_review.md",
+      "report_path": "reports/provider_portal_review.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T21-01-35-886Z-97380184",
+      "latest_hash": "97380184b68a157384b7eb437b0d52e5359e74a0",
+      "latest_snapshot_path": "reports/versions/provider_portal_review/2026-07-17T21-01-35-886Z-97380184.md",
+      "last_updated_utc": "2026-07-17T21:01:35.887Z",
+      "size_bytes": 3093,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "provider_portal_schema.md",
+      "report_path": "reports/provider_portal_schema.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T13-15-08-847Z-820d9348",
+      "latest_hash": "820d93487ea5fc16e6166bf7e111a9babb593f42",
+      "latest_snapshot_path": "reports/versions/provider_portal_schema/2026-07-17T13-15-08-847Z-820d9348.md",
+      "last_updated_utc": "2026-07-17T13:15:08.848Z",
+      "size_bytes": 7506,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "provider_quality.md",
+      "report_path": "reports/provider_quality.md",
+      "responsible_agent": "Provider Intelligence Agent",
+      "latest_version_id": "2026-07-17T21-06-53-290Z-0e690456",
+      "latest_hash": "0e690456bd5f1d3cbf4664caabafd68c8ed4c2e2",
+      "latest_snapshot_path": "reports/versions/provider_quality/2026-07-17T21-06-53-290Z-0e690456.md",
+      "last_updated_utc": "2026-07-17T21:06:53.291Z",
+      "size_bytes": 8328,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "quality_scorecard.md",
+      "report_path": "reports/quality_scorecard.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-18T04-17-02-706Z-70fec538",
+      "latest_hash": "70fec53834fd234b9e284cbab1139be713918003",
+      "latest_snapshot_path": "reports/versions/quality_scorecard/2026-07-18T04-17-02-706Z-70fec538.md",
+      "last_updated_utc": "2026-07-18T04:17:02.707Z",
+      "size_bytes": 281,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "real_world_outcome_validation.md",
+      "report_path": "reports/real_world_outcome_validation.md",
+      "responsible_agent": "Outcome Learning Agent",
+      "latest_version_id": "2026-07-16T21-12-54-409Z-ba40b56e",
+      "latest_hash": "ba40b56ede56c4833b869bf8125929f1c9b86c3a",
+      "latest_snapshot_path": "reports/versions/real_world_outcome_validation/2026-07-16T21-12-54-409Z-ba40b56e.md",
+      "last_updated_utc": "2026-07-16T21:12:54.409Z",
+      "size_bytes": 22434,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "reasoning_standard.md",
+      "report_path": "reports/reasoning_standard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-17-02-694Z-fcacff0e",
+      "latest_hash": "fcacff0eb31c1d055cc965a394e80cdac264c35c",
+      "latest_snapshot_path": "reports/versions/reasoning_standard/2026-07-18T04-17-02-694Z-fcacff0e.md",
+      "last_updated_utc": "2026-07-18T04:17:02.694Z",
+      "size_bytes": 564,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "recommendation_accuracy_dashboard.md",
+      "report_path": "reports/recommendation_accuracy_dashboard.md",
+      "responsible_agent": "Outcome Learning Agent",
+      "latest_version_id": "2026-07-16T21-12-54-440Z-ac005df9",
+      "latest_hash": "ac005df9b0bb3419e031ccbf32b1cac4de4ea52a",
+      "latest_snapshot_path": "reports/versions/recommendation_accuracy_dashboard/2026-07-16T21-12-54-440Z-ac005df9.md",
+      "last_updated_utc": "2026-07-16T21:12:54.440Z",
+      "size_bytes": 780,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "recommendation_engine_validation.md",
+      "report_path": "reports/recommendation_engine_validation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-03-56-927Z-a39169e4",
+      "latest_hash": "a39169e4ae6f553be943aa1fdf71a66903f14446",
+      "latest_snapshot_path": "reports/versions/recommendation_engine_validation/2026-07-18T04-03-56-927Z-a39169e4.md",
+      "last_updated_utc": "2026-07-18T04:03:56.927Z",
+      "size_bytes": 652,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "recommendation_gate.md",
+      "report_path": "reports/recommendation_gate.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-38-00-996Z-5f417200",
+      "latest_hash": "5f4172000365ccb2e3be4e5b74e05ad396d88649",
+      "latest_snapshot_path": "reports/versions/recommendation_gate/2026-07-18T04-38-00-996Z-5f417200.md",
+      "last_updated_utc": "2026-07-18T04:38:00.997Z",
+      "size_bytes": 464,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "recommendation_package_schema.md",
+      "report_path": "reports/recommendation_package_schema.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-17-02-700Z-5a048885",
+      "latest_hash": "5a04888523dd1e247d5267953fc84e0a0424c7db",
+      "latest_snapshot_path": "reports/versions/recommendation_package_schema/2026-07-18T04-17-02-700Z-5a048885.md",
+      "last_updated_utc": "2026-07-18T04:17:02.701Z",
+      "size_bytes": 771,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "recommendation_pipeline_trace.md",
+      "report_path": "reports/recommendation_pipeline_trace.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-40-00-445Z-d4fa27ac",
+      "latest_hash": "d4fa27acdb2e181f9f9997d34814d722d1d1f1f2",
+      "latest_snapshot_path": "reports/versions/recommendation_pipeline_trace/2026-07-17T21-40-00-445Z-d4fa27ac.md",
+      "last_updated_utc": "2026-07-17T21:40:00.446Z",
+      "size_bytes": 2684,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "recommendation_ranking_report.md",
+      "report_path": "reports/recommendation_ranking_report.md",
+      "responsible_agent": "Matching Improvement Agent",
+      "latest_version_id": "2026-07-18T04-03-56-937Z-2f44291c",
+      "latest_hash": "2f44291c3467fa9bc21c2a7485bfa1f8498a090f",
+      "latest_snapshot_path": "reports/versions/recommendation_ranking_report/2026-07-18T04-03-56-937Z-2f44291c.md",
+      "last_updated_utc": "2026-07-18T04:03:56.938Z",
+      "size_bytes": 474,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "recommendation_trace.md",
+      "report_path": "reports/recommendation_trace.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-27-42-240Z-86b5f661",
+      "latest_hash": "86b5f6617dc4c89ab71a841677ef389c5fc021c6",
+      "latest_snapshot_path": "reports/versions/recommendation_trace/2026-07-17T21-27-42-240Z-86b5f661.md",
+      "last_updated_utc": "2026-07-17T21:27:42.240Z",
+      "size_bytes": 15672,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "refresh_statistics.md",
+      "report_path": "reports/refresh_statistics.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-06-514Z-898e349e",
+      "latest_hash": "898e349ec0471c1131c189f923a06e38061cee5a",
+      "latest_snapshot_path": "reports/versions/refresh_statistics/2026-07-17T21-36-06-514Z-898e349e.md",
+      "last_updated_utc": "2026-07-17T21:36:06.514Z",
+      "size_bytes": 1789,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "research_methodology.md",
+      "report_path": "reports/research_methodology.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-44-31-521Z-1db268c8",
+      "latest_hash": "1db268c8a587c3eaca925a28109583bd5103e453",
+      "latest_snapshot_path": "reports/versions/research_methodology/2026-07-18T05-44-31-521Z-1db268c8.md",
+      "last_updated_utc": "2026-07-18T05:44:31.522Z",
+      "size_bytes": 932,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "risk_register.md",
+      "report_path": "reports/risk_register.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-01-35-886Z-b1b4ab1e",
+      "latest_hash": "b1b4ab1e5e79eb0b4a8e6b08e9857c0661439465",
+      "latest_snapshot_path": "reports/versions/risk_register/2026-07-17T21-01-35-886Z-b1b4ab1e.md",
+      "last_updated_utc": "2026-07-17T21:01:35.887Z",
+      "size_bytes": 3480,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "scientific_method.md",
+      "report_path": "reports/scientific_method.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T05-44-31-514Z-67c6fa8c",
+      "latest_hash": "67c6fa8c6e945dc55889776aba5fa6631b717389",
+      "latest_snapshot_path": "reports/versions/scientific_method/2026-07-18T05-44-31-514Z-67c6fa8c.md",
+      "last_updated_utc": "2026-07-18T05:44:31.515Z",
+      "size_bytes": 4303,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "scoring_gap_closure_report.md",
+      "report_path": "reports/scoring_gap_closure_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T04-39-12-540Z-f6622841",
+      "latest_hash": "f662284193940fe2960f5ab32f41a712f47b6346",
+      "latest_snapshot_path": "reports/versions/scoring_gap_closure_report/2026-07-17T04-39-12-540Z-f6622841.md",
+      "last_updated_utc": "2026-07-17T04:39:12.540Z",
+      "size_bytes": 4740,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "senior_living_search_demand_report.md",
+      "report_path": "reports/senior_living_search_demand_report.md",
+      "responsible_agent": "Competitive Intelligence Agent",
+      "latest_version_id": "2026-07-17T03-04-38-264Z-38f47f0c",
+      "latest_hash": "38f47f0c107ec0c580f99bd2a6c8a9e9d8bf2e38",
+      "latest_snapshot_path": "reports/versions/senior_living_search_demand_report/2026-07-17T03-04-38-264Z-38f47f0c.md",
+      "last_updated_utc": "2026-07-17T03:04:38.265Z",
+      "size_bytes": 2705,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "simulation_summary.md",
+      "report_path": "reports/simulation_summary.md",
+      "responsible_agent": "Narrative Intelligence Agent",
+      "latest_version_id": "2026-07-17T21-27-42-261Z-b14830ba",
+      "latest_hash": "b14830bab3848b827696eb55cffc7417dd134688",
+      "latest_snapshot_path": "reports/versions/simulation_summary/2026-07-17T21-27-42-261Z-b14830ba.md",
+      "last_updated_utc": "2026-07-17T21:27:42.261Z",
+      "size_bytes": 951,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "source_reliability.md",
+      "report_path": "reports/source_reliability.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-06-53-265Z-25b6204f",
+      "latest_hash": "25b6204fe7a726c5e0ac76a52c85cec9d65ce9a6",
+      "latest_snapshot_path": "reports/versions/source_reliability/2026-07-17T21-06-53-265Z-25b6204f.md",
+      "last_updated_utc": "2026-07-17T21:06:53.266Z",
+      "size_bytes": 4491,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "source_trust_framework.md",
+      "report_path": "reports/source_trust_framework.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-18T04-38-00-982Z-2ca13957",
+      "latest_hash": "2ca13957c20a60f32f466ac219e8a84f916d0577",
+      "latest_snapshot_path": "reports/versions/source_trust_framework/2026-07-18T04-38-00-982Z-2ca13957.md",
+      "last_updated_utc": "2026-07-18T04:38:00.982Z",
+      "size_bytes": 830,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "stale_knowledge_report.md",
+      "report_path": "reports/stale_knowledge_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-06-523Z-097ad8c8",
+      "latest_hash": "097ad8c8c87489503c8ab53bc98a3ac0d6f33c2c",
+      "latest_snapshot_path": "reports/versions/stale_knowledge_report/2026-07-17T21-36-06-523Z-097ad8c8.md",
+      "last_updated_utc": "2026-07-17T21:36:06.523Z",
+      "size_bytes": 447,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "supervisor_daily_report.md",
+      "report_path": "reports/supervisor_daily_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-30-820Z-1e1a14c3",
+      "latest_hash": "1e1a14c3d72d7613014b3e3f16a64131270ad4a5",
+      "latest_snapshot_path": "reports/versions/supervisor_daily_report/2026-07-17T21-36-30-820Z-1e1a14c3.md",
+      "last_updated_utc": "2026-07-17T21:36:30.820Z",
+      "size_bytes": 404,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "supervisor_decision_log.md",
+      "report_path": "reports/supervisor_decision_log.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-08-05-465Z-6f8302d9",
+      "latest_hash": "6f8302d9c266a7e9b6dba90e67af25aa9b366fe3",
+      "latest_snapshot_path": "reports/versions/supervisor_decision_log/2026-07-18T04-08-05-465Z-6f8302d9.md",
+      "last_updated_utc": "2026-07-18T04:08:05.465Z",
+      "size_bytes": 691,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "system_architecture_review.md",
+      "report_path": "reports/system_architecture_review.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-00-21-244Z-ae850b1e",
+      "latest_hash": "ae850b1eb8e97f60537483b5e69023dcb7e532c9",
+      "latest_snapshot_path": "reports/versions/system_architecture_review/2026-07-17T21-00-21-244Z-ae850b1e.md",
+      "last_updated_utc": "2026-07-17T21:00:21.245Z",
+      "size_bytes": 7193,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "system_health_dashboard.md",
+      "report_path": "reports/system_health_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-27-42-255Z-fd7ef3ea",
+      "latest_hash": "fd7ef3ea1c36e5c05944ecc9063a8bd208739e64",
+      "latest_snapshot_path": "reports/versions/system_health_dashboard/2026-07-17T21-27-42-255Z-fd7ef3ea.md",
+      "last_updated_utc": "2026-07-17T21:27:42.255Z",
+      "size_bytes": 475,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "system_health.md",
+      "report_path": "reports/system_health.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-06-53-299Z-487a4a2c",
+      "latest_hash": "487a4a2ca6ec91eedebdc5b2779589703db2eee5",
+      "latest_snapshot_path": "reports/versions/system_health/2026-07-17T21-06-53-299Z-487a4a2c.md",
+      "last_updated_utc": "2026-07-17T21:06:53.299Z",
+      "size_bytes": 1005,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "trust_dashboard.md",
+      "report_path": "reports/trust_dashboard.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-18T05-47-55-056Z-780ac775",
+      "latest_hash": "780ac775f78ee1c42b8ebe54fbb99adf362207a4",
+      "latest_snapshot_path": "reports/versions/trust_dashboard/2026-07-18T05-47-55-056Z-780ac775.md",
+      "last_updated_utc": "2026-07-18T05:47:55.056Z",
+      "size_bytes": 1931,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "ttl_policy_report.md",
+      "report_path": "reports/ttl_policy_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T21-36-06-530Z-2a4d2a29",
+      "latest_hash": "2a4d2a29d0e62fa4ff23ec1a12b601bfc73c5619",
+      "latest_snapshot_path": "reports/versions/ttl_policy_report/2026-07-17T21-36-06-530Z-2a4d2a29.md",
+      "last_updated_utc": "2026-07-17T21:36:06.530Z",
+      "size_bytes": 1137,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "ui_language_review.md",
+      "report_path": "reports/ui_language_review.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-03-56-941Z-0687fd18",
+      "latest_hash": "0687fd18f5a155d21eae811b966d29b340db8166",
+      "latest_snapshot_path": "reports/versions/ui_language_review/2026-07-18T04-03-56-941Z-0687fd18.md",
+      "last_updated_utc": "2026-07-18T04:03:56.941Z",
+      "size_bytes": 395,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "ui_simulation_discrepancy_investigation.md",
+      "report_path": "reports/ui_simulation_discrepancy_investigation.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T08-03-49-922Z-edfef82d",
+      "latest_hash": "edfef82d961550675665a569d6160acd76930d8b",
+      "latest_snapshot_path": "reports/versions/ui_simulation_discrepancy_investigation/2026-07-17T08-03-49-922Z-edfef82d.md",
+      "last_updated_utc": "2026-07-17T08:03:49.922Z",
+      "size_bytes": 25579,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "understanding_journey_v3_validation_report.md",
+      "report_path": "reports/understanding_journey_v3_validation_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T05-18-37-558Z-c2a19a15",
+      "latest_hash": "c2a19a1504b743581ba31d21842a8a69d8d47a26",
+      "latest_snapshot_path": "reports/versions/understanding_journey_v3_validation_report/2026-07-17T05-18-37-558Z-c2a19a15.md",
+      "last_updated_utc": "2026-07-17T05:18:37.558Z",
+      "size_bytes": 1184,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "understanding_profile_validation_report.md",
+      "report_path": "reports/understanding_profile_validation_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T05-36-33-094Z-3ce84bc0",
+      "latest_hash": "3ce84bc0dea9167f6ed8db654c955ea453d33ef9",
+      "latest_snapshot_path": "reports/versions/understanding_profile_validation_report/2026-07-17T05-36-33-094Z-3ce84bc0.md",
+      "last_updated_utc": "2026-07-17T05:36:33.095Z",
+      "size_bytes": 1731,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "understanding_score_root_cause_report.md",
+      "report_path": "reports/understanding_score_root_cause_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T05-36-33-079Z-2c5aa245",
+      "latest_hash": "2c5aa24532f7ff7dea2672bd665660807dd68a51",
+      "latest_snapshot_path": "reports/versions/understanding_score_root_cause_report/2026-07-17T05-36-33-079Z-2c5aa245.md",
+      "last_updated_utc": "2026-07-17T05:36:33.080Z",
+      "size_bytes": 1326,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "verification_inbox.md",
+      "report_path": "reports/verification_inbox.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-17T13-19-53-631Z-c0610b16",
+      "latest_hash": "c0610b1685a33868e861fe0da74a4b07a5dbcaa9",
+      "latest_snapshot_path": "reports/versions/verification_inbox/2026-07-17T13-19-53-631Z-c0610b16.md",
+      "last_updated_utc": "2026-07-17T13:19:53.632Z",
+      "size_bytes": 1844,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "verification_pipeline.md",
+      "report_path": "reports/verification_pipeline.md",
+      "responsible_agent": "Data Quality & Trust Agent",
+      "latest_version_id": "2026-07-18T04-38-00-982Z-742296cd",
+      "latest_hash": "742296cd0000e17e951b7c8ed718048139fc38ea",
+      "latest_snapshot_path": "reports/versions/verification_pipeline/2026-07-18T04-38-00-982Z-742296cd.md",
+      "last_updated_utc": "2026-07-18T04:38:00.982Z",
+      "size_bytes": 1005,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "verified_information_standard.md",
+      "report_path": "reports/verified_information_standard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-38-00-948Z-04e3aaea",
+      "latest_hash": "04e3aaea0d5f6cc5f41e630bd23e627c8a4eba4e",
+      "latest_snapshot_path": "reports/versions/verified_information_standard/2026-07-18T04-38-00-948Z-04e3aaea.md",
+      "last_updated_utc": "2026-07-18T04:38:00.949Z",
+      "size_bytes": 752,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "visual_intelligence_validation_report.md",
+      "report_path": "reports/visual_intelligence_validation_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T05-08-32-564Z-944be70a",
+      "latest_hash": "944be70af973fa45dcefcbc96e953ee5070b51c4",
+      "latest_snapshot_path": "reports/versions/visual_intelligence_validation_report/2026-07-17T05-08-32-564Z-944be70a.md",
+      "last_updated_utc": "2026-07-17T05:08:32.565Z",
+      "size_bytes": 8260,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "weight_dominance_audit.md",
+      "report_path": "reports/weight_dominance_audit.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-16T19-49-32-662Z-5838d0c3",
+      "latest_hash": "5838d0c38fca9f8bdbfebd837144d2ac1b42d018",
+      "latest_snapshot_path": "reports/versions/weight_dominance_audit/2026-07-16T19-49-32-662Z-5838d0c3.md",
+      "last_updated_utc": "2026-07-16T19:49:32.662Z",
+      "size_bytes": 3453,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "workforce_kpi_dashboard.md",
+      "report_path": "reports/workforce_kpi_dashboard.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-18T04-16-33-809Z-b5dc42dd",
+      "latest_hash": "b5dc42dd86a649ab78c16e74b232637bca101dd1",
+      "latest_snapshot_path": "reports/versions/workforce_kpi_dashboard/2026-07-18T04-16-33-809Z-b5dc42dd.md",
+      "last_updated_utc": "2026-07-18T04:16:33.810Z",
+      "size_bytes": 877,
+      "status": "AVAILABLE"
+    },
+    {
+      "report_name": "zero_score_root_cause_report.md",
+      "report_path": "reports/zero_score_root_cause_report.md",
+      "responsible_agent": "Chief AI Supervisor",
+      "latest_version_id": "2026-07-17T07-47-59-553Z-95d86ece",
+      "latest_hash": "95d86ececc215e3f0062473bf1d3623cc87e69e1",
+      "latest_snapshot_path": "reports/versions/zero_score_root_cause_report/2026-07-17T07-47-59-553Z-95d86ece.md",
+      "last_updated_utc": "2026-07-17T07:47:59.553Z",
+      "size_bytes": 1785,
+      "status": "AVAILABLE"
+    }
+  ],
+  "versions": {
+    "agent_architecture.md": [
+      {
+        "version_id": "2026-07-17T20-51-40-733Z-7a398a94",
+        "hash": "7a398a940f3d9f47064314a7f662434caa076834",
+        "snapshot_path": "reports/versions/agent_architecture/2026-07-17T20-51-40-733Z-7a398a94.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_certification_report.md": [
+      {
+        "version_id": "2026-07-17T21-27-42-223Z-7cf6e7d2",
+        "hash": "7cf6e7d2d31d3213397219c912da1e269f4d20a4",
+        "snapshot_path": "reports/versions/agent_certification_report/2026-07-17T21-27-42-223Z-7cf6e7d2.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_contributions.md": [
+      {
+        "version_id": "2026-07-17T21-11-10-692Z-b5349ff2",
+        "hash": "b5349ff20a664783e4f28f4ded4f35c05e63b03f",
+        "snapshot_path": "reports/versions/agent_contributions/2026-07-17T21-11-10-692Z-b5349ff2.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_daily_missions.md": [
+      {
+        "version_id": "2026-07-18T16-43-29-299Z-f565a292",
+        "hash": "f565a2923e1f7afa64a0d2c4ea5a21988c069c72",
+        "snapshot_path": "reports/versions/agent_daily_missions/2026-07-18T16-43-29-299Z-f565a292.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_daily_plan.md": [
+      {
+        "version_id": "2026-07-18T16-46-28-440Z-db65838a",
+        "hash": "db65838a0ae2655a7d3cf9112ef0cc837f3427aa",
+        "snapshot_path": "reports/versions/agent_daily_plan/2026-07-18T16-46-28-440Z-db65838a.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_health_dashboard.md": [
+      {
+        "version_id": "2026-07-17T21-27-42-233Z-849af138",
+        "hash": "849af138493df712a629617859bc13a029cc30fa",
+        "snapshot_path": "reports/versions/agent_health_dashboard/2026-07-17T21-27-42-233Z-849af138.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_learning_report.md": [
+      {
+        "version_id": "2026-07-17T21-58-23-184Z-eea1644a",
+        "hash": "eea1644a835062dcf38f3bb9053a18ed385fb73b",
+        "snapshot_path": "reports/versions/agent_learning_report/2026-07-17T21-58-23-184Z-eea1644a.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_missions.md": [
+      {
+        "version_id": "2026-07-18T16-46-28-440Z-c6c775cd",
+        "hash": "c6c775cda3d011bef5acc008ae34031606291625",
+        "snapshot_path": "reports/versions/agent_missions/2026-07-18T16-46-28-440Z-c6c775cd.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_productivity_dashboard.md": [
+      {
+        "version_id": "2026-07-18T04-08-05-453Z-b5b2c959",
+        "hash": "b5b2c95945dbdea09ddf8bb46079252f04545d29",
+        "snapshot_path": "reports/versions/agent_productivity_dashboard/2026-07-18T04-08-05-453Z-b5b2c959.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_registry.md": [
+      {
+        "version_id": "2026-07-18T16-46-28-426Z-40654f5e",
+        "hash": "40654f5e70a0b97e378e0487b412011cdfb249db",
+        "snapshot_path": "reports/versions/agent_registry/2026-07-18T16-46-28-426Z-40654f5e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_status_dashboard.md": [
+      {
+        "version_id": "2026-07-18T16-46-28-456Z-1987a906",
+        "hash": "1987a906e6895728bf89d395472770ac2ed6c8fb",
+        "snapshot_path": "reports/versions/agent_status_dashboard/2026-07-18T16-46-28-456Z-1987a906.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_status_report.md": [
+      {
+        "version_id": "2026-07-17T21-36-30-841Z-5a57f15d",
+        "hash": "5a57f15d57ab3a463739e802398775412844857c",
+        "snapshot_path": "reports/versions/agent_status_report/2026-07-17T21-36-30-841Z-5a57f15d.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_task_queue.md": [
+      {
+        "version_id": "2026-07-18T16-43-29-306Z-fe67f43a",
+        "hash": "fe67f43a7c8f17bc0f016ccfca480557cf1863fc",
+        "snapshot_path": "reports/versions/agent_task_queue/2026-07-18T16-43-29-306Z-fe67f43a.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "agent_value_matrix.md": [
+      {
+        "version_id": "2026-07-18T05-47-55-010Z-1bd766c5",
+        "hash": "1bd766c54fd8d62e10c1dac8141ac34ee51f3efe",
+        "snapshot_path": "reports/versions/agent_value_matrix/2026-07-18T05-47-55-010Z-1bd766c5.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "audit_framework.md": [
+      {
+        "version_id": "2026-07-18T04-38-00-998Z-90832275",
+        "hash": "90832275f1029fa4b8e17247bc954f4fad85e332",
+        "snapshot_path": "reports/versions/audit_framework/2026-07-18T04-38-00-998Z-90832275.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "benchmark_gap_analysis.md": [
+      {
+        "version_id": "2026-07-17T04-40-54-604Z-b26390ce",
+        "hash": "b26390ce77a251cdb766e35c0605281307caf571",
+        "snapshot_path": "reports/versions/benchmark_gap_analysis/2026-07-17T04-40-54-604Z-b26390ce.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "care_strategy_matrix_validation.md": [
+      {
+        "version_id": "2026-07-17T08-32-40-854Z-2f06bdc3",
+        "hash": "2f06bdc3de31a3e1fc1e07c773b6f866ca1f229d",
+        "snapshot_path": "reports/versions/care_strategy_matrix_validation/2026-07-17T08-32-40-854Z-2f06bdc3.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "clinical_evidence_validation.md": [
+      {
+        "version_id": "2026-07-17T20-56-53-045Z-4c54c827",
+        "hash": "4c54c8276db92fec6416347094c15c595a310717",
+        "snapshot_path": "reports/versions/clinical_evidence_validation/2026-07-17T20-56-53-045Z-4c54c827.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "clinical_knowledge_platform.md": [
+      {
+        "version_id": "2026-07-17T20-51-12-391Z-fc1a65d2",
+        "hash": "fc1a65d2d80faf42978623046d6ddf64bc911e3d",
+        "snapshot_path": "reports/versions/clinical_knowledge_platform/2026-07-17T20-51-12-391Z-fc1a65d2.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "clinical_reasoning_simulation_report.md": [
+      {
+        "version_id": "2026-07-17T12-30-57-258Z-321fe9b4",
+        "hash": "321fe9b43f974e2b24ed5436afd908d83b3e51a7",
+        "snapshot_path": "reports/versions/clinical_reasoning_simulation_report/2026-07-17T12-30-57-258Z-321fe9b4.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "clinical_reasoning_validation_report.md": [
+      {
+        "version_id": "2026-07-17T12-28-34-278Z-b20e1fd1",
+        "hash": "b20e1fd14fb55ac53c936a182bb09b2c81dfb8f1",
+        "snapshot_path": "reports/versions/clinical_reasoning_validation_report/2026-07-17T12-28-34-278Z-b20e1fd1.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "conflict_report.md": [
+      {
+        "version_id": "2026-07-17T21-06-53-277Z-9d3939a5",
+        "hash": "9d3939a55684dcc59f2e8cd1b4fc70109a2839cf",
+        "snapshot_path": "reports/versions/conflict_report/2026-07-17T21-06-53-277Z-9d3939a5.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "continuous_learning_framework.md": [
+      {
+        "version_id": "2026-07-18T04-17-02-717Z-e8ddedae",
+        "hash": "e8ddedae6ef7fa6b71b3125ac2d98f35c1ba8fe1",
+        "snapshot_path": "reports/versions/continuous_learning_framework/2026-07-18T04-17-02-717Z-e8ddedae.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "coverage_dashboard.md": [
+      {
+        "version_id": "2026-07-18T04-08-05-433Z-8467b9ea",
+        "hash": "8467b9eabb06531cd08ce62b55a4e8f58e35adbd",
+        "snapshot_path": "reports/versions/coverage_dashboard/2026-07-18T04-08-05-433Z-8467b9ea.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "daily_knowledge_growth.md": [
+      {
+        "version_id": "2026-07-17T21-58-23-151Z-c18fec0c",
+        "hash": "c18fec0c193a38174f6cac1c49ed3a91330069f8",
+        "snapshot_path": "reports/versions/daily_knowledge_growth/2026-07-17T21-58-23-151Z-c18fec0c.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "daily_learning_report.md": [
+      {
+        "version_id": "2026-07-18T04-08-05-414Z-5ae58113",
+        "hash": "5ae5811382ff2c0fd483f891cd527a30c4ac5e9e",
+        "snapshot_path": "reports/versions/daily_learning_report/2026-07-18T04-08-05-414Z-5ae58113.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "database_review.md": [
+      {
+        "version_id": "2026-07-17T21-00-21-244Z-c4a3e8a3",
+        "hash": "c4a3e8a3f318e0b5485975312d40f17e062ad89c",
+        "snapshot_path": "reports/versions/database_review/2026-07-17T21-00-21-244Z-c4a3e8a3.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "data_freshness.md": [
+      {
+        "version_id": "2026-07-17T21-06-53-281Z-2b81a9c2",
+        "hash": "2b81a9c2602dfa898781a87726d63957d8b07b89",
+        "snapshot_path": "reports/versions/data_freshness/2026-07-17T21-06-53-281Z-2b81a9c2.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "data_quality_dashboard.md": [
+      {
+        "version_id": "2026-07-17T21-06-53-263Z-adcb4b11",
+        "hash": "adcb4b11aef7221c2dd79a1913012eb5d041791f",
+        "snapshot_path": "reports/versions/data_quality_dashboard/2026-07-17T21-06-53-263Z-adcb4b11.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "decision_framework.md": [
+      {
+        "version_id": "2026-07-18T04-17-02-685Z-1d364fad",
+        "hash": "1d364fad2f0069591ce321db20f7041c89841519",
+        "snapshot_path": "reports/versions/decision_framework/2026-07-18T04-17-02-685Z-1d364fad.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "discovery_report.md": [
+      {
+        "version_id": "2026-07-18T16-52-10-271Z-8c8a3894",
+        "hash": "8c8a389499bc499a5cc09f9a479f9e25c32dff57",
+        "snapshot_path": "reports/versions/discovery_report/2026-07-18T16-52-10-271Z-8c8a3894.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "dynamic_persona_simulation_audit_v1.md": [
+      {
+        "version_id": "2026-07-16T20-36-31-999Z-6c232aeb",
+        "hash": "6c232aeb6951920ce7d23e19aa8329c9bc9e76bc",
+        "snapshot_path": "reports/versions/dynamic_persona_simulation_audit_v1/2026-07-16T20-36-31-999Z-6c232aeb.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "entity_relationship_model.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-410Z-14fd1bd3",
+        "hash": "14fd1bd3baa4f682f8eae00c128ea178359b6a7f",
+        "snapshot_path": "reports/versions/entity_relationship_model/2026-07-18T04-16-33-410Z-14fd1bd3.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "evidence_grading_framework.md": [
+      {
+        "version_id": "2026-07-18T05-44-31-532Z-527de6f3",
+        "hash": "527de6f325e48732fa21a19c3c84f8409ff11f54",
+        "snapshot_path": "reports/versions/evidence_grading_framework/2026-07-18T05-44-31-532Z-527de6f3.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "executive_dashboard.md": [
+      {
+        "version_id": "2026-07-18T16-46-28-456Z-90c31e3b",
+        "hash": "90c31e3b9c32129189ed2ebff14c4e39dafc3a63",
+        "snapshot_path": "reports/versions/executive_dashboard/2026-07-18T16-46-28-456Z-90c31e3b.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "executive_summary.md": [
+      {
+        "version_id": "2026-07-18T16-46-28-456Z-7995c565",
+        "hash": "7995c56526f5aa3fd860ec393908a4dc0cc7eb5b",
+        "snapshot_path": "reports/versions/executive_summary/2026-07-18T16-46-28-456Z-7995c565.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "expertise_gap_matrix.md": [
+      {
+        "version_id": "2026-07-18T05-47-55-033Z-9c035473",
+        "hash": "9c035473b4b1624cdb5f671e138af47b4acf22d3",
+        "snapshot_path": "reports/versions/expertise_gap_matrix/2026-07-18T05-47-55-033Z-9c035473.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "facility_memory_engine.md": [
+      {
+        "version_id": "2026-07-17T13-18-14-332Z-49c78c1b",
+        "hash": "49c78c1b02a31c905346c2259a11b669dc17e759",
+        "snapshot_path": "reports/versions/facility_memory_engine/2026-07-17T13-18-14-332Z-49c78c1b.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "facility_memory_persistence_simulation.md": [
+      {
+        "version_id": "2026-07-17T20-48-12-761Z-05634a97",
+        "hash": "05634a97a75e6e507e87918705751921eab79a12",
+        "snapshot_path": "reports/versions/facility_memory_persistence_simulation/2026-07-17T20-48-12-761Z-05634a97.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "facility_memory_validation.md": [
+      {
+        "version_id": "2026-07-17T12-56-37-945Z-326d8ba1",
+        "hash": "326d8ba1d0bd3e6578cb88f5c488310280694215",
+        "snapshot_path": "reports/versions/facility_memory_validation/2026-07-17T12-56-37-945Z-326d8ba1.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "facility_questionnaire_definition.md": [
+      {
+        "version_id": "2026-07-17T13-17-18-508Z-53d9ab91",
+        "hash": "53d9ab918ef1dadca9b133c0f5c6db91371753f3",
+        "snapshot_path": "reports/versions/facility_questionnaire_definition/2026-07-17T13-17-18-508Z-53d9ab91.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "family_experience_report.md": [
+      {
+        "version_id": "2026-07-18T04-03-56-941Z-883058ec",
+        "hash": "883058ecbc6557b3847c56b3168ade7c17773c12",
+        "snapshot_path": "reports/versions/family_experience_report/2026-07-18T04-03-56-941Z-883058ec.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "family_journey_review.md": [
+      {
+        "version_id": "2026-07-17T21-01-35-886Z-26562d0f",
+        "hash": "26562d0f2cfb3ae7b2f0db72b50c299551e58efa",
+        "snapshot_path": "reports/versions/family_journey_review/2026-07-17T21-01-35-886Z-26562d0f.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "fear_research_program.md": [
+      {
+        "version_id": "2026-07-18T05-01-41-802Z-18c5658e",
+        "hash": "18c5658eb9cb1a3e047846ca52c0e61ff307f528",
+        "snapshot_path": "reports/versions/fear_research_program/2026-07-18T05-01-41-802Z-18c5658e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "florida_discovery_inventory.md": [
+      {
+        "version_id": "2026-07-18T05-39-28-669Z-a6045986",
+        "hash": "a604598627b70ead41f20cca62f0e91a9441c24a",
+        "snapshot_path": "reports/versions/florida_discovery_inventory/2026-07-18T05-39-28-669Z-a6045986.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "future_care_preference_ui_simulation.md": [
+      {
+        "version_id": "2026-07-17T08-32-46-828Z-24627112",
+        "hash": "24627112bd6ddda28a4e088a516d132720c006b8",
+        "snapshot_path": "reports/versions/future_care_preference_ui_simulation/2026-07-17T08-32-46-828Z-24627112.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "future_care_validation_report.md": [
+      {
+        "version_id": "2026-07-17T04-20-52-050Z-6c6ffa76",
+        "hash": "6c6ffa762b1d45f69a160faad7dfbd0ecc08050a",
+        "snapshot_path": "reports/versions/future_care_validation_report/2026-07-17T04-20-52-050Z-6c6ffa76.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "gap_analysis.md": [
+      {
+        "version_id": "2026-07-17T21-00-21-244Z-497e56fd",
+        "hash": "497e56fdad570396d430ef7ad0f256aa2e4c1987",
+        "snapshot_path": "reports/versions/gap_analysis/2026-07-17T21-00-21-244Z-497e56fd.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "human_advisor_benchmark.md": [
+      {
+        "version_id": "2026-07-17T05-36-33-029Z-741698d0",
+        "hash": "741698d0d87e7623672282519a9aeaccf98631ff",
+        "snapshot_path": "reports/versions/human_advisor_benchmark/2026-07-17T05-36-33-029Z-741698d0.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "incident_report.md": [
+      {
+        "version_id": "2026-07-17T21-36-30-841Z-11db47f6",
+        "hash": "11db47f645f4a0bd9c67842e44e5f5e797b2aeb2",
+        "snapshot_path": "reports/versions/incident_report/2026-07-17T21-36-30-841Z-11db47f6.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "institute_operations_dashboard.md": [
+      {
+        "version_id": "2026-07-18T16-43-29-321Z-629a0c4d",
+        "hash": "629a0c4d23e74614a646c997024b352e9ee57ebc",
+        "snapshot_path": "reports/versions/institute_operations_dashboard/2026-07-18T16-43-29-321Z-629a0c4d.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "institutional_intelligence_audit.md": [
+      {
+        "version_id": "2026-07-18T05-47-54-997Z-377be582",
+        "hash": "377be5829303dbf2fd8bcc24f346f8e4692e389c",
+        "snapshot_path": "reports/versions/institutional_intelligence_audit/2026-07-18T05-47-54-997Z-377be582.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "intelligence_trace.md": [
+      {
+        "version_id": "2026-07-17T21-11-10-692Z-25bec6f0",
+        "hash": "25bec6f06c42227f00f72307195d3dd329eb6306",
+        "snapshot_path": "reports/versions/intelligence_trace/2026-07-17T21-11-10-692Z-25bec6f0.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "inventory_distribution_report.md": [
+      {
+        "version_id": "2026-07-17T13-25-54-001Z-e79de27c",
+        "hash": "e79de27c39b09211e559ca0b1f3a14efd00109cc",
+        "snapshot_path": "reports/versions/inventory_distribution_report/2026-07-17T13-25-54-001Z-e79de27c.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "inventory_expansion_validation.md": [
+      {
+        "version_id": "2026-07-17T13-25-54-004Z-8d2d285a",
+        "hash": "8d2d285a6861d0f312b178d68f90cf4b0140377a",
+        "snapshot_path": "reports/versions/inventory_expansion_validation/2026-07-17T13-25-54-004Z-8d2d285a.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "inventory_mix_report.md": [
+      {
+        "version_id": "2026-07-17T12-47-31-638Z-4a8d4cfa",
+        "hash": "4a8d4cfac56b502fe6dea405863ebcc1dcd3a3cc",
+        "snapshot_path": "reports/versions/inventory_mix_report/2026-07-17T12-47-31-638Z-4a8d4cfa.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_agent_catalog.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-787Z-2bc9aa20",
+        "hash": "2bc9aa20d7d8ab63f375099d878cd178a676f063",
+        "snapshot_path": "reports/versions/knowledge_agent_catalog/2026-07-18T04-16-33-787Z-2bc9aa20.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_expansion_report.md": [
+      {
+        "version_id": "2026-07-17T21-58-23-168Z-0cba507b",
+        "hash": "0cba507b7c3f01e0b3b4e9200b2e4e2056b50d74",
+        "snapshot_path": "reports/versions/knowledge_expansion_report/2026-07-17T21-58-23-168Z-0cba507b.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_fabric_architecture.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-386Z-62425e95",
+        "hash": "62425e95d2488de3758bcb1c79b761f5f9eaac3c",
+        "snapshot_path": "reports/versions/knowledge_fabric_architecture/2026-07-18T04-16-33-386Z-62425e95.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_freshness_report.md": [
+      {
+        "version_id": "2026-07-17T21-36-06-496Z-bf00261b",
+        "hash": "bf00261bd229cc21aedcb8b6e92033c116e517fe",
+        "snapshot_path": "reports/versions/knowledge_freshness_report/2026-07-17T21-36-06-496Z-bf00261b.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_gap_dashboard.md": [
+      {
+        "version_id": "2026-07-18T04-08-05-443Z-16aa882a",
+        "hash": "16aa882a1473d1c920933481f015f9e5ff887cba",
+        "snapshot_path": "reports/versions/knowledge_gap_dashboard/2026-07-18T04-08-05-443Z-16aa882a.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_gap_report.md": [
+      {
+        "version_id": "2026-07-17T21-58-23-168Z-5cea0dee",
+        "hash": "5cea0dee0e0895feb4f72da9fdaa7e8619fc5233",
+        "snapshot_path": "reports/versions/knowledge_gap_report/2026-07-17T21-58-23-168Z-5cea0dee.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_governance.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-403Z-824acefa",
+        "hash": "824acefa50a5ac022052a2095b371161d368ef60",
+        "snapshot_path": "reports/versions/knowledge_governance/2026-07-18T04-16-33-403Z-824acefa.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_graph_design.md": [
+      {
+        "version_id": "2026-07-17T20-53-55-334Z-d1cfa60b",
+        "hash": "d1cfa60b6718c49339a1a8fad3526b980f143152",
+        "snapshot_path": "reports/versions/knowledge_graph_design/2026-07-17T20-53-55-334Z-d1cfa60b.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_graph_growth.md": [
+      {
+        "version_id": "2026-07-17T21-58-23-184Z-e17cf4fd",
+        "hash": "e17cf4fd230875028ed5e589ae03f735940baa74",
+        "snapshot_path": "reports/versions/knowledge_graph_growth/2026-07-17T21-58-23-184Z-e17cf4fd.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_growth_dashboard.md": [
+      {
+        "version_id": "2026-07-18T16-46-28-472Z-29d3fdaa",
+        "hash": "29d3fdaa9519ca7eb9e1163601a24f9bfcaff740",
+        "snapshot_path": "reports/versions/knowledge_growth_dashboard/2026-07-18T16-46-28-472Z-29d3fdaa.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_growth_matrix.md": [
+      {
+        "version_id": "2026-07-18T05-47-55-022Z-fed29f9f",
+        "hash": "fed29f9f8eb130f8bfb9bf1fd4febc3580e36913",
+        "snapshot_path": "reports/versions/knowledge_growth_matrix/2026-07-18T05-47-55-022Z-fed29f9f.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_growth_report.md": [
+      {
+        "version_id": "2026-07-17T21-27-42-247Z-29372512",
+        "hash": "293725121f28e94ec8a205b5a5cd5212f7c919ef",
+        "snapshot_path": "reports/versions/knowledge_growth_report/2026-07-17T21-27-42-247Z-29372512.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_maturity_model.md": [
+      {
+        "version_id": "2026-07-18T05-44-31-532Z-e6d06c43",
+        "hash": "e6d06c437a1165834d50f5ca4d60e53cf33734e1",
+        "snapshot_path": "reports/versions/knowledge_maturity_model/2026-07-18T05-44-31-532Z-e6d06c43.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_object_schema.md": [
+      {
+        "version_id": "2026-07-18T04-38-00-998Z-c14d4cf1",
+        "hash": "c14d4cf134c82883869d7413c916c9b85b60b2ff",
+        "snapshot_path": "reports/versions/knowledge_object_schema/2026-07-18T04-38-00-998Z-c14d4cf1.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_quality_framework.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-415Z-86f18f2d",
+        "hash": "86f18f2de660b9ca2b10c9707d8d2953beb72376",
+        "snapshot_path": "reports/versions/knowledge_quality_framework/2026-07-18T04-16-33-415Z-86f18f2d.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_readiness_dashboard.md": [
+      {
+        "version_id": "2026-07-17T21-36-06-507Z-b2142631",
+        "hash": "b21426317495aa951086bc2199b6baa4df6e8b19",
+        "snapshot_path": "reports/versions/knowledge_readiness_dashboard/2026-07-17T21-36-06-507Z-b2142631.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_readiness_report.md": [
+      {
+        "version_id": "2026-07-17T21-36-30-835Z-dd15bb3b",
+        "hash": "dd15bb3bbe5e852f78333155cdb5c07fef4b2b5d",
+        "snapshot_path": "reports/versions/knowledge_readiness_report/2026-07-17T21-36-30-835Z-dd15bb3b.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_repository_schema.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-802Z-f9444605",
+        "hash": "f944460558e5000e6a8bbd950d83dc0ea253fadb",
+        "snapshot_path": "reports/versions/knowledge_repository_schema/2026-07-18T04-16-33-802Z-f9444605.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_validation_framework.md": [
+      {
+        "version_id": "2026-07-18T05-44-31-528Z-1d9e3fa2",
+        "hash": "1d9e3fa2a45d089946b9aa3e8f0c8c52dd6ffcdc",
+        "snapshot_path": "reports/versions/knowledge_validation_framework/2026-07-18T05-44-31-528Z-1d9e3fa2.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "knowledge_workforce_architecture.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-773Z-65b0d262",
+        "hash": "65b0d2625199793568ffe6313151927ed7099507",
+        "snapshot_path": "reports/versions/knowledge_workforce_architecture/2026-07-18T04-16-33-773Z-65b0d262.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "learning_dashboard.md": [
+      {
+        "version_id": "2026-07-18T05-47-55-048Z-65d851b3",
+        "hash": "65d851b373d7799be8f84d9954f610f3bd305f5c",
+        "snapshot_path": "reports/versions/learning_dashboard/2026-07-18T05-47-55-048Z-65d851b3.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "learning_impact.md": [
+      {
+        "version_id": "2026-07-17T21-11-10-708Z-eee42a31",
+        "hash": "eee42a31ce4c0fcb48b07e4e0cc4110a9b950272",
+        "snapshot_path": "reports/versions/learning_impact/2026-07-17T21-11-10-708Z-eee42a31.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "mandatory_gate_consistency_report.md": [
+      {
+        "version_id": "2026-07-17T07-59-07-567Z-d707f8e8",
+        "hash": "d707f8e808235ff2096612d7342d388c29df9bf9",
+        "snapshot_path": "reports/versions/mandatory_gate_consistency_report/2026-07-17T07-59-07-567Z-d707f8e8.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "match_quality_validation_report.md": [
+      {
+        "version_id": "2026-07-17T04-19-39-558Z-e9a6b958",
+        "hash": "e9a6b9589036375eb23625ef6fb72cf660d2ac08",
+        "snapshot_path": "reports/versions/match_quality_validation_report/2026-07-17T04-19-39-558Z-e9a6b958.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "optime_intelligence_platform.md": [
+      {
+        "version_id": "2026-07-17T20-49-27-490Z-218aabb8",
+        "hash": "218aabb837fbabca85d9960f1a0f41ff5cff7396",
+        "snapshot_path": "reports/versions/optime_intelligence_platform/2026-07-17T20-49-27-490Z-218aabb8.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "orchestrator_assignment_report.md": [
+      {
+        "version_id": "2026-07-18T16-43-29-329Z-f81adac7",
+        "hash": "f81adac7120a29a8e650040bd354d67adf344af6",
+        "snapshot_path": "reports/versions/orchestrator_assignment_report/2026-07-18T16-43-29-329Z-f81adac7.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "orchestrator_report.md": [
+      {
+        "version_id": "2026-07-18T16-46-28-475Z-20cc2b2e",
+        "hash": "20cc2b2eebe0efe327ad0689cc334f8c707830e9",
+        "snapshot_path": "reports/versions/orchestrator_report/2026-07-18T16-46-28-475Z-20cc2b2e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "osint_activation_wave3_report.md": [
+      {
+        "version_id": "2026-07-16T21-23-40-341Z-8ec21913",
+        "hash": "8ec219134d64522007804191deecf13b4164c5f8",
+        "snapshot_path": "reports/versions/osint_activation_wave3_report/2026-07-16T21-23-40-341Z-8ec21913.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "osint_facebook_signals.md": [
+      {
+        "version_id": "2026-07-16T21-33-42-482Z-d5d8af10",
+        "hash": "d5d8af10335724f8b57e5354ca99befe3bb100cf",
+        "snapshot_path": "reports/versions/osint_facebook_signals/2026-07-16T21-33-42-482Z-d5d8af10.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "osint_provenance_audit.md": [
+      {
+        "version_id": "2026-07-16T21-31-45-626Z-72c05de9",
+        "hash": "72c05de95ebd8af15bcba79ceaed4a2b77f09878",
+        "snapshot_path": "reports/versions/osint_provenance_audit/2026-07-16T21-31-45-626Z-72c05de9.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "osint_source_coverage_audit.md": [
+      {
+        "version_id": "2026-07-16T21-24-04-512Z-cf7f66af",
+        "hash": "cf7f66afd6d4fe6f7ec525a84de15f2b7ea89cbe",
+        "snapshot_path": "reports/versions/osint_source_coverage_audit/2026-07-16T21-24-04-512Z-cf7f66af.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "osint_validation_report.md": [
+      {
+        "version_id": "2026-07-17T13-28-45-750Z-5a03f2d3",
+        "hash": "5a03f2d3b465f821ee960aeaba2db1e4a8b1e83f",
+        "snapshot_path": "reports/versions/osint_validation_report/2026-07-17T13-28-45-750Z-5a03f2d3.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "persona_quality_gate_failure_investigation.md": [
+      {
+        "version_id": "2026-07-17T03-09-00-565Z-2b039a6a",
+        "hash": "2b039a6a0fd502958080d58a1b19a61ea7fe9f7b",
+        "snapshot_path": "reports/versions/persona_quality_gate_failure_investigation/2026-07-17T03-09-00-565Z-2b039a6a.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "phase7_agent_platform_simulation.md": [
+      {
+        "version_id": "2026-07-17T20-53-46-589Z-3b30835e",
+        "hash": "3b30835e7757fb51c72726db16583607970a6880",
+        "snapshot_path": "reports/versions/phase7_agent_platform_simulation/2026-07-17T20-53-46-589Z-3b30835e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "phase9_architecture_validation.md": [
+      {
+        "version_id": "2026-07-17T21-01-14-854Z-9b0c54d7",
+        "hash": "9b0c54d7a91795a74433e996bc69c15f12720412",
+        "snapshot_path": "reports/versions/phase9_architecture_validation/2026-07-17T21-01-14-854Z-9b0c54d7.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "platform_agent_catalog.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-795Z-ace1a6d2",
+        "hash": "ace1a6d230e2558a55ab5bc11e0c8075110fcf52",
+        "snapshot_path": "reports/versions/platform_agent_catalog/2026-07-18T04-16-33-795Z-ace1a6d2.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "platform_health_report.md": [
+      {
+        "version_id": "2026-07-17T21-36-30-831Z-f5bc1a98",
+        "hash": "f5bc1a9834dc17478e56406767ddfbaab3208511",
+        "snapshot_path": "reports/versions/platform_health_report/2026-07-17T21-36-30-831Z-f5bc1a98.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "platform_intelligence_report.md": [
+      {
+        "version_id": "2026-07-18T04-08-05-403Z-6a113db0",
+        "hash": "6a113db00b3233c7a0940d8990c5e28cf2e9edf6",
+        "snapshot_path": "reports/versions/platform_intelligence_report/2026-07-18T04-08-05-403Z-6a113db0.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "post_simplification_simulation.md": [
+      {
+        "version_id": "2026-07-17T12-42-18-169Z-4ee0f79c",
+        "hash": "4ee0f79cfc7fbea36669a9f367f132387da9e436",
+        "snapshot_path": "reports/versions/post_simplification_simulation/2026-07-17T12-42-18-169Z-4ee0f79c.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "post_taxonomy_validation_report.md": [
+      {
+        "version_id": "2026-07-17T12-28-05-204Z-71462e43",
+        "hash": "71462e43405ffdb837ede05eb3d330a4c5d65b44",
+        "snapshot_path": "reports/versions/post_taxonomy_validation_report/2026-07-17T12-28-05-204Z-71462e43.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "product_roadmap.md": [
+      {
+        "version_id": "2026-07-17T21-01-35-886Z-e2d7e43d",
+        "hash": "e2d7e43db4af0514e267513f88b6717cda102ca3",
+        "snapshot_path": "reports/versions/product_roadmap/2026-07-17T21-01-35-886Z-e2d7e43d.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "provider_ecosystem_simulation.md": [
+      {
+        "version_id": "2026-07-17T20-48-12-761Z-05634a97",
+        "hash": "05634a97a75e6e507e87918705751921eab79a12",
+        "snapshot_path": "reports/versions/provider_ecosystem_simulation/2026-07-17T20-48-12-761Z-05634a97.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "provider_growth_dashboard.md": [
+      {
+        "version_id": "2026-07-18T04-08-05-428Z-0d336275",
+        "hash": "0d3362750900a57581cf3fe1818690f26e1dce9d",
+        "snapshot_path": "reports/versions/provider_growth_dashboard/2026-07-18T04-08-05-428Z-0d336275.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "provider_identity_verification_simulation.md": [
+      {
+        "version_id": "2026-07-17T16-16-36-469Z-01888fd1",
+        "hash": "01888fd1d0bd67627807c803c1d7c5b74b039c5f",
+        "snapshot_path": "reports/versions/provider_identity_verification_simulation/2026-07-17T16-16-36-469Z-01888fd1.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "provider_portal_design.md": [
+      {
+        "version_id": "2026-07-17T13-13-11-508Z-d1008913",
+        "hash": "d10089131ae101591a842919081452731ecfd933",
+        "snapshot_path": "reports/versions/provider_portal_design/2026-07-17T13-13-11-508Z-d1008913.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "provider_portal_review.md": [
+      {
+        "version_id": "2026-07-17T21-01-35-886Z-97380184",
+        "hash": "97380184b68a157384b7eb437b0d52e5359e74a0",
+        "snapshot_path": "reports/versions/provider_portal_review/2026-07-17T21-01-35-886Z-97380184.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "provider_portal_schema.md": [
+      {
+        "version_id": "2026-07-17T13-15-08-847Z-820d9348",
+        "hash": "820d93487ea5fc16e6166bf7e111a9babb593f42",
+        "snapshot_path": "reports/versions/provider_portal_schema/2026-07-17T13-15-08-847Z-820d9348.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "provider_quality.md": [
+      {
+        "version_id": "2026-07-17T21-06-53-290Z-0e690456",
+        "hash": "0e690456bd5f1d3cbf4664caabafd68c8ed4c2e2",
+        "snapshot_path": "reports/versions/provider_quality/2026-07-17T21-06-53-290Z-0e690456.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "quality_scorecard.md": [
+      {
+        "version_id": "2026-07-18T04-17-02-706Z-70fec538",
+        "hash": "70fec53834fd234b9e284cbab1139be713918003",
+        "snapshot_path": "reports/versions/quality_scorecard/2026-07-18T04-17-02-706Z-70fec538.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "real_world_outcome_validation.md": [
+      {
+        "version_id": "2026-07-16T21-12-54-409Z-ba40b56e",
+        "hash": "ba40b56ede56c4833b869bf8125929f1c9b86c3a",
+        "snapshot_path": "reports/versions/real_world_outcome_validation/2026-07-16T21-12-54-409Z-ba40b56e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "reasoning_standard.md": [
+      {
+        "version_id": "2026-07-18T04-17-02-694Z-fcacff0e",
+        "hash": "fcacff0eb31c1d055cc965a394e80cdac264c35c",
+        "snapshot_path": "reports/versions/reasoning_standard/2026-07-18T04-17-02-694Z-fcacff0e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "recommendation_accuracy_dashboard.md": [
+      {
+        "version_id": "2026-07-16T21-12-54-440Z-ac005df9",
+        "hash": "ac005df9b0bb3419e031ccbf32b1cac4de4ea52a",
+        "snapshot_path": "reports/versions/recommendation_accuracy_dashboard/2026-07-16T21-12-54-440Z-ac005df9.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "recommendation_engine_validation.md": [
+      {
+        "version_id": "2026-07-18T04-03-56-927Z-a39169e4",
+        "hash": "a39169e4ae6f553be943aa1fdf71a66903f14446",
+        "snapshot_path": "reports/versions/recommendation_engine_validation/2026-07-18T04-03-56-927Z-a39169e4.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "recommendation_gate.md": [
+      {
+        "version_id": "2026-07-18T04-38-00-996Z-5f417200",
+        "hash": "5f4172000365ccb2e3be4e5b74e05ad396d88649",
+        "snapshot_path": "reports/versions/recommendation_gate/2026-07-18T04-38-00-996Z-5f417200.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "recommendation_package_schema.md": [
+      {
+        "version_id": "2026-07-18T04-17-02-700Z-5a048885",
+        "hash": "5a04888523dd1e247d5267953fc84e0a0424c7db",
+        "snapshot_path": "reports/versions/recommendation_package_schema/2026-07-18T04-17-02-700Z-5a048885.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "recommendation_pipeline_trace.md": [
+      {
+        "version_id": "2026-07-17T21-40-00-445Z-d4fa27ac",
+        "hash": "d4fa27acdb2e181f9f9997d34814d722d1d1f1f2",
+        "snapshot_path": "reports/versions/recommendation_pipeline_trace/2026-07-17T21-40-00-445Z-d4fa27ac.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "recommendation_ranking_report.md": [
+      {
+        "version_id": "2026-07-18T04-03-56-937Z-2f44291c",
+        "hash": "2f44291c3467fa9bc21c2a7485bfa1f8498a090f",
+        "snapshot_path": "reports/versions/recommendation_ranking_report/2026-07-18T04-03-56-937Z-2f44291c.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "recommendation_trace.md": [
+      {
+        "version_id": "2026-07-17T21-27-42-240Z-86b5f661",
+        "hash": "86b5f6617dc4c89ab71a841677ef389c5fc021c6",
+        "snapshot_path": "reports/versions/recommendation_trace/2026-07-17T21-27-42-240Z-86b5f661.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "refresh_statistics.md": [
+      {
+        "version_id": "2026-07-17T21-36-06-514Z-898e349e",
+        "hash": "898e349ec0471c1131c189f923a06e38061cee5a",
+        "snapshot_path": "reports/versions/refresh_statistics/2026-07-17T21-36-06-514Z-898e349e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "research_methodology.md": [
+      {
+        "version_id": "2026-07-18T05-44-31-521Z-1db268c8",
+        "hash": "1db268c8a587c3eaca925a28109583bd5103e453",
+        "snapshot_path": "reports/versions/research_methodology/2026-07-18T05-44-31-521Z-1db268c8.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "risk_register.md": [
+      {
+        "version_id": "2026-07-17T21-01-35-886Z-b1b4ab1e",
+        "hash": "b1b4ab1e5e79eb0b4a8e6b08e9857c0661439465",
+        "snapshot_path": "reports/versions/risk_register/2026-07-17T21-01-35-886Z-b1b4ab1e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "scientific_method.md": [
+      {
+        "version_id": "2026-07-18T05-44-31-514Z-67c6fa8c",
+        "hash": "67c6fa8c6e945dc55889776aba5fa6631b717389",
+        "snapshot_path": "reports/versions/scientific_method/2026-07-18T05-44-31-514Z-67c6fa8c.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "scoring_gap_closure_report.md": [
+      {
+        "version_id": "2026-07-17T04-39-12-540Z-f6622841",
+        "hash": "f662284193940fe2960f5ab32f41a712f47b6346",
+        "snapshot_path": "reports/versions/scoring_gap_closure_report/2026-07-17T04-39-12-540Z-f6622841.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "senior_living_search_demand_report.md": [
+      {
+        "version_id": "2026-07-17T03-04-38-264Z-38f47f0c",
+        "hash": "38f47f0c107ec0c580f99bd2a6c8a9e9d8bf2e38",
+        "snapshot_path": "reports/versions/senior_living_search_demand_report/2026-07-17T03-04-38-264Z-38f47f0c.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "simulation_summary.md": [
+      {
+        "version_id": "2026-07-17T21-27-42-261Z-b14830ba",
+        "hash": "b14830bab3848b827696eb55cffc7417dd134688",
+        "snapshot_path": "reports/versions/simulation_summary/2026-07-17T21-27-42-261Z-b14830ba.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "source_reliability.md": [
+      {
+        "version_id": "2026-07-17T21-06-53-265Z-25b6204f",
+        "hash": "25b6204fe7a726c5e0ac76a52c85cec9d65ce9a6",
+        "snapshot_path": "reports/versions/source_reliability/2026-07-17T21-06-53-265Z-25b6204f.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "source_trust_framework.md": [
+      {
+        "version_id": "2026-07-18T04-38-00-982Z-2ca13957",
+        "hash": "2ca13957c20a60f32f466ac219e8a84f916d0577",
+        "snapshot_path": "reports/versions/source_trust_framework/2026-07-18T04-38-00-982Z-2ca13957.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "stale_knowledge_report.md": [
+      {
+        "version_id": "2026-07-17T21-36-06-523Z-097ad8c8",
+        "hash": "097ad8c8c87489503c8ab53bc98a3ac0d6f33c2c",
+        "snapshot_path": "reports/versions/stale_knowledge_report/2026-07-17T21-36-06-523Z-097ad8c8.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "supervisor_daily_report.md": [
+      {
+        "version_id": "2026-07-17T21-36-30-820Z-1e1a14c3",
+        "hash": "1e1a14c3d72d7613014b3e3f16a64131270ad4a5",
+        "snapshot_path": "reports/versions/supervisor_daily_report/2026-07-17T21-36-30-820Z-1e1a14c3.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "supervisor_decision_log.md": [
+      {
+        "version_id": "2026-07-18T04-08-05-465Z-6f8302d9",
+        "hash": "6f8302d9c266a7e9b6dba90e67af25aa9b366fe3",
+        "snapshot_path": "reports/versions/supervisor_decision_log/2026-07-18T04-08-05-465Z-6f8302d9.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "system_architecture_review.md": [
+      {
+        "version_id": "2026-07-17T21-00-21-244Z-ae850b1e",
+        "hash": "ae850b1eb8e97f60537483b5e69023dcb7e532c9",
+        "snapshot_path": "reports/versions/system_architecture_review/2026-07-17T21-00-21-244Z-ae850b1e.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "system_health.md": [
+      {
+        "version_id": "2026-07-17T21-06-53-299Z-487a4a2c",
+        "hash": "487a4a2ca6ec91eedebdc5b2779589703db2eee5",
+        "snapshot_path": "reports/versions/system_health/2026-07-17T21-06-53-299Z-487a4a2c.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "system_health_dashboard.md": [
+      {
+        "version_id": "2026-07-17T21-27-42-255Z-fd7ef3ea",
+        "hash": "fd7ef3ea1c36e5c05944ecc9063a8bd208739e64",
+        "snapshot_path": "reports/versions/system_health_dashboard/2026-07-17T21-27-42-255Z-fd7ef3ea.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "trust_dashboard.md": [
+      {
+        "version_id": "2026-07-18T05-47-55-056Z-780ac775",
+        "hash": "780ac775f78ee1c42b8ebe54fbb99adf362207a4",
+        "snapshot_path": "reports/versions/trust_dashboard/2026-07-18T05-47-55-056Z-780ac775.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "ttl_policy_report.md": [
+      {
+        "version_id": "2026-07-17T21-36-06-530Z-2a4d2a29",
+        "hash": "2a4d2a29d0e62fa4ff23ec1a12b601bfc73c5619",
+        "snapshot_path": "reports/versions/ttl_policy_report/2026-07-17T21-36-06-530Z-2a4d2a29.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "ui_language_review.md": [
+      {
+        "version_id": "2026-07-18T04-03-56-941Z-0687fd18",
+        "hash": "0687fd18f5a155d21eae811b966d29b340db8166",
+        "snapshot_path": "reports/versions/ui_language_review/2026-07-18T04-03-56-941Z-0687fd18.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "ui_simulation_discrepancy_investigation.md": [
+      {
+        "version_id": "2026-07-17T08-03-49-922Z-edfef82d",
+        "hash": "edfef82d961550675665a569d6160acd76930d8b",
+        "snapshot_path": "reports/versions/ui_simulation_discrepancy_investigation/2026-07-17T08-03-49-922Z-edfef82d.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "understanding_journey_v3_validation_report.md": [
+      {
+        "version_id": "2026-07-17T05-18-37-558Z-c2a19a15",
+        "hash": "c2a19a1504b743581ba31d21842a8a69d8d47a26",
+        "snapshot_path": "reports/versions/understanding_journey_v3_validation_report/2026-07-17T05-18-37-558Z-c2a19a15.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "understanding_profile_validation_report.md": [
+      {
+        "version_id": "2026-07-17T05-36-33-094Z-3ce84bc0",
+        "hash": "3ce84bc0dea9167f6ed8db654c955ea453d33ef9",
+        "snapshot_path": "reports/versions/understanding_profile_validation_report/2026-07-17T05-36-33-094Z-3ce84bc0.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "understanding_score_root_cause_report.md": [
+      {
+        "version_id": "2026-07-17T05-36-33-079Z-2c5aa245",
+        "hash": "2c5aa24532f7ff7dea2672bd665660807dd68a51",
+        "snapshot_path": "reports/versions/understanding_score_root_cause_report/2026-07-17T05-36-33-079Z-2c5aa245.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "verification_inbox.md": [
+      {
+        "version_id": "2026-07-17T13-19-53-631Z-c0610b16",
+        "hash": "c0610b1685a33868e861fe0da74a4b07a5dbcaa9",
+        "snapshot_path": "reports/versions/verification_inbox/2026-07-17T13-19-53-631Z-c0610b16.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "verification_pipeline.md": [
+      {
+        "version_id": "2026-07-18T04-38-00-982Z-742296cd",
+        "hash": "742296cd0000e17e951b7c8ed718048139fc38ea",
+        "snapshot_path": "reports/versions/verification_pipeline/2026-07-18T04-38-00-982Z-742296cd.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "verified_information_standard.md": [
+      {
+        "version_id": "2026-07-18T04-38-00-948Z-04e3aaea",
+        "hash": "04e3aaea0d5f6cc5f41e630bd23e627c8a4eba4e",
+        "snapshot_path": "reports/versions/verified_information_standard/2026-07-18T04-38-00-948Z-04e3aaea.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "visual_intelligence_validation_report.md": [
+      {
+        "version_id": "2026-07-17T05-08-32-564Z-944be70a",
+        "hash": "944be70af973fa45dcefcbc96e953ee5070b51c4",
+        "snapshot_path": "reports/versions/visual_intelligence_validation_report/2026-07-17T05-08-32-564Z-944be70a.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "weight_dominance_audit.md": [
+      {
+        "version_id": "2026-07-16T19-49-32-662Z-5838d0c3",
+        "hash": "5838d0c38fca9f8bdbfebd837144d2ac1b42d018",
+        "snapshot_path": "reports/versions/weight_dominance_audit/2026-07-16T19-49-32-662Z-5838d0c3.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "workforce_kpi_dashboard.md": [
+      {
+        "version_id": "2026-07-18T04-16-33-809Z-b5dc42dd",
+        "hash": "b5dc42dd86a649ab78c16e74b232637bca101dd1",
+        "snapshot_path": "reports/versions/workforce_kpi_dashboard/2026-07-18T04-16-33-809Z-b5dc42dd.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ],
+    "zero_score_root_cause_report.md": [
+      {
+        "version_id": "2026-07-17T07-47-59-553Z-95d86ece",
+        "hash": "95d86ececc215e3f0062473bf1d3623cc87e69e1",
+        "snapshot_path": "reports/versions/zero_score_root_cause_report/2026-07-17T07-47-59-553Z-95d86ece.md",
+        "created_at_utc": "2026-07-18T17:00:29.940Z"
+      }
+    ]
+  }
+}

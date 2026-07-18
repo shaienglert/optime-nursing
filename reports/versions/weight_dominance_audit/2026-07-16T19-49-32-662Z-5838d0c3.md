@@ -1,0 +1,75 @@
+# Weight Dominance Audit Report
+
+Top 100 recommendations evaluated: 100
+Average total score across Top 100: 58.94
+Active questionnaire answer signals: 0
+Unused questionnaire answers: No active questionnaire answers are present in the current runtime state; all answer-level signals are inactive.
+
+## Signal Audit Table
+Signal | Average Contribution | Usage Count | Dominance %
+--- | ---: | ---: | ---:
+Medical Fit | 20.16 | 100 | 34.20%
+Lifestyle Fit | 9.00 | 100 | 15.27%
+Social Fit | 6.75 | 100 | 11.45%
+Family Proximity | 5.50 | 100 | 9.33%
+Cultural Fit | 5.40 | 100 | 9.16%
+Clinical Quality | 4.42 | 100 | 7.50%
+Activities Fit | 0.00 | 0 | 0.00%
+Distance Adjustment | 0.00 | 0 | 0.00%
+Future Care Fit | 0.00 | 0 | 0.00%
+Language Fit | 0.00 | 0 | 0.00%
+Legal Risk | 0.00 | 0 | 0.00%
+Regulatory Quality | 0.00 | 0 | 0.00%
+Review Sentiment | 0.00 | 0 | 0.00%
+Staff Quality | 0.00 | 0 | 0.00%
+Unknown Data Penalty | 0.00 | 0 | 0.00%
+
+## Top 10 Strongest Signals
+- Medical Fit: avg 20.16, variance 1.65, usage 100, dominance 34.20%
+- Lifestyle Fit: avg 9.00, variance 0.00, usage 100, dominance 15.27%
+- Social Fit: avg 6.75, variance 0.00, usage 100, dominance 11.45%
+- Family Proximity: avg 5.50, variance 0.00, usage 100, dominance 9.33%
+- Cultural Fit: avg 5.40, variance 0.00, usage 100, dominance 9.16%
+- Clinical Quality: avg 4.42, variance 0.84, usage 100, dominance 7.50%
+- Activities Fit: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Distance Adjustment: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Future Care Fit: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Language Fit: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+
+## Top 10 Weakest Signals
+- Activities Fit: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Distance Adjustment: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Future Care Fit: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Language Fit: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Legal Risk: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Regulatory Quality: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Review Sentiment: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Staff Quality: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Unknown Data Penalty: avg 0.00, variance 0.00, usage 0, dominance 0.00%
+- Clinical Quality: avg 4.42, variance 0.84, usage 100, dominance 7.50%
+
+## Dead Signals
+- Activities Fit: avg 0.00, usage 0
+- Distance Adjustment: avg 0.00, usage 0
+- Future Care Fit: avg 0.00, usage 0
+- Language Fit: avg 0.00, usage 0
+- Legal Risk: avg 0.00, usage 0
+- Regulatory Quality: avg 0.00, usage 0
+- Review Sentiment: avg 0.00, usage 0
+- Staff Quality: avg 0.00, usage 0
+- Unknown Data Penalty: avg 0.00, usage 0
+
+## Signals Over 25% Dominance
+- Medical Fit: dominance 34.20%
+
+## Top 100 Runtime Facilities
+1. INN AT SARASOTA BAY CLUB - final score 61.10
+2. ORLANDO HEALTH CENTER FOR REHABILITATION - final score 60.60
+3. Nursing Center at La Posada, The - final score 60.20
+4. BLOUNTSTOWN HEALTH AND REHABILITATION CENTER - final score 60.10
+5. VI AT AVENTURA - final score 59.80
+6. WATERS EDGE HEALTH AND REHABILITATION - final score 59.80
+7. WESTMINSTER ST AUGUSTINE - final score 59.80
+8. PAVILION FOR HEALTH CARE, THE - final score 59.80
+9. PREMIER PLACE AT THE GLENVIEW - final score 59.80
+10. LEE MEMORIAL HOSPITAL SKILLED NURSING UNIT - final score 59.80

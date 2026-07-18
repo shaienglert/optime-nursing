@@ -1,0 +1,9 @@
+# Entity Relationship Model
+
+| Entity Type | Examples | Relationship Examples |
+| --- | --- | --- |
+| Provider | Community, building, apartment type | Offers service; supports condition; located in county |
+| Service / Program | Memory care, rehabilitation, transportation | Delivered by provider; supported by evidence |
+| Lifestyle / Activity | Movies, gardening, music, religious services | Available at provider; improves outcome |
+| Clinical | Condition, therapy, clinical program | Requires service; supported by study |
+| Evidence / Outcome | Study, inspection, outcome pattern | Supports or contradicts knowledge object |

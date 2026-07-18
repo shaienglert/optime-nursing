@@ -1,0 +1,56 @@
+# Zero Score Root Cause Report
+
+## Runtime Snapshot
+
+- acceptedFacilities.length: **8**
+- hardRejectedFacilities.length: **92**
+- top finalScore: **0**
+- top matchQuality: **0**
+- top confidenceScore: **14**
+
+## Top Accepted Facility Breakdown
+
+| Field | Value |
+| --- | --- |
+| facility name | RIVER GARDEN HEBREW HOME FOR THE AGED |
+| careFit | 43.75020000000001 |
+| lifestyleFit | 36.2378 |
+| socialFit | 46.2533 |
+| financialFit | 95 |
+| culturalFit | 44.7 |
+| familyFit | 60.07 |
+| futureCareFit | 63 |
+| clinicalQuality | 100 |
+| luxuryFit | 35 |
+| weightedTotal before normalization | 54.481553999999996 |
+| weightedTotal after normalization | 54.481553999999996 |
+| finalScore | 0 |
+| confidenceScore | 14 |
+
+## Invalid Value Scan
+
+- undefined values: none
+- null values: none
+- NaN values: none
+
+## Code Path Analysis
+
+- zero-score accepted facility state observed: **YES**
+- mandatory gate triggered (mandatorySummary.matched < mandatorySummary.total): **YES**
+- mandatorySummary.matched: **1**
+- mandatorySummary.total: **2**
+- criticalSummary.matched: **0**
+- criticalSummary.total: **1**
+
+Exact zeroing code path in frontend/src/lib/optime-v2-engine.ts:
+- function buildMatchQualityResult(...)
+- variable mandatorySummary
+- branch: if (mandatorySummary.matched < mandatorySummary.total) { score = 0; }
+- variable names involved: baseScore, penalty, score, mandatorySummary.matched, mandatorySummary.total
+
+## Root Cause Decision
+
+- ROOT CAUSE FOUND: YES
+- Cause: Hard rejection filters and match-quality mandatory gating use different thresholds/logic.
+- Result: Facility can pass hard requirements (accepted) but still get score forced to zero by mandatory tier mismatch.
+- This is not caused by NaN, null, undefined, division by zero, or missing denominator in this run.

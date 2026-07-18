@@ -1,0 +1,17 @@
+# Conflict Report
+
+## Contradictory Information
+
+- Conflicting capability rows detected: **1**
+- Expired verification records detected: **0**
+
+| Facility ID | Capability | Distinct Values |
+| --- | --- | --- |
+| 4 | speech_therapy | 2 |
+
+## Expired Verification Records
+
+| Facility ID | Community | Capability | Expires At | Confidence |
+| --- | --- | --- | --- | --- |
+
+Policy: conflicts are flagged and verification tasks should be created. No auto-resolution is performed.

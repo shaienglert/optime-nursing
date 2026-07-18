@@ -24,3 +24,10 @@
 | Repositories | 5 |
 | Databases | 16 |
 | Workflows | 67 |
+
+## Report Status
+
+- Report Registry Indexed Reports: **143**
+- Report Registry Unavailable Reports: **0**
+- Live Orchestrator Dashboard: **reports/orchestrator_live_operations_dashboard.md**
+- Agent-Linked Report Coverage: **10 agents mapped**

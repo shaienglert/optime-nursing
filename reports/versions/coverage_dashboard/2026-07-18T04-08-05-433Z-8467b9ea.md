@@ -1,0 +1,41 @@
+# Coverage Dashboard
+
+State coverage is measured from prepared provider profiles. County coverage currently uses the CMS source baseline until county is normalized into the prepared provider repository.
+
+## Coverage Summary
+
+| Metric | Previous Baseline | Current | Growth |
+| --- | --- | --- | --- |
+| State Coverage | 0 | 1 | 1 |
+| County Coverage (source baseline) | 0 | 25 | 25 |
+
+## Coverage By State
+
+| State | Prepared Provider Profiles |
+| --- | --- |
+| FL | 694 |
+
+## Coverage By County
+
+| State | County | Providers |
+| --- | --- | --- |
+| CA | Los Angeles | 369 |
+| IL | Cook | 202 |
+| TX | Harris | 97 |
+| OH | Cuyahoga | 92 |
+| CA | San Diego | 82 |
+| TX | Dallas | 81 |
+| AZ | Maricopa | 77 |
+| CA | Orange | 72 |
+| MA | Middlesex | 72 |
+| TX | Tarrant | 71 |
+| CA | Alameda | 69 |
+| MO | St. Louis | 69 |
+| OH | Hamilton | 69 |
+| CT | Capitol | 65 |
+| FL | Pinellas | 65 |
+| MI | Wayne | 63 |
+| TX | Bexar | 62 |
+| PA | Montgomery | 58 |
+| NY | Queens | 57 |
+| OH | Franklin | 57 |

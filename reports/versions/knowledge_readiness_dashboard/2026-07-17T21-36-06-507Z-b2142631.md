@@ -1,0 +1,15 @@
+# Knowledge Readiness Dashboard
+
+| Agent | Agent Key | TTL (sec) | Knowledge Age (sec) | TTL Remaining (sec) | Freshness | Health | Pending Reviews | Failed Refreshes | Last Refresh | Next Refresh |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Clinical Knowledge Agent | clinical_knowledge | 86400 | 0 | 86400 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-18T21:36:05.197348+00:00 |
+| Senior Living Research Agent | senior_living_research | 3600 | 0 | 3600 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-17T22:36:05.197348+00:00 |
+| Resident Needs Intelligence Agent | resident_needs | 21600 | 0 | 21600 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-18T03:36:05.197348+00:00 |
+| Provider Intelligence Agent | provider_intelligence | 43200 | 0 | 43200 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-18T09:36:05.197348+00:00 |
+| Activities Intelligence Agent | activities_intelligence | 21600 | 0 | 21600 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-18T03:36:05.197348+00:00 |
+| Nutrition Intelligence Agent | nutrition_intelligence | 86400 | 0 | 86400 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-18T21:36:05.197348+00:00 |
+| Family Experience Intelligence Agent | family_experience | 3600 | 0 | 3600 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-17T22:36:05.197348+00:00 |
+| Outcome Learning Agent | outcome_learning | 86400 | 0 | 86400 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-18T21:36:05.197348+00:00 |
+| Matching Improvement Agent | matching_improvement | 300 | 0 | 300 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-17T21:41:05.197348+00:00 |
+| Knowledge Graph Agent | knowledge_graph | 86400 | 0 | 86400 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-18T21:36:05.197348+00:00 |
+| Data Quality & Trust Agent | data_quality | 300 | 0 | 300 | FRESH | HEALTHY | 0 | 0 | 2026-07-17T21:36:05.197348+00:00 | 2026-07-17T21:41:05.197348+00:00 |

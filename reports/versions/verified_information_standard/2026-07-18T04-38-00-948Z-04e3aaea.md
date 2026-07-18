@@ -1,0 +1,28 @@
+# Verified Information Standard
+
+No recommendation shall ever be based on assumptions, unverified claims, inferred facts, or AI-generated facts.
+
+Rule Zero: **No Verified Information, No Recommendation.**
+
+| Mandatory Attribute | Implemented In Knowledge Fabric |
+| --- | --- |
+| Knowledge ID | PASS |
+| Title | PASS |
+| Category | PASS |
+| Value | PASS |
+| Source | PASS |
+| Source Type | PASS |
+| Source URL or Document | PASS |
+| Trust Level | PASS |
+| Evidence | PASS |
+| Published Date | PASS |
+| Observed Date | PASS |
+| Verified Date | PASS |
+| Verified By | PASS |
+| Domain Owner | PASS |
+| Review Date | PASS |
+| Expiration Date | PASS |
+| Conflict Status | PASS |
+| Recommendation Eligible | PASS |
+| Audit History | PASS |
+| Version | PASS |

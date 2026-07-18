@@ -1,0 +1,15 @@
+# Provider Identity Verification Simulation
+
+## Scenario Outcomes
+
+- VALID_EMAIL_PASS: **PASS**
+- UNOFFICIAL_EMAIL_BLOCKED: **PASS**
+- EXPIRED_VERIFICATION_BLOCKED: **PASS**
+- LICENSE_VERIFICATION_PASS: **PASS**
+- NEW_STAFF_INVITE_PASS: **PASS**
+- AUDIT_TRAIL_PASS: **PASS**
+- ROLE_SECURITY_PASS: **PASS**
+
+## Facility
+
+- facility_id: 1

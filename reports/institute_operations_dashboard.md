@@ -29,3 +29,10 @@
 | Provider Intelligence Agent | Running | 2026-07-17T21:36:05.197348+00:00 | Scheduled refresh at 2026-07-18T09:36:05.197348+00:00 | HAS QUEUE | daily:Y weekly:N monthly:N |
 | Resident Needs Intelligence Agent | Running | 2026-07-17T21:36:05.197348+00:00 | Scheduled refresh at 2026-07-18T03:36:05.197348+00:00 | HAS QUEUE | daily:N weekly:N monthly:N |
 | Senior Living Research Agent | Running | 2026-07-17T21:36:05.197348+00:00 | Scheduled refresh at 2026-07-17T22:36:05.197348+00:00 | HAS QUEUE | daily:N weekly:N monthly:N |
+
+## Report Operations
+
+- Report Registry: **reports/agent_report_registry.md**
+- Indexed Reports: **143**
+- Unavailable Reports: **0**
+- Versioned Snapshots: **143**
