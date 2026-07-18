@@ -1,0 +1,6 @@
+# Provider Growth Dashboard
+
+| Metric | Previous Baseline | Current | Growth |
+| --- | --- | --- | --- |
+| Provider Profiles | 0 | 694 | 694 |
+| Enriched Provider Profiles | 0 | 0 | 0 |
