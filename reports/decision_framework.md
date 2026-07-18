@@ -1,0 +1,11 @@
+# Decision Framework
+
+The Decision Intelligence Framework defines a deterministic pipeline with five stages: Understand, Gather, Verify, Match, and Explain.
+
+| Stage | Purpose | Deterministic Output |
+| --- | --- | --- |
+| Understand | Normalize the resident profile, preferences, and missing information. | Structured Resident Profile |
+| Gather | Collect prepared verified inputs from provider, knowledge, evidence, activity, nutrition, and quality repositories. | Prepared fact bundle |
+| Verify | Attach source, verification date, evidence level, confidence, freshness, and conflicts to every fact. | Verified fact registry |
+| Match | Produce structured dimension reasoning across clinical, lifestyle, mobility, social, dining, transportation, budget, location, future care, and family fit. | Dimension reasoning matrix |
+| Explain | Emit a prose-free Recommendation Package for Narrative Intelligence to transform. | Recommendation Package |

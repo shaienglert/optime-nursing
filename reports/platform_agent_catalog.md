@@ -1,0 +1,10 @@
+# Platform Agent Catalog
+
+| Agent | Owned Domain |
+| --- | --- |
+| Knowledge Quality Agent | Completeness; Accuracy; Coverage; Consistency |
+| Verification Agent | Fact verification; Re-verification scheduling; Evidence tracking |
+| Freshness Agent | Knowledge age; Expired information; Refresh priorities |
+| Knowledge Graph Agent | Relationships; Link quality; Duplicate removal; Graph strengthening |
+| Conflict Resolution Agent | Contradiction detection; Verification requests; Non-destructive conflict handling |
+| Learning Agent | Gap detection; Research scheduling; Knowledge-growth measurement |

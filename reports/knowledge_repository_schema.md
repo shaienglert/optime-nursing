@@ -1,0 +1,9 @@
+# Knowledge Repository Schema
+
+| Schema Object | Purpose |
+| --- | --- |
+| KnowledgeObject | Canonical reusable fact with entity, property/value, verification, freshness, confidence, owner, and status. |
+| KnowledgeEvidence | Traceable supporting evidence with trust, source, version, and capture metadata. |
+| KnowledgeRelationship | Graph edge connecting knowledge objects for reuse across recommendations, profiles, comparisons, and analytics. |
+| KnowledgeObjectHistory | Non-destructive change history with previous values and change reasons. |
+| KnowledgeGovernanceRecord | Owner, reviewer, verification date, review cadence, retirement policy, and audit reference. |

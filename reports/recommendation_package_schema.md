@@ -1,0 +1,9 @@
+# Recommendation Package Schema
+
+| Field Group | Structured Content |
+| --- | --- |
+| Resident Summary | Relationship, age group, care needs, memory status, budget, location, future care preference, lifestyle, family priorities, dietary preferences, language preferences |
+| Recommendation Ranking | Rank, facility identity, overall match, recommendation tier, strengths, trade-offs, unknowns, verification checklist, suggested questions, next actions |
+| Dimension Scores | Clinical, lifestyle, mobility, social, dining, transportation, budget, location, future care, family reasoning |
+| Supporting Evidence | Prepared evidence references and supporting repository signals |
+| Global Package State | Alternative communities, unknowns, verification tasks, next actions |
