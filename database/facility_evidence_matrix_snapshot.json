@@ -1,0 +1,104 @@
+{
+  "generated_at_utc": "2026-07-19T22:47:54.875840+00:00",
+  "phase": 4,
+  "scope": {
+    "runtime_state": "FL",
+    "runtime_facility_count": 100,
+    "canonical_facility_count": 713,
+    "canonical_county_coverage": {
+      "counties_total": 67,
+      "counties_covered": 64,
+      "counties_missing": [
+        "Glades",
+        "Liberty",
+        "Union"
+      ]
+    }
+  },
+  "verification_status_counts": {
+    "UNKNOWN": 99,
+    "CONFLICTED": 1
+  },
+  "source_level_counts": {
+    "SOURCE_OF_TRUTH": 100
+  },
+  "unknown_field_counts": {
+    "confidence_level": 100,
+    "quality_and_cms_ratings": 1
+  },
+  "county_distribution_from_canonical": {
+    "Alachua": 28,
+    "Baker": 2,
+    "Bay": 5,
+    "Bradford": 2,
+    "Brevard": 21,
+    "Broward": 33,
+    "Calhoun": 2,
+    "Charlotte": 8,
+    "Citrus": 9,
+    "Clay": 12,
+    "Collier": 11,
+    "Columbia": 4,
+    "De Soto": 1,
+    "Dixie": 1,
+    "Duval": 34,
+    "Escambia": 16,
+    "Flagler": 2,
+    "Franklin": 1,
+    "Gadsden": 1,
+    "Gilchrist": 2,
+    "Gulf": 1,
+    "Hamilton": 1,
+    "Hardee": 1,
+    "Hendry": 2,
+    "Hernando": 6,
+    "Highlands": 5,
+    "Hillsborough": 30,
+    "Holmes": 1,
+    "Indian River": 6,
+    "Jackson": 4,
+    "Jefferson": 1,
+    "Lafayette": 1,
+    "Lake": 17,
+    "Lee": 20,
+    "Leon": 8,
+    "Levy": 1,
+    "Madison": 3,
+    "Manatee": 12,
+    "Marion": 11,
+    "Martin": 6,
+    "Miami-Dade": 54,
+    "Monroe": 2,
+    "Nassau": 2,
+    "Okaloosa": 8,
+    "Okeechobee": 1,
+    "Orange": 36,
+    "Osceola": 10,
+    "Palm Beach": 54,
+    "Pasco": 18,
+    "Pinellas": 65,
+    "Polk": 25,
+    "Putnam": 3,
+    "Santa Rosa": 4,
+    "Sarasota": 30,
+    "Seminole": 10,
+    "St. Johns": 8,
+    "St. Lucie": 9,
+    "Sumter": 4,
+    "Suwannee": 3,
+    "Taylor": 1,
+    "Volusia": 29,
+    "Wakulla": 1,
+    "Walton": 2,
+    "Washington": 2
+  },
+  "policies": {
+    "unknown_is_not_no": true,
+    "conflict_requires_review": true,
+    "insufficient_evidence_actions": [
+      "CLARIFY",
+      "INVESTIGATE",
+      "UNKNOWN"
+    ]
+  }
+}

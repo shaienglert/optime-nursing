@@ -1,0 +1,58 @@
+{
+  "phase": 4,
+  "title": "Facility Evidence Matrix",
+  "generated_at_utc": "2026-07-20T01:20:00Z",
+  "source_hierarchy": [
+    {
+      "level": "SOURCE_OF_TRUTH",
+      "description": "Authoritative public or regulator source"
+    },
+    {
+      "level": "PROVIDER_VERIFIED",
+      "description": "Facility-confirmed response"
+    },
+    {
+      "level": "INTELLIGENCE_SIGNAL",
+      "description": "Observed contextual signal, non-authoritative"
+    },
+    {
+      "level": "UNVERIFIED",
+      "description": "No reliable evidence yet"
+    }
+  ],
+  "verification_status_values": [
+    "VERIFIED",
+    "PARTIALLY_VERIFIED",
+    "UNVERIFIED",
+    "CONFLICTED",
+    "UNKNOWN"
+  ],
+  "unknown_handling_policy": {
+    "unknown_means": "Information not confirmed yet",
+    "forbidden_inference": "Do not convert UNKNOWN to NO",
+    "required_output_classes": [
+      "CLARIFY",
+      "INVESTIGATE",
+      "UNKNOWN"
+    ]
+  },
+  "conflict_policy": {
+    "detection_required": true,
+    "manual_resolution_required_for_authoritative_conflict": true,
+    "auto_resolution_allowed_for_non_authoritative_signal_updates": true
+  },
+  "required_matrix_fields": [
+    "facility_id",
+    "facility_name",
+    "state",
+    "county",
+    "capability_key",
+    "capability_value",
+    "verification_status",
+    "source_level",
+    "source_reference",
+    "source_date",
+    "expires_at",
+    "confidence"
+  ]
+}
