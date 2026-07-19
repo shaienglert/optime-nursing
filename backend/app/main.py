@@ -896,7 +896,16 @@ def startup() -> None:
         db.close()
 
     # One-time SMTP validation email on deployment startup.
-    send_startup_test_email_once()
+    print("SMTP_TEST: ATTEMPTING")
+    smtp_test_result = send_startup_test_email_once()
+    if not smtp_test_result.get("attempted"):
+        print(f"SMTP_TEST: SKIPPED reason={smtp_test_result.get('reason', 'unknown')}")
+    elif smtp_test_result.get("smtp_accepted"):
+        print("SMTP_TEST: SUCCESS smtp_accepted=true")
+    else:
+        err_type = smtp_test_result.get("error_type", "UNKNOWN")
+        err_msg = smtp_test_result.get("error_message", "unknown")
+        print(f"SMTP_TEST: FAILED error_type={err_type} message={err_msg}")
 
     # Refresh reports continuously in background so user requests never wait on research.
     start_background_refresh_loop()

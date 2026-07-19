@@ -338,11 +338,23 @@ def send_startup_test_email_once() -> Dict[str, object]:
             "attempted_at_utc": result.attempted_at_utc,
             "status": result.status,
             "smtp_accepted": smtp_accepted,
+            "complete": smtp_accepted,
         }
     )
+
+    error_type = None
+    if result.status != "DELIVERY_ACCEPTED":
+        if result.status == "DELIVERY_BLOCKED":
+            error_type = "CONFIGURATION"
+        elif result.status == "DELIVERY_FAILED":
+            error_type = "SMTP_SEND_FAILURE"
+        else:
+            error_type = "UNKNOWN"
 
     return {
         "attempted": True,
         "status": result.status,
         "smtp_accepted": smtp_accepted,
+        "error_type": error_type,
+        "error_message": result.message,
     }
