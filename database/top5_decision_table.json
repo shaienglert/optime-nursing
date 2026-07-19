@@ -1,0 +1,123 @@
+{
+  "phase": 6,
+  "meta": {
+    "generated_at_utc": "2026-07-19T22:49:53.032Z",
+    "scenario_id": "PHASE6_TOP5_BASELINE",
+    "persona_type": "Skilled Nursing",
+    "accepted_count": 92,
+    "rejected_count": 8,
+    "displayed_count": 92
+  },
+  "rows": [
+    {
+      "rank": 1,
+      "facility_id": 4,
+      "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "total_score": 100,
+      "final_match_score": 100,
+      "confidence_score": 23,
+      "verified_count": 3,
+      "unknown_count": 12,
+      "hard_rejection_reasons": [],
+      "top_positive_contributors": [
+        "Skilled nursing capability (1)",
+        "Neurological rehabilitation (1)",
+        "Physical therapy (1)"
+      ],
+      "top_negative_contributors": [],
+      "rank_reason": "Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment.",
+      "traceability": [
+        "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+        "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+      ]
+    },
+    {
+      "rank": 2,
+      "facility_id": 44,
+      "facility_name": "CRESTVIEW REHABILITATION CENTER, LLC",
+      "total_score": 100,
+      "final_match_score": 100,
+      "confidence_score": 23,
+      "verified_count": 3,
+      "unknown_count": 12,
+      "hard_rejection_reasons": [],
+      "top_positive_contributors": [
+        "Skilled nursing capability (1)",
+        "Neurological rehabilitation (1)",
+        "Physical therapy (1)"
+      ],
+      "top_negative_contributors": [],
+      "rank_reason": "Ranked #2 after comparing verified requirement coverage and confidence.",
+      "traceability": [
+        "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+        "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+      ]
+    },
+    {
+      "rank": 3,
+      "facility_id": 3,
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "total_score": 100,
+      "final_match_score": 100,
+      "confidence_score": 23,
+      "verified_count": 3,
+      "unknown_count": 12,
+      "hard_rejection_reasons": [],
+      "top_positive_contributors": [
+        "Skilled nursing capability (1)",
+        "Neurological rehabilitation (1)",
+        "Physical therapy (1)"
+      ],
+      "top_negative_contributors": [],
+      "rank_reason": "Ranked #3 after comparing verified requirement coverage and confidence.",
+      "traceability": [
+        "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+        "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+      ]
+    },
+    {
+      "rank": 4,
+      "facility_id": 20,
+      "facility_name": "BROWARD NURSING & REHABILITATION CENTER",
+      "total_score": 100,
+      "final_match_score": 100,
+      "confidence_score": 23,
+      "verified_count": 3,
+      "unknown_count": 12,
+      "hard_rejection_reasons": [],
+      "top_positive_contributors": [
+        "Skilled nursing capability (1)",
+        "Neurological rehabilitation (1)",
+        "Physical therapy (1)"
+      ],
+      "top_negative_contributors": [],
+      "rank_reason": "Ranked #4 after comparing verified requirement coverage and confidence.",
+      "traceability": [
+        "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+        "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+      ]
+    },
+    {
+      "rank": 5,
+      "facility_id": 26,
+      "facility_name": "MORTON PLANT REHABILITATION CENTER",
+      "total_score": 100,
+      "final_match_score": 100,
+      "confidence_score": 23,
+      "verified_count": 3,
+      "unknown_count": 12,
+      "hard_rejection_reasons": [],
+      "top_positive_contributors": [
+        "Skilled nursing capability (1)",
+        "Neurological rehabilitation (1)",
+        "Physical therapy (1)"
+      ],
+      "top_negative_contributors": [],
+      "rank_reason": "Ranked #5 after comparing verified requirement coverage and confidence.",
+      "traceability": [
+        "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+        "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+      ]
+    }
+  ]
+}
