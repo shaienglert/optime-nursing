@@ -54,6 +54,11 @@ from app.services.provider_identity import (
     validate_license_ownership,
 )
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
+from app.services.evidence_source_integrity import (
+    audit_traceability,
+    facility_material_claim_trace,
+    recommendation_score_trace,
+)
 from app.services.executive_report_service import (
     compare_latest_vs_previous,
     get_executive_report_history,
@@ -1613,3 +1618,21 @@ async def executive_report_history(limit: int = Query(default=30, ge=1, le=365))
 @app.get("/executive-report/compare")
 async def executive_report_compare():
     return compare_latest_vs_previous()
+
+
+@app.get("/evidence/traceability/audit")
+async def evidence_traceability_audit(db: Session = Depends(get_db)):
+    return audit_traceability(db)
+
+
+@app.get("/evidence/facilities/{facility_id}/material-claims")
+async def evidence_facility_material_claims(facility_id: int, db: Session = Depends(get_db)):
+    payload = facility_material_claim_trace(db, facility_id)
+    if payload.get("error") == "facility_not_found":
+        raise HTTPException(status_code=404, detail="Facility not found")
+    return payload
+
+
+@app.get("/evidence/recommendations/{recommendation_key}/score-trace")
+async def evidence_recommendation_score_trace(recommendation_key: str, db: Session = Depends(get_db)):
+    return recommendation_score_trace(db, recommendation_key)
