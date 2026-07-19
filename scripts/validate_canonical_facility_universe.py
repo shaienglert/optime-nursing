@@ -1,7 +1,9 @@
 import json
+import os
 import re
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -37,6 +39,8 @@ def validate() -> int:
     canonical = _load_json(CANONICAL_PATH)
     manifest = _load_json(MANIFEST_PATH)
     records = canonical.get("records", [])
+
+    now = datetime.now(timezone.utc)
 
     # totals mismatch: metadata totals and expected totals must equal observed totals
     observed_record_count = len(records)
@@ -156,6 +160,116 @@ def validate() -> int:
             f"Totals mismatch: cms_linked expected={manifest['validation_expectations']['cms_linked']} observed={cms_linked}",
         )
 
+    # official-source verification
+    cms_official_count = 0
+    medicare_official_count = 0
+    florida_official_marker_count = 0
+    cms_linked_without_official_marker = 0
+    for row in records:
+        refs = " | ".join(row.get("source_refs", []) or [])
+        urls = " | ".join(row.get("source_urls", []) or [])
+        blob = f"{refs} | {urls}".lower()
+        has_cms_official = ("cms provider information" in blob) or ("data.cms.gov" in blob)
+        has_medicare_official = ("medicare care compare" in blob) or ("medicare.gov" in blob)
+        has_florida_official = ("florida healthfinder" in blob) or ("ahca" in blob) or ("flhealthsource" in blob)
+
+        if has_cms_official:
+            cms_official_count += 1
+        if has_medicare_official:
+            medicare_official_count += 1
+        if has_florida_official:
+            florida_official_marker_count += 1
+
+        if _truthy(row.get("cms_certification_number")) and not (has_cms_official or has_medicare_official):
+            cms_linked_without_official_marker += 1
+
+    expected_cms_linked_missing_max = manifest["validation_expectations"]["official_source"][
+        "cms_linked_without_official_marker_max"
+    ]
+    if cms_linked_without_official_marker > expected_cms_linked_missing_max:
+        _error(
+            errors,
+            "Official-source verification mismatch: "
+            f"cms_linked_without_official_marker={cms_linked_without_official_marker} exceeds max={expected_cms_linked_missing_max}",
+        )
+
+    # freshness validation
+    generated_at_raw = canonical.get("generated_at_utc")
+    try:
+        generated_at = datetime.fromisoformat(str(generated_at_raw).replace("Z", "+00:00"))
+        generated_age_days = (now - generated_at).total_seconds() / 86400.0
+    except Exception:
+        generated_age_days = None
+        _error(errors, f"Freshness violation: invalid generated_at_utc={generated_at_raw}")
+
+    missing_last_source_date = 0
+    parsed_last_source_dates = []
+    for row in records:
+        raw = str(row.get("last_source_date") or "").strip()
+        if not raw:
+            missing_last_source_date += 1
+            continue
+        try:
+            parsed_last_source_dates.append(datetime.fromisoformat(f"{raw}T00:00:00+00:00"))
+        except Exception:
+            missing_last_source_date += 1
+
+    presence_ratio = 0.0
+    if records:
+        presence_ratio = (len(records) - missing_last_source_date) / len(records)
+
+    oldest_source_age_days = None
+    if parsed_last_source_dates:
+        oldest_source_age_days = (now - min(parsed_last_source_dates)).total_seconds() / 86400.0
+
+    freshness_expectations = manifest["validation_expectations"]["freshness"]
+    if generated_age_days is not None and generated_age_days > freshness_expectations["generated_age_days_max"]:
+        _error(
+            errors,
+            "Freshness violation: "
+            f"generated_age_days={generated_age_days:.2f} exceeds max={freshness_expectations['generated_age_days_max']}",
+        )
+    if presence_ratio < freshness_expectations["last_source_date_presence_ratio_min"]:
+        _error(
+            errors,
+            "Freshness violation: "
+            f"last_source_date_presence_ratio={presence_ratio:.4f} below min={freshness_expectations['last_source_date_presence_ratio_min']}",
+        )
+    if oldest_source_age_days is not None and oldest_source_age_days > freshness_expectations["last_source_oldest_age_days_max"]:
+        _error(
+            errors,
+            "Freshness violation: "
+            f"oldest_source_age_days={oldest_source_age_days:.2f} exceeds max={freshness_expectations['last_source_oldest_age_days_max']}",
+        )
+
+    # runtime wiring audit for legacy retirement
+    forbidden_runtime_refs = manifest["validation_expectations"].get("runtime_must_not_reference_legacy_sources", [])
+    runtime_audit_paths = manifest["validation_expectations"].get("runtime_audit_paths", [])
+    runtime_violations = []
+    for relative_path in runtime_audit_paths:
+        scan_root = ROOT / relative_path
+        if not scan_root.exists():
+            continue
+        for dirpath, _, filenames in os.walk(scan_root):
+            for filename in filenames:
+                file_path = Path(dirpath) / filename
+                if file_path.suffix.lower() not in {".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".md"}:
+                    continue
+                try:
+                    text = file_path.read_text(encoding="utf-8")
+                except Exception:
+                    continue
+                normalized_text = text.replace("\\", "/")
+                for forbidden in forbidden_runtime_refs:
+                    if forbidden in normalized_text:
+                        runtime_violations.append(f"{file_path.relative_to(ROOT)} -> {forbidden}")
+
+    if runtime_violations:
+        _error(
+            errors,
+            "Legacy-source runtime reference violations: " + "; ".join(runtime_violations[:20]),
+        )
+
     if errors:
         print("PHASE1_CANONICAL_VALIDATION=FAIL")
         for err in errors:
@@ -169,6 +283,9 @@ def validate() -> int:
     print("CANONICAL_ID_DUPLICATES=0")
     print("CONFLICTING_ID_MERGES=0")
     print("PROVENANCE_GAPS=0")
+    print("OFFICIAL_SOURCE_VERIFICATION=PASS")
+    print("FRESHNESS_VERIFICATION=PASS")
+    print("LEGACY_RETIREMENT_RUNTIME_AUDIT=PASS")
     return 0
 
 

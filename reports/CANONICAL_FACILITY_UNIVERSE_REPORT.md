@@ -46,6 +46,36 @@ Validation result on canonical dataset:
 - Neither CMS nor state license present: 10
 - Provenance gaps (missing source_refs or source_urls): 0
 
+## Official-Source Verification
+
+Verified against canonical dataset evidence markers:
+
+- Records with CMS official source marker (`CMS Provider Information` or `data.cms.gov`): 694
+- Records with Medicare official source marker (`Medicare Care Compare` or `medicare.gov`): 694
+- CMS-linked records missing official CMS/Medicare marker: 0
+- Florida official marker occurrences (`Florida HealthFinder`, `AHCA`, `flhealthsource`) in source evidence: 0
+
+Conclusion:
+
+- Official-source verification for CMS-linked records: VERIFIED
+- Florida-official lineage is not currently a primary marker in canonical evidence fields and remains a known enrichment gap.
+
+## Provenance and Freshness
+
+- Canonical snapshot generated_at_utc: 2026-07-18T05:39:28+00:00
+- Snapshot age at Phase 1 completion: 1.49 days
+- Records missing `last_source_date`: 19
+- `last_source_date` range in canonical records: 2026-06-01 to 2026-06-01
+- Oldest source age at Phase 1 completion: 48.73 days
+
+Freshness gate policy used in validation:
+
+- Max snapshot age: 7 days
+- Min `last_source_date` presence ratio: 0.95
+- Max oldest source age: 120 days
+
+Current freshness result: PASS
+
 ## Legacy Dataset Reconciliation Classification
 
 Canonical comparison classes used:
@@ -76,6 +106,27 @@ Aggregate reconciliation totals:
 - reports/executive_dashboard.md remains preserved as historical operational dashboard and now explicitly distinguishes legacy 3/67 from canonical 64/67 statewide truth.
 - No historical report files under reports/versions were deleted or rewritten.
 
+## Legacy Source Retirement
+
+Retirement policy applied:
+
+- Legacy inventories are retained as historical evidence artifacts only.
+- Runtime current-truth reporting is canonicalized to statewide source and must not present legacy 3/67 as current truth.
+
+Runtime retirement verification:
+
+- No `backend/app` runtime references found to legacy source files:
+	- `database/south_florida_senior_living_inventory.json`
+	- `database/market_communities_south_florida.json`
+	- `database/market_communities_palm_beach.json`
+- Legacy references remain in historical/data-build scripts under `scripts/` and are classified non-runtime.
+
+## Runtime Wiring Audit
+
+- Backend runtime dataset reference audit (`backend/app`): no direct JSON path references to legacy or canonical inventory files.
+- Canonical governance in this phase is enforced through report/manifest/validation layer.
+- Runtime policy outcome: no evidence of active runtime consuming legacy inventory files as current canonical truth.
+
 ## Validation Gates and Results
 
 Validation script: scripts/validate_canonical_facility_universe.py
@@ -87,6 +138,9 @@ Required failure gates implemented:
 - Coverage disagreement for canonical metadata and active current-truth surfaces
 - Provenance gaps
 - Totals mismatch
+- Official-source verification mismatch for CMS-linked records
+- Freshness policy violations
+- Legacy-source runtime reference violations
 
 Current run result: PASS
 

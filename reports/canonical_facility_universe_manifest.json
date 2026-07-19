@@ -17,7 +17,21 @@
     "state_license_linked": 9,
     "both_cms_and_state_license": 0,
     "neither_cms_nor_state_license": 10,
-    "provenance_gaps": 0
+    "provenance_gaps": 0,
+    "official_source": {
+      "cms_or_data_cms_gov_count": 694,
+      "medicare_or_care_compare_count": 694,
+      "cms_linked_without_official_marker": 0,
+      "florida_official_marker_count": 0
+    },
+    "freshness": {
+      "generated_age_days": 1.49,
+      "last_source_date_missing": 19,
+      "last_source_date_min": "2026-06-01",
+      "last_source_date_max": "2026-06-01",
+      "last_source_oldest_age_days": 48.73,
+      "last_source_newest_age_days": 48.73
+    }
   },
   "canonical_id_policy": {
     "authority_order": [
@@ -91,10 +105,27 @@
       "Union"
     ],
     "cms_linked": 694,
+    "official_source": {
+      "cms_linked_without_official_marker_max": 0
+    },
     "provenance_required_fields": [
       "source_refs",
       "source_urls"
     ],
-    "legacy_reports_must_not_claim_3_of_67_as_current_truth": true
+    "freshness": {
+      "generated_age_days_max": 7,
+      "last_source_date_presence_ratio_min": 0.95,
+      "last_source_oldest_age_days_max": 120
+    },
+    "legacy_reports_must_not_claim_3_of_67_as_current_truth": true,
+    "runtime_must_not_reference_legacy_sources": [
+      "database/south_florida_senior_living_inventory.json",
+      "database/market_communities_south_florida.json",
+      "database/market_communities_palm_beach.json"
+    ],
+    "runtime_audit_paths": [
+      "backend/app",
+      "frontend/src"
+    ]
   }
 }
