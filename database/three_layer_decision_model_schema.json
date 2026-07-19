@@ -1,0 +1,55 @@
+{
+  "phase": 3,
+  "title": "Three-Layer Decision Model",
+  "generated_at_utc": "2026-07-20T01:10:00Z",
+  "allowed_classifications": [
+    "MUST",
+    "OUR_RECOMMENDATION",
+    "NICE_TO_HAVE",
+    "CLARIFY",
+    "INVESTIGATE",
+    "UNKNOWN"
+  ],
+  "requirement_record_schema": {
+    "requirement_id": "string",
+    "origin": "USER_EXPLICIT | RULE_DERIVED | SYSTEM_UNKNOWN",
+    "original_user_answer": "string",
+    "interpreted_requirement": "string",
+    "classification": "MUST | OUR_RECOMMENDATION | NICE_TO_HAVE | CLARIFY | INVESTIGATE | UNKNOWN",
+    "rule_id": "string|null",
+    "authority_level": "A | B | C | D | UNKNOWN",
+    "evidence": "string",
+    "priority": "HARD | HIGH | MEDIUM | LOW | UNKNOWN",
+    "user_confirmed": "boolean",
+    "status": "SATISFIED | UNSATISFIED | UNRESOLVED | NOT_APPLICABLE | UNKNOWN",
+    "notes": "string"
+  },
+  "governance_boundaries": {
+    "must_allowed_origins": [
+      "USER_EXPLICIT",
+      "RULE_LEVEL_A"
+    ],
+    "our_recommendation_allowed_levels": [
+      "B",
+      "C"
+    ],
+    "nice_to_have_allowed_levels": [
+      "C"
+    ],
+    "level_d_restrictions": [
+      "NO_MUST",
+      "NO_HARD_EXCLUSION",
+      "NO_INDEPENDENT_OUR_RECOMMENDATION"
+    ],
+    "insufficient_evidence_actions": [
+      "CLARIFY",
+      "INVESTIGATE",
+      "UNKNOWN"
+    ]
+  },
+  "scenario_validation_matrix": {
+    "synthetic_personas": "REQUIRED_MECHANICAL",
+    "externally_defined_cases": "OPTIONAL_IF_AVAILABLE",
+    "real_world_cases": "AUDIT_EXISTING_ONLY"
+  }
+}
