@@ -1,0 +1,85 @@
+{
+  "phase": 5,
+  "title": "Recommendation Candidate Governance Policy",
+  "generated_at_utc": "2026-07-20T01:36:00Z",
+  "candidate_lifecycle": [
+    "GENERATED",
+    "EVALUATED",
+    "ACCEPTED_OR_REJECTED",
+    "RANKED",
+    "DISPLAYED"
+  ],
+  "candidate_classes": {
+    "accepted": {
+      "definition": "No hard rejection reasons after deterministic checks",
+      "display_priority": "PRIMARY"
+    },
+    "rejected": {
+      "definition": "One or more hard rejection reasons",
+      "display_priority": "SECONDARY_AUDIT"
+    },
+    "fallback": {
+      "definition": "Used when accepted list is empty; sorted by best available evidence",
+      "display_priority": "CONTINGENCY"
+    }
+  },
+  "hard_rejection_taxonomy": [
+    "BUDGET",
+    "CARE_LEVEL",
+    "ACTIVITY_OR_LIFESTYLE",
+    "FUTURE_CARE_PATH",
+    "DISTANCE",
+    "VERIFICATION",
+    "UNKNOWN"
+  ],
+  "governance_rules": [
+    {
+      "rule_id": "CG-001",
+      "statement": "Accepted list must include only candidates with zero hard rejection reasons.",
+      "validator_type": "MECHANICAL"
+    },
+    {
+      "rule_id": "CG-002",
+      "statement": "Fallback list may be displayed when accepted list is empty.",
+      "validator_type": "MECHANICAL"
+    },
+    {
+      "rule_id": "CG-003",
+      "statement": "Unknown checklist items reduce confidence and must not be auto-converted to NO for scoring.",
+      "validator_type": "MECHANICAL"
+    },
+    {
+      "rule_id": "CG-004",
+      "statement": "Rejection summary must preserve explicit reason buckets for auditability.",
+      "validator_type": "MECHANICAL"
+    },
+    {
+      "rule_id": "CG-005",
+      "statement": "Ranking tie-breakers may use completeness only after fit equivalence.",
+      "validator_type": "MECHANICAL"
+    }
+  ],
+  "output_contract": {
+    "required_engine_keys": [
+      "accepted",
+      "rejected",
+      "displayedRecommendations",
+      "rejectionSummary",
+      "qualityCheck",
+      "persona"
+    ],
+    "required_rejection_summary_keys": [
+      "totalFacilities",
+      "accepted",
+      "rejected",
+      "rejectedByBudget",
+      "rejectedByCare",
+      "rejectedByActivities",
+      "rejectedByFutureCare",
+      "rejectedByDistance",
+      "rejectedByVerification",
+      "rejectedByUnknown",
+      "topRejectionReason"
+    ]
+  }
+}
