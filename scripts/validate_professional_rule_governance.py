@@ -137,12 +137,17 @@ def main() -> int:
 
     suspicious_patterns = [
         r"assessment\.state\s*===\s*\"UNKNOWN\"\s*\?\s*0",
-        r"UNKNOWN[^\n]{0,80}penalt",
-        r"UNKNOWN[^\n]{0,80}hardRejection",
+        r"matchScore\s*=\s*[^\n]*unknown",
+        r"unknown\s*\*\s*-",
+        r"-\s*unknown",
     ]
     for pattern in suspicious_patterns:
         if re.search(pattern, engine_text, flags=re.IGNORECASE):
             errors.append(f"UNKNOWN is silently converted into negative/zero pattern detected: {pattern}")
+
+    # Explicit positive guard: unknown should be excluded from match-score denominator.
+    if "const matchScore = verifiedYes + verifiedNo > 0 ? Math.round((verifiedYes / (verifiedYes + verifiedNo)) * 100) : 0;" not in engine_text:
+        unknown_checks.append("unable to verify explicit unknown-excluded matchScore formula")
 
     # Report/registry count consistency
     if REPORT_PATH.exists():
