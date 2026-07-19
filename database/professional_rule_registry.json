@@ -1,0 +1,776 @@
+{
+  "phase": 2,
+  "title": "Professional Rule Governance",
+  "generated_at_utc": "2026-07-20T00:00:00Z",
+  "canonical_scope": {
+    "baseline_commit": "410efd3",
+    "phase1_commit": "192ea1b",
+    "phase1_canonical_truth": {
+      "facilities": 713,
+      "counties_covered": 64,
+      "counties_total": 67,
+      "cms_linked": 694,
+      "validation": "PASS"
+    }
+  },
+  "authority_model": {
+    "A": "Authoritative hard requirement (user-declared non-negotiable or binding authoritative constraint)",
+    "B": "Validated professional rule (strong professional guidance, not automatic MUST unless independently hard)",
+    "C": "Evidence-informed preference (non-binding, recommendation shaping only)",
+    "D": "Hypothesis/unvalidated/internal heuristic (research-only, clarify/investigate/no-action)"
+  },
+  "validator_policy": {
+    "authoritative_source_validation": [
+      "Government/regulator",
+      "Statutory/licensing source",
+      "Official clinical/public-health authority"
+    ],
+    "professional_validation": [
+      "Qualified external professional",
+      "Documented external professional guideline/consensus",
+      "Independently reviewed rule"
+    ],
+    "outcome_validation": [
+      "Real-world outcome methodology with traceable cohort and metrics"
+    ],
+    "internal_review_only": [
+      "OPTIME internal team",
+      "AI agents",
+      "Synthetic simulations"
+    ],
+    "constraints": [
+      "Internal review alone cannot upgrade unsupported rules to Level A/B",
+      "AI cannot validate its own professional rule"
+    ]
+  },
+  "output_boundaries": {
+    "must_allowed_origins": [
+      "USER_EXPLICIT_NON_NEGOTIABLE",
+      "LEVEL_A"
+    ],
+    "our_recommendation_allowed_origins": [
+      "LEVEL_B",
+      "LEVEL_C_WITH_TRANSPARENT_EVIDENCE"
+    ],
+    "nice_to_have_allowed_origins": [
+      "USER_PREFERENCE_NON_MUST",
+      "LOW_IMPACT_LEVEL_C"
+    ],
+    "level_d_restrictions": [
+      "Cannot generate MUST",
+      "Cannot independently generate OUR_RECOMMENDATION",
+      "Cannot hard-exclude",
+      "Cannot materially rank as professionally validated"
+    ],
+    "insufficient_evidence_outputs": [
+      "CLARIFY",
+      "INVESTIGATE",
+      "UNKNOWN",
+      "NO_ACTION"
+    ]
+  },
+  "rules": [
+    {
+      "rule_id": "PR-A-001",
+      "name": "User non-negotiable budget hard gate",
+      "description": "When user explicitly marks budget as mandatory, facilities over mandatory budget are hard excluded.",
+      "trigger_input": "Questionnaire notes contains strict/hard mandatory budget terms",
+      "interpretation": "Budget is a declared MUST, not a soft preference.",
+      "decision_effect": "Hard exclusion on mandatory budget breach",
+      "authority_level": "A",
+      "allowed_output_class": ["MUST"],
+      "hard_exclusion_allowed": true,
+      "source_type": "USER_EXPLICIT_NON_NEGOTIABLE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::hasStrictBudgetRequirement + hardRejectionReasons",
+      "source_date": null,
+      "validator_type": "USER_DECLARATION",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Explicit user signal",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Complies with MUST boundary because origin is explicit user non-negotiable."
+    },
+    {
+      "rule_id": "PR-A-002",
+      "name": "User non-negotiable distance hard gate",
+      "description": "When user explicitly marks distance/location as mandatory, out-of-range communities are hard excluded.",
+      "trigger_input": "Questionnaire notes and distance profile marked mandatory",
+      "interpretation": "Geography is a declared MUST for this case.",
+      "decision_effect": "Hard exclusion on mandatory geography mismatch",
+      "authority_level": "A",
+      "allowed_output_class": ["MUST"],
+      "hard_exclusion_allowed": true,
+      "source_type": "USER_EXPLICIT_NON_NEGOTIABLE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::hasMandatoryDistanceRequirement + hardRejectionReasons",
+      "source_date": null,
+      "validator_type": "USER_DECLARATION",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Explicit user signal",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Complies with MUST boundary because origin is explicit user non-negotiable."
+    },
+    {
+      "rule_id": "PR-A-003",
+      "name": "User non-negotiable language hard gate",
+      "description": "When language is mandatory per user language profile, facilities without clear support are hard excluded.",
+      "trigger_input": "Preferred spoken language + bilingual/familiar language required flags",
+      "interpretation": "Language continuity is mandatory.",
+      "decision_effect": "Hard exclusion on mandatory language mismatch",
+      "authority_level": "A",
+      "allowed_output_class": ["MUST"],
+      "hard_exclusion_allowed": true,
+      "source_type": "USER_EXPLICIT_NON_NEGOTIABLE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::hasMandatoryLanguageRequirement + supportsMandatoryLanguage + hardRejectionReasons",
+      "source_date": null,
+      "validator_type": "USER_DECLARATION",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Explicit user signal",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Complies with MUST boundary because origin is explicit user non-negotiable."
+    },
+    {
+      "rule_id": "PR-A-004",
+      "name": "Required care-level compatibility gate",
+      "description": "Facilities must support required care level derived from user-declared assistance/memory/future-care profile.",
+      "trigger_input": "assistanceLevel, memoryStatus, futureCarePreference, care taxonomy",
+      "interpretation": "Unsafe or incompatible care-level mismatch is non-eligible.",
+      "decision_effect": "Hard exclusion when required care type is unsupported",
+      "authority_level": "A",
+      "allowed_output_class": ["MUST"],
+      "hard_exclusion_allowed": true,
+      "source_type": "USER_NEED_PLUS_AUTHORITATIVE_SAFETY_CONSTRAINT",
+      "source_reference": "42 CFR Part 483 resident care requirements; frontend/src/lib/optime-v2-engine.ts::resolveCurrentCareNeed/resolveAllowedCareTypes/supportsAllowedCareType/hardRejectionReasons",
+      "source_date": "2026-07-20",
+      "validator_type": "AUTHORITATIVE_SOURCE_VALIDATION",
+      "validation_status": "EXTERNAL_VALIDATION_REQUIRED",
+      "validated_at": null,
+      "confidence_evidence_status": "Safety-critical, source trace present",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE_WITH_EXTERNAL_REVIEW_REQUIRED",
+      "active_runtime": true,
+      "notes": "Must remain traceable to explicit care requirements and safety rationale."
+    },
+    {
+      "rule_id": "PR-A-005",
+      "name": "Critical clinical capability absence gate",
+      "description": "Critical clinical requirements evaluated as NO produce hard exclusion.",
+      "trigger_input": "Clinical capability assessment states for CRITICAL requirements",
+      "interpretation": "Missing critical capability creates unacceptable care risk.",
+      "decision_effect": "Hard exclusion",
+      "authority_level": "A",
+      "allowed_output_class": ["MUST"],
+      "hard_exclusion_allowed": true,
+      "source_type": "AUTHORITATIVE_SAFETY_CONSTRAINT",
+      "source_reference": "42 CFR Part 483 quality of care and nursing service obligations; frontend/src/lib/optime-v2-engine.ts::buildClinicalRequirements + assessClinicalCapability + critical NO hard rejection",
+      "source_date": "2026-07-20",
+      "validator_type": "AUTHORITATIVE_SOURCE_VALIDATION",
+      "validation_status": "EXTERNAL_VALIDATION_REQUIRED",
+      "validated_at": null,
+      "confidence_evidence_status": "Safety-critical, external verification pending",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE_WITH_EXTERNAL_REVIEW_REQUIRED",
+      "active_runtime": true,
+      "notes": "Governance requires ongoing external review of each CRITICAL requirement mapping."
+    },
+    {
+      "rule_id": "PR-B-001",
+      "name": "Clinical requirement extraction from questionnaire",
+      "description": "Transforms user signals and notes into structured clinical/lifestyle/social/future-care requirements.",
+      "trigger_input": "Questionnaire fields and free-text notes",
+      "interpretation": "Map raw user statements to care capability checks.",
+      "decision_effect": "Generates requirement checklist and verification questions",
+      "authority_level": "B",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "CLARIFY", "INVESTIGATE"],
+      "hard_exclusion_allowed": false,
+      "source_type": "PROFESSIONAL_GUIDANCE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::buildClinicalRequirements",
+      "source_date": null,
+      "validator_type": "PROFESSIONAL_VALIDATION_REQUIRED",
+      "validation_status": "MECHANICAL_ONLY",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Rule extraction works mechanically; professional mapping review pending",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE_PENDING_EXTERNAL_PROFESSIONAL_REVIEW",
+      "active_runtime": true,
+      "notes": "No automatic MUST allowed from this rule alone."
+    },
+    {
+      "rule_id": "PR-B-002",
+      "name": "Facility capability assessment with memory-first evidence",
+      "description": "Uses verified facility memory when available; otherwise evaluates capability from facility text/taxonomy.",
+      "trigger_input": "Requirement key + facility evidence text + persisted verification memory",
+      "interpretation": "Prefer verified evidence over inferred metadata cues",
+      "decision_effect": "YES/NO/LIMITED/UNKNOWN capability state",
+      "authority_level": "B",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "CLARIFY", "INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "PROFESSIONAL_GUIDANCE_PLUS_VERIFIED_PROVIDER_EVIDENCE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::assessClinicalCapability + getActiveKnowledgeCapability",
+      "source_date": null,
+      "validator_type": "PROFESSIONAL_VALIDATION_REQUIRED",
+      "validation_status": "MECHANICAL_ONLY",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Verified evidence preferred; heuristic fallback present",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE_PENDING_EXTERNAL_PROFESSIONAL_REVIEW",
+      "active_runtime": true,
+      "notes": "Fallback text heuristics are evidence-limited and must stay transparent."
+    },
+    {
+      "rule_id": "PR-B-003",
+      "name": "Recommendation knowledge guard",
+      "description": "Backend guard uses freshness/health/verification/confidence policy to use or skip agent knowledge in recommendations.",
+      "trigger_input": "Agent report snapshot freshness, confidence, verified_until, health",
+      "interpretation": "Prepared knowledge can only influence decisions when policy allows.",
+      "decision_effect": "USED or SKIPPED decision with trace log",
+      "authority_level": "B",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "PROFESSIONAL_DATA_GOVERNANCE",
+      "source_reference": "backend/app/services/agent_knowledge_reports.py::recommendation_guard_decision",
+      "source_date": null,
+      "validator_type": "INDEPENDENT_REVIEW_REQUIRED",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Traceable policy decision with persisted logs",
+      "implementation_locations": [
+        "backend/app/services/agent_knowledge_reports.py",
+        "backend/app/main.py"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Supports anti-hallucination by skipping unverified/stale knowledge."
+    },
+    {
+      "rule_id": "PR-B-004",
+      "name": "Evidence source tier classification",
+      "description": "Assigns source tiers for evidence traceability and confidence weighting.",
+      "trigger_input": "source_name, source_type",
+      "interpretation": "Higher-authority source tiers should carry higher baseline confidence.",
+      "decision_effect": "Tier assignment TIER_1..TIER_4",
+      "authority_level": "B",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "EVIDENCE_GOVERNANCE",
+      "source_reference": "backend/app/services/evidence_source_integrity.py::source_tier",
+      "source_date": null,
+      "validator_type": "INDEPENDENT_REVIEW_REQUIRED",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Traceable tier logic; calibration review pending",
+      "implementation_locations": [
+        "backend/app/services/evidence_source_integrity.py"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Used for confidence and traceability, not direct hard exclusion."
+    },
+    {
+      "rule_id": "PR-B-005",
+      "name": "Claim freshness classification",
+      "description": "Classifies claims as CURRENT/AGING/STALE/UNKNOWN based on claim type and dates.",
+      "trigger_input": "claim_type, evidence_date, verified_date",
+      "interpretation": "Different claim domains have different freshness windows.",
+      "decision_effect": "Freshness status impacts confidence and recommendation usage",
+      "authority_level": "B",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "EVIDENCE_GOVERNANCE",
+      "source_reference": "backend/app/services/evidence_source_integrity.py::freshness_status_for_claim",
+      "source_date": null,
+      "validator_type": "INDEPENDENT_REVIEW_REQUIRED",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Traceable freshness logic",
+      "implementation_locations": [
+        "backend/app/services/evidence_source_integrity.py"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Unknown freshness must not be treated as PASS."
+    },
+    {
+      "rule_id": "PR-B-006",
+      "name": "Claim confidence calculation",
+      "description": "Computes claim confidence from source tier, source count, conflict status, freshness.",
+      "trigger_input": "source tier + freshness + conflict + source count",
+      "interpretation": "Confidence must degrade when stale/conflicting and increase with corroboration.",
+      "decision_effect": "Confidence score 0..1 for evidence-backed claims",
+      "authority_level": "B",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "EVIDENCE_GOVERNANCE",
+      "source_reference": "backend/app/services/evidence_source_integrity.py::confidence_for_claim",
+      "source_date": null,
+      "validator_type": "INDEPENDENT_REVIEW_REQUIRED",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Traceable confidence calculus",
+      "implementation_locations": [
+        "backend/app/services/evidence_source_integrity.py"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Calibrated confidence, not a hard exclusion rule."
+    },
+    {
+      "rule_id": "PR-C-001",
+      "name": "Preference bonus from preference YES states",
+      "description": "Preference YES counts influence ranking order as tie/bonus, not eligibility.",
+      "trigger_input": "PREFERENCE assessments with state YES",
+      "interpretation": "Preference alignment improves ranking but should not hard-exclude.",
+      "decision_effect": "Ranking bonus only",
+      "authority_level": "C",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "NICE_TO_HAVE"],
+      "hard_exclusion_allowed": false,
+      "source_type": "EVIDENCE_INFORMED_PREFERENCE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::preferenceYes and ranking tie-break usage",
+      "source_date": null,
+      "validator_type": "OUTCOME_VALIDATION_REQUIRED",
+      "validation_status": "MECHANICAL_ONLY",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Preference signal with limited external validation",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Complies with no hard exclusion for Level C."
+    },
+    {
+      "rule_id": "PR-C-002",
+      "name": "Family-fit tie-break in accepted ranking",
+      "description": "When primary score ties, family/clinical tie-breakers decide order.",
+      "trigger_input": "Equal total score among accepted recommendations",
+      "interpretation": "Tie should be resolved using transparent, lower-impact signals.",
+      "decision_effect": "Ranking order adjustment only",
+      "authority_level": "C",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "NICE_TO_HAVE"],
+      "hard_exclusion_allowed": false,
+      "source_type": "EVIDENCE_INFORMED_PREFERENCE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::accepted.sort tie-break chain",
+      "source_date": null,
+      "validator_type": "OUTCOME_VALIDATION_REQUIRED",
+      "validation_status": "MECHANICAL_ONLY",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Operational tie-break, external outcome proof pending",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "No direct hard exclusion; applies only after eligibility."
+    },
+    {
+      "rule_id": "PR-C-003",
+      "name": "Fallback ranking when accepted set is empty",
+      "description": "If no accepted recommendations exist, fallback ranking uses evidence-completeness and fit blend.",
+      "trigger_input": "accepted.length == 0",
+      "interpretation": "Show best available options with explicit tradeoffs instead of empty output.",
+      "decision_effect": "Display order for fallback recommendations",
+      "authority_level": "C",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "INVESTIGATE"],
+      "hard_exclusion_allowed": false,
+      "source_type": "EVIDENCE_INFORMED_PREFERENCE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::fallbackRecommendations sort",
+      "source_date": null,
+      "validator_type": "OUTCOME_VALIDATION_REQUIRED",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Transparent fallback behavior with uncertainty surfaced",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts",
+        "frontend/src/app/results/results-page-client.tsx"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Supports user continuity while preserving uncertainty exposure."
+    },
+    {
+      "rule_id": "PR-C-004",
+      "name": "Distance band scoring",
+      "description": "Distance inputs are converted into banded family-fit adjustments.",
+      "trigger_input": "Distance profile drive time / distanceFromFamily",
+      "interpretation": "Travel burden influences fit as contextual preference.",
+      "decision_effect": "Score adjustment for family-fit context",
+      "authority_level": "C",
+      "allowed_output_class": ["NICE_TO_HAVE", "OUR_RECOMMENDATION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "EVIDENCE_INFORMED_PREFERENCE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::parseDistancePoints + scoreFamilyFit",
+      "source_date": null,
+      "validator_type": "OUTCOME_VALIDATION_REQUIRED",
+      "validation_status": "MECHANICAL_ONLY",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Heuristic contextual mapping; external validation pending",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Can affect ranking; should stay transparent and non-authoritative."
+    },
+    {
+      "rule_id": "PR-C-005",
+      "name": "Future-care preference ranking adjustment",
+      "description": "Future-care preference modifies ranking through bounded adjustments and explanations.",
+      "trigger_input": "futureCarePreference + facility care taxonomy",
+      "interpretation": "Future progression preference shapes recommendation order.",
+      "decision_effect": "Positive/negative ranking adjustment and explanation",
+      "authority_level": "C",
+      "allowed_output_class": ["OUR_RECOMMENDATION", "NICE_TO_HAVE", "CLARIFY"],
+      "hard_exclusion_allowed": false,
+      "source_type": "EVIDENCE_INFORMED_PREFERENCE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::evaluateFutureCarePreference",
+      "source_date": null,
+      "validator_type": "OUTCOME_VALIDATION_REQUIRED",
+      "validation_status": "MECHANICAL_ONLY",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Preference logic with transparent rationale",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Independent-only preference can generate rejection reasons inside this function but hard exclusion is enforced by dedicated MUST rules."
+    },
+    {
+      "rule_id": "PR-C-006",
+      "name": "UNKNOWN affects confidence only",
+      "description": "Unknown capability states are excluded from match score and only lower confidence/readiness.",
+      "trigger_input": "Checklist states include UNKNOWN",
+      "interpretation": "No evidence cannot be silently converted into negative professional claim.",
+      "decision_effect": "Confidence reduction + verification task generation; no automatic negative score impact",
+      "authority_level": "C",
+      "allowed_output_class": ["CLARIFY", "INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "ANTI_HALLUCINATION_GOVERNANCE",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::matchScore/confidenceScore computation and traceability text",
+      "source_date": "2026-07-20",
+      "validator_type": "INDEPENDENT_REVIEW_REQUIRED",
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "validated_at": "2026-07-20T00:00:00Z",
+      "confidence_evidence_status": "Explicitly traceable in runtime formula",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts",
+        "scripts/run_clinical_reasoning_simulation.cjs"
+      ],
+      "review_status": "ACTIVE",
+      "active_runtime": true,
+      "notes": "Core anti-hallucination behavior for unknown capability evidence."
+    },
+    {
+      "rule_id": "PR-D-001",
+      "name": "Persona weight profile table",
+      "description": "Static persona-to-weight map with fixed percentages across fit dimensions.",
+      "trigger_input": "Persona type classification",
+      "interpretation": "Applies heuristic weighting profile by persona",
+      "decision_effect": "Affects explanations/audit fields and potential ranking pathways",
+      "authority_level": "D",
+      "allowed_output_class": ["INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "INTERNAL_HEURISTIC",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::PERSONA_WEIGHT_PROFILES",
+      "source_date": null,
+      "validator_type": "INTERNAL_REVIEW_ONLY",
+      "validation_status": "UNVALIDATED",
+      "validated_at": null,
+      "confidence_evidence_status": "No external professional validation for these specific weight values",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE_UNVALIDATED",
+      "active_runtime": true,
+      "notes": "Cannot be represented as professionally validated rule."
+    },
+    {
+      "rule_id": "PR-D-002",
+      "name": "Understanding domain weight schema",
+      "description": "Static domain weights for understanding score and recommendation confidence.",
+      "trigger_input": "Questionnaire signal completeness",
+      "interpretation": "Heuristic weighting for profile readiness",
+      "decision_effect": "Understanding score and confidence calculation",
+      "authority_level": "D",
+      "allowed_output_class": ["INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "INTERNAL_HEURISTIC",
+      "source_reference": "frontend/src/lib/understanding-profile.ts::DOMAIN_WEIGHTS and related formulas",
+      "source_date": null,
+      "validator_type": "INTERNAL_REVIEW_ONLY",
+      "validation_status": "UNVALIDATED",
+      "validated_at": null,
+      "confidence_evidence_status": "No external professional validation for fixed domain weights",
+      "implementation_locations": [
+        "frontend/src/lib/understanding-profile.ts",
+        "frontend/src/app/page.tsx"
+      ],
+      "review_status": "ACTIVE_UNVALIDATED",
+      "active_runtime": true,
+      "notes": "Operational metric only, not professional recommendation authority."
+    },
+    {
+      "rule_id": "PR-D-003",
+      "name": "Understanding critical-penalty multipliers",
+      "description": "Fixed multipliers for missing critical domains in understanding score.",
+      "trigger_input": "Missing critical domain count",
+      "interpretation": "Heuristic severity curve for incompleteness",
+      "decision_effect": "Penalty to understanding score",
+      "authority_level": "D",
+      "allowed_output_class": ["INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "INTERNAL_HEURISTIC",
+      "source_reference": "frontend/src/lib/understanding-profile.ts::criticalPenaltyMultiplier",
+      "source_date": null,
+      "validator_type": "INTERNAL_REVIEW_ONLY",
+      "validation_status": "UNVALIDATED",
+      "validated_at": null,
+      "confidence_evidence_status": "No external validation for selected multipliers",
+      "implementation_locations": [
+        "frontend/src/lib/understanding-profile.ts"
+      ],
+      "review_status": "ACTIVE_UNVALIDATED",
+      "active_runtime": true,
+      "notes": "Must not be promoted as professional clinical rule."
+    },
+    {
+      "rule_id": "PR-D-004",
+      "name": "Intelligence overlay capping heuristics",
+      "description": "Hard caps and provenance-specific deltas for social/family/cultural/reputation/staff/regulatory overlays.",
+      "trigger_input": "facility.intelligenceSnapshot signal_details",
+      "interpretation": "Bounded heuristic overlay of external signals",
+      "decision_effect": "Adjusts priority scores",
+      "authority_level": "D",
+      "allowed_output_class": ["INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "INTERNAL_HEURISTIC",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::applyIntelligenceOverlay/provenanceCap/clampIntelligenceDelta",
+      "source_date": null,
+      "validator_type": "INTERNAL_REVIEW_ONLY",
+      "validation_status": "UNVALIDATED",
+      "validated_at": null,
+      "confidence_evidence_status": "Heuristic calibrations; external evidence mapping incomplete",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE_UNVALIDATED",
+      "active_runtime": true,
+      "notes": "Material score modifiers must remain marked unvalidated until external calibration evidence exists."
+    },
+    {
+      "rule_id": "PR-D-005",
+      "name": "Distance-to-points step function",
+      "description": "Discrete point bands for drive-time values.",
+      "trigger_input": "Distance minutes from profile",
+      "interpretation": "Heuristic translation of travel time to score points",
+      "decision_effect": "Family-fit score adjustment",
+      "authority_level": "D",
+      "allowed_output_class": ["INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "INTERNAL_HEURISTIC",
+      "source_reference": "frontend/src/lib/optime-v2-engine.ts::parseDistancePoints",
+      "source_date": null,
+      "validator_type": "INTERNAL_REVIEW_ONLY",
+      "validation_status": "UNVALIDATED",
+      "validated_at": null,
+      "confidence_evidence_status": "No external published calibration in repository",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts"
+      ],
+      "review_status": "ACTIVE_UNVALIDATED",
+      "active_runtime": true,
+      "notes": "Keep transparent as heuristic-only."
+    },
+    {
+      "rule_id": "PR-D-006",
+      "name": "Benchmark advisor rescoring multipliers",
+      "description": "Synthetic benchmark script applies fixed multipliers/bonuses/penalties for advisor simulation.",
+      "trigger_input": "Benchmark persona priorities and care-type preferences",
+      "interpretation": "Simulation-only advisor proxy logic",
+      "decision_effect": "Benchmark comparison score only",
+      "authority_level": "D",
+      "allowed_output_class": ["INVESTIGATE", "NO_ACTION"],
+      "hard_exclusion_allowed": false,
+      "source_type": "SYNTHETIC_TEST_HEURISTIC",
+      "source_reference": "scripts/run_human_advisor_benchmark.cjs::advisorPriorityBonuses/advisorCareTypeAdjustment",
+      "source_date": null,
+      "validator_type": "INTERNAL_REVIEW_ONLY",
+      "validation_status": "UNVALIDATED",
+      "validated_at": null,
+      "confidence_evidence_status": "Synthetic mechanics only, not professional rule validation",
+      "implementation_locations": [
+        "scripts/run_human_advisor_benchmark.cjs"
+      ],
+      "review_status": "NON_RUNTIME_SIMULATION_ONLY",
+      "active_runtime": false,
+      "notes": "Cannot be used as professional validation evidence."
+    }
+  ],
+  "unknown_unmapped": [
+    {
+      "rule_id": "PR-U-001",
+      "name": "Legacy weightedTotal pipeline functions",
+      "status": "UNKNOWN_UNMAPPED",
+      "reason": "Function exists but no active runtime invocation found in current engine path.",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts::weightedTotal"
+      ]
+    },
+    {
+      "rule_id": "PR-U-002",
+      "name": "Legacy tiered match-quality builder path",
+      "status": "UNKNOWN_UNMAPPED",
+      "reason": "Function exists but no active runtime invocation found in current engine path.",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts::buildMatchQualityResult"
+      ]
+    },
+    {
+      "rule_id": "PR-U-003",
+      "name": "Legacy intelligence report builder path",
+      "status": "UNKNOWN_UNMAPPED",
+      "reason": "Function exists but no active runtime invocation found in current engine path.",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts::buildIntelligenceReport"
+      ]
+    },
+    {
+      "rule_id": "PR-U-004",
+      "name": "Legacy collectHardRejectionReasons helper",
+      "status": "UNKNOWN_UNMAPPED",
+      "reason": "Helper exists but no active runtime invocation in current recommendation path.",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts::collectHardRejectionReasons"
+      ]
+    },
+    {
+      "rule_id": "PR-U-005",
+      "name": "Legacy hasMandatoryMismatch helper",
+      "status": "UNKNOWN_UNMAPPED",
+      "reason": "Helper exists but no active runtime invocation in current recommendation path.",
+      "implementation_locations": [
+        "frontend/src/lib/optime-v2-engine.ts::hasMandatoryMismatch"
+      ]
+    }
+  ],
+  "hardcoded_weights_audit": [
+    {
+      "weight_id": "W-001",
+      "name": "Persona weight profiles",
+      "location": "frontend/src/lib/optime-v2-engine.ts::PERSONA_WEIGHT_PROFILES",
+      "classification": "UNVALIDATED",
+      "material_decision_impact": true,
+      "validation_status": "UNVALIDATED",
+      "notes": "Static percentages by persona type."
+    },
+    {
+      "weight_id": "W-002",
+      "name": "Understanding domain weights",
+      "location": "frontend/src/lib/understanding-profile.ts::DOMAIN_WEIGHTS",
+      "classification": "OPERATIONAL_ONLY",
+      "material_decision_impact": true,
+      "validation_status": "UNVALIDATED",
+      "notes": "Used for readiness/confidence profile, not direct facility hard exclusion."
+    },
+    {
+      "weight_id": "W-003",
+      "name": "Understanding critical penalty multipliers",
+      "location": "frontend/src/lib/understanding-profile.ts::criticalPenaltyMultiplier",
+      "classification": "UNVALIDATED",
+      "material_decision_impact": true,
+      "validation_status": "UNVALIDATED",
+      "notes": "Fixed penalty multipliers for missing critical domains."
+    },
+    {
+      "weight_id": "W-004",
+      "name": "Distance point bands",
+      "location": "frontend/src/lib/optime-v2-engine.ts::parseDistancePoints",
+      "classification": "UNVALIDATED",
+      "material_decision_impact": true,
+      "validation_status": "UNVALIDATED",
+      "notes": "Step-function heuristics for travel burden scoring."
+    },
+    {
+      "weight_id": "W-005",
+      "name": "Intelligence overlay provenance caps",
+      "location": "frontend/src/lib/optime-v2-engine.ts::provenanceCap",
+      "classification": "UNVALIDATED",
+      "material_decision_impact": true,
+      "validation_status": "UNVALIDATED",
+      "notes": "Cap values by provenance class and mode."
+    },
+    {
+      "weight_id": "W-006",
+      "name": "Confidence penalty for missing intelligence",
+      "location": "frontend/src/lib/optime-v2-engine.ts::confidencePenalty",
+      "classification": "UNVALIDATED",
+      "material_decision_impact": true,
+      "validation_status": "UNVALIDATED",
+      "notes": "Penalty uses count-based heuristic."
+    },
+    {
+      "weight_id": "W-007",
+      "name": "Knowledge confidence formula",
+      "location": "frontend/src/lib/optime-v2-engine.ts::computeKnowledgeConfidence",
+      "classification": "EVIDENCE_SUPPORTED",
+      "material_decision_impact": false,
+      "validation_status": "MECHANICALLY_VALIDATED",
+      "notes": "Operational confidence metric for memory overlay, not direct professional claim."
+    },
+    {
+      "weight_id": "W-008",
+      "name": "Benchmark advisor multipliers",
+      "location": "scripts/run_human_advisor_benchmark.cjs::advisorPriorityBonuses",
+      "classification": "UNVALIDATED",
+      "material_decision_impact": false,
+      "validation_status": "UNVALIDATED",
+      "notes": "Simulation-only, cannot validate professional correctness."
+    },
+    {
+      "weight_id": "W-009",
+      "name": "Benchmark care-type penalties/bonuses",
+      "location": "scripts/run_human_advisor_benchmark.cjs::advisorCareTypeAdjustment",
+      "classification": "UNVALIDATED",
+      "material_decision_impact": false,
+      "validation_status": "UNVALIDATED",
+      "notes": "Simulation-only, not production rule validation evidence."
+    }
+  ],
+  "inventory_coverage": {
+    "active_rules_identified": 22,
+    "unknown_unmapped_rules": 5,
+    "search_scope": [
+      "frontend/src",
+      "backend/app",
+      "scripts",
+      "reports",
+      "docs/master-book",
+      "docs"
+    ],
+    "documentation_only_items": [
+      "docs/master-book/12_RECOMMENDATION_ENGINE.md",
+      "docs/OPTIME_SCORE_ENGINE.md"
+    ]
+  }
+}
