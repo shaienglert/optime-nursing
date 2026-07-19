@@ -1,6 +1,6 @@
 # Recommendation Accuracy Dashboard
 
-Release Gate: **PASS**
+Release Gate: **FAIL**
 
 ## KPI Snapshot
 
@@ -9,7 +9,7 @@ Release Gate: **PASS**
 | Top-3 visit rate | 100% | >70% | PASS |
 | Top-3 move-in rate | 100% | >50% | PASS |
 | Average satisfaction | 4.25/5 | >4.0/5 | PASS |
-| Advisor agreement | 94% | >90% | PASS |
+| Advisor agreement | 52% | >90% | FAIL |
 | Recommendation acceptance | 100% | Track upward | INFO |
 | Tour conversion | 79.2% | Track upward | INFO |
 | Move-in conversion | 68.4% | Track upward | INFO |

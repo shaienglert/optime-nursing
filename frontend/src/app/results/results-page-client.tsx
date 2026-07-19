@@ -9,7 +9,7 @@ import { SearchFacility, fetchSearchFacilities } from "@/lib/api";
 import { RankedRecommendation, runOptimeV2Engine } from "@/lib/optime-v2-engine";
 import { clearSearchSession } from "@/lib/search-session";
 
-const TOP_RECOMMENDATION_COUNT = 3;
+const TOP_RECOMMENDATION_COUNT = 5;
 
 type RelaxationOverrides = {
   adjustBudget: boolean;

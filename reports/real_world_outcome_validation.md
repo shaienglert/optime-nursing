@@ -1,6 +1,6 @@
 # Real World Outcome Validation V1
 
-Outcome Validation Status: **PASS**
+Outcome Validation Status: **FAIL**
 Sessions Evaluated: **28**
 Synthetic Bootstrap Added: **0**
 
@@ -28,7 +28,7 @@ Synthetic Bootstrap Added: **0**
 | 90-Day Satisfaction Score | 4.25/5 |
 | Top-3 Visit Rate | 100% |
 | Top-3 Move-In Rate | 100% |
-| Advisor Agreement | 94% |
+| Advisor Agreement | 52% |
 
 ## Funnel Totals
 
@@ -48,7 +48,7 @@ Synthetic Bootstrap Added: **0**
 | Top-3 visit rate > 70% | 100% | PASS |
 | Top-3 move-in rate > 50% | 100% | PASS |
 | Average satisfaction > 4.0/5 | 4.25/5 | PASS |
-| Advisor agreement > 90% | 94% | PASS |
+| Advisor agreement > 90% | 52% | FAIL |
 | All required event types tracked | 7/7 | PASS |
 
 ## Miss Analysis

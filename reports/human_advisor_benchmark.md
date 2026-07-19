@@ -1,22 +1,22 @@
 # Human Advisor Benchmark V1
 
-Benchmark Status: **PASS**
-Average Agreement: **90%**
+Benchmark Status: **FAIL**
+Average Agreement: **52%**
 
 ## Comparison
 
 | Persona | OPTIME Top 5 | Advisor Expected Top 5 | Agreement % | Disagreement Reasons |
 | --- | --- | --- | --- | --- |
-| Independent social widow | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; CLEARWATER CENTER | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | 100% | None |
-| Independent introverted couple | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; CLEARWATER CENTER; AVANTE AT LEESBURG, INC; BARTOW CENTER | 100% | None |
-| Early memory concerns | AVIATA AT EMERALD SHORES; ATHENS POST ACUTE LLC; RIVER GARDEN HEBREW HOME FOR THE AGED; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | AVIATA AT EMERALD SHORES; RIVER GARDEN HEBREW HOME FOR THE AGED; ATHENS POST ACUTE LLC; LAKESIDE HEALTH CENTER; MIAMI JEWISH HEALTH SYSTEMS, INC | 100% | None |
-| Assisted living transition | RIVER GARDEN HEBREW HOME FOR THE AGED; TARPON BAYOU CENTER; CLEARWATER CENTER; BARTOW CENTER; AVIATA AT THE SEA - PASADENA | RIVER GARDEN HEBREW HOME FOR THE AGED; TARPON BAYOU CENTER; CLEARWATER CENTER; BARTOW CENTER; AVIATA AT EMERALD SHORES | 80% | AVIATA AT THE SEA - PASADENA |
-| Skilled nursing needs | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | 100% | None |
-| Rehabilitation after hospitalization | WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | WESTSIDE OAKS REHABILITATION & NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; OAK HAVEN REHAB AND NURSING CENTER; VILLA MARIA NURSING CENTER; JACKSON MEMORIAL PERDUE MEDICAL CENTER | 100% | None |
-| Spanish speaking senior | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; AVIATA AT THE SEA - PASADENA | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER; AVANTE AT LEESBURG, INC | 80% | BARTOW CENTER |
-| Jewish senior seeking Jewish programming | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; AVIATA AT THE SEA - PASADENA | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; CLEARWATER CENTER | 80% | AVIATA AT THE SEA - PASADENA |
-| Family-centered senior | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVANTE AT LEESBURG, INC; AVIATA AT THE SEA - PASADENA | JOHN KNOX VILLAGE OF POMPANO BEACH; TARPON BAYOU CENTER; BARTOW CENTER; AVIATA AT THE SEA - PASADENA; CLEARWATER CENTER | 80% | AVANTE AT LEESBURG, INC |
-| High clinical complexity senior | COMMUNITY CONVALESCENT CENTER; WESTSIDE OAKS REHABILITATION & NURSING CENTER; OAK HAVEN REHAB AND NURSING CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; VILLA MARIA NURSING CENTER | COMMUNITY CONVALESCENT CENTER; PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN; AVANTE AT ORMOND BEACH, INC; VILLA MARIA NURSING CENTER; WESTSIDE OAKS REHABILITATION & NURSING CENTER | 80% | OAK HAVEN REHAB AND NURSING CENTER |
+| Independent social widow | RIVER GARDEN HEBREW HOME FOR THE AGED; BISCAYNE HEALTH AND REHABILITATION CENTER; CORAL GABLES NURSING AND REHABILITATION CENTER; SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER | RIVER GARDEN HEBREW HOME FOR THE AGED; Rehabilitation Center of The Palm Beaches, The; BISCAYNE HEALTH AND REHABILITATION CENTER; FORT WALTON REHABILITATION CENTER, LLC; Pinecrest Center for Rehabilitation and Healing | 40% | CORAL GABLES NURSING AND REHABILITATION CENTER; SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER |
+| Independent introverted couple | RIVER GARDEN HEBREW HOME FOR THE AGED; BISCAYNE HEALTH AND REHABILITATION CENTER; CORAL GABLES NURSING AND REHABILITATION CENTER; SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER | RIVER GARDEN HEBREW HOME FOR THE AGED; Rehabilitation Center of The Palm Beaches, The; CORAL GABLES NURSING AND REHABILITATION CENTER; BISCAYNE HEALTH AND REHABILITATION CENTER; FORT WALTON REHABILITATION CENTER, LLC | 60% | SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER |
+| Early memory concerns | SANDS AT SOUTH BEACH CARE CENTER, THE; AVIATA AT EMERALD SHORES; ATHENS POST ACUTE LLC; RIVER GARDEN HEBREW HOME FOR THE AGED; BISCAYNE HEALTH AND REHABILITATION CENTER | SANDS AT SOUTH BEACH CARE CENTER, THE; AVIATA AT EMERALD SHORES; ATHENS POST ACUTE LLC; RIVER GARDEN HEBREW HOME FOR THE AGED; LIFE CARE CENTER OF MELBOURNE | 80% | BISCAYNE HEALTH AND REHABILITATION CENTER |
+| Assisted living transition | RIVER GARDEN HEBREW HOME FOR THE AGED; BISCAYNE HEALTH AND REHABILITATION CENTER; CORAL GABLES NURSING AND REHABILITATION CENTER; SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER | RIVER GARDEN HEBREW HOME FOR THE AGED; Rehabilitation Center of The Palm Beaches, The; BISCAYNE HEALTH AND REHABILITATION CENTER; CORAL GABLES NURSING AND REHABILITATION CENTER; Pinecrest Center for Rehabilitation and Healing | 60% | SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER |
+| Skilled nursing needs | BISCAYNE HEALTH AND REHABILITATION CENTER; TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; PINES OF SARASOTA; CRESTVIEW REHABILITATION CENTER, LLC; CORAL GABLES NURSING AND REHABILITATION CENTER | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; PINES OF SARASOTA; LIFE CARE CENTER OF MELBOURNE; SANDS AT SOUTH BEACH CARE CENTER, THE; CRESTVIEW REHABILITATION CENTER, LLC | 60% | BISCAYNE HEALTH AND REHABILITATION CENTER; CORAL GABLES NURSING AND REHABILITATION CENTER |
+| Rehabilitation after hospitalization | BISCAYNE HEALTH AND REHABILITATION CENTER; TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; PINES OF SARASOTA; CRESTVIEW REHABILITATION CENTER, LLC; CORAL GABLES NURSING AND REHABILITATION CENTER | CRESTVIEW REHABILITATION CENTER, LLC; DAYTONA BEACH HEALTH AND REHABILITATION CENTER; MORTON PLANT REHABILITATION CENTER; BROWARD NURSING & REHABILITATION CENTER; BISCAYNE HEALTH AND REHABILITATION CENTER | 40% | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; PINES OF SARASOTA; CORAL GABLES NURSING AND REHABILITATION CENTER |
+| Spanish speaking senior |  | CORAL GABLES NURSING AND REHABILITATION CENTER; TERRACES OF LAKE WORTH CARE CENTER AND REHAB; Pinecrest Center for Rehabilitation and Healing; BISCAYNE HEALTH AND REHABILITATION CENTER; FORT WALTON REHABILITATION CENTER, LLC | 0% | None |
+| Jewish senior seeking Jewish programming | RIVER GARDEN HEBREW HOME FOR THE AGED; BISCAYNE HEALTH AND REHABILITATION CENTER; CORAL GABLES NURSING AND REHABILITATION CENTER; SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER | RIVER GARDEN HEBREW HOME FOR THE AGED; BISCAYNE HEALTH AND REHABILITATION CENTER; FORT WALTON REHABILITATION CENTER, LLC; Rehabilitation Center of The Palm Beaches, The; Pinecrest Center for Rehabilitation and Healing | 40% | CORAL GABLES NURSING AND REHABILITATION CENTER; SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER |
+| Family-centered senior | RIVER GARDEN HEBREW HOME FOR THE AGED; BISCAYNE HEALTH AND REHABILITATION CENTER; CORAL GABLES NURSING AND REHABILITATION CENTER; SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER | RIVER GARDEN HEBREW HOME FOR THE AGED; Rehabilitation Center of The Palm Beaches, The; CORAL GABLES NURSING AND REHABILITATION CENTER; BISCAYNE HEALTH AND REHABILITATION CENTER; FORT WALTON REHABILITATION CENTER, LLC | 60% | SANDS AT SOUTH BEACH CARE CENTER, THE; MORTON PLANT REHABILITATION CENTER |
+| High clinical complexity senior | PINES OF SARASOTA; SANDS AT SOUTH BEACH CARE CENTER, THE; BISCAYNE HEALTH AND REHABILITATION CENTER; TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; CRESTVIEW REHABILITATION CENTER, LLC | PINES OF SARASOTA; SANDS AT SOUTH BEACH CARE CENTER, THE; TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE; LIFE CARE CENTER OF MELBOURNE; CRESTVIEW REHABILITATION CENTER, LLC | 80% | BISCAYNE HEALTH AND REHABILITATION CENTER |
 
 ## Independent social widow
 
@@ -39,32 +39,32 @@ Generated Persona Type: **Independent Social Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 52.97 |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 49.86 |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living | 49.86 |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 49.23 |
-| 5 | CLEARWATER CENTER | Assisted Living, Independent Living | 49.23 |
-| 6 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 48.93 |
-| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 46.20 |
-| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 45.06 |
-| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
-| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
+| 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 2 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 3 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 4 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 0.00 |
+| 5 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 6 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 0.00 |
+| 7 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living | 0.00 |
+| 8 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing, Assisted Living | 0.00 |
+| 9 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living | 0.00 |
+| 10 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living | 0.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has fully independent needs and prefers daily social interaction. JOHN KNOX VILLAGE OF POMPANO BEACH scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. The community's lifestyle cues were compared against movies. The distance signal is 20.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified RIVER GARDEN HEBREW HOME FOR THE AGED as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 90% | 9 |
+| Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 90% | 9 |
-| Memory Care | 20% | 2 |
-| Skilled Nursing | 10% | 1 |
-| Rehabilitation | 0% | 0 |
-| CCRC | 10% | 1 |
+| Assisted Living | 100% | 10 |
+| Memory Care | 10% | 1 |
+| Skilled Nursing | 30% | 3 |
+| Rehabilitation | 60% | 6 |
+| CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -76,25 +76,29 @@ Expected exclusions: Skilled Nursing, Rehabilitation, Hospice
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living |
-| 4 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living |
+| 2 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living |
+| 3 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 4 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living |
+| 5 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living |
 
-Agreement: **100%** (PASS)
+Agreement: **40%** (FAIL)
 
 ### Top Positive Contributors
 
-Financial fit (10); Care fit (8); Lifestyle fit (7); Family fit (7)
+None
 
 ### Top Negative Contributors
 
-Clinical quality (-4); Luxury amenities (-4); Cultural fit (-3)
+None
 
 ### Disagreements
 
-No disagreements in the top 5.
+| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
+| --- | --- | --- | --- | --- |
+| CORAL GABLES NURSING AND REHABILITATION CENTER | None | Advisor excludes Rehabilitation for this persona. | Social Fit (26%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+| SANDS AT SOUTH BEACH CARE CENTER, THE | None | Advisor excludes Skilled Nursing for this persona. | Social Fit (26%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+| MORTON PLANT REHABILITATION CENTER | None | Advisor excludes Rehabilitation for this persona. | Social Fit (26%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
 
 ## Independent introverted couple
 
@@ -117,32 +121,32 @@ Generated Persona Type: **Independent Quiet Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 58.29 |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 53.80 |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living | 53.80 |
-| 4 | CLEARWATER CENTER | Assisted Living, Independent Living | 53.60 |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 53.60 |
-| 6 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 53.29 |
-| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 49.21 |
-| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 48.50 |
-| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
-| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
+| 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 2 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 3 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 4 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 0.00 |
+| 5 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 6 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 0.00 |
+| 7 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living | 0.00 |
+| 8 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing, Assisted Living | 0.00 |
+| 9 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living | 0.00 |
+| 10 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living | 0.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because couple has fully independent needs and prefers monthly or less social interaction. JOHN KNOX VILLAGE OF POMPANO BEACH scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. The community's lifestyle cues were compared against quiet time. Distance was not supplied, so it did not change the score.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified RIVER GARDEN HEBREW HOME FOR THE AGED as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 90% | 9 |
+| Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 90% | 9 |
-| Memory Care | 20% | 2 |
-| Skilled Nursing | 10% | 1 |
-| Rehabilitation | 0% | 0 |
-| CCRC | 10% | 1 |
+| Assisted Living | 100% | 10 |
+| Memory Care | 10% | 1 |
+| Skilled Nursing | 30% | 3 |
+| Rehabilitation | 60% | 6 |
+| CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -154,25 +158,28 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
-| 5 | BARTOW CENTER | Assisted Living, Independent Living |
+| 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living |
+| 2 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living |
+| 3 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 4 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 5 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living |
 
-Agreement: **100%** (PASS)
+Agreement: **60%** (NEEDS TUNING)
 
 ### Top Positive Contributors
 
-Financial fit (11); Clinical quality (11); Care fit (10); Lifestyle fit (6)
+None
 
 ### Top Negative Contributors
 
-Luxury amenities (-6); Cultural fit (-4); Social fit (-3)
+None
 
 ### Disagreements
 
-No disagreements in the top 5.
+| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
+| --- | --- | --- | --- | --- |
+| SANDS AT SOUTH BEACH CARE CENTER, THE | None | Advisor excludes Skilled Nursing for this persona. | Lifestyle Fit (17%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+| MORTON PLANT REHABILITATION CENTER | None | Advisor excludes Rehabilitation for this persona. | Lifestyle Fit (17%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
 
 ## Early memory concerns
 
@@ -195,31 +202,31 @@ Generated Persona Type: **Early Memory Support**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 84.72 |
-| 2 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 84.24 |
-| 3 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 81.34 |
-| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living | 80.19 |
-| 5 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living | 78.91 |
-| 6 | W FRANK WELLS NURSING HOME | Skilled Nursing, Assisted Living | 78.87 |
-| 7 | GOLFCREST NURSING CENTER | Skilled Nursing, Assisted Living | 78.61 |
-| 8 | BAYSIDE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 78.59 |
-| 9 | MADISON POINTE CARE CENTER | Assisted Living, Skilled Nursing, Rehabilitation | 78.56 |
-| 10 | EGRET COVE CENTER | Assisted Living, Skilled Nursing, Independent Living | 78.52 |
+| 1 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 100.00 |
+| 2 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 100.00 |
+| 3 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 100.00 |
+| 4 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 5 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 6 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 7 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 8 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 0.00 |
+| 9 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living | 0.00 |
+| 10 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing, Assisted Living | 0.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has some daily support needs and prefers a specific social rhythm social interaction. AVIATA AT EMERALD SHORES scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. The distance signal is 15.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified SANDS AT SOUTH BEACH CARE CENTER, THE as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 30% | 3 |
+| Independent Living | 20% | 2 |
 | Active Adult 55+ | 0% | 0 |
 | Assisted Living | 100% | 10 |
-| Memory Care | 20% | 2 |
-| Skilled Nursing | 70% | 7 |
-| Rehabilitation | 20% | 2 |
+| Memory Care | 30% | 3 |
+| Skilled Nursing | 30% | 3 |
+| Rehabilitation | 40% | 4 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
@@ -232,25 +239,27 @@ Expected exclusions: Independent Living, Active Adult 55+
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care |
-| 2 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living |
+| 1 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care |
+| 2 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care |
 | 3 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care |
-| 4 | LAKESIDE HEALTH CENTER | Skilled Nursing, Assisted Living |
-| 5 | MIAMI JEWISH HEALTH SYSTEMS, INC | Skilled Nursing, Assisted Living |
+| 4 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living |
+| 5 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living |
 
-Agreement: **100%** (PASS)
+Agreement: **80%** (GOOD)
 
 ### Top Positive Contributors
 
-Care fit (27); Clinical quality (16); Family fit (11); Financial fit (7)
+Memory care or dementia programming (1)
 
 ### Top Negative Contributors
 
-Social fit (-4); Luxury amenities (-3); Cultural fit (-2)
+None
 
 ### Disagreements
 
-No disagreements in the top 5.
+| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
+| --- | --- | --- | --- | --- |
+| BISCAYNE HEALTH AND REHABILITATION CENTER | None | Advisor would prioritize Memory Care, Assisted Living over Rehabilitation, Assisted Living. | Care Fit (28%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
 
 ## Assisted living transition
 
@@ -274,28 +283,30 @@ Generated Persona Type: **Assisted Living**
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
 | 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 0.00 |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living | 0.00 |
-| 4 | BARTOW CENTER | Assisted Living, Independent Living | 0.00 |
-| 5 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 0.00 |
-| 6 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 0.00 |
-| 7 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 0.00 |
-| 8 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 0.00 |
+| 2 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 3 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 4 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 0.00 |
+| 5 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 6 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 0.00 |
+| 7 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living | 0.00 |
+| 8 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing, Assisted Living | 0.00 |
+| 9 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living | 0.00 |
+| 10 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living | 0.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has some daily support needs and prefers a specific social rhythm social interaction. RIVER GARDEN HEBREW HOME FOR THE AGED scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. The community's lifestyle cues were compared against group dining. Distance was not supplied, so it did not change the score.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified RIVER GARDEN HEBREW HOME FOR THE AGED as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 88% | 7 |
+| Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 100% | 8 |
-| Memory Care | 25% | 2 |
-| Skilled Nursing | 0% | 0 |
-| Rehabilitation | 0% | 0 |
+| Assisted Living | 100% | 10 |
+| Memory Care | 10% | 1 |
+| Skilled Nursing | 30% | 3 |
+| Rehabilitation | 60% | 6 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
@@ -309,26 +320,27 @@ Expected exclusions: Skilled Nursing, Hospice
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
 | 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 3 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 4 | BARTOW CENTER | Assisted Living, Independent Living |
-| 5 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care |
+| 2 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living |
+| 3 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 4 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 5 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living |
 
-Agreement: **80%** (GOOD)
+Agreement: **60%** (NEEDS TUNING)
 
 ### Top Positive Contributors
 
-Clinical quality (10); Care fit (10); Financial fit (10); Social fit (6)
+None
 
 ### Top Negative Contributors
 
-Lifestyle fit (-6); Cultural fit (-4); Luxury amenities (-4)
+None
 
 ### Disagreements
 
 | Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
 | --- | --- | --- | --- | --- |
-| AVIATA AT THE SEA - PASADENA | Financial fit (10); Care fit (7); Social fit (6); Family fit (6) | Advisor would prioritize Assisted Living, CCRC over Assisted Living, Independent Living. | Care Fit (22%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+| SANDS AT SOUTH BEACH CARE CENTER, THE | None | Advisor excludes Skilled Nursing for this persona. | Care Fit (22%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+| MORTON PLANT REHABILITATION CENTER | None | Advisor would prioritize Assisted Living, CCRC over Rehabilitation, Assisted Living. | Care Fit (22%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
 
 ## Skilled nursing needs
 
@@ -351,20 +363,20 @@ Generated Persona Type: **Skilled Nursing**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 79.52 |
-| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 79.42 |
-| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 78.89 |
-| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 77.75 |
-| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 77.13 |
-| 6 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 75.95 |
-| 7 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 0.00 |
-| 8 | SOUTHERN PINES NURSING CENTER | Skilled Nursing, Assisted Living | 0.00 |
-| 9 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation | 0.00 |
-| 10 | BOCA CIEGA CENTER | Skilled Nursing, Rehabilitation, Assisted Living | 0.00 |
+| 1 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 2 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 100.00 |
+| 3 | PINES OF SARASOTA | Skilled Nursing, Memory Care | 100.00 |
+| 4 | CRESTVIEW REHABILITATION CENTER, LLC | Rehabilitation | 100.00 |
+| 5 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 6 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 100.00 |
+| 7 | BROWARD NURSING & REHABILITATION CENTER | Rehabilitation | 100.00 |
+| 8 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 9 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 100.00 |
+| 10 | DAYTONA BEACH HEALTH AND REHABILITATION CENTER | Rehabilitation | 100.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has skilled nursing care needs and prefers a specific social rhythm social interaction. WESTSIDE OAKS REHABILITATION & NURSING CENTER scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. Distance was not supplied, so it did not change the score.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified BISCAYNE HEALTH AND REHABILITATION CENTER as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
@@ -372,9 +384,9 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 | --- | --- | --- |
 | Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 30% | 3 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 100% | 10 |
+| Assisted Living | 50% | 5 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 40% | 4 |
 | Rehabilitation | 60% | 6 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
@@ -388,25 +400,28 @@ Expected exclusions: Independent Living, Active Adult 55+
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
-| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing |
-| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
-| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
-| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing |
+| 1 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing |
+| 2 | PINES OF SARASOTA | Skilled Nursing, Memory Care |
+| 3 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living |
+| 4 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care |
+| 5 | CRESTVIEW REHABILITATION CENTER, LLC | Rehabilitation |
 
-Agreement: **100%** (PASS)
+Agreement: **60%** (NEEDS TUNING)
 
 ### Top Positive Contributors
 
-Care fit (24); Clinical quality (14); Family fit (6); Financial fit (5)
+Skilled nursing capability (1)
 
 ### Top Negative Contributors
 
-Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
+None
 
 ### Disagreements
 
-No disagreements in the top 5.
+| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
+| --- | --- | --- | --- | --- |
+| BISCAYNE HEALTH AND REHABILITATION CENTER | Skilled nursing capability (1) | Advisor would prioritize Skilled Nursing, Rehabilitation over Rehabilitation, Assisted Living. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+| CORAL GABLES NURSING AND REHABILITATION CENTER | Skilled nursing capability (1) | Advisor would prioritize Skilled Nursing, Rehabilitation over Rehabilitation, Assisted Living. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
 
 ## Rehabilitation after hospitalization
 
@@ -429,20 +444,20 @@ Generated Persona Type: **Rehabilitation**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 79.52 |
-| 2 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 79.42 |
-| 3 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 78.89 |
-| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 77.75 |
-| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 77.13 |
-| 6 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 75.95 |
-| 7 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 0.00 |
-| 8 | SOUTHERN PINES NURSING CENTER | Skilled Nursing, Assisted Living | 0.00 |
-| 9 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation | 0.00 |
-| 10 | BOCA CIEGA CENTER | Skilled Nursing, Rehabilitation, Assisted Living | 0.00 |
+| 1 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 2 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 100.00 |
+| 3 | PINES OF SARASOTA | Skilled Nursing, Memory Care | 100.00 |
+| 4 | CRESTVIEW REHABILITATION CENTER, LLC | Rehabilitation | 100.00 |
+| 5 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 6 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 100.00 |
+| 7 | BROWARD NURSING & REHABILITATION CENTER | Rehabilitation | 100.00 |
+| 8 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 9 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 100.00 |
+| 10 | DAYTONA BEACH HEALTH AND REHABILITATION CENTER | Rehabilitation | 100.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has skilled nursing care needs and prefers a specific social rhythm social interaction. WESTSIDE OAKS REHABILITATION & NURSING CENTER scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. Distance was not supplied, so it did not change the score.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified BISCAYNE HEALTH AND REHABILITATION CENTER as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
@@ -450,9 +465,9 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 | --- | --- | --- |
 | Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 30% | 3 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 100% | 10 |
+| Assisted Living | 50% | 5 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 40% | 4 |
 | Rehabilitation | 60% | 6 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
@@ -466,25 +481,29 @@ Expected exclusions: Independent Living
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
-| 2 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
-| 3 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing |
-| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
-| 5 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing |
+| 1 | CRESTVIEW REHABILITATION CENTER, LLC | Rehabilitation |
+| 2 | DAYTONA BEACH HEALTH AND REHABILITATION CENTER | Rehabilitation |
+| 3 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 4 | BROWARD NURSING & REHABILITATION CENTER | Rehabilitation |
+| 5 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
 
-Agreement: **100%** (PASS)
+Agreement: **40%** (FAIL)
 
 ### Top Positive Contributors
 
-Care fit (19); Clinical quality (17); Family fit (6); Financial fit (5)
+Skilled nursing capability (1)
 
 ### Top Negative Contributors
 
-Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
+None
 
 ### Disagreements
 
-No disagreements in the top 5.
+| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
+| --- | --- | --- | --- | --- |
+| TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled nursing capability (1) | Advisor would prioritize Rehabilitation, Skilled Nursing over Skilled Nursing. | Clinical Quality (32%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+| PINES OF SARASOTA | Skilled nursing capability (1) | Advisor would prioritize Rehabilitation, Skilled Nursing over Skilled Nursing, Memory Care. | Clinical Quality (32%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+| CORAL GABLES NURSING AND REHABILITATION CENTER | Skilled nursing capability (1) | Advisor would prioritize Rehabilitation, Skilled Nursing over Rehabilitation, Assisted Living. | Clinical Quality (32%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
 
 ## Spanish speaking senior
 
@@ -507,32 +526,22 @@ Generated Persona Type: **Independent Active Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 58.92 |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 54.45 |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living | 54.45 |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 54.26 |
-| 5 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 54.25 |
-| 6 | CLEARWATER CENTER | Assisted Living, Independent Living | 54.25 |
-| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 49.86 |
-| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 49.46 |
-| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
-| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has fully independent needs and prefers a specific social rhythm social interaction. JOHN KNOX VILLAGE OF POMPANO BEACH scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. Distance was not supplied, so it did not change the score.
+No recommendation available.
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 90% | 9 |
+| Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 90% | 9 |
-| Memory Care | 20% | 2 |
-| Skilled Nursing | 10% | 1 |
+| Assisted Living | 0% | 0 |
+| Memory Care | 0% | 0 |
+| Skilled Nursing | 0% | 0 |
 | Rehabilitation | 0% | 0 |
-| CCRC | 10% | 1 |
+| CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -544,27 +553,25 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 3 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
-| 4 | CLEARWATER CENTER | Assisted Living, Independent Living |
-| 5 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
+| 1 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 2 | TERRACES OF LAKE WORTH CARE CENTER AND REHAB | Rehabilitation, Assisted Living |
+| 3 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living |
+| 4 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 5 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living |
 
-Agreement: **80%** (GOOD)
+Agreement: **0%** (FAIL)
 
 ### Top Positive Contributors
 
-Financial fit (11); Lifestyle fit (11); Care fit (10); Clinical quality (7)
+None
 
 ### Top Negative Contributors
 
-Luxury amenities (-6); Family fit (-4); Cultural fit (-2)
+None
 
 ### Disagreements
 
-| Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
-| --- | --- | --- | --- | --- |
-| BARTOW CENTER | Financial fit (11); Lifestyle fit (11); Social fit (6); Luxury amenities (6) | Advisor would prioritize Independent Living, CCRC, Assisted Living over Assisted Living, Independent Living. | Lifestyle Fit (22%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+No disagreements in the top 5.
 
 ## Jewish senior seeking Jewish programming
 
@@ -587,32 +594,32 @@ Generated Persona Type: **Independent Active Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 62.41 |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 57.78 |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living | 57.78 |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 57.58 |
-| 5 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 57.57 |
-| 6 | CLEARWATER CENTER | Assisted Living, Independent Living | 57.57 |
-| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 53.03 |
-| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 52.62 |
-| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
-| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
+| 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 2 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 3 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 4 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 0.00 |
+| 5 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 6 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 0.00 |
+| 7 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living | 0.00 |
+| 8 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing, Assisted Living | 0.00 |
+| 9 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living | 0.00 |
+| 10 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living | 0.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has fully independent needs and prefers a specific social rhythm social interaction. JOHN KNOX VILLAGE OF POMPANO BEACH scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. Distance was not supplied, so it did not change the score.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified RIVER GARDEN HEBREW HOME FOR THE AGED as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 90% | 9 |
+| Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 90% | 9 |
-| Memory Care | 20% | 2 |
-| Skilled Nursing | 10% | 1 |
-| Rehabilitation | 0% | 0 |
-| CCRC | 10% | 1 |
+| Assisted Living | 100% | 10 |
+| Memory Care | 10% | 1 |
+| Skilled Nursing | 30% | 3 |
+| Rehabilitation | 60% | 6 |
+| CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -624,27 +631,29 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living |
-| 5 | CLEARWATER CENTER | Assisted Living, Independent Living |
+| 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living |
+| 2 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 3 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living |
+| 4 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living |
+| 5 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living |
 
-Agreement: **80%** (GOOD)
+Agreement: **40%** (FAIL)
 
 ### Top Positive Contributors
 
-Financial fit (11); Lifestyle fit (11); Care fit (10); Clinical quality (7)
+None
 
 ### Top Negative Contributors
 
-Luxury amenities (-6); Family fit (-4); Cultural fit (-2)
+None
 
 ### Disagreements
 
 | Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
 | --- | --- | --- | --- | --- |
-| AVIATA AT THE SEA - PASADENA | Financial fit (11); Lifestyle fit (11); Care fit (8); Luxury amenities (7) | Advisor would prioritize Independent Living, CCRC, Assisted Living over Assisted Living, Independent Living. | Lifestyle Fit (22%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+| CORAL GABLES NURSING AND REHABILITATION CENTER | None | Advisor excludes Rehabilitation for this persona. | Lifestyle Fit (22%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+| SANDS AT SOUTH BEACH CARE CENTER, THE | None | Advisor excludes Skilled Nursing for this persona. | Lifestyle Fit (22%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+| MORTON PLANT REHABILITATION CENTER | None | Advisor excludes Rehabilitation for this persona. | Lifestyle Fit (22%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
 
 ## Family-centered senior
 
@@ -667,32 +676,32 @@ Generated Persona Type: **Family-Centered Senior**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC | 87.37 |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living | 82.02 |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living | 82.02 |
-| 4 | AVANTE AT LEESBURG, INC | Assisted Living, Independent Living | 81.36 |
-| 5 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living | 81.32 |
-| 6 | CLEARWATER CENTER | Assisted Living, Independent Living | 81.32 |
-| 7 | AVIATA AT EMERALD SHORES | Assisted Living, Independent Living, Memory Care | 76.08 |
-| 8 | ATHENS POST ACUTE LLC | Assisted Living, Independent Living, Memory Care | 75.18 |
-| 9 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
-| 10 | GROVES CENTER | Assisted Living, Skilled Nursing, Independent Living | 0.00 |
+| 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living | 0.00 |
+| 2 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 3 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 4 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 0.00 |
+| 5 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 0.00 |
+| 6 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 0.00 |
+| 7 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living | 0.00 |
+| 8 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing, Assisted Living | 0.00 |
+| 9 | Pinecrest Center for Rehabilitation and Healing | Rehabilitation, Assisted Living | 0.00 |
+| 10 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living | 0.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has fully independent needs and prefers a specific social rhythm social interaction. JOHN KNOX VILLAGE OF POMPANO BEACH scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. The distance signal is 10.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified RIVER GARDEN HEBREW HOME FOR THE AGED as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
 | Care Type | Top 10 Share | Count |
 | --- | --- | --- |
-| Independent Living | 90% | 9 |
+| Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 90% | 9 |
-| Memory Care | 20% | 2 |
-| Skilled Nursing | 10% | 1 |
-| Rehabilitation | 0% | 0 |
-| CCRC | 10% | 1 |
+| Assisted Living | 100% | 10 |
+| Memory Care | 10% | 1 |
+| Skilled Nursing | 30% | 3 |
+| Rehabilitation | 60% | 6 |
+| CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
 | Hospice | 0% | 0 |
 | UNKNOWN | 0% | 0 |
@@ -704,27 +713,28 @@ Expected exclusions: Skilled Nursing, Rehabilitation
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | JOHN KNOX VILLAGE OF POMPANO BEACH | Independent Living, CCRC |
-| 2 | TARPON BAYOU CENTER | Assisted Living, Independent Living |
-| 3 | BARTOW CENTER | Assisted Living, Independent Living |
-| 4 | AVIATA AT THE SEA - PASADENA | Assisted Living, Independent Living |
-| 5 | CLEARWATER CENTER | Assisted Living, Independent Living |
+| 1 | RIVER GARDEN HEBREW HOME FOR THE AGED | Assisted Living |
+| 2 | Rehabilitation Center of The Palm Beaches, The | Rehabilitation, Assisted Living |
+| 3 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 4 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living |
+| 5 | FORT WALTON REHABILITATION CENTER, LLC | Rehabilitation, Assisted Living |
 
-Agreement: **80%** (GOOD)
+Agreement: **60%** (NEEDS TUNING)
 
 ### Top Positive Contributors
 
-Family fit (22); Financial fit (11); Care fit (7); Clinical quality (7)
+None
 
 ### Top Negative Contributors
 
-Luxury amenities (-6); Social fit (-4); Cultural fit (-3)
+None
 
 ### Disagreements
 
 | Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
 | --- | --- | --- | --- | --- |
-| AVANTE AT LEESBURG, INC | Family fit (23); Financial fit (11); Lifestyle fit (6); Luxury amenities (6) | Advisor would prioritize Independent Living, CCRC, Assisted Living over Assisted Living, Independent Living. | Family Fit (28%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+| SANDS AT SOUTH BEACH CARE CENTER, THE | None | Advisor excludes Skilled Nursing for this persona. | Family Fit (28%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
+| MORTON PLANT REHABILITATION CENTER | None | Advisor excludes Rehabilitation for this persona. | Family Fit (28%) | Increase exclusion penalty for this care type under the persona-specific advisor model. |
 
 ## High clinical complexity senior
 
@@ -747,20 +757,20 @@ Generated Persona Type: **Skilled Nursing**
 
 | Rank | Community | Care Types | Score |
 | --- | --- | --- | --- |
-| 1 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living | 76.59 |
-| 2 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
-| 3 | OAK HAVEN REHAB AND NURSING CENTER | Rehabilitation, Skilled Nursing | 0.00 |
-| 4 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing | 0.00 |
-| 5 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation | 0.00 |
-| 6 | JACKSON MEMORIAL PERDUE MEDICAL CENTER | Skilled Nursing | 0.00 |
-| 7 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 0.00 |
-| 8 | SOUTHERN PINES NURSING CENTER | Skilled Nursing, Assisted Living | 0.00 |
-| 9 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation | 0.00 |
-| 10 | BOCA CIEGA CENTER | Skilled Nursing, Rehabilitation, Assisted Living | 0.00 |
+| 1 | PINES OF SARASOTA | Skilled Nursing, Memory Care | 100.00 |
+| 2 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care | 100.00 |
+| 3 | BISCAYNE HEALTH AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 4 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing | 100.00 |
+| 5 | CRESTVIEW REHABILITATION CENTER, LLC | Rehabilitation | 100.00 |
+| 6 | CORAL GABLES NURSING AND REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 7 | BROWARD NURSING & REHABILITATION CENTER | Rehabilitation | 100.00 |
+| 8 | MORTON PLANT REHABILITATION CENTER | Rehabilitation, Assisted Living | 100.00 |
+| 9 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living | 100.00 |
+| 10 | DAYTONA BEACH HEALTH AND REHABILITATION CENTER | Rehabilitation | 100.00 |
 
 ### Score Explanation
 
-Ranked #1 because it has the highest weighted fit score and the strongest top-two contributor balance. We prioritized this community because parent has skilled nursing care needs and prefers a specific social rhythm social interaction. COMMUNITY CONVALESCENT CENTER scored well on the strongest fit dimensions, which kept it near the top of the ranking. This score reflects how well the community matches what matters most to you, not how many features it offers. No single activity preference dominated the score. Distance was not supplied, so it did not change the score.
+Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment. After reviewing the resident's medical, functional, social and lifestyle needs, OPTIME identified PINES OF SARASOTA as one of the strongest matches. The recommendation is based primarily on the community's ability to support current care needs while maintaining quality of life.
 
 ### Care Type Distribution
 
@@ -768,9 +778,9 @@ Ranked #1 because it has the highest weighted fit score and the strongest top-tw
 | --- | --- | --- |
 | Independent Living | 0% | 0 |
 | Active Adult 55+ | 0% | 0 |
-| Assisted Living | 30% | 3 |
-| Memory Care | 0% | 0 |
-| Skilled Nursing | 100% | 10 |
+| Assisted Living | 50% | 5 |
+| Memory Care | 20% | 2 |
+| Skilled Nursing | 40% | 4 |
 | Rehabilitation | 60% | 6 |
 | CCRC | 0% | 0 |
 | Continuing Care | 0% | 0 |
@@ -784,24 +794,24 @@ Expected exclusions: Independent Living, Active Adult 55+
 
 | Advisor Rank | Community | Care Types |
 | --- | --- | --- |
-| 1 | COMMUNITY CONVALESCENT CENTER | Skilled Nursing, Assisted Living |
-| 2 | PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN | Rehabilitation, Skilled Nursing |
-| 3 | AVANTE AT ORMOND BEACH, INC | Skilled Nursing, Rehabilitation |
-| 4 | VILLA MARIA NURSING CENTER | Skilled Nursing, Rehabilitation |
-| 5 | WESTSIDE OAKS REHABILITATION & NURSING CENTER | Rehabilitation, Skilled Nursing |
+| 1 | PINES OF SARASOTA | Skilled Nursing, Memory Care |
+| 2 | SANDS AT SOUTH BEACH CARE CENTER, THE | Skilled Nursing, Assisted Living, Memory Care |
+| 3 | TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE | Skilled Nursing |
+| 4 | LIFE CARE CENTER OF MELBOURNE | Skilled Nursing, Assisted Living |
+| 5 | CRESTVIEW REHABILITATION CENTER, LLC | Rehabilitation |
 
 Agreement: **80%** (GOOD)
 
 ### Top Positive Contributors
 
-Care fit (20); Clinical quality (11); Family fit (6); Financial fit (5)
+Skilled nursing capability (1); Memory care or dementia programming (1)
 
 ### Top Negative Contributors
 
-Lifestyle fit (-3); Social fit (-2); Cultural fit (-2)
+None
 
 ### Disagreements
 
 | Community | Why OPTIME selected it | Why advisor likely would not | Weight caused difference | Suggested calibration |
 | --- | --- | --- | --- | --- |
-| OAK HAVEN REHAB AND NURSING CENTER | Care fit (24); Clinical quality (13); Family fit (6); Financial fit (5) | Advisor would prioritize Skilled Nursing, Memory Care, Rehabilitation over Rehabilitation, Skilled Nursing. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
+| BISCAYNE HEALTH AND REHABILITATION CENTER | Skilled nursing capability (1) | Advisor would prioritize Skilled Nursing, Memory Care, Rehabilitation over Rehabilitation, Assisted Living. | Care Fit (35%) | Increase preferred care-type bonus or reduce non-core fit influence for this persona. |
