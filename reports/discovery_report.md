@@ -3,6 +3,8 @@
 Discovery Mission Status: **COMPLETE (Report Generated)**
 Report Generated At (UTC): **2026-07-18T16:52:10.255Z**
 Inventory Snapshot Timestamp (UTC): **2026-07-15T09:02:09+00:00**
+Scope Classification: **LEGACY_REGIONAL_SNAPSHOT (South Florida)**
+Canonical Statewide Truth: **reports/CANONICAL_FACILITY_UNIVERSE_REPORT.md (713 records, 64/67 counties)**
 
 ## Discovery Totals
 
@@ -75,7 +77,7 @@ Inventory Snapshot Timestamp (UTC): **2026-07-15T09:02:09+00:00**
 
 ## Database Quality
 
-- Coverage: **3/67 counties** represented (4.5%)
+- Legacy snapshot coverage: **3/67 counties** represented (4.5%). This is **not** the current statewide truth; canonical statewide coverage is **64/67 counties**.
 - Completeness: **87.6%** across required profile fields
 - Verification status: **494/784 verified** (63.0%)
 - Freshness: **Recent (2-7 days)** (snapshot age: 3 day(s))

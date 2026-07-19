@@ -4,7 +4,6 @@
   "counties_total": 67,
   "counties_covered": 64,
   "counties_missing": [
-    "DeSoto",
     "Glades",
     "Liberty",
     "Union"

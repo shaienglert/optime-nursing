@@ -1,0 +1,100 @@
+{
+  "phase": 1,
+  "title": "establish canonical facility universe",
+  "generated_at_utc": "2026-07-19T17:28:35Z",
+  "canonical_source": {
+    "file": "database/florida_senior_living_inventory.json",
+    "generated_at_utc": "2026-07-18T05:39:28+00:00",
+    "record_count": 713,
+    "counties_covered": 64,
+    "counties_total": 67,
+    "counties_missing": [
+      "Glades",
+      "Liberty",
+      "Union"
+    ],
+    "cms_linked": 694,
+    "state_license_linked": 9,
+    "both_cms_and_state_license": 0,
+    "neither_cms_nor_state_license": 10,
+    "provenance_gaps": 0
+  },
+  "canonical_id_policy": {
+    "authority_order": [
+      "cms_certification_number",
+      "state_license_number",
+      "normalized_community_name_address_city_zip"
+    ],
+    "canonical_id_duplicates": 0,
+    "conflicting_id_merges": 0
+  },
+  "legacy_datasets": [
+    {
+      "file": "database/south_florida_senior_living_inventory.json",
+      "status": "LEGACY_NOT_CANONICAL",
+      "record_count": 784,
+      "coverage_counties": 3,
+      "reconciliation": {
+        "CONFIRMED_SAME": 0,
+        "PROBABLE_MATCH_REVIEW_REQUIRED": 4,
+        "DISTINCT": 490,
+        "UNRESOLVED": 290
+      }
+    },
+    {
+      "file": "database/market_communities_south_florida.json",
+      "status": "LEGACY_NOT_CANONICAL",
+      "record_count": 141,
+      "reconciliation": {
+        "CONFIRMED_SAME": 0,
+        "PROBABLE_MATCH_REVIEW_REQUIRED": 141,
+        "DISTINCT": 0,
+        "UNRESOLVED": 0
+      }
+    },
+    {
+      "file": "database/market_communities_palm_beach.json",
+      "status": "LEGACY_NOT_CANONICAL",
+      "record_count": 54,
+      "reconciliation": {
+        "CONFIRMED_SAME": 0,
+        "PROBABLE_MATCH_REVIEW_REQUIRED": 54,
+        "DISTINCT": 0,
+        "UNRESOLVED": 0
+      }
+    }
+  ],
+  "active_report_surfaces": [
+    {
+      "file": "reports/discovery_report.md",
+      "scope": "LEGACY_REGIONAL_SNAPSHOT",
+      "is_current_canonical_truth": false
+    },
+    {
+      "file": "reports/executive_dashboard.md",
+      "scope": "OPERATIONAL_DASHBOARD_WITH_LEGACY_COMPONENT",
+      "is_current_canonical_truth": false
+    },
+    {
+      "file": "reports/CANONICAL_FACILITY_UNIVERSE_REPORT.md",
+      "scope": "CURRENT_CANONICAL_STATEWIDE_TRUTH",
+      "is_current_canonical_truth": true
+    }
+  ],
+  "validation_expectations": {
+    "record_count": 713,
+    "counties_covered": 64,
+    "counties_total": 67,
+    "counties_missing": [
+      "Glades",
+      "Liberty",
+      "Union"
+    ],
+    "cms_linked": 694,
+    "provenance_required_fields": [
+      "source_refs",
+      "source_urls"
+    ],
+    "legacy_reports_must_not_claim_3_of_67_as_current_truth": true
+  }
+}

@@ -10,7 +10,9 @@
 - Evidence Objects: **3056**
 - Communities: **784**
 - Verified Communities: **494**
-- Coverage: **3/67 counties**
+- Legacy South Florida Snapshot Coverage: **3/67 counties** (not current statewide truth)
+- Canonical Statewide Communities: **713**
+- Canonical Statewide Coverage: **64/67 counties**
 - Knowledge Growth Today: **UNPROVEN**
 - Research Completed Today: **UNPROVEN**
 - Knowledge Gaps: **15**
