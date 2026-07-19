@@ -65,6 +65,7 @@ from app.services.executive_report_service import (
     get_latest_executive_report,
     start_executive_report_scheduler,
 )
+from app.services.email_service import send_startup_test_email_once
 from app.services.cms_service import (
     CMS_PROVIDER_DATASET_ID,
     clean_state,
@@ -893,6 +894,9 @@ def startup() -> None:
         ensure_reports_available(db)
     finally:
         db.close()
+
+    # One-time SMTP validation email on deployment startup.
+    send_startup_test_email_once()
 
     # Refresh reports continuously in background so user requests never wait on research.
     start_background_refresh_loop()

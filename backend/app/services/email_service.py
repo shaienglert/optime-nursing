@@ -1,4 +1,5 @@
 import os
+import json
 import smtplib
 import socket
 import ssl
@@ -10,6 +11,8 @@ from typing import Dict, List, Optional, Tuple
 
 
 DEFAULT_RECIPIENT = "office@optime-nursing.com"
+STARTUP_TEST_SUBJECT = "OPTIME Email System Test"
+STARTUP_TEST_BODY = "OPTIME automated email delivery is operational."
 
 
 @dataclass
@@ -38,10 +41,38 @@ def _delivery_log_path() -> Path:
     return _email_reports_dir() / "delivery_log.jsonl"
 
 
+def _startup_test_state_path() -> Path:
+    return _email_reports_dir() / "startup_test_state.json"
+
+
 def _append_delivery_log(entry: Dict[str, object]) -> None:
     path = _delivery_log_path()
     with path.open("a", encoding="utf-8") as f:
         f.write(__import__("json").dumps(entry, ensure_ascii=True) + "\n")
+
+
+def _deployment_key() -> str:
+    return (
+        os.getenv("RENDER_GIT_COMMIT", "").strip()
+        or os.getenv("RENDER_DEPLOY_ID", "").strip()
+        or os.getenv("OPTIME_SMTP_STARTUP_TEST_KEY", "").strip()
+        or "default"
+    )
+
+
+def _load_startup_test_state() -> Dict[str, object]:
+    path = _startup_test_state_path()
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_startup_test_state(state: Dict[str, object]) -> None:
+    path = _startup_test_state_path()
+    path.write_text(json.dumps(state, ensure_ascii=True, indent=2), encoding="utf-8")
 
 
 def provider_name() -> str:
@@ -281,3 +312,37 @@ def send_email(
         recipients=recipients,
     )
     return result.ok, result.message, result.recipients
+
+
+def send_startup_test_email_once() -> Dict[str, object]:
+    if os.getenv("OPTIME_SMTP_STARTUP_TEST_ENABLED", "1").strip() == "0":
+        return {"attempted": False, "reason": "disabled"}
+
+    deployment_key = _deployment_key()
+    state = _load_startup_test_state()
+    if state.get("deployment_key") == deployment_key and bool(state.get("attempted")):
+        return {"attempted": False, "reason": "already_attempted_for_deployment"}
+
+    result = send_email_detailed(
+        subject=STARTUP_TEST_SUBJECT,
+        body_text=STARTUP_TEST_BODY,
+        recipients=[DEFAULT_RECIPIENT],
+        max_retries=0,
+    )
+
+    smtp_accepted = result.status == "DELIVERY_ACCEPTED" and "SMTP_ACCEPTED=True" in result.provider_response
+    _save_startup_test_state(
+        {
+            "deployment_key": deployment_key,
+            "attempted": True,
+            "attempted_at_utc": result.attempted_at_utc,
+            "status": result.status,
+            "smtp_accepted": smtp_accepted,
+        }
+    )
+
+    return {
+        "attempted": True,
+        "status": result.status,
+        "smtp_accepted": smtp_accepted,
+    }
