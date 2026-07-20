@@ -88,6 +88,9 @@ app = FastAPI(
     description="OPTIME Phase 1 CMS ingestion pipeline for Florida nursing homes",
 )
 
+REQUIRED_FRONTEND_ORIGINS = ["https://optime-nursing.vercel.app"]
+DEVELOPMENT_FRONTEND_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
 def _normalize_origin(origin: str) -> str:
     value = origin.strip().strip('"').strip("'")
     return value.rstrip("/")
@@ -102,8 +105,20 @@ def _parse_frontend_origins(raw_origins: str) -> list[str]:
     return normalized
 
 
+def _build_allowed_origins(raw_origins: str) -> list[str]:
+    configured = _parse_frontend_origins(raw_origins)
+    merged: list[str] = []
+
+    for candidate in [*configured, *REQUIRED_FRONTEND_ORIGINS, *DEVELOPMENT_FRONTEND_ORIGINS]:
+        value = _normalize_origin(candidate)
+        if value and value not in merged:
+            merged.append(value)
+
+    return merged
+
+
 frontend_origins = os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
-allowed_origins = _parse_frontend_origins(frontend_origins)
+allowed_origins = _build_allowed_origins(frontend_origins)
 
 app.add_middleware(
     CORSMiddleware,
@@ -936,6 +951,7 @@ def _to_agent_knowledge_report(row: AgentKnowledgeReportSnapshot) -> AgentKnowle
 
 @app.on_event("startup")
 def startup() -> None:
+    print(f"CORS_ALLOWED_ORIGINS={allowed_origins}")
     # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
