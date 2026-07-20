@@ -1,0 +1,1906 @@
+{
+  "metadata": {
+    "run_id": "20260720T182016Z",
+    "run_window": {
+      "start": "2026-07-20 18:20:18",
+      "end": "2026-07-20 18:22:14"
+    },
+    "cohort_size": 54,
+    "source_attempts": 218
+  },
+  "totals": {
+    "raw_new_external_fact_records": 593,
+    "unique_semantic_facts": 593,
+    "net_new_vs_prior_optime_knowledge": 117,
+    "high_value_net_new_facts": 41,
+    "category_counts": {
+      "A": 147,
+      "B": 61,
+      "D": 370,
+      "C": 10,
+      "E": 5
+    },
+    "category_percentages": {
+      "A": 24.79,
+      "B": 10.29,
+      "D": 62.39,
+      "C": 1.69,
+      "E": 0.84
+    },
+    "facilities_with_at_least_one_high_value_new_discovery": 53
+  },
+  "inventory_counts": {
+    "by_facility": {
+      "AVENTURA REHAB AND NURSING CENTER": 12,
+      "AZURE SHORES REHAB": 12,
+      "BISCAYNE HEALTH AND REHABILITATION CENTER": 12,
+      "BROOKWOOD GARDENS REHABILITATION AND NURSING CENTE": 9,
+      "CLARIDGE HOUSE NURSING AND REHABILITATION CENTER": 12,
+      "CORAL REEF SUBACUTE CARE CENTER LLC": 11,
+      "East Ridge Rehabilitation and Nursing Center": 12,
+      "FLORIDEAN HEALTH & REHABILITATION CENTER": 12,
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER": 12,
+      "GARDENS NURSING AND REHAB CENTER": 11,
+      "HAMPTON COURT NURSING AND REHABILITATION CENTER": 11,
+      "HARMONY HEALTH CENTER": 12,
+      "HIALEAH SHORES NURSING AND REHAB CENTER": 13,
+      "HOMESTEAD MANOR A PALACE COMMUNITY": 11,
+      "JACKSON GARDENS HEALTH AND REHABILITATION CENTER": 12,
+      "JACKSON MEMORIAL LONG TERM CARE CENTER": 13,
+      "JACKSON MEMORIAL PERDUE MEDICAL CENTER": 13,
+      "KENDALL LAKES HEALTHCARE AND REHAB CENTER": 12,
+      "MIAMI JEWISH HEALTH SYSTEMS, INC": 9,
+      "MIAMI SHORES NURSING AND REHAB CENTER": 13,
+      "MIAMI SPRINGS NURSING AND REHABILITATION CENTER": 16,
+      "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER": 10,
+      "NORTH DADE NURSING AND REHABILITATION CENTER": 12,
+      "NSPIRE HEALTHCARE KENDALL": 12,
+      "NSPIRE HEALTHCARE MIAMI LAKES": 11,
+      "PALACE AT KENDALL NURSING AND REHABILITATION CENTE": 12,
+      "PALM GARDEN OF AVENTURA": 11,
+      "PALMETTO CARE CENTER AND REHAB": 10,
+      "PALMETTO SUBACUTE CARE CENTER": 11,
+      "PINES NURSING HOME": 11,
+      "Pinecrest Center for Rehabilitation and Healing": 9,
+      "Ponce Health and Rehabilitation Center": 9,
+      "REGENTS PARK AT AVENTURA": 12,
+      "RIVERSIDE CARE CENTER": 12,
+      "RIVIERA HEALTH RESORT": 10,
+      "SANDS AT SOUTH BEACH CARE CENTER, THE": 9,
+      "SERENITY BAY NURSING AND REHABILITATION CENTER": 10,
+      "SHORESIDE HEALTH AND REHABILITATION CENTER": 12,
+      "SIERRA LAKES NURSING & REHABILITATION CENTER": 12,
+      "SOUTH DADE NURSING AND REHABILITATION CENTER": 12,
+      "ST ANNES NURSING CENTER, ST ANNES RESIDENCE INC": 9,
+      "SUSANNA WESLEY HEALTH CENTER": 11,
+      "TERRACE OF HIALEAH, THE": 9,
+      "THE LILAC AT SILVER PALMS": 13,
+      "TREASURE ISLE CARE CENTER": 11,
+      "UNITY HEALTHCARE AND REHABILITATION CENTER": 11,
+      "UNIVERSITY HEALTH AND REHABILITATION CENTER": 12,
+      "VI AT AVENTURA": 11,
+      "VICTORIA NURSING & REHABILITATION CENTER, INC.": 10,
+      "VILLA MARIA NURSING CENTER": 9,
+      "VILLA MARIA WEST SKILLED NURSING FACILITY": 9,
+      "WATERFORD NURSING AND REHABILITATION CENTER": 12,
+      "WEST GABLES HEALTH CARE CENTER": 9
+    },
+    "by_property_type": {
+      "clinical_services": 39,
+      "activities": 40,
+      "nutrition_support": 21,
+      "provider_name": 53,
+      "address": 53,
+      "overall_rating": 53,
+      "staffing_rating": 53,
+      "quality_rating": 52,
+      "inspection_rating": 53,
+      "beds": 53,
+      "inspection_summary": 53,
+      "quality_summary": 53,
+      "operator_identity": 10,
+      "family_review_summary": 1,
+      "pricing": 2,
+      "care_models": 2,
+      "amenities": 2
+    },
+    "by_source_type": {
+      "official_facility": 110,
+      "government": 476,
+      "secondary_profile": 7
+    },
+    "by_source_domain": {
+      "aventurarehab.com": 3,
+      "data.cms.gov": 476,
+      "ultimateseniorresource.com": 16,
+      "biscaynerehab.com": 3,
+      "claridgehouse.care": 3,
+      "coralreefsubacute.com": 2,
+      "eastridgeatcutlerbay.com": 3,
+      "florideanrehab.com": 3,
+      "www.fountainmanorhealth.com": 3,
+      "www.nursinghomes.us": 4,
+      "www.hamptoncourtnursing.com": 2,
+      "harmonyhealth.care": 3,
+      "hialeahshoresrehab.com": 4,
+      "npino.com": 7,
+      "jacksongardensrehab.com": 3,
+      "jacksonhealth.org": 8,
+      "miamishoresrehab.com": 4,
+      "www.cms.gov": 3,
+      "www.seniorly.com": 7,
+      "northbeachrehab.com": 1,
+      "ourhealthnetwork.com": 2,
+      "palmgardenofaventura.com": 2,
+      "palmettocarecenter.com": 1,
+      "palmettosubacute.com": 2,
+      "regentspark.care": 3,
+      "rivierahealthresort.com": 1,
+      "serenitybaycare.com": 2,
+      "shoresiderehab.com": 3,
+      "sierralakesrehab.com": 3,
+      "www.southdadenursing.com": 3,
+      "susannawesleyrehab.com": 2,
+      "treasureislecarecenter.com": 2,
+      "universityrehabilitation.com": 3,
+      "www.viliving.com": 2,
+      "victorianursing.net": 1,
+      "www.waterford.care": 3
+    },
+    "by_agent": {
+      "provider_intelligence": 110,
+      "senior_living_research": 423,
+      "clinical_knowledge": 53,
+      "family_experience": 7
+    },
+    "by_verification_status": {
+      "VERIFIED": 586,
+      "PARTIALLY_VERIFIED": 7
+    },
+    "by_retrieval_date": {
+      "2026-07-20": 593
+    },
+    "existing_before_flags": {
+      "NET_NEW": 117,
+      "EXISTED_BEFORE": 476
+    }
+  },
+  "deep_audit_10_facilities": [
+    {
+      "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "what_known_before": [],
+      "what_discovered_now_count": 0,
+      "examples": [
+        {
+          "new_fact": "NO_NEW_FACT_IN_593_RUN",
+          "why_matters": "No new externally verified fact was persisted for this facility in the audited run window.",
+          "source": "N/A",
+          "source_authority": "OTHER",
+          "retrieved_at": "N/A",
+          "verification_status": "N/A",
+          "decision_impact": "no decision impact"
+        }
+      ]
+    },
+    {
+      "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 12,
+      "examples": [
+        {
+          "new_fact": "clinical_services=[\"cardiac_pulmonary\", \"dialysis\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:23",
+          "verification_status": "VERIFIED",
+          "decision_impact": "ranking"
+        },
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 13, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-07-14\", \"2023-07-27\", \"2024-10-31\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:25",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:25",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "activities=[\"cultural\", \"religious\", \"social\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:23",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "nutrition_support=[\"therapeutic_diets\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:23",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "address=12505 NE 16TH AVE",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:25",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        }
+      ]
+    },
+    {
+      "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 9,
+      "examples": [
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 26, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-12-01\", \"2024-03-07\", \"2025-06-03\", \"2025-07-24\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:21:40",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:21:40",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "address=42 COLLINS AVENUE",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:21:40",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        },
+        {
+          "new_fact": "beds=230",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:21:40",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        },
+        {
+          "new_fact": "inspection_rating=4",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:21:40",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        },
+        {
+          "new_fact": "overall_rating=5",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:21:40",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        }
+      ]
+    },
+    {
+      "facility": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 9,
+      "examples": [
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 11, \"severe_deficiency_count\": 1, \"survey_dates\": [\"2024-05-09\", \"2025-02-25\", \"2025-06-02\", \"2025-09-19\", \"2026-03-18\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "address=5200 NE 2ND AVENUE",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        },
+        {
+          "new_fact": "beds=393",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        },
+        {
+          "new_fact": "inspection_rating=3",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        },
+        {
+          "new_fact": "overall_rating=4",
+          "why_matters": "Profile context",
+          "source": "CMS Provider Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "no decision impact"
+        }
+      ]
+    },
+    {
+      "facility": "MIAMI SPRINGS NURSING AND REHABILITATION CENTER",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 16,
+      "examples": [
+        {
+          "new_fact": "clinical_services=[\"dialysis\", \"specialized_nursing\"]",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "ranking"
+        },
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 24, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-10-13\", \"2023-12-14\", \"2025-05-08\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:58",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "pricing={\"amount\": \"4500\", \"snippet\": \"he Miami Springs area that also offers Skilled Nursing Facility care. Estimated costs for this community start at $4,500/mo, which is lower than the ",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "Seniorly profile",
+          "source_authority": "REPUTABLE_SECONDARY",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "PARTIALLY_VERIFIED",
+          "decision_impact": "ranking"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:58",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "activities=[\"cultural\", \"lectures\", \"religious\", \"social\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "nutrition_support=[\"therapeutic_diets\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        }
+      ]
+    },
+    {
+      "facility": "HIALEAH SHORES NURSING AND REHAB CENTER",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 13,
+      "examples": [
+        {
+          "new_fact": "clinical_services=[\"cardiac_pulmonary\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\", \"wound_care\"]",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:42",
+          "verification_status": "VERIFIED",
+          "decision_impact": "ranking"
+        },
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 3, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-12-01\", \"2024-02-29\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:44",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:44",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "activities=[\"cultural\", \"exercise\", \"religious\", \"social\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:42",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "nutrition_support=[\"therapeutic_diets\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:42",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "operator_identity=venous therapy medical technique to administer fluids, medication and nutrients provided by our skilled nurses under the direction of a medical doctor. Psychological Services Psych",
+          "why_matters": "Profile context",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:42",
+          "verification_status": "VERIFIED",
+          "decision_impact": "facility profile"
+        }
+      ]
+    },
+    {
+      "facility": "JACKSON MEMORIAL LONG TERM CARE CENTER",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 13,
+      "examples": [
+        {
+          "new_fact": "clinical_services=[\"cardiac_pulmonary\", \"specialized_nursing\"]",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:48",
+          "verification_status": "VERIFIED",
+          "decision_impact": "ranking"
+        },
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 9, \"severe_deficiency_count\": 1, \"survey_dates\": [\"2024-04-04\", \"2025-08-14\", \"2026-02-27\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:50",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:50",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "activities=[\"cultural\", \"religious\", \"social\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:48",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "nutrition_support=[\"therapeutic_diets\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:48",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "operator_identity=n (AHCA). Staff Jackson Memorial Long-Term Care Center has 24-hour skilled care provided by an interdisciplinary team of physicians, registered nurses, licensed practical nurses, d",
+          "why_matters": "Profile context",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:48",
+          "verification_status": "VERIFIED",
+          "decision_impact": "facility profile"
+        }
+      ]
+    },
+    {
+      "facility": "JACKSON MEMORIAL PERDUE MEDICAL CENTER",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 13,
+      "examples": [
+        {
+          "new_fact": "clinical_services=[\"cardiac_pulmonary\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\"]",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:50",
+          "verification_status": "VERIFIED",
+          "decision_impact": "ranking"
+        },
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 16, \"severe_deficiency_count\": 1, \"survey_dates\": [\"2023-07-13\", \"2024-09-10\", \"2024-10-24\", \"2026-04-30\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:52",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:52",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "activities=[\"cultural\", \"music\", \"religious\", \"social\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:50",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "nutrition_support=[\"therapeutic_diets\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:50",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "operator_identity=emorial Perdue Medical Center provides 24-hour medical and skilled nursing care provided by staff physicians, registered nurses, licensed practical nurses, dieticians, and certifie",
+          "why_matters": "Profile context",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:50",
+          "verification_status": "VERIFIED",
+          "decision_impact": "facility profile"
+        }
+      ]
+    },
+    {
+      "facility": "MIAMI SHORES NURSING AND REHAB CENTER",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 13,
+      "examples": [
+        {
+          "new_fact": "clinical_services=[\"cardiac_pulmonary\", \"dialysis\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\"]",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "ranking"
+        },
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 23, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-11-04\", \"2023-10-19\", \"2025-03-26\", \"2025-06-24\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "activities=[\"exercise\", \"religious\", \"social\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "nutrition_support=[\"therapeutic_diets\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "operator_identity=erapy Licensed nurses administer and monitor treatments. Psychological Services Provided by bilingual Psychologists and Psychiatrists. Our Reviews Great staff & care! Very clean! -",
+          "why_matters": "Profile context",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:20:56",
+          "verification_status": "VERIFIED",
+          "decision_impact": "facility profile"
+        }
+      ]
+    },
+    {
+      "facility": "THE LILAC AT SILVER PALMS",
+      "what_known_before": [
+        "address",
+        "beds",
+        "inspection_rating",
+        "inspection_summary",
+        "overall_rating",
+        "provider_name",
+        "quality_rating",
+        "quality_summary",
+        "staffing_rating"
+      ],
+      "what_discovered_now_count": 13,
+      "examples": [
+        {
+          "new_fact": "clinical_services=[\"cardiac_pulmonary\", \"specialized_nursing\", \"wound_care\"]",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:21:58",
+          "verification_status": "VERIFIED",
+          "decision_impact": "ranking"
+        },
+        {
+          "new_fact": "inspection_summary={\"deficiency_count\": 27, \"severe_deficiency_count\": 3, \"survey_dates\": [\"2023-06-06\", \"2023-09-14\", \"2025-01-30\", \"2025-02-24\", \"2026-02-20\"]}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Inspection Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:22:01",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "quality_summary={\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "why_matters": "Regulatory/clinical signal",
+          "source": "CMS Quality Dataset",
+          "source_authority": "GOVERNMENT",
+          "retrieved_at": "2026-07-20 18:22:01",
+          "verification_status": "VERIFIED",
+          "decision_impact": "warning/risk"
+        },
+        {
+          "new_fact": "activities=[\"cultural\", \"religious\", \"social\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:21:58",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "nutrition_support=[\"therapeutic_diets\"]",
+          "why_matters": "Personal fit signal",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:21:58",
+          "verification_status": "VERIFIED",
+          "decision_impact": "personalized match"
+        },
+        {
+          "new_fact": "operator_identity=ms + − Skilled Nursing Round-the-clock medical care and rehabilitation services provided by licensed nurses and therapists for seniors with complex health needs requiring professio",
+          "why_matters": "Profile context",
+          "source": "Official website",
+          "source_authority": "OFFICIAL_PROVIDER",
+          "retrieved_at": "2026-07-20 18:21:58",
+          "verification_status": "VERIFIED",
+          "decision_impact": "facility profile"
+        }
+      ]
+    }
+  ],
+  "source_quality_audit": {
+    "status_counts": {
+      "NEW_VALUE": 203,
+      "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 6,
+      "SOURCE_RATE_LIMITED": 2,
+      "RAN_CONNECTED_NO_NEW_VALUE": 3,
+      "SOURCE_ACCESS_FAILED": 4
+    },
+    "connected_no_new_data": 3,
+    "source_access_failed": 4,
+    "other_failure_classes": {
+      "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 6,
+      "SOURCE_RATE_LIMITED": 2
+    },
+    "source_families": [
+      {
+        "source_family": "government|data.cms.gov",
+        "attempts": 162,
+        "success": 162,
+        "failures": 0,
+        "new_facts_produced": 476,
+        "high_value_facts_produced": 106,
+        "low_value_facts_produced": 370,
+        "status_breakdown": {
+          "NEW_VALUE": 159,
+          "RAN_CONNECTED_NO_NEW_VALUE": 3
+        }
+      },
+      {
+        "source_family": "official_facility|ultimateseniorresource.com",
+        "attempts": 5,
+        "success": 5,
+        "failures": 0,
+        "new_facts_produced": 16,
+        "high_value_facts_produced": 5,
+        "low_value_facts_produced": 5,
+        "status_breakdown": {
+          "NEW_VALUE": 5
+        }
+      },
+      {
+        "source_family": "official_facility|npino.com",
+        "attempts": 3,
+        "success": 3,
+        "failures": 0,
+        "new_facts_produced": 7,
+        "high_value_facts_produced": 3,
+        "low_value_facts_produced": 1,
+        "status_breakdown": {
+          "NEW_VALUE": 3
+        }
+      },
+      {
+        "source_family": "official_facility|www.catholichealthservices.org",
+        "attempts": 3,
+        "success": 0,
+        "failures": 3,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_ACCESS_FAILED": 3
+        }
+      },
+      {
+        "source_family": "official_facility|jacksonhealth.org",
+        "attempts": 2,
+        "success": 2,
+        "failures": 0,
+        "new_facts_produced": 8,
+        "high_value_facts_produced": 2,
+        "low_value_facts_produced": 2,
+        "status_breakdown": {
+          "NEW_VALUE": 2
+        }
+      },
+      {
+        "source_family": "official_facility|www.miradorliving.com",
+        "attempts": 2,
+        "success": 0,
+        "failures": 2,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_RATE_LIMITED": 2
+        }
+      },
+      {
+        "source_family": "official_facility|www.nursinghomes.us",
+        "attempts": 2,
+        "success": 2,
+        "failures": 0,
+        "new_facts_produced": 4,
+        "high_value_facts_produced": 2,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 2
+        }
+      },
+      {
+        "source_family": "official_facility|www.seniorlivingguide.com",
+        "attempts": 2,
+        "success": 0,
+        "failures": 2,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 2
+        }
+      },
+      {
+        "source_family": "secondary_profile|www.seniorly.com",
+        "attempts": 2,
+        "success": 2,
+        "failures": 0,
+        "new_facts_produced": 7,
+        "high_value_facts_produced": 2,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 2
+        }
+      },
+      {
+        "source_family": "official_facility|aventurarehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|biscaynerehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|brookwoodhc.com",
+        "attempts": 1,
+        "success": 0,
+        "failures": 1,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+        }
+      },
+      {
+        "source_family": "official_facility|claridgehouse.care",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|coralreefsubacute.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|eastridgeatcutlerbay.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|elevatecare.com",
+        "attempts": 1,
+        "success": 0,
+        "failures": 1,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+        }
+      },
+      {
+        "source_family": "official_facility|florideanrehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|harmonyhealth.care",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|hialeahshoresrehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 4,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 1,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|jacksongardensrehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|miamishoresrehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 4,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 1,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|northbeachrehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 1,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|nspirehc.com",
+        "attempts": 1,
+        "success": 0,
+        "failures": 1,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_ACCESS_FAILED": 1
+        }
+      },
+      {
+        "source_family": "official_facility|ourhealthnetwork.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|palmettocarecenter.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 1,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|palmettosubacute.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|palmgardenofaventura.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|pinecrestrehab.com",
+        "attempts": 1,
+        "success": 0,
+        "failures": 1,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+        }
+      },
+      {
+        "source_family": "official_facility|regentspark.care",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|rivierahealthresort.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 1,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|serenitybaycare.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|shoresiderehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|sierralakesrehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|susannawesleyrehab.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|treasureislecarecenter.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|universityrehabilitation.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|victorianursing.net",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 1,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|www.cms.gov",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|www.fountainmanorhealth.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|www.hamptoncourtnursing.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|www.miamijewishhealth.org",
+        "attempts": 1,
+        "success": 0,
+        "failures": 1,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+        }
+      },
+      {
+        "source_family": "official_facility|www.southdadenursing.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|www.viliving.com",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 2,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      },
+      {
+        "source_family": "official_facility|www.waterford.care",
+        "attempts": 1,
+        "success": 1,
+        "failures": 0,
+        "new_facts_produced": 3,
+        "high_value_facts_produced": 1,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 1
+        }
+      }
+    ],
+    "highest_yield_sources": [
+      {
+        "source_family": "government|data.cms.gov",
+        "attempts": 162,
+        "success": 162,
+        "failures": 0,
+        "new_facts_produced": 476,
+        "high_value_facts_produced": 106,
+        "low_value_facts_produced": 370,
+        "status_breakdown": {
+          "NEW_VALUE": 159,
+          "RAN_CONNECTED_NO_NEW_VALUE": 3
+        }
+      },
+      {
+        "source_family": "official_facility|ultimateseniorresource.com",
+        "attempts": 5,
+        "success": 5,
+        "failures": 0,
+        "new_facts_produced": 16,
+        "high_value_facts_produced": 5,
+        "low_value_facts_produced": 5,
+        "status_breakdown": {
+          "NEW_VALUE": 5
+        }
+      },
+      {
+        "source_family": "official_facility|npino.com",
+        "attempts": 3,
+        "success": 3,
+        "failures": 0,
+        "new_facts_produced": 7,
+        "high_value_facts_produced": 3,
+        "low_value_facts_produced": 1,
+        "status_breakdown": {
+          "NEW_VALUE": 3
+        }
+      },
+      {
+        "source_family": "official_facility|jacksonhealth.org",
+        "attempts": 2,
+        "success": 2,
+        "failures": 0,
+        "new_facts_produced": 8,
+        "high_value_facts_produced": 2,
+        "low_value_facts_produced": 2,
+        "status_breakdown": {
+          "NEW_VALUE": 2
+        }
+      },
+      {
+        "source_family": "secondary_profile|www.seniorly.com",
+        "attempts": 2,
+        "success": 2,
+        "failures": 0,
+        "new_facts_produced": 7,
+        "high_value_facts_produced": 2,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "NEW_VALUE": 2
+        }
+      }
+    ],
+    "lowest_yield_sources": [
+      {
+        "source_family": "official_facility|www.catholichealthservices.org",
+        "attempts": 3,
+        "success": 0,
+        "failures": 3,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_ACCESS_FAILED": 3
+        }
+      },
+      {
+        "source_family": "official_facility|www.miradorliving.com",
+        "attempts": 2,
+        "success": 0,
+        "failures": 2,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_RATE_LIMITED": 2
+        }
+      },
+      {
+        "source_family": "official_facility|www.seniorlivingguide.com",
+        "attempts": 2,
+        "success": 0,
+        "failures": 2,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 2
+        }
+      },
+      {
+        "source_family": "official_facility|brookwoodhc.com",
+        "attempts": 1,
+        "success": 0,
+        "failures": 1,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+        }
+      },
+      {
+        "source_family": "official_facility|elevatecare.com",
+        "attempts": 1,
+        "success": 0,
+        "failures": 1,
+        "new_facts_produced": 0,
+        "high_value_facts_produced": 0,
+        "low_value_facts_produced": 0,
+        "status_breakdown": {
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+        }
+      }
+    ]
+  },
+  "number_593_test": {
+    "raw_new_fact_records": 593,
+    "unique_semantic_facts": 593,
+    "duplicate_or_variant_records": 0,
+    "is_inflated_assessment": "TRUSTWORTHY",
+    "inflation_notes": "No material inflation detected."
+  },
+  "golden_case": {
+    "before_top5": [
+      "JOHN KNOX VILLAGE OF POMPANO BEACH",
+      "RIVER GARDEN HEBREW HOME FOR THE AGED",
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "SANDS AT SOUTH BEACH CARE CENTER, THE"
+    ],
+    "after_top5": [
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "Pinecrest Center for Rehabilitation and Healing",
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "SERENITY BAY NURSING AND REHABILITATION CENTER"
+    ],
+    "ranking_changed": true,
+    "verified_reasons_if_changed": [
+      "Frozen benchmark files differ; runtime causal attribution not embedded in frozen JSON."
+    ],
+    "profile_or_family_value_without_rank_change": "Discovery can still improve profile detail and family-facing explanations even without score/rank changes."
+  },
+  "top_20_most_valuable_new_discoveries": [
+    {
+      "facility": "AVENTURA REHAB AND NURSING CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"dialysis\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "AZURE SHORES REHAB",
+      "discovery": "clinical_services=[\"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"dialysis\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "CLARIDGE HOUSE NURSING AND REHABILITATION CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "CORAL REEF SUBACUTE CARE CENTER LLC",
+      "discovery": "clinical_services=[\"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "East Ridge Rehabilitation and Nursing Center",
+      "discovery": "clinical_services=[\"specialized_nursing\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "FLORIDEAN HEALTH & REHABILITATION CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"dialysis\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "discovery": "clinical_services=[\"occupational_therapy\", \"specialized_nursing\", \"speech_therapy\", \"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "GARDENS NURSING AND REHAB CENTER",
+      "discovery": "clinical_services=[\"physical_therapy\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "HARMONY HEALTH CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"dialysis\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "HIALEAH SHORES NURSING AND REHAB CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\", \"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "HOMESTEAD MANOR A PALACE COMMUNITY",
+      "discovery": "clinical_services=[\"dialysis\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "JACKSON GARDENS HEALTH AND REHABILITATION CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"dialysis\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "JACKSON MEMORIAL LONG TERM CARE CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"specialized_nursing\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "JACKSON MEMORIAL PERDUE MEDICAL CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "KENDALL LAKES HEALTHCARE AND REHAB CENTER",
+      "discovery": "clinical_services=[\"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "MIAMI SHORES NURSING AND REHAB CENTER",
+      "discovery": "clinical_services=[\"cardiac_pulmonary\", \"dialysis\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "MIAMI SPRINGS NURSING AND REHABILITATION CENTER",
+      "discovery": "clinical_services=[\"dialysis\", \"specialized_nursing\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "MIAMI SPRINGS NURSING AND REHABILITATION CENTER",
+      "discovery": "pricing={\"amount\": \"4500\", \"snippet\": \"he Miami Springs area that also offers Skilled Nursing Facility care. Estimated costs for this community start at $4,500/mo, which is lower than the ",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Seniorly profile",
+      "verification": "PARTIALLY_VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    },
+    {
+      "facility": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "discovery": "clinical_services=[\"specialized_nursing\"]",
+      "why_important": "Clinical/regulatory signal",
+      "source": "Official website",
+      "verification": "VERIFIED",
+      "previously_unknown": true,
+      "impact": "RANKING",
+      "category": "A"
+    }
+  ],
+  "remaining_knowledge_gaps": [
+    {
+      "field": "current_private_pay_price",
+      "known": 2,
+      "unknown": 52,
+      "coverage_pct": 3.7,
+      "best_source_to_resolve": "CMS/official provider websites",
+      "agent_owner": "provider_intelligence"
+    },
+    {
+      "field": "medicare_medicaid_acceptance",
+      "known": 2,
+      "unknown": 52,
+      "coverage_pct": 3.7,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "rehab_intensity_frequency",
+      "known": 39,
+      "unknown": 15,
+      "coverage_pct": 72.22,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "pt",
+      "known": 39,
+      "unknown": 15,
+      "coverage_pct": 72.22,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "ot",
+      "known": 39,
+      "unknown": 15,
+      "coverage_pct": 72.22,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "speech_therapy",
+      "known": 39,
+      "unknown": 15,
+      "coverage_pct": 72.22,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "stroke_rehab_evidence",
+      "known": 39,
+      "unknown": 15,
+      "coverage_pct": 72.22,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "physician_coverage",
+      "known": 39,
+      "unknown": 15,
+      "coverage_pct": 72.22,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "rn_coverage",
+      "known": 39,
+      "unknown": 15,
+      "coverage_pct": 72.22,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "languages",
+      "known": 41,
+      "unknown": 13,
+      "coverage_pct": 75.93,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "activities_intelligence"
+    },
+    {
+      "field": "hebrew_jewish_fit",
+      "known": 41,
+      "unknown": 13,
+      "coverage_pct": 75.93,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "activities_intelligence"
+    },
+    {
+      "field": "food_dietary_support",
+      "known": 22,
+      "unknown": 32,
+      "coverage_pct": 40.74,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "nutrition_intelligence"
+    },
+    {
+      "field": "activities",
+      "known": 40,
+      "unknown": 14,
+      "coverage_pct": 74.07,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "activities_intelligence"
+    },
+    {
+      "field": "family_satisfaction",
+      "known": 1,
+      "unknown": 53,
+      "coverage_pct": 1.85,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "family_experience"
+    },
+    {
+      "field": "employee_staff_sentiment",
+      "known": 0,
+      "unknown": 54,
+      "coverage_pct": 0.0,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "family_experience"
+    },
+    {
+      "field": "current_bed_availability",
+      "known": 0,
+      "unknown": 54,
+      "coverage_pct": 0.0,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "admissions_eligibility",
+      "known": 0,
+      "unknown": 54,
+      "coverage_pct": 0.0,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "clinical_knowledge"
+    },
+    {
+      "field": "transportation",
+      "known": 41,
+      "unknown": 13,
+      "coverage_pct": 75.93,
+      "best_source_to_resolve": "Provider websites and validated secondary sources",
+      "agent_owner": "activities_intelligence"
+    },
+    {
+      "field": "recent_regulatory_events",
+      "known": 53,
+      "unknown": 1,
+      "coverage_pct": 98.15,
+      "best_source_to_resolve": "CMS/official provider websites",
+      "agent_owner": "senior_living_research"
+    },
+    {
+      "field": "ownership_operator",
+      "known": 10,
+      "unknown": 44,
+      "coverage_pct": 18.52,
+      "best_source_to_resolve": "CMS/official provider websites",
+      "agent_owner": "provider_intelligence"
+    },
+    {
+      "field": "official_website",
+      "known": 12,
+      "unknown": 42,
+      "coverage_pct": 22.22,
+      "best_source_to_resolve": "CMS/official provider websites",
+      "agent_owner": "provider_intelligence"
+    }
+  ],
+  "production_scoring_changed": "NO",
+  "stall_diagnosis": {
+    "root_cause": "Repeated waits at Python environment configuration were not required because repository-local venv already existed and commands could run directly.",
+    "observed_process_state": "No active python.exe/pythonw.exe process was running while waiting.",
+    "prevention": [
+      "Use absolute venv interpreter path directly for audit scripts.",
+      "Set explicit command timeouts for long DB audits.",
+      "Avoid re-invoking environment configuration during an active audit session."
+    ]
+  }
+}
