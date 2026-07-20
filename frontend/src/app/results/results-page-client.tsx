@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { resolveBudgetValue } from "@/lib/budget-utils";
 import { GovernanceRuntimeContext, SearchFacility, fetchGovernanceRuntimeContext, fetchSearchFacilities } from "@/lib/api";
+import { resolveFacilityImage, resolvePriceTruth } from "@/lib/facility-experience";
 import { RankedRecommendation, runOptimeV2Engine } from "@/lib/optime-v2-engine";
 import { clearSearchSession } from "@/lib/search-session";
 
@@ -143,7 +144,7 @@ function familyNarrative(recommendation: RankedRecommendation): string[] {
   const facility = recommendation.facility;
   const clinical = recommendation.report.audit.clinicalReasoning;
   const unknownCount = recommendation.report.audit.verificationRequest.unknownCount;
-  const budgetRange = recommendation.report.audit.verificationRequest.anonymousPayload.budgetRange;
+  const budgetRange = recommendation.report.audit.anonymousVerificationPayload.budgetRange;
 
   const first = `We recommend ${facility.name} because it appears to match the requested level of daily support.`;
   const second = budgetRange === "Budget not supplied"
@@ -161,7 +162,7 @@ function familyNarrative(recommendation: RankedRecommendation): string[] {
 
 function stoodOutBullets(recommendation: RankedRecommendation): string[] {
   const facility = recommendation.facility;
-  const budgetRange = recommendation.report.audit.verificationRequest.anonymousPayload.budgetRange;
+  const budgetRange = recommendation.report.audit.anonymousVerificationPayload.budgetRange;
   const bullets: string[] = [];
 
   bullets.push("Meets the requested care level.");
@@ -177,32 +178,6 @@ function stoodOutBullets(recommendation: RankedRecommendation): string[] {
   }
 
   return bullets.slice(0, 5);
-}
-
-function normalizeTagLabel(value: string): string {
-  return value.trim().toLowerCase();
-}
-
-function visualFitForFacility(facility: SearchFacility, state: ReturnType<typeof useQuestionnaire>["state"]): number {
-  const tags = new Set(facility.visualIntelligence.lifestyleTags.map((tag) => normalizeTagLabel(tag.label)));
-  let score = 52;
-
-  const activityPrefs = new Set((state.happinessPreferences || []).map((item) => item.toLowerCase()));
-  const environmentPrefs = new Set((state.humanIntelligenceV2.communityPreferenceProfile.preferredEnvironment || []).map((item) => item.toLowerCase()));
-  const socialProfile = state.humanIntelligenceV2.socialProfile;
-  const culturalProfile = state.humanIntelligenceV2.culturalProfile;
-
-  if (activityPrefs.has("social activities") && tags.has("active social life")) score += 12;
-  if (activityPrefs.has("outdoor activities") && tags.has("large gardens")) score += 12;
-  if (activityPrefs.has("good food") && tags.has("cafe environment")) score += 10;
-  if (activityPrefs.has("exercise and wellness") && tags.has("fitness center")) score += 10;
-  if (environmentPrefs.has("quiet community") && tags.has("active social life")) score -= 8;
-  if (environmentPrefs.has("quiet community") && tags.has("clinical setting")) score -= 16;
-  if ((socialProfile.socialInteractionFrequency || "").toLowerCase() === "daily" && tags.has("active social life")) score += 8;
-  if ((culturalProfile.faithTraditions || []).includes("Jewish") && tags.has("jewish services")) score += 10;
-  if (["Important", "Very important", "High", "Very high"].includes(state.humanIntelligenceV2.independenceProfile.petOwnershipImportance) && tags.has("pet friendly")) score += 8;
-
-  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 export function ResultsPageClient() {
@@ -222,13 +197,9 @@ export function ResultsPageClient() {
     includeCommunitiesWithoutMemoryCare: false,
     removeActivityPreference: false,
   });
-  const [verificationSentByFacility, setVerificationSentByFacility] = useState<Record<number, boolean>>({});
-  const [verificationAuditLog, setVerificationAuditLog] = useState<Array<{
-    facilityId: number;
-    timestamp: string;
-    sharedFields: string[];
-    consent: boolean;
-  }>>([]);
+  const [savedFacilityIds, setSavedFacilityIds] = useState<number[]>([]);
+  const [skippedFacilityIds, setSkippedFacilityIds] = useState<number[]>([]);
+  const [compareFacilityIds, setCompareFacilityIds] = useState<number[]>([]);
 
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
   const age = searchParams.get("age") || state.ageGroup || "80-84";
@@ -313,8 +284,6 @@ export function ResultsPageClient() {
     const facility = recommendation.facility;
     const report = recommendation.report;
     const clinical = report.audit.clinicalReasoning;
-    const verificationSent = Boolean(verificationSentByFacility[facility.id]);
-    const latestAuditLog = [...verificationAuditLog].reverse().find((item) => item.facilityId === facility.id);
     const narrativeParagraphs = familyNarrative(recommendation);
     const verifiedItems = report.audit.verificationChecklist.filter((item) => item.state === "YES");
     const unknownItems = report.audit.verificationChecklist.filter((item) => item.state === "UNKNOWN");
@@ -323,220 +292,96 @@ export function ResultsPageClient() {
     const visitQuestions = report.audit.clinicalReasoning.questionsForFacility.slice(0, 4);
     const reviewDate = formatReviewDate(report.audit.confidence.lastIntelligenceRefresh);
     const governed = report.audit.governedFacilityDecision;
+    const imageTruth = resolveFacilityImage(facility);
+    const priceTruth = resolvePriceTruth(facility);
+    const isSaved = savedFacilityIds.includes(facility.id);
+    const isSkipped = skippedFacilityIds.includes(facility.id);
+    const isCompared = compareFacilityIds.includes(facility.id);
 
     return (
-      <article key={facility.id} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
-        <div className="mb-4 overflow-hidden rounded-2xl border border-[#e3d8c8] bg-[#f7f2e8]">
-          <img
-            src={facility.visualIntelligence.heroImage.url}
-            alt={`${facility.name} hero`}
-            className="h-52 w-full object-cover"
-            onError={(event) => {
-              event.currentTarget.src = "/cms-placeholder.svg";
-            }}
-          />
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e3d8c8] bg-white px-3 py-2 text-xs text-[#6b6257]">
-            <span>Hero source: {facility.visualIntelligence.heroImage.source}</span>
-            <span>Coverage {facility.visualIntelligence.visualCoverageScore}%</span>
-          </div>
-        </div>
-
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="mb-2 inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(index)}</p>
-            <h3 className="text-2xl font-semibold text-[#2f2a24]">{facility.name}</h3>
-            <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
-          </div>
-          <div className="rounded-2xl border border-[#d8e7dc] bg-[#f4fbf6] px-3 py-2 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Overall match</p>
-            <p className="mt-1 text-base font-semibold text-[#2f6d3e]">{Math.max(1, Math.round(recommendation.totalScore))}%</p>
-          </div>
-        </div>
-
-        <section className="mt-4 grid gap-3 rounded-xl border border-[#d9e3ec] bg-white p-4 text-sm text-[#4f473d] sm:grid-cols-3">
-          <div>
-            <p className="font-semibold text-[#2f2a24]">Confidence</p>
-            <p className="mt-1">{visualConfidenceLabel(report.confidenceScore)} confidence</p>
-          </div>
-          <div>
-            <p className="font-semibold text-[#2f2a24]">Verification date</p>
-            <p className="mt-1">{reviewDate}</p>
-          </div>
-          <div>
-            <p className="font-semibold text-[#2f2a24]">Overall fit</p>
-            <p className="mt-1">{recommendation.rankReason || "One of the strongest available options for this search."}</p>
-          </div>
-        </section>
-
-        <div className="mt-4 space-y-3 text-sm text-[#4f473d]">
-          <section className="rounded-xl border border-[#d6e4ef] bg-[#f5fbff] p-4">
-            <p className="font-semibold text-[#24425e]">Why OPTIME recommends this community</p>
-            <div className="mt-2 space-y-3 text-sm leading-6 text-[#3f5f79]">
-              {narrativeParagraphs.map((paragraph) => (
-                <p key={`${facility.id}-narrative-${paragraph}`}>{paragraph}</p>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-[#cde2d2] bg-[#f3fbf5] p-4">
-            <p className="font-semibold text-[#2f6d3e]">Good matches</p>
-            {verifiedItems.length > 0 ? (
-              <ul className="mt-2 space-y-2 text-sm text-[#2f6d3e]">
-                {verifiedItems.slice(0, 8).map((item) => (
-                  <li key={`${facility.id}-verified-good-${item.label}`} className="rounded-lg border border-[#bcd9c0] bg-[#eef8f1] px-3 py-2">
-                    ✔ {item.label}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-2 text-sm text-[#4f473d]">No items are verified yet.</p>
-            )}
-          </section>
-
-          {governed ? (
-            <section className="rounded-xl border border-[#d9e3ec] bg-[#f8fbff] p-4">
-              <p className="font-semibold text-[#24425e]">Governed MUST status</p>
-              <p className="mt-2 text-sm text-[#4f473d]">Eligibility: {governed.eligibility_status}</p>
-              <p className="mt-1 text-sm text-[#4f473d]">Canonical identity: {governed.identity_status}{governed.canonical_facility_id ? ` (#${governed.canonical_facility_id})` : ""}</p>
-              <div className="mt-3 grid gap-2 text-xs text-[#4f473d] sm:grid-cols-2">
-                <div>
-                  <p className="font-semibold">MUST satisfied</p>
-                  <p>{governed.must_satisfied.length > 0 ? governed.must_satisfied.join("; ") : "None"}</p>
-                </div>
-                <div>
-                  <p className="font-semibold">MUST failed</p>
-                  <p>{governed.must_failed.length > 0 ? governed.must_failed.join("; ") : "None"}</p>
-                </div>
-                <div>
-                  <p className="font-semibold">MUST unknown</p>
-                  <p>{governed.must_unknown.length > 0 ? governed.must_unknown.join("; ") : "None"}</p>
-                </div>
-                <div>
-                  <p className="font-semibold">Verification required</p>
-                  <p>{governed.verification_required.length > 0 ? governed.verification_required.join("; ") : "None"}</p>
-                </div>
-              </div>
-            </section>
-          ) : null}
-
-          <section className="rounded-xl border border-[#f0d9b0] bg-[#fff8ea] p-4">
-            <p className="font-semibold text-[#8a6a2f]">Still needs confirmation</p>
-            {unknownItems.length > 0 ? (
-              <ul className="mt-2 space-y-2 text-sm text-[#7a6847]">
-                {unknownItems.slice(0, 8).map((item) => (
-                  <li key={`${facility.id}-unknown-confirm-${item.label}`} className="rounded-lg border border-[#e3d2a6] bg-[#fff8e9] px-3 py-2">
-                    ❓ {item.label}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-2 text-sm text-[#4f473d]">No open confirmation items.</p>
-            )}
-            <p className="mt-3 text-xs text-[#6f6148]">We have not found reliable confirmation yet. OPTIME can verify these directly with the community.</p>
-          </section>
-
-          {noItems.length > 0 ? (
-            <section className="rounded-xl border border-[#f0c9bf] bg-[#fff3ef] p-4">
-              <p className="font-semibold text-[#8b4f3f]">Things to consider</p>
-              <ul className="mt-2 space-y-2 text-sm text-[#8b4f3f]">
-                {noItems.slice(0, 6).map((item) => (
-                  <li key={`${facility.id}-not-available-${item.label}`} className="rounded-lg border border-[#e9c5bc] bg-[#fff3ef] px-3 py-2">
-                    ✖ {item.label}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          <section className="rounded-xl border border-[#d9e3ec] bg-white p-4">
-            <p className="font-semibold text-[#2f2a24]">Why this community stood out</p>
-            <ul className="mt-2 space-y-2 text-sm text-[#4f473d]">
-              {standout.map((item) => (
-                <li key={`${facility.id}-stoodout-${item}`} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#6f9a86]" aria-hidden="true" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="rounded-xl border border-[#d9e3ec] bg-white p-4">
-            <p className="font-semibold text-[#24425e]">What should happen next</p>
-            {visitQuestions.length > 0 ? (
-              <ul className="mt-2 space-y-2 text-sm text-[#5f5548]">
-                {visitQuestions.map((question) => (
-                  <li key={`${facility.id}-visit-${question}`} className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#6f9a86]" aria-hidden="true" />
-                    <span>{question}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => {
-                setVerificationSentByFacility((current) => ({
-                  ...current,
-                  [facility.id]: true,
-                }));
-                setVerificationAuditLog((current) => [
-                  ...current,
-                  {
-                    facilityId: facility.id,
-                    timestamp: new Date().toISOString(),
-                    sharedFields: [
-                      "Care level",
-                      "Functional needs",
-                      "Dietary needs",
-                      "Lifestyle interests",
-                      "Move-in timeframe",
-                      "Geographic area",
-                    ],
-                    consent: false,
-                  },
-                ]);
+      <article key={facility.id} className={`rounded-2xl border ${isSkipped ? "border-[#f0c9bf] bg-[#fff8f4] opacity-85" : "border-[#e8ddcc] bg-white"} p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]`}>
+        <div className="grid gap-4 lg:grid-cols-[96px,1fr]">
+          <div className="overflow-hidden rounded-xl border border-[#e3d8c8] bg-[#f7f2e8]">
+            <img
+              src={imageTruth.url}
+              alt={`${facility.name} thumbnail`}
+              className="h-24 w-full object-cover"
+              onError={(event) => {
+                event.currentTarget.src = "/cms-placeholder.svg";
               }}
-              className="w-full rounded-2xl bg-[#2f6d3e] px-5 py-4 text-base font-semibold text-white hover:bg-[#265a33]"
-            >
-              Verify remaining questions with this community
-            </button>
-            <p className="mt-2 text-xs text-[#5f5548]">No personal information will be shared. We will only ask about the unanswered items.</p>
-            {verificationSent ? (
-              <div className="mt-3 rounded-lg border border-[#c9dfcf] bg-[#f1faf3] p-2 text-xs text-[#2f6d3e]">
-                <p className="font-semibold">Verification request sent anonymously.</p>
-                {latestAuditLog ? (
-                  <p className="mt-1 text-[#3f6a48]">Audit log: {latestAuditLog.timestamp}</p>
-                ) : null}
+            />
+            <div className="border-t border-[#e3d8c8] bg-white px-2 py-1 text-[10px] text-[#6b6257]">
+              {imageTruth.isPlaceholder ? "Compact placeholder" : imageTruth.sourceLabel}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(index)}</p>
+                <h3 className="mt-2 text-xl font-semibold text-[#2f2a24]">{facility.name}</h3>
+                <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
+                <p className="mt-1 text-xs font-medium text-[#5f7f6b]">{facility.careTypes.slice(0, 2).join(" • ")}</p>
               </div>
-            ) : null}
-          </section>
-        </div>
+              <div className="rounded-2xl border border-[#d8e7dc] bg-[#f4fbf6] px-3 py-2 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">OPTIME fit</p>
+                <p className="mt-1 text-lg font-semibold text-[#2f6d3e]">{Math.max(1, Math.round(recommendation.totalScore))}%</p>
+                <p className="text-[10px] text-[#5e7264]">{visualConfidenceLabel(report.confidenceScore)} confidence</p>
+              </div>
+            </div>
 
-        <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">Estimated monthly range: {facility.priceRange}</p>
+            <p className="text-sm text-[#4f473d]">{narrativeParagraphs[0]}</p>
+            <p className="text-sm text-[#5f5548]">{standout.slice(0, 3).join(" · ")}</p>
+            <p className="text-sm text-[#5f5548]">{clinical.whyThisCommunity || recommendation.rankReason}</p>
+            <p className="text-xs text-[#6b6257]">{verifiedItems.length > 0 ? `Verified: ${verifiedItems.slice(0, 2).map((item) => item.label).join("; ")}` : "No verified matches yet."}</p>
+            <p className="text-xs text-[#8b4f3f]">{noItems.length > 0 ? `Biggest concern: ${noItems[0].label}` : "No confirmed negative item yet."}</p>
+            <p className="text-xs text-[#24425e]">{visitQuestions[0] ? `Ask: ${visitQuestions[0]}` : "No unanswered question surfaced yet."}</p>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {facility.careTypes.map((careType) => (
-            <span key={careType} className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 text-xs font-medium text-[#5f5548]">
-              {careType}
-            </span>
-          ))}
-        </div>
+            <div className="flex flex-wrap gap-2 text-xs text-[#5b5245]">
+              <span className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 font-medium">{governed ? `Governed: ${governed.eligibility_status}` : "Governed data pending"}</span>
+              <span className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 font-medium">{reviewDate}</span>
+              <span className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 font-medium">{priceTruth.label}: {priceTruth.value}</span>
+              <span className="rounded-full border border-[#d9cfbf] bg-white px-3 py-1 font-medium">{unknownItems.length} unresolved</span>
+            </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {facility.matchBadges.map((badge) => (
-            <span key={badge} className="rounded-full bg-[#edf3ea] px-3 py-1 text-xs font-medium text-[#4c6f5b]">
-              {badge}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Link href={`/facilities/${facility.id}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
-            View details
-          </Link>
-          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${facility.name} ${facility.city}`)}`} target="_blank" rel="noreferrer" className="inline-flex rounded-full border border-[#dccfb9] px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">
-            Map
-          </a>
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/facility/${facility.id}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
+                VIEW FACILITY
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setSavedFacilityIds((current) => current.includes(facility.id) ? current.filter((id) => id !== facility.id) : [...current, facility.id]);
+                  setSkippedFacilityIds((current) => current.filter((id) => id !== facility.id));
+                }}
+                className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isSaved ? "border-[#6f9a86] bg-[#f1faf3] text-[#2f6d3e]" : "border-[#dccfb9] bg-white text-[#5b5245]"}`}
+              >
+                {isSaved ? "Saved" : "SAVE"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSkippedFacilityIds((current) => current.includes(facility.id) ? current.filter((id) => id !== facility.id) : [...current, facility.id]);
+                  setSavedFacilityIds((current) => current.filter((id) => id !== facility.id));
+                }}
+                className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isSkipped ? "border-[#f0c9bf] bg-[#fff3ef] text-[#8b4f3f]" : "border-[#dccfb9] bg-white text-[#5b5245]"}`}
+              >
+                {isSkipped ? "Skipped" : "NOT FOR ME"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCompareFacilityIds((current) => current.includes(facility.id) ? current.filter((id) => id !== facility.id) : [...current.slice(0, 2), facility.id]);
+                }}
+                className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isCompared ? "border-[#5f7f6b] bg-[#eef7f1] text-[#3f6a48]" : "border-[#dccfb9] bg-white text-[#5b5245]"}`}
+              >
+                {isCompared ? "Comparing" : "COMPARE"}
+              </button>
+              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${facility.name} ${facility.city}`)}`} target="_blank" rel="noreferrer" className="inline-flex rounded-full border border-[#dccfb9] px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">
+                MAP
+              </a>
+            </div>
+          </div>
         </div>
       </article>
     );
@@ -565,54 +410,7 @@ export function ResultsPageClient() {
   };
 
   const renderCompactCard = (recommendation: RankedRecommendation, index: number) => {
-    const facility = recommendation.facility;
-    return (
-      <article key={`compact-${facility.id}`} className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]">
-        <div className="mb-3 overflow-hidden rounded-xl border border-[#e3d8c8] bg-[#f7f2e8]">
-          <img
-            src={facility.visualIntelligence.heroImage.url}
-            alt={`${facility.name} hero`}
-            className="h-36 w-full object-cover"
-            onError={(event) => {
-              event.currentTarget.src = "/cms-placeholder.svg";
-            }}
-          />
-        </div>
-
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#6a6257]">{recommendationTitle(index)}</p>
-            <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">{facility.name}</h3>
-            <p className="mt-1 text-sm text-[#6d655b]">{facility.city}, {facility.state}</p>
-          </div>
-        </div>
-
-        <div className="mt-3 rounded-xl border border-[#e7ddcd] bg-[#fcfaf5] p-3 text-sm text-[#4f473d]">
-          <p className="font-semibold text-[#2f2a24]">Family summary</p>
-          <p className="mt-2 text-sm text-[#5f5548]">{recommendation.whyThisFits}</p>
-        </div>
-
-        <p className="mt-3 text-sm text-[#5f554a]">{recommendation.tradeoff}</p>
-        <p className="mt-2 text-sm font-semibold text-[#4f6f8f]">Estimated monthly range: {facility.priceRange}</p>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {facility.matchBadges.slice(0, 3).map((badge) => (
-            <span key={`compact-${facility.id}-${badge}`} className="rounded-full bg-[#edf3ea] px-3 py-1 text-xs font-medium text-[#4c6f5b]">
-              {badge}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <Link href={`/facilities/${facility.id}`} className="text-sm font-semibold text-[#5f7f6b] hover:text-[#4f6f8f]">
-            View
-          </Link>
-          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${facility.name} ${facility.city}`)}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#5b5245] hover:text-[#2f2a24]">
-            Map
-          </a>
-        </div>
-      </article>
-    );
+    return renderFullCard(recommendation, index);
   };
 
   return (
@@ -736,6 +534,23 @@ export function ResultsPageClient() {
                   </section>
                 ) : null}
               </div>
+            ) : null}
+
+            {compareFacilityIds.length > 0 ? (
+              <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Compare tray</p>
+                <p className="mt-2 text-sm text-[#4a6076]">Selected facilities are staged locally for future comparison. This does not change ranking.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {compareFacilityIds.map((id) => {
+                    const item = visibleRecommendations.find((recommendation) => recommendation.facility.id === id);
+                    return (
+                      <span key={`compare-${id}`} className="rounded-full border border-[#cddce5] bg-white px-3 py-1 text-xs font-semibold text-[#24425e]">
+                        {item?.facility.name || `Facility ${id}`}
+                      </span>
+                    );
+                  })}
+                </div>
+              </section>
             ) : null}
           </section>
         ) : null}

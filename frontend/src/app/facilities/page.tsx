@@ -77,7 +77,7 @@ export default function FacilitiesPage() {
             {facilities.map((facility) => (
               <Link
                 key={facility.id}
-                href={`/facilities/${facility.id}`}
+                href={`/facility/${facility.id}`}
                 className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
               >
                 <h2 className="text-lg font-semibold text-slate-900 group-hover:text-cyan-800">{facility.name}</h2>

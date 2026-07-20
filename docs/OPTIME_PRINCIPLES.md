@@ -122,3 +122,13 @@ Knowledge is never finished.
 It compounds.
 
 It improves every future recommendation.
+
+## Principle 11: Booking + Tinder Decision Journey
+OPTIME must combine:
+- Booking-style decision depth for rich facility profiles and structured comparison
+- Tinder-style discovery efficiency for fast visual scanning, save/skip/compare behavior, and shortlist learning
+- OPTIME-specific evidence intelligence that answers what the facility means for this person specifically
+
+This is a product principle, not a branding directive.
+
+It does not permit copying Booking or Tinder layouts, branding, or proprietary interaction patterns.
