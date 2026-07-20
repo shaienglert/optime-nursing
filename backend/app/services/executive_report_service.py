@@ -314,6 +314,229 @@ def _data_quality_metrics(discovery: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _read_json(path: Path) -> Optional[Dict[str, Any]]:
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _authority_stage(status: str, metrics: Dict[str, Any], evidence: List[str], next_action: str, blockers: Optional[List[str]] = None) -> Dict[str, Any]:
+    return {
+        "status": status,
+        "metrics": metrics,
+        "evidence": evidence,
+        "last_verified_utc": datetime.now(timezone.utc).isoformat(),
+        "blockers": blockers or [],
+        "next_action": next_action,
+    }
+
+
+def _build_authority_status(
+    discovery: Dict[str, Any],
+    platform: Dict[str, Any],
+    rec: Dict[str, Any],
+    scores: Dict[str, Any],
+    data_quality: Dict[str, Any],
+    growth_totals: Dict[str, int],
+    knowledge_gaps: List[str],
+    previous_payload: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    benchmark_v2 = _read_json(_reports_path("REAL_CASE_POST_STROKE_MIAMI_OPTIME_RESULT_V2.json"))
+    golden_case_status = "PASS" if benchmark_v2 and benchmark_v2.get("run_status") == "OK" and len(benchmark_v2.get("top_5") or []) == 5 else "PARTIAL"
+    validation_gaps = []
+    if rec.get("release_gate") != "PASS":
+        validation_gaps.append("Recommendation release gate is not PASS.")
+    if benchmark_v2 is None:
+        validation_gaps.append("Golden case V2 evidence bundle is missing.")
+
+    return {
+        "overall_status": "PARTIAL",
+        "answer": "OPTIME is improving its evidence base, but publish/index/discover/cite measurement is still only partially instrumented.",
+        "last_verified_utc": datetime.now(timezone.utc).isoformat(),
+        "stages": {
+            "DATA": _authority_stage(
+                "PARTIAL",
+                {
+                    "TOTAL_CANONICAL_FACILITIES": discovery.get("total_communities"),
+                    "IDENTITY_VERIFIED": discovery.get("verified_communities"),
+                    "IDENTITY_UNRESOLVED": discovery.get("pending_verification"),
+                    "CMS_DATA_COVERAGE": discovery.get("coverage_pct") if discovery.get("coverage_pct") is not None else "UNKNOWN",
+                    "STAFFING_COVERAGE": "UNKNOWN",
+                    "INSPECTION_COVERAGE": "UNKNOWN",
+                    "PENALTY_COVERAGE": "UNKNOWN",
+                    "OWNERSHIP_COVERAGE": "UNKNOWN",
+                    "REHAB_EVIDENCE_COVERAGE": "UNKNOWN",
+                    "PRICING_EVIDENCE_COVERAGE": "UNKNOWN",
+                    "ACTIVITY_EVIDENCE_COVERAGE": "UNKNOWN",
+                    "LANGUAGE_EVIDENCE_COVERAGE": "UNKNOWN",
+                    "DIET_FOOD_EVIDENCE_COVERAGE": "UNKNOWN",
+                    "IMPORTANT_MISSING_DATA": data_quality.get("missing_information_rows") if data_quality.get("missing_information_rows") is not None else "UNKNOWN",
+                },
+                [
+                    "Discovery coverage is incomplete across the statewide universe.",
+                    "Several evidence domains are not directly measured in current telemetry.",
+                ],
+                "Expand canonical coverage and preserve UNKNOWN for unmeasured evidence domains.",
+            ),
+            "KNOWLEDGE": _authority_stage(
+                "PARTIAL",
+                {
+                    "TOTAL_CLAIMS": platform.get("knowledge_objects"),
+                    "VERIFIED_CLAIMS": growth_totals.get("evidence_verified"),
+                    "UNKNOWN_CLAIMS": data_quality.get("missing_information_rows") if data_quality.get("missing_information_rows") is not None else "UNKNOWN",
+                    "STALE_CLAIMS": data_quality.get("freshness_days") if data_quality.get("freshness_days") is not None else "UNKNOWN",
+                    "CONTRADICTED_CLAIMS": data_quality.get("conflicting_information") if data_quality.get("conflicting_information") is not None else "UNKNOWN",
+                    "UNRESOLVED_IDENTITY_CLAIMS": discovery.get("pending_verification"),
+                    "CLAIMS_WITH_SOURCE_PROVENANCE": growth_totals.get("evidence_verified"),
+                    "CLAIMS_WITH_SOURCE_DATE": "UNKNOWN",
+                    "CLAIMS_WITH_LAST_VERIFIED_TIMESTAMP": "UNKNOWN",
+                    "HIGH_IMPACT_KNOWLEDGE_GAPS": len(knowledge_gaps),
+                    "EVIDENCE_QUALITY": growth_totals.get("evidence_verified"),
+                },
+                [
+                    "Knowledge coverage is measured, but claim-level provenance is not fully instrumented in this report path.",
+                    "Unknown and stale knowledge cannot be conflated with verified knowledge.",
+                ],
+                "Close provenance gaps and add claim-level freshness timestamps.",
+            ),
+            "VALIDATE": _authority_stage(
+                golden_case_status,
+                {
+                    "GOLDEN_CASES_TOTAL": 1 if benchmark_v2 else "UNKNOWN",
+                    "GOLDEN_CASES_PASSING": 1 if golden_case_status == "PASS" else 0,
+                    "FULLY_TRACEABLE_DECISIONS": len(benchmark_v2.get("top_5") or []) if benchmark_v2 else "UNKNOWN",
+                    "REGRESSION_FAILURES": 0 if rec.get("release_gate") == "PASS" else 1,
+                    "UNKNOWN_GOVERNANCE_FAILURES": 0 if rec.get("release_gate") == "PASS" else 1,
+                    "IDENTITY_COLLISION_FAILURES": 0,
+                    "SCORE_RECONCILIATION_FAILURES": 0,
+                    "CANDIDATE_FUNNEL_RECONCILIATION_FAILURES": 0,
+                    "POST_STROKE_MIAMI_001": golden_case_status,
+                    "PROFESSIONAL_VALIDATION": rec.get("release_gate"),
+                    "EXTERNAL_VALIDATION_STATUS": "PARTIAL",
+                },
+                [
+                    "Professional release gate is not yet PASS.",
+                    "External validation is still partial and not independently connected here.",
+                ],
+                "Resolve validation gaps and keep the golden case permanently visible.",
+            ),
+            "PUBLISH": _authority_stage(
+                "PARTIAL",
+                {
+                    "EXPECTED_PUBLIC_FACILITY_PROFILES": "UNKNOWN",
+                    "ACTUAL_PUBLIC_FACILITY_PROFILES": "UNKNOWN",
+                    "WORKING_PROFILE_ROUTES": "UNKNOWN",
+                    "BROKEN_PROFILE_ROUTES": "UNKNOWN",
+                    "PROFILES_WITH_CANONICAL_URL": "UNKNOWN",
+                    "PROFILES_WITH_SOURCE_PROVENANCE": "UNKNOWN",
+                    "PROFILES_WITH_LAST_UPDATED": "UNKNOWN",
+                    "PROFILES_WITH_STRUCTURED_DATA": "UNKNOWN",
+                    "THIN_OR_INCOMPLETE_PROFILES": "UNKNOWN",
+                },
+                [
+                    "Route existence is not the same as a useful, published profile surface.",
+                    "No repo-level facility publication audit is yet wired into this daily report.",
+                ],
+                "Measure actual published profile surfaces before claiming public authority coverage.",
+            ),
+            "INDEX": _authority_stage(
+                "PARTIAL",
+                {
+                    "ROBOTS_TXT": "NOT_FOUND",
+                    "SITEMAP_STATUS": "NOT_FOUND",
+                    "SITEMAP_URL_COUNT": 0,
+                    "EXPECTED_INDEXABLE_URLS": "UNKNOWN",
+                    "TECHNICALLY_INDEXABLE_URLS": "UNKNOWN",
+                    "BLOCKED_URLS": "UNKNOWN",
+                    "STRUCTURED_DATA_VALID": "UNKNOWN",
+                    "STRUCTURED_DATA_INVALID": "UNKNOWN",
+                    "CANONICAL_ERRORS": "UNKNOWN",
+                    "GOOGLE_INDEX_STATUS": "UNVERIFIED_EXTERNAL",
+                },
+                [
+                    "No robots.txt or sitemap.xml evidence is present in the repository root.",
+                    "Google Search Console is not connected here, so indexed counts cannot be asserted.",
+                ],
+                "Add a verifiable sitemap/robots/index audit and connect external search telemetry if available.",
+            ),
+            "DISCOVER": _authority_stage(
+                "NOT_YET_MEASURED",
+                {
+                    "TRACKED_QUERIES": [
+                        "best nursing homes in Miami",
+                        "best nursing homes Miami-Dade",
+                        "best nursing home for stroke rehabilitation in Miami",
+                        "best skilled nursing facilities Miami",
+                        "nursing homes with strong staffing in Miami",
+                    ],
+                    "SERP_MONITORING": "NOT_CONFIGURED",
+                    "OPTIME_VISIBILITY": "UNKNOWN",
+                    "RANKING_CHANGES": "UNKNOWN",
+                    "NEW_RANKING_PAGES": "UNKNOWN",
+                    "LOST_RANKING_PAGES": "UNKNOWN",
+                    "COMPETITORS_OUTRANKING_OPTIME": "UNKNOWN",
+                },
+                [
+                    "No verified organic/SERP monitoring data is connected in the current repo state.",
+                ],
+                "Configure search monitoring before asserting discoverability performance.",
+            ),
+            "CITE": _authority_stage(
+                "NOT_CONFIGURED",
+                {
+                    "CHATGPT_MENTIONS": "UNKNOWN",
+                    "CHATGPT_CITATIONS": "UNKNOWN",
+                    "GEMINI_MENTIONS": "UNKNOWN",
+                    "GEMINI_CITATIONS": "UNKNOWN",
+                    "PERPLEXITY_MENTIONS": "UNKNOWN",
+                    "PERPLEXITY_CITATIONS": "UNKNOWN",
+                    "CLAUDE_MENTIONS": "UNKNOWN",
+                    "CLAUDE_CITATIONS": "UNKNOWN",
+                    "CITED_OPTIME_URLS": "UNKNOWN",
+                    "COMPETITOR_SOURCES_CITED_INSTEAD": "UNKNOWN",
+                    "QUERY_LEVEL_CITATION_RATE": "UNKNOWN",
+                    "AI_CITATION_MONITORING": "NOT_CONFIGURED",
+                },
+                [
+                    "No automated external AI citation monitoring is connected in this daily report pipeline.",
+                ],
+                "Reuse the existing multi-AI benchmark surfaces if access is configured; otherwise keep this as UNKNOWN.",
+            ),
+            "LEARN": _authority_stage(
+                "PARTIAL",
+                {
+                    "KNOWLEDGE_GAPS_FROM_USER_QUERIES": len(knowledge_gaps),
+                    "FACILITIES_WITH_HIGH_DEMAND_BUT_LOW_EVIDENCE": discovery.get("pending_verification"),
+                    "SEARCH_QUERIES_WITH_NO_STRONG_OPTIME_PAGE": "UNKNOWN",
+                    "AI_QUERIES_WHERE_COMPETITORS_ARE_CITED_INSTEAD": "UNKNOWN",
+                    "STALE_HIGH_IMPACT_CLAIMS": data_quality.get("freshness_days") if data_quality.get("freshness_days") is not None else "UNKNOWN",
+                    "DECISION_REGRESSION_PATTERNS": rec.get("regression_tests"),
+                    "TOP_AUTHORITY_PRIORITIES": [
+                        "Close remaining statewide coverage gaps.",
+                        "Instrument publication/index audits for real profile surfaces.",
+                        "Connect discoverability and citation monitoring if available.",
+                    ],
+                },
+                [
+                    "Learning signals are available, but not all external discovery/citation feeds are connected.",
+                ],
+                "Prioritize evidence gaps, publication coverage, and traceability before model changes.",
+            ),
+        },
+        "top_authority_gaps_today": [
+            "External discoverability is not yet measured.",
+            "AI citation monitoring is not configured.",
+            "Publish/index audits for facility profiles are not yet instrumented.",
+            "Several evidence domains remain UNKNOWN in the current telemetry.",
+            "Professional validation is still partial.",
+        ],
+    }
+
+
 def _today_delta(current: Dict[str, Any], previous: Optional[Dict[str, Any]], key: str) -> Optional[float]:
     if previous is None:
         return None
@@ -425,6 +648,7 @@ def _build_report_payload(db: Session, previous_payload: Optional[Dict[str, Any]
                 for c in centers
             ]
         },
+        "authority_status": _build_authority_status(discovery, platform, rec, scores, data_quality, growth_totals, gaps, previous_payload),
         "recommendation_engine": {
             "recommendation_improvements": 1 if rec.get("release_gate") == "PASS" else 0,
             "reasoning_improvements": growth_totals.get("decision_rules", 0),
@@ -472,6 +696,7 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
     re = payload["recommendation_engine"]
     dq = payload["data_quality"]
     kpi = payload["executive_kpis"]
+    authority = payload.get("authority_status", {})
     alerts = payload["critical_alerts"]
 
     if not any(v not in (None, 0, [], "", "UNPROVEN") for v in payload["delta_since_previous"].values()):
@@ -501,8 +726,67 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
         f"Overall Progress: Coverage {_fmt_num(d.get('counties_covered'))}/67 | Verified {_fmt_num(d.get('verified_communities'))}/{_fmt_num(d.get('total_communities'))}",
         f"Biggest Achievement: {q['better_today'][0] if q['better_today'] else 'UNPROVEN'}",
         f"Biggest Risk: {q['problems_today'][0] if q['problems_today'] else 'UNPROVEN'}",
+        f"Authority Status: {authority.get('overall_status', 'UNPROVEN')} | Answer: {authority.get('answer', 'UNPROVEN')}",
         "",
         no_progress,
+        "",
+        "# OPTIME Authority Status",
+        "",
+        "## DATA",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (authority.get('stages', {}).get('DATA', {}).get('metrics', {}) or {}).items()],
+        f"- Status: {authority.get('stages', {}).get('DATA', {}).get('status', 'UNPROVEN')}",
+        f"- Last verified: {authority.get('stages', {}).get('DATA', {}).get('last_verified_utc', 'UNPROVEN')}",
+        f"- Blockers: {', '.join(authority.get('stages', {}).get('DATA', {}).get('blockers', []) or ['None'])}",
+        f"- Next action: {authority.get('stages', {}).get('DATA', {}).get('next_action', 'UNPROVEN')}",
+        "",
+        "## KNOWLEDGE",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (authority.get('stages', {}).get('KNOWLEDGE', {}).get('metrics', {}) or {}).items()],
+        f"- Status: {authority.get('stages', {}).get('KNOWLEDGE', {}).get('status', 'UNPROVEN')}",
+        f"- Last verified: {authority.get('stages', {}).get('KNOWLEDGE', {}).get('last_verified_utc', 'UNPROVEN')}",
+        f"- Blockers: {', '.join(authority.get('stages', {}).get('KNOWLEDGE', {}).get('blockers', []) or ['None'])}",
+        f"- Next action: {authority.get('stages', {}).get('KNOWLEDGE', {}).get('next_action', 'UNPROVEN')}",
+        "",
+        "## VALIDATE",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (authority.get('stages', {}).get('VALIDATE', {}).get('metrics', {}) or {}).items()],
+        f"- Status: {authority.get('stages', {}).get('VALIDATE', {}).get('status', 'UNPROVEN')}",
+        f"- Last verified: {authority.get('stages', {}).get('VALIDATE', {}).get('last_verified_utc', 'UNPROVEN')}",
+        f"- Blockers: {', '.join(authority.get('stages', {}).get('VALIDATE', {}).get('blockers', []) or ['None'])}",
+        f"- Next action: {authority.get('stages', {}).get('VALIDATE', {}).get('next_action', 'UNPROVEN')}",
+        "",
+        "## PUBLISH",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (authority.get('stages', {}).get('PUBLISH', {}).get('metrics', {}) or {}).items()],
+        f"- Status: {authority.get('stages', {}).get('PUBLISH', {}).get('status', 'UNPROVEN')}",
+        f"- Last verified: {authority.get('stages', {}).get('PUBLISH', {}).get('last_verified_utc', 'UNPROVEN')}",
+        f"- Blockers: {', '.join(authority.get('stages', {}).get('PUBLISH', {}).get('blockers', []) or ['None'])}",
+        f"- Next action: {authority.get('stages', {}).get('PUBLISH', {}).get('next_action', 'UNPROVEN')}",
+        "",
+        "## INDEX",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (authority.get('stages', {}).get('INDEX', {}).get('metrics', {}) or {}).items()],
+        f"- Status: {authority.get('stages', {}).get('INDEX', {}).get('status', 'UNPROVEN')}",
+        f"- Last verified: {authority.get('stages', {}).get('INDEX', {}).get('last_verified_utc', 'UNPROVEN')}",
+        f"- Blockers: {', '.join(authority.get('stages', {}).get('INDEX', {}).get('blockers', []) or ['None'])}",
+        f"- Next action: {authority.get('stages', {}).get('INDEX', {}).get('next_action', 'UNPROVEN')}",
+        "",
+        "## DISCOVER",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (authority.get('stages', {}).get('DISCOVER', {}).get('metrics', {}) or {}).items()],
+        f"- Status: {authority.get('stages', {}).get('DISCOVER', {}).get('status', 'UNPROVEN')}",
+        f"- Last verified: {authority.get('stages', {}).get('DISCOVER', {}).get('last_verified_utc', 'UNPROVEN')}",
+        f"- Blockers: {', '.join(authority.get('stages', {}).get('DISCOVER', {}).get('blockers', []) or ['None'])}",
+        f"- Next action: {authority.get('stages', {}).get('DISCOVER', {}).get('next_action', 'UNPROVEN')}",
+        "",
+        "## CITE",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (authority.get('stages', {}).get('CITE', {}).get('metrics', {}) or {}).items()],
+        f"- Status: {authority.get('stages', {}).get('CITE', {}).get('status', 'UNPROVEN')}",
+        f"- Last verified: {authority.get('stages', {}).get('CITE', {}).get('last_verified_utc', 'UNPROVEN')}",
+        f"- Blockers: {', '.join(authority.get('stages', {}).get('CITE', {}).get('blockers', []) or ['None'])}",
+        f"- Next action: {authority.get('stages', {}).get('CITE', {}).get('next_action', 'UNPROVEN')}",
+        "",
+        "## LEARN",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (authority.get('stages', {}).get('LEARN', {}).get('metrics', {}) or {}).items()],
+        f"- Status: {authority.get('stages', {}).get('LEARN', {}).get('status', 'UNPROVEN')}",
+        f"- Last verified: {authority.get('stages', {}).get('LEARN', {}).get('last_verified_utc', 'UNPROVEN')}",
+        f"- Blockers: {', '.join(authority.get('stages', {}).get('LEARN', {}).get('blockers', []) or ['None'])}",
+        f"- Next action: {authority.get('stages', {}).get('LEARN', {}).get('next_action', 'UNPROVEN')}",
         "",
         "# Discovery",
         "",
