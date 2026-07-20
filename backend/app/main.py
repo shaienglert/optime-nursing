@@ -88,8 +88,22 @@ app = FastAPI(
     description="OPTIME Phase 1 CMS ingestion pipeline for Florida nursing homes",
 )
 
+def _normalize_origin(origin: str) -> str:
+    value = origin.strip().strip('"').strip("'")
+    return value.rstrip("/")
+
+
+def _parse_frontend_origins(raw_origins: str) -> list[str]:
+    normalized: list[str] = []
+    for candidate in raw_origins.split(","):
+        value = _normalize_origin(candidate)
+        if value and value not in normalized:
+            normalized.append(value)
+    return normalized
+
+
 frontend_origins = os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
-allowed_origins = [origin.strip() for origin in frontend_origins.split(",") if origin.strip()]
+allowed_origins = _parse_frontend_origins(frontend_origins)
 
 app.add_middleware(
     CORSMiddleware,
