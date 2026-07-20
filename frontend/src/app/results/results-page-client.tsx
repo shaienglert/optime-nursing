@@ -208,6 +208,7 @@ export function ResultsPageClient() {
   const [facilities, setFacilities] = useState<SearchFacility[]>([]);
   const [governanceContext, setGovernanceContext] = useState<GovernanceRuntimeContext | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [apiLoadError, setApiLoadError] = useState<string | null>(null);
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
   const [relaxationOverrides, setRelaxationOverrides] = useState<RelaxationOverrides>({
     adjustBudget: false,
@@ -252,14 +253,26 @@ export function ResultsPageClient() {
 
     async function loadFacilities() {
       setIsLoading(true);
-      const [data, governedContext] = await Promise.all([
-        fetchSearchFacilities(textQuery),
-        fetchGovernanceRuntimeContext(),
-      ]);
-      if (isMounted) {
-        setFacilities(data);
-        setGovernanceContext(governedContext);
-        setIsLoading(false);
+      setApiLoadError(null);
+      try {
+        const [data, governedContext] = await Promise.all([
+          fetchSearchFacilities(textQuery),
+          fetchGovernanceRuntimeContext(),
+        ]);
+        if (isMounted) {
+          setFacilities(data);
+          setGovernanceContext(governedContext);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setFacilities([]);
+          setGovernanceContext(null);
+          setApiLoadError(error instanceof Error ? error.message : "Unable to load authoritative production API data.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -639,6 +652,14 @@ export function ResultsPageClient() {
           </div>
         </header>
 
+        {!isLoading && apiLoadError ? (
+          <section className="mt-6 rounded-3xl border border-[#e5b7b7] bg-[#fff4f4] p-6 text-sm text-[#7a2f2f]">
+            <p className="font-semibold">Authoritative API unavailable</p>
+            <p className="mt-2">{apiLoadError}</p>
+            <p className="mt-2">Production fallback recommendations are disabled until backend API connectivity is restored.</p>
+          </section>
+        ) : null}
+
         {!isLoading && facilities.length > 0 && !hasExactMatches ? (
           <section className="mt-6 rounded-3xl border border-[#eadfcd] bg-white p-8 text-center text-[#5f554a]">
             <p className="text-xl font-semibold">Best Available Communities</p>
@@ -713,7 +734,7 @@ export function ResultsPageClient() {
           </section>
         ) : null}
 
-        <div className="py-10 text-center text-sm text-[#6d655b]">{isLoading ? "Loading communities..." : hasVisibleRecommendations ? "End of recommendations" : "No communities available"}</div>
+        <div className="py-10 text-center text-sm text-[#6d655b]">{isLoading ? "Loading communities..." : apiLoadError ? "Authoritative API unavailable" : hasVisibleRecommendations ? "End of recommendations" : "No communities available"}</div>
       </section>
     </main>
   );

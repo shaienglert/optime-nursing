@@ -1354,12 +1354,45 @@ function getFallbackSearchFacilities(searchText?: string): SearchFacility[] {
   return filtered.length > 0 ? filtered : mapped;
 }
 
+const EXPECTED_RENDER_BACKEND_URL = "https://optime-nursing-backend.onrender.com";
+
+function shouldUseDevelopmentFallbackData(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
+function normalizeApiBaseUrl(raw: string): string {
+  return raw.trim().replace(/\/+$/, "");
+}
+
+function joinApiUrl(baseUrl: string, routePath: string): string {
+  const normalizedBase = normalizeApiBaseUrl(baseUrl);
+  const normalizedRoute = routePath.startsWith("/") ? routePath : `/${routePath}`;
+  return `${normalizedBase}${normalizedRoute}`;
+}
+
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  const configuredBase = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || "");
+
+  if (configuredBase) {
+    if (typeof window !== "undefined") {
+      const currentOrigin = normalizeApiBaseUrl(window.location.origin);
+      // Guard against self-referential production config that points API requests back to the Vercel frontend.
+      if (configuredBase === currentOrigin && window.location.hostname.endsWith("vercel.app")) {
+        return EXPECTED_RENDER_BACKEND_URL;
+      }
+    }
+    return configuredBase;
+  }
+
+  if (shouldUseDevelopmentFallbackData()) {
+    return "http://127.0.0.1:8000";
+  }
+
+  throw new Error("NEXT_PUBLIC_API_URL is required in production and must point to the backend API.");
 }
 
 async function fetchJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), path), {
     method: "GET",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
@@ -1371,7 +1404,7 @@ async function fetchJson<T>(path: string): Promise<T> {
 }
 
 async function postJson<TReq, TRes>(path: string, payload: TReq): Promise<TRes> {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), path), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -1387,11 +1420,17 @@ export async function fetchFacilities(searchText?: string): Promise<Facility[]> 
   try {
     facilities = await fetchJson<BackendFacility[]>("/facilities");
   } catch {
-    facilities = FALLBACK_BACKEND_FACILITIES;
+    if (shouldUseDevelopmentFallbackData()) {
+      facilities = FALLBACK_BACKEND_FACILITIES;
+    } else {
+      throw new Error("Unable to load facilities from production API.");
+    }
   }
 
   if (facilities.length === 0) {
-    facilities = FALLBACK_BACKEND_FACILITIES;
+    if (shouldUseDevelopmentFallbackData()) {
+      facilities = FALLBACK_BACKEND_FACILITIES;
+    }
   }
 
   const mapped = facilities.map(toFacility);
@@ -1406,7 +1445,7 @@ export async function fetchSearchFacilities(searchText?: string): Promise<Search
   try {
     const facilities = await fetchJson<BackendFacility[]>("/facilities");
     if (facilities.length === 0) {
-      return getFallbackSearchFacilities(searchText);
+      return shouldUseDevelopmentFallbackData() ? getFallbackSearchFacilities(searchText) : [];
     }
 
     const mapped = facilities.map(toSearchFacility);
@@ -1416,7 +1455,10 @@ export async function fetchSearchFacilities(searchText?: string): Promise<Search
     const filtered = mapped.filter((facility) => matchesSearchQuery(facility.searchTokens || [], query));
     return filtered.length > 0 ? filtered : mapped;
   } catch {
-    return getFallbackSearchFacilities(searchText);
+    if (shouldUseDevelopmentFallbackData()) {
+      return getFallbackSearchFacilities(searchText);
+    }
+    throw new Error("Unable to load search facilities from production API.");
   }
 }
 
@@ -1472,6 +1514,9 @@ export async function fetchGovernanceRuntimeContext(): Promise<GovernanceRuntime
   try {
     return await fetchJson<GovernanceRuntimeContext>("/governance/runtime-context");
   } catch {
+    if (!shouldUseDevelopmentFallbackData()) {
+      throw new Error("Unable to load governance runtime context from production API.");
+    }
     return null;
   }
 }

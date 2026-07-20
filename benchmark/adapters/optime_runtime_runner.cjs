@@ -134,8 +134,14 @@ function runCase(casePayload) {
   const state = toState(casePayload);
   const result = runOptimeV2Engine(facilities, state, { mode: 'production', governanceContext });
 
-  const top5 = result.displayedRecommendations.slice(0, 5).map((rec) => ({
+  const displayed = Array.isArray(result.displayedRecommendations) ? result.displayedRecommendations : [];
+  const accepted = Array.isArray(result.accepted) ? result.accepted : [];
+  const rejected = Array.isArray(result.rejected) ? result.rejected : [];
+
+  const top5 = displayed.slice(0, 5).map((rec) => ({
     facility_name: rec.facility.name,
+    facility_id: rec.facility.id,
+    canonical_facility_id: rec.report.audit.governedFacilityDecision?.canonical_facility_id || null,
     location: [rec.facility.city, rec.facility.state].filter(Boolean).join(', '),
     why_selected: rec.shortExplanation,
     must_satisfied: rec.report.audit.clinicalReasoning.verifiedCapabilities || [],
@@ -147,16 +153,16 @@ function runCase(casePayload) {
     evidence_gaps: rec.report.audit.verificationRequest.items
       .filter((item) => item.state === 'UNKNOWN')
       .map((item) => item.label),
-    sources: [],
+    sources: rec.report.audit.governedFacilityDecision?.source_traceability || [],
     confidence: String(rec.report.audit.verificationRequest.confidenceScore || 'UNKNOWN'),
   }));
 
   return {
     run_status: 'OK',
     top_5: top5,
-    accepted_count: result.acceptedRecommendations.length,
-    rejected_count: result.rejectedRecommendations.length,
-    fallback_count: result.bestAvailableRecommendations.length,
+    accepted_count: accepted.length,
+    rejected_count: rejected.length,
+    fallback_count: accepted.length > 0 ? 0 : displayed.length,
     chain_breaks: [],
   };
 }
