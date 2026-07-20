@@ -23,6 +23,7 @@ from app.services.report_archive_service import (
     mark_report_sent,
     previous_record,
 )
+from app.services.external_discovery import build_external_discovery_summary
 
 SUPPLEMENTAL_AGENT_DEFS: List[Dict[str, Any]] = [
     {
@@ -893,6 +894,7 @@ def _build_report_payload(db: Session, previous_payload: Optional[Dict[str, Any]
     centers = _extract_centers()
     gaps = _knowledge_gap_lines()
     organic_authority = _organic_ai_authority_status()
+    external_discovery = build_external_discovery_summary(db)
 
     current_kpis = {
         "total_communities": discovery.get("total_communities"),
@@ -962,6 +964,7 @@ def _build_report_payload(db: Session, previous_payload: Optional[Dict[str, Any]
         },
         "discovery": discovery,
         "provider_intelligence": provider,
+        "external_discovery": external_discovery,
         "knowledge_growth": {
             **growth_totals,
             "clinical_guidelines_added": provider.get("cms_updates", 0),
@@ -1034,6 +1037,7 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
     kpi = payload["executive_kpis"]
     authority = payload.get("authority_status", {})
     control_tower = payload.get("agent_control_tower", {})
+    external_discovery = payload.get("external_discovery", {})
     organic_authority = payload.get("organic_ai_authority", {})
     alerts = payload["critical_alerts"]
 
@@ -1089,6 +1093,41 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
             f"- {item['agent']}: why={item['why']} impact={item['impact']} next_action={item['next_action']}"
             for item in (control_tower.get('attention', []) or [])
         ],
+        "",
+        "# What OPTIME Learned Today",
+        "",
+        *[
+            f"- {item.get('facility')}: {item.get('claim_type')} -> {item.get('claim_value')} ({item.get('status')})"
+            for item in (external_discovery.get('recent_requests', []) or [])[:10]
+            if item.get('status') in {'NEW_VALUE', 'STALE_REFRESHED', 'CHANGED'}
+        ],
+        *( ["- No new external facts were verified today."] if not any(item.get('status') in {'NEW_VALUE', 'STALE_REFRESHED', 'CHANGED'} for item in (external_discovery.get('recent_requests', []) or [])[:10]) else [] ),
+        "",
+        "# Source Connectivity Outcomes",
+        "",
+        *[
+            f"- {key}: {_fmt_num(value)}"
+            for key, value in (external_discovery.get('request_status_counts', {}) or {}).items()
+        ],
+        *[
+            f"- classification {key}: {_fmt_num(value)}"
+            for key, value in (external_discovery.get('request_classification_counts', {}) or {}).items()
+        ],
+        "",
+        "# External Sources Checked",
+        "",
+        *[
+            f"- {item.get('source_name', item.get('source'))}: last_success={item.get('last_success')} last_failure={item.get('last_failure')} success_rate={item.get('success_rate')}% facilities_covered={item.get('facilities_covered')} last_new_value={item.get('last_new_value')} next_refresh={item.get('next_refresh')}"
+            for item in (external_discovery.get('source_health', []) or [])[:20]
+        ],
+        "",
+        "# Source Failures",
+        "",
+        *[
+            f"- {item.get('facility')}: {item.get('source')} -> {item.get('status')} [{item.get('classification')}] http={item.get('http_status')} latency_ms={item.get('latency_ms')} reason={item.get('reason') or 'UNKNOWN'}"
+            for item in (external_discovery.get('recent_source_attempts', []) or [])
+            if item.get('status') in {'SOURCE_ACCESS_FAILED', 'SOURCE_GEO_BLOCKED_OR_SUSPECTED', 'SOURCE_RATE_LIMITED', 'SOURCE_PARSE_FAILED', 'SOURCE_NOT_CONFIGURED', 'AGENT_FAILED'}
+        ][:10],
         "",
         "# Organic / AI Authority System",
         "",

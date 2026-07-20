@@ -17,6 +17,8 @@ from app.database import Base, SessionLocal, engine
 from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
 import app.models.clinical_evidence
 import app.models.agent_execution
+import app.models.external_discovery
+import app.models.knowledge_fabric
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
@@ -92,6 +94,13 @@ app = FastAPI(
 REQUIRED_FRONTEND_ORIGINS = ["https://optime-nursing.vercel.app"]
 DEVELOPMENT_FRONTEND_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
+def _get_dev_network_origins() -> list[str]:
+    candidates = [
+        os.getenv("DEV_NETWORK_ORIGIN", ""),
+        f"http://{os.getenv('HOSTNAME', '')}:3000",
+    ]
+    return [origin for origin in (_normalize_origin(candidate) for candidate in candidates) if origin]
+
 def _normalize_origin(origin: str) -> str:
     value = origin.strip().strip('"').strip("'")
     return value.rstrip("/")
@@ -110,7 +119,7 @@ def _build_allowed_origins(raw_origins: str) -> list[str]:
     configured = _parse_frontend_origins(raw_origins)
     merged: list[str] = []
 
-    for candidate in [*configured, *REQUIRED_FRONTEND_ORIGINS, *DEVELOPMENT_FRONTEND_ORIGINS]:
+    for candidate in [*configured, *REQUIRED_FRONTEND_ORIGINS, *DEVELOPMENT_FRONTEND_ORIGINS, *_get_dev_network_origins()]:
         value = _normalize_origin(candidate)
         if value and value not in merged:
             merged.append(value)

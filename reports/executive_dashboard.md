@@ -39,7 +39,7 @@
 - Latest Report (Markdown): **reports/daily/archive/executive_intelligence_report_2026-07-20.md**
 - Latest Report (HTML): **reports/daily/archive/executive_intelligence_report_2026-07-20.html**
 - Latest Report (JSON): **reports/daily/archive/executive_intelligence_report_2026-07-20.json**
-- Generated At (UTC): **2026-07-20T13:56:02.441624+00:00**
+- Generated At (UTC): **2026-07-20T15:26:03.740895+00:00**
 - Previous Report (JSON): **reports/daily/archive/executive_intelligence_report_2026-07-20.json**
 
 ### Trend Comparison (Today vs Yesterday)

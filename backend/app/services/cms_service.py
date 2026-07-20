@@ -28,10 +28,10 @@ def get_distribution_url(dataset_id: str) -> str:
     return distributions[0]["downloadURL"]
 
 
-def download_dataset(dataset_id: str, filename: str) -> Path:
+def download_dataset(dataset_id: str, filename: str, force: bool = False) -> Path:
     ensure_cache_dir()
     output = CACHE_DIR / filename
-    if output.exists():
+    if output.exists() and not force:
         return output
 
     url = get_distribution_url(dataset_id)

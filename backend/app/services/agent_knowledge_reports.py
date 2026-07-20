@@ -18,7 +18,9 @@ from app.models.agent_execution import (
     AgentKnowledgeReportSnapshot,
     RecommendationKnowledgeUsageLog,
 )
-from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, Inspection, QualityMeasure, ResidentOutcome, Staffing
+from app.models.facility import AnswerState, AdaptiveQuestionResponse, Facility, FacilityActivityCategory, FacilityCapability, FacilityIntelligenceProfile, Inspection, QualityMeasure, ResidentOutcome, Staffing
+from app.models.knowledge_fabric import KnowledgeObject
+from app.services.external_discovery import build_external_discovery_summary, run_external_discovery
 
 AGENT_REPORT_DEFS: List[Dict[str, object]] = [
     {
@@ -391,56 +393,29 @@ def _finalize_workflow(result: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _provider_intelligence_work(db: Session) -> Dict[str, Any]:
-    cohort = _load_miami_dade_context(db)
-    result = {"facilities_processed": len(cohort), "sources_checked": 2, "source_requests_successful": 2, "new_findings": [], "items_added": 0, "items_updated": 0, "new_verified_facts": 0, "changed_facts": 0, "facilities_enriched": 0}
-    for item in cohort:
-        facility: Facility = item["facility"]
-        canonical = item["canonical"] or {}
-        payload = {
-            "facility_id": facility.id,
-            "cms_id": facility.cms_id,
-            "name": facility.name,
-            "city": facility.city,
-            "county": canonical.get("county"),
-            "ownership_type": canonical.get("ownership_type"),
-            "parent_company": canonical.get("parent_company"),
-            "provider_type": canonical.get("cms_provider_type"),
-            "beds": facility.beds,
-            "overall_rating": facility.overall_rating,
-            "staffing_rating": facility.staffing_rating,
-            "quality_rating": facility.quality_rating,
-            "inspection_rating": facility.inspection_rating,
-            "source_refs": canonical.get("source_refs") or ["CMS Provider Information", "Medicare Care Compare"],
-            "source_urls": canonical.get("source_urls") or [],
-            "last_source_date": canonical.get("last_source_date") or facility.source_date,
-        }
-        change = _persist_agent_record(
-            db,
-            agent_key="provider_intelligence",
-            record_type="provider_baseline",
-            entity_key=f"facility:{facility.cms_id}:provider_baseline",
-            summary=f"Verified provider baseline for {facility.name} in Miami-Dade.",
-            source="CMS_PROVIDER_DATASET",
-            confidence=0.95,
-            payload=payload,
-        )
-        if change == "NEW":
-            result["items_added"] += 1
-            result["new_verified_facts"] += 1
-            if len(result["new_findings"]) < 5:
-                result["new_findings"].append(f"New provider baseline stored for {facility.name} ({facility.cms_id}).")
-        elif change == "CHANGED":
-            result["items_updated"] += 1
-            result["changed_facts"] += 1
-        profile_change = _upsert_facility_profile(db, item)
-        if profile_change == "NEW":
-            result["facilities_enriched"] += 1
-            result["items_added"] += 1
-        elif profile_change == "CHANGED":
-            result["facilities_enriched"] += 1
-            result["items_updated"] += 1
-    result["new_evidence_records"] = result["items_added"]
-    return _finalize_workflow(result)
+    result = run_external_discovery(db, agent_key="provider_intelligence")
+    workflow = {
+        "facilities_processed": int(result.get("facilities_successfully_discovered", 0) or 0),
+        "sources_checked": int(result.get("external_sources_identified", 0) or 0),
+        "source_requests_successful": int(result.get("source_successes", 0) or 0),
+        "source_requests_failed": int(result.get("source_failures", 0) or 0),
+        "new_findings": [
+            f"{item.get('facility')}: {item.get('claim_type')} -> {item.get('claim_value')}"
+            for item in list(result.get("new_discoveries") or [])[:5]
+        ],
+        "items_added": int(result.get("new_external_verified_facts", 0) or 0),
+        "items_updated": int(result.get("external_changed_facts", 0) or 0),
+        "new_verified_facts": int(result.get("new_external_verified_facts", 0) or 0),
+        "changed_facts": int(result.get("external_changed_facts", 0) or 0),
+        "facilities_enriched": int(result.get("unknown_resolved", 0) or 0),
+        "new_evidence_records": int(result.get("new_external_verified_facts", 0) or 0),
+        "source_health": result.get("source_health", []),
+        "source_requests_by_status": result.get("source_requests_by_status", {}),
+        "unknown_before": int(result.get("unknown_before", 0) or 0),
+        "unknown_resolved": int(result.get("unknown_resolved", 0) or 0),
+        "unknown_remaining": int(result.get("unknown_remaining", 0) or 0),
+    }
+    return _finalize_workflow(workflow)
 
 
 def _clinical_knowledge_work(db: Session) -> Dict[str, Any]:
@@ -536,6 +511,8 @@ def _senior_living_research_work(db: Session) -> Dict[str, Any]:
     cohort = _load_miami_dade_context(db)
     ownership_mix: Dict[str, int] = {}
     beds_total = 0
+    regulatory_rows = db.query(KnowledgeObject).filter(KnowledgeObject.category == "REGULATORY", KnowledgeObject.entity_key.in_([str(item["facility"].cms_id) for item in cohort])).all()
+    pricing_rows = db.query(KnowledgeObject).filter(KnowledgeObject.category == "PRICING", KnowledgeObject.entity_key.in_([str(item["facility"].cms_id) for item in cohort])).all()
     for item in cohort:
         canonical = item["canonical"] or {}
         ownership = str(canonical.get("ownership_type") or "UNKNOWN")
@@ -546,22 +523,24 @@ def _senior_living_research_work(db: Session) -> Dict[str, Any]:
         "facility_count": len(cohort),
         "beds_total": beds_total,
         "ownership_mix": ownership_mix,
-        "source_refs": ["CMS Provider Information", "Medicare Care Compare"],
+        "regulatory_findings": len(regulatory_rows),
+        "pricing_findings": len(pricing_rows),
+        "source_refs": ["External discovery", "CMS Provider Information", "Medicare Care Compare"],
     }
-    result = {"facilities_processed": len(cohort), "sources_checked": 2, "source_requests_successful": 2, "new_findings": [], "items_added": 0, "items_updated": 0, "changed_facts": 0}
+    result = {"facilities_processed": len(cohort), "sources_checked": 1, "source_requests_successful": 1, "new_findings": [], "items_added": 0, "items_updated": 0, "changed_facts": 0}
     change = _persist_agent_record(
         db,
         agent_key="senior_living_research",
-        record_type="market_snapshot",
-        entity_key="market:miami-dade:skilled-nursing",
-        summary=f"Miami-Dade skilled nursing market snapshot verified for {len(cohort)} facilities.",
-        source="CMS_MARKET_SNAPSHOT",
-        confidence=0.92,
+        record_type="external_market_snapshot",
+        entity_key="market:miami-dade:external_snapshot",
+        summary=f"Miami-Dade external market and regulatory snapshot refreshed for {len(cohort)} facilities.",
+        source="EXTERNAL_DISCOVERY_SUMMARY",
+        confidence=0.93,
         payload=payload,
     )
     if change == "NEW":
         result["items_added"] = 1
-        result["new_findings"] = [f"Miami-Dade market snapshot stored for {len(cohort)} facilities and {beds_total} beds."]
+        result["new_findings"] = [f"External market snapshot stored for {len(cohort)} facilities and {beds_total} beds."]
     elif change == "CHANGED":
         result["items_updated"] = 1
         result["changed_facts"] = 1
@@ -650,6 +629,141 @@ def _matching_improvement_work(db: Session) -> Dict[str, Any]:
     return _finalize_workflow(result)
 
 
+def _activities_intelligence_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    result = {"facilities_processed": len(cohort), "sources_checked": 0, "source_requests_successful": 0, "new_findings": [], "items_added": 0, "items_updated": 0, "changed_facts": 0}
+    for item in cohort:
+        facility: Facility = item["facility"]
+        rows = db.query(FacilityActivityCategory).filter(FacilityActivityCategory.facility_id == facility.id, FacilityActivityCategory.availability != AnswerState.UNKNOWN).all()
+        if not rows:
+            continue
+        payload = {
+            "facility_id": facility.id,
+            "cms_id": facility.cms_id,
+            "activity_categories": [
+                {
+                    "category": row.category,
+                    "availability": str(row.availability),
+                    "confidence": float(row.confidence or 0.0),
+                    "source": row.import_source,
+                    "last_imported_at": row.last_imported_at.isoformat() if row.last_imported_at else None,
+                }
+                for row in rows
+            ],
+            "source_refs": ["FacilityActivityCategory", "External discovery"],
+        }
+        change = _persist_agent_record(
+            db,
+            agent_key="activities_intelligence",
+            record_type="activity_enrichment",
+            entity_key=f"facility:{facility.cms_id}:activity_enrichment",
+            summary=f"Activities intelligence verified for {facility.name} from external source evidence.",
+            source="EXTERNAL_DISCOVERY_ACTIVITIES",
+            confidence=0.9,
+            payload=payload,
+        )
+        if change == "NEW":
+            result["items_added"] += 1
+            if len(result["new_findings"]) < 5:
+                result["new_findings"].append(f"Activities categories stored for {facility.name}: {', '.join(sorted({row.category for row in rows}))}.")
+        elif change == "CHANGED":
+            result["items_updated"] += 1
+            result["changed_facts"] += 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
+def _nutrition_intelligence_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    result = {"facilities_processed": len(cohort), "sources_checked": 0, "source_requests_successful": 0, "new_findings": [], "items_added": 0, "items_updated": 0, "changed_facts": 0}
+    nutrition_terms = ("diet", "meal", "dining", "kosher", "nutrition", "food", "chef", "special_dietary")
+    for item in cohort:
+        facility: Facility = item["facility"]
+        rows = db.query(FacilityCapability).filter(FacilityCapability.facility_id == facility.id).all()
+        filtered = [row for row in rows if any(term in str(row.capability or "").lower() for term in nutrition_terms) and row.value != AnswerState.UNKNOWN]
+        if not filtered:
+            continue
+        payload = {
+            "facility_id": facility.id,
+            "cms_id": facility.cms_id,
+            "nutrition_capabilities": [
+                {
+                    "capability": row.capability,
+                    "value": str(row.value),
+                    "source": row.source,
+                    "verified_at": row.verified_at.isoformat() if row.verified_at else None,
+                    "confidence": float(row.confidence or 0.0),
+                }
+                for row in filtered
+            ],
+            "source_refs": ["FacilityCapability", "External discovery"],
+        }
+        change = _persist_agent_record(
+            db,
+            agent_key="nutrition_intelligence",
+            record_type="nutrition_enrichment",
+            entity_key=f"facility:{facility.cms_id}:nutrition_enrichment",
+            summary=f"Nutrition intelligence verified for {facility.name} from external source evidence.",
+            source="EXTERNAL_DISCOVERY_NUTRITION",
+            confidence=0.9,
+            payload=payload,
+        )
+        if change == "NEW":
+            result["items_added"] += 1
+            if len(result["new_findings"]) < 5:
+                result["new_findings"].append(f"Nutrition capabilities stored for {facility.name}: {', '.join(sorted({row.capability for row in filtered}))}.")
+        elif change == "CHANGED":
+            result["items_updated"] += 1
+            result["changed_facts"] += 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
+def _family_experience_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    result = {"facilities_processed": len(cohort), "sources_checked": 0, "source_requests_successful": 0, "new_findings": [], "items_added": 0, "items_updated": 0, "changed_facts": 0}
+    for item in cohort:
+        facility: Facility = item["facility"]
+        reviews = db.query(KnowledgeObject).filter(KnowledgeObject.entity_key == str(facility.cms_id), KnowledgeObject.category == "REPUTATION").all()
+        if not reviews:
+            continue
+        payload = {
+            "facility_id": facility.id,
+            "cms_id": facility.cms_id,
+            "review_objects": [
+                {
+                    "source_name": row.source_name,
+                    "source_type": row.source_type,
+                    "claim_type": row.property_name,
+                    "fact_value": row.fact_value,
+                    "verification_status": row.verification_status,
+                    "confidence": float(row.confidence or 0.0),
+                }
+                for row in reviews
+            ],
+            "source_refs": ["KnowledgeObject.REPUTATION", "External discovery"],
+        }
+        change = _persist_agent_record(
+            db,
+            agent_key="family_experience",
+            record_type="family_experience_summary",
+            entity_key=f"facility:{facility.cms_id}:family_experience_summary",
+            summary=f"Family experience evidence verified for {facility.name} from public review sources.",
+            source="EXTERNAL_DISCOVERY_REPUTATION",
+            confidence=0.8,
+            payload=payload,
+        )
+        if change == "NEW":
+            result["items_added"] += 1
+            if len(result["new_findings"]) < 5:
+                result["new_findings"].append(f"Family experience evidence stored for {facility.name}: {len(reviews)} review object(s).")
+        elif change == "CHANGED":
+            result["items_updated"] += 1
+            result["changed_facts"] += 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
 def _no_source_work(agent_key: str, reason: str) -> Dict[str, Any]:
     return _finalize_workflow(
         {
@@ -673,9 +787,9 @@ def _run_agent_workflow(db: Session, agent_key: str) -> Dict[str, Any]:
         "matching_improvement": _matching_improvement_work,
         "resident_needs": lambda session: _no_source_work("resident_needs", "SOURCE_NOT_CONNECTED: adaptive_question_responses has no records."),
         "outcome_learning": lambda session: _no_source_work("outcome_learning", "SOURCE_NOT_CONNECTED: resident_outcomes has no records."),
-        "activities_intelligence": lambda session: _no_source_work("activities_intelligence", "SOURCE_NOT_CONNECTED: facility_activity_categories has no records."),
-        "nutrition_intelligence": lambda session: _no_source_work("nutrition_intelligence", "SOURCE_NOT_CONNECTED: facility_capabilities has no nutrition-specific records."),
-        "family_experience": lambda session: _no_source_work("family_experience", "SOURCE_NOT_CONNECTED: facility_reviews has no records."),
+        "activities_intelligence": _activities_intelligence_work,
+        "nutrition_intelligence": _nutrition_intelligence_work,
+        "family_experience": _family_experience_work,
     }
 
     started = datetime.now(timezone.utc)

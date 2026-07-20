@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.facility import Facility, FacilityIntelligenceProfile, FacilityReview, Inspection, Staffing
+from app.services.external_discovery import run_external_discovery
 
 EVIDENCE_VERIFIED_FACT = "verified_fact"
 EVIDENCE_PUBLIC_ALLEGATION = "public_allegation"
@@ -836,22 +837,30 @@ def build_facility_intelligence_profile(db: Session, facility: Facility) -> Faci
 
 
 def run_intelligence_collection(db: Session, facility_id: Optional[int] = None) -> Dict[str, object]:
-    # This table is fully derived and safe to rebuild to keep schema aligned without migrations.
-    FacilityIntelligenceProfile.__table__.drop(bind=db.bind, checkfirst=True)
-    FacilityIntelligenceProfile.__table__.create(bind=db.bind, checkfirst=True)
-
     if facility_id is not None:
         facilities = db.query(Facility).filter(Facility.id == facility_id).all()
     else:
         facilities = db.query(Facility).order_by(Facility.id.asc()).all()
+
+    live_discovery = run_external_discovery(
+        db,
+        agent_key="provider_intelligence",
+        facility_ids=[facility.id for facility in facilities],
+    )
 
     profiles: List[FacilityIntelligenceProfile] = []
     for facility in facilities:
         profiles.append(build_facility_intelligence_profile(db, facility))
 
     return {
+        "facilities_processed_from_existing_local_data": len(profiles),
+        "facilities_researched_from_live_external_sources": int(live_discovery.get("facilities_successfully_discovered") or 0),
+        "external_source_requests": int(live_discovery.get("external_source_requests") or 0),
+        "live_source_successes": int(live_discovery.get("source_successes") or 0),
+        "live_source_failures": int(live_discovery.get("source_failures") or 0),
         "processed": len(profiles),
         "facility_ids": [profile.facility_id for profile in profiles],
         "update_frequency": UPDATE_FREQUENCY,
         "source_registry": PUBLIC_SOURCE_REGISTRY,
+        "live_discovery": live_discovery,
     }

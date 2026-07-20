@@ -1,0 +1,472 @@
+{
+  "executive_questions": {
+    "better_today": [
+      "Florida coverage now 64/67 counties (95.5%).",
+      "Recommendation release gate: UNKNOWN; advisor agreement 52.0%."
+    ],
+    "new_knowledge_today": [
+      "Knowledge objects: 2634",
+      "Evidence objects: 3056"
+    ],
+    "problems_today": [
+      "Statewide county coverage incomplete (64/67).",
+      "Missing information rows remain high: 585."
+    ],
+    "remaining_work": [
+      "Complete 67/67 county coverage.",
+      "Reduce pending verification backlog.",
+      "Close highest-priority knowledge gaps."
+    ],
+    "tomorrow_priorities": [
+      "Finish remaining Florida county discovery coverage.",
+      "Process pending verification queue for newly discovered communities.",
+      "Resolve open high-severity supervisor incidents.",
+      "Increase provider intelligence enrichment depth.",
+      "Link outcome miss-analysis to recommendation calibration updates."
+    ]
+  },
+  "discovery": {
+    "total_communities": 784,
+    "verified_communities": 494,
+    "pending_verification": 290,
+    "newly_discovered": 778,
+    "updated": 4,
+    "closed": 137,
+    "duplicates_merged": 2,
+    "counties_covered": 64,
+    "counties_total": 67,
+    "coverage_pct": 95.5
+  },
+  "provider_intelligence": {
+    "profiles_enriched": 0,
+    "ownership_changes": 0,
+    "inspection_updates": 0,
+    "licensing_updates": 0,
+    "cms_updates": 0,
+    "staffing_updates": 0,
+    "pricing_updates": 0,
+    "website_changes": 0,
+    "new_penalties_detected": 0,
+    "new_awards_detected": 0
+  },
+  "knowledge_growth": {
+    "knowledge_created": 220,
+    "knowledge_updated": 132,
+    "evidence_reviewed": 275,
+    "evidence_verified": 198,
+    "decision_rules": 8,
+    "relationships": 100,
+    "gaps_closed": 33,
+    "clinical_guidelines_added": 0,
+    "research_papers_reviewed": 0,
+    "best_practices_added": 8
+  },
+  "research_activity": {
+    "knowledge_centers": [
+      {
+        "center": "Clinical Geriatrics",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Nursing Care",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Dementia & Memory Care",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Parkinson's Disease",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Stroke & Neurological Rehabilitation",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Falls & Mobility",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Medication Management",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Nutrition & Hydration",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Psychology of Aging",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Social Work & Family Support",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Sociology of Aging",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Decision Psychology",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Activities & Engagement",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Quality of Life",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Palliative & End-of-Life Care",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Provider Intelligence",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Regulatory & Compliance",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Senior Living Operations",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Transition & Adaptation",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Institutional Research",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      }
+    ]
+  },
+  "recommendation_engine": {
+    "recommendation_improvements": 0,
+    "reasoning_improvements": 8,
+    "confidence_improvements": 0,
+    "validation_results": {
+      "release_gate": "UNKNOWN",
+      "advisor_agreement_pct": 52.0,
+      "top3_visit_pct": 100.0,
+      "top3_movein_pct": 100.0
+    },
+    "regression_tests": "UNKNOWN"
+  },
+  "agent_activity": [
+    {
+      "agent_key": "activities_intelligence",
+      "agent_name": "Activities Intelligence Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Review new domain research and trusted guidelines.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Publish verified knowledge and evidence objects.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "clinical_knowledge",
+      "agent_name": "Clinical Knowledge Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Review new domain research and trusted guidelines.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Publish verified knowledge and evidence objects.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "data_quality",
+      "agent_name": "Data Quality & Trust Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Discover new Florida communities and provider changes from trusted sources.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Detect ownership, licensing, and service-line changes.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "family_experience",
+      "agent_name": "Family Experience Intelligence Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Convert prepared institutional knowledge into advisor-ready guidance.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Improve explanation quality while preserving uncertainty.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "knowledge_graph",
+      "agent_name": "Knowledge Graph Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Link new knowledge objects into the knowledge graph.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Detect orphan objects and missing relationships.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "matching_improvement",
+      "agent_name": "Matching Improvement Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Verify newly discovered entities and changed facts.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Resolve contradictions and track uncertainty explicitly.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "nutrition_intelligence",
+      "agent_name": "Nutrition Intelligence Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Review new domain research and trusted guidelines.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Publish verified knowledge and evidence objects.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "outcome_learning",
+      "agent_name": "Outcome Learning Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Verify newly discovered entities and changed facts.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Resolve contradictions and track uncertainty explicitly.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "provider_intelligence",
+      "agent_name": "Provider Intelligence Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Discover new Florida communities and provider changes from trusted sources.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Detect ownership, licensing, and service-line changes.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "resident_needs",
+      "agent_name": "Resident Needs Intelligence Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Execute domain discovery and verification tasks continuously.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Publish measurable daily knowledge outputs.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    },
+    {
+      "agent_key": "senior_living_research",
+      "agent_name": "Senior Living Research Agent",
+      "status": "IDLE",
+      "health": "HEALTHY",
+      "current_task": "Execute domain discovery and verification tasks continuously.",
+      "completed_today": 0,
+      "blocked_tasks": 0,
+      "next_task": "Publish measurable daily knowledge outputs.",
+      "learning_completed": 0,
+      "knowledge_produced": 20
+    }
+  ],
+  "data_quality": {
+    "database_coverage": "64/67 counties",
+    "verification_coverage_pct": 63.0,
+    "duplicate_rate_pct": 0.26,
+    "missing_information_rows": 585,
+    "conflicting_information": 2,
+    "freshness_days": 3
+  },
+  "knowledge_gaps": [
+    "Activities Intelligence Agent: Updated activity calendars, event programs, and engagement opportunities. -> Capture new activity schedules and add verified engagement evidence.",
+    "Clinical Knowledge Agent: Fresh clinical guideline and care-pathway evidence for complex care transitions. -> Collect recent guideline updates and map them to care-pathway knowledge objects.",
+    "Data Quality & Trust Agent: Fresh source-trust, contradiction, and coverage-monitoring signals. -> Create knowledge-gap tasks for stale or conflicting source clusters.",
+    "Family Experience Intelligence Agent: Fresh family-experience signals and responsiveness evidence. -> Ingest new family feedback and record validated experience improvements.",
+    "Knowledge Graph Agent: Missing cross-domain links between evidence, outcomes, and care concepts. -> Add relationship edges for the newest evidence-backed concepts."
+  ],
+  "executive_kpis": {
+    "total_communities": 784,
+    "verified_communities": 494,
+    "florida_coverage_pct": 95.5,
+    "knowledge_centers": 20,
+    "certified_knowledge_centers": null,
+    "knowledge_objects": 2634,
+    "evidence_objects": 3056,
+    "research_papers": 0,
+    "best_practices": 8,
+    "open_knowledge_gaps": 5,
+    "closed_knowledge_gaps_today": 0,
+    "trust_score": 0.0,
+    "institutional_intelligence_score": 0.0,
+    "recommendation_quality_score": 52.0,
+    "agents_running": 11
+  },
+  "critical_alerts": [
+    "Activities Intelligence Agent status=IDLE blocked_tasks=0",
+    "Clinical Knowledge Agent status=IDLE blocked_tasks=0",
+    "Data Quality & Trust Agent status=IDLE blocked_tasks=0",
+    "Family Experience Intelligence Agent status=IDLE blocked_tasks=0",
+    "Knowledge Graph Agent status=IDLE blocked_tasks=0",
+    "Matching Improvement Agent status=IDLE blocked_tasks=0",
+    "Nutrition Intelligence Agent status=IDLE blocked_tasks=0",
+    "Outcome Learning Agent status=IDLE blocked_tasks=0",
+    "Provider Intelligence Agent status=IDLE blocked_tasks=0",
+    "Resident Needs Intelligence Agent status=IDLE blocked_tasks=0",
+    "Senior Living Research Agent status=IDLE blocked_tasks=0"
+  ],
+  "tomorrow": {
+    "top_five_priorities": [
+      "Finish remaining Florida county discovery coverage.",
+      "Process pending verification queue for newly discovered communities.",
+      "Resolve open high-severity supervisor incidents.",
+      "Increase provider intelligence enrichment depth.",
+      "Link outcome miss-analysis to recommendation calibration updates."
+    ],
+    "expected_deliverables": [
+      "Updated discovery and verification reports.",
+      "Refreshed executive dashboard trend section.",
+      "Knowledge gap closure delta summary."
+    ],
+    "potential_risks": [
+      "Statewide county coverage incomplete (64/67).",
+      "Missing information rows remain high: 585."
+    ]
+  },
+  "delta_since_previous": {
+    "communities_discovered_today": 0.0,
+    "communities_verified_today": 0.0,
+    "knowledge_objects_created_today": 0.0,
+    "evidence_objects_added_today": 0.0
+  },
+  "report_id": "20260720T132804Z",
+  "report_date": "2026-07-20",
+  "generated_at_utc": "2026-07-20T13:28:04.795407+00:00",
+  "subject": "OPTIME Executive Intelligence Report | 2026-07-20",
+  "artifacts": {
+    "markdown": "reports/daily/archive/executive_intelligence_report_20260720T132804Z.md",
+    "html": "reports/daily/archive/executive_intelligence_report_20260720T132804Z.html",
+    "json": "reports/daily/archive/executive_intelligence_report_20260720T132804Z.json"
+  }
+}

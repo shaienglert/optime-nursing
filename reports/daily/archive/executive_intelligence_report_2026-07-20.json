@@ -248,7 +248,7 @@
   "authority_status": {
     "overall_status": "PARTIAL",
     "answer": "OPTIME is improving its evidence base, but publish/index/discover/cite measurement is still only partially instrumented.",
-    "last_verified_utc": "2026-07-20T13:56:02.434818+00:00",
+    "last_verified_utc": "2026-07-20T15:26:03.734742+00:00",
     "stages": {
       "DATA": {
         "status": "PARTIAL",
@@ -272,7 +272,7 @@
           "Discovery coverage is incomplete across the statewide universe.",
           "Several evidence domains are not directly measured in current telemetry."
         ],
-        "last_verified_utc": "2026-07-20T13:56:02.434839+00:00",
+        "last_verified_utc": "2026-07-20T15:26:03.734757+00:00",
         "blockers": [],
         "next_action": "Expand canonical coverage and preserve UNKNOWN for unmeasured evidence domains."
       },
@@ -295,7 +295,7 @@
           "Knowledge coverage is measured, but claim-level provenance is not fully instrumented in this report path.",
           "Unknown and stale knowledge cannot be conflated with verified knowledge."
         ],
-        "last_verified_utc": "2026-07-20T13:56:02.434848+00:00",
+        "last_verified_utc": "2026-07-20T15:26:03.734764+00:00",
         "blockers": [],
         "next_action": "Close provenance gaps and add claim-level freshness timestamps."
       },
@@ -318,7 +318,7 @@
           "Professional release gate is not yet PASS.",
           "External validation is still partial and not independently connected here."
         ],
-        "last_verified_utc": "2026-07-20T13:56:02.434855+00:00",
+        "last_verified_utc": "2026-07-20T15:26:03.734768+00:00",
         "blockers": [],
         "next_action": "Resolve validation gaps and keep the golden case permanently visible."
       },
@@ -339,7 +339,7 @@
           "Route existence is not the same as a useful, published profile surface.",
           "No repo-level facility publication audit is yet wired into this daily report."
         ],
-        "last_verified_utc": "2026-07-20T13:56:02.434861+00:00",
+        "last_verified_utc": "2026-07-20T15:26:03.734772+00:00",
         "blockers": [],
         "next_action": "Measure actual published profile surfaces before claiming public authority coverage."
       },
@@ -361,7 +361,7 @@
           "No robots.txt or sitemap.xml evidence is present in the repository root.",
           "Google Search Console is not connected here, so indexed counts cannot be asserted."
         ],
-        "last_verified_utc": "2026-07-20T13:56:02.434898+00:00",
+        "last_verified_utc": "2026-07-20T15:26:03.734775+00:00",
         "blockers": [],
         "next_action": "Add a verifiable sitemap/robots/index audit and connect external search telemetry if available."
       },
@@ -385,7 +385,7 @@
         "evidence": [
           "No verified organic/SERP monitoring data is connected in the current repo state."
         ],
-        "last_verified_utc": "2026-07-20T13:56:02.434903+00:00",
+        "last_verified_utc": "2026-07-20T15:26:03.734778+00:00",
         "blockers": [],
         "next_action": "Configure search monitoring before asserting discoverability performance."
       },
@@ -408,7 +408,7 @@
         "evidence": [
           "No automated external AI citation monitoring is connected in this daily report pipeline."
         ],
-        "last_verified_utc": "2026-07-20T13:56:02.434907+00:00",
+        "last_verified_utc": "2026-07-20T15:26:03.734781+00:00",
         "blockers": [],
         "next_action": "Reuse the existing multi-AI benchmark surfaces if access is configured; otherwise keep this as UNKNOWN."
       },
@@ -430,7 +430,7 @@
         "evidence": [
           "Learning signals are available, but not all external discovery/citation feeds are connected."
         ],
-        "last_verified_utc": "2026-07-20T13:56:02.434912+00:00",
+        "last_verified_utc": "2026-07-20T15:26:03.734785+00:00",
         "blockers": [],
         "next_action": "Prioritize evidence gaps, publication coverage, and traceability before model changes."
       }
@@ -523,15 +523,15 @@
           "Official websites",
           "Public records"
         ],
-        "last_known_run": "2026-07-20 13:54:16.684984",
+        "last_known_run": "2026-07-20 14:56:02.442574",
         "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
         "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
         "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
         "current_status": "WORKED - CREATED NEW VALUE",
         "run_status": "READY",
         "worked": "YES",
-        "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously.",
-        "items_examined": 29,
+        "what_it_did": "Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously.",
+        "items_examined": 30,
         "items_changed": 1,
         "new_outputs": [
           "1 knowledge record(s)"
@@ -752,15 +752,15 @@
           "Family surveys",
           "Outcome feedback"
         ],
-        "last_known_run": "2026-07-20 13:54:17.008164",
+        "last_known_run": "2026-07-20 14:56:02.453636",
         "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
         "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
         "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
         "current_status": "RAN - NO NEW FINDINGS",
         "run_status": "READY",
         "worked": "NO",
-        "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.",
-        "items_examined": 29,
+        "what_it_did": "Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.",
+        "items_examined": 30,
         "items_changed": 0,
         "new_outputs": [
           "No new knowledge records"
@@ -843,15 +843,15 @@
           "Validation reports",
           "Outcome deltas"
         ],
-        "last_known_run": "2026-07-20 13:54:17.221157",
+        "last_known_run": "2026-07-20 15:26:02.544690",
         "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
         "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
         "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
         "current_status": "WORKED - CREATED NEW VALUE",
         "run_status": "READY",
         "worked": "YES",
-        "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts.",
-        "items_examined": 29,
+        "what_it_did": "Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts.",
+        "items_examined": 35,
         "items_changed": 15,
         "new_outputs": [
           "15 knowledge record(s)"
@@ -937,15 +937,15 @@
           "Conflict report",
           "Source reliability"
         ],
-        "last_known_run": "2026-07-20 13:54:17.717291",
+        "last_known_run": "2026-07-20 15:26:02.549143",
         "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
         "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
         "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
         "current_status": "WORKED - CREATED NEW VALUE",
         "run_status": "READY",
         "worked": "YES",
-        "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources.",
-        "items_examined": 29,
+        "what_it_did": "Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+        "items_examined": 35,
         "items_changed": 1,
         "new_outputs": [
           "1 knowledge record(s)"
@@ -1290,15 +1290,15 @@
         "Official websites",
         "Public records"
       ],
-      "last_known_run": "2026-07-20 13:54:16.684984",
+      "last_known_run": "2026-07-20 14:56:02.442574",
       "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
       "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
       "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
       "current_status": "WORKED - CREATED NEW VALUE",
       "run_status": "READY",
       "worked": "YES",
-      "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously.",
-      "items_examined": 29,
+      "what_it_did": "Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously.",
+      "items_examined": 30,
       "items_changed": 1,
       "new_outputs": [
         "1 knowledge record(s)"
@@ -1519,15 +1519,15 @@
         "Family surveys",
         "Outcome feedback"
       ],
-      "last_known_run": "2026-07-20 13:54:17.008164",
+      "last_known_run": "2026-07-20 14:56:02.453636",
       "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
       "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
       "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
       "current_status": "RAN - NO NEW FINDINGS",
       "run_status": "READY",
       "worked": "NO",
-      "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.",
-      "items_examined": 29,
+      "what_it_did": "Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.",
+      "items_examined": 30,
       "items_changed": 0,
       "new_outputs": [
         "No new knowledge records"
@@ -1610,15 +1610,15 @@
         "Validation reports",
         "Outcome deltas"
       ],
-      "last_known_run": "2026-07-20 13:54:17.221157",
+      "last_known_run": "2026-07-20 15:26:02.544690",
       "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
       "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
       "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
       "current_status": "WORKED - CREATED NEW VALUE",
       "run_status": "READY",
       "worked": "YES",
-      "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts.",
-      "items_examined": 29,
+      "what_it_did": "Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts.",
+      "items_examined": 35,
       "items_changed": 15,
       "new_outputs": [
         "15 knowledge record(s)"
@@ -1704,15 +1704,15 @@
         "Conflict report",
         "Source reliability"
       ],
-      "last_known_run": "2026-07-20 13:54:17.717291",
+      "last_known_run": "2026-07-20 15:26:02.549143",
       "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
       "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
       "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
       "current_status": "WORKED - CREATED NEW VALUE",
       "run_status": "READY",
       "worked": "YES",
-      "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources.",
-      "items_examined": 29,
+      "what_it_did": "Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+      "items_examined": 35,
       "items_changed": 1,
       "new_outputs": [
         "1 knowledge record(s)"
@@ -1971,7 +1971,7 @@
   },
   "report_id": "2026-07-20",
   "report_date": "2026-07-20",
-  "generated_at_utc": "2026-07-20T13:56:02.441624+00:00",
+  "generated_at_utc": "2026-07-20T15:26:03.740895+00:00",
   "subject": "OPTIME Executive Intelligence Report | 2026-07-20",
   "artifacts": {
     "markdown": "reports/daily/archive/executive_intelligence_report_2026-07-20.md",
