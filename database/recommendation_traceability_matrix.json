@@ -1,0 +1,219 @@
+{
+  "phase": 7,
+  "generated_at_utc": "2026-07-20T06:14:08.918821+00:00",
+  "source_artifacts": {
+    "top5": "top5_decision_table.json",
+    "rule_registry": "professional_rule_registry.json",
+    "candidate_policy": "candidate_governance_policy.json"
+  },
+  "meta": {
+    "scenario_id": "PHASE6_TOP5_BASELINE",
+    "persona_type": "Skilled Nursing",
+    "total_trace_entries": 5,
+    "governed_rules_count": 23,
+    "candidate_lifecycle": [
+      "GENERATED",
+      "EVALUATED",
+      "ACCEPTED_OR_REJECTED",
+      "RANKED",
+      "DISPLAYED"
+    ]
+  },
+  "trace_entries": [
+    {
+      "recommendation_id": "REC-1",
+      "rank": 1,
+      "facility_id": 4,
+      "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "decision": {
+        "classification": "OUR_RECOMMENDATION",
+        "status": "ACCEPTED",
+        "hard_rejection_reasons": []
+      },
+      "score": {
+        "total_score": 100,
+        "final_match_score": 100,
+        "confidence_score": 23
+      },
+      "evidence": {
+        "verified_count": 3,
+        "unknown_count": 12,
+        "unknown_handling": "UNKNOWN retained and routed to clarify/investigate"
+      },
+      "explanation": {
+        "rank_reason": "Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment.",
+        "traceability_lines": [
+          "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+          "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+        ]
+      },
+      "governance": {
+        "policy_reference": "candidate_governance_policy.json",
+        "rule_registry_reference": "professional_rule_registry.json",
+        "authority_inventory": {
+          "A": 5,
+          "B": 6,
+          "C": 6,
+          "D": 6,
+          "UNKNOWN": 0
+        }
+      }
+    },
+    {
+      "recommendation_id": "REC-2",
+      "rank": 2,
+      "facility_id": 44,
+      "facility_name": "CRESTVIEW REHABILITATION CENTER, LLC",
+      "decision": {
+        "classification": "OUR_RECOMMENDATION",
+        "status": "ACCEPTED",
+        "hard_rejection_reasons": []
+      },
+      "score": {
+        "total_score": 100,
+        "final_match_score": 100,
+        "confidence_score": 23
+      },
+      "evidence": {
+        "verified_count": 3,
+        "unknown_count": 12,
+        "unknown_handling": "UNKNOWN retained and routed to clarify/investigate"
+      },
+      "explanation": {
+        "rank_reason": "Ranked #2 after comparing verified requirement coverage and confidence.",
+        "traceability_lines": [
+          "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+          "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+        ]
+      },
+      "governance": {
+        "policy_reference": "candidate_governance_policy.json",
+        "rule_registry_reference": "professional_rule_registry.json",
+        "authority_inventory": {
+          "A": 5,
+          "B": 6,
+          "C": 6,
+          "D": 6,
+          "UNKNOWN": 0
+        }
+      }
+    },
+    {
+      "recommendation_id": "REC-3",
+      "rank": 3,
+      "facility_id": 3,
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "decision": {
+        "classification": "OUR_RECOMMENDATION",
+        "status": "ACCEPTED",
+        "hard_rejection_reasons": []
+      },
+      "score": {
+        "total_score": 100,
+        "final_match_score": 100,
+        "confidence_score": 23
+      },
+      "evidence": {
+        "verified_count": 3,
+        "unknown_count": 12,
+        "unknown_handling": "UNKNOWN retained and routed to clarify/investigate"
+      },
+      "explanation": {
+        "rank_reason": "Ranked #3 after comparing verified requirement coverage and confidence.",
+        "traceability_lines": [
+          "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+          "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+        ]
+      },
+      "governance": {
+        "policy_reference": "candidate_governance_policy.json",
+        "rule_registry_reference": "professional_rule_registry.json",
+        "authority_inventory": {
+          "A": 5,
+          "B": 6,
+          "C": 6,
+          "D": 6,
+          "UNKNOWN": 0
+        }
+      }
+    },
+    {
+      "recommendation_id": "REC-4",
+      "rank": 4,
+      "facility_id": 20,
+      "facility_name": "BROWARD NURSING & REHABILITATION CENTER",
+      "decision": {
+        "classification": "OUR_RECOMMENDATION",
+        "status": "ACCEPTED",
+        "hard_rejection_reasons": []
+      },
+      "score": {
+        "total_score": 100,
+        "final_match_score": 100,
+        "confidence_score": 23
+      },
+      "evidence": {
+        "verified_count": 3,
+        "unknown_count": 12,
+        "unknown_handling": "UNKNOWN retained and routed to clarify/investigate"
+      },
+      "explanation": {
+        "rank_reason": "Ranked #4 after comparing verified requirement coverage and confidence.",
+        "traceability_lines": [
+          "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+          "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+        ]
+      },
+      "governance": {
+        "policy_reference": "candidate_governance_policy.json",
+        "rule_registry_reference": "professional_rule_registry.json",
+        "authority_inventory": {
+          "A": 5,
+          "B": 6,
+          "C": 6,
+          "D": 6,
+          "UNKNOWN": 0
+        }
+      }
+    },
+    {
+      "recommendation_id": "REC-5",
+      "rank": 5,
+      "facility_id": 26,
+      "facility_name": "MORTON PLANT REHABILITATION CENTER",
+      "decision": {
+        "classification": "OUR_RECOMMENDATION",
+        "status": "ACCEPTED",
+        "hard_rejection_reasons": []
+      },
+      "score": {
+        "total_score": 100,
+        "final_match_score": 100,
+        "confidence_score": 23
+      },
+      "evidence": {
+        "verified_count": 3,
+        "unknown_count": 12,
+        "unknown_handling": "UNKNOWN retained and routed to clarify/investigate"
+      },
+      "explanation": {
+        "rank_reason": "Ranked #5 after comparing verified requirement coverage and confidence.",
+        "traceability_lines": [
+          "Match Score = verified_yes / (verified_yes + verified_no) = 3 / 3",
+          "UNKNOWN items excluded from match score (10 unknown item(s)); they affect confidence only."
+        ]
+      },
+      "governance": {
+        "policy_reference": "candidate_governance_policy.json",
+        "rule_registry_reference": "professional_rule_registry.json",
+        "authority_inventory": {
+          "A": 5,
+          "B": 6,
+          "C": 6,
+          "D": 6,
+          "UNKNOWN": 0
+        }
+      }
+    }
+  ]
+}
