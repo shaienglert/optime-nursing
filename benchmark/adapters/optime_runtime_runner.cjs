@@ -1,8 +1,87 @@
 const path = require('path');
+const fs = require('fs');
 
 const repoRoot = path.join(__dirname, '..', '..');
 const simulationHelpers = require(path.join(repoRoot, 'scripts', 'run_dynamic_persona_simulation_audit.cjs'));
 const { runOptimeV2Engine } = require(path.join(repoRoot, 'frontend', 'src', 'lib', 'optime-v2-engine.ts'));
+
+function loadJson(filePath) {
+  if (!fs.existsSync(filePath)) return {};
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function buildGovernanceContext(backendFacilities) {
+  const registry = loadJson(path.join(repoRoot, 'database', 'professional_rule_registry.json'));
+  const threeLayer = loadJson(path.join(repoRoot, 'database', 'three_layer_decision_model_schema.json'));
+  const candidatePolicy = loadJson(path.join(repoRoot, 'database', 'candidate_governance_policy.json'));
+  const evidenceSnapshot = loadJson(path.join(repoRoot, 'database', 'facility_evidence_matrix_snapshot.json'));
+  const canonical = loadJson(path.join(repoRoot, 'database', 'florida_senior_living_inventory.json'));
+
+  const canonicalByCms = new Map();
+  (canonical.records || []).forEach((row, index) => {
+    if (row.cms_certification_number) {
+      canonicalByCms.set(String(row.cms_certification_number), index + 1);
+    }
+  });
+
+  const reconciliation = backendFacilities.map((facility) => {
+    const canonicalId = canonicalByCms.get(String(facility.cms_id || '')) || null;
+    return {
+      runtime_facility_id: facility.id,
+      canonical_facility_id: canonicalId,
+      cms_certification_number: facility.cms_id || null,
+      identity_status: canonicalId ? 'CONFIRMED_CANONICAL_ID' : 'UNRESOLVED_IDENTITY',
+      source_provenance: canonicalId ? ['CMS Provider Information', 'Medicare Care Compare'] : ['runtime_db_only'],
+    };
+  });
+
+  return {
+    generated_at_utc: new Date().toISOString(),
+    professional_rule_registry: {
+      version: registry.phase || null,
+      rule_count: (registry.rules || []).length,
+      hash: '',
+      rules: registry.rules || [],
+      validator_policy: registry.validator_policy || {},
+      authority_model: registry.authority_model || {},
+    },
+    three_layer_model: {
+      hash: '',
+      allowed_classifications: threeLayer.allowed_classifications || [],
+      governance_boundaries: threeLayer.governance_boundaries || {},
+    },
+    candidate_governance: {
+      hash: '',
+      candidate_lifecycle: candidatePolicy.candidate_lifecycle || [],
+      hard_rejection_taxonomy: candidatePolicy.hard_rejection_taxonomy || [],
+      governance_rules: candidatePolicy.governance_rules || [],
+    },
+    facility_evidence_runtime: {
+      hash: '',
+      verification_status_counts: evidenceSnapshot.verification_status_counts || {},
+      source_level_counts: evidenceSnapshot.source_level_counts || {},
+      unknown_field_counts: evidenceSnapshot.unknown_field_counts || {},
+      policies: evidenceSnapshot.policies || { unknown_is_not_no: true, conflict_requires_review: true },
+    },
+    canonical_runtime_coverage: {
+      canonical_total: canonical.record_count || 0,
+      runtime_total: backendFacilities.length,
+      confirmed_canonical_identity: reconciliation.filter((row) => row.identity_status === 'CONFIRMED_CANONICAL_ID').length,
+      unresolved_identity: reconciliation.filter((row) => row.identity_status === 'UNRESOLVED_IDENTITY').length,
+      reconciliation,
+    },
+    confidence_status: {
+      total_evaluated: backendFacilities.length,
+      known_confidence: 0,
+      unknown_confidence: backendFacilities.length,
+      reason_breakdown: { benchmark_runtime_context: backendFacilities.length },
+    },
+    validation_truth: {
+      external_professional_validation: 'PARTIAL',
+      benchmark_52_status: 'FAIL',
+    },
+  };
+}
 
 function parseCasePayload(raw) {
   try {
@@ -51,8 +130,9 @@ function toState(casePayload) {
 function runCase(casePayload) {
   const backendFacilities = simulationHelpers.loadBackendFacilities();
   const facilities = backendFacilities.map((facility) => simulationHelpers.toSearchFacility(facility, 'post'));
+  const governanceContext = buildGovernanceContext(backendFacilities);
   const state = toState(casePayload);
-  const result = runOptimeV2Engine(facilities, state, { mode: 'production' });
+  const result = runOptimeV2Engine(facilities, state, { mode: 'production', governanceContext });
 
   const top5 = result.displayedRecommendations.slice(0, 5).map((rec) => ({
     facility_name: rec.facility.name,

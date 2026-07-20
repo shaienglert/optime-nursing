@@ -1,0 +1,277 @@
+{
+  "case_id": "POST_STROKE_MIAMI_001",
+  "normalized_profile": {
+    "age_group": "80-84",
+    "care_context": "post-stroke",
+    "explicit_needs": [
+      "24/7 nursing availability",
+      "rehabilitation capability",
+      "medication management",
+      "mobility limitations"
+    ],
+    "preferences": [
+      "Miami-Dade or nearby",
+      "social engagement desirable"
+    ],
+    "budget_status": "UNKNOWN"
+  },
+  "requirement_layers": {
+    "MUST": [
+      {
+        "requirement_id": "REQ-1-LICENSED_NURSES_24_7",
+        "label": "Licensed nurses 24/7",
+        "origin": "EXPLICIT_USER_REQUIREMENT"
+      },
+      {
+        "requirement_id": "REQ-2-SKILLED_NURSING",
+        "label": "Skilled nursing capability",
+        "origin": "INTERNAL_HEURISTIC"
+      },
+      {
+        "requirement_id": "REQ-3-NEUROLOGICAL_REHABILITATION",
+        "label": "Neurological rehabilitation",
+        "origin": "EXPLICIT_USER_REQUIREMENT"
+      },
+      {
+        "requirement_id": "REQ-4-SPEECH_THERAPY",
+        "label": "Speech therapy",
+        "origin": "EXPLICIT_USER_REQUIREMENT"
+      },
+      {
+        "requirement_id": "REQ-8-WALKER_ACCESSIBILITY",
+        "label": "Walker accessibility",
+        "origin": "EXPLICIT_USER_REQUIREMENT"
+      },
+      {
+        "requirement_id": "REQ-10-MOBILITY_ASSISTANCE",
+        "label": "Mobility and transfer assistance",
+        "origin": "EXPLICIT_USER_REQUIREMENT"
+      },
+      {
+        "requirement_id": "REQ-EXPLICIT-MEDICATION_MANAGEMENT",
+        "label": "Medication management",
+        "origin": "EXPLICIT_USER_REQUIREMENT"
+      }
+    ],
+    "OUR_RECOMMENDATION": [
+      {
+        "requirement_id": "REQ-5-OCCUPATIONAL_THERAPY",
+        "label": "Occupational therapy",
+        "origin": "INTERNAL_HEURISTIC"
+      },
+      {
+        "requirement_id": "REQ-6-PHYSICAL_THERAPY",
+        "label": "Physical therapy",
+        "origin": "INTERNAL_HEURISTIC"
+      },
+      {
+        "requirement_id": "REQ-7-SWALLOWING_ASSESSMENT",
+        "label": "Swallowing assessment support",
+        "origin": "INTERNAL_HEURISTIC"
+      },
+      {
+        "requirement_id": "REQ-9-FALL_PREVENTION",
+        "label": "Fall prevention protocol",
+        "origin": "INTERNAL_HEURISTIC"
+      },
+      {
+        "requirement_id": "REQ-11-FUTURE_CARE_PATH",
+        "label": "Future care pathway: Full continuum of care on one campus",
+        "origin": "INTERNAL_HEURISTIC"
+      }
+    ],
+    "NICE_TO_HAVE": []
+  },
+  "candidate_counts_by_stage": {
+    "DISCOVERED": 100,
+    "IDENTITY_RESOLVED": 100,
+    "EVIDENCE_EVALUATED": 100,
+    "MUST_ELIGIBLE": 0,
+    "MUST_VERIFICATION_REQUIRED": 92,
+    "MUST_REJECTED": 8,
+    "RANKED": 92,
+    "TOP5_SELECTED": 5
+  },
+  "top_5": [
+    {
+      "rank": 1,
+      "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "canonical_id": 375,
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "our_recommendation_alignment": 3,
+      "nice_to_have_alignment": 0,
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "ranking_explanation": "Ranked #1 by governed MUST eligibility, OUR_RECOMMENDATION alignment, NICE_TO_HAVE alignment, and evidence confidence."
+    },
+    {
+      "rank": 2,
+      "facility": "CRESTVIEW REHABILITATION CENTER, LLC",
+      "canonical_id": 392,
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "our_recommendation_alignment": 3,
+      "nice_to_have_alignment": 0,
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "ranking_explanation": "Ranked #2 after governed eligibility and ranking-factor comparison."
+    },
+    {
+      "rank": 3,
+      "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "canonical_id": 348,
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "our_recommendation_alignment": 3,
+      "nice_to_have_alignment": 0,
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "ranking_explanation": "Ranked #3 after governed eligibility and ranking-factor comparison."
+    },
+    {
+      "rank": 4,
+      "facility": "BROWARD NURSING & REHABILITATION CENTER",
+      "canonical_id": 62,
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "our_recommendation_alignment": 3,
+      "nice_to_have_alignment": 0,
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "ranking_explanation": "Ranked #4 after governed eligibility and ranking-factor comparison."
+    },
+    {
+      "rank": 5,
+      "facility": "MORTON PLANT REHABILITATION CENTER",
+      "canonical_id": 518,
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "our_recommendation_alignment": 3,
+      "nice_to_have_alignment": 0,
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Walker accessibility",
+        "Mobility and transfer assistance",
+        "Medication management"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "ranking_explanation": "Ranked #5 after governed eligibility and ranking-factor comparison."
+    }
+  ]
+}

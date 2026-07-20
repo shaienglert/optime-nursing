@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "errors": [],
+  "summary": {
+    "accepted": 92,
+    "rejected": 8,
+    "displayed": 92,
+    "top5_count": 5,
+    "registry_consumed": true
+  },
+  "negative_tests": {
+    "age_alone_no_nursing_must": true,
+    "social_preference_not_must": true,
+    "unknown_budget_preserved": true,
+    "unknown_capability_not_yes": true,
+    "score_cannot_override_must_failed": true,
+    "unvalidated_rule_no_hard_must": true,
+    "legacy_weight_not_override_must": true,
+    "missing_source_not_verified": true
+  }
+}

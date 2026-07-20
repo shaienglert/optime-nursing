@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
-import { SearchFacility, fetchSearchFacilities } from "@/lib/api";
+import { GovernanceRuntimeContext, SearchFacility, fetchGovernanceRuntimeContext, fetchSearchFacilities } from "@/lib/api";
 import { RankedRecommendation, runOptimeV2Engine } from "@/lib/optime-v2-engine";
 import { clearSearchSession } from "@/lib/search-session";
 
@@ -206,6 +206,7 @@ export function ResultsPageClient() {
   const { state, resetState } = useQuestionnaire();
 
   const [facilities, setFacilities] = useState<SearchFacility[]>([]);
+  const [governanceContext, setGovernanceContext] = useState<GovernanceRuntimeContext | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
   const [relaxationOverrides, setRelaxationOverrides] = useState<RelaxationOverrides>({
@@ -251,9 +252,13 @@ export function ResultsPageClient() {
 
     async function loadFacilities() {
       setIsLoading(true);
-      const data = await fetchSearchFacilities(textQuery);
+      const [data, governedContext] = await Promise.all([
+        fetchSearchFacilities(textQuery),
+        fetchGovernanceRuntimeContext(),
+      ]);
       if (isMounted) {
         setFacilities(data);
+        setGovernanceContext(governedContext);
         setIsLoading(false);
       }
     }
@@ -265,7 +270,10 @@ export function ResultsPageClient() {
   }, [textQuery]);
 
   const engineState = useMemo(() => deriveEngineState(state, relaxationOverrides), [state, relaxationOverrides]);
-  const engineOutput = useMemo(() => runOptimeV2Engine(facilities, engineState), [facilities, engineState]);
+  const engineOutput = useMemo(
+    () => runOptimeV2Engine(facilities, engineState, { governanceContext }),
+    [facilities, engineState, governanceContext],
+  );
   const visibleRecommendations = useMemo(() => engineOutput.displayedRecommendations, [engineOutput]);
   const topRecommendations = useMemo(() => visibleRecommendations.slice(0, TOP_RECOMMENDATION_COUNT), [visibleRecommendations]);
   const remainingRecommendations = useMemo(() => visibleRecommendations.slice(TOP_RECOMMENDATION_COUNT), [visibleRecommendations]);
@@ -295,6 +303,7 @@ export function ResultsPageClient() {
     const standout = stoodOutBullets(recommendation);
     const visitQuestions = report.audit.clinicalReasoning.questionsForFacility.slice(0, 4);
     const reviewDate = formatReviewDate(report.audit.confidence.lastIntelligenceRefresh);
+    const governed = report.audit.governedFacilityDecision;
 
     return (
       <article key={facility.id} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
@@ -364,6 +373,32 @@ export function ResultsPageClient() {
               <p className="mt-2 text-sm text-[#4f473d]">No items are verified yet.</p>
             )}
           </section>
+
+          {governed ? (
+            <section className="rounded-xl border border-[#d9e3ec] bg-[#f8fbff] p-4">
+              <p className="font-semibold text-[#24425e]">Governed MUST status</p>
+              <p className="mt-2 text-sm text-[#4f473d]">Eligibility: {governed.eligibility_status}</p>
+              <p className="mt-1 text-sm text-[#4f473d]">Canonical identity: {governed.identity_status}{governed.canonical_facility_id ? ` (#${governed.canonical_facility_id})` : ""}</p>
+              <div className="mt-3 grid gap-2 text-xs text-[#4f473d] sm:grid-cols-2">
+                <div>
+                  <p className="font-semibold">MUST satisfied</p>
+                  <p>{governed.must_satisfied.length > 0 ? governed.must_satisfied.join("; ") : "None"}</p>
+                </div>
+                <div>
+                  <p className="font-semibold">MUST failed</p>
+                  <p>{governed.must_failed.length > 0 ? governed.must_failed.join("; ") : "None"}</p>
+                </div>
+                <div>
+                  <p className="font-semibold">MUST unknown</p>
+                  <p>{governed.must_unknown.length > 0 ? governed.must_unknown.join("; ") : "None"}</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Verification required</p>
+                  <p>{governed.verification_required.length > 0 ? governed.verification_required.join("; ") : "None"}</p>
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           <section className="rounded-xl border border-[#f0d9b0] bg-[#fff8ea] p-4">
             <p className="font-semibold text-[#8a6a2f]">Still needs confirmation</p>

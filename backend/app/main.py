@@ -1,8 +1,10 @@
 import os
 import json
+import hashlib
 from datetime import datetime
 from statistics import mean
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func, or_
 
@@ -777,6 +779,55 @@ def _parse_json_object(raw: Optional[str]) -> Dict[str, object]:
     return {}
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _load_json_file(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _sha256_for_file(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _canonical_lookup(canonical_records: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    by_cms: Dict[str, Dict[str, Any]] = {}
+    for index, row in enumerate(canonical_records, start=1):
+        cms_id = str(row.get("cms_certification_number") or "").strip()
+        if cms_id:
+            by_cms[cms_id] = {
+                "canonical_facility_id": index,
+                "community_name": row.get("community_name"),
+                "county": row.get("county"),
+                "state": row.get("state"),
+                "cms_certification_number": cms_id,
+                "source_refs": row.get("source_refs") or [],
+            }
+    return by_cms
+
+
+def _compute_confidence_level_for_facility(facility: Facility, profile: Optional[FacilityIntelligenceProfile]) -> Dict[str, Any]:
+    explicit = str(facility.confidence_level or "").upper().strip()
+    if explicit in {"HIGH", "MEDIUM", "LOW"}:
+        return {"confidence": explicit, "reason": "facility.confidence_level"}
+
+    profile_confidence = float(profile.intelligence_confidence or 0.0) if profile else 0.0
+    known_sources = len(_parse_json_array(profile.sources_used) if profile else [])
+
+    if profile_confidence >= 0.85 and known_sources >= 2:
+        return {"confidence": "HIGH", "reason": "derived_from_intelligence_profile"}
+    if profile_confidence >= 0.65 and known_sources >= 1:
+        return {"confidence": "MEDIUM", "reason": "derived_from_intelligence_profile"}
+    if profile_confidence >= 0.45 and known_sources >= 1:
+        return {"confidence": "LOW", "reason": "derived_from_intelligence_profile"}
+
+    return {"confidence": "UNKNOWN", "reason": "insufficient_evidence_provenance"}
+
+
 def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> FacilityIntelligenceProfileOut:
     return FacilityIntelligenceProfileOut(
         facility_id=profile.facility_id,
@@ -933,6 +984,106 @@ async def import_summary():
     if not summary:
         raise HTTPException(status_code=404, detail="Import summary not found")
     return summary
+
+
+@app.get("/governance/runtime-context")
+async def get_governance_runtime_context(db: Session = Depends(get_db)):
+    registry_path = REPO_ROOT / "database" / "professional_rule_registry.json"
+    three_layer_path = REPO_ROOT / "database" / "three_layer_decision_model_schema.json"
+    evidence_path = REPO_ROOT / "database" / "facility_evidence_matrix_snapshot.json"
+    candidate_policy_path = REPO_ROOT / "database" / "candidate_governance_policy.json"
+    canonical_path = REPO_ROOT / "database" / "florida_senior_living_inventory.json"
+
+    registry_payload = _load_json_file(registry_path)
+    three_layer_payload = _load_json_file(three_layer_path)
+    evidence_payload = _load_json_file(evidence_path)
+    candidate_policy_payload = _load_json_file(candidate_policy_path)
+    canonical_payload = _load_json_file(canonical_path)
+
+    facilities = db.query(Facility).filter(Facility.state == "FL").order_by(Facility.id.asc()).all()
+    profile_rows = db.query(FacilityIntelligenceProfile).filter(
+        FacilityIntelligenceProfile.facility_id.in_([facility.id for facility in facilities])
+    ).all() if facilities else []
+    profiles_by_facility = {row.facility_id: row for row in profile_rows}
+
+    canonical_records = canonical_payload.get("records") or []
+    canonical_by_cms = _canonical_lookup(canonical_records)
+
+    reconciliation_rows: List[Dict[str, Any]] = []
+    confidence_totals = {"total_evaluated": len(facilities), "known_confidence": 0, "unknown_confidence": 0}
+    confidence_reasons: Dict[str, int] = {}
+
+    for facility in facilities:
+        cms_id = str(facility.cms_id or "").strip()
+        canonical = canonical_by_cms.get(cms_id)
+        identity_status = "CONFIRMED_CANONICAL_ID" if canonical else "UNRESOLVED_IDENTITY"
+        reconciliation_rows.append(
+            {
+                "runtime_facility_id": facility.id,
+                "canonical_facility_id": canonical.get("canonical_facility_id") if canonical else None,
+                "cms_certification_number": cms_id or None,
+                "identity_status": identity_status,
+                "source_provenance": canonical.get("source_refs") if canonical else ["runtime_db_only"],
+            }
+        )
+
+        confidence_result = _compute_confidence_level_for_facility(facility, profiles_by_facility.get(facility.id))
+        if confidence_result["confidence"] == "UNKNOWN":
+            confidence_totals["unknown_confidence"] += 1
+        else:
+            confidence_totals["known_confidence"] += 1
+        reason_key = str(confidence_result["reason"])
+        confidence_reasons[reason_key] = int(confidence_reasons.get(reason_key) or 0) + 1
+
+    confirmed_count = sum(1 for row in reconciliation_rows if row["identity_status"] == "CONFIRMED_CANONICAL_ID")
+
+    return {
+        "generated_at_utc": datetime.utcnow().isoformat() + "Z",
+        "professional_rule_registry": {
+            "version": registry_payload.get("phase"),
+            "rule_count": len(registry_payload.get("rules") or []),
+            "hash": _sha256_for_file(registry_path),
+            "rules": registry_payload.get("rules") or [],
+            "validator_policy": registry_payload.get("validator_policy") or {},
+            "authority_model": registry_payload.get("authority_model") or {},
+        },
+        "three_layer_model": {
+            "hash": _sha256_for_file(three_layer_path),
+            "allowed_classifications": three_layer_payload.get("allowed_classifications") or [],
+            "governance_boundaries": three_layer_payload.get("governance_boundaries") or {},
+        },
+        "candidate_governance": {
+            "hash": _sha256_for_file(candidate_policy_path),
+            "candidate_lifecycle": candidate_policy_payload.get("candidate_lifecycle") or [],
+            "hard_rejection_taxonomy": candidate_policy_payload.get("hard_rejection_taxonomy") or [],
+            "governance_rules": candidate_policy_payload.get("governance_rules") or [],
+        },
+        "facility_evidence_runtime": {
+            "hash": _sha256_for_file(evidence_path),
+            "verification_status_counts": evidence_payload.get("verification_status_counts") or {},
+            "source_level_counts": evidence_payload.get("source_level_counts") or {},
+            "unknown_field_counts": evidence_payload.get("unknown_field_counts") or {},
+            "policies": evidence_payload.get("policies") or {
+                "unknown_is_not_no": True,
+                "conflict_requires_review": True,
+            },
+        },
+        "canonical_runtime_coverage": {
+            "canonical_total": canonical_payload.get("record_count") or len(canonical_records),
+            "runtime_total": len(facilities),
+            "confirmed_canonical_identity": confirmed_count,
+            "unresolved_identity": len(facilities) - confirmed_count,
+            "reconciliation": reconciliation_rows,
+        },
+        "confidence_status": {
+            **confidence_totals,
+            "reason_breakdown": confidence_reasons,
+        },
+        "validation_truth": {
+            "external_professional_validation": "PARTIAL",
+            "benchmark_52_status": "FAIL",
+        },
+    }
 
 
 @app.get("/facilities", response_model=List[FacilityListOut])

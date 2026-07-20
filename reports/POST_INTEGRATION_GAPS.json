@@ -1,0 +1,126 @@
+[
+  {
+    "gap_id": "G-001",
+    "severity": "CRITICAL",
+    "component": "Professional Rule Registry",
+    "before": "IMPLEMENTED_NOT_WIRED",
+    "after": "CLOSED_RUNTIME_WIRED",
+    "status_change": "CLOSED",
+    "runtime_evidence": [
+      "backend/app/main.py:/governance/runtime-context professional_rule_registry payload",
+      "frontend/src/lib/api.ts:fetchGovernanceRuntimeContext",
+      "frontend/src/lib/optime-v2-engine.ts:governanceContext consumed in runOptimeV2Engine",
+      "reports/GOVERNED_RUNTIME_INTEGRATION_VALIDATION.json:summary.registry_consumed=true"
+    ]
+  },
+  {
+    "gap_id": "G-002",
+    "severity": "CRITICAL",
+    "component": "Three-Layer Model",
+    "before": "MECHANICAL_ONLY",
+    "after": "CLOSED_RUNTIME_CLASSIFICATION",
+    "status_change": "CLOSED",
+    "runtime_evidence": [
+      "frontend/src/lib/governed-runtime.ts:buildGovernedRequirements",
+      "frontend/src/lib/optime-v2-engine.ts:audit includes governedRequirements",
+      "reports/POST_STROKE_MIAMI_001_RUNTIME_OUTPUT.json:requirement_layers contains MUST/OUR_RECOMMENDATION/NICE_TO_HAVE"
+    ]
+  },
+  {
+    "gap_id": "G-003",
+    "severity": "CRITICAL",
+    "component": "Canonical Facility Universe",
+    "before": "NOT_WIRED",
+    "after": "PARTIAL_RECONCILIATION_ONLY",
+    "status_change": "PARTIAL",
+    "runtime_evidence": [
+      "backend/app/main.py:canonical_runtime_coverage reconciliation by CMS",
+      "frontend/src/lib/governed-runtime.ts:evaluateGovernedFacility identity_status + canonical_facility_id",
+      "reports/POST_STROKE_MIAMI_001_RUNTIME_OUTPUT.json:top_5[*].canonical_id populated"
+    ],
+    "open_risk": "Runtime source feed still originates from DB sample endpoint; canonical inventory is reconciled but not yet sole runtime source contract."
+  },
+  {
+    "gap_id": "G-004",
+    "severity": "CRITICAL",
+    "component": "Facility Evidence Matrix",
+    "before": "IMPLEMENTED_NOT_WIRED",
+    "after": "PARTIAL_RUNTIME_EVIDENCE_GOVERNANCE",
+    "status_change": "PARTIAL",
+    "runtime_evidence": [
+      "backend/app/main.py:facility_evidence_runtime snapshot exposed in runtime context",
+      "frontend/src/lib/governed-runtime.ts:evidence_records + source_traceability + verification_required",
+      "reports/POST_STROKE_MIAMI_001_RUNTIME_OUTPUT.json:top_5 includes evidence_gaps + sources"
+    ],
+    "open_risk": "Per-facility snapshot matrix fields are not yet directly joined as authoritative facility-level evidence rows during scoring."
+  },
+  {
+    "gap_id": "G-005",
+    "severity": "HIGH",
+    "component": "Top-5 Decision Table Artifact",
+    "before": "IMPLEMENTED_NOT_WIRED",
+    "after": "CLOSED_RUNTIME_TOP5",
+    "status_change": "CLOSED",
+    "runtime_evidence": [
+      "frontend/src/lib/optime-v2-engine.ts:candidate stage TOP5_SELECTED",
+      "frontend/src/app/results/results-page-client.tsx:display uses engineOutput.displayedRecommendations.slice(0, TOP_RECOMMENDATION_COUNT)",
+      "reports/POST_STROKE_MIAMI_001_RUNTIME_OUTPUT.json:top_5 length=5"
+    ]
+  },
+  {
+    "gap_id": "G-006",
+    "severity": "HIGH",
+    "component": "Recommendation Traceability Matrix",
+    "before": "IMPLEMENTED_NOT_WIRED",
+    "after": "PARTIAL_RUNTIME_TRACEABILITY",
+    "status_change": "PARTIAL",
+    "runtime_evidence": [
+      "frontend/src/lib/governed-runtime.ts:source_traceability records per recommendation",
+      "frontend/src/app/results/results-page-client.tsx:governed MUST status section exposed in runtime card",
+      "reports/POST_STROKE_MIAMI_001_RUNTIME_OUTPUT.json:top_5[*].sources populated"
+    ],
+    "open_risk": "Dedicated matrix drilldown view by recommendation ID is still not implemented."
+  },
+  {
+    "gap_id": "G-007",
+    "severity": "HIGH",
+    "component": "Validation Program",
+    "before": "PARTIAL",
+    "after": "PARTIAL_RUNTIME_VALIDATED",
+    "status_change": "PARTIAL",
+    "runtime_evidence": [
+      "scripts/validate_governed_runtime_integration.cjs",
+      "reports/GOVERNED_RUNTIME_INTEGRATION_VALIDATION.json:status=PASS",
+      "reports/GOVERNED_RUNTIME_INTEGRATION_VALIDATION.json:negative_tests all true"
+    ],
+    "open_risk": "External professional validation remains PARTIAL by policy."
+  },
+  {
+    "gap_id": "G-008",
+    "severity": "HIGH",
+    "component": "Hardcoded Weights",
+    "before": "ACTIVE_UNVALIDATED",
+    "after": "PARTIAL_GOVERNED_GATING_APPLIED",
+    "status_change": "PARTIAL",
+    "runtime_evidence": [
+      "frontend/src/lib/optime-v2-engine.ts:MUST gating enforced before rank ordering",
+      "frontend/src/lib/governed-runtime.ts:weight governance snapshot + ranking_factors",
+      "reports/GOVERNED_RUNTIME_INTEGRATION_VALIDATION.json:score_cannot_override_must_failed=true"
+    ],
+    "open_risk": "Some legacy weight values still remain active pending full external validation and governance versioning closure."
+  },
+  {
+    "gap_id": "G-009",
+    "severity": "HIGH",
+    "component": "Evidence Confidence Field",
+    "before": "MISSING_RUNTIME_DATA",
+    "after": "OPEN_CONFIDENCE_GAPS_VISIBLE",
+    "status_change": "OPEN",
+    "runtime_evidence": [
+      "backend/app/main.py:confidence_status included in runtime context",
+      "frontend/src/lib/governed-runtime.ts:unknown evidence preserved as UNKNOWN/verification required",
+      "reports/POST_STROKE_MIAMI_001_RUNTIME_OUTPUT.json:must_unknown and evidence_gaps present"
+    ],
+    "open_risk": "Pipeline still has broad unknown confidence coverage; now transparent and non-silent, but not yet fully populated."
+  }
+]

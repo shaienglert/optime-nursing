@@ -176,6 +176,73 @@ export type FacilityDetailsData = SearchFacility & {
   };
 };
 
+export type GovernedRule = {
+  rule_id: string;
+  authority_level: "A" | "B" | "C" | "D" | "UNKNOWN";
+  validation_status: string;
+  active_runtime: boolean;
+  source_reference?: string;
+  source_type?: string;
+  review_status?: string;
+  allowed_output_class?: string[];
+  [key: string]: unknown;
+};
+
+export type RuntimeFacilityReconciliation = {
+  runtime_facility_id: number;
+  canonical_facility_id: number | null;
+  cms_certification_number: string | null;
+  identity_status: "CONFIRMED_CANONICAL_ID" | "UNRESOLVED_IDENTITY";
+  source_provenance: string[];
+};
+
+export type GovernanceRuntimeContext = {
+  generated_at_utc: string;
+  professional_rule_registry: {
+    version: string | number | null;
+    rule_count: number;
+    hash: string;
+    rules: GovernedRule[];
+    validator_policy: Record<string, unknown>;
+    authority_model: Record<string, string>;
+  };
+  three_layer_model: {
+    hash: string;
+    allowed_classifications: string[];
+    governance_boundaries: Record<string, unknown>;
+  };
+  candidate_governance: {
+    hash: string;
+    candidate_lifecycle: string[];
+    hard_rejection_taxonomy: string[];
+    governance_rules: Array<Record<string, unknown>>;
+  };
+  facility_evidence_runtime: {
+    hash: string;
+    verification_status_counts: Record<string, number>;
+    source_level_counts: Record<string, number>;
+    unknown_field_counts: Record<string, number>;
+    policies: Record<string, unknown>;
+  };
+  canonical_runtime_coverage: {
+    canonical_total: number;
+    runtime_total: number;
+    confirmed_canonical_identity: number;
+    unresolved_identity: number;
+    reconciliation: RuntimeFacilityReconciliation[];
+  };
+  confidence_status: {
+    total_evaluated: number;
+    known_confidence: number;
+    unknown_confidence: number;
+    reason_breakdown: Record<string, number>;
+  };
+  validation_truth: {
+    external_professional_validation: string;
+    benchmark_52_status: string;
+  };
+};
+
 type BackendFacility = {
   id: number;
   cms_id?: string;
@@ -1399,6 +1466,14 @@ export async function fetchFacilityDetails(id: string): Promise<FacilityDetailsD
 
 export async function fetchFacilityIntelligenceProfile(id: string): Promise<FacilityIntelligenceProfile> {
   return fetchJson<FacilityIntelligenceProfile>(`/intelligence/facilities/${id}`);
+}
+
+export async function fetchGovernanceRuntimeContext(): Promise<GovernanceRuntimeContext | null> {
+  try {
+    return await fetchJson<GovernanceRuntimeContext>("/governance/runtime-context");
+  } catch {
+    return null;
+  }
 }
 
 export type HumanIntelligenceScorePayload = {

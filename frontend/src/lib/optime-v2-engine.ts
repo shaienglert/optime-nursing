@@ -1,11 +1,18 @@
 import { QuestionnaireState } from "@/context/questionnaire-context";
-import { SearchFacility } from "@/lib/api";
+import { GovernanceRuntimeContext, SearchFacility } from "@/lib/api";
+import {
+  buildGovernedRequirements,
+  buildGovernedRuntimeMeta,
+  buildWeightGovernanceSnapshot,
+  evaluateGovernedFacility,
+} from "@/lib/governed-runtime";
 import { QUESTION_GRAPH } from "@/lib/questionnaire-graph";
 
 type EngineRunMode = "production" | "simulation";
 
 type EngineRunOptions = {
   mode?: EngineRunMode;
+  governanceContext?: GovernanceRuntimeContext | null;
 };
 
 type SignalRole = "score contribution" | "explanation contribution" | "rejection rationale" | "missing information analysis";
@@ -260,6 +267,9 @@ type AuditFormula = {
   verificationReadinessScore: number;
   clinicalReasoning: ClinicalReasoningNarrative;
   anonymousVerificationPayload: AnonymousVerificationPayload;
+  governedRequirements?: ReturnType<typeof buildGovernedRequirements>;
+  governedFacilityDecision?: ReturnType<typeof evaluateGovernedFacility>;
+  weightGovernance?: ReturnType<typeof buildWeightGovernanceSnapshot>;
 };
 
 export type IntelligenceScoringReport = {
@@ -325,6 +335,8 @@ export type EngineOutput = {
   };
   qualityCheck: EngineQualityCheck;
   persona: PersonaProfile;
+  governedRuntime: ReturnType<typeof buildGovernedRuntimeMeta>;
+  candidateStageCounts: Record<string, number>;
 };
 
 const PERSONA_WEIGHT_PROFILES: Record<PersonaType, WeightProfile> = {
@@ -2991,12 +3003,15 @@ function summarizeRejections(recommendations: RankedRecommendation[]) {
 
 export function runOptimeV2Engine(facilities: SearchFacility[], state: QuestionnaireState, options?: EngineRunOptions): EngineOutput {
   const mode: EngineRunMode = options?.mode || "production";
+  const governanceContext = options?.governanceContext || null;
   const answeredSignals = flattenAnsweredSignals(state);
   const signalRoles = answeredSignals.map((signal) => ({
     key: signal.key,
     role: roleForSignalKey(signal.key),
   }));
   const persona = buildPersonaProfile(state);
+  const governedRuntime = buildGovernedRuntimeMeta(governanceContext);
+  const weightGovernance = buildWeightGovernanceSnapshot();
 
   const miamiDadeCities = new Set([
     "MIAMI",
@@ -3172,6 +3187,22 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       },
     ];
 
+    const governedRequirements = buildGovernedRequirements(assessments, state, governanceContext);
+    const governedDecision = evaluateGovernedFacility(
+      facility,
+      governedRequirements,
+      assessments,
+      hardRejectionReasons,
+      matchScore,
+      verifiedYes,
+      preferenceYes,
+      governanceContext,
+    );
+
+    if (governedDecision.eligibility_status === "MUST_REJECTED" && !hardRejectionReasons.includes("Governed MUST eligibility failed.")) {
+      hardRejectionReasons.push("Governed MUST eligibility failed.");
+    }
+
     const report: IntelligenceScoringReport = {
       finalMatchScore: matchScore,
       confidenceScore,
@@ -3222,6 +3253,9 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
         verificationReadinessScore: verificationRequest.visitReadinessScore,
         clinicalReasoning: clinicalReasoning.narrative,
         anonymousVerificationPayload: clinicalReasoning.anonymousPayload,
+        governedRequirements,
+        governedFacilityDecision: governedDecision,
+        weightGovernance,
       },
     };
 
@@ -3251,10 +3285,26 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
   });
 
   const accepted = recommendations
-    .filter((recommendation) => recommendation.hardRejectionReasons.length === 0)
+    .filter((recommendation) => {
+      const governedDecision = recommendation.report.audit.governedFacilityDecision;
+      const mustFailed = governedDecision?.must_failed.length || 0;
+      return recommendation.hardRejectionReasons.length === 0 && mustFailed === 0;
+    })
     .sort((a, b) => {
       const preferenceBonusA = a.report.audit.clinicalReasoning.verifiedCapabilities.filter((item) => a.report.audit.clinicalReasoning.questionsForFacility.every((q) => !q.toLowerCase().includes(item.toLowerCase()))).length;
       const preferenceBonusB = b.report.audit.clinicalReasoning.verifiedCapabilities.filter((item) => b.report.audit.clinicalReasoning.questionsForFacility.every((q) => !q.toLowerCase().includes(item.toLowerCase()))).length;
+      const governedA = a.report.audit.governedFacilityDecision;
+      const governedB = b.report.audit.governedFacilityDecision;
+      const recommendationA = (governedA?.ranking_factors || []).find((item) => item.factor === "OUR_RECOMMENDATION alignment")?.contribution || 0;
+      const recommendationB = (governedB?.ranking_factors || []).find((item) => item.factor === "OUR_RECOMMENDATION alignment")?.contribution || 0;
+      const niceA = (governedA?.ranking_factors || []).find((item) => item.factor === "NICE_TO_HAVE alignment")?.contribution || 0;
+      const niceB = (governedB?.ranking_factors || []).find((item) => item.factor === "NICE_TO_HAVE alignment")?.contribution || 0;
+
+      const governedFitDelta = (recommendationB + niceB) - (recommendationA + niceA);
+      if (governedFitDelta !== 0) {
+        return governedFitDelta;
+      }
+
       const fitDelta = b.totalScore - a.totalScore;
       if (fitDelta !== 0) {
         return fitDelta;
@@ -3271,8 +3321,9 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
         || b.priorityScores.familyFit - a.priorityScores.familyFit;
     });
 
-  const rejected = recommendations.filter((recommendation) => recommendation.hardRejectionReasons.length > 0);
+  const rejected = recommendations.filter((recommendation) => recommendation.hardRejectionReasons.length > 0 || (recommendation.report.audit.governedFacilityDecision?.must_failed.length || 0) > 0);
   const fallbackRecommendations = recommendations
+    .filter((recommendation) => (recommendation.report.audit.governedFacilityDecision?.must_failed.length || 0) === 0)
     .slice()
     .sort((a, b) => {
       const satisfiedA = a.report.audit.verificationChecklist.filter((item) => item.state === "YES").length;
@@ -3291,14 +3342,25 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
 
   accepted.forEach((item, index) => {
     item.rankReason = index === 0
-      ? "Ranked #1 by deterministic checklist match, verified capability fit, and preference alignment."
-      : `Ranked #${index + 1} after comparing verified requirement coverage and confidence.`;
+      ? "Ranked #1 by governed MUST eligibility, OUR_RECOMMENDATION alignment, NICE_TO_HAVE alignment, and evidence confidence."
+      : `Ranked #${index + 1} after governed eligibility and ranking-factor comparison.`;
 
     item.report.rankingPosition = index + 1;
     item.report.rankingExplanation = item.rankReason;
   });
 
   const qualityCheck = buildQualityCheck(displayedRecommendations, signalRoles);
+
+  const candidateStageCounts: Record<string, number> = {
+    DISCOVERED: recommendations.length,
+    IDENTITY_RESOLVED: recommendations.filter((item) => item.report.audit.governedFacilityDecision?.identity_status === "CONFIRMED_CANONICAL_ID").length,
+    EVIDENCE_EVALUATED: recommendations.length,
+    MUST_ELIGIBLE: recommendations.filter((item) => item.report.audit.governedFacilityDecision?.eligibility_status === "MUST_ELIGIBLE").length,
+    MUST_VERIFICATION_REQUIRED: recommendations.filter((item) => item.report.audit.governedFacilityDecision?.eligibility_status === "ELIGIBLE_WITH_VERIFICATION_REQUIRED").length,
+    MUST_REJECTED: recommendations.filter((item) => item.report.audit.governedFacilityDecision?.eligibility_status === "MUST_REJECTED").length,
+    RANKED: displayedRecommendations.length,
+    TOP5_SELECTED: displayedRecommendations.slice(0, 5).length,
+  };
 
   return {
     accepted,
@@ -3312,5 +3374,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     },
     qualityCheck,
     persona,
+    governedRuntime,
+    candidateStageCounts,
   };
 }
