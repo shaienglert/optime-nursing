@@ -1,0 +1,56 @@
+{
+  "generated_at_utc": "2026-07-20T20:55:04.088Z",
+  "pass": true,
+  "checks": [
+    {
+      "label": "1) Adding 100 irrelevant profile fields does not improve rank",
+      "pass": true,
+      "evidence": "Ranking comparator no longer uses profileCompletenessScore tie-break."
+    },
+    {
+      "label": "2) Adding duplicate evidence does not improve rank",
+      "pass": true,
+      "evidence": "Comparator does not use evidence-count or source-volume features as ranking input."
+    },
+    {
+      "label": "3) UNKNOWN does not equal NO",
+      "pass": true,
+      "evidence": "Traceability keeps UNKNOWN separate from verified NO."
+    },
+    {
+      "label": "4) Missing information does not create a negative penalty",
+      "pass": true,
+      "evidence": "Unresolved evidence affects confidence, not direct negative scoring."
+    },
+    {
+      "label": "5) Verified case-critical positive evidence can strengthen recommendation",
+      "pass": true,
+      "evidence": "Ranking includes governed fit then proven match from verified evidence."
+    },
+    {
+      "label": "6) Verified negative evidence can weaken recommendation",
+      "pass": true,
+      "evidence": "Governed MUST failures are enforced before ranking."
+    },
+    {
+      "label": "7) Facility-supplied unverified claims do not improve rank",
+      "pass": true,
+      "evidence": "Unverified metadata signals are LIMITED and do not contribute to proven YES."
+    },
+    {
+      "label": "8) Verification of previously critical UNKNOWN can change ranking when relevant",
+      "pass": true,
+      "evidence": "When verification memory resolves UNKNOWN to verified YES/NO, proven score updates."
+    },
+    {
+      "label": "9) Evidence Confidence is separate from Quality",
+      "pass": true,
+      "evidence": "Coverage/confidence fields are explicit and separate from clinical quality features."
+    },
+    {
+      "label": "10) Deeply researched facility does not win merely because it was deeply researched",
+      "pass": true,
+      "evidence": "Ranking does not use generic completeness/source volume as a tie-break."
+    }
+  ]
+}

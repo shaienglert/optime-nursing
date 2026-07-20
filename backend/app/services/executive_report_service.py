@@ -101,6 +101,35 @@ def _read(path: Path) -> str:
 
 def _extract_int(pattern: str, text: str) -> Optional[int]:
     m = re.search(pattern, text, re.IGNORECASE)
+
+
+    def _load_evidence_parity_audit() -> Dict[str, Any]:
+        path = _reports_path("GOLDEN_CASE_RANKING_CAUSALITY_AUDIT.json")
+        if not path.exists():
+            return {
+                "status": "UNPROVEN",
+                "corrected_proven_match_top5": [],
+                "high_potential_needs_verification": [],
+                "regression_status": "UNPROVEN",
+            }
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return {
+                "status": "UNPROVEN",
+                "corrected_proven_match_top5": [],
+                "high_potential_needs_verification": [],
+                "regression_status": "UNPROVEN",
+            }
+
+        golden = payload.get("golden_case") if isinstance(payload.get("golden_case"), dict) else {}
+        regression = payload.get("regression_tests") if isinstance(payload.get("regression_tests"), dict) else {}
+        return {
+            "status": "ACTIVE",
+            "corrected_proven_match_top5": golden.get("corrected_proven_match_top5") or golden.get("evidence_parity_top5") or [],
+            "high_potential_needs_verification": golden.get("high_potential_needs_verification") or [],
+            "regression_status": regression.get("status", "UNPROVEN"),
+        }
     if not m:
         return None
     try:
@@ -895,6 +924,7 @@ def _build_report_payload(db: Session, previous_payload: Optional[Dict[str, Any]
     gaps = _knowledge_gap_lines()
     organic_authority = _organic_ai_authority_status()
     external_discovery = build_external_discovery_summary(db)
+    evidence_parity = _load_evidence_parity_audit()
 
     current_kpis = {
         "total_communities": discovery.get("total_communities"),
@@ -995,6 +1025,7 @@ def _build_report_payload(db: Session, previous_payload: Optional[Dict[str, Any]
             "validation_results": rec,
             "regression_tests": rec.get("release_gate"),
         },
+        "evidence_parity": evidence_parity,
         "agent_activity": agents,
         "data_quality": data_quality,
         "knowledge_gaps": gaps,
@@ -1039,6 +1070,7 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
     control_tower = payload.get("agent_control_tower", {})
     external_discovery = payload.get("external_discovery", {})
     organic_authority = payload.get("organic_ai_authority", {})
+    evidence_parity = payload.get("evidence_parity", {})
     alerts = payload["critical_alerts"]
 
     if not any(v not in (None, 0, [], "", "UNPROVEN") for v in payload["delta_since_previous"].values()):
@@ -1240,6 +1272,18 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
         f"- Confidence improvements: {_fmt_num(re.get('confidence_improvements'))}",
         f"- Validation results: release_gate={re['validation_results'].get('release_gate')} advisor_agreement={_fmt_num(re['validation_results'].get('advisor_agreement_pct'))}%",
         f"- Regression tests: {_fmt_num(re.get('regression_tests'))}",
+        "",
+        "# Evidence Parity / Proven Match",
+        "",
+        f"- Status: {evidence_parity.get('status', 'UNPROVEN')}",
+        f"- Regression status: {evidence_parity.get('regression_status', 'UNPROVEN')}",
+        f"- Corrected proven-match top 5: {', '.join(evidence_parity.get('corrected_proven_match_top5', []) or ['UNPROVEN'])}",
+        "- High-potential / needs-verification:",
+        *[
+            f"  - {item.get('facility_name')}: proven={item.get('proven_match_score')} potential={item.get('potential_match_score')} critical_unknowns={len(item.get('critical_unknowns') or [])}"
+            for item in (evidence_parity.get('high_potential_needs_verification', []) or [])[:10]
+        ],
+        *( ["  - None"] if not (evidence_parity.get('high_potential_needs_verification', []) or []) else [] ),
         "",
         "# Agent Activity",
         "",

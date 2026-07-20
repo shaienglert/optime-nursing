@@ -370,12 +370,12 @@ export function buildWeightGovernanceSnapshot(): WeightGovernanceRecord[] {
     },
     {
       weight_id: "W-COMPLETENESS-TIEBREAK",
-      purpose: "Profile completeness tie-breaker",
+      purpose: "Legacy profile completeness tie-break (removed from ranking decisions)",
       runtime_location: "frontend/src/lib/optime-v2-engine.ts::accepted.sort",
       decision_effect: "RANKING",
-      authority: "NON_MATERIAL",
+      authority: "REMOVE_FROM_DECISION",
       validation_status: "INTERNAL_HEURISTIC",
-      default_behavior: "Used only on score ties.",
+      default_behavior: "Not used. Ranking now relies on governed fit, proven match, and case-relevant evidence coverage.",
     },
     {
       weight_id: "W-CRITICAL-NO-GATE",

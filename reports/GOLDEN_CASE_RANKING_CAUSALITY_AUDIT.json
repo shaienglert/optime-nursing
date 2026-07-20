@@ -1,0 +1,1467 @@
+{
+  "generated_at_utc": "2026-07-20T20:54:34.890118Z",
+  "run_id": "20260720T204918Z",
+  "golden_case": {
+    "original_top5": [
+      "JOHN KNOX VILLAGE OF POMPANO BEACH",
+      "RIVER GARDEN HEBREW HOME FOR THE AGED",
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "SANDS AT SOUTH BEACH CARE CENTER, THE"
+    ],
+    "asymmetric_enrichment_top5": [
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "Pinecrest Center for Rehabilitation and Healing",
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "SERENITY BAY NURSING AND REHABILITATION CENTER"
+    ],
+    "corrected_proven_match_top5": [
+      "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "Pinecrest Center for Rehabilitation and Healing",
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER"
+    ],
+    "evidence_parity_top5": [
+      "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "Pinecrest Center for Rehabilitation and Healing",
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER"
+    ],
+    "asymmetric_top10": [
+      "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "Pinecrest Center for Rehabilitation and Healing",
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "PINES NURSING HOME",
+      "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "VILLA MARIA NURSING CENTER",
+      "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER"
+    ],
+    "parity_top10": [
+      "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "Pinecrest Center for Rehabilitation and Healing",
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "PINES NURSING HOME",
+      "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "VILLA MARIA NURSING CENTER",
+      "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER"
+    ],
+    "top10_trace": [
+      {
+        "rank": 1,
+        "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+        "facility_id": 54,
+        "canonical_facility_id": 372,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": null,
+        "potential_match_status": "REQUIRES_VERIFICATION",
+        "confidence_score": 14,
+        "case_relevant_evidence_coverage_pct": 14,
+        "critical_evidence_coverage_pct": 25,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 2,
+        "verified_no": 0,
+        "unknown_count": 14,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 2,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 2,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 14,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 14
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 2,
+        "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+        "facility_id": 4,
+        "canonical_facility_id": 375,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": 100,
+        "potential_match_status": "CALCULATED",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 3,
+        "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "facility_id": 3,
+        "canonical_facility_id": 348,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": 100,
+        "potential_match_status": "CALCULATED",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 4,
+        "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+        "facility_id": 36,
+        "canonical_facility_id": 379,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": 100,
+        "potential_match_status": "CALCULATED",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 5,
+        "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+        "facility_id": 41,
+        "canonical_facility_id": 377,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": 100,
+        "potential_match_status": "CALCULATED",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 6,
+        "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+        "facility_id": 9,
+        "canonical_facility_id": 357,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": null,
+        "potential_match_status": "REQUIRES_VERIFICATION",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 7,
+        "facility_name": "PINES NURSING HOME",
+        "facility_id": 16,
+        "canonical_facility_id": 361,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": null,
+        "potential_match_status": "REQUIRES_VERIFICATION",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 8,
+        "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+        "facility_id": 24,
+        "canonical_facility_id": 386,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": 100,
+        "potential_match_status": "CALCULATED",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 9,
+        "facility_name": "VILLA MARIA NURSING CENTER",
+        "facility_id": 55,
+        "canonical_facility_id": 381,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": null,
+        "potential_match_status": "REQUIRES_VERIFICATION",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      {
+        "rank": 10,
+        "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+        "facility_id": 51,
+        "canonical_facility_id": 384,
+        "total_score": 100,
+        "match_score": 100,
+        "proven_match_score": 100,
+        "potential_match_score": 100,
+        "potential_match_status": "CALCULATED",
+        "confidence_score": 7,
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "evidence_confidence": "LOW",
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "high_potential_needs_verification": false,
+        "evidence_coverage": "LOW",
+        "comparison_confidence": "HIGH",
+        "comparison_confidence_reason": "Evidence coverage is relatively even across compared facilities.",
+        "verified_yes": 1,
+        "verified_no": 0,
+        "unknown_count": 15,
+        "governed_factors": [
+          {
+            "factor": "OUR_RECOMMENDATION alignment",
+            "contribution": 1,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "NICE_TO_HAVE alignment",
+            "contribution": 0,
+            "type": "GOVERNED_RANKING"
+          },
+          {
+            "factor": "Legacy heuristic match score",
+            "contribution": 100,
+            "type": "LEGACY_HEURISTIC_COMPONENT"
+          }
+        ],
+        "score_breakdown": [
+          {
+            "name": "Critical requirements",
+            "score": 1,
+            "maxScore": 1,
+            "source": "Deterministic checklist",
+            "rationale": "Only verified critical and important capabilities drive the proven match score.",
+            "weightedContribution": 100
+          },
+          {
+            "name": "Preference bonus",
+            "score": 0,
+            "maxScore": 2,
+            "source": "Deterministic checklist",
+            "rationale": "Preference matches affect ranking order only.",
+            "weightedContribution": 0
+          },
+          {
+            "name": "Confidence",
+            "score": 7,
+            "maxScore": 100,
+            "source": "Case-relevant evidence coverage",
+            "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+            "weightedContribution": 7
+          }
+        ],
+        "must_satisfied": [
+          "Skilled nursing capability"
+        ],
+        "must_failed": [],
+        "must_unknown": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Mobility and transfer assistance",
+          "Medication management"
+        ],
+        "source_traceability": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      }
+    ],
+    "high_potential_needs_verification": []
+  },
+  "movement_analysis": {
+    "JOHN KNOX VILLAGE OF POMPANO BEACH": {
+      "facts_found": [],
+      "classification": "COHORT_SELECTION_ARTIFACT",
+      "in_miami_54_cohort": false
+    },
+    "RIVER GARDEN HEBREW HOME FOR THE AGED": {
+      "facts_found": [],
+      "classification": "COHORT_SELECTION_ARTIFACT",
+      "in_miami_54_cohort": false
+    },
+    "SANDS AT SOUTH BEACH CARE CENTER, THE": {
+      "facts_found": [],
+      "classification": "EVIDENCE_COVERAGE_BIAS",
+      "in_miami_54_cohort": true
+    },
+    "Pinecrest Center for Rehabilitation and Healing": {
+      "facts_found": [],
+      "classification": "EVIDENCE_COVERAGE_BIAS",
+      "in_miami_54_cohort": true
+    },
+    "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER": {
+      "facts_found": [],
+      "classification": "EVIDENCE_COVERAGE_BIAS",
+      "in_miami_54_cohort": true
+    },
+    "SERENITY BAY NURSING AND REHABILITATION CENTER": {
+      "facts_found": [],
+      "classification": "EVIDENCE_COVERAGE_BIAS",
+      "in_miami_54_cohort": true
+    }
+  },
+  "evidence_parity": {
+    "evidence_coverage_bias_found": true,
+    "scoring_bug_found": false,
+    "missing_data_penalty_found": false,
+    "parity_guard_status": "PASS",
+    "principle_verified": true
+  },
+  "targeted_parity_enrichment": {
+    "mode": "REPLAY_FROM_LATEST_DB_RUN",
+    "facilities_targeted": 12,
+    "facility_names_targeted": [
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "JOHN KNOX VILLAGE OF POMPANO BEACH",
+      "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "PINES NURSING HOME",
+      "Pinecrest Center for Rehabilitation and Healing",
+      "RIVER GARDEN HEBREW HOME FOR THE AGED",
+      "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "VILLA MARIA NURSING CENTER"
+    ],
+    "live_sources_attempted": 0,
+    "live_sources_successfully_reached": 0,
+    "high_value_new_facts_found": 0,
+    "source_status_counts": {
+      "RAN_CONNECTED_NO_NEW_VALUE": 205,
+      "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 6,
+      "SOURCE_RATE_LIMITED": 3,
+      "SOURCE_ACCESS_FAILED": 4
+    }
+  },
+  "official_website_resolution": {
+    "verified_official": 44,
+    "probable_official": 0,
+    "unresolved": 10,
+    "total": 54
+  },
+  "unknown_resolution_queue": {
+    "tier1": [
+      {
+        "field": "medicare_medicaid_acceptance",
+        "facilities_unknown": 52,
+        "decision_value": 5,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "GOVERNMENT/OFFICIAL",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 3,
+        "update_frequency": "weekly",
+        "priority_score": 780
+      },
+      {
+        "field": "ownership_operator",
+        "facilities_unknown": 44,
+        "decision_value": 4,
+        "best_source": "CMS/official provider websites",
+        "source_authority": "GOVERNMENT/OFFICIAL",
+        "responsible_agent": "provider_intelligence",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 704
+      },
+      {
+        "field": "official_website",
+        "facilities_unknown": 42,
+        "decision_value": 4,
+        "best_source": "CMS/official provider websites",
+        "source_authority": "GOVERNMENT/OFFICIAL",
+        "responsible_agent": "provider_intelligence",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 672
+      },
+      {
+        "field": "current_private_pay_price",
+        "facilities_unknown": 52,
+        "decision_value": 5,
+        "best_source": "CMS/official provider websites",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "provider_intelligence",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 520
+      },
+      {
+        "field": "admissions_eligibility",
+        "facilities_unknown": 54,
+        "decision_value": 4,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 2,
+        "update_frequency": "daily",
+        "priority_score": 432
+      },
+      {
+        "field": "employee_staff_sentiment",
+        "facilities_unknown": 54,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "family_experience",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 324
+      },
+      {
+        "field": "family_satisfaction",
+        "facilities_unknown": 53,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "family_experience",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 318
+      },
+      {
+        "field": "ot",
+        "facilities_unknown": 15,
+        "decision_value": 5,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 300
+      }
+    ],
+    "all": [
+      {
+        "field": "medicare_medicaid_acceptance",
+        "facilities_unknown": 52,
+        "decision_value": 5,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "GOVERNMENT/OFFICIAL",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 3,
+        "update_frequency": "weekly",
+        "priority_score": 780
+      },
+      {
+        "field": "ownership_operator",
+        "facilities_unknown": 44,
+        "decision_value": 4,
+        "best_source": "CMS/official provider websites",
+        "source_authority": "GOVERNMENT/OFFICIAL",
+        "responsible_agent": "provider_intelligence",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 704
+      },
+      {
+        "field": "official_website",
+        "facilities_unknown": 42,
+        "decision_value": 4,
+        "best_source": "CMS/official provider websites",
+        "source_authority": "GOVERNMENT/OFFICIAL",
+        "responsible_agent": "provider_intelligence",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 672
+      },
+      {
+        "field": "current_private_pay_price",
+        "facilities_unknown": 52,
+        "decision_value": 5,
+        "best_source": "CMS/official provider websites",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "provider_intelligence",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 520
+      },
+      {
+        "field": "admissions_eligibility",
+        "facilities_unknown": 54,
+        "decision_value": 4,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 2,
+        "update_frequency": "daily",
+        "priority_score": 432
+      },
+      {
+        "field": "employee_staff_sentiment",
+        "facilities_unknown": 54,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "family_experience",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 324
+      },
+      {
+        "field": "family_satisfaction",
+        "facilities_unknown": 53,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "family_experience",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 318
+      },
+      {
+        "field": "ot",
+        "facilities_unknown": 15,
+        "decision_value": 5,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 300
+      },
+      {
+        "field": "pt",
+        "facilities_unknown": 15,
+        "decision_value": 5,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 300
+      },
+      {
+        "field": "speech_therapy",
+        "facilities_unknown": 15,
+        "decision_value": 5,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 300
+      },
+      {
+        "field": "food_dietary_support",
+        "facilities_unknown": 32,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "nutrition_intelligence",
+        "expected_resolvability": 3,
+        "update_frequency": "weekly",
+        "priority_score": 288
+      },
+      {
+        "field": "stroke_rehab_evidence",
+        "facilities_unknown": 15,
+        "decision_value": 5,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 3,
+        "update_frequency": "weekly",
+        "priority_score": 225
+      },
+      {
+        "field": "rn_coverage",
+        "facilities_unknown": 15,
+        "decision_value": 4,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 3,
+        "update_frequency": "weekly",
+        "priority_score": 180
+      },
+      {
+        "field": "activities",
+        "facilities_unknown": 14,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "activities_intelligence",
+        "expected_resolvability": 4,
+        "update_frequency": "weekly",
+        "priority_score": 168
+      },
+      {
+        "field": "rehab_intensity_frequency",
+        "facilities_unknown": 15,
+        "decision_value": 5,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 150
+      },
+      {
+        "field": "physician_coverage",
+        "facilities_unknown": 15,
+        "decision_value": 4,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 120
+      },
+      {
+        "field": "languages",
+        "facilities_unknown": 13,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "activities_intelligence",
+        "expected_resolvability": 3,
+        "update_frequency": "weekly",
+        "priority_score": 117
+      },
+      {
+        "field": "current_bed_availability",
+        "facilities_unknown": 54,
+        "decision_value": 2,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "clinical_knowledge",
+        "expected_resolvability": 1,
+        "update_frequency": "daily",
+        "priority_score": 108
+      },
+      {
+        "field": "hebrew_jewish_fit",
+        "facilities_unknown": 13,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "activities_intelligence",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 78
+      },
+      {
+        "field": "transportation",
+        "facilities_unknown": 13,
+        "decision_value": 3,
+        "best_source": "Provider websites and validated secondary sources",
+        "source_authority": "OFFICIAL_PROVIDER/REPUTABLE_SECONDARY",
+        "responsible_agent": "activities_intelligence",
+        "expected_resolvability": 2,
+        "update_frequency": "weekly",
+        "priority_score": 78
+      },
+      {
+        "field": "recent_regulatory_events",
+        "facilities_unknown": 1,
+        "decision_value": 5,
+        "best_source": "CMS/official provider websites",
+        "source_authority": "GOVERNMENT/OFFICIAL",
+        "responsible_agent": "senior_living_research",
+        "expected_resolvability": 5,
+        "update_frequency": "daily",
+        "priority_score": 25
+      }
+    ],
+    "high_value_unknowns_resolved": 0
+  },
+  "regression_tests": {
+    "status": "PASS",
+    "details": {
+      "generated_at_utc": "2026-07-20T20:54:34.858Z",
+      "pass": true,
+      "checks": [
+        {
+          "label": "1) Adding 100 irrelevant profile fields does not improve rank",
+          "pass": true,
+          "evidence": "Ranking comparator no longer uses profileCompletenessScore tie-break."
+        },
+        {
+          "label": "2) Adding duplicate evidence does not improve rank",
+          "pass": true,
+          "evidence": "Comparator does not use evidence-count or source-volume features as ranking input."
+        },
+        {
+          "label": "3) UNKNOWN does not equal NO",
+          "pass": true,
+          "evidence": "Traceability keeps UNKNOWN separate from verified NO."
+        },
+        {
+          "label": "4) Missing information does not create a negative penalty",
+          "pass": true,
+          "evidence": "Unresolved evidence affects confidence, not direct negative scoring."
+        },
+        {
+          "label": "5) Verified case-critical positive evidence can strengthen recommendation",
+          "pass": true,
+          "evidence": "Ranking includes governed fit then proven match from verified evidence."
+        },
+        {
+          "label": "6) Verified negative evidence can weaken recommendation",
+          "pass": true,
+          "evidence": "Governed MUST failures are enforced before ranking."
+        },
+        {
+          "label": "7) Facility-supplied unverified claims do not improve rank",
+          "pass": true,
+          "evidence": "Unverified metadata signals are LIMITED and do not contribute to proven YES."
+        },
+        {
+          "label": "8) Verification of previously critical UNKNOWN can change ranking when relevant",
+          "pass": true,
+          "evidence": "When verification memory resolves UNKNOWN to verified YES/NO, proven score updates."
+        },
+        {
+          "label": "9) Evidence Confidence is separate from Quality",
+          "pass": true,
+          "evidence": "Coverage/confidence fields are explicit and separate from clinical quality features."
+        },
+        {
+          "label": "10) Deeply researched facility does not win merely because it was deeply researched",
+          "pass": true,
+          "evidence": "Ranking does not use generic completeness/source volume as a tie-break."
+        }
+      ]
+    }
+  }
+}

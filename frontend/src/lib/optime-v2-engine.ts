@@ -182,6 +182,8 @@ type ClinicalRequirement = {
 type ClinicalCapabilityAssessment = ClinicalRequirement & {
   state: VerificationState;
   evidence: string;
+  evidenceVerified: boolean;
+  evidenceClass: "VERIFIED" | "UNVERIFIED" | "INFERRED";
 };
 
 type ClinicalReasoningNarrative = {
@@ -251,6 +253,23 @@ type AuditConfidence = {
   missingDataImpact: string;
   sourceCoverage: string;
   lastIntelligenceRefresh: string;
+  evidenceCoverage: "HIGH" | "MEDIUM" | "LOW";
+  comparisonConfidence: "HIGH" | "MEDIUM" | "LOW";
+  comparisonConfidenceReason: string;
+  caseRelevantEvidenceCoveragePct: number;
+  criticalEvidenceCoveragePct: number;
+  criticalUnknownCount: number;
+};
+
+type MatchEvidenceStatus = {
+  provenMatchScore: number;
+  potentialMatchScore: number | null;
+  potentialMatchStatus: "CALCULATED" | "REQUIRES_VERIFICATION";
+  evidenceConfidence: "HIGH" | "MEDIUM" | "LOW";
+  caseRelevantEvidenceCoveragePct: number;
+  criticalEvidenceCoveragePct: number;
+  criticalUnknowns: string[];
+  highPotentialNeedsVerification: boolean;
 };
 
 type AuditFormula = {
@@ -276,6 +295,7 @@ type AuditFormula = {
 export type IntelligenceScoringReport = {
   finalMatchScore: number;
   confidenceScore: number;
+  matchEvidenceStatus: MatchEvidenceStatus;
   rankingPosition: number | null;
   rankingExplanation: string;
   personaType: PersonaType;
@@ -2207,6 +2227,8 @@ function assessClinicalCapability(requirement: ClinicalRequirement, facility: Se
       ...requirement,
       state: memoryCapability.state,
       evidence: `Verified via ${memoryCapability.source} on ${memoryCapability.verifiedAt}. Valid until ${memoryCapability.expiresAt}.`,
+      evidenceVerified: true,
+      evidenceClass: "VERIFIED",
     };
   }
 
@@ -2219,51 +2241,66 @@ function assessClinicalCapability(requirement: ClinicalRequirement, facility: Se
 
   let state: VerificationState = "UNKNOWN";
   let evidence = "No reliable facility evidence currently confirms this capability.";
+  let evidenceVerified = false;
+  let evidenceClass: "VERIFIED" | "UNVERIFIED" | "INFERRED" = "INFERRED";
 
   switch (requirement.key) {
     case "licensed_nurses_24_7":
       if (yes(["24/7", "24 hour", "around the clock", "nursing staff", "licensed nurse"])) {
-        state = "YES";
-        evidence = "Facility metadata mentions around-the-clock nursing coverage.";
+        state = "LIMITED";
+        evidence = "Facility metadata mentions around-the-clock nursing coverage; independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       } else if (isIndependentOnly) {
         state = "NO";
         evidence = "Care taxonomy indicates an independent-only model without clear 24/7 nursing services.";
+        evidenceVerified = true;
+        evidenceClass = "VERIFIED";
       }
       break;
     case "skilled_nursing":
       if (careTypes.some((item) => item.includes("skilled") || item.includes("rehab") || item.includes("nursing"))) {
         state = "YES";
         evidence = "Care taxonomy includes skilled nursing or rehabilitation services.";
+        evidenceVerified = true;
+        evidenceClass = "VERIFIED";
       } else if (isIndependentOnly) {
         state = "NO";
         evidence = "Care taxonomy does not indicate skilled nursing capability.";
+        evidenceVerified = true;
+        evidenceClass = "VERIFIED";
       }
       break;
     case "neurological_rehabilitation":
       if (yes(["neurological", "stroke", "neuro", "rehabilitation", "post-acute"])) {
-        state = "YES";
-        evidence = "Facility metadata includes neurological or rehabilitation language.";
+        state = "LIMITED";
+        evidence = "Facility metadata includes neurological or rehabilitation language, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       } else if (isIndependentOnly) {
         state = "NO";
         evidence = "Independent-only care model does not indicate neurological rehabilitation services.";
+        evidenceVerified = true;
+        evidenceClass = "VERIFIED";
       }
       break;
     case "speech_therapy":
       if (yes(["speech therapy", "speech-language", "slp", "aphasia"])) {
-        state = "YES";
-        evidence = "Facility metadata explicitly references speech therapy support.";
+        state = "LIMITED";
+        evidence = "Facility metadata references speech therapy support, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "occupational_therapy":
       if (yes(["occupational therapy", "ot ", "activities of daily living"])) {
-        state = "YES";
-        evidence = "Facility metadata references occupational therapy services.";
+        state = "LIMITED";
+        evidence = "Facility metadata references occupational therapy services, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "physical_therapy":
       if (yes(["physical therapy", "pt ", "rehabilitation"])) {
-        state = "YES";
-        evidence = "Facility metadata references physical therapy services.";
+        state = "LIMITED";
+        evidence = "Facility metadata references physical therapy services, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "swallowing_assessment":
@@ -2280,32 +2317,40 @@ function assessClinicalCapability(requirement: ClinicalRequirement, facility: Se
       break;
     case "walker_accessibility":
       if (yes(["accessible", "accessibility", "walker", "mobility support", "ada"])) {
-        state = "YES";
-        evidence = "Facility metadata indicates accessibility and mobility support cues.";
+        state = "LIMITED";
+        evidence = "Facility metadata indicates accessibility and mobility support cues, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       } else if (yes(["stairs only", "not accessible"])) {
-        state = "NO";
-        evidence = "Facility text includes non-accessibility cues.";
+        state = "LIMITED";
+        evidence = "Facility text includes non-accessibility cues, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "fall_prevention":
       if (yes(["fall prevention", "fall risk", "safety monitoring", "mobility safety"])) {
-        state = "YES";
-        evidence = "Facility metadata references fall prevention or safety monitoring.";
+        state = "LIMITED";
+        evidence = "Facility metadata references fall prevention or safety monitoring, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "mobility_assistance":
       if (yes(["transfer assistance", "mobility assistance", "assistance with walking", "care assistance"])) {
-        state = "YES";
-        evidence = "Facility metadata references daily mobility assistance support.";
+        state = "LIMITED";
+        evidence = "Facility metadata references daily mobility assistance support, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "memory_support":
       if (careTypes.some((item) => item.includes("memory"))) {
         state = "YES";
         evidence = "Care taxonomy includes memory support capability.";
+        evidenceVerified = true;
+        evidenceClass = "VERIFIED";
       } else if (isIndependentOnly) {
         state = "NO";
         evidence = "Care taxonomy does not indicate memory-focused services.";
+        evidenceVerified = true;
+        evidenceClass = "VERIFIED";
       }
       break;
     case "gluten_free_meals":
@@ -2316,35 +2361,43 @@ function assessClinicalCapability(requirement: ClinicalRequirement, facility: Se
       break;
     case "dietitian_support":
       if (yes(["dietitian", "nutrition", "dietary support"])) {
-        state = "YES";
-        evidence = "Facility metadata references dietitian or nutrition support.";
+        state = "LIMITED";
+        evidence = "Facility metadata references dietitian or nutrition support, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "movie_programming":
       if (yes(["movie", "cinema", "theater room", "film"])) {
-        state = "YES";
-        evidence = "Facility metadata references movie or cinema programming.";
+        state = "LIMITED";
+        evidence = "Facility metadata references movie or cinema programming, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "music_activities":
       if (yes(["music", "live performance", "music therapy", "concert"])) {
-        state = "YES";
-        evidence = "Facility metadata references music activities or programming.";
+        state = "LIMITED";
+        evidence = "Facility metadata references music activities or programming, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "group_activities":
       if (yes(["group activities", "social calendar", "community events", "activity program"])) {
-        state = "YES";
-        evidence = "Facility metadata references group social programming.";
+        state = "LIMITED";
+        evidence = "Facility metadata references group social programming, but independent verification is still required.";
+        evidenceClass = "UNVERIFIED";
       }
       break;
     case "future_care_path":
       if (careTypes.some((item) => item.includes("ccrc") || item.includes("continuing care"))) {
         state = "YES";
         evidence = "Care taxonomy indicates continuum-style future care coverage.";
+        evidenceVerified = true;
+        evidenceClass = "VERIFIED";
       } else if (isIndependentOnly) {
         state = "LIMITED";
         evidence = "Current taxonomy suggests limited future-care escalation options.";
+        evidenceVerified = true;
+        evidenceClass = "VERIFIED";
       }
       break;
     default:
@@ -2355,6 +2408,8 @@ function assessClinicalCapability(requirement: ClinicalRequirement, facility: Se
     ...requirement,
     state,
     evidence,
+    evidenceVerified,
+    evidenceClass,
   };
 }
 
@@ -2845,6 +2900,12 @@ function buildIntelligenceReport(
       missingDataImpact: `${missingIntelligence.length} missing intelligence item(s); confidence reduced by ${confidencePenalty}`,
       sourceCoverage: `${sourcesUsed.length} source bucket(s) connected`,
       lastIntelligenceRefresh: new Date().toISOString(),
+      evidenceCoverage: adjustedConfidence >= 80 ? "HIGH" : adjustedConfidence >= 50 ? "MEDIUM" : "LOW",
+      comparisonConfidence: "MEDIUM",
+      comparisonConfidenceReason: "Legacy report path; comparison confidence is assigned at ranking stage.",
+      caseRelevantEvidenceCoveragePct: adjustedConfidence,
+      criticalEvidenceCoveragePct: adjustedConfidence,
+      criticalUnknownCount: 0,
     },
     verificationChecklist,
     verificationRequest,
@@ -2867,6 +2928,16 @@ function buildIntelligenceReport(
   return {
     finalMatchScore: Math.round(totalScore),
     confidenceScore: adjustedConfidence,
+    matchEvidenceStatus: {
+      provenMatchScore: Math.round(totalScore),
+      potentialMatchScore: null,
+      potentialMatchStatus: "REQUIRES_VERIFICATION",
+      evidenceConfidence: adjustedConfidence >= 80 ? "HIGH" : adjustedConfidence >= 50 ? "MEDIUM" : "LOW",
+      caseRelevantEvidenceCoveragePct: adjustedConfidence,
+      criticalEvidenceCoveragePct: adjustedConfidence,
+      criticalUnknowns: [],
+      highPotentialNeedsVerification: false,
+    },
     rankingPosition: index + 1,
     rankingExplanation: buildRankingExplanation(accepted, index),
     personaType: persona.personaType,
@@ -3003,6 +3074,28 @@ function summarizeRejections(recommendations: RankedRecommendation[]) {
   };
 }
 
+function evidenceCoverageTier(verifiedYes: number, verifiedNo: number, unknown: number): "HIGH" | "MEDIUM" | "LOW" {
+  const observed = verifiedYes + verifiedNo;
+  const total = observed + unknown;
+  if (total <= 0) {
+    return "LOW";
+  }
+  const coverage = observed / total;
+  if (coverage >= 0.8) {
+    return "HIGH";
+  }
+  if (coverage >= 0.5) {
+    return "MEDIUM";
+  }
+  return "LOW";
+}
+
+function coverageToTier(coveragePct: number): "HIGH" | "MEDIUM" | "LOW" {
+  if (coveragePct >= 80) return "HIGH";
+  if (coveragePct >= 50) return "MEDIUM";
+  return "LOW";
+}
+
 export function runOptimeV2Engine(facilities: SearchFacility[], state: QuestionnaireState, options?: EngineRunOptions): EngineOutput {
   const mode: EngineRunMode = options?.mode || "production";
   const governanceContext = options?.governanceContext || null;
@@ -3072,7 +3165,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       hardRejectionReasons.push("This community does not provide the required level of daily support.");
     }
 
-    const criticalNo = assessments.filter((assessment) => assessment.priority === "CRITICAL" && assessment.state === "NO");
+    const criticalNo = assessments.filter((assessment) => assessment.priority === "CRITICAL" && assessment.state === "NO" && assessment.evidenceVerified);
     criticalNo.forEach((assessment) => {
       hardRejectionReasons.push(`This community is missing a required clinical capability: ${assessment.label}.`);
     });
@@ -3099,11 +3192,25 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     }
 
     const scoredRequirements = assessments.filter((assessment) => assessment.priority === "CRITICAL" || assessment.priority === "IMPORTANT");
-    const verifiedYes = scoredRequirements.filter((assessment) => assessment.state === "YES").length;
-    const verifiedNo = scoredRequirements.filter((assessment) => assessment.state === "NO").length;
-    const unknown = scoredRequirements.filter((assessment) => assessment.state === "UNKNOWN" || assessment.state === "LIMITED").length;
+    const criticalRequirements = assessments.filter((assessment) => assessment.priority === "CRITICAL");
+    const verifiedYes = scoredRequirements.filter((assessment) => assessment.state === "YES" && assessment.evidenceVerified).length;
+    const verifiedNo = scoredRequirements.filter((assessment) => assessment.state === "NO" && assessment.evidenceVerified).length;
+    const unresolved = scoredRequirements.filter((assessment) => !assessment.evidenceVerified || assessment.state === "UNKNOWN" || assessment.state === "LIMITED").length;
+    const unverifiedPositiveSignals = scoredRequirements.filter((assessment) => assessment.state === "LIMITED" && !assessment.evidenceVerified).length;
     const matchScore = verifiedYes + verifiedNo > 0 ? Math.round((verifiedYes / (verifiedYes + verifiedNo)) * 100) : 0;
-    const confidenceScore = verifiedYes + verifiedNo + unknown > 0 ? Math.round(((verifiedYes + verifiedNo) / (verifiedYes + verifiedNo + unknown)) * 100) : 100;
+    const confidenceScore = scoredRequirements.length > 0 ? Math.round(((verifiedYes + verifiedNo) / scoredRequirements.length) * 100) : 100;
+    const caseRelevantEvidenceCoveragePct = scoredRequirements.length > 0 ? Math.round(((verifiedYes + verifiedNo) / scoredRequirements.length) * 100) : 100;
+    const criticalVerifiedKnown = criticalRequirements.filter((assessment) => assessment.evidenceVerified && (assessment.state === "YES" || assessment.state === "NO")).length;
+    const criticalEvidenceCoveragePct = criticalRequirements.length > 0 ? Math.round((criticalVerifiedKnown / criticalRequirements.length) * 100) : 100;
+    const criticalUnknowns = criticalRequirements
+      .filter((assessment) => !assessment.evidenceVerified || assessment.state === "UNKNOWN" || assessment.state === "LIMITED")
+      .map((assessment) => assessment.label);
+    const coverageTier = coverageToTier(caseRelevantEvidenceCoveragePct);
+    const potentialMatchScore = unverifiedPositiveSignals > 0 && (verifiedYes + verifiedNo + unverifiedPositiveSignals) > 0
+      ? Math.round(((verifiedYes + unverifiedPositiveSignals) / (verifiedYes + verifiedNo + unverifiedPositiveSignals)) * 100)
+      : null;
+    const potentialMatchStatus: "CALCULATED" | "REQUIRES_VERIFICATION" = potentialMatchScore === null ? "REQUIRES_VERIFICATION" : "CALCULATED";
+    const highPotentialNeedsVerification = potentialMatchScore !== null && potentialMatchScore > matchScore && criticalUnknowns.length > 0;
 
     const preferenceYes = assessments.filter((assessment) => assessment.priority === "PREFERENCE" && assessment.state === "YES").length;
 
@@ -3120,16 +3227,16 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       name: assessment.label,
       tier: assessment.priority === "CRITICAL" ? "MANDATORY" : assessment.priority === "IMPORTANT" ? "IMPORTANT" : "OPTIONAL",
       score: assessment.state === "YES" ? 100 : assessment.state === "NO" ? 0 : 50,
-      matched: assessment.state === "YES",
+      matched: assessment.state === "YES" && assessment.evidenceVerified,
       applicable: true,
-      rationale: assessment.rationale,
-      source: `state=${assessment.state}; evidence=${assessment.evidence}`,
+      rationale: assessment.evidenceVerified ? assessment.rationale : `${assessment.rationale} Verification is still required before this can strengthen ranking.`,
+      source: `state=${assessment.state}; evidence=${assessment.evidence}; verified=${assessment.evidenceVerified}`,
     }));
 
     const tierSummaries: MatchQualityTierSummary[] = [
       {
         tier: "MANDATORY",
-        matched: assessments.filter((assessment) => assessment.priority === "CRITICAL" && assessment.state === "YES").length,
+        matched: assessments.filter((assessment) => assessment.priority === "CRITICAL" && assessment.state === "YES" && assessment.evidenceVerified).length,
         total: assessments.filter((assessment) => assessment.priority === "CRITICAL").length,
         averageScore: assessments.filter((assessment) => assessment.priority === "CRITICAL").length > 0
           ? Math.round(average(assessments.filter((assessment) => assessment.priority === "CRITICAL").map((assessment) => assessment.state === "YES" ? 100 : assessment.state === "NO" ? 0 : 50), 50))
@@ -3145,7 +3252,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       },
       {
         tier: "IMPORTANT",
-        matched: assessments.filter((assessment) => assessment.priority === "IMPORTANT" && assessment.state === "YES").length,
+        matched: assessments.filter((assessment) => assessment.priority === "IMPORTANT" && assessment.state === "YES" && assessment.evidenceVerified).length,
         total: assessments.filter((assessment) => assessment.priority === "IMPORTANT").length,
         averageScore: assessments.filter((assessment) => assessment.priority === "IMPORTANT").length > 0
           ? Math.round(average(assessments.filter((assessment) => assessment.priority === "IMPORTANT").map((assessment) => assessment.state === "YES" ? 100 : assessment.state === "NO" ? 0 : 50), 50))
@@ -3154,7 +3261,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       },
       {
         tier: "OPTIONAL",
-        matched: assessments.filter((assessment) => assessment.priority === "PREFERENCE" && assessment.state === "YES").length,
+        matched: assessments.filter((assessment) => assessment.priority === "PREFERENCE" && assessment.state === "YES" && assessment.evidenceVerified).length,
         total: assessments.filter((assessment) => assessment.priority === "PREFERENCE").length,
         averageScore: assessments.filter((assessment) => assessment.priority === "PREFERENCE").length > 0
           ? Math.round(average(assessments.filter((assessment) => assessment.priority === "PREFERENCE").map((assessment) => assessment.state === "YES" ? 100 : assessment.state === "NO" ? 0 : 50), 50))
@@ -3169,7 +3276,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
         score: verifiedYes,
         maxScore: Math.max(verifiedYes + verifiedNo, 1),
         source: "Deterministic checklist",
-        rationale: "Critical and important verified capabilities drive the match score.",
+        rationale: "Only verified critical and important capabilities drive the proven match score.",
         weightedContribution: matchScore,
       },
       {
@@ -3184,17 +3291,27 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
         name: "Confidence",
         score: confidenceScore,
         maxScore: 100,
-        source: "Checklist evidence coverage",
-        rationale: "UNKNOWN items reduce confidence only and are never treated as NO.",
+        source: "Case-relevant evidence coverage",
+        rationale: "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
         weightedContribution: confidenceScore,
       },
     ];
 
-    const governedRequirements = buildGovernedRequirements(assessments, state, governanceContext);
+    const governedAssessments = assessments.map((assessment) => {
+      if (assessment.evidenceVerified) {
+        return assessment;
+      }
+      return {
+        ...assessment,
+        state: "LIMITED" as VerificationState,
+      };
+    });
+
+    const governedRequirements = buildGovernedRequirements(governedAssessments, state, governanceContext);
     const governedDecision = evaluateGovernedFacility(
       facility,
       governedRequirements,
-      assessments,
+      governedAssessments,
       hardRejectionReasons,
       matchScore,
       verifiedYes,
@@ -3209,6 +3326,16 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     const report: IntelligenceScoringReport = {
       finalMatchScore: matchScore,
       confidenceScore,
+      matchEvidenceStatus: {
+        provenMatchScore: matchScore,
+        potentialMatchScore,
+        potentialMatchStatus,
+        evidenceConfidence: coverageTier,
+        caseRelevantEvidenceCoveragePct,
+        criticalEvidenceCoveragePct,
+        criticalUnknowns,
+        highPotentialNeedsVerification,
+      },
       rankingPosition: null,
       rankingExplanation: "",
       personaType: persona.personaType,
@@ -3217,7 +3344,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       whyWeightsSelected: persona.whySelected,
       whatWouldChangeThisRanking: persona.whatWouldChangeThisRanking,
       scoreBreakdown,
-      positiveContributors: assessments.filter((assessment) => assessment.state === "YES").slice(0, 4).map((assessment) => ({
+      positiveContributors: assessments.filter((assessment) => assessment.state === "YES" && assessment.evidenceVerified).slice(0, 4).map((assessment) => ({
         signal: assessment.label,
         source: "Deterministic checklist",
         weight: 0,
@@ -3233,11 +3360,13 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       missingIntelligence: clinicalReasoning.narrative.unknownCapabilities,
       humanNarrativeExplanation: clinicalReasoning.narrative.whyThisCommunity,
       scoreTraceability: [
-        `Match Score = verified_yes / (verified_yes + verified_no) = ${verifiedYes} / ${verifiedYes + verifiedNo || 1}`,
-        `UNKNOWN items excluded from match score (${unknown} unknown item(s)); they affect confidence only.`,
+        `Proven Match Score = verified_yes / (verified_yes + verified_no) = ${verifiedYes} / ${verifiedYes + verifiedNo || 1}`,
+        `Case-relevant evidence coverage = ${verifiedYes + verifiedNo} / ${scoredRequirements.length} (${caseRelevantEvidenceCoveragePct}%).`,
+        `Critical evidence coverage = ${criticalVerifiedKnown} / ${criticalRequirements.length || 1} (${criticalEvidenceCoveragePct}%).`,
+        `UNKNOWN or unverified items (${unresolved}) never count as NO and do not lower proven score directly; they lower confidence and appear in critical unknowns.`,
       ],
       audit: {
-        executedFormula: "match_score = verified_yes / (verified_yes + verified_no)",
+        executedFormula: "proven_match = verified_yes / (verified_yes + verified_no); confidence = verified_known / case_relevant_total",
         finalScore: matchScore,
         categoryRows: [],
         bonuses: [{ name: "Preference yes", rawScore: preferenceYes, value: preferenceYes, source: "Preference checklist", applied: preferenceYes > 0 }],
@@ -3247,9 +3376,15 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
         matchQualityExplanation: "Deterministic checklist model: unknown items are never treated as unavailable.",
         confidence: {
           confidenceScore,
-          missingDataImpact: `${unknown} unknown checklist item(s) reduce confidence only.`,
+          missingDataImpact: `${unresolved} unresolved checklist item(s) reduce confidence only and are never treated as NO.`,
           sourceCoverage: `${buildIntelligenceSourcesUsed(facility).length} source bucket(s) connected`,
           lastIntelligenceRefresh: new Date().toISOString(),
+          evidenceCoverage: coverageTier,
+          comparisonConfidence: "MEDIUM",
+          comparisonConfidenceReason: "Comparison confidence is computed after ranking across displayed candidates.",
+          caseRelevantEvidenceCoveragePct,
+          criticalEvidenceCoveragePct,
+          criticalUnknownCount: criticalUnknowns.length,
         },
         verificationChecklist,
         verificationRequest,
@@ -3279,8 +3414,8 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       tradeoff: clinicalReasoning.narrative.verificationNeeded,
       whyThisFits: clinicalReasoning.narrative.whyThisCommunity,
       rankReason: "",
-      confidenceExplanation: `Confidence is ${confidenceScore >= 75 ? "high" : confidenceScore >= 55 ? "moderate" : "limited"} because ${verifiedYes + verifiedNo} requirements are verified and ${unknown} remain unknown.`,
-      missingInformation: clinicalReasoning.narrative.unknownCapabilities,
+      confidenceExplanation: `Confidence is ${confidenceScore >= 75 ? "high" : confidenceScore >= 55 ? "moderate" : "limited"} because ${verifiedYes + verifiedNo} case-relevant requirements are independently verified and ${unresolved} still require verification.`,
+      missingInformation: Array.from(new Set([...clinicalReasoning.narrative.unknownCapabilities, ...criticalUnknowns])),
       hardRejectionReasons,
       contributionHighlights: contributions,
       report,
@@ -3308,16 +3443,22 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
         return governedFitDelta;
       }
 
+      const provenDelta = b.report.matchEvidenceStatus.provenMatchScore - a.report.matchEvidenceStatus.provenMatchScore;
+      if (provenDelta !== 0) {
+        return provenDelta;
+      }
+
+      const confidenceDelta = b.report.matchEvidenceStatus.caseRelevantEvidenceCoveragePct - a.report.matchEvidenceStatus.caseRelevantEvidenceCoveragePct;
+      if (confidenceDelta !== 0) {
+        return confidenceDelta;
+      }
+
       const fitDelta = b.totalScore - a.totalScore;
       if (fitDelta !== 0) {
         return fitDelta;
       }
 
-      // Completeness acts only as tie-breaker when fit is equivalent.
-      const completenessTieBreak = (b.facility.profileCompletenessScore || 0) - (a.facility.profileCompletenessScore || 0);
-      if (completenessTieBreak !== 0) {
-        return completenessTieBreak;
-      }
+      // Evidence volume/completeness must not create ranking advantage when fit is equivalent.
 
       return preferenceBonusB - preferenceBonusA
         || b.priorityScores.clinicalQuality - a.priorityScores.clinicalQuality
@@ -3342,6 +3483,20 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
     });
 
   const displayedRecommendations = accepted.length > 0 ? accepted : fallbackRecommendations;
+
+  const coverageValues = displayedRecommendations.map((item) => item.report.matchEvidenceStatus.caseRelevantEvidenceCoveragePct);
+  const coverageSpread = coverageValues.length > 0 ? Math.max(...coverageValues) - Math.min(...coverageValues) : 0;
+  const comparisonConfidence: "HIGH" | "MEDIUM" | "LOW" = coverageSpread <= 15 ? "HIGH" : coverageSpread <= 35 ? "MEDIUM" : "LOW";
+  const comparisonConfidenceReason = coverageSpread <= 15
+    ? "Evidence coverage is relatively even across compared facilities."
+    : coverageSpread <= 35
+      ? "Evidence coverage varies across compared facilities; compare with caution."
+      : "Evidence coverage is materially uneven across compared facilities; ranking certainty is limited.";
+
+  displayedRecommendations.forEach((item) => {
+    item.report.audit.confidence.comparisonConfidence = comparisonConfidence;
+    item.report.audit.confidence.comparisonConfidenceReason = comparisonConfidenceReason;
+  });
 
   accepted.forEach((item, index) => {
     item.rankReason = index === 0
