@@ -68,6 +68,7 @@ function emptyCareTypeProbabilities() {
 
 function loadBackendFacilities() {
   const dbPath = path.join(repoRoot, 'optime_nursing.db');
+  const canonicalPath = path.join(repoRoot, 'database', 'florida_senior_living_inventory.json');
   const pythonPath = path.join(repoRoot, '.venv', 'Scripts', 'python.exe');
   const pythonCode = [
     'import json, sqlite3, sys',
@@ -106,7 +107,20 @@ function loadBackendFacilities() {
     throw new Error(`Failed to query SQLite dataset. ${result.stderr || result.stdout}`.trim());
   }
 
-  return JSON.parse(result.stdout);
+  const facilities = JSON.parse(result.stdout);
+  const canonical = JSON.parse(fs.readFileSync(canonicalPath, 'utf8'));
+  const countyByCms = new Map();
+  (canonical.records || []).forEach((row) => {
+    const cms = String(row.cms_certification_number || '').trim();
+    if (cms) {
+      countyByCms.set(cms, row.county || null);
+    }
+  });
+
+  return facilities.map((facility) => ({
+    ...facility,
+    county: countyByCms.get(String(facility.cms_id || '').trim()) || null,
+  }));
 }
 
 function clamp(value, min = 0, max = 100) {
@@ -245,7 +259,7 @@ function buildShortExplanation(facility) {
 }
 
 function baseFacilityText(facility) {
-  return [facility.name, facility.address, facility.city, buildShortExplanation(facility)].filter(Boolean).join(' ').toLowerCase();
+  return [facility.name, facility.address, facility.city, facility.county || '', buildShortExplanation(facility)].filter(Boolean).join(' ').toLowerCase();
 }
 
 function inferLegacyCareTaxonomy(facility) {
@@ -474,7 +488,7 @@ function expandSearchTerm(term) {
 }
 
 function buildFacilitySearchTokens(base, careTypes = [], matchBadges = []) {
-  const joined = [base.name, base.city || '', base.state || '', base.address || '', base.zip_code || '', ...careTypes, ...matchBadges].join(' ');
+  const joined = [base.name, base.city || '', base.county || '', base.state || '', base.address || '', base.zip_code || '', ...careTypes, ...matchBadges].join(' ');
   const tokens = new Set(tokenizeSearchText(joined));
   tokenizeSearchText(joined).forEach((token) => {
     expandSearchTerm(token).forEach((expanded) => tokens.add(expanded));
@@ -489,6 +503,7 @@ function toFacility(facility) {
     cms_id: facility.cms_id,
     name: facility.name,
     city: facility.city,
+    county: facility.county || null,
     state: facility.state,
     overall_rating: facility.overall_rating ?? undefined,
     staffing_rating: facility.staffing_rating ?? undefined,

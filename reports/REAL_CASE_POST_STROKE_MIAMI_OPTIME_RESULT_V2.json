@@ -1,0 +1,294 @@
+{
+  "run_status": "OK",
+  "top_5": [
+    {
+      "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "facility_id": 4,
+      "canonical_facility_id": 375,
+      "location": "NORTH MIAMI, FL",
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation",
+        "Physical therapy"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "recommendation_alignment": "Because the resident profile requires licensed nurses 24/7, skilled nursing capability, neurological rehabilitation, speech therapy, occupational therapy, physical therapy, swallowing assessment support, walker accessibility, fall prevention protocol, mobility and transfer assistance, memory care or dementia programming, we prioritized communities experienced in complex clinical support. Confirmed in this community: Skilled nursing capability, Neurological rehabilitation, Physical therapy.",
+      "nice_to_have_alignment": "Maintaining quality of life remains important. Confirmed lifestyle alignment currently includes: none yet.",
+      "tradeoffs": [
+        "Future care pathway preference was not constrained in this profile."
+      ],
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "confidence": "19"
+    },
+    {
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "facility_id": 3,
+      "canonical_facility_id": 348,
+      "location": "MIAMI, FL",
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation",
+        "Physical therapy"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "recommendation_alignment": "Because the resident profile requires licensed nurses 24/7, skilled nursing capability, neurological rehabilitation, speech therapy, occupational therapy, physical therapy, swallowing assessment support, walker accessibility, fall prevention protocol, mobility and transfer assistance, memory care or dementia programming, we prioritized communities experienced in complex clinical support. Confirmed in this community: Skilled nursing capability, Neurological rehabilitation, Physical therapy.",
+      "nice_to_have_alignment": "Maintaining quality of life remains important. Confirmed lifestyle alignment currently includes: none yet.",
+      "tradeoffs": [
+        "Future care pathway preference was not constrained in this profile."
+      ],
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "confidence": "19"
+    },
+    {
+      "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+      "facility_id": 36,
+      "canonical_facility_id": 379,
+      "location": "NORTH MIAMI, FL",
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation",
+        "Physical therapy"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "recommendation_alignment": "Because the resident profile requires licensed nurses 24/7, skilled nursing capability, neurological rehabilitation, speech therapy, occupational therapy, physical therapy, swallowing assessment support, walker accessibility, fall prevention protocol, mobility and transfer assistance, memory care or dementia programming, we prioritized communities experienced in complex clinical support. Confirmed in this community: Skilled nursing capability, Neurological rehabilitation, Physical therapy.",
+      "nice_to_have_alignment": "Maintaining quality of life remains important. Confirmed lifestyle alignment currently includes: none yet.",
+      "tradeoffs": [
+        "Future care pathway preference was not constrained in this profile."
+      ],
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "confidence": "19"
+    },
+    {
+      "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "facility_id": 41,
+      "canonical_facility_id": 377,
+      "location": "NORTH MIAMI, FL",
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation",
+        "Physical therapy"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "recommendation_alignment": "Because the resident profile requires licensed nurses 24/7, skilled nursing capability, neurological rehabilitation, speech therapy, occupational therapy, physical therapy, swallowing assessment support, walker accessibility, fall prevention protocol, mobility and transfer assistance, memory care or dementia programming, we prioritized communities experienced in complex clinical support. Confirmed in this community: Skilled nursing capability, Neurological rehabilitation, Physical therapy.",
+      "nice_to_have_alignment": "Maintaining quality of life remains important. Confirmed lifestyle alignment currently includes: none yet.",
+      "tradeoffs": [
+        "Future care pathway preference was not constrained in this profile."
+      ],
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "confidence": "19"
+    },
+    {
+      "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "facility_id": 24,
+      "canonical_facility_id": 386,
+      "location": "NORTH MIAMI BEACH, FL",
+      "must_satisfied": [
+        "Skilled nursing capability",
+        "Neurological rehabilitation",
+        "Physical therapy"
+      ],
+      "must_failed": [],
+      "must_unknown": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "recommendation_alignment": "Because the resident profile requires licensed nurses 24/7, skilled nursing capability, neurological rehabilitation, speech therapy, occupational therapy, physical therapy, swallowing assessment support, walker accessibility, fall prevention protocol, mobility and transfer assistance, memory care or dementia programming, we prioritized communities experienced in complex clinical support. Confirmed in this community: Skilled nursing capability, Neurological rehabilitation, Physical therapy.",
+      "nice_to_have_alignment": "Maintaining quality of life remains important. Confirmed lifestyle alignment currently includes: none yet.",
+      "tradeoffs": [
+        "Future care pathway preference was not constrained in this profile."
+      ],
+      "evidence_gaps": [
+        "Licensed nurses 24/7",
+        "Speech therapy",
+        "Occupational therapy",
+        "Swallowing assessment support",
+        "Walker accessibility",
+        "Fall prevention protocol",
+        "Mobility and transfer assistance",
+        "Memory care or dementia programming",
+        "Gluten-free meal capability",
+        "Dietitian support",
+        "Movie programming",
+        "Music activities",
+        "Group social activities"
+      ],
+      "sources": [
+        "REQ-1-LICENSED_NURSES_24_7:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+        "REQ-3-NEUROLOGICAL_REHABILITATION:YES:HEURISTIC_INFERRED",
+        "REQ-4-SPEECH_THERAPY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-8-WALKER_ACCESSIBILITY:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-10-MOBILITY_ASSISTANCE:UNKNOWN:HEURISTIC_INFERRED",
+        "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+      ],
+      "confidence": "19"
+    }
+  ],
+  "accepted_count": 10,
+  "rejected_count": 90,
+  "fallback_count": 0,
+  "chain_breaks": []
+}

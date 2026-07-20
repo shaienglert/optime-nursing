@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { execFileSync } = require('child_process');
 
 const repoRoot = path.join(__dirname, '..');
 const simulationHelpers = require(path.join(repoRoot, 'scripts', 'run_dynamic_persona_simulation_audit.cjs'));
 const { runOptimeV2Engine } = require(path.join(repoRoot, 'frontend', 'src', 'lib', 'optime-v2-engine.ts'));
+const { buildCaseContract, buildState } = require(path.join(repoRoot, 'benchmark', 'case_contracts', 'post_stroke_miami_001.cjs'));
 
 function loadJson(filePath) {
   if (!fs.existsSync(filePath)) return {};
@@ -203,6 +205,11 @@ function main() {
   const backendFacilities = simulationHelpers.loadBackendFacilities();
   const facilities = backendFacilities.map((facility) => simulationHelpers.toSearchFacility(facility, 'post'));
   const governanceContext = buildGovernanceContext(backendFacilities);
+  const caseContract = buildCaseContract();
+
+  if (caseContract.case_truth.budget_ceiling_monthly !== 17000) errors.push('case_contract_budget_not_preserved');
+  if (!caseContract.person_model.unsupported_person_model_fields.includes('bathing_assistance')) errors.push('case_contract_unsupported_fields_missing');
+  if (!String(caseContract.person_model.supported_fields.notes.join(' ')).includes('Must stay close to Miami-Dade family support')) errors.push('case_contract_geography_trigger_missing');
 
   const output = runWithState(facilities, governanceContext, postStrokeState());
   const top = output.displayedRecommendations[0];
@@ -253,6 +260,19 @@ function main() {
   const displayedIds = new Set(output.displayedRecommendations.map((item) => item.facility.id));
   const overlap = mustFailedRejected.some((id) => displayedIds.has(id));
   if (overlap) errors.push('legacy_weight_overrode_verified_must');
+
+  const adapterRaw = execFileSync('node', [path.join(repoRoot, 'benchmark', 'adapters', 'optime_runtime_runner.cjs'), JSON.stringify({ case_id: 'POST_STROKE_MIAMI_001' })], { encoding: 'utf8' });
+  const adapterOutput = JSON.parse(adapterRaw);
+  if (adapterOutput.run_status !== 'OK') errors.push('adapter_run_failed');
+  if (!Array.isArray(adapterOutput.top_5) || adapterOutput.top_5.length !== 5) errors.push('adapter_top5_incomplete');
+
+  const canonical = loadJson(path.join(repoRoot, 'database', 'florida_senior_living_inventory.json'));
+  const countyByCanonicalId = new Map((canonical.records || []).map((row, index) => [index + 1, String(row.county || '').trim().toLowerCase()]));
+  const nonMiamiTop5 = (adapterOutput.top_5 || []).filter((row) => countyByCanonicalId.get(row.canonical_facility_id) !== 'miami-dade');
+  if (nonMiamiTop5.length > 0) errors.push('adapter_geography_not_preserved');
+
+  const adapterTop1 = adapterOutput.top_5?.[0] || null;
+  if (!adapterTop1?.must_unknown?.includes('Licensed nurses 24/7')) errors.push('adapter_traceability_missing_must_unknown');
 
   const resultsPageText = fs.readFileSync(path.join(repoRoot, 'frontend', 'src', 'app', 'results', 'results-page-client.tsx'), 'utf8');
   if (!resultsPageText.includes('engineOutput.displayedRecommendations') || !resultsPageText.includes('slice(0, TOP_RECOMMENDATION_COUNT)')) {

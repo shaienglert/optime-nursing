@@ -4,6 +4,7 @@ const fs = require('fs');
 const repoRoot = path.join(__dirname, '..', '..');
 const simulationHelpers = require(path.join(repoRoot, 'scripts', 'run_dynamic_persona_simulation_audit.cjs'));
 const { runOptimeV2Engine } = require(path.join(repoRoot, 'frontend', 'src', 'lib', 'optime-v2-engine.ts'));
+const { buildState: buildPostStrokeMiamiState } = require(path.join(repoRoot, 'benchmark', 'case_contracts', 'post_stroke_miami_001.cjs'));
 
 function loadJson(filePath) {
   if (!fs.existsSync(filePath)) return {};
@@ -93,38 +94,9 @@ function parseCasePayload(raw) {
 
 function toState(casePayload) {
   const base = simulationHelpers.emptyState();
-  const explicitNeeds = casePayload.explicit_needs || [];
-  const nonNegotiables = casePayload.explicit_non_negotiables || [];
-  const knownUnknowns = casePayload.known_unknowns || [];
-  const location = casePayload.location || {};
-
-  const notes = [
-    ...(explicitNeeds || []),
-    ...(nonNegotiables || []),
-    ...(knownUnknowns || []).map((item) => `UNKNOWN: ${item}`),
-    location.county ? `Preferred county ${location.county}` : '',
-  ].filter(Boolean).join('. ');
-
-  return {
-    ...base,
-    relationship: 'Parent',
-    gender: casePayload.person_profile?.gender || 'Unknown',
-    ageGroup: casePayload.person_profile?.age_group || '80-84',
-    assistanceLevel: explicitNeeds.join(' ').toLowerCase().includes('24/7') ? 'Skilled nursing care' : 'Some daily support',
-    futureCarePreference: 'Full continuum of care on one campus',
-    budget: 7000,
-    notes,
-    referenceLocationType: location.county ? 'County' : 'Region',
-    referenceLocationValue: location.county || location.region || 'South Florida',
-    humanIntelligenceV2: {
-      ...base.humanIntelligenceV2,
-      transitionRiskProfile: {
-        ...base.humanIntelligenceV2.transitionRiskProfile,
-        recentHospitalization: explicitNeeds.join(' ').toLowerCase().includes('post-stroke') ? 'Yes' : 'Unknown',
-        postHospitalRehabNeed: explicitNeeds.join(' ').toLowerCase().includes('rehab') ? 'Yes' : 'Unknown',
-      },
-    },
-  };
+  const state = buildPostStrokeMiamiState(base);
+  const overrides = casePayload?.stateOverrides && typeof casePayload.stateOverrides === 'object' ? casePayload.stateOverrides : null;
+  return overrides ? deepMerge(state, overrides) : state;
 }
 
 function runCase(casePayload) {
