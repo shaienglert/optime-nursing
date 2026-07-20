@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
 
@@ -141,16 +142,7 @@ function parseDataQualityDashboard(filePath) {
 
 function runPythonDbAudit(recommendations) {
   const dbPath = path.join(repoRoot, 'backend', 'optime_nursing.db');
-  const candidates = [
-    path.join(repoRoot, 'backend', '.venv', 'Scripts', 'python.exe'),
-    path.join(repoRoot, '.venv', 'Scripts', 'python.exe'),
-    'python',
-    'py',
-  ];
-  const pyPath = candidates.find((p) => p === 'python' || p === 'py' || fs.existsSync(p));
-  if (!pyPath) {
-    throw new Error('No usable Python executable found for DB audit.');
-  }
+  const pyPath = resolveCanonicalPython(repoRoot);
   const ids = recommendations.map((r) => Number(r.facility_id)).filter((n) => Number.isFinite(n));
 
   const py = [
@@ -185,9 +177,7 @@ function runPythonDbAudit(recommendations) {
     'print(json.dumps(payload))',
   ].join('\n');
 
-  const pyArgs = pyPath === 'py'
-    ? ['-3', '-c', py, dbPath, JSON.stringify(ids)]
-    : ['-c', py, dbPath, JSON.stringify(ids)];
+  const pyArgs = ['-c', py, dbPath, JSON.stringify(ids)];
 
   const out = spawnSync(pyPath, pyArgs, {
     cwd: repoRoot,

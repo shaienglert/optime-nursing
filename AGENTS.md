@@ -70,3 +70,13 @@ Principle changes, principle reinterpretation, and architectural deviations stil
 - Preserve principle intent, not only wording.
 - Do not collapse distinctions among quality, match, proven match, potential match, evidence confidence, unknown, negative evidence, source failure, and no data found.
 - If two valid implementations imply different product philosophies, escalate for owner decision.
+
+## Python Runtime Determinism (Permanent)
+
+- Canonical interpreter for repository automation is `backend/venv/Scripts/python.exe`.
+- Secondary fallback (only if canonical is missing) is `.venv/Scripts/python.exe`.
+- Do not invoke interactive "Configure Python Environment" flows during normal repository tasks.
+- Do not create a new virtual environment unless the canonical environment is demonstrably broken and repair is explicitly required.
+- For scripts and agents, resolve Python via repository-owned runtime helper (`scripts/lib/python_runtime.cjs`) instead of `python`, `python3`, or `py` PATH lookups.
+- Bound long-running Python/network operations with explicit process limits/timeouts where practical.
+- If Python execution fails, capture exact stderr/stdout and continue non-blocked work; do not wait indefinitely on environment discovery.

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
 const reportsDir = path.join(repoRoot, 'reports');
@@ -16,6 +17,7 @@ function mdTable(headers, rows) {
 
 function readStateAndInjectCycle() {
   const dbPath = path.join(repoRoot, 'backend', 'optime_nursing.db');
+  const pythonPath = resolveCanonicalPython(repoRoot);
   const py = [
     'import sqlite3, json, sys, datetime',
     'db = sqlite3.connect(sys.argv[1])',
@@ -38,7 +40,7 @@ function readStateAndInjectCycle() {
     'print(json.dumps({"snapshots": snapshots, "refresh": refresh, "usage": usage, "incidents": inc}))',
   ].join('\n');
 
-  const out = spawnSync('py', ['-3', '-c', py, dbPath], {
+  const out = spawnSync(pythonPath, ['-c', py, dbPath], {
     cwd: repoRoot,
     encoding: 'utf8',
     maxBuffer: 20 * 1024 * 1024,

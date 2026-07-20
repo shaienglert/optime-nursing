@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
-const pythonExe = path.join(repoRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = resolveCanonicalPython(repoRoot);
 
 function runCommand(command, args, cwd) {
   const isWindowsNpm = process.platform === 'win32' && command === 'npm';

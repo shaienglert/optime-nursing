@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
 const reportsDir = path.join(repoRoot, 'reports');
@@ -103,6 +104,7 @@ function parseRecommendationAccuracy() {
 function queryPlatformData() {
   const dbPath = path.join(repoRoot, 'backend', 'optime_nursing.db');
   const providerCsv = path.join(repoRoot, 'backend', 'app', 'data', 'NH_ProviderInfo_Jun2026.csv');
+  const pythonPath = resolveCanonicalPython(repoRoot);
   const py = [
     'import csv, json, os, sqlite3, sys',
     'db = sqlite3.connect(sys.argv[1])',
@@ -131,7 +133,7 @@ function queryPlatformData() {
     'db.close()',
   ].join('\n');
 
-  const out = spawnSync('py', ['-3', '-c', py, dbPath, providerCsv], {
+  const out = spawnSync(pythonPath, ['-c', py, dbPath, providerCsv], {
     cwd: repoRoot,
     encoding: 'utf8',
     maxBuffer: 20 * 1024 * 1024,

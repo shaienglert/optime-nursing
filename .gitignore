@@ -7,7 +7,6 @@ node_modules/
 dist/
 venv/
 .idea/
-.vscode/settings.json
 backend/app/data/
 *.csv
 *.parquet

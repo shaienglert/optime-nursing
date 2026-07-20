@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
 const reportsDir = path.join(repoRoot, 'reports');
@@ -103,6 +104,7 @@ function parseKnowledgeGrowthReport() {
 
 function querySnapshots() {
   const dbPath = path.join(repoRoot, 'backend', 'optime_nursing.db');
+  const pythonPath = resolveCanonicalPython(repoRoot);
   const py = [
     'import json, sqlite3, sys',
     'db = sqlite3.connect(sys.argv[1])',
@@ -112,7 +114,7 @@ function querySnapshots() {
     'print(json.dumps([dict(r) for r in rows]))',
   ].join('\n');
 
-  const out = spawnSync('py', ['-3', '-c', py, dbPath], {
+  const out = spawnSync(pythonPath, ['-c', py, dbPath], {
     cwd: repoRoot,
     encoding: 'utf8',
     maxBuffer: 20 * 1024 * 1024,

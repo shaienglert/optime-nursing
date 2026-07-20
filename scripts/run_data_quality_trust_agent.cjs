@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
 
@@ -66,7 +67,7 @@ function freshnessScore(days) {
 }
 
 function runPythonAudit() {
-  const pythonPath = path.join(repoRoot, '.venv', 'Scripts', 'python.exe');
+  const pythonPath = resolveCanonicalPython(repoRoot);
   const dbPath = path.join(repoRoot, 'optime_nursing.db');
   const py = [
     'import json, sqlite3, sys',

@@ -3,6 +3,7 @@ const path = require('path');
 const Module = require('module');
 const ts = require(path.join(__dirname, '..', 'frontend', 'node_modules', 'typescript'));
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
 const frontendRoot = path.join(repoRoot, 'frontend');
@@ -69,7 +70,7 @@ function emptyCareTypeProbabilities() {
 function loadBackendFacilities() {
   const dbPath = path.join(repoRoot, 'optime_nursing.db');
   const canonicalPath = path.join(repoRoot, 'database', 'florida_senior_living_inventory.json');
-  const pythonPath = path.join(repoRoot, '.venv', 'Scripts', 'python.exe');
+  const pythonPath = resolveCanonicalPython(repoRoot);
   const pythonCode = [
     'import json, sqlite3, sys',
     'sys.path.insert(0, r"' + path.join(repoRoot, 'backend').replace(/\\/g, '\\\\') + '")',

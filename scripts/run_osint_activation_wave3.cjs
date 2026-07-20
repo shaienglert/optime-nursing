@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
 
@@ -29,7 +30,7 @@ function csvEscape(value) {
 }
 
 function runPython(code) {
-  const pythonPath = path.join(repoRoot, '.venv', 'Scripts', 'python.exe');
+  const pythonPath = resolveCanonicalPython(repoRoot);
   const result = spawnSync(pythonPath, ['-c', code], {
     cwd: repoRoot,
     encoding: 'utf8',

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { resolveCanonicalPython } = require('./lib/python_runtime.cjs');
 
 const repoRoot = path.join(__dirname, '..');
 const simulationHelpers = require('./run_dynamic_persona_simulation_audit.cjs');
@@ -66,7 +67,7 @@ function toSimulationFacilityList() {
 }
 
 function runPythonSnippet(code, args = []) {
-  const pythonPath = path.join(repoRoot, '.venv', 'Scripts', 'python.exe');
+  const pythonPath = resolveCanonicalPython(repoRoot);
   const result = spawnSync(pythonPath, ['-c', code, ...args], {
     cwd: repoRoot,
     encoding: 'utf8',
