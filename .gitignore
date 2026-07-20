@@ -11,3 +11,4 @@ venv/
 backend/app/data/
 *.csv
 *.parquet
+reports/email/startup_test_state.json
