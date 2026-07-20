@@ -1,88 +1,199 @@
 # OPTIME Agent System Audit
 
-## What Exists
+## Exact Agent Inventory
 
-- Runtime-backed agent refresh system in `backend/app/services/agent_knowledge_reports.py`.
-- Supervisor logic in `backend/app/services/chief_ai_supervisor.py`.
-- Existing daily executive report pipeline in `backend/app/services/executive_report_service.py`.
-- Existing backend executive-report endpoints in `backend/app/main.py`.
-- Existing daily history/archive system in `backend/app/services/report_archive_service.py`.
-- Existing email delivery layer in `backend/app/services/email_service.py`.
-- Existing GEO / AI authority strategy in `docs/GEO_STRATEGY.md`.
-- Existing Multi-AI benchmark scaffolding in `reports/MULTI_AI_BENCHMARK_SYSTEM_REPORT.md`.
+- Total known agents/systems: 15
+- Automatic runtime-backed agents: 11
+- Manual/spec-only or unknown-status agents: 4
 
-## Which Agents Actually Run
+## Schema Root Cause
 
-- Runtime-backed automatic agents found in the live backend database: UNKNOWN.
-- Known total agents represented in the control tower: UNKNOWN.
-- Automatic runtime agents attempted work in the last 24h: 11.
-- Automatic runtime agents that created verified new value in the last 24h: UNKNOWN.
-- Automatic runtime agents that failed in the last 24h: UNKNOWN.
+- `FacilityIntelligenceProfile` in `backend/app/models/facility.py` expects these columns in `facility_intelligence_profiles`:
+  - `signal_details`
+  - `visual_hero_image`
+  - `visual_gallery_images`
+  - `visual_lifestyle_tags`
+  - `visual_confidence_score`
+  - `visual_coverage_score`
+- The live backend SQLite database at `backend/optime_nursing.db` did not contain those columns.
+- `Base.metadata.create_all()` does not alter existing tables.
+- Startup previously only applied `ensure_provider_identity_schema(engine)`, so the facility-intelligence table drift remained unapplied.
 
-## What Actually Happened In The Last 24 Hours
+## Schema Fix Applied
 
-- All 11 runtime-backed automatic agents attempted scheduled refreshes.
-- All 11 failed.
-- No new `agent_knowledge_records` were created in the last 24h.
-- No `agent_job_runs` were recorded in the last 24h.
-- The control tower therefore distinguishes `FAILED` from `WORKED` using database evidence, not filenames.
+- Added `ensure_facility_intelligence_profile_schema(engine)` in `backend/app/services/schema_migrations.py`.
+- Wired that upgrade into backend startup in `backend/app/main.py`.
+- Applied the upgrade safely to the live backend database without recreating the table or losing data.
+- Fixed timezone-aware vs timezone-naive datetime comparisons in `backend/app/services/agent_knowledge_reports.py`.
+- Fixed successful refresh bookkeeping so `failed_refresh_count`, `refresh_error`, and `freshness_status` now clear correctly on success.
 
-## Failure Cause
+## Controlled Automatic Agent Execution
 
-- The first blocking failure was timezone-naive vs timezone-aware datetime comparison in the refresh path.
-- That bug was fixed in code.
-- After the fix, the next concrete failure surfaced: schema mismatch in `facility_intelligence_profiles`, specifically missing `signal_details` in the live backend database schema.
-- This means the control tower now exposes the real blocker instead of masking it.
+- Automatic agents attempted in controlled run: 11
+- Controlled refresh result: 11 refreshed, 0 failures
+- Successful refresh events in last 24h: 22
+- Failed refresh events in last 24h: 264
+- Automatic agents that created verified new value in last 24h: 0
+- Automatic agents that ran with no new value in last 24h: 11
+- Automatic agents that failed in last 24h: 0
 
-## Organic / AI Authority Agent Status
+## Before / After Evidence
 
-- Current status: UNKNOWN
-- Last verified work: UNKNOWN
-- What it actually did: UNKNOWN
-- New result created: UNKNOWN
-- Google visibility: UNKNOWN
-- AI citation monitoring: UNKNOWN
+- New agent knowledge records in last 24h: 0
+- New facility intelligence rows updated in last 24h: 0
+- Net outcome of controlled run: successful execution state was restored, but no verified new knowledge/evidence objects were created during the run.
 
-This is implemented as strategy and benchmark scaffolding, not a verified automatic monitoring agent.
+## Per-Agent Runtime State
+
+```json
+[
+  {
+    "agent_key": "activities_intelligence",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.311578",
+    "next_refresh_at": "2026-07-20 19:40:34.311578"
+  },
+  {
+    "agent_key": "clinical_knowledge",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.282956",
+    "next_refresh_at": "2026-07-21 13:40:34.282956"
+  },
+  {
+    "agent_key": "data_quality",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.350889",
+    "next_refresh_at": "2026-07-20 13:45:34.350889"
+  },
+  {
+    "agent_key": "family_experience",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.322398",
+    "next_refresh_at": "2026-07-20 14:40:34.322398"
+  },
+  {
+    "agent_key": "knowledge_graph",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.341250",
+    "next_refresh_at": "2026-07-21 13:40:34.341250"
+  },
+  {
+    "agent_key": "matching_improvement",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.334822",
+    "next_refresh_at": "2026-07-20 13:45:34.334822"
+  },
+  {
+    "agent_key": "nutrition_intelligence",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.317235",
+    "next_refresh_at": "2026-07-21 13:40:34.317235"
+  },
+  {
+    "agent_key": "outcome_learning",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.329840",
+    "next_refresh_at": "2026-07-21 13:40:34.329840"
+  },
+  {
+    "agent_key": "provider_intelligence",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.304410",
+    "next_refresh_at": "2026-07-21 01:40:34.304410"
+  },
+  {
+    "agent_key": "resident_needs",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.299254",
+    "next_refresh_at": "2026-07-20 19:40:34.299254"
+  },
+  {
+    "agent_key": "senior_living_research",
+    "refresh_status": "READY",
+    "freshness_status": "FRESH",
+    "failed_refresh_count": 0,
+    "refresh_error": null,
+    "last_successful_refresh": "2026-07-20 13:40:34.291846",
+    "next_refresh_at": "2026-07-20 14:40:34.291846"
+  }
+]
+```
+
+## Organic / AI Authority Real Status
+
+- Status: PARTIAL
+- Automated: NO
+- Last verified work: UNVERIFIED_EXTERNAL
+- What it actually does today: Strategy docs and multi-AI benchmark scaffolding exist, but automated organic/citation monitoring is not configured.
+- New measurable result created: No verified external search or citation result was collected automatically.
+- Google visibility: UNVERIFIED_EXTERNAL
+- AI citation monitoring: NOT_CONFIGURED
+
+This remains strategy/scaffolding plus benchmark support, not a verified automatic monitoring agent.
 
 ## Daily Report Integration
 
-- The existing daily executive report now includes:
-  - agent activity summary
-  - agent activity table
-  - aggregate achievements for the last 24h
-  - agents requiring attention
-  - organic / AI authority system row
-  - authority lifecycle stages
-- The system continues to use one canonical daily report per day.
+- The existing canonical daily executive report now includes:
+  - Agent Activity summary
+  - Agent Activity table
+  - What OPTIME Achieved Today
+  - Agents Requiring Attention
+  - Organic / AI Authority system row
+  - Authority lifecycle stages
+- Same-day idempotency verified: canonical report count for today remained 1 before and after regeneration.
 
-## Admin UI Integration
+## Admin UI Verification
 
-- New route added in code: `/admin/executive-intelligence`.
-- The page reuses the existing executive report latest/history APIs.
-- Frontend build passed with the new route.
-- Live smoke check against the currently running local frontend returned 404, which indicates the running dev/prod process was stale and not yet restarted with the new code.
+- Backend live endpoint verified: `GET /executive-report/latest/full` returned HTTP 200.
+- Frontend live admin route verified: `GET /admin/executive-intelligence` returned HTTP 200 after restarting only the stale local backend/frontend processes.
+- The rendered page exposes Executive Intelligence title, Agent Activity, Daily Report History, Attention, and authority-related content.
 
-## Email Delivery Status
+## Scheduler Verification
 
-- Email delivery code exists.
-- Controlled daily report generation returned `SMTP host is not configured (OPTIME_SMTP_HOST)`.
-- Status: NOT_CONFIGURED for safe automatic delivery in this environment.
+- Automatic scheduler entry still exists in backend startup via `start_background_refresh_loop()` and `start_executive_report_scheduler()`.
+- Canonical one-report-per-day behavior remains in the existing archive/report writer path.
+- SMTP remains unconfigured, so report generation succeeds but email delivery is blocked without affecting archive/admin visibility.
 
-## What Was Fixed
+## Email Status
 
-- Added shared control-tower metrics and agent activity inventory to the existing daily executive report.
-- Added backend APIs to retrieve full canonical latest and historical executive report payloads.
-- Added admin executive-intelligence UI route to surface the existing report inside OPTIME Admin.
-- Fixed the datetime timezone comparison bug in the agent refresh path so the real downstream schema failure is now observable.
+- NOT_CONFIGURED
+- Latest controlled report generation returned: `SMTP host is not configured (OPTIME_SMTP_HOST)`
 
-## What Remains
+## Remaining Blockers
 
-- The runtime-backed agent refresh system still fails because the live backend DB schema is missing `facility_intelligence_profiles.signal_details`.
-- Organic/AI authority monitoring is still not automatically measured.
-- Live local server processes need restart/redeploy to expose the new admin route and API endpoints at runtime.
-- The older timestamped archive snapshots remain as untracked noise and were not committed as canonical history.
+- The automatic agents now run successfully, but they still produce no verified new value because their current refresh logic only rebuilds prepared snapshots from existing data and did not create new `agent_knowledge_records` in the controlled run.
+- Organic/AI authority monitoring is still not an automated measurable agent.
 
 ## Generated At
 
-- 2026-07-20T13:15:40.020800+00:00
+- 2026-07-20T13:42:18.423853+00:00

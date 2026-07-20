@@ -360,7 +360,7 @@ def refresh_all_agent_reports(
             finished = datetime.now(timezone.utc)
             duration_ms = max(1, int((finished - started).total_seconds() * 1000))
             age_seconds = int((finished - report["last_refreshed_at"]).total_seconds())
-            failed_count = max(0, int(row.failed_refresh_count or 0) - 1)
+            failed_count = 0
             freshness_status = _freshness_from_age(age_seconds, int(report["ttl_seconds"]), int(report["pending_reviews"]), failed_count)
 
             row.agent_name = report["agent_name"]
@@ -384,7 +384,7 @@ def refresh_all_agent_reports(
             row.last_refreshed_at = report["last_refreshed_at"]
             row.next_refresh_at = finished + timedelta(seconds=int(report["ttl_seconds"]))
             row.refresh_status = "READY"
-            row.refresh_error = report["refresh_error"]
+            row.refresh_error = None
 
             _mark_refresh_event(db, agent_key, refresh_mode, "SUCCESS", started, finished)
             refreshed += 1

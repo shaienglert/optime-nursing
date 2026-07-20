@@ -43,7 +43,7 @@ from app.services.cms_quality_import import import_quality_data
 from app.services.cms_staffing_import import import_staffing_data
 from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_public_activity_categories, import_activity_categories
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
-from app.services.schema_migrations import ensure_provider_identity_schema
+from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.provider_identity import (
     apply_facility_field_update,
     complete_email_verification,
@@ -956,6 +956,7 @@ def startup() -> None:
     # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
+    ensure_facility_intelligence_profile_schema(engine)
     db = SessionLocal()
     try:
         state = os.getenv("OPTIME_IMPORT_STATE", "FL")

@@ -36,10 +36,10 @@
 
 ## Daily Executive Intelligence Reports
 
-- Latest Report (Markdown): **reports/daily/archive/executive_intelligence_report_20260720T131304Z.md**
-- Latest Report (HTML): **reports/daily/archive/executive_intelligence_report_20260720T131304Z.html**
-- Latest Report (JSON): **reports/daily/archive/executive_intelligence_report_20260720T131304Z.json**
-- Generated At (UTC): **2026-07-20T13:13:04.297310+00:00**
+- Latest Report (Markdown): **reports/daily/archive/executive_intelligence_report_2026-07-20.md**
+- Latest Report (HTML): **reports/daily/archive/executive_intelligence_report_2026-07-20.html**
+- Latest Report (JSON): **reports/daily/archive/executive_intelligence_report_2026-07-20.json**
+- Generated At (UTC): **2026-07-20T13:41:59.889347+00:00**
 - Previous Report (JSON): **reports/daily/archive/executive_intelligence_report_2026-07-20.json**
 
 ### Trend Comparison (Today vs Yesterday)

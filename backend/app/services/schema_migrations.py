@@ -38,3 +38,31 @@ def ensure_provider_identity_schema(engine: Engine) -> None:
     with engine.begin() as connection:
         for statement in alter_statements:
             connection.execute(text(statement))
+
+
+def ensure_facility_intelligence_profile_schema(engine: Engine) -> None:
+    columns = _column_names(engine, "facility_intelligence_profiles")
+    if not columns:
+        return
+
+    alter_statements: list[str] = []
+
+    if "signal_details" not in columns:
+        alter_statements.append("ALTER TABLE facility_intelligence_profiles ADD COLUMN signal_details TEXT NOT NULL DEFAULT '[]'")
+    if "visual_hero_image" not in columns:
+        alter_statements.append("ALTER TABLE facility_intelligence_profiles ADD COLUMN visual_hero_image TEXT NOT NULL DEFAULT '{}' ")
+    if "visual_gallery_images" not in columns:
+        alter_statements.append("ALTER TABLE facility_intelligence_profiles ADD COLUMN visual_gallery_images TEXT NOT NULL DEFAULT '[]'")
+    if "visual_lifestyle_tags" not in columns:
+        alter_statements.append("ALTER TABLE facility_intelligence_profiles ADD COLUMN visual_lifestyle_tags TEXT NOT NULL DEFAULT '[]'")
+    if "visual_confidence_score" not in columns:
+        alter_statements.append("ALTER TABLE facility_intelligence_profiles ADD COLUMN visual_confidence_score FLOAT NOT NULL DEFAULT 0.0")
+    if "visual_coverage_score" not in columns:
+        alter_statements.append("ALTER TABLE facility_intelligence_profiles ADD COLUMN visual_coverage_score FLOAT NOT NULL DEFAULT 0.0")
+
+    if not alter_statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in alter_statements:
+            connection.execute(text(statement))
