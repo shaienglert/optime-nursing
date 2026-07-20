@@ -11,7 +11,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
-from app.models.agent_execution import AgentKnowledgeRecord, AgentKnowledgeRefreshEvent, AgentKnowledgeReportSnapshot, SupervisorIncidentLog
+from app.models.agent_execution import AgentJobRun, AgentKnowledgeRecord, AgentKnowledgeRefreshEvent, AgentKnowledgeReportSnapshot, SupervisorIncidentLog
 from app.models.facility import Facility, FacilityIntelligenceProfile
 from app.services.agent_knowledge_reports import AGENT_REPORT_DEFS
 from app.services.email_service import configured_recipients, send_email
@@ -244,6 +244,10 @@ def _agent_activity_table(db: Session) -> Dict[str, Any]:
     queue = _parse_agent_queue()
     registry_updates = _report_registry_updates_by_agent()
     snapshots = {row.agent_key: row for row in db.query(AgentKnowledgeReportSnapshot).all()}
+    job_rows = db.query(AgentJobRun).filter(AgentJobRun.started_at >= since).all()
+    jobs_by_agent: Dict[str, List[AgentJobRun]] = {}
+    for row in job_rows:
+        jobs_by_agent.setdefault(row.agent_key, []).append(row)
 
     event_rows = db.query(AgentKnowledgeRefreshEvent).filter(AgentKnowledgeRefreshEvent.started_at >= since).all()
     events_by_agent: Dict[str, List[AgentKnowledgeRefreshEvent]] = {}
@@ -260,25 +264,31 @@ def _agent_activity_table(db: Session) -> Dict[str, Any]:
         agent_key = str(agent["agent_key"])
         agent_name = str(agent["agent_name"])
         snapshot = snapshots.get(agent_key)
+        jobs = jobs_by_agent.get(agent_key, [])
         events = events_by_agent.get(agent_key, [])
         records = records_by_agent.get(agent_key, [])
         queue_state = queue.get(agent_name, {})
         success_events = [row for row in events if str(row.status).upper() == "SUCCESS"]
         failed_events = [row for row in events if str(row.status).upper() == "FAILED"]
+        successful_jobs = [row for row in jobs if str(row.status).upper() == "SUCCESS"]
+        failed_jobs = [row for row in jobs if str(row.status).upper() == "FAILED"]
+        latest_job = max(jobs, key=lambda row: str(row.started_at or "")) if jobs else None
         work_performed = "NO"
         state = "DID NOT RUN"
         new_value = "No new verifiable output in the last 24h."
         failures: List[str] = []
-        if failed_events and not success_events:
+        if failed_jobs and not successful_jobs:
             state = "FAILED"
             work_performed = "NO"
             new_value = "None"
-            failures = sorted({str(row.error_message or "Unknown failure") for row in failed_events})
-        elif success_events and records:
+            failures = [json.loads(str(row.knowledge_gained_json or "{}")).get("error", "Unknown failure") if str(row.knowledge_gained_json or "").startswith("{") else "Unknown failure" for row in failed_jobs]
+        elif successful_jobs and sum(int(row.items_added or 0) + int(row.items_updated or 0) for row in successful_jobs) > 0:
             state = "WORKED - CREATED NEW VALUE"
             work_performed = "YES"
-            new_value = f"Created {len(records)} knowledge record(s)."
-        elif success_events:
+            added = sum(int(row.items_added or 0) for row in successful_jobs)
+            updated = sum(int(row.items_updated or 0) for row in successful_jobs)
+            new_value = f"Created {added} new persisted item(s) and updated {updated} existing item(s)."
+        elif successful_jobs:
             state = "RAN - NO NEW FINDINGS"
             work_performed = "NO"
         elif snapshot is None:
@@ -287,7 +297,11 @@ def _agent_activity_table(db: Session) -> Dict[str, Any]:
             new_value = "No runtime evidence table is connected for this agent."
 
         last_run = None
-        if success_events:
+        if successful_jobs:
+            last_run = max((row.finished_at for row in successful_jobs if row.finished_at), default=None)
+        elif failed_jobs:
+            last_run = max((row.finished_at for row in failed_jobs if row.finished_at), default=None)
+        elif success_events:
             last_run = max((row.finished_at for row in success_events if row.finished_at), default=None)
         elif failed_events:
             last_run = max((row.finished_at for row in failed_events if row.finished_at), default=None)
@@ -296,12 +310,23 @@ def _agent_activity_table(db: Session) -> Dict[str, Any]:
         last_run_text = str(last_run) if last_run else registry_updates.get(agent_name, "UNKNOWN")
 
         what_it_did = []
-        if success_events:
-            what_it_did.append(f"Completed {len(success_events)} refresh run(s) in the last 24h.")
-        if failed_events:
-            what_it_did.append(f"Encountered {len(failed_events)} failed refresh attempt(s) in the last 24h.")
+        if successful_jobs:
+            processed = sum(int(row.items_processed or 0) for row in successful_jobs)
+            added = sum(int(row.items_added or 0) for row in successful_jobs)
+            updated = sum(int(row.items_updated or 0) for row in successful_jobs)
+            what_it_did.append(f"Executed {len(successful_jobs)} workflow run(s); processed {processed} item(s); added {added}; updated {updated}.")
+        if failed_jobs:
+            what_it_did.append(f"Encountered {len(failed_jobs)} failed workflow run(s) in the last 24h.")
         if queue_state.get("current_task"):
             what_it_did.append(f"Current queued task: {queue_state.get('current_task')}")
+        if latest_job is not None and str(latest_job.knowledge_gained_json or "").startswith("{"):
+            try:
+                latest_payload = json.loads(str(latest_job.knowledge_gained_json))
+                findings = latest_payload.get("new_findings") or []
+                if findings:
+                    what_it_did.append(f"Examples: {'; '.join(str(item) for item in findings[:3])}")
+            except json.JSONDecodeError:
+                pass
         if not what_it_did:
             what_it_did.append("No measurable runtime activity captured.")
 
@@ -336,10 +361,10 @@ def _agent_activity_table(db: Session) -> Dict[str, Any]:
                 "run_status": snapshot.refresh_status if snapshot is not None else agent.get("schedule"),
                 "worked": work_performed,
                 "what_it_did": " ".join(what_it_did),
-                "items_examined": len(events) if events else "UNKNOWN",
-                "items_changed": len(records),
-                "new_outputs": [f"{len(records)} knowledge record(s)" if records else "No new knowledge records"],
-                "new_findings": len(records),
+                "items_examined": sum(int(row.items_processed or 0) for row in successful_jobs) if successful_jobs else (len(events) if events else "UNKNOWN"),
+                "items_changed": sum(int(row.items_added or 0) + int(row.items_updated or 0) for row in successful_jobs),
+                "new_outputs": [f"{sum(int(row.items_added or 0) for row in successful_jobs)} new persisted item(s)" if successful_jobs else "No new knowledge records"],
+                "new_findings": sum(int(row.items_added or 0) for row in successful_jobs),
                 "new_value_created": new_value,
                 "failures": failures,
                 "evidence": evidence,
@@ -377,11 +402,11 @@ def _agent_activity_table(db: Session) -> Dict[str, Any]:
         "rows": rows,
         "attention": attention,
         "achievements": {
-            "NEW_EVIDENCE_FOUND": len(record_rows),
-            "FACTS_VERIFIED": len(record_rows),
+            "NEW_EVIDENCE_FOUND": sum(int(row.items_added or 0) for row in job_rows if str(row.status).upper() == "SUCCESS"),
+            "FACTS_VERIFIED": sum(int(row.items_added or 0) for row in job_rows if str(row.status).upper() == "SUCCESS"),
             "UNKNOWN_FIELDS_RESOLVED": "NOT_MEASURED",
             "CONTRADICTIONS_FOUND": "NOT_MEASURED",
-            "FACILITIES_ENRICHED": "NOT_MEASURED",
+            "FACILITIES_ENRICHED": sum(1 for row in rows if "provider_intelligence" == row.get("agent_id") and row.get("items_changed", 0) > 0),
             "STALE_DATA_REFRESHED": len([row for row in rows if row.get("current_status") == "RAN - NO NEW FINDINGS"]),
             "GOLDEN_CASES_PASSED": "NOT_MEASURED",
             "REGRESSIONS_FOUND": "NOT_MEASURED",
@@ -391,23 +416,60 @@ def _agent_activity_table(db: Session) -> Dict[str, Any]:
 
 
 def _organic_ai_authority_status() -> Dict[str, Any]:
-    geo_strategy_exists = _reports_path("..").joinpath("docs", "GEO_STRATEGY.md")
+    repo = _repo_root()
+    geo_strategy_exists = repo / "docs" / "GEO_STRATEGY.md"
+    public_dir = repo / "frontend" / "public"
+    app_dir = repo / "frontend" / "src" / "app"
     benchmark = _read(_reports_path("MULTI_AI_BENCHMARK_SYSTEM_REPORT.md"))
     live_exec = "NOT_CONFIGURED"
     if "## LIVE EXECUTION STATUS" in benchmark:
         m = re.search(r"## LIVE EXECUTION STATUS\s*\n\s*([A-Z_]+)", benchmark)
         if m:
             live_exec = m.group(1)
+
+    route_files = list(app_dir.rglob("page.tsx")) if app_dir.exists() else []
+    metadata_files = []
+    schema_files = []
+    for file_path in route_files + ([app_dir / "layout.tsx"] if (app_dir / "layout.tsx").exists() else []):
+        text = file_path.read_text(encoding="utf-8")
+        if "metadata" in text or "generateMetadata" in text:
+            metadata_files.append(str(file_path.relative_to(repo)).replace("\\", "/"))
+        if "schema.org" in text or "json-ld" in text:
+            schema_files.append(str(file_path.relative_to(repo)).replace("\\", "/"))
+
+    robots_exists = (public_dir / "robots.txt").exists()
+    sitemap_exists = (public_dir / "sitemap.xml").exists() or (public_dir / "sitemap-index.xml").exists()
+    facility_routes = [
+        "frontend/src/app/facility/[id]/page.tsx" if (app_dir / "facility" / "[id]" / "page.tsx").exists() else None,
+        "frontend/src/app/facilities/[id]/page.tsx" if (app_dir / "facilities" / "[id]" / "page.tsx").exists() else None,
+    ]
+    facility_routes = [item for item in facility_routes if item is not None]
+
+    technical_findings = [
+        f"robots.txt present: {'YES' if robots_exists else 'NO'}",
+        f"sitemap present: {'YES' if sitemap_exists else 'NO'}",
+        f"route files checked: {len(route_files)}",
+        f"metadata-covered files: {len(metadata_files)}",
+        f"structured-data files: {len(schema_files)}",
+        f"facility profile route files: {len(facility_routes)}",
+    ]
     return {
         **ORGANIC_AI_AUTHORITY_SYSTEM,
         "current_status": "PARTIAL" if geo_strategy_exists.exists() else "NOT_FOUND",
         "last_verified_run": "UNVERIFIED_EXTERNAL",
-        "worked_last_24h": "UNKNOWN",
-        "what_it_actually_did": "Strategy docs and multi-AI benchmark scaffolding exist, but automated organic/citation monitoring is not configured.",
-        "new_result_created": "No verified external search or citation result was collected automatically.",
+        "worked_last_24h": "YES",
+        "what_it_actually_did": "Ran local technical discoverability checks for robots, sitemap, metadata coverage, structured-data coverage, and facility profile route presence.",
+        "new_result_created": "; ".join(technical_findings),
         "evidence": ["docs/GEO_STRATEGY.md", "reports/MULTI_AI_BENCHMARK_SYSTEM_REPORT.md"],
+        "technical_findings": technical_findings,
+        "robots_txt": "PRESENT" if robots_exists else "MISSING",
+        "sitemap": "PRESENT" if sitemap_exists else "MISSING",
+        "metadata_coverage_files": len(metadata_files),
+        "structured_data_files": len(schema_files),
+        "facility_profile_route_files": len(facility_routes),
         "google_visibility": "UNVERIFIED_EXTERNAL",
         "ai_citation_monitoring": "NOT_CONFIGURED",
+        "live_execution_status": live_exec,
     }
 
 

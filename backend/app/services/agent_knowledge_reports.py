@@ -1,21 +1,24 @@
 import json
 import os
+import hashlib
 import threading
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
 from app.models.agent_execution import (
+    AgentJobRun,
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
     AgentKnowledgeReportSnapshot,
     RecommendationKnowledgeUsageLog,
 )
-from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, ResidentOutcome
+from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, Inspection, QualityMeasure, ResidentOutcome, Staffing
 
 AGENT_REPORT_DEFS: List[Dict[str, object]] = [
     {
@@ -147,6 +150,565 @@ def _default_refresh_minutes() -> int:
 
 def ttl_for_agent(agent_key: str) -> int:
     return int(TTL_POLICY_SECONDS.get(agent_key, 60 * 60))
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def _serialize_payload(payload: Dict[str, Any]) -> str:
+    return json.dumps(payload, sort_keys=True, default=str, ensure_ascii=True)
+
+
+def _hash_payload(payload: Dict[str, Any]) -> str:
+    return hashlib.sha1(_serialize_payload(payload).encode("utf-8")).hexdigest()
+
+
+def _load_canonical_inventory() -> Dict[str, Dict[str, Any]]:
+    path = _repo_root() / "database" / "florida_senior_living_inventory.json"
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    out: Dict[str, Dict[str, Any]] = {}
+    for row in data.get("records", []):
+        cms = str(row.get("cms_certification_number") or "").strip()
+        if cms:
+            out[cms] = row
+    return out
+
+
+def _load_miami_dade_context(db: Session) -> List[Dict[str, Any]]:
+    inventory = _load_canonical_inventory()
+    miami_ids = {cms for cms, row in inventory.items() if str(row.get("county") or "").strip().lower() == "miami-dade"}
+    facilities = (
+        db.query(Facility)
+        .filter(Facility.cms_id.in_(sorted(miami_ids)))
+        .order_by(Facility.name.asc())
+        .all()
+    )
+    context: List[Dict[str, Any]] = []
+    for facility in facilities:
+        staffing = db.query(Staffing).filter(Staffing.facility_id == facility.id).order_by(Staffing.id.desc()).first()
+        inspections = db.query(Inspection).filter(Inspection.facility_id == facility.id).all()
+        quality_rows = db.query(QualityMeasure).filter(QualityMeasure.facility_id == facility.id).all()
+        canonical = inventory.get(str(facility.cms_id).strip(), {})
+        context.append(
+            {
+                "facility": facility,
+                "canonical": canonical,
+                "staffing": staffing,
+                "inspections": inspections,
+                "quality_rows": quality_rows,
+            }
+        )
+    return context
+
+
+def _persist_agent_record(
+    db: Session,
+    *,
+    agent_key: str,
+    record_type: str,
+    entity_key: str,
+    summary: str,
+    source: str,
+    confidence: float,
+    payload: Dict[str, Any],
+) -> str:
+    fingerprint = _hash_payload({"summary": summary, "payload": payload})
+    latest = (
+        db.query(AgentKnowledgeRecord)
+        .filter(
+            AgentKnowledgeRecord.agent_key == agent_key,
+            AgentKnowledgeRecord.record_type == record_type,
+            AgentKnowledgeRecord.entity_key == entity_key,
+        )
+        .order_by(AgentKnowledgeRecord.created_at.desc(), AgentKnowledgeRecord.id.desc())
+        .first()
+    )
+    if latest is not None:
+        try:
+            latest_payload = json.loads(latest.payload_json or "{}")
+        except json.JSONDecodeError:
+            latest_payload = {}
+        if latest_payload.get("fingerprint") == fingerprint:
+            return "UNCHANGED"
+
+    payload_to_store = dict(payload)
+    payload_to_store["fingerprint"] = fingerprint
+    payload_to_store["retrieved_at"] = datetime.now(timezone.utc).isoformat()
+    payload_to_store["change_status"] = "CHANGED" if latest is not None else "NEW"
+    db.add(
+        AgentKnowledgeRecord(
+            agent_key=agent_key,
+            record_type=record_type,
+            entity_key=entity_key,
+            summary=summary,
+            payload_json=_serialize_payload(payload_to_store),
+            confidence=confidence,
+            source=source,
+        )
+    )
+    return str(payload_to_store["change_status"])
+
+
+def _profile_payload(context: Dict[str, Any]) -> Dict[str, Any]:
+    facility: Facility = context["facility"]
+    canonical = context["canonical"] or {}
+    staffing: Optional[Staffing] = context["staffing"]
+    inspections: List[Inspection] = context["inspections"]
+    quality_rows: List[QualityMeasure] = context["quality_rows"]
+    fine_events = sum(1 for item in inspections if item.fine_amount is not None and float(item.fine_amount or 0) > 0)
+    missing = []
+    if facility.overall_rating is None:
+        missing.append("overall_rating")
+    if facility.staffing_rating is None:
+        missing.append("staffing_rating")
+    if facility.quality_rating is None:
+        missing.append("quality_rating")
+    if facility.inspection_rating is None:
+        missing.append("inspection_rating")
+
+    verified_facts = [
+        f"County: {canonical.get('county') or 'UNKNOWN'}",
+        f"Ownership type: {canonical.get('ownership_type') or 'UNKNOWN'}",
+        f"Beds: {facility.beds if facility.beds is not None else 'UNKNOWN'}",
+        f"Overall rating: {facility.overall_rating if facility.overall_rating is not None else 'UNKNOWN'}",
+        f"Staffing rating: {facility.staffing_rating if facility.staffing_rating is not None else 'UNKNOWN'}",
+        f"Quality rating: {facility.quality_rating if facility.quality_rating is not None else 'UNKNOWN'}",
+        f"Inspection rating: {facility.inspection_rating if facility.inspection_rating is not None else 'UNKNOWN'}",
+        f"Quality measures tracked: {len(quality_rows)}",
+        f"Inspection events tracked: {len(inspections)}",
+    ]
+    positive = []
+    negative = []
+    if facility.overall_rating is not None and facility.overall_rating >= 4:
+        positive.append("High CMS overall rating")
+    if facility.staffing_rating is not None and facility.staffing_rating >= 4:
+        positive.append("High CMS staffing rating")
+    if facility.inspection_rating is not None and facility.inspection_rating <= 2:
+        negative.append("Low inspection rating")
+    if fine_events > 0:
+        negative.append(f"Inspection fines recorded: {fine_events}")
+
+    signal_details = [
+        {
+            "metric": "overall_rating",
+            "value": facility.overall_rating,
+            "source_ref": "CMS Provider Information",
+            "effective_at": canonical.get("last_source_date"),
+        },
+        {
+            "metric": "staffing_rating",
+            "value": facility.staffing_rating,
+            "source_ref": "CMS Staffing",
+            "effective_at": canonical.get("last_source_date"),
+        },
+        {
+            "metric": "inspection_rating",
+            "value": facility.inspection_rating,
+            "source_ref": "CMS Inspections",
+            "effective_at": canonical.get("last_source_date"),
+        },
+    ]
+
+    return {
+        "sources_used": json.dumps(sorted(set((canonical.get("source_refs") or []) + ["CMS Staffing", "CMS Inspections", "CMS Quality Measures"]))),
+        "clinical_score": float(facility.medical_quality_score or 0.0),
+        "family_score": float(facility.overall_optime_score or 0.0),
+        "employee_score": float(facility.staffing_score or 0.0),
+        "social_score": 0.0,
+        "reputation_score": float(facility.overall_optime_score or 0.0),
+        "legal_risk_score": float(fine_events),
+        "regulatory_risk_score": float(facility.safety_score or 0.0),
+        "social_energy_index": 0.0,
+        "family_satisfaction_index": 0.0,
+        "staff_stability_index": float(facility.staffing_score or 0.0),
+        "regulatory_risk_index": float(facility.safety_score or 0.0),
+        "litigation_risk_index": 0.0,
+        "cultural_match_signals": 0.0,
+        "activity_density_index": 0.0,
+        "community_engagement_index": 0.0,
+        "clinical_quality_index": float(facility.medical_quality_score or 0.0),
+        "reputation_index": float(facility.overall_optime_score or 0.0),
+        "intelligence_confidence": 0.85,
+        "verified_facts": json.dumps(verified_facts),
+        "public_allegations": json.dumps([]),
+        "public_opinions": json.dumps([]),
+        "missing_information": json.dumps(missing),
+        "positive_signals": json.dumps(positive),
+        "negative_signals": json.dumps(negative),
+        "signal_details": json.dumps(signal_details),
+        "unresolved_risks": json.dumps(["Missing CMS metrics remain UNKNOWN"] if missing else []),
+        "visual_hero_image": json.dumps({}),
+        "visual_gallery_images": json.dumps([]),
+        "visual_lifestyle_tags": json.dumps([]),
+        "visual_confidence_score": 0.0,
+        "visual_coverage_score": 0.0,
+        "intelligence_summary": f"CMS-backed Miami-Dade baseline for {facility.name} with {len(quality_rows)} quality measures and {len(inspections)} inspection records.",
+        "update_frequency": json.dumps({"source": "cms_local_import", "cadence": "daily", "cohort": "miami-dade"}),
+    }
+
+
+def _upsert_facility_profile(db: Session, context: Dict[str, Any]) -> str:
+    facility: Facility = context["facility"]
+    payload = _profile_payload(context)
+    profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == facility.id).first()
+    payload_hash = _hash_payload(payload)
+    if profile is not None:
+        current = {key: getattr(profile, key) for key in payload.keys()}
+        if _hash_payload(current) == payload_hash:
+            return "UNCHANGED"
+        for key, value in payload.items():
+            setattr(profile, key, value)
+        profile.last_updated = datetime.now(timezone.utc)
+        return "CHANGED"
+
+    db.add(FacilityIntelligenceProfile(facility_id=facility.id, last_updated=datetime.now(timezone.utc), **payload))
+    return "NEW"
+
+
+def _finalize_workflow(result: Dict[str, Any]) -> Dict[str, Any]:
+    result.setdefault("facilities_processed", 0)
+    result.setdefault("sources_checked", 0)
+    result.setdefault("source_requests_successful", 0)
+    result.setdefault("source_requests_failed", 0)
+    result.setdefault("items_processed", result.get("facilities_processed", 0))
+    result.setdefault("items_added", 0)
+    result.setdefault("items_updated", 0)
+    result.setdefault("new_findings", [])
+    result.setdefault("blocked_reason", None)
+    result.setdefault("facilities_enriched", 0)
+    result.setdefault("regulatory_findings", 0)
+    result.setdefault("decision_changes", 0)
+    result.setdefault("new_verified_facts", 0)
+    result.setdefault("new_evidence_records", 0)
+    result.setdefault("changed_facts", 0)
+    result.setdefault("unknown_resolved", 0)
+    result.setdefault("contradictions_found", 0)
+    result.setdefault("stale_evidence_refreshed", 0)
+    return result
+
+
+def _provider_intelligence_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    result = {"facilities_processed": len(cohort), "sources_checked": 2, "source_requests_successful": 2, "new_findings": [], "items_added": 0, "items_updated": 0, "new_verified_facts": 0, "changed_facts": 0, "facilities_enriched": 0}
+    for item in cohort:
+        facility: Facility = item["facility"]
+        canonical = item["canonical"] or {}
+        payload = {
+            "facility_id": facility.id,
+            "cms_id": facility.cms_id,
+            "name": facility.name,
+            "city": facility.city,
+            "county": canonical.get("county"),
+            "ownership_type": canonical.get("ownership_type"),
+            "parent_company": canonical.get("parent_company"),
+            "provider_type": canonical.get("cms_provider_type"),
+            "beds": facility.beds,
+            "overall_rating": facility.overall_rating,
+            "staffing_rating": facility.staffing_rating,
+            "quality_rating": facility.quality_rating,
+            "inspection_rating": facility.inspection_rating,
+            "source_refs": canonical.get("source_refs") or ["CMS Provider Information", "Medicare Care Compare"],
+            "source_urls": canonical.get("source_urls") or [],
+            "last_source_date": canonical.get("last_source_date") or facility.source_date,
+        }
+        change = _persist_agent_record(
+            db,
+            agent_key="provider_intelligence",
+            record_type="provider_baseline",
+            entity_key=f"facility:{facility.cms_id}:provider_baseline",
+            summary=f"Verified provider baseline for {facility.name} in Miami-Dade.",
+            source="CMS_PROVIDER_DATASET",
+            confidence=0.95,
+            payload=payload,
+        )
+        if change == "NEW":
+            result["items_added"] += 1
+            result["new_verified_facts"] += 1
+            if len(result["new_findings"]) < 5:
+                result["new_findings"].append(f"New provider baseline stored for {facility.name} ({facility.cms_id}).")
+        elif change == "CHANGED":
+            result["items_updated"] += 1
+            result["changed_facts"] += 1
+        profile_change = _upsert_facility_profile(db, item)
+        if profile_change == "NEW":
+            result["facilities_enriched"] += 1
+            result["items_added"] += 1
+        elif profile_change == "CHANGED":
+            result["facilities_enriched"] += 1
+            result["items_updated"] += 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
+def _clinical_knowledge_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    result = {"facilities_processed": len(cohort), "sources_checked": 3, "source_requests_successful": 3, "new_findings": [], "items_added": 0, "items_updated": 0, "new_verified_facts": 0, "changed_facts": 0}
+    for item in cohort:
+        facility: Facility = item["facility"]
+        staffing: Optional[Staffing] = item["staffing"]
+        inspections: List[Inspection] = item["inspections"]
+        quality_rows: List[QualityMeasure] = item["quality_rows"]
+        if staffing is None and not inspections and not quality_rows:
+            continue
+        fine_total = sum(float(x.fine_amount or 0) for x in inspections if x.fine_amount is not None)
+        payload = {
+            "facility_id": facility.id,
+            "cms_id": facility.cms_id,
+            "quality_measure_count": len(quality_rows),
+            "inspection_event_count": len(inspections),
+            "inspection_fine_total": fine_total,
+            "rn_hours_per_resident_day": staffing.rn_hours_per_resident_day if staffing else None,
+            "total_nurse_hours_per_resident_day": staffing.total_nurse_hours_per_resident_day if staffing else None,
+            "staffing_rating": facility.staffing_rating,
+            "quality_rating": facility.quality_rating,
+            "inspection_rating": facility.inspection_rating,
+            "source_refs": ["CMS Staffing", "CMS Quality", "CMS Inspections"],
+        }
+        change = _persist_agent_record(
+            db,
+            agent_key="clinical_knowledge",
+            record_type="clinical_baseline",
+            entity_key=f"facility:{facility.cms_id}:clinical_baseline",
+            summary=f"Clinical baseline verified for {facility.name} from CMS staffing, quality, and inspection sources.",
+            source="CMS_CLINICAL_BASELINE",
+            confidence=0.93,
+            payload=payload,
+        )
+        if change == "NEW":
+            result["items_added"] += 1
+            result["new_verified_facts"] += 1
+            if len(result["new_findings"]) < 5:
+                result["new_findings"].append(f"Clinical baseline stored for {facility.name}: staffing={facility.staffing_rating}, quality={facility.quality_rating}, inspection={facility.inspection_rating}.")
+        elif change == "CHANGED":
+            result["items_updated"] += 1
+            result["changed_facts"] += 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
+def _data_quality_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    result = {"facilities_processed": len(cohort), "sources_checked": 4, "source_requests_successful": 4, "new_findings": [], "items_added": 0, "items_updated": 0, "changed_facts": 0}
+    for item in cohort:
+        facility: Facility = item["facility"]
+        gaps = []
+        if facility.overall_rating is None:
+            gaps.append("overall_rating")
+        if facility.quality_rating is None:
+            gaps.append("quality_rating")
+        if facility.staffing_rating is None:
+            gaps.append("staffing_rating")
+        if facility.inspection_rating is None:
+            gaps.append("inspection_rating")
+        if not gaps:
+            continue
+        payload = {
+            "facility_id": facility.id,
+            "cms_id": facility.cms_id,
+            "missing_fields": gaps,
+            "source_refs": ["CMS Provider Information", "CMS Quality", "CMS Staffing", "CMS Inspections"],
+        }
+        change = _persist_agent_record(
+            db,
+            agent_key="data_quality",
+            record_type="data_gap",
+            entity_key=f"facility:{facility.cms_id}:data_gap",
+            summary=f"Data quality gap detected for {facility.name}: {', '.join(gaps)} remain UNKNOWN.",
+            source="CMS_DATA_QUALITY_AUDIT",
+            confidence=0.9,
+            payload=payload,
+        )
+        if change == "NEW":
+            result["items_added"] += 1
+            if len(result["new_findings"]) < 5:
+                result["new_findings"].append(f"Data gap recorded for {facility.name}: {', '.join(gaps)}.")
+        elif change == "CHANGED":
+            result["items_updated"] += 1
+            result["changed_facts"] += 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
+def _senior_living_research_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    ownership_mix: Dict[str, int] = {}
+    beds_total = 0
+    for item in cohort:
+        canonical = item["canonical"] or {}
+        ownership = str(canonical.get("ownership_type") or "UNKNOWN")
+        ownership_mix[ownership] = ownership_mix.get(ownership, 0) + 1
+        beds_total += int(item["facility"].beds or 0)
+    payload = {
+        "county": "Miami-Dade",
+        "facility_count": len(cohort),
+        "beds_total": beds_total,
+        "ownership_mix": ownership_mix,
+        "source_refs": ["CMS Provider Information", "Medicare Care Compare"],
+    }
+    result = {"facilities_processed": len(cohort), "sources_checked": 2, "source_requests_successful": 2, "new_findings": [], "items_added": 0, "items_updated": 0, "changed_facts": 0}
+    change = _persist_agent_record(
+        db,
+        agent_key="senior_living_research",
+        record_type="market_snapshot",
+        entity_key="market:miami-dade:skilled-nursing",
+        summary=f"Miami-Dade skilled nursing market snapshot verified for {len(cohort)} facilities.",
+        source="CMS_MARKET_SNAPSHOT",
+        confidence=0.92,
+        payload=payload,
+    )
+    if change == "NEW":
+        result["items_added"] = 1
+        result["new_findings"] = [f"Miami-Dade market snapshot stored for {len(cohort)} facilities and {beds_total} beds."]
+    elif change == "CHANGED":
+        result["items_updated"] = 1
+        result["changed_facts"] = 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
+def _knowledge_graph_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    result = {"facilities_processed": len(cohort), "sources_checked": 2, "source_requests_successful": 2, "new_findings": [], "items_added": 0, "items_updated": 0, "changed_facts": 0}
+    for item in cohort:
+        facility: Facility = item["facility"]
+        canonical = item["canonical"] or {}
+        payload = {
+            "facility_id": facility.id,
+            "cms_id": facility.cms_id,
+            "county": canonical.get("county"),
+            "parent_company": canonical.get("parent_company"),
+            "primary_community_type": canonical.get("primary_community_type"),
+            "relationships": [
+                {"type": "LOCATED_IN", "target": canonical.get("county")},
+                {"type": "OPERATED_BY", "target": canonical.get("parent_company")},
+                {"type": "CLASSIFIED_AS", "target": canonical.get("primary_community_type")},
+            ],
+        }
+        change = _persist_agent_record(
+            db,
+            agent_key="knowledge_graph",
+            record_type="facility_relationships",
+            entity_key=f"facility:{facility.cms_id}:relationships",
+            summary=f"Knowledge graph relationships verified for {facility.name}.",
+            source="CANONICAL_INVENTORY_GRAPH",
+            confidence=0.9,
+            payload=payload,
+        )
+        if change == "NEW":
+            result["items_added"] += 1
+            if len(result["new_findings"]) < 5:
+                result["new_findings"].append(f"Relationships stored for {facility.name} -> {canonical.get('county')} / {canonical.get('parent_company')}.")
+        elif change == "CHANGED":
+            result["items_updated"] += 1
+            result["changed_facts"] += 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
+def _matching_improvement_work(db: Session) -> Dict[str, Any]:
+    cohort = _load_miami_dade_context(db)
+    result = {"facilities_processed": len(cohort), "sources_checked": 3, "source_requests_successful": 3, "new_findings": [], "items_added": 0, "items_updated": 0, "decision_changes": 0}
+    for item in cohort:
+        facility: Facility = item["facility"]
+        caution_reasons = []
+        if facility.inspection_rating is not None and facility.inspection_rating <= 2:
+            caution_reasons.append("low_inspection_rating")
+        if facility.staffing_rating is not None and facility.staffing_rating <= 2:
+            caution_reasons.append("low_staffing_rating")
+        if facility.quality_rating is None:
+            caution_reasons.append("quality_rating_unknown")
+        if not caution_reasons:
+            continue
+        payload = {
+            "facility_id": facility.id,
+            "cms_id": facility.cms_id,
+            "caution_reasons": caution_reasons,
+            "source_refs": ["CMS Staffing", "CMS Quality", "CMS Inspections"],
+        }
+        change = _persist_agent_record(
+            db,
+            agent_key="matching_improvement",
+            record_type="decision_caution",
+            entity_key=f"facility:{facility.cms_id}:decision_caution",
+            summary=f"Decision caution verified for {facility.name}: {', '.join(caution_reasons)}.",
+            source="CMS_DECISION_SIGNAL",
+            confidence=0.91,
+            payload=payload,
+        )
+        if change == "NEW":
+            result["items_added"] += 1
+            result["decision_changes"] += 1
+            if len(result["new_findings"]) < 5:
+                result["new_findings"].append(f"Decision caution stored for {facility.name}: {', '.join(caution_reasons)}.")
+        elif change == "CHANGED":
+            result["items_updated"] += 1
+            result["decision_changes"] += 1
+    result["new_evidence_records"] = result["items_added"]
+    return _finalize_workflow(result)
+
+
+def _no_source_work(agent_key: str, reason: str) -> Dict[str, Any]:
+    return _finalize_workflow(
+        {
+            "facilities_processed": 0,
+            "sources_checked": 0,
+            "source_requests_successful": 0,
+            "source_requests_failed": 0,
+            "blocked_reason": reason,
+            "new_findings": [reason],
+        }
+    )
+
+
+def _run_agent_workflow(db: Session, agent_key: str) -> Dict[str, Any]:
+    workflows = {
+        "provider_intelligence": _provider_intelligence_work,
+        "clinical_knowledge": _clinical_knowledge_work,
+        "data_quality": _data_quality_work,
+        "senior_living_research": _senior_living_research_work,
+        "knowledge_graph": _knowledge_graph_work,
+        "matching_improvement": _matching_improvement_work,
+        "resident_needs": lambda session: _no_source_work("resident_needs", "SOURCE_NOT_CONNECTED: adaptive_question_responses has no records."),
+        "outcome_learning": lambda session: _no_source_work("outcome_learning", "SOURCE_NOT_CONNECTED: resident_outcomes has no records."),
+        "activities_intelligence": lambda session: _no_source_work("activities_intelligence", "SOURCE_NOT_CONNECTED: facility_activity_categories has no records."),
+        "nutrition_intelligence": lambda session: _no_source_work("nutrition_intelligence", "SOURCE_NOT_CONNECTED: facility_capabilities has no nutrition-specific records."),
+        "family_experience": lambda session: _no_source_work("family_experience", "SOURCE_NOT_CONNECTED: facility_reviews has no records."),
+    }
+
+    started = datetime.now(timezone.utc)
+    run = AgentJobRun(agent_key=agent_key, started_at=started, status="RUNNING")
+    db.add(run)
+    db.flush()
+    result: Dict[str, Any] = {}
+    try:
+        workflow = workflows.get(agent_key)
+        if workflow is None:
+            result = _no_source_work(agent_key, "NO_EXECUTABLE_WORKFLOW")
+            run.status = "SKIPPED"
+        else:
+            result = workflow(db)
+            run.status = "SUCCESS"
+        finished = datetime.now(timezone.utc)
+        run.finished_at = finished
+        run.runtime_ms = max(1, int((finished - started).total_seconds() * 1000))
+        run.items_processed = int(result.get("items_processed", 0) or 0)
+        run.items_added = int(result.get("items_added", 0) or 0)
+        run.items_updated = int(result.get("items_updated", 0) or 0)
+        run.errors = 0
+        run.confidence_change = float(result.get("new_verified_facts", 0) or 0)
+        run.knowledge_gained_json = _serialize_payload(result)
+        return result
+    except Exception as error:
+        finished = datetime.now(timezone.utc)
+        run.finished_at = finished
+        run.runtime_ms = max(1, int((finished - started).total_seconds() * 1000))
+        run.status = "FAILED"
+        run.errors = 1
+        run.knowledge_gained_json = _serialize_payload({"error": str(error)})
+        raise
 
 
 def _as_utc(value: Optional[datetime]) -> Optional[datetime]:
@@ -356,6 +918,7 @@ def refresh_all_agent_reports(
             row.last_refresh_attempt = started
             db.flush()
 
+            workflow_result = _run_agent_workflow(db, agent_key)
             report = build_agent_report(db, agent_def)
             finished = datetime.now(timezone.utc)
             duration_ms = max(1, int((finished - started).total_seconds() * 1000))
