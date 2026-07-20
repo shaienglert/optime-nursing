@@ -1,0 +1,68 @@
+{
+  "phase": 8,
+  "title": "Separated Validation Program Registry",
+  "generated_at_utc": "2026-07-20T02:03:00Z",
+  "validation_tracks": [
+    {
+      "track_id": "MECHANICAL_RUNTIME",
+      "description": "Code/data contract checks executable in repository",
+      "owner": "engineering",
+      "status": "ACTIVE"
+    },
+    {
+      "track_id": "EXTERNAL_PROFESSIONAL",
+      "description": "Independent professional or external validation required for outcome claims",
+      "owner": "clinical_governance",
+      "status": "PARTIAL"
+    }
+  ],
+  "mechanical_validators": [
+    {
+      "id": "PHASE2_RULE_GOVERNANCE",
+      "script": "scripts/validate_professional_rule_governance.py",
+      "required": true
+    },
+    {
+      "id": "PHASE3_THREE_LAYER_MODEL",
+      "script": "scripts/validate_three_layer_decision_model.py",
+      "required": true
+    },
+    {
+      "id": "PHASE4_EVIDENCE_MATRIX",
+      "script": "scripts/validate_facility_evidence_matrix.py",
+      "required": true
+    },
+    {
+      "id": "PHASE5_CANDIDATE_GOVERNANCE",
+      "script": "scripts/validate_candidate_governance.py",
+      "required": true
+    },
+    {
+      "id": "PHASE6_TOP5_DECISION_TABLE",
+      "script": "scripts/validate_top5_decision_table.py",
+      "required": true
+    },
+    {
+      "id": "PHASE7_TRACEABILITY",
+      "script": "scripts/validate_recommendation_traceability.py",
+      "required": true
+    }
+  ],
+  "external_validation_requirements": [
+    {
+      "id": "EXT-001",
+      "name": "Independent professional review of MUST and recommendation boundaries",
+      "status": "PENDING"
+    },
+    {
+      "id": "EXT-002",
+      "name": "Externally defined case-pack outcome comparison",
+      "status": "NOT_AVAILABLE"
+    },
+    {
+      "id": "EXT-003",
+      "name": "Real-world longitudinal outcome verification",
+      "status": "PENDING"
+    }
+  ]
+}

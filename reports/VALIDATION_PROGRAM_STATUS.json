@@ -1,0 +1,103 @@
+{
+  "generated_at_utc": "2026-07-20T06:15:15.089868+00:00",
+  "phase": 8,
+  "tracks": [
+    {
+      "track_id": "MECHANICAL_RUNTIME",
+      "description": "Code/data contract checks executable in repository",
+      "owner": "engineering",
+      "status": "ACTIVE"
+    },
+    {
+      "track_id": "EXTERNAL_PROFESSIONAL",
+      "description": "Independent professional or external validation required for outcome claims",
+      "owner": "clinical_governance",
+      "status": "PARTIAL"
+    }
+  ],
+  "mechanical": {
+    "overall_status": "PASS",
+    "validators": [
+      {
+        "id": "PHASE2_RULE_GOVERNANCE",
+        "script": "scripts/validate_professional_rule_governance.py",
+        "required": true,
+        "status": "PASS",
+        "exit_code": 0,
+        "stdout": "ANTI_HALLUCINATION_GATE=PASS\nMUST_GOVERNANCE=PASS\nTRACEABILITY=PASS\nVALIDATION=PASS\nTOTAL_RULES=23\nLEVEL_A=5\nLEVEL_B=6\nLEVEL_C=6\nLEVEL_D=6\nUNKNOWN_UNMAPPED=5\nUNVALIDATED_MATERIAL_WEIGHTS=5\nPROFESSIONAL_VALIDATION_GAPS=4",
+        "stderr": ""
+      },
+      {
+        "id": "PHASE3_THREE_LAYER_MODEL",
+        "script": "scripts/validate_three_layer_decision_model.py",
+        "required": true,
+        "status": "PASS",
+        "exit_code": 0,
+        "stdout": "THREE_LAYER_VALIDATION=PASS\nTOTAL_RULES_CHECKED=23\nMUST_GOVERNANCE=PASS\nLEVEL_D_BOUNDARIES=PASS\nTHREE_LAYER_WARNINGS=NO",
+        "stderr": ""
+      },
+      {
+        "id": "PHASE4_EVIDENCE_MATRIX",
+        "script": "scripts/validate_facility_evidence_matrix.py",
+        "required": true,
+        "status": "PASS",
+        "exit_code": 0,
+        "stdout": "EVIDENCE_MATRIX_VALIDATION=PASS\nRUNTIME_FACILITIES=100\nCANONICAL_FACILITIES=713\nUNKNOWN_POLICY=PASS\nSOURCE_HIERARCHY=PASS\nEVIDENCE_MATRIX_WARNINGS=YES\nWARNING: all runtime facilities currently have unknown confidence_level",
+        "stderr": ""
+      },
+      {
+        "id": "PHASE5_CANDIDATE_GOVERNANCE",
+        "script": "scripts/validate_candidate_governance.py",
+        "required": true,
+        "status": "PASS",
+        "exit_code": 0,
+        "stdout": "CANDIDATE_GOVERNANCE_VALIDATION=PASS\nCANDIDATE_LIFECYCLE=PASS\nACCEPTED_REJECTED_BOUNDARY=PASS\nUNKNOWN_POLICY=PASS\nFALLBACK_BEHAVIOR=PASS\nCANDIDATE_GOVERNANCE_WARNINGS=NO",
+        "stderr": ""
+      },
+      {
+        "id": "PHASE6_TOP5_DECISION_TABLE",
+        "script": "scripts/validate_top5_decision_table.py",
+        "required": true,
+        "status": "PASS",
+        "exit_code": 0,
+        "stdout": "TOP5_DECISION_TABLE_VALIDATION=PASS\nTOP5_ROWS=5\nPERSONA_TYPE=Skilled Nursing\nUNKNOWN_TOTAL=60\nTOP5_WARNINGS=NO",
+        "stderr": ""
+      },
+      {
+        "id": "PHASE7_TRACEABILITY",
+        "script": "scripts/validate_recommendation_traceability.py",
+        "required": true,
+        "status": "PASS",
+        "exit_code": 0,
+        "stdout": "TRACEABILITY_VALIDATION=PASS\nTRACE_ENTRIES=5\nUNKNOWN_POSITIVE_ENTRIES=5\nTRACEABILITY_WARNINGS=NO",
+        "stderr": ""
+      }
+    ]
+  },
+  "external": {
+    "overall_status": "PARTIAL",
+    "requirements": [
+      {
+        "id": "EXT-001",
+        "name": "Independent professional review of MUST and recommendation boundaries",
+        "status": "PENDING"
+      },
+      {
+        "id": "EXT-002",
+        "name": "Externally defined case-pack outcome comparison",
+        "status": "NOT_AVAILABLE"
+      },
+      {
+        "id": "EXT-003",
+        "name": "Real-world longitudinal outcome verification",
+        "status": "PENDING"
+      }
+    ],
+    "summary": {
+      "total": 3,
+      "pending": 2,
+      "not_available": 1,
+      "complete": 0
+    }
+  }
+}
