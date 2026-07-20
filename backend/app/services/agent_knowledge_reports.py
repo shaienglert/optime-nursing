@@ -149,6 +149,14 @@ def ttl_for_agent(agent_key: str) -> int:
     return int(TTL_POLICY_SECONDS.get(agent_key, 60 * 60))
 
 
+def _as_utc(value: Optional[datetime]) -> Optional[datetime]:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 def _freshness_from_age(age_seconds: int, ttl_seconds: int, pending_reviews: int, failed_refresh_count: int) -> str:
     if failed_refresh_count >= 3:
         return "ERROR"
@@ -335,7 +343,8 @@ def refresh_all_agent_reports(
         started = datetime.now(timezone.utc)
         try:
             row = db.query(AgentKnowledgeReportSnapshot).filter(AgentKnowledgeReportSnapshot.agent_key == agent_key).first()
-            if row and not force and incremental and row.next_refresh_at and row.next_refresh_at > now:
+            next_refresh_at = _as_utc(row.next_refresh_at) if row else None
+            if row and not force and incremental and next_refresh_at and next_refresh_at > now:
                 continue
 
             if row is None:
@@ -429,7 +438,8 @@ def compute_supervisor_metrics(db: Session) -> Dict[str, object]:
     refresh_queue = 0
 
     for row in rows:
-        age = int((now - (row.last_successful_refresh or row.last_refreshed_at or now)).total_seconds())
+        reference_dt = _as_utc(row.last_successful_refresh) or _as_utc(row.last_refreshed_at) or now
+        age = int((now - reference_dt).total_seconds())
         state = _freshness_from_age(age, int(row.ttl_seconds or 3600), int(row.pending_reviews or 0), int(row.failed_refresh_count or 0))
         freshness_values.append(max(0.0, 1.0 - (age / max(1, row.ttl_seconds or 3600))))
         if state == "FRESH":
@@ -441,7 +451,8 @@ def compute_supervisor_metrics(db: Session) -> Dict[str, object]:
         if int(row.failed_refresh_count or 0) > 0:
             failed += int(row.failed_refresh_count or 0)
         pending_reviews += int(row.pending_reviews or 0)
-        if row.next_refresh_at and row.next_refresh_at <= now:
+        next_refresh_at = _as_utc(row.next_refresh_at)
+        if next_refresh_at and next_refresh_at <= now:
             refresh_queue += 1
 
     events_total = int(db.query(func.count(AgentKnowledgeRefreshEvent.id)).scalar() or 0)
@@ -508,11 +519,13 @@ def recommendation_guard_decision(
         return decision
 
     now = datetime.now(timezone.utc)
-    age = int((now - (row.last_successful_refresh or row.last_refreshed_at or now)).total_seconds())
+    reference_dt = _as_utc(row.last_successful_refresh) or _as_utc(row.last_refreshed_at) or now
+    age = int((now - reference_dt).total_seconds())
     freshness = _freshness_from_age(age, int(row.ttl_seconds or 3600), int(row.pending_reviews or 0), int(row.failed_refresh_count or 0))
     confidence = float(row.average_confidence or 0.0)
     health = row.health_status or "UNKNOWN"
-    verified = row.verified_until is not None and row.verified_until >= now
+    verified_until = _as_utc(row.verified_until)
+    verified = verified_until is not None and verified_until >= now
 
     policy_allowed = bool(health == "HEALTHY" and confidence >= min_confidence and verified)
     used_stale = freshness in {"STALE", "NEEDS_REVIEW"}

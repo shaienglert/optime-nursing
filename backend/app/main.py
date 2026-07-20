@@ -65,6 +65,7 @@ from app.services.executive_report_service import (
     compare_latest_vs_previous,
     get_executive_report_history,
     get_latest_executive_report,
+    get_executive_report_payload,
     start_executive_report_scheduler,
 )
 from app.services.email_service import send_startup_test_email_once
@@ -1802,6 +1803,22 @@ async def executive_report_latest():
     if not latest:
         raise HTTPException(status_code=404, detail="No executive report generated yet")
     return latest
+
+
+@app.get("/executive-report/latest/full")
+async def executive_report_latest_full():
+    payload = get_executive_report_payload()
+    if not payload:
+        raise HTTPException(status_code=404, detail="No executive report generated yet")
+    return payload
+
+
+@app.get("/executive-report/by-id/{report_id}")
+async def executive_report_by_id(report_id: str):
+    payload = get_executive_report_payload(report_id=report_id)
+    if not payload:
+        raise HTTPException(status_code=404, detail="Executive report not found")
+    return payload
 
 
 @app.get("/executive-report/history")

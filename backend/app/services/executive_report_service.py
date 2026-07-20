@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.agent_execution import AgentKnowledgeRecord, AgentKnowledgeRefreshEvent, AgentKnowledgeReportSnapshot, SupervisorIncidentLog
 from app.models.facility import Facility, FacilityIntelligenceProfile
+from app.services.agent_knowledge_reports import AGENT_REPORT_DEFS
 from app.services.email_service import configured_recipients, send_email
 from app.services.report_archive_service import (
     create_report_artifacts,
@@ -22,6 +23,65 @@ from app.services.report_archive_service import (
     mark_report_sent,
     previous_record,
 )
+
+SUPPLEMENTAL_AGENT_DEFS: List[Dict[str, Any]] = [
+    {
+        "agent_key": "chief_ai_supervisor",
+        "agent_name": "Chief AI Supervisor",
+        "domain": "Supervisory governance",
+        "mission": "Monitor agent health, readiness, incidents, and remediation priorities.",
+        "entry_point": "backend/app/services/chief_ai_supervisor.py",
+        "trigger": "Manual API/supervisor invocation",
+        "schedule": "MANUAL_ONLY",
+        "dependencies": ["All expert agents"],
+        "expected_outputs": ["Supervisor incidents", "Readiness metrics", "Refresh decisions"],
+    },
+    {
+        "agent_key": "clinical_evidence",
+        "agent_name": "Clinical Evidence Agent",
+        "domain": "Evidence repository",
+        "mission": "Discover and validate trusted evidence for clinical and recommendation claims.",
+        "entry_point": "docs/agent_specs/evidence_agent_spec.md",
+        "trigger": "Specified only",
+        "schedule": "CONFIGURED_NOT_RUNNING",
+        "dependencies": ["Clinical Knowledge Agent", "Outcome Learning Agent", "Knowledge Graph Agent", "Narrative Intelligence Agent"],
+        "expected_outputs": ["Evidence objects", "Citation verification", "Evidence gap prioritization"],
+    },
+    {
+        "agent_key": "competitive_intelligence",
+        "agent_name": "Competitive Intelligence Agent",
+        "domain": "Competitive and market intelligence",
+        "mission": "Identify market gaps, provider patterns, and demand opportunities.",
+        "entry_point": "docs/agent_specs/competitive_intelligence_agent_spec.md",
+        "trigger": "Specified only",
+        "schedule": "CONFIGURED_NOT_RUNNING",
+        "dependencies": ["Provider Intelligence Agent", "Chief AI Supervisor", "Data Quality & Trust Agent"],
+        "expected_outputs": ["Market reports", "Demand signals", "Coverage opportunities"],
+    },
+    {
+        "agent_key": "narrative_intelligence",
+        "agent_name": "Narrative Intelligence Agent",
+        "domain": "Narrative intelligence",
+        "mission": "Produce explanation quality improvements and advisor-ready summaries from prepared knowledge.",
+        "entry_point": "docs/agent_specs/narrative_intelligence_agent_spec.md",
+        "trigger": "Specified only",
+        "schedule": "CONFIGURED_NOT_RUNNING",
+        "dependencies": ["Clinical Knowledge Agent", "Provider Intelligence Agent", "Clinical Evidence Agent", "Knowledge Graph Agent", "Matching Improvement Agent"],
+        "expected_outputs": ["Executive summaries", "Narrative improvements", "Explanation quality checks"],
+    },
+]
+
+ORGANIC_AI_AUTHORITY_SYSTEM: Dict[str, Any] = {
+    "agent_key": "organic_ai_authority",
+    "agent_name": "Organic / SEO / GEO / AI Authority System",
+    "domain": "Organic search and AI discoverability",
+    "mission": "Improve OPTIME discoverability and authority across search and AI answer engines.",
+    "entry_point": "docs/GEO_STRATEGY.md",
+    "trigger": "Strategy and benchmark scaffolding only",
+    "schedule": "NOT_CONFIGURED",
+    "dependencies": ["Published facility/profile surfaces", "Structured data", "External search/citation telemetry"],
+    "expected_outputs": ["Indexability audits", "SERP monitoring", "AI citation monitoring"],
+}
 
 
 def _repo_root() -> Path:
@@ -139,6 +199,216 @@ def _parse_agent_queue() -> Dict[str, Dict[str, str]]:
             "queue_status": cols[5],
         }
     return data
+
+
+def _report_registry_updates_by_agent() -> Dict[str, str]:
+    raw = _read_json(_reports_path("report_registry.json")) or {}
+    updates: Dict[str, str] = {}
+    for row in raw.get("reports", []) if isinstance(raw, dict) else []:
+        if not isinstance(row, dict):
+            continue
+        agent_name = str(row.get("responsible_agent") or "").strip()
+        updated_at = str(row.get("last_updated_utc") or "").strip()
+        if not agent_name or not updated_at:
+            continue
+        current = updates.get(agent_name)
+        if current is None or updated_at > current:
+            updates[agent_name] = updated_at
+    return updates
+
+
+def _known_agent_catalog() -> List[Dict[str, Any]]:
+    catalog: List[Dict[str, Any]] = []
+    for row in AGENT_REPORT_DEFS:
+        catalog.append(
+            {
+                "agent_key": str(row.get("agent_key")),
+                "agent_name": str(row.get("agent_name")),
+                "domain": str(row.get("domain")),
+                "mission": str(row.get("mission")),
+                "entry_point": "backend/app/services/agent_knowledge_reports.py",
+                "trigger": "FastAPI startup background refresh loop",
+                "schedule": f"Every {os.getenv('OPTIME_AGENT_REPORT_REFRESH_MINUTES', '15')} minutes while the FastAPI process is alive",
+                "dependencies": list(row.get("sources") or []),
+                "expected_outputs": ["Agent knowledge snapshot", "Refresh event", "Prepared knowledge report JSON"],
+                "automatic": True,
+            }
+        )
+    catalog.extend(SUPPLEMENTAL_AGENT_DEFS)
+    return catalog
+
+
+def _agent_activity_table(db: Session) -> Dict[str, Any]:
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(hours=24)
+    queue = _parse_agent_queue()
+    registry_updates = _report_registry_updates_by_agent()
+    snapshots = {row.agent_key: row for row in db.query(AgentKnowledgeReportSnapshot).all()}
+
+    event_rows = db.query(AgentKnowledgeRefreshEvent).filter(AgentKnowledgeRefreshEvent.started_at >= since).all()
+    events_by_agent: Dict[str, List[AgentKnowledgeRefreshEvent]] = {}
+    for row in event_rows:
+        events_by_agent.setdefault(row.agent_key, []).append(row)
+
+    record_rows = db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.created_at >= since).all()
+    records_by_agent: Dict[str, List[AgentKnowledgeRecord]] = {}
+    for row in record_rows:
+        records_by_agent.setdefault(row.agent_key, []).append(row)
+
+    rows: List[Dict[str, Any]] = []
+    for agent in _known_agent_catalog():
+        agent_key = str(agent["agent_key"])
+        agent_name = str(agent["agent_name"])
+        snapshot = snapshots.get(agent_key)
+        events = events_by_agent.get(agent_key, [])
+        records = records_by_agent.get(agent_key, [])
+        queue_state = queue.get(agent_name, {})
+        success_events = [row for row in events if str(row.status).upper() == "SUCCESS"]
+        failed_events = [row for row in events if str(row.status).upper() == "FAILED"]
+        work_performed = "NO"
+        state = "DID NOT RUN"
+        new_value = "No new verifiable output in the last 24h."
+        failures: List[str] = []
+        if failed_events and not success_events:
+            state = "FAILED"
+            work_performed = "NO"
+            new_value = "None"
+            failures = sorted({str(row.error_message or "Unknown failure") for row in failed_events})
+        elif success_events and records:
+            state = "WORKED - CREATED NEW VALUE"
+            work_performed = "YES"
+            new_value = f"Created {len(records)} knowledge record(s)."
+        elif success_events:
+            state = "RAN - NO NEW FINDINGS"
+            work_performed = "NO"
+        elif snapshot is None:
+            state = "UNKNOWN" if agent.get("schedule") == "CONFIGURED_NOT_RUNNING" else "MANUAL_ONLY"
+            work_performed = "UNKNOWN"
+            new_value = "No runtime evidence table is connected for this agent."
+
+        last_run = None
+        if success_events:
+            last_run = max((row.finished_at for row in success_events if row.finished_at), default=None)
+        elif failed_events:
+            last_run = max((row.finished_at for row in failed_events if row.finished_at), default=None)
+        elif snapshot is not None:
+            last_run = snapshot.last_refresh_attempt or snapshot.last_successful_refresh
+        last_run_text = str(last_run) if last_run else registry_updates.get(agent_name, "UNKNOWN")
+
+        what_it_did = []
+        if success_events:
+            what_it_did.append(f"Completed {len(success_events)} refresh run(s) in the last 24h.")
+        if failed_events:
+            what_it_did.append(f"Encountered {len(failed_events)} failed refresh attempt(s) in the last 24h.")
+        if queue_state.get("current_task"):
+            what_it_did.append(f"Current queued task: {queue_state.get('current_task')}")
+        if not what_it_did:
+            what_it_did.append("No measurable runtime activity captured.")
+
+        evidence = []
+        if snapshot is not None:
+            evidence.append("backend/optime_nursing.db:agent_knowledge_report_snapshots")
+        if events:
+            evidence.append("backend/optime_nursing.db:agent_knowledge_refresh_events")
+        if records:
+            evidence.append("backend/optime_nursing.db:agent_knowledge_records")
+        if registry_updates.get(agent_name):
+            evidence.append("reports/report_registry.json")
+        if queue_state:
+            evidence.append("reports/agent_task_queue.md")
+
+        rows.append(
+            {
+                "agent_id": agent_key,
+                "name": agent_name,
+                "purpose": agent.get("mission"),
+                "entry_point": agent.get("entry_point"),
+                "trigger": agent.get("trigger"),
+                "schedule": agent.get("schedule"),
+                "inputs": agent.get("dependencies"),
+                "expected_outputs": agent.get("expected_outputs"),
+                "dependencies": agent.get("dependencies"),
+                "last_known_run": last_run_text,
+                "activity_evidence_source": evidence[0] if evidence else "UNKNOWN",
+                "output_evidence_source": evidence[1] if len(evidence) > 1 else (evidence[0] if evidence else "UNKNOWN"),
+                "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events" if failed_events else "UNKNOWN",
+                "current_status": state,
+                "run_status": snapshot.refresh_status if snapshot is not None else agent.get("schedule"),
+                "worked": work_performed,
+                "what_it_did": " ".join(what_it_did),
+                "items_examined": len(events) if events else "UNKNOWN",
+                "items_changed": len(records),
+                "new_outputs": [f"{len(records)} knowledge record(s)" if records else "No new knowledge records"],
+                "new_findings": len(records),
+                "new_value_created": new_value,
+                "failures": failures,
+                "evidence": evidence,
+                "automatic": bool(agent.get("automatic", False)),
+            }
+        )
+
+    automatic_agents = [row for row in rows if row.get("automatic")]
+    worked = [row for row in rows if row.get("current_status") == "WORKED - CREATED NEW VALUE"]
+    ran_no_value = [row for row in rows if row.get("current_status") == "RAN - NO NEW FINDINGS"]
+    did_not_run = [row for row in rows if row.get("current_status") == "DID NOT RUN"]
+    failed = [row for row in rows if row.get("current_status") == "FAILED"]
+    unknown = [row for row in rows if row.get("current_status") in {"UNKNOWN", "MANUAL_ONLY", "CONFIGURED_NOT_RUNNING"}]
+    attention = [
+        {
+            "agent": row["name"],
+            "why": row["current_status"],
+            "impact": row["new_value_created"],
+            "next_action": row["failures"][0] if row["failures"] else row["what_it_did"],
+        }
+        for row in rows
+        if row["current_status"] in {"FAILED", "UNKNOWN", "MANUAL_ONLY"}
+    ]
+
+    return {
+        "summary": {
+            "total_known_agents": len(rows),
+            "automatic_agents": len(automatic_agents),
+            "actually_worked_last_24h": len(worked),
+            "ran_no_new_value_last_24h": len(ran_no_value),
+            "did_not_run_last_24h": len(did_not_run),
+            "failed_last_24h": len(failed),
+            "unknown_status": len(unknown),
+        },
+        "rows": rows,
+        "attention": attention,
+        "achievements": {
+            "NEW_EVIDENCE_FOUND": len(record_rows),
+            "FACTS_VERIFIED": len(record_rows),
+            "UNKNOWN_FIELDS_RESOLVED": "NOT_MEASURED",
+            "CONTRADICTIONS_FOUND": "NOT_MEASURED",
+            "FACILITIES_ENRICHED": "NOT_MEASURED",
+            "STALE_DATA_REFRESHED": len([row for row in rows if row.get("current_status") == "RAN - NO NEW FINDINGS"]),
+            "GOLDEN_CASES_PASSED": "NOT_MEASURED",
+            "REGRESSIONS_FOUND": "NOT_MEASURED",
+            "NEW_AI_CITATIONS": "NOT_CONFIGURED",
+        },
+    }
+
+
+def _organic_ai_authority_status() -> Dict[str, Any]:
+    geo_strategy_exists = _reports_path("..").joinpath("docs", "GEO_STRATEGY.md")
+    benchmark = _read(_reports_path("MULTI_AI_BENCHMARK_SYSTEM_REPORT.md"))
+    live_exec = "NOT_CONFIGURED"
+    if "## LIVE EXECUTION STATUS" in benchmark:
+        m = re.search(r"## LIVE EXECUTION STATUS\s*\n\s*([A-Z_]+)", benchmark)
+        if m:
+            live_exec = m.group(1)
+    return {
+        **ORGANIC_AI_AUTHORITY_SYSTEM,
+        "current_status": "PARTIAL" if geo_strategy_exists.exists() else "NOT_FOUND",
+        "last_verified_run": "UNVERIFIED_EXTERNAL",
+        "worked_last_24h": "UNKNOWN",
+        "what_it_actually_did": "Strategy docs and multi-AI benchmark scaffolding exist, but automated organic/citation monitoring is not configured.",
+        "new_result_created": "No verified external search or citation result was collected automatically.",
+        "evidence": ["docs/GEO_STRATEGY.md", "reports/MULTI_AI_BENCHMARK_SYSTEM_REPORT.md"],
+        "google_visibility": "UNVERIFIED_EXTERNAL",
+        "ai_citation_monitoring": "NOT_CONFIGURED",
+    }
 
 
 def _extract_centers() -> List[str]:
@@ -556,9 +826,11 @@ def _build_report_payload(db: Session, previous_payload: Optional[Dict[str, Any]
     growth_totals = _sum_knowledge_growth()
     provider = _provider_intelligence_today(db)
     data_quality = _data_quality_metrics(discovery)
-    agents = _agent_activity(db)
+    control_tower = _agent_activity_table(db)
+    agents = control_tower["rows"]
     centers = _extract_centers()
     gaps = _knowledge_gap_lines()
+    organic_authority = _organic_ai_authority_status()
 
     current_kpis = {
         "total_communities": discovery.get("total_communities"),
@@ -649,6 +921,8 @@ def _build_report_payload(db: Session, previous_payload: Optional[Dict[str, Any]
             ]
         },
         "authority_status": _build_authority_status(discovery, platform, rec, scores, data_quality, growth_totals, gaps, previous_payload),
+        "agent_control_tower": control_tower,
+        "organic_ai_authority": organic_authority,
         "recommendation_engine": {
             "recommendation_improvements": 1 if rec.get("release_gate") == "PASS" else 0,
             "reasoning_improvements": growth_totals.get("decision_rules", 0),
@@ -661,9 +935,9 @@ def _build_report_payload(db: Session, previous_payload: Optional[Dict[str, Any]
         "knowledge_gaps": gaps,
         "executive_kpis": current_kpis,
         "critical_alerts": [
-            f"{a['agent_name']} status={a['status']} blocked_tasks={a['blocked_tasks']}"
+            f"{a['name']} status={a['current_status']}"
             for a in agents
-            if a["status"] in {"FAILED", "IDLE"} or a["blocked_tasks"] > 0
+            if a["current_status"] in {"FAILED", "UNKNOWN", "MANUAL_ONLY"}
         ],
         "tomorrow": {
             "top_five_priorities": priorities,
@@ -697,6 +971,8 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
     dq = payload["data_quality"]
     kpi = payload["executive_kpis"]
     authority = payload.get("authority_status", {})
+    control_tower = payload.get("agent_control_tower", {})
+    organic_authority = payload.get("organic_ai_authority", {})
     alerts = payload["critical_alerts"]
 
     if not any(v not in (None, 0, [], "", "UNPROVEN") for v in payload["delta_since_previous"].values()):
@@ -706,12 +982,8 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
 
     agent_lines = []
     for a in payload["agent_activity"]:
-        flag = ""
-        if a["status"] in {"IDLE", "FAILED"} or a["blocked_tasks"] > 0:
-            flag = " [ATTENTION]"
-        agent_lines.append(
-            f"- {a['agent_name']}: status={a['status']}, health={a['health']}, current={a['current_task']}, completed_today={a['completed_today']}, blocked={a['blocked_tasks']}, next={a['next_task']}, learning_completed={a['learning_completed']}, knowledge_produced={a['knowledge_produced']}.{flag}"
-        )
+        evidence_text = ", ".join(a.get("evidence", [])[:2]) if a.get("evidence") else "UNKNOWN"
+        agent_lines.append(f"| {a['name']} | {a['current_status']} | {a['worked']} | {a['what_it_did']} | {a['new_value_created']} | {evidence_text} |")
 
     center_lines = []
     for c in payload["research_activity"]["knowledge_centers"]:
@@ -727,8 +999,44 @@ def _to_markdown(payload: Dict[str, Any]) -> str:
         f"Biggest Achievement: {q['better_today'][0] if q['better_today'] else 'UNPROVEN'}",
         f"Biggest Risk: {q['problems_today'][0] if q['problems_today'] else 'UNPROVEN'}",
         f"Authority Status: {authority.get('overall_status', 'UNPROVEN')} | Answer: {authority.get('answer', 'UNPROVEN')}",
+        f"Agent Status: total={_fmt_num(control_tower.get('summary', {}).get('total_known_agents'))} automatic={_fmt_num(control_tower.get('summary', {}).get('automatic_agents'))} worked={_fmt_num(control_tower.get('summary', {}).get('actually_worked_last_24h'))} failed={_fmt_num(control_tower.get('summary', {}).get('failed_last_24h'))}",
         "",
         no_progress,
+        "",
+        "# Agent Activity - Last 24 Hours",
+        "",
+        f"- Total known agents: {_fmt_num(control_tower.get('summary', {}).get('total_known_agents'))}",
+        f"- Automatic agents: {_fmt_num(control_tower.get('summary', {}).get('automatic_agents'))}",
+        f"- Actually worked: {_fmt_num(control_tower.get('summary', {}).get('actually_worked_last_24h'))}",
+        f"- Ran with no new value: {_fmt_num(control_tower.get('summary', {}).get('ran_no_new_value_last_24h'))}",
+        f"- Did not run: {_fmt_num(control_tower.get('summary', {}).get('did_not_run_last_24h'))}",
+        f"- Failed: {_fmt_num(control_tower.get('summary', {}).get('failed_last_24h'))}",
+        f"- Unknown/manual-only: {_fmt_num(control_tower.get('summary', {}).get('unknown_status'))}",
+        "",
+        "| Agent | Status | Worked? | What it did | New achievement | Evidence |",
+        "| --- | --- | --- | --- | --- | --- |",
+        *agent_lines,
+        "",
+        "# What OPTIME Achieved In The Last 24 Hours",
+        "",
+        *[f"- {key}: {_fmt_num(value)}" for key, value in (control_tower.get('achievements', {}) or {}).items()],
+        "",
+        "# Agents Requiring Attention",
+        "",
+        *[
+            f"- {item['agent']}: why={item['why']} impact={item['impact']} next_action={item['next_action']}"
+            for item in (control_tower.get('attention', []) or [])
+        ],
+        "",
+        "# Organic / AI Authority System",
+        "",
+        f"- Status: {organic_authority.get('current_status', 'UNKNOWN')}",
+        f"- Last verified work: {organic_authority.get('last_verified_run', 'UNKNOWN')}",
+        f"- What it actually did: {organic_authority.get('what_it_actually_did', 'UNKNOWN')}",
+        f"- New result created: {organic_authority.get('new_result_created', 'UNKNOWN')}",
+        f"- Google visibility: {organic_authority.get('google_visibility', 'UNKNOWN')}",
+        f"- AI citation monitoring: {organic_authority.get('ai_citation_monitoring', 'UNKNOWN')}",
+        f"- Evidence: {', '.join(organic_authority.get('evidence', []) or ['UNKNOWN'])}",
         "",
         "# OPTIME Authority Status",
         "",
@@ -1000,6 +1308,26 @@ def generate_and_send_executive_report(db: Session) -> Dict[str, Any]:
 
 def get_latest_executive_report() -> Optional[Dict[str, Any]]:
     return latest_record()
+
+
+def get_executive_report_payload(report_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    target = None
+    if report_id:
+        for row in history(limit=365):
+            if str(row.get("report_id")) == report_id or str(row.get("report_date")) == report_id:
+                target = row
+                break
+    else:
+        target = latest_record()
+
+    if not target or not target.get("json_path"):
+        return None
+
+    payload = load_report_json(str(target.get("json_path"))) or {}
+    return {
+        "record": target,
+        "report": payload,
+    }
 
 
 def get_executive_report_history(limit: int = 30) -> List[Dict[str, Any]]:

@@ -1588,3 +1588,32 @@ export async function fetchValidationFeedback(): Promise<{
 }> {
   return fetchJson("/validation-feedback");
 }
+
+export type ExecutiveReportRecord = {
+  report_id: string;
+  report_date: string;
+  generated_at_utc: string;
+  subject?: string;
+  markdown_path?: string;
+  html_path?: string;
+  json_path?: string;
+  sent?: boolean;
+  recipients?: string[];
+};
+
+export type ExecutiveReportPayload = {
+  record: ExecutiveReportRecord;
+  report: Record<string, unknown>;
+};
+
+export async function fetchExecutiveReportLatestFull(): Promise<ExecutiveReportPayload> {
+  return fetchJson<ExecutiveReportPayload>("/executive-report/latest/full");
+}
+
+export async function fetchExecutiveReportHistory(limit = 30): Promise<{ reports: ExecutiveReportRecord[] }> {
+  return fetchJson<{ reports: ExecutiveReportRecord[] }>(`/executive-report/history?limit=${limit}`);
+}
+
+export async function fetchExecutiveReportById(reportId: string): Promise<ExecutiveReportPayload> {
+  return fetchJson<ExecutiveReportPayload>(`/executive-report/by-id/${encodeURIComponent(reportId)}`);
+}

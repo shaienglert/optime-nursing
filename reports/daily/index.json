@@ -2,11 +2,23 @@
   {
     "report_id": "2026-07-20",
     "report_date": "2026-07-20",
-    "generated_at_utc": "2026-07-20T13:01:13.583997+00:00",
+    "generated_at_utc": "2026-07-20T13:12:43.700237+00:00",
     "subject": "OPTIME Executive Intelligence Report | 2026-07-20",
     "markdown_path": "reports/daily/archive/executive_intelligence_report_2026-07-20.md",
     "html_path": "reports/daily/archive/executive_intelligence_report_2026-07-20.html",
     "json_path": "reports/daily/archive/executive_intelligence_report_2026-07-20.json",
+    "sent": false,
+    "sent_at_utc": null,
+    "recipients": []
+  },
+  {
+    "report_id": "20260720T131304Z",
+    "report_date": "2026-07-20",
+    "generated_at_utc": "2026-07-20T13:13:04.297310+00:00",
+    "subject": "OPTIME Executive Intelligence Report | 2026-07-20",
+    "markdown_path": "reports/daily/archive/executive_intelligence_report_20260720T131304Z.md",
+    "html_path": "reports/daily/archive/executive_intelligence_report_20260720T131304Z.html",
+    "json_path": "reports/daily/archive/executive_intelligence_report_20260720T131304Z.json",
     "sent": false,
     "sent_at_utc": null,
     "recipients": []
