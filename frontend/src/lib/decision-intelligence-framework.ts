@@ -1,4 +1,5 @@
 import { QuestionnaireState } from "@/context/questionnaire-context";
+import { resolveBudgetValue } from "@/lib/budget-utils";
 import { RankedRecommendation } from "@/lib/optime-v2-engine";
 
 export type StructuredResidentProfile = {
@@ -114,7 +115,7 @@ function buildResidentProfile(state: QuestionnaireState, recommendations: Ranked
     ageGroup: state.ageGroup || "Unknown",
     careNeeds: state.assistanceLevel || "Not fully specified",
     memoryStatus: state.memoryStatus || "Not specified",
-    budget: Number(state.budget || 0),
+    budget: resolveBudgetValue(state.budget) ?? 0,
     locationPreference: state.referenceLocationValue || state.distanceFromFamily || "Not specified",
     futureCarePreference: state.futureCarePreference || "No stated preference",
     lifestylePreferences: state.happinessPreferences || [],

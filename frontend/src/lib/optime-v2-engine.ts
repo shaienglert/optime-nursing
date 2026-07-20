@@ -1,5 +1,6 @@
 import { QuestionnaireState } from "@/context/questionnaire-context";
 import { GovernanceRuntimeContext, SearchFacility } from "@/lib/api";
+import { formatBudgetRangeLabel, resolveBudgetValue } from "@/lib/budget-utils";
 import {
   buildGovernedRequirements,
   buildGovernedRuntimeMeta,
@@ -1493,9 +1494,9 @@ function scoreFamilyFit(state: QuestionnaireState): { score: number; detail: str
 }
 
 function scoreFinancialFit(facility: SearchFacility, state: QuestionnaireState): number {
-  const budget = state.budget || 7000;
+  const budget = resolveBudgetValue(state.budget);
   const parsed = parsePriceRange(facility.priceRange);
-  if (!parsed) return 50;
+  if (!parsed || budget === null) return 50;
 
   if (budget >= parsed.max) return 95;
   if (budget >= parsed.min) return 75;
@@ -1576,7 +1577,8 @@ function collectHardRejectionReasons(facility: SearchFacility, state: Questionna
 
   if (hasStrictBudgetRequirement(state)) {
     const parsedBudget = parsePriceRange(facility.priceRange);
-    if (parsedBudget && parsedBudget.min > (state.budget || 0)) {
+    const budget = resolveBudgetValue(state.budget);
+    if (parsedBudget && budget !== null && parsedBudget.min > budget) {
       reasons.push("This community is outside the monthly budget that was marked as mandatory.");
     }
   }
@@ -2429,7 +2431,7 @@ function buildClinicalReasoning(
     medicalNeeds: medicalNeeds,
     dietaryRequirements: dietaryNeeds,
     lifestylePreferences: lifestyleNeeds,
-    budgetRange: `Up to $${Number(state.budget || 0).toLocaleString()}/month`,
+    budgetRange: formatBudgetRangeLabel(state.budget),
     moveInTimeframe,
     geographicPreference,
     unknownQuestions: narrative.questionsForFacility,
@@ -3077,7 +3079,8 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
 
     if (hasStrictBudgetRequirement(state)) {
       const parsedBudget = parsePriceRange(facility.priceRange);
-      if (parsedBudget && parsedBudget.min > (state.budget || 0)) {
+      const budget = resolveBudgetValue(state.budget);
+      if (parsedBudget && budget !== null && parsedBudget.min > budget) {
         hardRejectionReasons.push("This community is outside the monthly budget that was marked as mandatory.");
       }
     }

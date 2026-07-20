@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
+import { resolveBudgetValue } from "@/lib/budget-utils";
 import { GovernanceRuntimeContext, SearchFacility, fetchGovernanceRuntimeContext, fetchSearchFacilities } from "@/lib/api";
 import { RankedRecommendation, runOptimeV2Engine } from "@/lib/optime-v2-engine";
 import { clearSearchSession } from "@/lib/search-session";
@@ -142,9 +143,12 @@ function familyNarrative(recommendation: RankedRecommendation): string[] {
   const facility = recommendation.facility;
   const clinical = recommendation.report.audit.clinicalReasoning;
   const unknownCount = recommendation.report.audit.verificationRequest.unknownCount;
+  const budgetRange = recommendation.report.audit.verificationRequest.anonymousPayload.budgetRange;
 
-  const first = `We recommend ${facility.name} because it appears to match the requested level of daily support while staying within the selected budget range.`;
-  const second = `Based on the current information, this community looks suitable for someone who needs ongoing care and values a socially engaging environment.`;
+  const first = `We recommend ${facility.name} because it appears to match the requested level of daily support.`;
+  const second = budgetRange === "Budget not supplied"
+    ? "A budget was not supplied, so OPTIME is using verified care and fit signals instead of claiming a price-based match."
+    : `The current budget signal is ${budgetRange.toLowerCase()}.`;
   const third = clinical.whyThisCommunity
     ? ensureSentence(clinical.whyThisCommunity)
     : "Clinical and lifestyle indicators suggest a strong overall fit for this search.";
@@ -157,10 +161,11 @@ function familyNarrative(recommendation: RankedRecommendation): string[] {
 
 function stoodOutBullets(recommendation: RankedRecommendation): string[] {
   const facility = recommendation.facility;
+  const budgetRange = recommendation.report.audit.verificationRequest.anonymousPayload.budgetRange;
   const bullets: string[] = [];
 
   bullets.push("Meets the requested care level.");
-  bullets.push("Fits the selected budget range.");
+  bullets.push(budgetRange === "Budget not supplied" ? "Budget was not supplied, so price remains an estimate." : "Fits the selected budget range.");
   if ((facility.lifestyleCapabilities || []).length > 0) {
     bullets.push("Supports a socially active daily routine.");
   }
@@ -230,7 +235,8 @@ export function ResultsPageClient() {
   const care = searchParams.get("care") || state.assistanceLevel || "Help with bathing";
   const futureCarePreference = searchParams.get("futureCarePreference") || state.futureCarePreference || "";
   const activities = (searchParams.get("activities") || state.happinessPreferences?.[0] || "Movies").split(",")[0];
-  const budget = Number(searchParams.get("budget") || state.budget || 7000);
+  const budgetParam = searchParams.get("budget");
+  const budget = budgetParam !== null && budgetParam !== "" ? Number(budgetParam) : resolveBudgetValue(state.budget) ?? 7000;
   const textQuery = searchParams.get("q") || searchParams.get("search") || "";
   const distanceProfile = state.humanIntelligenceV2.distanceProfile;
   const hasAddresses = hasRealAddressData(distanceProfile);
@@ -506,7 +512,7 @@ export function ResultsPageClient() {
           </section>
         </div>
 
-        <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
+        <p className="mt-4 text-sm font-semibold text-[#4f6f8f]">Estimated monthly range: {facility.priceRange}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {facility.careTypes.map((careType) => (
@@ -587,7 +593,7 @@ export function ResultsPageClient() {
         </div>
 
         <p className="mt-3 text-sm text-[#5f554a]">{recommendation.tradeoff}</p>
-        <p className="mt-2 text-sm font-semibold text-[#4f6f8f]">{facility.priceRange}</p>
+        <p className="mt-2 text-sm font-semibold text-[#4f6f8f]">Estimated monthly range: {facility.priceRange}</p>
 
         <div className="mt-3 flex flex-wrap gap-2">
           {facility.matchBadges.slice(0, 3).map((badge) => (
