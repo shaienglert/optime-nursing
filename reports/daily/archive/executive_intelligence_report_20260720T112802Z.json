@@ -460,13 +460,13 @@
     "knowledge_objects_created_today": 0.0,
     "evidence_objects_added_today": 0.0
   },
-  "report_id": "20260720T114303Z",
+  "report_id": "20260720T112802Z",
   "report_date": "2026-07-20",
-  "generated_at_utc": "2026-07-20T11:43:03.083367+00:00",
+  "generated_at_utc": "2026-07-20T11:28:02.935262+00:00",
   "subject": "OPTIME Executive Intelligence Report | 2026-07-20",
   "artifacts": {
-    "markdown": "reports/daily/archive/executive_intelligence_report_20260720T114303Z.md",
-    "html": "reports/daily/archive/executive_intelligence_report_20260720T114303Z.html",
-    "json": "reports/daily/archive/executive_intelligence_report_20260720T114303Z.json"
+    "markdown": "reports/daily/archive/executive_intelligence_report_20260720T112802Z.md",
+    "html": "reports/daily/archive/executive_intelligence_report_20260720T112802Z.html",
+    "json": "reports/daily/archive/executive_intelligence_report_20260720T112802Z.json"
   }
 }

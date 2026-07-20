@@ -84,25 +84,41 @@ def _save_index(rows: List[Dict[str, object]]) -> None:
     _index_path().write_text(json.dumps(rows, indent=2), encoding="utf-8")
 
 
+def _canonical_rows(rows: List[Dict[str, object]]) -> List[Dict[str, object]]:
+    best_by_date: Dict[str, Dict[str, object]] = {}
+    for row in rows:
+        report_date = str(row.get("report_date") or "").strip()
+        if not report_date:
+            continue
+        current = best_by_date.get(report_date)
+        if current is None:
+            best_by_date[report_date] = row
+            continue
+        current_generated_at = str(current.get("generated_at_utc") or "")
+        next_generated_at = str(row.get("generated_at_utc") or "")
+        if next_generated_at >= current_generated_at:
+            best_by_date[report_date] = row
+
+    return sorted(best_by_date.values(), key=lambda r: str(r.get("report_date", "")))
+
+
 def latest_record() -> Optional[Dict[str, object]]:
-    rows = _load_index()
+    rows = _canonical_rows(_load_index())
     if not rows:
         return None
-    rows_sorted = sorted(rows, key=lambda r: str(r.get("generated_at_utc", "")), reverse=True)
-    return rows_sorted[0]
+    return rows[-1]
 
 
 def previous_record() -> Optional[Dict[str, object]]:
-    rows = _load_index()
+    rows = _canonical_rows(_load_index())
     if len(rows) < 2:
         return None
-    rows_sorted = sorted(rows, key=lambda r: str(r.get("generated_at_utc", "")), reverse=True)
-    return rows_sorted[1]
+    return rows[-2]
 
 
 def history(limit: int = 30) -> List[Dict[str, object]]:
-    rows = _load_index()
-    rows_sorted = sorted(rows, key=lambda r: str(r.get("generated_at_utc", "")), reverse=True)
+    rows = _canonical_rows(_load_index())
+    rows_sorted = list(reversed(rows))
     return rows_sorted[: max(1, min(limit, 365))]
 
 
@@ -123,9 +139,9 @@ def create_report_artifacts(subject: str, markdown_text: str, report_json: Dict[
     ensure_archive_layout()
     now = datetime.now(timezone.utc)
     report_date = now.strftime("%Y-%m-%d")
-    report_id = now.strftime("%Y%m%dT%H%M%SZ")
+    report_id = report_date
 
-    base_name = f"executive_intelligence_report_{report_id}"
+    base_name = f"executive_intelligence_report_{report_date}"
     md_path = daily_archive_dir() / f"{base_name}.md"
     html_path = daily_archive_dir() / f"{base_name}.html"
     json_path = daily_archive_dir() / f"{base_name}.json"
@@ -164,6 +180,7 @@ def create_report_artifacts(subject: str, markdown_text: str, report_json: Dict[
     )
 
     rows = _load_index()
+    rows = [row for row in rows if str(row.get("report_date") or "") != report_date]
     rows.append(record.__dict__)
     _save_index(rows)
     return record
