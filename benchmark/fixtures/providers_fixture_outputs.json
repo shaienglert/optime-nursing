@@ -1,0 +1,100 @@
+{
+  "label": "TEST_FIXTURE_NOT_REAL_AI_RESULT",
+  "providers": {
+    "optime": {
+      "response_json": {
+        "UNDERSTOOD_PERSON_PROFILE": {"summary": "Post-stroke senior with mobility limits and explicit nursing/rehab/medication needs."},
+        "EXPLICIT_NEEDS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "MISSING_INFORMATION": ["budget", "speech therapy verification"],
+        "CLARIFYING_QUESTIONS": ["What is the maximum monthly budget?"],
+        "MUST_REQUIREMENTS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "PROFESSIONAL_RECOMMENDATIONS": ["Verify 24/7 nurse coverage directly with facility"],
+        "NICE_TO_HAVE": ["social engagement programming"],
+        "FACILITIES_CONSIDERED": ["BISCAYNE HEALTH AND REHABILITATION CENTER", "CORAL GABLES NURSING AND REHABILITATION CENTER"],
+        "TOP_5": [
+          {
+            "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+            "location": "North Miami, FL",
+            "why_selected": "Strong rehab and skilled nursing profile",
+            "must_satisfied": ["Skilled nursing capability"],
+            "must_failed": [],
+            "must_unknown": ["24/7 licensed nurse staffing detail"],
+            "recommendation_alignment": "Clinical needs alignment",
+            "nice_to_have_alignment": "Social programs partially known",
+            "tradeoffs": ["Unknown speech therapy schedule"],
+            "evidence_gaps": ["Speech therapy schedule"],
+            "sources": [{"url": "https://example.org/cms", "source_type": "CMS_OFFICIAL_QUALITY_DATA"}],
+            "confidence": "MEDIUM"
+          }
+        ],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": ["Call top facilities to verify unknown MUST items"]
+      },
+      "response_text": "Fixture response for OPTIME."
+    },
+    "openai": {
+      "response_json": {
+        "UNDERSTOOD_PERSON_PROFILE": {"summary": "Senior needs post-stroke support with explicit medical needs."},
+        "EXPLICIT_NEEDS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "MISSING_INFORMATION": ["budget"],
+        "CLARIFYING_QUESTIONS": ["Do you have a budget range?"],
+        "MUST_REQUIREMENTS": ["24/7 nursing availability", "rehabilitation capability"],
+        "PROFESSIONAL_RECOMMENDATIONS": ["Confirm licensed nursing coverage"],
+        "NICE_TO_HAVE": ["social engagement"],
+        "FACILITIES_CONSIDERED": ["CRESTVIEW REHABILITATION CENTER, LLC"],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": ["Gather budget and insurance coverage"]
+      },
+      "response_text": "Fixture response for OpenAI."
+    },
+    "anthropic": {
+      "response_json": {
+        "UNDERSTOOD_PERSON_PROFILE": {"summary": "Post-stroke case with nursing and rehab requirements."},
+        "EXPLICIT_NEEDS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "MISSING_INFORMATION": ["budget", "therapy mix"],
+        "CLARIFYING_QUESTIONS": ["Is speech therapy required?"],
+        "MUST_REQUIREMENTS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "PROFESSIONAL_RECOMMENDATIONS": ["Validate med management protocols"],
+        "NICE_TO_HAVE": ["family-friendly visiting hours"],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": ["Validate unknowns before final selection"]
+      },
+      "response_text": "Fixture response for Anthropic."
+    },
+    "google": {
+      "response_json": {
+        "UNDERSTOOD_PERSON_PROFILE": {"summary": "Senior with explicit clinical and rehab requirements."},
+        "EXPLICIT_NEEDS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "MISSING_INFORMATION": ["budget"],
+        "CLARIFYING_QUESTIONS": ["What budget constraints should be applied?"],
+        "MUST_REQUIREMENTS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "PROFESSIONAL_RECOMMENDATIONS": ["Ensure post-stroke therapy continuity"],
+        "NICE_TO_HAVE": ["social engagement"],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": ["Request updated clinical care plan"]
+      },
+      "response_text": "Fixture response for Gemini."
+    },
+    "perplexity": {
+      "response_json": {
+        "UNDERSTOOD_PERSON_PROFILE": {"summary": "Clinical support case requiring nursing and rehab."},
+        "EXPLICIT_NEEDS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "MISSING_INFORMATION": ["budget"],
+        "CLARIFYING_QUESTIONS": ["Any insurance reimbursement constraints?"],
+        "MUST_REQUIREMENTS": ["24/7 nursing availability", "rehabilitation capability", "medication management"],
+        "PROFESSIONAL_RECOMMENDATIONS": ["Verify all MUST unknowns"],
+        "NICE_TO_HAVE": ["social programming"],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": ["Request written verification from facilities"]
+      },
+      "response_text": "Fixture response for Perplexity."
+    }
+  }
+}

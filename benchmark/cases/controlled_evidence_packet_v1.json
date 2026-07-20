@@ -1,0 +1,63 @@
+{
+  "packet_id": "CONTROLLED_EVIDENCE_V1",
+  "version": "1.0.0",
+  "frozen_at": "2026-07-20T00:00:00Z",
+  "description": "Frozen shared evidence packet for Track B. All systems receive identical content.",
+  "facilities": [
+    {
+      "canonical_facility_id": 1,
+      "name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "location": {"city": "North Miami", "state": "FL", "county": "Miami-Dade"},
+      "care_capabilities": ["Skilled Nursing", "Rehabilitation"],
+      "must_evidence": [
+        {"claim": "Skilled nursing capability", "source_type": "CMS_OFFICIAL_QUALITY_DATA", "source_ref": "CMS profile", "source_date": null},
+        {"claim": "Rehabilitation capability", "source_type": "FACILITY_SELF_REPORTED", "source_ref": "Facility profile", "source_date": null}
+      ],
+      "known_unknowns": ["24/7 licensed nurse staffing details", "speech therapy availability"]
+    },
+    {
+      "canonical_facility_id": 2,
+      "name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "location": {"city": "Coral Gables", "state": "FL", "county": "Miami-Dade"},
+      "care_capabilities": ["Skilled Nursing", "Rehabilitation"],
+      "must_evidence": [
+        {"claim": "Medication management support", "source_type": "PROFESSIONAL_CLINICAL_AUTHORITY", "source_ref": "Clinical service listing", "source_date": null}
+      ],
+      "known_unknowns": ["walker accessibility details"]
+    },
+    {
+      "canonical_facility_id": 3,
+      "name": "BROWARD NURSING & REHABILITATION CENTER",
+      "location": {"city": "Fort Lauderdale", "state": "FL", "county": "Broward"},
+      "care_capabilities": ["Skilled Nursing", "Rehabilitation"],
+      "must_evidence": [
+        {"claim": "Physical therapy capability", "source_type": "CMS_OFFICIAL_QUALITY_DATA", "source_ref": "CMS service category", "source_date": null}
+      ],
+      "known_unknowns": ["distance fit for Miami-Dade family"]
+    },
+    {
+      "canonical_facility_id": 4,
+      "name": "MORTON PLANT REHABILITATION CENTER",
+      "location": {"city": "Clearwater", "state": "FL", "county": "Pinellas"},
+      "care_capabilities": ["Rehabilitation"],
+      "must_evidence": [
+        {"claim": "Post-acute rehab capability", "source_type": "THIRD_PARTY_DIRECTORY", "source_ref": "Directory listing", "source_date": null}
+      ],
+      "known_unknowns": ["Miami-Dade geography mismatch risk"]
+    },
+    {
+      "canonical_facility_id": 5,
+      "name": "CRESTVIEW REHABILITATION CENTER, LLC",
+      "location": {"city": "Miami", "state": "FL", "county": "Miami-Dade"},
+      "care_capabilities": ["Skilled Nursing", "Rehabilitation"],
+      "must_evidence": [
+        {"claim": "Skilled nursing and rehab services", "source_type": "FACILITY_SELF_REPORTED", "source_ref": "Facility website", "source_date": null}
+      ],
+      "known_unknowns": ["occupational therapy schedule", "speech therapy schedule"]
+    }
+  ],
+  "constraints": {
+    "external_search_allowed": false,
+    "hidden_evidence_forbidden": true
+  }
+}

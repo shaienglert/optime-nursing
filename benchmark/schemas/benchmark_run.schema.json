@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BenchmarkRunRecord",
+  "type": "object",
+  "required": [
+    "benchmark_version",
+    "run_id",
+    "track",
+    "case_id",
+    "provider",
+    "model",
+    "run_timestamp",
+    "prompt",
+    "raw_response",
+    "normalized_response"
+  ],
+  "properties": {
+    "track": {"enum": ["TRACK_A_OPEN_WORLD", "TRACK_B_CONTROLLED_EVIDENCE"]},
+    "raw_response": {"type": "object"},
+    "normalized_response": {"type": "object"}
+  }
+}

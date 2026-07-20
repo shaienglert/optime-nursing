@@ -1,0 +1,1016 @@
+{
+  "blind_packet": [
+    {
+      "answer_id": "ANSWER_A",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_B_CONTROLLED_EVIDENCE",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Post-stroke case with nursing and rehab requirements."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget",
+          "therapy mix"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "Is speech therapy required?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Validate med management protocols"
+        ],
+        "NICE_TO_HAVE": [
+          "family-friendly visiting hours"
+        ],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Validate unknowns before final selection"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 1.0,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.0
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 0.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 0.0,
+          "official_source_coverage": 0.0,
+          "citation_correctness": 0.0,
+          "freshness": 0.0,
+          "traceability": 0.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 0.0,
+          "actionability": 1.0,
+          "explanation_completeness": 0.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_B",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_A_OPEN_WORLD",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Senior with explicit clinical and rehab requirements."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "What budget constraints should be applied?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Ensure post-stroke therapy continuity"
+        ],
+        "NICE_TO_HAVE": [
+          "social engagement"
+        ],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Request updated clinical care plan"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 1.0,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.0
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 0.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 0.0,
+          "official_source_coverage": 0.0,
+          "citation_correctness": 0.0,
+          "freshness": 0.0,
+          "traceability": 0.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 0.0,
+          "actionability": 1.0,
+          "explanation_completeness": 0.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_C",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_A_OPEN_WORLD",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Post-stroke case with nursing and rehab requirements."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget",
+          "therapy mix"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "Is speech therapy required?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Validate med management protocols"
+        ],
+        "NICE_TO_HAVE": [
+          "family-friendly visiting hours"
+        ],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Validate unknowns before final selection"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 1.0,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.0
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 0.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 0.0,
+          "official_source_coverage": 0.0,
+          "citation_correctness": 0.0,
+          "freshness": 0.0,
+          "traceability": 0.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 0.0,
+          "actionability": 1.0,
+          "explanation_completeness": 0.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_D",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_B_CONTROLLED_EVIDENCE",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Senior with explicit clinical and rehab requirements."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "What budget constraints should be applied?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Ensure post-stroke therapy continuity"
+        ],
+        "NICE_TO_HAVE": [
+          "social engagement"
+        ],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Request updated clinical care plan"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 1.0,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.0
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 0.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 0.0,
+          "official_source_coverage": 0.0,
+          "citation_correctness": 0.0,
+          "freshness": 0.0,
+          "traceability": 0.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 0.0,
+          "actionability": 1.0,
+          "explanation_completeness": 0.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_E",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_B_CONTROLLED_EVIDENCE",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Post-stroke senior with mobility limits and explicit nursing/rehab/medication needs."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget",
+          "speech therapy verification"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "What is the maximum monthly budget?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Verify 24/7 nurse coverage directly with facility"
+        ],
+        "NICE_TO_HAVE": [
+          "social engagement programming"
+        ],
+        "FACILITIES_CONSIDERED": [
+          "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "CORAL GABLES NURSING AND REHABILITATION CENTER"
+        ],
+        "TOP_5": [
+          {
+            "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+            "location": "North Miami, FL",
+            "why_selected": "Strong rehab and skilled nursing profile",
+            "must_satisfied": [
+              "Skilled nursing capability"
+            ],
+            "must_failed": [],
+            "must_unknown": [
+              "24/7 licensed nurse staffing detail"
+            ],
+            "recommendation_alignment": "Clinical needs alignment",
+            "nice_to_have_alignment": "Social programs partially known",
+            "tradeoffs": [
+              "Unknown speech therapy schedule"
+            ],
+            "evidence_gaps": [
+              "Speech therapy schedule"
+            ],
+            "sources": [
+              {
+                "url": "https://example.org/cms",
+                "source_type": "CMS_OFFICIAL_QUALITY_DATA"
+              }
+            ],
+            "confidence": "MEDIUM"
+          }
+        ],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Call top facilities to verify unknown MUST items"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 1.0,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.0
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 1.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 1.0,
+          "official_source_coverage": 1.0,
+          "citation_correctness": 1.0,
+          "freshness": 0.0,
+          "traceability": 1.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 1.0,
+          "actionability": 1.0,
+          "explanation_completeness": 1.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_F",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_B_CONTROLLED_EVIDENCE",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Senior needs post-stroke support with explicit medical needs."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "Do you have a budget range?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Confirm licensed nursing coverage"
+        ],
+        "NICE_TO_HAVE": [
+          "social engagement"
+        ],
+        "FACILITIES_CONSIDERED": [
+          "CRESTVIEW REHABILITATION CENTER, LLC"
+        ],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Gather budget and insurance coverage"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 0.6666666666666666,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.3333333333333333
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 0.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 0.0,
+          "official_source_coverage": 0.0,
+          "citation_correctness": 0.0,
+          "freshness": 0.0,
+          "traceability": 0.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 0.0,
+          "actionability": 1.0,
+          "explanation_completeness": 0.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_G",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_B_CONTROLLED_EVIDENCE",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Clinical support case requiring nursing and rehab."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "Any insurance reimbursement constraints?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Verify all MUST unknowns"
+        ],
+        "NICE_TO_HAVE": [
+          "social programming"
+        ],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Request written verification from facilities"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 1.0,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.0
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 0.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 0.0,
+          "official_source_coverage": 0.0,
+          "citation_correctness": 0.0,
+          "freshness": 0.0,
+          "traceability": 0.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 0.0,
+          "actionability": 1.0,
+          "explanation_completeness": 0.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_H",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_A_OPEN_WORLD",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Clinical support case requiring nursing and rehab."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "Any insurance reimbursement constraints?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Verify all MUST unknowns"
+        ],
+        "NICE_TO_HAVE": [
+          "social programming"
+        ],
+        "FACILITIES_CONSIDERED": [],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Request written verification from facilities"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 1.0,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.0
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 0.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 0.0,
+          "official_source_coverage": 0.0,
+          "citation_correctness": 0.0,
+          "freshness": 0.0,
+          "traceability": 0.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 0.0,
+          "actionability": 1.0,
+          "explanation_completeness": 0.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_I",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_A_OPEN_WORLD",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Post-stroke senior with mobility limits and explicit nursing/rehab/medication needs."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget",
+          "speech therapy verification"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "What is the maximum monthly budget?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Verify 24/7 nurse coverage directly with facility"
+        ],
+        "NICE_TO_HAVE": [
+          "social engagement programming"
+        ],
+        "FACILITIES_CONSIDERED": [
+          "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "CORAL GABLES NURSING AND REHABILITATION CENTER"
+        ],
+        "TOP_5": [
+          {
+            "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+            "location": "North Miami, FL",
+            "why_selected": "Strong rehab and skilled nursing profile",
+            "must_satisfied": [
+              "Skilled nursing capability"
+            ],
+            "must_failed": [],
+            "must_unknown": [
+              "24/7 licensed nurse staffing detail"
+            ],
+            "recommendation_alignment": "Clinical needs alignment",
+            "nice_to_have_alignment": "Social programs partially known",
+            "tradeoffs": [
+              "Unknown speech therapy schedule"
+            ],
+            "evidence_gaps": [
+              "Speech therapy schedule"
+            ],
+            "sources": [
+              {
+                "url": "https://example.org/cms",
+                "source_type": "CMS_OFFICIAL_QUALITY_DATA"
+              }
+            ],
+            "confidence": "MEDIUM"
+          }
+        ],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Call top facilities to verify unknown MUST items"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 1.0,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.0
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 1.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 1.0,
+          "official_source_coverage": 1.0,
+          "citation_correctness": 1.0,
+          "freshness": 0.0,
+          "traceability": 1.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 1.0,
+          "actionability": 1.0,
+          "explanation_completeness": 1.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    },
+    {
+      "answer_id": "ANSWER_J",
+      "case_id": "POST_STROKE_MIAMI_001",
+      "track": "TRACK_A_OPEN_WORLD",
+      "normalized_response": {
+        "UNDERSTOOD_PERSON_PROFILE": {
+          "summary": "Senior needs post-stroke support with explicit medical needs."
+        },
+        "EXPLICIT_NEEDS": [
+          "24/7 nursing availability",
+          "rehabilitation capability",
+          "medication management"
+        ],
+        "MISSING_INFORMATION": [
+          "budget"
+        ],
+        "CLARIFYING_QUESTIONS": [
+          "Do you have a budget range?"
+        ],
+        "MUST_REQUIREMENTS": [
+          "24/7 nursing availability",
+          "rehabilitation capability"
+        ],
+        "PROFESSIONAL_RECOMMENDATIONS": [
+          "Confirm licensed nursing coverage"
+        ],
+        "NICE_TO_HAVE": [
+          "social engagement"
+        ],
+        "FACILITIES_CONSIDERED": [
+          "CRESTVIEW REHABILITATION CENTER, LLC"
+        ],
+        "TOP_5": [],
+        "UNSUPPORTED_OR_UNVERIFIED_CLAIMS": [],
+        "NEXT_STEPS_FOR_FAMILY": [
+          "Gather budget and insurance coverage"
+        ]
+      },
+      "metrics": {
+        "A_PERSON_UNDERSTANDING": {
+          "explicit_need_recall": 0.75,
+          "unsupported_inferred_need_rate": 0.0,
+          "critical_omission_rate": 0.25
+        },
+        "B_MUST_QUALITY": {
+          "explicit_must_preservation": 0.6666666666666666,
+          "unsupported_must_creation": 0.0,
+          "critical_must_omission": 0.3333333333333333
+        },
+        "C_UNKNOWN_DISCIPLINE": {
+          "unknown_preservation": 0.5,
+          "invented_certainty_rate": 0.0,
+          "appropriate_clarification_rate": 0.5
+        },
+        "D_FACILITY_SELECTION": {
+          "valid_facility_rate": 1.0,
+          "must_failure_rate": 0.0,
+          "must_unknown_transparency": 0.0,
+          "geographic_fit": 1.0
+        },
+        "E_EVIDENCE_QUALITY": {
+          "citation_coverage": 0.0,
+          "official_source_coverage": 0.0,
+          "citation_correctness": 0.0,
+          "freshness": 0.0,
+          "traceability": 0.0
+        },
+        "F_HALLUCINATION": {
+          "unsupported_factual_claim_rate": 0.0,
+          "fabricated_facility_rate": 0.0,
+          "unsupported_professional_claim_rate": 0.0
+        },
+        "G_DECISION_USEFULNESS": {
+          "tradeoff_clarity": 0.0,
+          "actionability": 1.0,
+          "explanation_completeness": 0.0,
+          "family_decision_support": 1.0
+        },
+        "H_COMMUNICATION": {
+          "clarity": 1.0,
+          "structure": 1.0,
+          "readability": 1.0,
+          "excessive_verbosity": 0.0,
+          "overconfidence": 0
+        }
+      },
+      "provider": "REDACTED",
+      "model": "REDACTED"
+    }
+  ],
+  "answer_key": [
+    {
+      "answer_id": "ANSWER_A",
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5"
+    },
+    {
+      "answer_id": "ANSWER_B",
+      "provider": "google",
+      "model": "gemini-2.5-pro"
+    },
+    {
+      "answer_id": "ANSWER_C",
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5"
+    },
+    {
+      "answer_id": "ANSWER_D",
+      "provider": "google",
+      "model": "gemini-2.5-pro"
+    },
+    {
+      "answer_id": "ANSWER_E",
+      "provider": "optime",
+      "model": "optime-runtime"
+    },
+    {
+      "answer_id": "ANSWER_F",
+      "provider": "openai",
+      "model": "gpt-5.3-codex"
+    },
+    {
+      "answer_id": "ANSWER_G",
+      "provider": "perplexity",
+      "model": "sonar-pro"
+    },
+    {
+      "answer_id": "ANSWER_H",
+      "provider": "perplexity",
+      "model": "sonar-pro"
+    },
+    {
+      "answer_id": "ANSWER_I",
+      "provider": "optime",
+      "model": "optime-runtime"
+    },
+    {
+      "answer_id": "ANSWER_J",
+      "provider": "openai",
+      "model": "gpt-5.3-codex"
+    }
+  ],
+  "judge_instructions": {
+    "no_identity_exposure": true,
+    "required_outputs": [
+      "dimension_score",
+      "reason",
+      "critical_error_flags"
+    ],
+    "forbidden": [
+      "self_grading_only",
+      "provider_identity_inference_claims"
+    ]
+  }
+}

@@ -1,0 +1,784 @@
+{
+  "run_id": "8a303893171d",
+  "benchmark_version": "1.0.0",
+  "tracks": {
+    "TRACK_A_OPEN_WORLD": [
+      {
+        "provider": "optime",
+        "model": "optime-runtime",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 1.0,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.0
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 1.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 1.0,
+            "official_source_coverage": 1.0,
+            "citation_correctness": 1.0,
+            "freshness": 0.0,
+            "traceability": 1.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 1.0,
+            "actionability": 1.0,
+            "explanation_completeness": 1.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      },
+      {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 0.6666666666666666,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.3333333333333333
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 0.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 0.0,
+            "official_source_coverage": 0.0,
+            "citation_correctness": 0.0,
+            "freshness": 0.0,
+            "traceability": 0.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 0.0,
+            "actionability": 1.0,
+            "explanation_completeness": 0.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      },
+      {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-5",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 1.0,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.0
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 0.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 0.0,
+            "official_source_coverage": 0.0,
+            "citation_correctness": 0.0,
+            "freshness": 0.0,
+            "traceability": 0.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 0.0,
+            "actionability": 1.0,
+            "explanation_completeness": 0.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      },
+      {
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 1.0,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.0
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 0.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 0.0,
+            "official_source_coverage": 0.0,
+            "citation_correctness": 0.0,
+            "freshness": 0.0,
+            "traceability": 0.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 0.0,
+            "actionability": 1.0,
+            "explanation_completeness": 0.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      },
+      {
+        "provider": "perplexity",
+        "model": "sonar-pro",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 1.0,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.0
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 0.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 0.0,
+            "official_source_coverage": 0.0,
+            "citation_correctness": 0.0,
+            "freshness": 0.0,
+            "traceability": 0.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 0.0,
+            "actionability": 1.0,
+            "explanation_completeness": 0.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      }
+    ],
+    "TRACK_B_CONTROLLED_EVIDENCE": [
+      {
+        "provider": "optime",
+        "model": "optime-runtime",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 1.0,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.0
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 1.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 1.0,
+            "official_source_coverage": 1.0,
+            "citation_correctness": 1.0,
+            "freshness": 0.0,
+            "traceability": 1.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 1.0,
+            "actionability": 1.0,
+            "explanation_completeness": 1.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      },
+      {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 0.6666666666666666,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.3333333333333333
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 0.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 0.0,
+            "official_source_coverage": 0.0,
+            "citation_correctness": 0.0,
+            "freshness": 0.0,
+            "traceability": 0.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 0.0,
+            "actionability": 1.0,
+            "explanation_completeness": 0.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      },
+      {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-5",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 1.0,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.0
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 0.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 0.0,
+            "official_source_coverage": 0.0,
+            "citation_correctness": 0.0,
+            "freshness": 0.0,
+            "traceability": 0.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 0.0,
+            "actionability": 1.0,
+            "explanation_completeness": 0.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      },
+      {
+        "provider": "google",
+        "model": "gemini-2.5-pro",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 1.0,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.0
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 0.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 0.0,
+            "official_source_coverage": 0.0,
+            "citation_correctness": 0.0,
+            "freshness": 0.0,
+            "traceability": 0.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 0.0,
+            "actionability": 1.0,
+            "explanation_completeness": 0.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      },
+      {
+        "provider": "perplexity",
+        "model": "sonar-pro",
+        "metrics": {
+          "A_PERSON_UNDERSTANDING": {
+            "explicit_need_recall": 0.75,
+            "unsupported_inferred_need_rate": 0.0,
+            "critical_omission_rate": 0.25
+          },
+          "B_MUST_QUALITY": {
+            "explicit_must_preservation": 1.0,
+            "unsupported_must_creation": 0.0,
+            "critical_must_omission": 0.0
+          },
+          "C_UNKNOWN_DISCIPLINE": {
+            "unknown_preservation": 0.5,
+            "invented_certainty_rate": 0.0,
+            "appropriate_clarification_rate": 0.5
+          },
+          "D_FACILITY_SELECTION": {
+            "valid_facility_rate": 1.0,
+            "must_failure_rate": 0.0,
+            "must_unknown_transparency": 0.0,
+            "geographic_fit": 1.0
+          },
+          "E_EVIDENCE_QUALITY": {
+            "citation_coverage": 0.0,
+            "official_source_coverage": 0.0,
+            "citation_correctness": 0.0,
+            "freshness": 0.0,
+            "traceability": 0.0
+          },
+          "F_HALLUCINATION": {
+            "unsupported_factual_claim_rate": 0.0,
+            "fabricated_facility_rate": 0.0,
+            "unsupported_professional_claim_rate": 0.0
+          },
+          "G_DECISION_USEFULNESS": {
+            "tradeoff_clarity": 0.0,
+            "actionability": 1.0,
+            "explanation_completeness": 0.0,
+            "family_decision_support": 1.0
+          },
+          "H_COMMUNICATION": {
+            "clarity": 1.0,
+            "structure": 1.0,
+            "readability": 1.0,
+            "excessive_verbosity": 0.0,
+            "overconfidence": 0
+          }
+        }
+      }
+    ]
+  },
+  "top5_overlap": {
+    "TRACK_A_OPEN_WORLD": {
+      "provider_top5": {
+        "optime": [
+          "BISCAYNE HEALTH AND REHABILITATION CENTER"
+        ],
+        "openai": [],
+        "anthropic": [],
+        "google": [],
+        "perplexity": []
+      },
+      "pairwise": [
+        {
+          "pair": [
+            "anthropic",
+            "google"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "anthropic",
+            "openai"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "anthropic",
+            "optime"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": [
+            "BISCAYNE HEALTH AND REHABILITATION CENTER"
+          ]
+        },
+        {
+          "pair": [
+            "anthropic",
+            "perplexity"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "google",
+            "openai"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "google",
+            "optime"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": [
+            "BISCAYNE HEALTH AND REHABILITATION CENTER"
+          ]
+        },
+        {
+          "pair": [
+            "google",
+            "perplexity"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "openai",
+            "optime"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": [
+            "BISCAYNE HEALTH AND REHABILITATION CENTER"
+          ]
+        },
+        {
+          "pair": [
+            "openai",
+            "perplexity"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "optime",
+            "perplexity"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [
+            "BISCAYNE HEALTH AND REHABILITATION CENTER"
+          ],
+          "unique_right": []
+        }
+      ],
+      "consensus_facilities": [],
+      "outlier_facilities": [
+        "BISCAYNE HEALTH AND REHABILITATION CENTER"
+      ]
+    },
+    "TRACK_B_CONTROLLED_EVIDENCE": {
+      "provider_top5": {
+        "optime": [
+          "BISCAYNE HEALTH AND REHABILITATION CENTER"
+        ],
+        "openai": [],
+        "anthropic": [],
+        "google": [],
+        "perplexity": []
+      },
+      "pairwise": [
+        {
+          "pair": [
+            "anthropic",
+            "google"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "anthropic",
+            "openai"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "anthropic",
+            "optime"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": [
+            "BISCAYNE HEALTH AND REHABILITATION CENTER"
+          ]
+        },
+        {
+          "pair": [
+            "anthropic",
+            "perplexity"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "google",
+            "openai"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "google",
+            "optime"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": [
+            "BISCAYNE HEALTH AND REHABILITATION CENTER"
+          ]
+        },
+        {
+          "pair": [
+            "google",
+            "perplexity"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "openai",
+            "optime"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": [
+            "BISCAYNE HEALTH AND REHABILITATION CENTER"
+          ]
+        },
+        {
+          "pair": [
+            "openai",
+            "perplexity"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [],
+          "unique_right": []
+        },
+        {
+          "pair": [
+            "optime",
+            "perplexity"
+          ],
+          "exact_overlap": [],
+          "overlap_count": 0,
+          "unique_left": [
+            "BISCAYNE HEALTH AND REHABILITATION CENTER"
+          ],
+          "unique_right": []
+        }
+      ],
+      "consensus_facilities": [],
+      "outlier_facilities": [
+        "BISCAYNE HEALTH AND REHABILITATION CENTER"
+      ]
+    }
+  },
+  "composite_score": null,
+  "composite_weights_documented": false
+}

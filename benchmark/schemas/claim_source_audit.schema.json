@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClaimSourceAuditEntry",
+  "type": "object",
+  "required": ["claim", "source_type", "supports_claim", "freshness"],
+  "properties": {
+    "source_type": {
+      "enum": [
+        "GOVERNMENT_REGULATORY",
+        "CMS_OFFICIAL_QUALITY_DATA",
+        "FACILITY_SELF_REPORTED",
+        "PROFESSIONAL_CLINICAL_AUTHORITY",
+        "REVIEW_USER_GENERATED",
+        "THIRD_PARTY_DIRECTORY",
+        "SEARCH_SNIPPET_ONLY",
+        "UNKNOWN"
+      ]
+    },
+    "freshness": {"enum": ["FRESH", "STALE_RISK", "STALE", "UNKNOWN"]}
+  }
+}

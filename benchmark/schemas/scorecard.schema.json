@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BenchmarkScorecard",
+  "type": "object",
+  "required": [
+    "A_PERSON_UNDERSTANDING",
+    "B_MUST_QUALITY",
+    "C_UNKNOWN_DISCIPLINE",
+    "D_FACILITY_SELECTION",
+    "E_EVIDENCE_QUALITY",
+    "F_HALLUCINATION",
+    "G_DECISION_USEFULNESS",
+    "H_COMMUNICATION"
+  ]
+}

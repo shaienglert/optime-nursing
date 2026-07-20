@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "providers": [
+    {
+      "provider": "optime",
+      "default_model": "optime-runtime",
+      "model_version_policy": "frontend/src/lib/optime-v2-engine.ts path captured",
+      "credentials_required": [],
+      "tools_search_supported": false,
+      "status": "CONFIGURABLE"
+    },
+    {
+      "provider": "openai",
+      "default_model": "gpt-5.3-codex",
+      "model_version_policy": "API response model field",
+      "credentials_required": ["OPENAI_API_KEY"],
+      "tools_search_supported": "provider-dependent",
+      "status": "NOT_CONFIGURED"
+    },
+    {
+      "provider": "anthropic",
+      "default_model": "claude-sonnet-4-5",
+      "model_version_policy": "API response model field",
+      "credentials_required": ["ANTHROPIC_API_KEY"],
+      "tools_search_supported": "provider-dependent",
+      "status": "NOT_CONFIGURED"
+    },
+    {
+      "provider": "google",
+      "default_model": "gemini-2.5-pro",
+      "model_version_policy": "requested model",
+      "credentials_required": ["GOOGLE_API_KEY"],
+      "tools_search_supported": "provider-dependent",
+      "status": "NOT_CONFIGURED"
+    },
+    {
+      "provider": "perplexity",
+      "default_model": "sonar-pro",
+      "model_version_policy": "API response model field",
+      "credentials_required": ["PERPLEXITY_API_KEY"],
+      "tools_search_supported": true,
+      "status": "NOT_CONFIGURED"
+    }
+  ]
+}

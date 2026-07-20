@@ -1,0 +1,48 @@
+{
+  "run_id": "8a303893171d",
+  "dry_run": true,
+  "providers": [
+    "anthropic",
+    "google",
+    "openai",
+    "optime",
+    "perplexity"
+  ],
+  "tracks": [
+    "TRACK_A_OPEN_WORLD",
+    "TRACK_B_CONTROLLED_EVIDENCE"
+  ],
+  "live_status": {
+    "perplexity": {
+      "statuses": [
+        "OK"
+      ],
+      "errors": []
+    },
+    "google": {
+      "statuses": [
+        "OK"
+      ],
+      "errors": []
+    },
+    "optime": {
+      "statuses": [
+        "OK"
+      ],
+      "errors": []
+    },
+    "openai": {
+      "statuses": [
+        "OK"
+      ],
+      "errors": []
+    },
+    "anthropic": {
+      "statuses": [
+        "OK"
+      ],
+      "errors": []
+    }
+  },
+  "report": "reports/MULTI_AI_BENCHMARK_SYSTEM_REPORT.md"
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BlindJudgingPacket",
+  "type": "object",
+  "required": ["blind_packet", "answer_key", "judge_instructions"],
+  "properties": {
+    "blind_packet": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["answer_id", "normalized_response", "provider", "model"],
+        "properties": {
+          "provider": {"const": "REDACTED"},
+          "model": {"const": "REDACTED"}
+        }
+      }
+    }
+  }
+}

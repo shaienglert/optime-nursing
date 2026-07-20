@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NormalizedResponse",
+  "type": "object",
+  "required": [
+    "UNDERSTOOD_PERSON_PROFILE",
+    "EXPLICIT_NEEDS",
+    "MISSING_INFORMATION",
+    "CLARIFYING_QUESTIONS",
+    "MUST_REQUIREMENTS",
+    "PROFESSIONAL_RECOMMENDATIONS",
+    "NICE_TO_HAVE",
+    "FACILITIES_CONSIDERED",
+    "TOP_5",
+    "UNSUPPORTED_OR_UNVERIFIED_CLAIMS",
+    "NEXT_STEPS_FOR_FAMILY"
+  ],
+  "properties": {
+    "TOP_5": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["facility_name", "why_selected", "must_satisfied", "must_failed", "must_unknown", "sources", "confidence"]
+      }
+    }
+  }
+}

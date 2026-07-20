@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BenchmarkCaseRegistry",
+  "type": "object",
+  "required": ["registry_version", "frozen_at", "cases"],
+  "properties": {
+    "registry_version": {"type": "string"},
+    "frozen_at": {"type": "string"},
+    "cases": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["case_id", "version", "origin", "scenario", "person_profile", "explicit_needs", "explicit_non_negotiables", "known_unknowns", "ground_truth"],
+        "properties": {
+          "case_id": {"type": "string"},
+          "version": {"type": "string"},
+          "origin": {"enum": ["EXTERNALLY_DEFINED", "USER_DEFINED", "SYNTHETIC"]},
+          "ground_truth": {"type": "object"}
+        }
+      }
+    }
+  }
+}

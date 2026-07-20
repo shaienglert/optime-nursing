@@ -1,0 +1,33 @@
+{
+  "rubric_version": "1.0.0",
+  "frozen_at": "2026-07-20T00:00:00Z",
+  "dimensions": [
+    "understood_person_correctly",
+    "preserved_explicit_needs",
+    "identified_important_unknowns",
+    "asked_useful_clarifications",
+    "avoided_unsupported_musts",
+    "avoided_unsupported_professional_claims",
+    "recommended_plausible_facilities",
+    "explained_tradeoffs",
+    "provided_traceable_evidence",
+    "handled_uncertainty_honestly",
+    "helped_family_make_decision"
+  ],
+  "required_judge_output": [
+    "dimension_score",
+    "reason",
+    "critical_error_flags"
+  ],
+  "judge_panels_supported": [
+    "AI_JUDGE_1",
+    "AI_JUDGE_2",
+    "AI_JUDGE_3",
+    "HUMAN_PROFESSIONAL_JUDGE",
+    "FAMILY_USER_USEFULNESS_JUDGE"
+  ],
+  "governance_rules": {
+    "no_single_self_judge": true,
+    "subjective_not_objective_truth": true
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "registry_version": "1.0.0",
+  "generated_at": "2026-07-20T06:56:15+00:00",
+  "entries": [
+    {
+      "case_id": "ASSISTED_ADL_DADE_003",
+      "version": "1.0.0",
+      "content_hash": "b897fb9bedcab5c0844c93fee0807d0a17bc9bb1bda23a498c5c3e288d46fb53"
+    },
+    {
+      "case_id": "COUPLE_SPLIT_NEEDS_013",
+      "version": "1.0.0",
+      "content_hash": "1c77305f2a5587c7167fd34253985ef36fc940c9bb043f60eb4408cb3130b29d"
+    },
+    {
+      "case_id": "CULTURAL_KOSHER_012",
+      "version": "1.0.0",
+      "content_hash": "92e975cec382c599089ea7e82ab4728de4c6fc6e925aac167b5cf250d3af7697"
+    },
+    {
+      "case_id": "EARLY_MEMORY_BROWARD_004",
+      "version": "1.0.0",
+      "content_hash": "4065498f7982ea67337a40b6367994c74a60ecddbde53dc89efc1127a9e8d96e"
+    },
+    {
+      "case_id": "FAMILY_CONFLICT_018",
+      "version": "1.0.0",
+      "content_hash": "decec6edb267a233067e031601c771b29d2034adcadc1174e18ecb58c115c765"
+    },
+    {
+      "case_id": "FLEX_GEO_FL_015",
+      "version": "1.0.0",
+      "content_hash": "c58808eca10fbf8c1d469ec1e60f2c611b7b165ebfa5304ee951f76883074ff8"
+    },
+    {
+      "case_id": "INDEPENDENT_SOCIAL_PB_002",
+      "version": "1.0.0",
+      "content_hash": "f76886a2704e66ff22d40a25c0a5d67e8c1730cf09b531d5e17965455dbf1d2c"
+    },
+    {
+      "case_id": "LANGUAGE_HEBREW_011",
+      "version": "1.0.0",
+      "content_hash": "5cc7e08860dc433b7247d5b8179501690dd0613253106873a53abc832b307680"
+    },
+    {
+      "case_id": "MEDICATION_COMPLEXITY_007",
+      "version": "1.0.0",
+      "content_hash": "cc653d208a1a261e3bec68496a7dc6c663f876a3417103f78e5c5942f24b8c77"
+    },
+    {
+      "case_id": "MEMORY_CARE_STRICT_005",
+      "version": "1.0.0",
+      "content_hash": "222fa0bfbac2115661b4ee885a41515b66ce38afd0a1da5d0b08b6e17c662e42"
+    },
+    {
+      "case_id": "MISSING_CRITICAL_019",
+      "version": "1.0.0",
+      "content_hash": "d6e56a1a1c09f18c9edd1749ce9da72d85ccce05d8717b2a00a3d7dcd1535437"
+    },
+    {
+      "case_id": "NURSING_24_7_009",
+      "version": "1.0.0",
+      "content_hash": "5f3edb86e6e482e8343f7bda5a30761c0412a811d83102034338cf84b370f876"
+    },
+    {
+      "case_id": "POST_HOSPITAL_REHAB_008",
+      "version": "1.0.0",
+      "content_hash": "cc500cfa62657c67330057a6044170dfc478f05257265b32baf361f66e5b2559"
+    },
+    {
+      "case_id": "POST_STROKE_MIAMI_001",
+      "version": "1.0.0",
+      "content_hash": "7f2da54a6717dc4676a4fd17130892f605ac4c84aa640fdbe80548907f05bd7d"
+    },
+    {
+      "case_id": "REHAB_PLUS_SOCIAL_020",
+      "version": "1.0.0",
+      "content_hash": "70ce0e1ead16a80b9db51650d99047278335c86e2bad82361d3f4d6f804eda23"
+    },
+    {
+      "case_id": "SOCIAL_ISOLATION_010",
+      "version": "1.0.0",
+      "content_hash": "5514cad5bbfa225d4a4d1a16f8c9b654b533ed77ae61468c7cbbf659e9b30b77"
+    },
+    {
+      "case_id": "STRICT_BUDGET_016",
+      "version": "1.0.0",
+      "content_hash": "3003bdb6304c030d5f5c136b48956e6b42b59256f053a2fdc1816aef0b170451"
+    },
+    {
+      "case_id": "STRICT_GEO_MIAMI_014",
+      "version": "1.0.0",
+      "content_hash": "3b94c469758b405b91053b36fd362b3c6e09afe8ef51567aac7539133a1e8c41"
+    },
+    {
+      "case_id": "UNKNOWN_BUDGET_017",
+      "version": "1.0.0",
+      "content_hash": "72ba94ae673611603326b9e97f91ccf41e1890e7de9e94364d333f061fc300b4"
+    },
+    {
+      "case_id": "WHEELCHAIR_ACCESS_006",
+      "version": "1.0.0",
+      "content_hash": "cc5145296118e615d238038cd85df687c0e69f865344a21fdd6c76379ecb9799"
+    }
+  ]
+}
