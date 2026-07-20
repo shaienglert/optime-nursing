@@ -1,0 +1,3768 @@
+{
+  "generated_at_utc": "2026-07-20T21:43:42.544Z",
+  "task_scope": "CONTROLLED_VALIDATION_AUDIT_ONLY",
+  "principle_impact_check": {
+    "relevant_existing_principles": [
+      "PR-005",
+      "PR-006",
+      "PR-007",
+      "PR-008"
+    ],
+    "does_this_change_alter_any_principle": "NO",
+    "owner_approval_required": "NO",
+    "classification": "B. Implementation Completion"
+  },
+  "frozen_case": {
+    "case_id": "POST_STROKE_MIAMI_001",
+    "age": 82,
+    "location": "Miami-Dade County or reasonably close to family in Miami",
+    "care_needs": {
+      "nursing_support_24_7": true,
+      "rehabilitation_requirement": true,
+      "medication_management": true
+    },
+    "therapy_needs": {
+      "physical_therapy": true,
+      "occupational_therapy": true,
+      "speech_therapy": true
+    },
+    "mobility_needs": {
+      "limited_mobility": true,
+      "transfer_assistance": true,
+      "bathing_assistance": true,
+      "dressing_assistance": true
+    },
+    "languages": [
+      "English",
+      "Hebrew"
+    ],
+    "cognitive_status": {
+      "mentally_alert": true,
+      "no_dementia": true
+    },
+    "budget": 17000,
+    "distance_policy": {
+      "classification": "SOFT_PREFERENCE",
+      "hard_constraint": false,
+      "county_preference": "Miami-Dade"
+    },
+    "hard_filters": [
+      "Required care type support (supportsAllowedCareType).",
+      "No verified CRITICAL=NO capability.",
+      "Mandatory budget only if marked mandatory in state.",
+      "Mandatory distance only if marked mandatory in state.",
+      "Mandatory language only if marked mandatory in state.",
+      "Governed MUST eligibility gate."
+    ],
+    "nice_to_have_preferences": [
+      "Movies",
+      "Music",
+      "Conversation",
+      "Social activities"
+    ],
+    "case_fingerprint": "99ad8716065c3d2925eaf650d8711bdee14db8cf4cb657adb02eed5d7673d016"
+  },
+  "frozen_engine": {
+    "engine_commit_sha": "b97382f0dfdb94ae2cce2dd6f2d3a58676e03844",
+    "scoring_version": "SCORING_SHA256_fdedca1dbdc86614",
+    "ranking_version": "RANKING_SHA256_323005da543f5cdd",
+    "data_snapshot_timestamp_utc": "2026-07-17 20:48:06.998555",
+    "ranking_run_timestamp_utc": "2026-07-20T21:43:42.544Z",
+    "case_fingerprint": "99ad8716065c3d2925eaf650d8711bdee14db8cf4cb657adb02eed5d7673d016"
+  },
+  "candidate_universe": {
+    "discovered_total": 100,
+    "ranked_total": 10,
+    "rejected_total": 90,
+    "required_facilities_present": [
+      {
+        "facility": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+        "present_in_runtime_dataset": true
+      },
+      {
+        "facility": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+        "present_in_runtime_dataset": true
+      },
+      {
+        "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+        "present_in_runtime_dataset": true
+      },
+      {
+        "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+        "present_in_runtime_dataset": true
+      },
+      {
+        "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "present_in_runtime_dataset": true
+      },
+      {
+        "facility": "PINECREST CENTER FOR REHABILITATION AND HEALING",
+        "present_in_runtime_dataset": true
+      },
+      {
+        "facility": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+        "present_in_runtime_dataset": true
+      }
+    ],
+    "facilities": [
+      {
+        "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "PINES NURSING HOME",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "VILLA MARIA NURSING CENTER",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+        "in_candidate_universe": "YES",
+        "exclusion": null
+      },
+      {
+        "facility_name": "APOLLO HEALTHCARE & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "ATHENS POST ACUTE LLC",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "AVANTE AT INVERNESS INC",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "AVANTE AT LEESBURG, INC",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "AVANTE AT ORMOND BEACH, INC",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "AVIATA AT EMERALD SHORES",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "AVIATA AT LAKESIDE OAKS",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "AVIATA AT SAINT LUCIE",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "AVIATA AT THE SEA - PASADENA",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "AVIATA AT THE SEA - POMPANO BEACH",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BARTOW CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BAYSIDE CARE CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BAYSIDE HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BEACH STREET HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BEACHSIDE CENTER FOR REHABILITATION AND NURSING",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "Blue Lake Post Acute",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BOCA CIEGA CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BOCA RATON REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BOULEVARD REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BRADEN RIVER REHABILITATION CENTER LLC",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BROOKSVILLE HEALTHCARE CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BROWARD NURSING & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "BROWARD OAKS NURSING AND REHABILITATION",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "CLEARWATER CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "COMMUNITY CONVALESCENT CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "CRESTVIEW REHABILITATION CENTER, LLC",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "CRYSTAL RIVER HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "DAYTONA BEACH HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "EAGLE LAKE NURSING AND REHAB CARE CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "EDEN SPRINGS NURSING AND REHAB CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "EGRET COVE CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "EMERALD COAST CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "FAIRWAY OAKS CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "FORT WALTON REHABILITATION CENTER, LLC",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "FT LAUDERDALE HEALTH & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "GOLFCREST NURSING CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "GREENBRIAR HEALTHCARE REHABILITATION AND NURSING C",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "GROVES CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "JACKSON MEMORIAL PERDUE MEDICAL CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "JACKSONVILLE REHABILITATION AND NURSING",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "LAKE EUSTIS HEALTHCARE AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "LAKELAND HILLS CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "LAKESIDE HEALTH CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "LAURELLWOOD POST- ACUTE AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "LEXINGTON HEALTHCARE AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "LIFE CARE CENTER OF MELBOURNE",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "LIFE CARE CENTER OF PUNTA GORDA",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "MADISON POINTE CARE CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "MARTIN COAST CENTER FOR REHABILITATION AND HEALTHC",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "MEDICANA NURSING AND REHAB CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "MELBOURNE HEALTHCARE AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "MORTON PLANT REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "NORTH HEALTHCARE AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "OAK HAVEN REHAB AND NURSING CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "OAK MANOR HEALTHCARE & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "PALMS AT SEBRING NURSING AND REHABILITATION THE",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "PARK MEADOWS HEALTHCARE & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "PARKSIDE HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "PARKVIEW REHABILITATION CENTER AT WINTER PARK",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "PINES OF SARASOTA",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "PLANTATION NURSING & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "REHABILITATION AND HEALTHCARE CENTER OF TAMPA",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "Rehabilitation Center of The Palm Beaches, The",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "RIVERWOOD CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "ROCKLEDGE HEALTHCARE & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "SARASOTA HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "SAVOY AT FORT LAUDERDALE REHABILITATION AND NURSIN",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "SEASIDE HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "SHORE ACRES CARE CENTER AND REHAB",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "SOUTH HERITAGE HEALTH & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "SOUTHERN PINES NURSING CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "ST AUGUSTINE HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "STUART REHABILITATION AND HEALTHCARE",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "SUNRISE POINT HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "TALLAHASSEE MEMORIAL HOSPITAL EXTENDED CARE",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "TARPON BAYOU CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "TERRACES OF LAKE WORTH CARE CENTER AND REHAB",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "THE BRISTOL CARE CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "THE LODGE HEALTHCARE AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "VALENCIA HILLS HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "VENTURA HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "W FRANK WELLS NURSING HOME",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "WESTLAKE NURSING AND REHAB CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "WESTSIDE OAKS REHABILITATION & NURSING CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "WHISPERING OAKS",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "WILTON MANORS HEALTHCARE & REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      },
+      {
+        "facility_name": "WINTER HAVEN HEALTH AND REHABILITATION CENTER",
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_rule": "This community is outside the location range that was marked as mandatory.",
+          "exclusion_category": "distance/geography",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:YES:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        }
+      }
+    ]
+  },
+  "evidence_parity": {
+    "same_checklist_fields_applied_to_all_candidates": true,
+    "required_fields": [
+      "24/7 skilled nursing",
+      "post-stroke / neurological rehabilitation",
+      "physical therapy",
+      "occupational therapy",
+      "speech therapy",
+      "mobility / transfer assistance",
+      "medication management",
+      "relevant CMS quality",
+      "staffing",
+      "regulatory / inspection risk",
+      "Medicare / Medicaid where relevant",
+      "distance / geography",
+      "language / cultural fit where relevant",
+      "other explicit case requirements"
+    ],
+    "unknown_preservation_rule": "UNKNOWN is preserved and never converted to NO.",
+    "source_access_failure_rule": "SOURCE_ACCESS_FAILED is preserved independently.",
+    "duplicate_evidence_policy": "No evidence count tie-break is used for ranking.",
+    "generic_completeness_policy": "Generic completeness is not a ranking comparator.",
+    "connectivity_snapshot": {
+      "lookup_mode": "REUSE_EXISTING_EVIDENCE_WITH_LOCAL_DB_STATUS",
+      "latest_run_id": "20260720T214443Z",
+      "source_attempt_status_counts": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 205,
+        "SOURCE_ACCESS_FAILED": 4,
+        "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 6,
+        "SOURCE_RATE_LIMITED": 3
+      },
+      "access_status_normalization": [
+        "SUCCESS",
+        "TIMEOUT",
+        "GEO_BLOCKED_OR_SUSPECTED",
+        "RATE_LIMITED",
+        "ACCESS_DENIED",
+        "NETWORK_ERROR",
+        "OTHER"
+      ]
+    }
+  },
+  "controlled_process": {
+    "sequence": [
+      "FREEZE_CASE",
+      "FREEZE_ENGINE",
+      "BUILD_CANDIDATE_UNIVERSE",
+      "APPLY_SAME_EVIDENCE_CHECKLIST",
+      "RECORD_UNKNOWN_AND_ACCESS_FAILURES",
+      "FREEZE_EVIDENCE_SNAPSHOT",
+      "RUN_RANKING_ONCE",
+      "GENERATE_TRACE"
+    ],
+    "candidate_universe_rule": "single_engine_run_same_case",
+    "same_checklist_for_all_candidates": true,
+    "source_authority_rules_preserved": true,
+    "single_ranking_run": true,
+    "unknown_and_access_failures_preserved": true,
+    "external_lookup_performed": false
+  },
+  "key_facilities": [
+    {
+      "requested_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+      "trace_exists": true,
+      "in_candidate_universe": "NO",
+      "exclusion": {
+        "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+        "exclusion_rule": "This community does not provide the required level of daily support.",
+        "exclusion_category": "care capability",
+        "source_data_used": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      "current_rank": null,
+      "eligible_under_frozen_case": "NO",
+      "received_verified_negative_case_relevant_evidence": "NO",
+      "what_prevents_higher_rank": "This community does not provide the required level of daily support.",
+      "trace": {
+        "facility_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+        "facility_id": 62,
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        },
+        "eligibility_under_frozen_case": "NO",
+        "current_rank": null,
+        "quality_score": 82.97792,
+        "personalized_match": 0,
+        "proven_match": 0,
+        "potential_match": "NOT_CALCULABLE",
+        "evidence_confidence": "LOW",
+        "case_relevant_evidence_coverage_pct": 0,
+        "critical_evidence_coverage_pct": 0,
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Skilled nursing capability",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "critical_unknown_count": 8,
+        "verified_positive_case_relevant_facts": [],
+        "verified_negative_case_relevant_facts": [],
+        "limited_facts": [],
+        "source_access_failures": {},
+        "hard_filter_status": "FAILED",
+        "distance_geography_status": "FAILED",
+        "requirement_checklist_classification": {
+          "licensed_nurses_24_7": {
+            "title": "24/7 skilled nursing",
+            "classification": "UNKNOWN"
+          },
+          "post_stroke_neuro_rehab": {
+            "title": "post-stroke / neurological rehabilitation",
+            "classification": "UNKNOWN"
+          },
+          "physical_therapy": {
+            "title": "physical therapy",
+            "classification": "UNKNOWN"
+          },
+          "occupational_therapy": {
+            "title": "occupational therapy",
+            "classification": "UNKNOWN"
+          },
+          "speech_therapy": {
+            "title": "speech therapy",
+            "classification": "UNKNOWN"
+          },
+          "mobility_transfer": {
+            "title": "mobility / transfer assistance",
+            "classification": "UNKNOWN"
+          },
+          "medication_management": {
+            "title": "medication management",
+            "classification": "UNKNOWN"
+          },
+          "cms_quality": {
+            "title": "relevant CMS quality",
+            "classification": "UNKNOWN"
+          },
+          "staffing": {
+            "title": "staffing",
+            "classification": "UNKNOWN"
+          },
+          "regulatory_inspection": {
+            "title": "regulatory / inspection risk",
+            "classification": "UNKNOWN"
+          },
+          "medicare_medicaid": {
+            "title": "Medicare / Medicaid where relevant",
+            "classification": "UNKNOWN"
+          },
+          "distance_geography": {
+            "title": "distance / geography",
+            "classification": "UNKNOWN"
+          },
+          "language_cultural": {
+            "title": "language / cultural fit where relevant",
+            "classification": "UNKNOWN"
+          },
+          "case_specific_other": {
+            "title": "other explicit case requirements",
+            "classification": "UNKNOWN"
+          }
+        },
+        "exact_ranking_contributions": {
+          "governed_factors": [
+            {
+              "factor": "OUR_RECOMMENDATION alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "NICE_TO_HAVE alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "Legacy heuristic match score",
+              "contribution": 0,
+              "type": "LEGACY_HEURISTIC_COMPONENT"
+            }
+          ],
+          "score_breakdown": [
+            {
+              "name": "Critical requirements",
+              "score": 0,
+              "maxScore": 1,
+              "source": "Deterministic checklist",
+              "rationale": "Only verified critical and important capabilities drive the proven match score.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Preference bonus",
+              "score": 0,
+              "maxScore": 2,
+              "source": "Deterministic checklist",
+              "rationale": "Preference matches affect ranking order only.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Confidence",
+              "score": 0,
+              "maxScore": 100,
+              "source": "Case-relevant evidence coverage",
+              "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+              "weightedContribution": 0
+            }
+          ]
+        },
+        "exact_tie_break_contributions": null,
+        "why_above_next": null,
+        "legacy_heuristic_audit": {
+          "legacy_heuristic_contribution": 0,
+          "legacy_inputs": "Legacy heuristic match score",
+          "affected_order": false,
+          "representation": "historical scoring / generic heuristic"
+        },
+        "high_potential_needs_verification": {
+          "qualification": "NOT_CALCULABLE",
+          "reason": "Potential Match is not calculable under current gate.",
+          "proven_match": 0,
+          "potential_match": "NOT_CALCULABLE",
+          "critical_unknowns": 8,
+          "evidence_confidence": "LOW"
+        }
+      }
+    },
+    {
+      "requested_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+      "trace_exists": true,
+      "in_candidate_universe": "NO",
+      "exclusion": {
+        "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+        "exclusion_rule": "This community does not provide the required level of daily support.",
+        "exclusion_category": "care capability",
+        "source_data_used": [
+          "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+          "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+          "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+          "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+          "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+          "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+        ]
+      },
+      "current_rank": null,
+      "eligible_under_frozen_case": "NO",
+      "received_verified_negative_case_relevant_evidence": "NO",
+      "what_prevents_higher_rank": "This community does not provide the required level of daily support.",
+      "trace": {
+        "facility_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+        "facility_id": 7,
+        "in_candidate_universe": "NO",
+        "exclusion": {
+          "exact_exclusion_reason": "This community does not provide the required level of daily support.",
+          "exclusion_rule": "This community does not provide the required level of daily support.",
+          "exclusion_category": "care capability",
+          "source_data_used": [
+            "REQ-1-LICENSED_NURSES_24_7:LIMITED:HEURISTIC_INFERRED",
+            "REQ-2-SKILLED_NURSING:LIMITED:HEURISTIC_INFERRED",
+            "REQ-3-NEUROLOGICAL_REHABILITATION:LIMITED:HEURISTIC_INFERRED",
+            "REQ-4-SPEECH_THERAPY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-8-WALKER_ACCESSIBILITY:LIMITED:HEURISTIC_INFERRED",
+            "REQ-10-MOBILITY_ASSISTANCE:LIMITED:HEURISTIC_INFERRED",
+            "REQ-EXPLICIT-MEDICATION_MANAGEMENT:UNKNOWN:HEURISTIC_INFERRED"
+          ]
+        },
+        "eligibility_under_frozen_case": "NO",
+        "current_rank": null,
+        "quality_score": 100,
+        "personalized_match": 0,
+        "proven_match": 0,
+        "potential_match": "NOT_CALCULABLE",
+        "evidence_confidence": "LOW",
+        "case_relevant_evidence_coverage_pct": 0,
+        "critical_evidence_coverage_pct": 0,
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Skilled nursing capability",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "critical_unknown_count": 8,
+        "verified_positive_case_relevant_facts": [],
+        "verified_negative_case_relevant_facts": [],
+        "limited_facts": [],
+        "source_access_failures": {},
+        "hard_filter_status": "FAILED",
+        "distance_geography_status": "FAILED",
+        "requirement_checklist_classification": {
+          "licensed_nurses_24_7": {
+            "title": "24/7 skilled nursing",
+            "classification": "UNKNOWN"
+          },
+          "post_stroke_neuro_rehab": {
+            "title": "post-stroke / neurological rehabilitation",
+            "classification": "UNKNOWN"
+          },
+          "physical_therapy": {
+            "title": "physical therapy",
+            "classification": "UNKNOWN"
+          },
+          "occupational_therapy": {
+            "title": "occupational therapy",
+            "classification": "UNKNOWN"
+          },
+          "speech_therapy": {
+            "title": "speech therapy",
+            "classification": "UNKNOWN"
+          },
+          "mobility_transfer": {
+            "title": "mobility / transfer assistance",
+            "classification": "UNKNOWN"
+          },
+          "medication_management": {
+            "title": "medication management",
+            "classification": "UNKNOWN"
+          },
+          "cms_quality": {
+            "title": "relevant CMS quality",
+            "classification": "UNKNOWN"
+          },
+          "staffing": {
+            "title": "staffing",
+            "classification": "UNKNOWN"
+          },
+          "regulatory_inspection": {
+            "title": "regulatory / inspection risk",
+            "classification": "UNKNOWN"
+          },
+          "medicare_medicaid": {
+            "title": "Medicare / Medicaid where relevant",
+            "classification": "UNKNOWN"
+          },
+          "distance_geography": {
+            "title": "distance / geography",
+            "classification": "UNKNOWN"
+          },
+          "language_cultural": {
+            "title": "language / cultural fit where relevant",
+            "classification": "UNKNOWN"
+          },
+          "case_specific_other": {
+            "title": "other explicit case requirements",
+            "classification": "UNKNOWN"
+          }
+        },
+        "exact_ranking_contributions": {
+          "governed_factors": [
+            {
+              "factor": "OUR_RECOMMENDATION alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "NICE_TO_HAVE alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "Legacy heuristic match score",
+              "contribution": 0,
+              "type": "LEGACY_HEURISTIC_COMPONENT"
+            }
+          ],
+          "score_breakdown": [
+            {
+              "name": "Critical requirements",
+              "score": 0,
+              "maxScore": 1,
+              "source": "Deterministic checklist",
+              "rationale": "Only verified critical and important capabilities drive the proven match score.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Preference bonus",
+              "score": 0,
+              "maxScore": 2,
+              "source": "Deterministic checklist",
+              "rationale": "Preference matches affect ranking order only.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Confidence",
+              "score": 0,
+              "maxScore": 100,
+              "source": "Case-relevant evidence coverage",
+              "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+              "weightedContribution": 0
+            }
+          ]
+        },
+        "exact_tie_break_contributions": null,
+        "why_above_next": null,
+        "legacy_heuristic_audit": {
+          "legacy_heuristic_contribution": 0,
+          "legacy_inputs": "Legacy heuristic match score",
+          "affected_order": false,
+          "representation": "historical scoring / generic heuristic"
+        },
+        "high_potential_needs_verification": {
+          "qualification": "NOT_CALCULABLE",
+          "reason": "Potential Match is not calculable under current gate.",
+          "proven_match": 0,
+          "potential_match": "NOT_CALCULABLE",
+          "critical_unknowns": 8,
+          "evidence_confidence": "LOW"
+        }
+      }
+    },
+    {
+      "requested_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "trace_exists": true,
+      "in_candidate_universe": "YES",
+      "exclusion": null,
+      "current_rank": 1,
+      "eligible_under_frozen_case": "YES",
+      "received_verified_negative_case_relevant_evidence": "NO",
+      "what_prevents_higher_rank": "Already rank #1 in this controlled run.",
+      "trace": {
+        "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+        "facility_id": 54,
+        "in_candidate_universe": "YES",
+        "exclusion": null,
+        "eligibility_under_frozen_case": "YES",
+        "current_rank": 1,
+        "quality_score": 100,
+        "personalized_match": 100,
+        "proven_match": 100,
+        "potential_match": "NOT_CALCULABLE",
+        "evidence_confidence": "LOW",
+        "case_relevant_evidence_coverage_pct": 14,
+        "critical_evidence_coverage_pct": 25,
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Gluten-free meal capability"
+        ],
+        "critical_unknown_count": 6,
+        "verified_positive_case_relevant_facts": [
+          "Skilled nursing capability",
+          "Memory care or dementia programming"
+        ],
+        "verified_negative_case_relevant_facts": [],
+        "limited_facts": [],
+        "source_access_failures": {
+          "RAN_CONNECTED_NO_NEW_VALUE": 3,
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+        },
+        "hard_filter_status": "PASS",
+        "distance_geography_status": "PASS_OR_NOT_MANDATORY",
+        "requirement_checklist_classification": {
+          "licensed_nurses_24_7": {
+            "title": "24/7 skilled nursing",
+            "classification": "VERIFIED_YES"
+          },
+          "post_stroke_neuro_rehab": {
+            "title": "post-stroke / neurological rehabilitation",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "physical_therapy": {
+            "title": "physical therapy",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "occupational_therapy": {
+            "title": "occupational therapy",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "speech_therapy": {
+            "title": "speech therapy",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "mobility_transfer": {
+            "title": "mobility / transfer assistance",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "medication_management": {
+            "title": "medication management",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "cms_quality": {
+            "title": "relevant CMS quality",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "staffing": {
+            "title": "staffing",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "regulatory_inspection": {
+            "title": "regulatory / inspection risk",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "medicare_medicaid": {
+            "title": "Medicare / Medicaid where relevant",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "distance_geography": {
+            "title": "distance / geography",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "language_cultural": {
+            "title": "language / cultural fit where relevant",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "case_specific_other": {
+            "title": "other explicit case requirements",
+            "classification": "SOURCE_ACCESS_FAILED"
+          }
+        },
+        "exact_ranking_contributions": {
+          "governed_factors": [
+            {
+              "factor": "OUR_RECOMMENDATION alignment",
+              "contribution": 2,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "NICE_TO_HAVE alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "Legacy heuristic match score",
+              "contribution": 100,
+              "type": "LEGACY_HEURISTIC_COMPONENT"
+            }
+          ],
+          "score_breakdown": [
+            {
+              "name": "Critical requirements",
+              "score": 2,
+              "maxScore": 2,
+              "source": "Deterministic checklist",
+              "rationale": "Only verified critical and important capabilities drive the proven match score.",
+              "weightedContribution": 100
+            },
+            {
+              "name": "Preference bonus",
+              "score": 0,
+              "maxScore": 2,
+              "source": "Deterministic checklist",
+              "rationale": "Preference matches affect ranking order only.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Confidence",
+              "score": 14,
+              "maxScore": 100,
+              "source": "Case-relevant evidence coverage",
+              "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+              "weightedContribution": 14
+            }
+          ]
+        },
+        "exact_tie_break_contributions": {
+          "preference_bonus_delta": 1,
+          "clinical_quality_delta": 0,
+          "family_fit_delta": -1.5210000000000008
+        },
+        "why_above_next": {
+          "decisive_rule": "GOVERNED_ALIGNMENT",
+          "reason": "Ordered above next by GOVERNED_ALIGNMENT.",
+          "comparator_deltas": {
+            "governed_fit_delta": 1,
+            "proven_match_delta": 0,
+            "evidence_coverage_delta": 7,
+            "final_match_delta": 0
+          },
+          "tie_break_deltas": {
+            "preference_bonus_delta": 1,
+            "clinical_quality_delta": 0,
+            "family_fit_delta": -1.5210000000000008
+          }
+        },
+        "legacy_heuristic_audit": {
+          "legacy_heuristic_contribution": 100,
+          "legacy_inputs": "Legacy heuristic match score",
+          "affected_order": false,
+          "representation": "historical scoring / generic heuristic"
+        },
+        "high_potential_needs_verification": {
+          "qualification": "NOT_CALCULABLE",
+          "reason": "Potential Match is not calculable under current gate.",
+          "proven_match": 100,
+          "potential_match": "NOT_CALCULABLE",
+          "critical_unknowns": 6,
+          "evidence_confidence": "LOW"
+        }
+      }
+    },
+    {
+      "requested_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "trace_exists": true,
+      "in_candidate_universe": "YES",
+      "exclusion": null,
+      "current_rank": 2,
+      "eligible_under_frozen_case": "YES",
+      "received_verified_negative_case_relevant_evidence": "NO",
+      "what_prevents_higher_rank": "Lower governed/proven/coverage comparator outcome than higher-ranked facility.",
+      "trace": {
+        "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+        "facility_id": 4,
+        "in_candidate_universe": "YES",
+        "exclusion": null,
+        "eligibility_under_frozen_case": "YES",
+        "current_rank": 2,
+        "quality_score": 100,
+        "personalized_match": 100,
+        "proven_match": 100,
+        "potential_match": 100,
+        "evidence_confidence": "LOW",
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "critical_unknown_count": 7,
+        "verified_positive_case_relevant_facts": [
+          "Skilled nursing capability"
+        ],
+        "verified_negative_case_relevant_facts": [],
+        "limited_facts": [
+          "Neurological rehabilitation",
+          "Physical therapy"
+        ],
+        "source_access_failures": {
+          "RAN_CONNECTED_NO_NEW_VALUE": 4
+        },
+        "hard_filter_status": "PASS",
+        "distance_geography_status": "PASS_OR_NOT_MANDATORY",
+        "requirement_checklist_classification": {
+          "licensed_nurses_24_7": {
+            "title": "24/7 skilled nursing",
+            "classification": "VERIFIED_YES"
+          },
+          "post_stroke_neuro_rehab": {
+            "title": "post-stroke / neurological rehabilitation",
+            "classification": "LIMITED"
+          },
+          "physical_therapy": {
+            "title": "physical therapy",
+            "classification": "LIMITED"
+          },
+          "occupational_therapy": {
+            "title": "occupational therapy",
+            "classification": "UNKNOWN"
+          },
+          "speech_therapy": {
+            "title": "speech therapy",
+            "classification": "UNKNOWN"
+          },
+          "mobility_transfer": {
+            "title": "mobility / transfer assistance",
+            "classification": "UNKNOWN"
+          },
+          "medication_management": {
+            "title": "medication management",
+            "classification": "UNKNOWN"
+          },
+          "cms_quality": {
+            "title": "relevant CMS quality",
+            "classification": "UNKNOWN"
+          },
+          "staffing": {
+            "title": "staffing",
+            "classification": "UNKNOWN"
+          },
+          "regulatory_inspection": {
+            "title": "regulatory / inspection risk",
+            "classification": "UNKNOWN"
+          },
+          "medicare_medicaid": {
+            "title": "Medicare / Medicaid where relevant",
+            "classification": "UNKNOWN"
+          },
+          "distance_geography": {
+            "title": "distance / geography",
+            "classification": "UNKNOWN"
+          },
+          "language_cultural": {
+            "title": "language / cultural fit where relevant",
+            "classification": "UNKNOWN"
+          },
+          "case_specific_other": {
+            "title": "other explicit case requirements",
+            "classification": "UNKNOWN"
+          }
+        },
+        "exact_ranking_contributions": {
+          "governed_factors": [
+            {
+              "factor": "OUR_RECOMMENDATION alignment",
+              "contribution": 1,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "NICE_TO_HAVE alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "Legacy heuristic match score",
+              "contribution": 100,
+              "type": "LEGACY_HEURISTIC_COMPONENT"
+            }
+          ],
+          "score_breakdown": [
+            {
+              "name": "Critical requirements",
+              "score": 1,
+              "maxScore": 1,
+              "source": "Deterministic checklist",
+              "rationale": "Only verified critical and important capabilities drive the proven match score.",
+              "weightedContribution": 100
+            },
+            {
+              "name": "Preference bonus",
+              "score": 0,
+              "maxScore": 2,
+              "source": "Deterministic checklist",
+              "rationale": "Preference matches affect ranking order only.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Confidence",
+              "score": 7,
+              "maxScore": 100,
+              "source": "Case-relevant evidence coverage",
+              "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+              "weightedContribution": 7
+            }
+          ]
+        },
+        "exact_tie_break_contributions": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 0,
+          "family_fit_delta": 1.0529999999999973
+        },
+        "why_above_next": {
+          "decisive_rule": "TIE_BREAK",
+          "reason": "Ordered above next by TIE_BREAK.",
+          "comparator_deltas": {
+            "governed_fit_delta": 0,
+            "proven_match_delta": 0,
+            "evidence_coverage_delta": 0,
+            "final_match_delta": 0
+          },
+          "tie_break_deltas": {
+            "preference_bonus_delta": 0,
+            "clinical_quality_delta": 0,
+            "family_fit_delta": 1.0529999999999973
+          }
+        },
+        "legacy_heuristic_audit": {
+          "legacy_heuristic_contribution": 100,
+          "legacy_inputs": "Legacy heuristic match score",
+          "affected_order": false,
+          "representation": "historical scoring / generic heuristic"
+        },
+        "high_potential_needs_verification": {
+          "qualification": "NO",
+          "reason": "Gate not satisfied (potential<=proven or no critical unknowns).",
+          "proven_match": 100,
+          "potential_match": 100,
+          "critical_unknowns": 7,
+          "evidence_confidence": "LOW"
+        }
+      }
+    },
+    {
+      "requested_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "trace_exists": true,
+      "in_candidate_universe": "YES",
+      "exclusion": null,
+      "current_rank": 3,
+      "eligible_under_frozen_case": "YES",
+      "received_verified_negative_case_relevant_evidence": "NO",
+      "what_prevents_higher_rank": "Lower governed/proven/coverage comparator outcome than higher-ranked facility.",
+      "trace": {
+        "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "facility_id": 3,
+        "in_candidate_universe": "YES",
+        "exclusion": null,
+        "eligibility_under_frozen_case": "YES",
+        "current_rank": 3,
+        "quality_score": 100,
+        "personalized_match": 100,
+        "proven_match": 100,
+        "potential_match": 100,
+        "evidence_confidence": "LOW",
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "critical_unknown_count": 7,
+        "verified_positive_case_relevant_facts": [
+          "Skilled nursing capability"
+        ],
+        "verified_negative_case_relevant_facts": [],
+        "limited_facts": [
+          "Neurological rehabilitation",
+          "Physical therapy"
+        ],
+        "source_access_failures": {
+          "RAN_CONNECTED_NO_NEW_VALUE": 3,
+          "SOURCE_RATE_LIMITED": 1
+        },
+        "hard_filter_status": "PASS",
+        "distance_geography_status": "PASS_OR_NOT_MANDATORY",
+        "requirement_checklist_classification": {
+          "licensed_nurses_24_7": {
+            "title": "24/7 skilled nursing",
+            "classification": "VERIFIED_YES"
+          },
+          "post_stroke_neuro_rehab": {
+            "title": "post-stroke / neurological rehabilitation",
+            "classification": "LIMITED"
+          },
+          "physical_therapy": {
+            "title": "physical therapy",
+            "classification": "LIMITED"
+          },
+          "occupational_therapy": {
+            "title": "occupational therapy",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "speech_therapy": {
+            "title": "speech therapy",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "mobility_transfer": {
+            "title": "mobility / transfer assistance",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "medication_management": {
+            "title": "medication management",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "cms_quality": {
+            "title": "relevant CMS quality",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "staffing": {
+            "title": "staffing",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "regulatory_inspection": {
+            "title": "regulatory / inspection risk",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "medicare_medicaid": {
+            "title": "Medicare / Medicaid where relevant",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "distance_geography": {
+            "title": "distance / geography",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "language_cultural": {
+            "title": "language / cultural fit where relevant",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "case_specific_other": {
+            "title": "other explicit case requirements",
+            "classification": "SOURCE_ACCESS_FAILED"
+          }
+        },
+        "exact_ranking_contributions": {
+          "governed_factors": [
+            {
+              "factor": "OUR_RECOMMENDATION alignment",
+              "contribution": 1,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "NICE_TO_HAVE alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "Legacy heuristic match score",
+              "contribution": 100,
+              "type": "LEGACY_HEURISTIC_COMPONENT"
+            }
+          ],
+          "score_breakdown": [
+            {
+              "name": "Critical requirements",
+              "score": 1,
+              "maxScore": 1,
+              "source": "Deterministic checklist",
+              "rationale": "Only verified critical and important capabilities drive the proven match score.",
+              "weightedContribution": 100
+            },
+            {
+              "name": "Preference bonus",
+              "score": 0,
+              "maxScore": 2,
+              "source": "Deterministic checklist",
+              "rationale": "Preference matches affect ranking order only.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Confidence",
+              "score": 7,
+              "maxScore": 100,
+              "source": "Case-relevant evidence coverage",
+              "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+              "weightedContribution": 7
+            }
+          ]
+        },
+        "exact_tie_break_contributions": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 7.005279999999999,
+          "family_fit_delta": -0.5850000000000009
+        },
+        "why_above_next": {
+          "decisive_rule": "TIE_BREAK",
+          "reason": "Ordered above next by TIE_BREAK.",
+          "comparator_deltas": {
+            "governed_fit_delta": 0,
+            "proven_match_delta": 0,
+            "evidence_coverage_delta": 0,
+            "final_match_delta": 0
+          },
+          "tie_break_deltas": {
+            "preference_bonus_delta": 0,
+            "clinical_quality_delta": 7.005279999999999,
+            "family_fit_delta": -0.5850000000000009
+          }
+        },
+        "legacy_heuristic_audit": {
+          "legacy_heuristic_contribution": 100,
+          "legacy_inputs": "Legacy heuristic match score",
+          "affected_order": false,
+          "representation": "historical scoring / generic heuristic"
+        },
+        "high_potential_needs_verification": {
+          "qualification": "NO",
+          "reason": "Gate not satisfied (potential<=proven or no critical unknowns).",
+          "proven_match": 100,
+          "potential_match": 100,
+          "critical_unknowns": 7,
+          "evidence_confidence": "LOW"
+        }
+      }
+    },
+    {
+      "requested_name": "PINECREST CENTER FOR REHABILITATION AND HEALING",
+      "trace_exists": true,
+      "in_candidate_universe": "YES",
+      "exclusion": null,
+      "current_rank": 4,
+      "eligible_under_frozen_case": "YES",
+      "received_verified_negative_case_relevant_evidence": "NO",
+      "what_prevents_higher_rank": "Lower governed/proven/coverage comparator outcome than higher-ranked facility.",
+      "trace": {
+        "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+        "facility_id": 36,
+        "in_candidate_universe": "YES",
+        "exclusion": null,
+        "eligibility_under_frozen_case": "YES",
+        "current_rank": 4,
+        "quality_score": 92.99472,
+        "personalized_match": 100,
+        "proven_match": 100,
+        "potential_match": 100,
+        "evidence_confidence": "LOW",
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "critical_unknown_count": 7,
+        "verified_positive_case_relevant_facts": [
+          "Skilled nursing capability"
+        ],
+        "verified_negative_case_relevant_facts": [],
+        "limited_facts": [
+          "Neurological rehabilitation",
+          "Physical therapy"
+        ],
+        "source_access_failures": {
+          "RAN_CONNECTED_NO_NEW_VALUE": 3,
+          "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+        },
+        "hard_filter_status": "PASS",
+        "distance_geography_status": "PASS_OR_NOT_MANDATORY",
+        "requirement_checklist_classification": {
+          "licensed_nurses_24_7": {
+            "title": "24/7 skilled nursing",
+            "classification": "VERIFIED_YES"
+          },
+          "post_stroke_neuro_rehab": {
+            "title": "post-stroke / neurological rehabilitation",
+            "classification": "LIMITED"
+          },
+          "physical_therapy": {
+            "title": "physical therapy",
+            "classification": "LIMITED"
+          },
+          "occupational_therapy": {
+            "title": "occupational therapy",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "speech_therapy": {
+            "title": "speech therapy",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "mobility_transfer": {
+            "title": "mobility / transfer assistance",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "medication_management": {
+            "title": "medication management",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "cms_quality": {
+            "title": "relevant CMS quality",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "staffing": {
+            "title": "staffing",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "regulatory_inspection": {
+            "title": "regulatory / inspection risk",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "medicare_medicaid": {
+            "title": "Medicare / Medicaid where relevant",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "distance_geography": {
+            "title": "distance / geography",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "language_cultural": {
+            "title": "language / cultural fit where relevant",
+            "classification": "SOURCE_ACCESS_FAILED"
+          },
+          "case_specific_other": {
+            "title": "other explicit case requirements",
+            "classification": "SOURCE_ACCESS_FAILED"
+          }
+        },
+        "exact_ranking_contributions": {
+          "governed_factors": [
+            {
+              "factor": "OUR_RECOMMENDATION alignment",
+              "contribution": 1,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "NICE_TO_HAVE alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "Legacy heuristic match score",
+              "contribution": 100,
+              "type": "LEGACY_HEURISTIC_COMPONENT"
+            }
+          ],
+          "score_breakdown": [
+            {
+              "name": "Critical requirements",
+              "score": 1,
+              "maxScore": 1,
+              "source": "Deterministic checklist",
+              "rationale": "Only verified critical and important capabilities drive the proven match score.",
+              "weightedContribution": 100
+            },
+            {
+              "name": "Preference bonus",
+              "score": 0,
+              "maxScore": 2,
+              "source": "Deterministic checklist",
+              "rationale": "Preference matches affect ranking order only.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Confidence",
+              "score": 7,
+              "maxScore": 100,
+              "source": "Case-relevant evidence coverage",
+              "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+              "weightedContribution": 7
+            }
+          ]
+        },
+        "exact_tie_break_contributions": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 0.04304000000000485,
+          "family_fit_delta": 0.11700000000000443
+        },
+        "why_above_next": {
+          "decisive_rule": "TIE_BREAK",
+          "reason": "Ordered above next by TIE_BREAK.",
+          "comparator_deltas": {
+            "governed_fit_delta": 0,
+            "proven_match_delta": 0,
+            "evidence_coverage_delta": 0,
+            "final_match_delta": 0
+          },
+          "tie_break_deltas": {
+            "preference_bonus_delta": 0,
+            "clinical_quality_delta": 0.04304000000000485,
+            "family_fit_delta": 0.11700000000000443
+          }
+        },
+        "legacy_heuristic_audit": {
+          "legacy_heuristic_contribution": 100,
+          "legacy_inputs": "Legacy heuristic match score",
+          "affected_order": false,
+          "representation": "historical scoring / generic heuristic"
+        },
+        "high_potential_needs_verification": {
+          "qualification": "NO",
+          "reason": "Gate not satisfied (potential<=proven or no critical unknowns).",
+          "proven_match": 100,
+          "potential_match": 100,
+          "critical_unknowns": 7,
+          "evidence_confidence": "LOW"
+        }
+      }
+    },
+    {
+      "requested_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "trace_exists": true,
+      "in_candidate_universe": "YES",
+      "exclusion": null,
+      "current_rank": 5,
+      "eligible_under_frozen_case": "YES",
+      "received_verified_negative_case_relevant_evidence": "NO",
+      "what_prevents_higher_rank": "Lower governed/proven/coverage comparator outcome than higher-ranked facility.",
+      "trace": {
+        "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+        "facility_id": 41,
+        "in_candidate_universe": "YES",
+        "exclusion": null,
+        "eligibility_under_frozen_case": "YES",
+        "current_rank": 5,
+        "quality_score": 92.95168,
+        "personalized_match": 100,
+        "proven_match": 100,
+        "potential_match": 100,
+        "evidence_confidence": "LOW",
+        "case_relevant_evidence_coverage_pct": 7,
+        "critical_evidence_coverage_pct": 13,
+        "critical_unknowns": [
+          "Licensed nurses 24/7",
+          "Neurological rehabilitation",
+          "Speech therapy",
+          "Walker accessibility",
+          "Fall prevention protocol",
+          "Memory care or dementia programming",
+          "Gluten-free meal capability"
+        ],
+        "critical_unknown_count": 7,
+        "verified_positive_case_relevant_facts": [
+          "Skilled nursing capability"
+        ],
+        "verified_negative_case_relevant_facts": [],
+        "limited_facts": [
+          "Neurological rehabilitation",
+          "Physical therapy"
+        ],
+        "source_access_failures": {
+          "RAN_CONNECTED_NO_NEW_VALUE": 4
+        },
+        "hard_filter_status": "PASS",
+        "distance_geography_status": "PASS_OR_NOT_MANDATORY",
+        "requirement_checklist_classification": {
+          "licensed_nurses_24_7": {
+            "title": "24/7 skilled nursing",
+            "classification": "VERIFIED_YES"
+          },
+          "post_stroke_neuro_rehab": {
+            "title": "post-stroke / neurological rehabilitation",
+            "classification": "LIMITED"
+          },
+          "physical_therapy": {
+            "title": "physical therapy",
+            "classification": "LIMITED"
+          },
+          "occupational_therapy": {
+            "title": "occupational therapy",
+            "classification": "UNKNOWN"
+          },
+          "speech_therapy": {
+            "title": "speech therapy",
+            "classification": "UNKNOWN"
+          },
+          "mobility_transfer": {
+            "title": "mobility / transfer assistance",
+            "classification": "UNKNOWN"
+          },
+          "medication_management": {
+            "title": "medication management",
+            "classification": "UNKNOWN"
+          },
+          "cms_quality": {
+            "title": "relevant CMS quality",
+            "classification": "UNKNOWN"
+          },
+          "staffing": {
+            "title": "staffing",
+            "classification": "UNKNOWN"
+          },
+          "regulatory_inspection": {
+            "title": "regulatory / inspection risk",
+            "classification": "UNKNOWN"
+          },
+          "medicare_medicaid": {
+            "title": "Medicare / Medicaid where relevant",
+            "classification": "UNKNOWN"
+          },
+          "distance_geography": {
+            "title": "distance / geography",
+            "classification": "UNKNOWN"
+          },
+          "language_cultural": {
+            "title": "language / cultural fit where relevant",
+            "classification": "UNKNOWN"
+          },
+          "case_specific_other": {
+            "title": "other explicit case requirements",
+            "classification": "UNKNOWN"
+          }
+        },
+        "exact_ranking_contributions": {
+          "governed_factors": [
+            {
+              "factor": "OUR_RECOMMENDATION alignment",
+              "contribution": 1,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "NICE_TO_HAVE alignment",
+              "contribution": 0,
+              "type": "GOVERNED_RANKING"
+            },
+            {
+              "factor": "Legacy heuristic match score",
+              "contribution": 100,
+              "type": "LEGACY_HEURISTIC_COMPONENT"
+            }
+          ],
+          "score_breakdown": [
+            {
+              "name": "Critical requirements",
+              "score": 1,
+              "maxScore": 1,
+              "source": "Deterministic checklist",
+              "rationale": "Only verified critical and important capabilities drive the proven match score.",
+              "weightedContribution": 100
+            },
+            {
+              "name": "Preference bonus",
+              "score": 0,
+              "maxScore": 2,
+              "source": "Deterministic checklist",
+              "rationale": "Preference matches affect ranking order only.",
+              "weightedContribution": 0
+            },
+            {
+              "name": "Confidence",
+              "score": 7,
+              "maxScore": 100,
+              "source": "Case-relevant evidence coverage",
+              "rationale": "Coverage tracks verified decision evidence only. UNKNOWN and unverified claims reduce confidence only and are never treated as NO.",
+              "weightedContribution": 7
+            }
+          ]
+        },
+        "exact_tie_break_contributions": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 7.628,
+          "family_fit_delta": 0.4679999999999964
+        },
+        "why_above_next": {
+          "decisive_rule": "TIE_BREAK",
+          "reason": "Ordered above next by TIE_BREAK.",
+          "comparator_deltas": {
+            "governed_fit_delta": 0,
+            "proven_match_delta": 0,
+            "evidence_coverage_delta": 0,
+            "final_match_delta": 0
+          },
+          "tie_break_deltas": {
+            "preference_bonus_delta": 0,
+            "clinical_quality_delta": 7.628,
+            "family_fit_delta": 0.4679999999999964
+          }
+        },
+        "legacy_heuristic_audit": {
+          "legacy_heuristic_contribution": 100,
+          "legacy_inputs": "Legacy heuristic match score",
+          "affected_order": false,
+          "representation": "historical scoring / generic heuristic"
+        },
+        "high_potential_needs_verification": {
+          "qualification": "NO",
+          "reason": "Gate not satisfied (potential<=proven or no critical unknowns).",
+          "proven_match": 100,
+          "potential_match": 100,
+          "critical_unknowns": 7,
+          "evidence_confidence": "LOW"
+        }
+      }
+    }
+  ],
+  "sands_verification": {
+    "current_rank": 1,
+    "evidence_confidence": "LOW",
+    "case_relevant_evidence_coverage_pct": 14,
+    "critical_evidence_coverage_pct": 25,
+    "critical_unknown_count": 6,
+    "verified_positive_case_relevant_facts": [
+      "Skilled nursing capability",
+      "Memory care or dementia programming"
+    ],
+    "reason_if_rank_1": {
+      "decisive_rule": "GOVERNED_ALIGNMENT",
+      "reason": "Ordered above next by GOVERNED_ALIGNMENT.",
+      "comparator_deltas": {
+        "governed_fit_delta": 1,
+        "proven_match_delta": 0,
+        "evidence_coverage_delta": 7,
+        "final_match_delta": 0
+      },
+      "tie_break_deltas": {
+        "preference_bonus_delta": 1,
+        "clinical_quality_delta": 0,
+        "family_fit_delta": -1.5210000000000008
+      }
+    },
+    "strongest_proven_fit_or_heuristic": "TIE_BREAK_OR_OTHER",
+    "legacy_heuristic_contribution": {
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    }
+  },
+  "legacy_heuristic_audit": [
+    {
+      "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "rank": 1,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "rank": 2,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "rank": 3,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+      "rank": 4,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "rank": 5,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "rank": 6,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "PINES NURSING HOME",
+      "rank": 7,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "rank": 8,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "VILLA MARIA NURSING CENTER",
+      "rank": 9,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    },
+    {
+      "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "rank": 10,
+      "legacy_heuristic_contribution": 100,
+      "legacy_inputs": "Legacy heuristic match score",
+      "affected_order": false,
+      "representation": "historical scoring / generic heuristic"
+    }
+  ],
+  "high_potential_needs_verification": [
+    {
+      "facility_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+      "result": {
+        "qualification": "NOT_CALCULABLE",
+        "reason": "Potential Match is not calculable under current gate.",
+        "proven_match": 0,
+        "potential_match": "NOT_CALCULABLE",
+        "critical_unknowns": 8,
+        "evidence_confidence": "LOW"
+      }
+    },
+    {
+      "facility_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+      "result": {
+        "qualification": "NOT_CALCULABLE",
+        "reason": "Potential Match is not calculable under current gate.",
+        "proven_match": 0,
+        "potential_match": "NOT_CALCULABLE",
+        "critical_unknowns": 8,
+        "evidence_confidence": "LOW"
+      }
+    },
+    {
+      "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "result": {
+        "qualification": "NOT_CALCULABLE",
+        "reason": "Potential Match is not calculable under current gate.",
+        "proven_match": 100,
+        "potential_match": "NOT_CALCULABLE",
+        "critical_unknowns": 6,
+        "evidence_confidence": "LOW"
+      }
+    },
+    {
+      "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "result": {
+        "qualification": "NO",
+        "reason": "Gate not satisfied (potential<=proven or no critical unknowns).",
+        "proven_match": 100,
+        "potential_match": 100,
+        "critical_unknowns": 7,
+        "evidence_confidence": "LOW"
+      }
+    },
+    {
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "result": {
+        "qualification": "NO",
+        "reason": "Gate not satisfied (potential<=proven or no critical unknowns).",
+        "proven_match": 100,
+        "potential_match": 100,
+        "critical_unknowns": 7,
+        "evidence_confidence": "LOW"
+      }
+    },
+    {
+      "facility_name": "PINECREST CENTER FOR REHABILITATION AND HEALING",
+      "result": {
+        "qualification": "NO",
+        "reason": "Gate not satisfied (potential<=proven or no critical unknowns).",
+        "proven_match": 100,
+        "potential_match": 100,
+        "critical_unknowns": 7,
+        "evidence_confidence": "LOW"
+      }
+    },
+    {
+      "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "result": {
+        "qualification": "NO",
+        "reason": "Gate not satisfied (potential<=proven or no critical unknowns).",
+        "proven_match": 100,
+        "potential_match": 100,
+        "critical_unknowns": 7,
+        "evidence_confidence": "LOW"
+      }
+    }
+  ],
+  "decision_table_sorted_by_rank": [
+    {
+      "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "eligible": "YES",
+      "rank": 1,
+      "quality": 100,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": "NOT_CALCULABLE",
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 14,
+      "critical_coverage_pct": 25,
+      "critical_unknowns": 6,
+      "verified_positives": 2,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 3,
+        "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "GOVERNED_ALIGNMENT",
+        "reason": "Ordered above next by GOVERNED_ALIGNMENT.",
+        "comparator_deltas": {
+          "governed_fit_delta": 1,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 7,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 1,
+          "clinical_quality_delta": 0,
+          "family_fit_delta": -1.5210000000000008
+        }
+      }
+    },
+    {
+      "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "eligible": "YES",
+      "rank": 2,
+      "quality": 100,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": 100,
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 4
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "TIE_BREAK",
+        "reason": "Ordered above next by TIE_BREAK.",
+        "comparator_deltas": {
+          "governed_fit_delta": 0,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 0,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 0,
+          "family_fit_delta": 1.0529999999999973
+        }
+      }
+    },
+    {
+      "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "eligible": "YES",
+      "rank": 3,
+      "quality": 100,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": 100,
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 3,
+        "SOURCE_RATE_LIMITED": 1
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "TIE_BREAK",
+        "reason": "Ordered above next by TIE_BREAK.",
+        "comparator_deltas": {
+          "governed_fit_delta": 0,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 0,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 7.005279999999999,
+          "family_fit_delta": -0.5850000000000009
+        }
+      }
+    },
+    {
+      "facility": "Pinecrest Center for Rehabilitation and Healing",
+      "eligible": "YES",
+      "rank": 4,
+      "quality": 92.99472,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": 100,
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 3,
+        "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "TIE_BREAK",
+        "reason": "Ordered above next by TIE_BREAK.",
+        "comparator_deltas": {
+          "governed_fit_delta": 0,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 0,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 0.04304000000000485,
+          "family_fit_delta": 0.11700000000000443
+        }
+      }
+    },
+    {
+      "facility": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "eligible": "YES",
+      "rank": 5,
+      "quality": 92.95168,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": 100,
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 4
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "TIE_BREAK",
+        "reason": "Ordered above next by TIE_BREAK.",
+        "comparator_deltas": {
+          "governed_fit_delta": 0,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 0,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 7.628,
+          "family_fit_delta": 0.4679999999999964
+        }
+      }
+    },
+    {
+      "facility": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "eligible": "YES",
+      "rank": 6,
+      "quality": 85.32368,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": "NOT_CALCULABLE",
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 3,
+        "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "TIE_BREAK",
+        "reason": "Ordered above next by TIE_BREAK.",
+        "comparator_deltas": {
+          "governed_fit_delta": 0,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 0,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 8.708479999999994,
+          "family_fit_delta": -0.5850000000000009
+        }
+      }
+    },
+    {
+      "facility": "PINES NURSING HOME",
+      "eligible": "YES",
+      "rank": 7,
+      "quality": 76.6152,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": "NOT_CALCULABLE",
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 4
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "TIE_BREAK",
+        "reason": "Ordered above next by TIE_BREAK.",
+        "comparator_deltas": {
+          "governed_fit_delta": 0,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 0,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 2.6061333333333323,
+          "family_fit_delta": -1.0529999999999973
+        }
+      }
+    },
+    {
+      "facility": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "eligible": "YES",
+      "rank": 8,
+      "quality": 74.00906666666667,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": 100,
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 4
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "TIE_BREAK",
+        "reason": "Ordered above next by TIE_BREAK.",
+        "comparator_deltas": {
+          "governed_fit_delta": 0,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 0,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 8.283306666666675,
+          "family_fit_delta": 0.5850000000000009
+        }
+      }
+    },
+    {
+      "facility": "VILLA MARIA NURSING CENTER",
+      "eligible": "YES",
+      "rank": 9,
+      "quality": 65.72576,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": "NOT_CALCULABLE",
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 3,
+        "SOURCE_ACCESS_FAILED": 1
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "TIE_BREAK",
+        "reason": "Ordered above next by TIE_BREAK.",
+        "comparator_deltas": {
+          "governed_fit_delta": 0,
+          "proven_match_delta": 0,
+          "evidence_coverage_delta": 0,
+          "final_match_delta": 0
+        },
+        "tie_break_deltas": {
+          "preference_bonus_delta": 0,
+          "clinical_quality_delta": 10.713759999999994,
+          "family_fit_delta": 0
+        }
+      }
+    },
+    {
+      "facility": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "eligible": "YES",
+      "rank": 10,
+      "quality": 55.012,
+      "personalized_match": 100,
+      "proven_match": 100,
+      "potential_match": 100,
+      "evidence_confidence": "LOW",
+      "case_relevant_coverage_pct": 7,
+      "critical_coverage_pct": 13,
+      "critical_unknowns": 7,
+      "verified_positives": 1,
+      "verified_negatives": 0,
+      "source_access_failures": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 4
+      },
+      "legacy_heuristic_effect": {
+        "legacy_heuristic_contribution": 100,
+        "legacy_inputs": "Legacy heuristic match score",
+        "affected_order": false,
+        "representation": "historical scoring / generic heuristic"
+      },
+      "why_this_rank": {
+        "decisive_rule": "LAST_RANKED",
+        "reason": "No next facility.",
+        "comparator_deltas": null,
+        "tie_break_deltas": null
+      }
+    }
+  ],
+  "validity_gate": {
+    "benchmark_validity": "VALID APPLES-TO-APPLES",
+    "checks": [
+      {
+        "check": "Same exact case contract",
+        "pass": true
+      },
+      {
+        "check": "Same case fingerprint",
+        "pass": true
+      },
+      {
+        "check": "Same engine commit/version",
+        "pass": true
+      },
+      {
+        "check": "Same candidate universe rules",
+        "pass": true
+      },
+      {
+        "check": "Same evidence checklist",
+        "pass": true
+      },
+      {
+        "check": "Same source authority rules",
+        "pass": true
+      },
+      {
+        "check": "Same ranking run",
+        "pass": true
+      },
+      {
+        "check": "Full traces exist for all key facilities",
+        "pass": true
+      },
+      {
+        "check": "No silent removal by enrichment cohort",
+        "pass": true
+      },
+      {
+        "check": "Unknown/access failures preserved",
+        "pass": true
+      }
+    ]
+  }
+}

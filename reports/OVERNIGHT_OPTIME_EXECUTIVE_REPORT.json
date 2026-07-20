@@ -1,0 +1,69 @@
+{
+  "run_id": "OVERNIGHT_20260720T221742Z",
+  "generated_at_utc": "2026-07-20T22:17:42.530730+00:00",
+  "started_at_utc": "2026-07-20T22:17:42.175669+00:00",
+  "task_scope": "OVERNIGHT_VALIDATION_AND_REPORTING",
+  "phase_status": {
+    "completed": [
+      "Phase 1 baseline truth",
+      "Phase 7 evidence parity regression (existing PASS artifact)",
+      "Phase 8 controlled benchmark (existing VALID artifact)",
+      "Phase 9 Sands causality trace (existing controlled trace)",
+      "Task 1 permanent Python runtime fix"
+    ],
+    "partial": [
+      "Phase 2 agent authority audit",
+      "Phase 3 canonical 54-facility identity verification",
+      "Phase 4 decision-critical coverage matrix",
+      "Phase 6 source connectivity diagnostics",
+      "Phase 11 daily automation reality check",
+      "Phase 13 control tower truth",
+      "Phase 16 validation"
+    ],
+    "not_started": [
+      "Phase 5 bounded external discovery refresh",
+      "Phase 15 safe fix cycle beyond Python runtime determinism"
+    ]
+  },
+  "summary_metrics": {
+    "canonical_facilities": 54,
+    "agents_expected": 11,
+    "agents_actually_executed": 11,
+    "agents_successful": 11,
+    "agents_partial": 0,
+    "agents_failed": 0,
+    "facilities_actually_researched": 54,
+    "sources_attempted": 218,
+    "sources_successful": 205,
+    "sources_failed": 13,
+    "new_verified_facts": 0,
+    "changed_facts": 0,
+    "unknowns_resolved": 0
+  },
+  "golden_case": {
+    "top10": [
+      "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "Pinecrest Center for Rehabilitation and Healing",
+      "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "PINES NURSING HOME",
+      "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "VILLA MARIA NURSING CENTER",
+      "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER"
+    ],
+    "why_sands_is_1": "GOVERNED_ALIGNMENT: Ordered above next by GOVERNED_ALIGNMENT.",
+    "legacy_heuristic_material_effect": "NO",
+    "evidence_asymmetry": "PARTIAL"
+  },
+  "automation_reality": {
+    "daily_run_scheduled": "PARTIAL",
+    "daily_report_generated": "YES",
+    "control_tower_reflects_execution": "PARTIAL"
+  },
+  "owner_decisions_required": [],
+  "principle_changes": "NO",
+  "unapproved_scoring_changes": "NO",
+  "unapproved_ranking_changes": "NO"
+}
