@@ -1,0 +1,637 @@
+{
+  "frozen_run_reference": {
+    "frozen_commit": "ca2d26b3f298599b7345d133007104ec57c94e98",
+    "source_artifact": "reports/REAL_CASE_POST_STROKE_MIAMI_OPTIME_RESULT.json",
+    "runtime_entrypoint": "benchmark/adapters/optime_runtime_runner.cjs",
+    "runtime_universe_count": 100,
+    "canonical_universe_count": 713,
+    "run_status": "OK",
+    "accepted_count": 55,
+    "rejected_count": 45,
+    "top5_unchanged": true,
+    "recommendation_logic_changed": false,
+    "weights_changed": false,
+    "canonical_data_modified": false,
+    "traceable_to_real_run": true
+  },
+  "top5_identity_audit": [
+    {
+      "rank": 1,
+      "facility_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+      "canonical_facility_id": 84,
+      "cms_certification_number": "105255",
+      "address": "700 SW 4TH STREET",
+      "city": "POMPANO BEACH",
+      "county": "Broward",
+      "state": "FL",
+      "facility_type": ["Continuing Care Retirement Communities (CCRC)", "Skilled Nursing"],
+      "identity_status": "CONFIRMED_CANONICAL_ID",
+      "identity_flag": "IDENTITY_OK",
+      "geography_flag": "GEOGRAPHY_CONFLICT",
+      "location_sources": ["CMS Provider Information", "Medicare Care Compare"],
+      "actual_location_vs_optiime_belief": "Actual location is Broward County; OPTIME ranked it despite Miami-Dade preference because geography was not made mandatory."
+    },
+    {
+      "rank": 2,
+      "facility_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+      "canonical_facility_id": 162,
+      "cms_certification_number": "105016",
+      "address": "11401 OLD SAINT AUGUSTINE RD",
+      "city": "JACKSONVILLE",
+      "county": "Duval",
+      "state": "FL",
+      "facility_type": ["Skilled Nursing"],
+      "identity_status": "CONFIRMED_CANONICAL_ID",
+      "identity_flag": "IDENTITY_OK",
+      "geography_flag": "GEOGRAPHY_CONFLICT",
+      "location_sources": ["CMS Provider Information", "Medicare Care Compare"],
+      "actual_location_vs_optiime_belief": "Actual location is Jacksonville / Duval County, not Miami-Dade."
+    },
+    {
+      "rank": 3,
+      "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "canonical_facility_id": 375,
+      "cms_certification_number": "105008",
+      "address": "12505 NE 16TH AVE",
+      "city": "NORTH MIAMI",
+      "county": "Miami-Dade",
+      "state": "FL",
+      "facility_type": ["Skilled Nursing"],
+      "identity_status": "CONFIRMED_CANONICAL_ID",
+      "identity_flag": "IDENTITY_OK",
+      "geography_flag": "IDENTITY_OK",
+      "location_sources": ["CMS Provider Information", "Medicare Care Compare"],
+      "actual_location_vs_optiime_belief": "Actual location matches the Miami-Dade geography that OPTIME would prefer."
+    },
+    {
+      "rank": 4,
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "canonical_facility_id": 348,
+      "cms_certification_number": "105005",
+      "address": "7060 SW 8TH STREET",
+      "city": "MIAMI",
+      "county": "Miami-Dade",
+      "state": "FL",
+      "facility_type": ["Skilled Nursing"],
+      "identity_status": "CONFIRMED_CANONICAL_ID",
+      "identity_flag": "IDENTITY_OK",
+      "geography_flag": "IDENTITY_OK",
+      "location_sources": ["CMS Provider Information", "Medicare Care Compare"],
+      "actual_location_vs_optiime_belief": "Actual location matches the Miami-Dade geography that OPTIME would prefer."
+    },
+    {
+      "rank": 5,
+      "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "canonical_facility_id": 372,
+      "cms_certification_number": "105229",
+      "address": "42 COLLINS AVENUE",
+      "city": "MIAMI BEACH",
+      "county": "Miami-Dade",
+      "state": "FL",
+      "facility_type": ["Skilled Nursing"],
+      "identity_status": "CONFIRMED_CANONICAL_ID",
+      "identity_flag": "IDENTITY_OK",
+      "geography_flag": "IDENTITY_OK",
+      "location_sources": ["CMS Provider Information", "Medicare Care Compare"],
+      "actual_location_vs_optiime_belief": "Actual location matches the Miami-Dade geography that OPTIME would prefer."
+    }
+  ],
+  "geography_audit": {
+    "case_preference": "Miami-Dade or nearby",
+    "runtime_interpretation": "Stored only as notes/referenceLocationValue; not converted into a mandatory geographic radius.",
+    "distance_calculated": false,
+    "county_matching_enforced": false,
+    "mandatory_distance_triggered": false,
+    "code_paths": {
+      "parseDistancePoints": "frontend/src/lib/optime-v2-engine.ts",
+      "hasDistanceConstraint": "frontend/src/lib/optime-v2-engine.ts",
+      "hasMandatoryDistanceRequirement": "frontend/src/lib/optime-v2-engine.ts",
+      "collectHardRejectionReasons": "frontend/src/lib/optime-v2-engine.ts",
+      "miamiDadeCities_gate": "frontend/src/lib/optime-v2-engine.ts",
+      "adapter_toState": "benchmark/adapters/optime_runtime_runner.cjs"
+    },
+    "top5": [
+      {
+        "facility_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+        "county": "Broward",
+        "is_miami_dade": false,
+        "geographic_relationship_to_miami": "North of Miami in Broward County; nearby regionally, but not Miami-Dade.",
+        "geographic_requirement_classification": "OUR_RECOMMENDATION",
+        "geographic_score_or_penalty": "Neutral in the frozen run because distance fields were not populated.",
+        "could_non_miami_dade_outrank_miami_dade": true,
+        "flag": "GEOGRAPHY_CONFLICT"
+      },
+      {
+        "facility_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+        "county": "Duval",
+        "is_miami_dade": false,
+        "geographic_relationship_to_miami": "Far north in Jacksonville; not reasonably close for the stated family preference.",
+        "geographic_requirement_classification": "OUR_RECOMMENDATION",
+        "geographic_score_or_penalty": "Neutral in the frozen run because distance fields were not populated.",
+        "could_non_miami_dade_outrank_miami_dade": true,
+        "flag": "GEOGRAPHY_CONFLICT"
+      },
+      {
+        "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+        "county": "Miami-Dade",
+        "is_miami_dade": true,
+        "geographic_relationship_to_miami": "North Miami, close to Miami proper.",
+        "geographic_requirement_classification": "OUR_RECOMMENDATION",
+        "geographic_score_or_penalty": "Neutral in the frozen run because distance fields were not populated.",
+        "could_non_miami_dade_outrank_miami_dade": true,
+        "flag": "IDENTITY_OK"
+      },
+      {
+        "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "county": "Miami-Dade",
+        "is_miami_dade": true,
+        "geographic_relationship_to_miami": "Miami / Coral Gables, local to the family preference.",
+        "geographic_requirement_classification": "OUR_RECOMMENDATION",
+        "geographic_score_or_penalty": "Neutral in the frozen run because distance fields were not populated.",
+        "could_non_miami_dade_outrank_miami_dade": true,
+        "flag": "IDENTITY_OK"
+      },
+      {
+        "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+        "county": "Miami-Dade",
+        "is_miami_dade": true,
+        "geographic_relationship_to_miami": "Miami Beach, local to Miami.",
+        "geographic_requirement_classification": "OUR_RECOMMENDATION",
+        "geographic_score_or_penalty": "Neutral in the frozen run because distance fields were not populated.",
+        "could_non_miami_dade_outrank_miami_dade": true,
+        "flag": "IDENTITY_OK"
+      }
+    ]
+  },
+  "requirements_audit": [
+    {
+      "requirement": "24/7 nursing availability",
+      "case_source": "explicit_needs + explicit_non_negotiables",
+      "classification": "MUST",
+      "rule_or_code": "buildClinicalRequirements -> licensed_nurses_24_7 / skilled_nursing",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Should gate eligibility if explicitly present, but evidence did not surface cleanly in the frozen top-5 artifact.",
+      "effect_on_ranking": "Influences care-fit and persona weighting indirectly.",
+      "status_issue": "MISCLASSIFIED"
+    },
+    {
+      "requirement": "post-stroke rehabilitation",
+      "case_source": "explicit_needs + post-hospital transition after stroke",
+      "classification": "MUST",
+      "rule_or_code": "buildClinicalRequirements -> neurological_rehabilitation",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Should be checked as a critical medical capability.",
+      "effect_on_ranking": "Raises care-fit and clinical-quality relevance.",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "physical therapy",
+      "case_source": "explicit_needs",
+      "classification": "OUR_RECOMMENDATION",
+      "rule_or_code": "buildClinicalRequirements -> physical_therapy",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Does not hard-reject by itself in the frozen run.",
+      "effect_on_ranking": "Raises medical fit if explicitly confirmed.",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "occupational therapy",
+      "case_source": "explicit_needs",
+      "classification": "OUR_RECOMMENDATION",
+      "rule_or_code": "buildClinicalRequirements -> occupational_therapy",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Does not hard-reject by itself in the frozen run.",
+      "effect_on_ranking": "Raises medical fit if explicitly confirmed.",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "limited mobility",
+      "case_source": "person_profile.mobility",
+      "classification": "MUST",
+      "rule_or_code": "buildClinicalRequirements -> walker_accessibility / fall_prevention / mobility_assistance",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Should constrain eligible facilities if it had been fully threaded through the runtime state.",
+      "effect_on_ranking": "Would affect care-fit and accessibility scoring.",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "transfer assistance",
+      "case_source": "clinical inference from limited mobility",
+      "classification": "OUR_RECOMMENDATION",
+      "rule_or_code": "buildClinicalRequirements -> mobility_assistance",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Not an explicit hard gate in the frozen artifact.",
+      "effect_on_ranking": "Would prefer facilities with explicit mobility support.",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "bathing assistance",
+      "case_source": "not present in frozen benchmark case payload",
+      "classification": "NOT_A_REQUIREMENT",
+      "rule_or_code": "no runtime mapping in the frozen adapter",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "None",
+      "effect_on_ranking": "None",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "dressing assistance",
+      "case_source": "not present in frozen benchmark case payload",
+      "classification": "NOT_A_REQUIREMENT",
+      "rule_or_code": "no runtime mapping in the frozen adapter",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "None",
+      "effect_on_ranking": "None",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "medication management",
+      "case_source": "explicit_needs + explicit_non_negotiables",
+      "classification": "MUST",
+      "rule_or_code": "case intent; no explicit runtime requirement mapping preserved in frozen adapter",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Should have been a hard requirement, but the frozen runtime did not preserve it cleanly in the benchmark artifact.",
+      "effect_on_ranking": "Would influence care-fit if preserved.",
+      "status_issue": "MISCLASSIFIED"
+    },
+    {
+      "requirement": "Miami/family proximity",
+      "case_source": "preferences + location county",
+      "classification": "OUR_RECOMMENDATION",
+      "rule_or_code": "hasDistanceConstraint / hasMandatoryDistanceRequirement / parseDistancePoints",
+      "evidence_state": "NEUTRAL",
+      "effect_on_eligibility": "Did not gate the frozen run.",
+      "effect_on_ranking": "No distance score was applied because the adapter omitted distance fields.",
+      "status_issue": "GEOGRAPHY_LOGIC_ERROR"
+    },
+    {
+      "requirement": "no dementia requirement",
+      "case_source": "not present in frozen benchmark case payload",
+      "classification": "NOT_A_REQUIREMENT",
+      "rule_or_code": "none",
+      "evidence_state": "N/A",
+      "effect_on_eligibility": "None",
+      "effect_on_ranking": "None",
+      "status_issue": "NO_ERROR / EXPECTED_BEHAVIOR"
+    },
+    {
+      "requirement": "Hebrew/language preference",
+      "case_source": "not present in frozen benchmark case payload",
+      "classification": "NOT_CONNECTED_TO_RUNTIME",
+      "rule_or_code": "hasMandatoryLanguageRequirement / supportsMandatoryLanguage",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Would only matter if the adapter had supplied it.",
+      "effect_on_ranking": "Would affect cultural fit and potential hard-rejection if mandatory.",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "social activities",
+      "case_source": "preferences (social engagement desirable)",
+      "classification": "OUR_RECOMMENDATION",
+      "rule_or_code": "buildClinicalRequirements -> group_activities / socialFit",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "Not a hard gate in the frozen run.",
+      "effect_on_ranking": "Would raise social fit if explicitly encoded.",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "movies/music/conversation",
+      "case_source": "not present in frozen benchmark case payload",
+      "classification": "NOT_CONNECTED_TO_RUNTIME",
+      "rule_or_code": "buildClinicalRequirements -> movie_programming / music_activities",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "None",
+      "effect_on_ranking": "None",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "gluten-free diet",
+      "case_source": "not present in frozen benchmark case payload",
+      "classification": "NOT_CONNECTED_TO_RUNTIME",
+      "rule_or_code": "buildClinicalRequirements -> gluten_free_meals",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "None",
+      "effect_on_ranking": "None",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "food quality",
+      "case_source": "not present in frozen benchmark case payload",
+      "classification": "NOT_CONNECTED_TO_RUNTIME",
+      "rule_or_code": "buildClinicalRequirements -> dining preferences / food profile",
+      "evidence_state": "UNKNOWN",
+      "effect_on_eligibility": "None",
+      "effect_on_ranking": "None",
+      "status_issue": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "requirement": "budget <= $17,000",
+      "case_source": "user-facing benchmark intent",
+      "classification": "MUST",
+      "rule_or_code": "benchmark/adapters/optime_runtime_runner.cjs::toState sets budget = 7000",
+      "evidence_state": "MISSET",
+      "effect_on_eligibility": "A fixed budget was injected instead of preserving unknown budget truth.",
+      "effect_on_ranking": "Could avoid budget penalties and alter ranking order.",
+      "status_issue": "RUNTIME_WIRING_ERROR"
+    }
+  ],
+  "score_decomposition": {
+    "score_traceability_failure": true,
+    "reason": "The frozen artifact only preserved rank order and a short top-5 summary; it did not preserve per-facility numeric score breakdowns or the full governed candidate audit.",
+    "known_formula": "final_score = tiered_match_quality(critical, important, optional) - mismatch_penalties",
+    "ranking_tiebreakers": [
+      "OUR_RECOMMENDATION alignment",
+      "NICE_TO_HAVE alignment",
+      "legacy heuristic match score",
+      "profile completeness",
+      "clinical quality",
+      "family fit"
+    ],
+    "per_top5": [
+      {
+        "facility_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+        "total_score": null,
+        "available_components": [
+          "Rehabilitation persona weighting: careFit 0.28, clinicalQuality 0.32",
+          "CCRC / future-care signal",
+          "Skilled nursing / care-fit signals",
+          "No geography penalty because distance was not populated"
+        ],
+        "not_recoverable": [
+          "Exact final numeric score",
+          "Exact ranking factor contributions",
+          "Full score traceability rows"
+        ]
+      },
+      {
+        "facility_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+        "total_score": null,
+        "available_components": [
+          "Rehabilitation persona weighting",
+          "Skilled nursing signal",
+          "No geography penalty from distance logic"
+        ],
+        "not_recoverable": [
+          "Exact final numeric score",
+          "Exact ranking factor contributions"
+        ]
+      },
+      {
+        "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+        "total_score": null,
+        "available_components": [
+          "Miami-Dade location",
+          "Skilled nursing signal",
+          "No geography penalty from distance logic"
+        ],
+        "not_recoverable": [
+          "Exact final numeric score"
+        ]
+      },
+      {
+        "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "total_score": null,
+        "available_components": [
+          "Miami-Dade location",
+          "Skilled nursing signal"
+        ],
+        "not_recoverable": [
+          "Exact final numeric score"
+        ]
+      },
+      {
+        "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+        "total_score": null,
+        "available_components": [
+          "Miami-Dade location",
+          "Skilled nursing signal"
+        ],
+        "not_recoverable": [
+          "Exact final numeric score"
+        ]
+      }
+    ]
+  },
+  "comparison_facility_audit": [
+    {
+      "input_name": "THE PALACE NURSING AND REHABILITATION CENTER",
+      "canonical_record_found": false,
+      "identity_resolved": false,
+      "in_geographic_universe": false,
+      "entered_candidate_pool": false,
+      "eligible": false,
+      "excluded": true,
+      "exclusion_reason": "No canonical record found in the local canonical inventory/runtime universe.",
+      "failed_must": [],
+      "unknown_must": [],
+      "final_score": null,
+      "final_rank": null,
+      "why_below_top5": "Not in the candidate universe."
+    },
+    {
+      "input_name": "VI AT AVENTURA",
+      "canonical_record_found": true,
+      "identity_resolved": true,
+      "canonical_name": "VI AT AVENTURA",
+      "county": "Miami-Dade",
+      "entered_candidate_pool": false,
+      "eligible": false,
+      "excluded": true,
+      "exclusion_reason": "Canonical record exists in the broader inventory, but it was not present in the 100-facility runtime feed used for the frozen run.",
+      "failed_must": [],
+      "unknown_must": [],
+      "final_score": null,
+      "final_rank": null,
+      "why_below_top5": "Not scored in the frozen runtime universe."
+    },
+    {
+      "input_name": "RIVIERA HEALTH RESORT",
+      "canonical_record_found": true,
+      "identity_resolved": true,
+      "canonical_name": "RIVIERA HEALTH RESORT",
+      "county": "Miami-Dade",
+      "entered_candidate_pool": false,
+      "eligible": false,
+      "excluded": true,
+      "exclusion_reason": "Canonical record exists in the broader inventory, but it was not present in the 100-facility runtime feed used for the frozen run.",
+      "failed_must": [],
+      "unknown_must": [],
+      "final_score": null,
+      "final_rank": null,
+      "why_below_top5": "Not scored in the frozen runtime universe."
+    },
+    {
+      "input_name": "MIAMI JEWISH HEALTH",
+      "canonical_record_found": true,
+      "identity_resolved": true,
+      "canonical_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "county": "Miami-Dade",
+      "entered_candidate_pool": true,
+      "eligible": true,
+      "excluded": false,
+      "exclusion_reason": null,
+      "failed_must": [],
+      "unknown_must": [],
+      "final_score": null,
+      "final_rank": null,
+      "why_below_top5": "It was in the runtime universe but did not outrank the top-5 surfaced communities, likely because the frozen run favored stronger CCRC / future-care alignment and the artifact does not preserve exact numeric scoring."
+    },
+    {
+      "input_name": "EAST RIDGE AT CUTLER BAY",
+      "canonical_record_found": true,
+      "identity_resolved": true,
+      "canonical_name": "East Ridge Rehabilitation and Nursing Center",
+      "county": "Miami-Dade",
+      "entered_candidate_pool": false,
+      "eligible": false,
+      "excluded": true,
+      "exclusion_reason": "Alias not present in the 100-facility runtime feed used for the frozen run.",
+      "failed_must": [],
+      "unknown_must": [],
+      "final_score": null,
+      "final_rank": null,
+      "why_below_top5": "Not scored in the frozen runtime universe under the input alias."
+    },
+    {
+      "input_name": "WEST GABLES HEALTH CARE CENTER",
+      "canonical_record_found": true,
+      "identity_resolved": true,
+      "county": "Miami-Dade",
+      "entered_candidate_pool": false,
+      "eligible": false,
+      "excluded": true,
+      "exclusion_reason": "Canonical record exists in the broader inventory, but it was not present in the 100-facility runtime feed used for the frozen run.",
+      "failed_must": [],
+      "unknown_must": [],
+      "final_score": null,
+      "final_rank": null,
+      "why_below_top5": "Not scored in the frozen runtime universe."
+    },
+    {
+      "input_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "canonical_record_found": true,
+      "identity_resolved": true,
+      "canonical_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "county": "Miami-Dade",
+      "entered_candidate_pool": true,
+      "eligible": true,
+      "excluded": false,
+      "final_score": null,
+      "final_rank": 4,
+      "why_below_top5": "Not below top-5; it is the #4 frozen result."
+    },
+    {
+      "input_name": "VICTORIA NURSING AND REHABILITATION CENTER",
+      "canonical_record_found": false,
+      "identity_resolved": false,
+      "entered_candidate_pool": false,
+      "eligible": false,
+      "excluded": true,
+      "exclusion_reason": "No canonical record found in the local canonical inventory/runtime universe.",
+      "failed_must": [],
+      "unknown_must": [],
+      "final_score": null,
+      "final_rank": null,
+      "why_below_top5": "Not in the candidate universe."
+    }
+  ],
+  "candidate_funnel": {
+    "canonical_universe": 713,
+    "runtime_universe": 100,
+    "discovered": 100,
+    "identity_resolved": 100,
+    "evidence_evaluated": 100,
+    "must_eligible": null,
+    "must_verification_required": null,
+    "must_rejected": null,
+    "eligible_candidates": 55,
+    "rejected_candidates": 45,
+    "ranked_candidates": 55,
+    "top5_selected": 5,
+    "deterministic_stages": true,
+    "unknown_can_remove": true,
+    "traceability_failure": true,
+    "notes": "The final eligible/rejected split is known from the frozen result, but the intermediate MUST subtype split is not preserved in the artifact."
+  },
+  "unknown_governance_findings": [
+    {
+      "finding": "Budget unknown was not preserved.",
+      "example": "benchmark/adapters/optime_runtime_runner.cjs sets budget to 7000.",
+      "effect": "Could avoid budget penalties and change ranking.",
+      "status": "UNKNOWN_TREATED_AS_POSITIVE_OR_NEUTRAL"
+    },
+    {
+      "finding": "Distance / proximity unknown was not threaded into the runtime state.",
+      "example": "toState() does not populate driveTimes or distanceFromFamily.",
+      "effect": "Distance scored neutral and could not reject far-away facilities.",
+      "status": "UNKNOWN_TREATED_AS_NEUTRAL"
+    },
+    {
+      "finding": "Language, gluten-free, PT/OT, diet, and social sub-signals were not connected to runtime state.",
+      "example": "No fields were injected for these in the frozen adapter.",
+      "effect": "They could not act as unknowns in ranking or eligibility.",
+      "status": "NOT_CONNECTED_TO_RUNTIME"
+    },
+    {
+      "finding": "Unknowns in the checklist are generally preserved as confidence reductions only.",
+      "example": "buildClinicalReasoning() and buildMatchQualityResult() reduce confidence but not score for unknowns.",
+      "effect": "Unknown evidence may avoid penalties, but only when it reaches the runtime state.",
+      "status": "PARTIALLY_RESPECTED"
+    }
+  ],
+  "root_causes": [
+    {
+      "issue": "Adapter hard-coded budget truth",
+      "class": "RUNTIME_WIRING_ERROR",
+      "severity": "HIGH"
+    },
+    {
+      "issue": "Soft geography preference not promoted to mandatory radius/county enforcement",
+      "class": "GEOGRAPHY_LOGIC_ERROR",
+      "severity": "HIGH"
+    },
+    {
+      "issue": "Several case-level needs were not mapped into runtime clinical requirements",
+      "class": "MUST_CLASSIFICATION_ERROR",
+      "severity": "HIGH"
+    },
+    {
+      "issue": "Unknown budget and other missing signals were not preserved end-to-end",
+      "class": "UNKNOWN_GOVERNANCE_ERROR",
+      "severity": "HIGH"
+    },
+    {
+      "issue": "Candidate-by-candidate score decomposition was not retained in the frozen artifact",
+      "class": "TRACEABILITY_ERROR",
+      "severity": "HIGH"
+    },
+    {
+      "issue": "Alias-heavy comparison names were not normalized into the frozen report",
+      "class": "IDENTITY_RESOLUTION_ERROR",
+      "severity": "MEDIUM"
+    },
+    {
+      "issue": "Canonical inventory data itself is intact and was not modified",
+      "class": "NO_ERROR / EXPECTED_BEHAVIOR",
+      "severity": "LOW"
+    }
+  ],
+  "decision_verdict": {
+    "john_knox_defensible": "INSUFFICIENT_EVIDENCE",
+    "river_garden_identity": "YES",
+    "river_garden_geography": "NO",
+    "geography_logic": "FAIL",
+    "must_enforcement": "FAIL",
+    "score_traceability": "FAIL",
+    "candidate_funnel": "PARTIAL",
+    "top5_consumer_ready": false,
+    "critical_root_causes": [
+      "RUNTIME_WIRING_ERROR",
+      "GEOGRAPHY_LOGIC_ERROR",
+      "MUST_CLASSIFICATION_ERROR",
+      "UNKNOWN_GOVERNANCE_ERROR",
+      "TRACEABILITY_ERROR"
+    ],
+    "no_fixes_applied": true
+  }
+}
