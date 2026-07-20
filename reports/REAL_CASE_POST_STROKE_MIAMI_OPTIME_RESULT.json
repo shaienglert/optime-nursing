@@ -1,0 +1,164 @@
+{
+  "benchmark_name": "REAL_CASE_POST_STROKE_MIAMI_OPTIME_RESULT",
+  "generated_at_utc": "2026-07-20T10:35:47.8755406Z",
+  "git_commit": "95f4b7f7074b6ba2af7e28455189de6fd2b3e2d1",
+  "runtime_entrypoint": "benchmark/adapters/optime_runtime_runner.cjs",
+  "case": {
+    "case_id": "POST_STROKE_MIAMI_001",
+    "version": "1.0.0",
+    "scenario": "80-year-old post-stroke senior with explicit clinical requirements and unknown budget.",
+    "person_profile": {
+      "age": 80,
+      "age_group": "80-84",
+      "gender": "Male",
+      "mobility": "Limited"
+    },
+    "explicit_needs": [
+      "24/7 nursing availability",
+      "rehabilitation capability",
+      "medication management",
+      "post-stroke support"
+    ],
+    "explicit_non_negotiables": [
+      "24/7 nursing availability",
+      "rehabilitation capability",
+      "medication management"
+    ],
+    "preferences": [
+      "Miami-Dade or nearby",
+      "social engagement desirable"
+    ],
+    "known_unknowns": [
+      "budget",
+      "facility-level evidence gaps"
+    ],
+    "location": {
+      "county": "Miami-Dade",
+      "state": "FL"
+    },
+    "budget_status": "UNKNOWN",
+    "care_context": "Post-hospital transition after stroke",
+    "expected_clarifications": [
+      "maximum monthly budget",
+      "preferred language support",
+      "family visit frequency constraints"
+    ]
+  },
+  "result": {
+    "run_status": "OK",
+    "accepted_count": 55,
+    "rejected_count": 45,
+    "fallback_count": 0,
+    "chain_breaks": [],
+    "top_5": [
+      {
+        "facility_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+        "facility_id": 62,
+        "canonical_facility_id": 84,
+        "location": "POMPANO BEACH, FL",
+        "why_selected": "No additional medical capability translation was required from the current profile.",
+        "must_satisfied": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "must_failed": [],
+        "must_unknown": [],
+        "recommendation_alignment": "No additional medical capability translation was required from the current profile.",
+        "nice_to_have_alignment": "No explicit lifestyle preferences were captured in this profile.",
+        "tradeoffs": [
+          "Future care preference was considered (Full continuum of care on one campus). Confirmed future-care alignment: Future care pathway: Full continuum of care on one campus."
+        ],
+        "evidence_gaps": [],
+        "sources": [],
+        "confidence": "100"
+      },
+      {
+        "facility_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+        "facility_id": 7,
+        "canonical_facility_id": 162,
+        "location": "JACKSONVILLE, FL",
+        "why_selected": "No additional medical capability translation was required from the current profile.",
+        "must_satisfied": [],
+        "must_failed": [],
+        "must_unknown": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "recommendation_alignment": "No additional medical capability translation was required from the current profile.",
+        "nice_to_have_alignment": "No explicit lifestyle preferences were captured in this profile.",
+        "tradeoffs": [
+          "Future care preference was considered (Full continuum of care on one campus). Confirmed future-care alignment: none yet."
+        ],
+        "evidence_gaps": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "sources": [],
+        "confidence": "UNKNOWN"
+      },
+      {
+        "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+        "facility_id": 4,
+        "canonical_facility_id": 375,
+        "location": "NORTH MIAMI, FL",
+        "why_selected": "No additional medical capability translation was required from the current profile.",
+        "must_satisfied": [],
+        "must_failed": [],
+        "must_unknown": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "recommendation_alignment": "No additional medical capability translation was required from the current profile.",
+        "nice_to_have_alignment": "No explicit lifestyle preferences were captured in this profile.",
+        "tradeoffs": [
+          "Future care preference was considered (Full continuum of care on one campus). Confirmed future-care alignment: none yet."
+        ],
+        "evidence_gaps": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "sources": [],
+        "confidence": "UNKNOWN"
+      },
+      {
+        "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "facility_id": 3,
+        "canonical_facility_id": 348,
+        "location": "MIAMI, FL",
+        "why_selected": "No additional medical capability translation was required from the current profile.",
+        "must_satisfied": [],
+        "must_failed": [],
+        "must_unknown": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "recommendation_alignment": "No additional medical capability translation was required from the current profile.",
+        "nice_to_have_alignment": "No explicit lifestyle preferences were captured in this profile.",
+        "tradeoffs": [
+          "Future care preference was considered (Full continuum of care on one campus). Confirmed future-care alignment: none yet."
+        ],
+        "evidence_gaps": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "sources": [],
+        "confidence": "UNKNOWN"
+      },
+      {
+        "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+        "facility_id": 54,
+        "canonical_facility_id": 372,
+        "location": "MIAMI BEACH, FL",
+        "why_selected": "No additional medical capability translation was required from the current profile.",
+        "must_satisfied": [],
+        "must_failed": [],
+        "must_unknown": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "recommendation_alignment": "No additional medical capability translation was required from the current profile.",
+        "nice_to_have_alignment": "No explicit lifestyle preferences were captured in this profile.",
+        "tradeoffs": [
+          "Future care preference was considered (Full continuum of care on one campus). Confirmed future-care alignment: none yet."
+        ],
+        "evidence_gaps": [
+          "Future care pathway: Full continuum of care on one campus"
+        ],
+        "sources": [],
+        "confidence": "UNKNOWN"
+      }
+    ]
+  }
+}
