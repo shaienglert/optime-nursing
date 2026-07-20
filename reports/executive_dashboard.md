@@ -33,3 +33,21 @@
 - Report Registry Unavailable Reports: **0**
 - Live Orchestrator Dashboard: **reports/orchestrator_live_operations_dashboard.md**
 - Agent-Linked Report Coverage: **10 agents mapped**
+
+## Daily Executive Intelligence Reports
+
+- Latest Report (Markdown): **reports/daily/archive/executive_intelligence_report_20260720T092744Z.md**
+- Latest Report (HTML): **reports/daily/archive/executive_intelligence_report_20260720T092744Z.html**
+- Latest Report (JSON): **reports/daily/archive/executive_intelligence_report_20260720T092744Z.json**
+- Generated At (UTC): **2026-07-20T09:27:44.280932+00:00**
+- Previous Report (JSON): **reports/daily/archive/executive_intelligence_report_20260720T092609Z.json**
+
+### Trend Comparison (Today vs Yesterday)
+
+| Trend | Today | Yesterday | Delta |
+| --- | --- | --- | --- |
+| Knowledge Growth | 220 | 220 | 0.0 |
+| Florida Coverage | 95.5 | 95.5 | 0.0 |
+| Recommendation Quality | 0 | 0 | 0.0 |
+| Trust Score | 0.0 | 0.0 | 0.0 |
+| Institutional Intelligence | 0.0 | 0.0 | 0.0 |
