@@ -19,6 +19,13 @@ The institutional command canon is mandatory doctrine for all OPTIME decisions:
 - Database Command DB-001 to DB-010: see `docs/COMMAND_DB_001_010.md`
 - Discovery Agent Constitution D-001 to D-020: see `docs/COMMAND_D_001_020_DISCOVERY_AGENT.md`
 
+## Canonical Principles Registry
+The canonical source of principle truth and lifecycle status is:
+
+- `docs/OPTIME_PRINCIPLES_REGISTRY.md`
+
+All substantial work that touches ranking, scoring, recommendations, agents, evidence, unknown handling, confidence, source governance, monetization boundaries, or architecture must run a Principle Impact Check before semantic changes.
+
 ## Principle 1: Outcome-Only Optimization
 The recommendation engine optimizes only for the user's outcome.
 
@@ -132,3 +139,33 @@ OPTIME must combine:
 This is a product principle, not a branding directive.
 
 It does not permit copying Booking or Tinder layouts, branding, or proprietary interaction patterns.
+
+## Principle 12: Principle Consistency And Owner Approval
+Established OPTIME product principles are constitutional constraints, not implementation suggestions.
+
+No contributor may silently change an established principle, including ranking philosophy, scoring semantics, UNKNOWN meaning, evidence weighting, confidence semantics, canonical architecture, or recommendation ordering.
+
+Every substantial change must be classified as one of:
+
+- Implementation Bug
+- Implementation Completion
+- Product Principle Ambiguity
+- Product Principle Change
+- Architectural Deviation
+
+If the change is Product Principle Ambiguity, Product Principle Change, or Architectural Deviation:
+
+- semantic implementation must stop
+- current principle and behavior must be documented
+- problem, proposal, alternatives, and risks must be surfaced
+- explicit owner approval is required before implementation
+
+Broad implementation directives such as "continue", "fix it", or "improve it" are not authorization to alter established principles.
+
+Missing information is not negative evidence.
+
+More generic profile completeness does not automatically mean a better facility.
+
+Verified, case-relevant knowledge may legitimately strengthen a recommendation because OPTIME can prove the match.
+
+Facilities may improve representation by supplying evidence, but unverified facility-supplied claims may not improve organic ranking and facilities cannot buy ranking.
