@@ -192,6 +192,10 @@ export type ParameterTableRow = {
 export type FacilityParameterTable = {
   canonical_facility_id: string;
   facility_name: string;
+  city?: string | null;
+  state?: string | null;
+  county?: string | null;
+  zip?: string | null;
   canonical_type?: string | null;
   role_classification?: string | null;
   match_status?: string | null;
@@ -236,6 +240,97 @@ export type PersonalizedParameterOrderResponse = {
   need_tags: string[];
   priority_parameter_ids: string[];
   ordered_parameters: PersonalizedParameterOrderRow[];
+};
+
+export type PatientNeed = {
+  parameter_id: string;
+  requirement_level: "REQUIRED" | "HIGH" | "MEDIUM" | "PREFERENCE";
+  desired_value: unknown;
+  acceptable_values: unknown[];
+  applicable_scope: "FACILITY" | "PROGRAM" | "UNIT" | "SERVICE";
+  user_evidence_source: string;
+  confidence: number;
+  need_text: string;
+};
+
+export type PatientNeedsProfile = {
+  generated_from: { questionnaire: boolean; natural_language: boolean };
+  needs: PatientNeed[];
+  need_tags: string[];
+  priority_parameter_ids: string[];
+  profile_key?: string | null;
+  location_city?: string | null;
+  natural_language_mapping: Record<string, unknown>;
+};
+
+export type DecisionEngineRecommendation = {
+  canonical_facility_id: string;
+  facility_name: string;
+  city?: string | null;
+  state?: string | null;
+  county?: string | null;
+  zip?: string | null;
+  canonical_type?: string | null;
+  role_classification?: string | null;
+  source_identity_ids?: Record<string, string>;
+  facility_profile_id?: number | null;
+  eligibility_status: "ELIGIBLE" | "POTENTIALLY_ELIGIBLE" | "INSUFFICIENT_EVIDENCE" | "INELIGIBLE";
+  match_score: number;
+  match_band: "STRONG_MATCH" | "GOOD_MATCH" | "PARTIAL_MATCH" | "LIMITED_MATCH";
+  matched_needs: Array<Record<string, unknown>>;
+  unmet_verified_needs: Array<Record<string, unknown>>;
+  unknown_critical_needs: Array<Record<string, unknown>>;
+  preference_matches: Array<Record<string, unknown>>;
+  evidence_certainty: number;
+  domain_breakdown: Record<string, number>;
+  explanation: {
+    why_matches: string[];
+    needs_verification: string[];
+    concerns: string[];
+    eligibility_reasons: string[];
+    availability_note: string;
+    location_note: string;
+  };
+  parameter_badges: string[];
+  comparison_parameter_ids: string[];
+};
+
+export type DecisionEngineResponse = {
+  patient_needs_profile: PatientNeedsProfile;
+  results: DecisionEngineRecommendation[];
+  result_count: number;
+  total_candidates_scored: number;
+  availability_policy: string;
+};
+
+export type DecisionEngineRequest = {
+  questionnaire_state: Record<string, unknown>;
+  natural_language_query?: string;
+  limit?: number;
+};
+
+export type PatientComparisonContextRequest = {
+  canonical_facility_ids: string[];
+  patient_needs_profile: PatientNeedsProfile;
+};
+
+export type PatientComparisonContextResponse = {
+  required_needs: PatientNeed[];
+  high_priority_needs: PatientNeed[];
+  preferences: PatientNeed[];
+  comparison_parameter_ids: string[];
+  facilities: Array<{
+    canonical_facility_id: string;
+    facility_name: string;
+    need_rows: Array<{
+      parameter_id: string;
+      requirement_level: string;
+      status: "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED";
+      source: string;
+      scope: string;
+      scope_name?: string | null;
+    }>;
+  }>;
 };
 
 export type GovernedRule = {
@@ -1702,4 +1797,22 @@ export async function fetchPersonalizedParameterOrder(
   payload: PersonalizedParameterOrderRequest
 ): Promise<PersonalizedParameterOrderResponse> {
   return postJson<PersonalizedParameterOrderRequest, PersonalizedParameterOrderResponse>("/canonical-facilities/personalized-parameter-order", payload);
+}
+
+export async function fetchPatientNeedsProfile(
+  payload: { questionnaire_state: Record<string, unknown>; natural_language_query?: string }
+): Promise<PatientNeedsProfile> {
+  return postJson<typeof payload, PatientNeedsProfile>("/decision-engine/patient-needs-profile", payload);
+}
+
+export async function fetchPatientDecisionRecommendations(
+  payload: DecisionEngineRequest
+): Promise<DecisionEngineResponse> {
+  return postJson<DecisionEngineRequest, DecisionEngineResponse>("/decision-engine/recommendations", payload);
+}
+
+export async function fetchPatientComparisonContext(
+  payload: PatientComparisonContextRequest
+): Promise<PatientComparisonContextResponse> {
+  return postJson<PatientComparisonContextRequest, PatientComparisonContextResponse>("/decision-engine/comparison-context", payload);
 }
