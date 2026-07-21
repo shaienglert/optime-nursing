@@ -11,7 +11,7 @@ import {
   DecisionEngineResponse,
   fetchPatientDecisionRecommendations,
 } from "@/lib/api";
-import { clearSearchSession } from "@/lib/search-session";
+import { clearSearchSession, clearCompareSelection, loadCompareSelection, saveCompareSelection } from "@/lib/search-session";
 
 const TOP_RECOMMENDATION_COUNT = 5;
 
@@ -130,6 +130,7 @@ export function ResultsPageClient() {
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
   const [savedCanonicalIds, setSavedCanonicalIds] = useState<string[]>([]);
   const [hiddenNeedIds, setHiddenNeedIds] = useState<string[]>([]);
+  const [compareSelectedIds, setCompareSelectedIds] = useState<string[]>(() => loadCompareSelection());
 
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
   const textQuery = searchParams.get("q") || searchParams.get("search") || "";
@@ -167,6 +168,14 @@ export function ResultsPageClient() {
     };
   }, [decisionRequestKey]);
 
+  useEffect(() => {
+    if (compareSelectedIds.length > 0) {
+      saveCompareSelection(compareSelectedIds.slice(0, 5));
+      return;
+    }
+    clearCompareSelection();
+  }, [compareSelectedIds]);
+
   const recommendations = decisionResponse?.results || [];
   const topRecommendations = useMemo(() => recommendations.slice(0, TOP_RECOMMENDATION_COUNT), [recommendations]);
   const remainingRecommendations = useMemo(() => recommendations.slice(TOP_RECOMMENDATION_COUNT), [recommendations]);
@@ -180,6 +189,14 @@ export function ResultsPageClient() {
     () => visibleNeeds.map((need) => ({ ...need, label: displayNeedLabel(need.parameter_id) })),
     [visibleNeeds],
   );
+
+  const compareSelectedFacilities = useMemo(
+    () => compareSelectedIds
+      .map((facilityId) => recommendations.find((recommendation) => recommendation.canonical_facility_id === facilityId))
+      .filter((recommendation): recommendation is DecisionEngineRecommendation => Boolean(recommendation)),
+    [compareSelectedIds, recommendations],
+  );
+  const currentResultsPath = `/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
   const comparisonNeeds = useMemo(() => {
     const allNeeds = decisionResponse?.patient_needs_profile.needs || [];
@@ -202,6 +219,7 @@ export function ResultsPageClient() {
 
   const startNewSearch = () => {
     clearSearchSession();
+    clearCompareSelection();
     resetState();
     router.replace("/");
   };
@@ -210,13 +228,32 @@ export function ResultsPageClient() {
     router.push("/");
   };
 
+  const toggleCompareSelection = (recommendation: DecisionEngineRecommendation) => {
+    setCompareSelectedIds((current) => {
+      if (current.includes(recommendation.canonical_facility_id)) {
+        return current.filter((item) => item !== recommendation.canonical_facility_id);
+      }
+      if (current.length >= 5) return current;
+      return [...current, recommendation.canonical_facility_id];
+    });
+  };
+
+  const buildCompareHref = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("facilities", compareSelectedIds.join(","));
+    params.set("returnTo", currentResultsPath);
+    return `/compare?${params.toString()}`;
+  };
+
   const renderRecommendationCard = (recommendation: DecisionEngineRecommendation, index: number) => {
     const isSaved = savedCanonicalIds.includes(recommendation.canonical_facility_id);
+    const isSelectedForCompare = compareSelectedIds.includes(recommendation.canonical_facility_id);
+    const compareDisabled = !isSelectedForCompare && compareSelectedIds.length >= 5;
 
     return (
       <article
         key={recommendation.canonical_facility_id}
-        className="rounded-2xl border border-[#e8ddcc] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)]"
+        className={`rounded-2xl border bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)] ${isSelectedForCompare ? "border-[#6f9a86] ring-1 ring-[#6f9a86]/30" : "border-[#e8ddcc]"}`}
       >
         <div className="space-y-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -300,8 +337,17 @@ export function ResultsPageClient() {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => toggleCompareSelection(recommendation)}
+              disabled={compareDisabled}
+              className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isSelectedForCompare ? "border-[#6f9a86] bg-[#f1faf3] text-[#2f6d3e]" : compareDisabled ? "border-[#e1d8c9] bg-[#f7f3eb] text-[#a0907d]" : "border-[#cddce5] bg-white text-[#24425e] hover:bg-[#f6fbff]"}`}
+            >
+              {isSelectedForCompare ? "Selected for compare" : compareDisabled ? "Compare limit reached" : "Compare"}
+            </button>
+
             {recommendation.facility_profile_id ? (
-              <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
+              <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
                 VIEW DETAILS
               </Link>
             ) : (
@@ -367,6 +413,39 @@ export function ResultsPageClient() {
                   </button>
                 ))}
               </div>
+            </div>
+          ) : null}
+
+          {compareSelectedFacilities.length > 0 ? (
+            <div className="mt-5 rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#24425e]">Compare tray</p>
+                  <p className="mt-1 text-sm text-[#4a6076]">Compare selected ({compareSelectedFacilities.length})</p>
+                </div>
+                <button
+                  type="button"
+                  disabled={compareSelectedFacilities.length < 2}
+                  onClick={() => router.push(buildCompareHref())}
+                  className="rounded-full bg-[#24425e] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#9bb0c1]"
+                >
+                  Compare now
+                </button>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {compareSelectedFacilities.map((facility) => (
+                  <button
+                    key={`tray-${facility.canonical_facility_id}`}
+                    type="button"
+                    onClick={() => toggleCompareSelection(facility)}
+                    className="inline-flex items-center gap-2 rounded-full border border-[#cddce5] bg-white px-3 py-1.5 text-sm text-[#24425e] hover:bg-[#edf6fb]"
+                  >
+                    <span>{facility.facility_name}</span>
+                    <span aria-hidden="true">x</span>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-[#4a6076]">Select 2 to 5 facilities. Compare stays separate from Save.</p>
             </div>
           ) : null}
         </header>

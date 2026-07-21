@@ -1,5 +1,6 @@
 export const QUESTIONNAIRE_SESSION_KEY = "optime.questionnaire.session";
 export const SEARCH_DRAFT_SESSION_KEY = "optime.search.draft";
+export const COMPARE_SELECTION_SESSION_KEY = "optime.compare.selection";
 
 function hasWindow(): boolean {
   return typeof window !== "undefined";
@@ -40,4 +41,17 @@ export function removeSessionKey(key: string): void {
 export function clearSearchSession(): void {
   removeSessionKey(QUESTIONNAIRE_SESSION_KEY);
   removeSessionKey(SEARCH_DRAFT_SESSION_KEY);
+}
+
+export function loadCompareSelection(): string[] {
+  const selection = loadSessionJson<unknown>(COMPARE_SELECTION_SESSION_KEY);
+  return Array.isArray(selection) ? selection.map((value) => String(value)).filter(Boolean) : [];
+}
+
+export function saveCompareSelection(selectedIds: string[]): void {
+  saveSessionJson(COMPARE_SELECTION_SESSION_KEY, selectedIds);
+}
+
+export function clearCompareSelection(): void {
+  removeSessionKey(COMPARE_SELECTION_SESSION_KEY);
 }
