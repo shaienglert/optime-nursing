@@ -1,0 +1,2116 @@
+{
+  "generated_at_utc": "2026-07-21T14:46:07+00:00",
+  "status": "COMPLETE",
+  "cms_source_file": "database/florida_senior_living_inventory.json",
+  "nppes_source_file": "data/nppes/raw/fl_facilities_nppes.csv",
+  "counts": {
+    "cms_input_records": 694,
+    "nppes_rows": 17684,
+    "nppes_unique_npis": 10663,
+    "nppes_taxonomy_rows": 17684,
+    "cms_nppes_matched": 267,
+    "review_required": 40,
+    "unmatched_cms": 387,
+    "unmatched_nppes": 10396,
+    "final_unique_canonical_facilities": 11090
+  },
+  "role_counts": {
+    "RESIDENTIAL_CANDIDATE": 9172,
+    "BOTH": 1258,
+    "SUPPORTING_PROVIDER": 660
+  },
+  "validation": [
+    {
+      "check": "UNKNOWN never became NO",
+      "status": "PASS",
+      "detail": "No availability or missing taxonomy field was coerced to NO"
+    },
+    {
+      "check": "Availability inferred",
+      "status": "PASS",
+      "detail": "Availability remains UNKNOWN in canonical records"
+    },
+    {
+      "check": "Facility Type not used as blanket exclusion",
+      "status": "PASS",
+      "detail": "CMS and NPPES records were kept independently and crosswalked by evidence"
+    },
+    {
+      "check": "Duplicate canonical IDs",
+      "status": "PASS",
+      "detail": "Duplicate IDs: 0"
+    }
+  ],
+  "samples": {
+    "matched": [
+      {
+        "canonical_id": "CMS-106066",
+        "cms_ccn": "106066",
+        "npi": "1538254222",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "OAK HAMMOCK AT THE UNIVERSITY OF FLORIDA INC",
+        "nppes_name": "OAK HAMMOCK AT THE UNIVERSITY OF FLORIDA INC",
+        "nppes_dba": null,
+        "address_key": "2660 sw 53rd ln|32608",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105638",
+        "cms_ccn": "105638",
+        "npi": "1881081180",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9081,
+        "match_reason": "exact normalized address+ZIP5 with compatible NPPES identity",
+        "cms_name": "PARKLANDS CARE CENTER AND REHAB",
+        "nppes_name": "PARKLANDS FACILITY INC",
+        "nppes_dba": "PARKLANDS CARE CENTER",
+        "address_key": "1000 sw 16th ave|32601",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105737",
+        "cms_ccn": "105737",
+        "npi": "1720075351",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "MACCLENNY NURSING AND REHAB CENTER",
+        "nppes_name": "SOVEREIGN HEALTHCARE OF MACCLENNY, LLC",
+        "nppes_dba": "MACCLENNY NURSING & REHAB CENTER",
+        "address_key": "755 s 5th st|32063",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105148",
+        "cms_ccn": "105148",
+        "npi": "1437921749",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "AVIATA AT EMERALD SHORES",
+        "nppes_name": "626 N TYNDALL PKWY OPCO LLC",
+        "nppes_dba": "AVIATA AT EMERALD SHORES",
+        "address_key": "626 n tyndall pkwy|32404",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105904",
+        "cms_ccn": "105904",
+        "npi": "1831186477",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "ATLANTIC SHORES NURSING AND REHAB CENTER",
+        "nppes_name": "SOVEREIGN HEALTHCARE OF ATLANTIC SHORES, LLC",
+        "nppes_dba": "ATLANTIC SHORES NURSING AND REHAB CENTER",
+        "address_key": "4251 stack blvd|32901",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105291",
+        "cms_ccn": "105291",
+        "npi": "1861418790",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "LIFE CARE CENTER OF MELBOURNE",
+        "nppes_name": "MELWOOD NURSING CENTER, L.L.C.",
+        "nppes_dba": "LIFE CARE CENTER OF MELBOURNE",
+        "address_key": "606 e sheridan rd|32901",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105207",
+        "cms_ccn": "105207",
+        "npi": "1417116252",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9081,
+        "match_reason": "exact normalized address+ZIP5 with compatible NPPES identity",
+        "cms_name": "MELBOURNE HEALTHCARE AND REHABILITATION CENTER",
+        "nppes_name": "SF CARNEGIE LLC",
+        "nppes_dba": "WAVE CREST HEALTH AND REHABILITATION CENTER",
+        "address_key": "1415 s hickory st|32901",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105861",
+        "cms_ccn": "105861",
+        "npi": "1780336255",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "NURSING & REHABILITATION CENTER OF MELBOURNE",
+        "nppes_name": "MELBOURNE OPCO, LLC",
+        "nppes_dba": "NURSING & REHABILITATION CENTER OF MELBOURNE",
+        "address_key": "3033 sarno rd|32934",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105325",
+        "cms_ccn": "105325",
+        "npi": "1508649575",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "SPACE COAST HEALTHCARE AND REHABILITATION CENTER",
+        "nppes_name": "ISLAND OPERATING LLC",
+        "nppes_dba": "SPACE COAST HEALTHCARE AND REHABILITATION CENTER",
+        "address_key": "125 alma blvd|32953",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105985",
+        "cms_ccn": "105985",
+        "npi": "1386416600",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "AVIATA AT PALM BAY",
+        "nppes_name": "5405 BABCOCK ST NE OPCO LLC",
+        "nppes_dba": "AVIATA AT PALM BAY",
+        "address_key": "5405 babcock street ne|32905",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105793",
+        "cms_ccn": "105793",
+        "npi": "1235126889",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "ROYAL OAKS NURSING AND REHAB CENTER",
+        "nppes_name": "SOVEREIGN HEALTHCARE OF TITUSVILLE, LLC",
+        "nppes_dba": "ROYAL OAKS NURSING & REHAB CENTER",
+        "address_key": "2225 knox mcrae dr|32780",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105448",
+        "cms_ccn": "105448",
+        "npi": "1508860115",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "TITUSVILLE REHABILITATION & NURSING CENTER",
+        "nppes_name": "FI-TITUSVILLE, LLC",
+        "nppes_dba": "TITUSVILLE REHABILITATION AND NURSING CENTER",
+        "address_key": "1705 jess parrish ct|32796",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105530",
+        "cms_ccn": "105530",
+        "npi": "1932982907",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "VISTA MANOR HEALTHCARE AND REHABILITATION CENTER",
+        "nppes_name": "VISTA MANOR OPERATING LLC",
+        "nppes_dba": "VISTA MANOR HEALTHCARE AND REHABILITATION CENTER",
+        "address_key": "1550 jess parrish ct|32796",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-106123",
+        "cms_ccn": "106123",
+        "npi": "1679081160",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "VIERA DEL MAR HEALTH AND REHABILITATION CENTER",
+        "nppes_name": "BREVARD OAKS CENTER, LLC",
+        "nppes_dba": "VIERA DEL MAR HEALTH AND REHABILITATION CENTER",
+        "address_key": "2355 vidina drive|32940",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105885",
+        "cms_ccn": "105885",
+        "npi": "1285058065",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9595,
+        "match_reason": "exact normalized address+ZIP5 with compatible NPPES identity",
+        "cms_name": "VIERA HEALTHCARE AND REHABILITATION CENTER",
+        "nppes_name": "VIERA NH LLC",
+        "nppes_dba": "VIERA HEALTH AND REHABILITATION CENTER",
+        "address_key": "8050 spyglass hill rd|32940",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105673",
+        "cms_ccn": "105673",
+        "npi": "1164410197",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "exact normalized facility name + address/city/ZIP evidence",
+        "cms_name": "INDIAN RIVER CENTER",
+        "nppes_name": "INDIAN RIVER CENTER, LLC",
+        "nppes_dba": "INDIAN RIVER CENTER",
+        "address_key": "7201 greenboro dr|32904",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105578",
+        "cms_ccn": "105578",
+        "npi": "1679252696",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.96,
+        "match_reason": "exact normalized address+ZIP5 with compatible NPPES identity",
+        "cms_name": "AVIATA AT THE SEA - HARBOR BEACH",
+        "nppes_name": "MIAMI ROAD OPCO LLC",
+        "nppes_dba": "AVIATA AT THE SEA - HARBOR BEACH",
+        "address_key": "1615 miami rd|33316",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105083",
+        "cms_ccn": "105083",
+        "npi": "1255357703",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9595,
+        "match_reason": "exact normalized address+ZIP5 with compatible NPPES identity",
+        "cms_name": "BROWARD NURSING & REHABILITATION CENTER",
+        "nppes_name": "BROWARD NURSING & REHABILITATION CENTER,LLC",
+        "nppes_dba": null,
+        "address_key": "1330 s andrews ave|33316",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105089",
+        "cms_ccn": "105089",
+        "npi": "1851005540",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9589,
+        "match_reason": "exact normalized address+ZIP5 with compatible NPPES identity",
+        "cms_name": "PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN",
+        "nppes_name": "M PINES OPCO LLC",
+        "nppes_dba": "THE PEARL AT FORT LAUDERDALE REHABILITATION AND NURSING CENTER",
+        "address_key": "1701 ne 26th st|33305",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      },
+      {
+        "canonical_id": "CMS-105205",
+        "cms_ccn": "105205",
+        "npi": "1295449981",
+        "match_status": "MATCHED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9589,
+        "match_reason": "exact normalized address+ZIP5 with compatible NPPES identity",
+        "cms_name": "SAVOY AT FORT LAUDERDALE REHABILITATION AND NURSIN",
+        "nppes_name": "M OAKS OPCO LLC",
+        "nppes_dba": "THE SAVOY AT FORT LAUDERDALE REHABILITATION AND NURSING CENTER",
+        "address_key": "2121 e commercial blvd|33308",
+        "review_required": false,
+        "crosswalk_status": "MATCHED"
+      }
+    ],
+    "review_required": [
+      {
+        "canonical_id": "CMS-105571",
+        "cms_ccn": "105571",
+        "npi": "1285630582",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "PALM GARDEN OF GAINESVILLE",
+        "nppes_name": "SA-PG-GAINESVILLE LLC",
+        "nppes_dba": "PALM GARDEN OF GAINESVILLE",
+        "address_key": "227 sw 62nd blvd|32607",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-105543",
+        "cms_ccn": "105543",
+        "npi": "1598952418",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9593,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "ST ANDREWS BAY SKILLED NURSING AND REHABILITATION",
+        "nppes_name": "PINNACLE HEALTH FACILITIES XXIV LP",
+        "nppes_dba": "ST. ANDREWS BAY SKILLED NURSING AND REHABILITATION CENTER",
+        "address_key": "2100 jenks ave|32405",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-105464",
+        "cms_ccn": "105464",
+        "npi": "1578490728",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "ANCHOR CARE & REHABILITATION CENTER",
+        "nppes_name": "ANCHOR FL OPCO LLC",
+        "nppes_dba": "ANCHOR CARE & REHABILITATION CENTER",
+        "address_key": "1515 port malabar boulevard ne|32905",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-105251",
+        "cms_ccn": "105251",
+        "npi": "1295484749",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9596,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "ROCKLEDGE HEALTHCARE & REHABILITATION CENTER",
+        "nppes_name": "ROCKLEDGE HEALTHCARE & REHABILITATION CENTER LLC",
+        "nppes_dba": null,
+        "address_key": "587 barton blvd|32955",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-105119",
+        "cms_ccn": "105119",
+        "npi": "1760122386",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9596,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "WILTON MANORS HEALTHCARE & REHABILITATION CENTER",
+        "nppes_name": "WILTON MANORS HEALTHCARE & REHABILITATION CENTER LLC",
+        "nppes_dba": null,
+        "address_key": "2675 n andrews ave|33311",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-105924",
+        "cms_ccn": "105924",
+        "npi": "1871589093",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "BLOUNTSTOWN HEALTH AND REHABILITATION CENTER",
+        "nppes_name": "REGENCY CARE OF BLOUNTSTOWN, LLC",
+        "nppes_dba": "BLOUNTSTOWN HEALTH & REHABILITATION CENTER",
+        "address_key": "16690 sw chipola rd|32424",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-106072",
+        "cms_ccn": "106072",
+        "npi": "1851031470",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9596,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "VILLAGE PLACE HEALTHCARE AND REHABILITATION CENTER",
+        "nppes_name": "VILLAGE PLACE HEALTHCARE AND REHABILITATION CENTER LLC",
+        "nppes_dba": null,
+        "address_key": "2370 harbor blvd|33952",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-105870",
+        "cms_ccn": "105870",
+        "npi": "1851325286",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "LIFE CARE CENTER OF CITRUS COUNTY",
+        "nppes_name": "LIFE CARE CENTERS OF AMERICA, INC.",
+        "nppes_dba": "LIFE CARE CENTER OF CITRUS COUNTY",
+        "address_key": "3325 w jerwayne ln|34461",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-106065",
+        "cms_ccn": "106065",
+        "npi": "1063160406",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_2",
+        "match_confidence": 0.9595,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "ISLE HEALTHCARE & REHABILITATION CENTER",
+        "nppes_name": "ISLE HEALTHCARE & REHABILITATION CENTER LLC",
+        "nppes_dba": null,
+        "address_key": "1125 fleming plantation blvd|32003",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      },
+      {
+        "canonical_id": "CMS-105846",
+        "cms_ccn": "105846",
+        "npi": "1811233570",
+        "match_status": "REVIEW_REQUIRED",
+        "match_tier": "TIER_3",
+        "match_confidence": 1.0,
+        "match_reason": "ambiguous candidate set or weak evidence",
+        "cms_name": "BAYA POINTE NURSING AND REHABILITATION CENTER",
+        "nppes_name": "BAYA NURSING AND REHABILITATION LLC",
+        "nppes_dba": "BAYA POINTE NURSING AND REHABILITATION CENTER",
+        "address_key": "587 se ermine ave|32025",
+        "review_required": true,
+        "crosswalk_status": "REVIEW_REQUIRED"
+      }
+    ],
+    "unmatched_cms": [
+      {
+        "cms_ccn": "105460",
+        "facility_name": "AVIATA AT NORTH FLORIDA",
+        "county": "Alachua",
+        "city": "GAINESVILLE",
+        "zip": "32605"
+      },
+      {
+        "cms_ccn": "105664",
+        "facility_name": "Gainesville Health and Rehabilitation",
+        "county": "Alachua",
+        "city": "GAINESVILLE",
+        "zip": "32607"
+      },
+      {
+        "cms_ccn": "106149",
+        "facility_name": "MAGNOLIA RIDGE HEALTH AND REHABILITATION CENTER",
+        "county": "Alachua",
+        "city": "GAINESVILLE",
+        "zip": "32606"
+      },
+      {
+        "cms_ccn": "105193",
+        "facility_name": "PARK MEADOWS HEALTHCARE & REHABILITATION CENTER",
+        "county": "Alachua",
+        "city": "GAINESVILLE",
+        "zip": "32608"
+      },
+      {
+        "cms_ccn": "105434",
+        "facility_name": "PLAZA HEALTH AND REHAB",
+        "county": "Alachua",
+        "city": "GAINESVILLE",
+        "zip": "32608"
+      },
+      {
+        "cms_ccn": "106046",
+        "facility_name": "TERRACE HEALTHCARE & REHABILITATION CENTER",
+        "county": "Alachua",
+        "city": "GAINESVILLE",
+        "zip": "32608"
+      },
+      {
+        "cms_ccn": "105210",
+        "facility_name": "W FRANK WELLS NURSING HOME",
+        "county": "Baker",
+        "city": "MACCLENNY",
+        "zip": "32063"
+      },
+      {
+        "cms_ccn": "106056",
+        "facility_name": "CLIFFORD CHESTER SIMS STATE VETERANS NURSING HOME",
+        "county": "Bay",
+        "city": "PANAMA CITY",
+        "zip": "32404"
+      },
+      {
+        "cms_ccn": "105975",
+        "facility_name": "COMMUNITY HEALTH AND REHABILITATION CENTER",
+        "county": "Bay",
+        "city": "PANAMA CITY",
+        "zip": "32404"
+      },
+      {
+        "cms_ccn": "106121",
+        "facility_name": "PRUITTHEALTH - PANAMA CITY",
+        "county": "Bay",
+        "city": "PANAMA CITY",
+        "zip": "32405"
+      }
+    ],
+    "miami_dade": [
+      {
+        "canonical_id": "CMS-105596",
+        "canonical_type": "CMS_NPPES_MATCHED",
+        "facility_name": "REGENTS PARK AT AVENTURA",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105596",
+          "npi": "1538260039"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105596",
+            "source_name": "REGENTS PARK AT AVENTURA",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105596",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": {
+            "npi": "1538260039",
+            "organization_name": "REGENTS PARK AT AVENTURA INC",
+            "doing_business_as": null,
+            "status": "A",
+            "taxonomy_primary_code": "314000000X",
+            "taxonomy_primary_desc": "Skilled Nursing Facility",
+            "taxonomy_primary_flag": true,
+            "license": "SNF1384095",
+            "license_state": "FL",
+            "address_1": "18905 NE 25TH AVE",
+            "address_2": null,
+            "city": "AVENTURA",
+            "state": "FL",
+            "postal_code": "331803208",
+            "address_key": "18905 ne 25th ave|33180",
+            "city_key": "aventura",
+            "name_key": "regents park at aventura inc",
+            "dba_key": "",
+            "telephone_number": "305-932-6360",
+            "fax_number": "305-935-9278",
+            "enumeration_date": "2006-09-26",
+            "last_updated": "2020-08-22",
+            "scope": "FACILITY",
+            "role_classification": "RESIDENTIAL_CANDIDATE",
+            "residential_keyword_hits": [
+              "skilled nursing facility",
+              "nursing facility"
+            ],
+            "supporting_keyword_hits": [],
+            "taxonomy_evidence_ids": [
+              "NPPES-ROW-09831"
+            ],
+            "taxonomy_rows": 1,
+            "taxonomy_primary_count": 1,
+            "taxonomy_secondary_count": 0,
+            "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+          }
+        },
+        "match": {
+          "status": "MATCHED",
+          "tier": "TIER_2",
+          "confidence": 0.9592
+        },
+        "address": "18905 NE 25TH AVE",
+        "city": "AVENTURA",
+        "county": "Miami-Dade",
+        "zip": "33180",
+        "phone": "3059326360",
+        "license_status": "active",
+        "licensed_beds_capacity": "180",
+        "ownership": "For profit - Corporation",
+        "profit_nonprofit_status": "For profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105596"
+      },
+      {
+        "canonical_id": "CMS-106076",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "VI AT AVENTURA",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "106076"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "106076",
+            "source_name": "VI AT AVENTURA",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "106076",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "19333 WEST COUNTRY CLUB DRIVE",
+        "city": "AVENTURA",
+        "county": "Miami-Dade",
+        "zip": "33180",
+        "phone": "3056924700",
+        "license_status": "active",
+        "licensed_beds_capacity": "40",
+        "ownership": "For profit - Corporation",
+        "profit_nonprofit_status": "For profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "106076"
+      },
+      {
+        "canonical_id": "CMS-106094",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "RIVIERA HEALTH RESORT",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "106094"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "106094",
+            "source_name": "RIVIERA HEALTH RESORT",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "106094",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "6901 YUMURI STREET",
+        "city": "CORAL GABLES",
+        "county": "Miami-Dade",
+        "zip": "33156",
+        "phone": "7865176999",
+        "license_status": "active",
+        "licensed_beds_capacity": "223",
+        "ownership": "For profit - Corporation",
+        "profit_nonprofit_status": "For profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "106094"
+      },
+      {
+        "canonical_id": "CMS-105508",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "East Ridge Rehabilitation and Nursing Center",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105508"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105508",
+            "source_name": "East Ridge Rehabilitation and Nursing Center",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105508",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "19225 SW 87TH AVE",
+        "city": "CUTLER BAY",
+        "county": "Miami-Dade",
+        "zip": "33157",
+        "phone": "3052563545",
+        "license_status": "active",
+        "licensed_beds_capacity": "74",
+        "ownership": "Non profit - Corporation",
+        "profit_nonprofit_status": "Non profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105508"
+      },
+      {
+        "canonical_id": "CMS-105252",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "JACKSON MEMORIAL PERDUE MEDICAL CENTER",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105252"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105252",
+            "source_name": "JACKSON MEMORIAL PERDUE MEDICAL CENTER",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105252",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "19590 OLD CUTLER ROAD",
+        "city": "CUTLER BAY",
+        "county": "Miami-Dade",
+        "zip": "33157",
+        "phone": "7864663500",
+        "license_status": "active",
+        "licensed_beds_capacity": "163",
+        "ownership": "Government - County",
+        "profit_nonprofit_status": "Government - County",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105252"
+      },
+      {
+        "canonical_id": "CMS-105709",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "NSPIRE HEALTHCARE MIAMI LAKES",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105709"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105709",
+            "source_name": "NSPIRE HEALTHCARE MIAMI LAKES",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105709",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "5725 NW 186 STREET",
+        "city": "HIALEAH",
+        "county": "Miami-Dade",
+        "zip": "33015",
+        "phone": "3056259857",
+        "license_status": "active",
+        "licensed_beds_capacity": "120",
+        "ownership": "For profit - Corporation",
+        "profit_nonprofit_status": "For profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105709"
+      },
+      {
+        "canonical_id": "CMS-105575",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "PALMETTO CARE CENTER AND REHAB",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105575"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105575",
+            "source_name": "PALMETTO CARE CENTER AND REHAB",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105575",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "6750 WEST 22ND COURT",
+        "city": "HIALEAH",
+        "county": "Miami-Dade",
+        "zip": "33016",
+        "phone": "3055124688",
+        "license_status": "active",
+        "licensed_beds_capacity": "90",
+        "ownership": "For profit - Limited Liability company",
+        "profit_nonprofit_status": "For profit - Limited Liability company",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105575"
+      },
+      {
+        "canonical_id": "CMS-105498",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "SUSANNA WESLEY HEALTH CENTER",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105498"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105498",
+            "source_name": "SUSANNA WESLEY HEALTH CENTER",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105498",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "5300 W 16TH AVENUE",
+        "city": "HIALEAH",
+        "county": "Miami-Dade",
+        "zip": "33012",
+        "phone": "3055563500",
+        "license_status": "active",
+        "licensed_beds_capacity": "120",
+        "ownership": "For profit - Limited Liability company",
+        "profit_nonprofit_status": "For profit - Limited Liability company",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105498"
+      },
+      {
+        "canonical_id": "CMS-105803",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "TERRACE OF HIALEAH, THE",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105803"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105803",
+            "source_name": "TERRACE OF HIALEAH, THE",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105803",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "190 W 28TH STREET",
+        "city": "HIALEAH",
+        "county": "Miami-Dade",
+        "zip": "33010",
+        "phone": "3058852437",
+        "license_status": "active",
+        "licensed_beds_capacity": "276",
+        "ownership": "For profit - Partnership",
+        "profit_nonprofit_status": "For profit - Partnership",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105803"
+      },
+      {
+        "canonical_id": "CMS-106080",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "VILLA MARIA WEST SKILLED NURSING FACILITY",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "106080"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "106080",
+            "source_name": "VILLA MARIA WEST SKILLED NURSING FACILITY",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "106080",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "8850 NW 122 ST",
+        "city": "HIALEAH GARDENS",
+        "county": "Miami-Dade",
+        "zip": "33018",
+        "phone": "3053517181",
+        "license_status": "active",
+        "licensed_beds_capacity": "27",
+        "ownership": "Non profit - Church related",
+        "profit_nonprofit_status": "Non profit - Church related",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "106080"
+      }
+    ],
+    "broward": [
+      {
+        "canonical_id": "CMS-105979",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "SOLARIS HEALTHCARE COCONUT CREEK",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105979"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105979",
+            "source_name": "SOLARIS HEALTHCARE COCONUT CREEK",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105979",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "4125 WEST SAMPLE RD",
+        "city": "COCONUT CREEK",
+        "county": "Broward",
+        "zip": "33073",
+        "phone": "9549688333",
+        "license_status": "active",
+        "licensed_beds_capacity": "120",
+        "ownership": "Non profit - Corporation",
+        "profit_nonprofit_status": "Non profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105979"
+      },
+      {
+        "canonical_id": "CMS-105296",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "WESTLAKE NURSING AND REHAB CENTER",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105296"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105296",
+            "source_name": "WESTLAKE NURSING AND REHAB CENTER",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105296",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "440 PHIPPEN WAITERS ROAD",
+        "city": "DANIA BEACH",
+        "county": "Broward",
+        "zip": "33004",
+        "phone": "9549270508",
+        "license_status": "active",
+        "licensed_beds_capacity": "88",
+        "ownership": "For profit - Corporation",
+        "profit_nonprofit_status": "For profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105296"
+      },
+      {
+        "canonical_id": "CMS-105578",
+        "canonical_type": "CMS_NPPES_MATCHED",
+        "facility_name": "AVIATA AT THE SEA - HARBOR BEACH",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105578",
+          "npi": "1679252696"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105578",
+            "source_name": "AVIATA AT THE SEA - HARBOR BEACH",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105578",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": {
+            "npi": "1679252696",
+            "organization_name": "MIAMI ROAD OPCO LLC",
+            "doing_business_as": "AVIATA AT THE SEA - HARBOR BEACH",
+            "status": "A",
+            "taxonomy_primary_code": "314000000X",
+            "taxonomy_primary_desc": "Skilled Nursing Facility",
+            "taxonomy_primary_flag": true,
+            "license": null,
+            "license_state": null,
+            "address_1": "1615 MIAMI RD",
+            "address_2": null,
+            "city": "FT LAUDERDALE",
+            "state": "FL",
+            "postal_code": "333162933",
+            "address_key": "1615 miami rd|33316",
+            "city_key": "ft lauderdale",
+            "name_key": "miami road opco llc",
+            "dba_key": "aviata at the sea harbor beach",
+            "telephone_number": "954-523-5673",
+            "fax_number": "954-523-3010",
+            "enumeration_date": "2023-07-17",
+            "last_updated": "2025-04-09",
+            "scope": "FACILITY",
+            "role_classification": "RESIDENTIAL_CANDIDATE",
+            "residential_keyword_hits": [
+              "skilled nursing facility",
+              "nursing facility"
+            ],
+            "supporting_keyword_hits": [],
+            "taxonomy_evidence_ids": [
+              "NPPES-ROW-09936"
+            ],
+            "taxonomy_rows": 1,
+            "taxonomy_primary_count": 1,
+            "taxonomy_secondary_count": 0,
+            "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+          }
+        },
+        "match": {
+          "status": "MATCHED",
+          "tier": "TIER_2",
+          "confidence": 0.96
+        },
+        "address": "1615 MIAMI RD",
+        "city": "FORT LAUDERDALE",
+        "county": "Broward",
+        "zip": "33316",
+        "phone": "9545235673",
+        "license_status": "active",
+        "licensed_beds_capacity": "59",
+        "ownership": "For profit - Limited Liability company",
+        "profit_nonprofit_status": "For profit - Limited Liability company",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105578"
+      },
+      {
+        "canonical_id": "CMS-105083",
+        "canonical_type": "CMS_NPPES_MATCHED",
+        "facility_name": "BROWARD NURSING & REHABILITATION CENTER",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105083",
+          "npi": "1255357703"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105083",
+            "source_name": "BROWARD NURSING & REHABILITATION CENTER",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105083",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": {
+            "npi": "1255357703",
+            "organization_name": "BROWARD NURSING & REHABILITATION CENTER,LLC",
+            "doing_business_as": null,
+            "status": "A",
+            "taxonomy_primary_code": "314000000X",
+            "taxonomy_primary_desc": "Skilled Nursing Facility",
+            "taxonomy_primary_flag": true,
+            "license": "SNF10670962",
+            "license_state": "FL",
+            "address_1": "1330 S ANDREWS AVE",
+            "address_2": null,
+            "city": "FT LAUDERDALE",
+            "state": "FL",
+            "postal_code": "333161838",
+            "address_key": "1330 s andrews ave|33316",
+            "city_key": "ft lauderdale",
+            "name_key": "broward nursing and rehabilitation center llc",
+            "dba_key": "",
+            "telephone_number": "954-524-5587",
+            "fax_number": "954-463-4428",
+            "enumeration_date": "2006-07-15",
+            "last_updated": "2015-04-15",
+            "scope": "FACILITY",
+            "role_classification": "RESIDENTIAL_CANDIDATE",
+            "residential_keyword_hits": [
+              "skilled nursing facility",
+              "nursing facility"
+            ],
+            "supporting_keyword_hits": [],
+            "taxonomy_evidence_ids": [
+              "NPPES-ROW-09898"
+            ],
+            "taxonomy_rows": 1,
+            "taxonomy_primary_count": 1,
+            "taxonomy_secondary_count": 0,
+            "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+          }
+        },
+        "match": {
+          "status": "MATCHED",
+          "tier": "TIER_2",
+          "confidence": 0.9595
+        },
+        "address": "1330 S ANDREWS AVE",
+        "city": "FORT LAUDERDALE",
+        "county": "Broward",
+        "zip": "33316",
+        "phone": "9545245587",
+        "license_status": "active",
+        "licensed_beds_capacity": "198",
+        "ownership": "For profit - Corporation",
+        "profit_nonprofit_status": "For profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105083"
+      },
+      {
+        "canonical_id": "CMS-105298",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "FT LAUDERDALE HEALTH & REHABILITATION CENTER",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105298"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105298",
+            "source_name": "FT LAUDERDALE HEALTH & REHABILITATION CENTER",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105298",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "2000 EAST COMMERCIAL BLVD",
+        "city": "FORT LAUDERDALE",
+        "county": "Broward",
+        "zip": "33308",
+        "phone": "9547712300",
+        "license_status": "active",
+        "licensed_beds_capacity": "169",
+        "ownership": "For profit - Limited Liability company",
+        "profit_nonprofit_status": "For profit - Limited Liability company",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105298"
+      },
+      {
+        "canonical_id": "CMS-105089",
+        "canonical_type": "CMS_NPPES_MATCHED",
+        "facility_name": "PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105089",
+          "npi": "1851005540"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105089",
+            "source_name": "PEARL AT FORT LAUDERDALE REHABILITATION AND NURSIN",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105089",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": {
+            "npi": "1851005540",
+            "organization_name": "M PINES OPCO LLC",
+            "doing_business_as": "THE PEARL AT FORT LAUDERDALE REHABILITATION AND NURSING CENTER",
+            "status": "A",
+            "taxonomy_primary_code": "314000000X",
+            "taxonomy_primary_desc": "Skilled Nursing Facility",
+            "taxonomy_primary_flag": true,
+            "license": null,
+            "license_state": null,
+            "address_1": "1701 NE 26TH ST",
+            "address_2": null,
+            "city": "WILTON MANORS",
+            "state": "FL",
+            "postal_code": "333051412",
+            "address_key": "1701 ne 26th st|33305",
+            "city_key": "wilton manors",
+            "name_key": "m pines opco llc",
+            "dba_key": "the pearl at fort lauderdale rehabilitation and nursing center",
+            "telephone_number": "954-566-8353",
+            "fax_number": null,
+            "enumeration_date": "2023-01-09",
+            "last_updated": "2023-05-22",
+            "scope": "FACILITY",
+            "role_classification": "RESIDENTIAL_CANDIDATE",
+            "residential_keyword_hits": [
+              "skilled nursing facility",
+              "nursing facility"
+            ],
+            "supporting_keyword_hits": [],
+            "taxonomy_evidence_ids": [
+              "NPPES-ROW-09929"
+            ],
+            "taxonomy_rows": 1,
+            "taxonomy_primary_count": 1,
+            "taxonomy_secondary_count": 0,
+            "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+          }
+        },
+        "match": {
+          "status": "MATCHED",
+          "tier": "TIER_2",
+          "confidence": 0.9589
+        },
+        "address": "1701 NE 26TH ST",
+        "city": "FORT LAUDERDALE",
+        "county": "Broward",
+        "zip": "33305",
+        "phone": "9545668353",
+        "license_status": "active",
+        "licensed_beds_capacity": "206",
+        "ownership": "For profit - Limited Liability company",
+        "profit_nonprofit_status": "For profit - Limited Liability company",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105089"
+      },
+      {
+        "canonical_id": "CMS-105205",
+        "canonical_type": "CMS_NPPES_MATCHED",
+        "facility_name": "SAVOY AT FORT LAUDERDALE REHABILITATION AND NURSIN",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105205",
+          "npi": "1295449981"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105205",
+            "source_name": "SAVOY AT FORT LAUDERDALE REHABILITATION AND NURSIN",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105205",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": {
+            "npi": "1295449981",
+            "organization_name": "M OAKS OPCO LLC",
+            "doing_business_as": "THE SAVOY AT FORT LAUDERDALE REHABILITATION AND NURSING CENTER",
+            "status": "A",
+            "taxonomy_primary_code": "314000000X",
+            "taxonomy_primary_desc": "Skilled Nursing Facility",
+            "taxonomy_primary_flag": true,
+            "license": null,
+            "license_state": null,
+            "address_1": "2121 E COMMERCIAL BLVD",
+            "address_2": null,
+            "city": "FORT LAUDERDALE",
+            "state": "FL",
+            "postal_code": "333083821",
+            "address_key": "2121 e commercial blvd|33308",
+            "city_key": "fort lauderdale",
+            "name_key": "m oaks opco llc",
+            "dba_key": "the savoy at fort lauderdale rehabilitation and nursing center",
+            "telephone_number": "954-771-8400",
+            "fax_number": null,
+            "enumeration_date": "2023-01-09",
+            "last_updated": "2024-06-07",
+            "scope": "FACILITY",
+            "role_classification": "RESIDENTIAL_CANDIDATE",
+            "residential_keyword_hits": [
+              "skilled nursing facility",
+              "nursing facility"
+            ],
+            "supporting_keyword_hits": [],
+            "taxonomy_evidence_ids": [
+              "NPPES-ROW-09928"
+            ],
+            "taxonomy_rows": 1,
+            "taxonomy_primary_count": 1,
+            "taxonomy_secondary_count": 0,
+            "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+          }
+        },
+        "match": {
+          "status": "MATCHED",
+          "tier": "TIER_2",
+          "confidence": 0.9589
+        },
+        "address": "2121 E COMMERCIAL BLVD",
+        "city": "FORT LAUDERDALE",
+        "county": "Broward",
+        "zip": "33308",
+        "phone": "9547718400",
+        "license_status": "active",
+        "licensed_beds_capacity": "116",
+        "ownership": "For profit - Corporation",
+        "profit_nonprofit_status": "For profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105205"
+      },
+      {
+        "canonical_id": "CMS-105495",
+        "canonical_type": "CMS_NPPES_MATCHED",
+        "facility_name": "EMERALD NURSING AND REHABILITATION CENTER",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105495",
+          "npi": "1750337671"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105495",
+            "source_name": "EMERALD NURSING AND REHABILITATION CENTER",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105495",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": {
+            "npi": "1750337671",
+            "organization_name": "WASHINGTON MANOR HEALTH CARE ASSOCIATES LLC",
+            "doing_business_as": "HILLCREST NURSING AND REHABILITATION CENTER",
+            "status": "A",
+            "taxonomy_primary_code": "314000000X",
+            "taxonomy_primary_desc": "Skilled Nursing Facility",
+            "taxonomy_primary_flag": true,
+            "license": "SNF15840951",
+            "license_state": "FL",
+            "address_1": "4200 WASHINGTON ST",
+            "address_2": null,
+            "city": "HOLLYWOOD",
+            "state": "FL",
+            "postal_code": "330217353",
+            "address_key": "4200 washington st|33021",
+            "city_key": "hollywood",
+            "name_key": "washington manor health care associates llc",
+            "dba_key": "hillcrest nursing and rehabilitation center",
+            "telephone_number": "954-981-6300",
+            "fax_number": "954-967-2725",
+            "enumeration_date": "2006-05-25",
+            "last_updated": "2012-08-02",
+            "scope": "FACILITY",
+            "role_classification": "RESIDENTIAL_CANDIDATE",
+            "residential_keyword_hits": [
+              "skilled nursing facility",
+              "nursing facility"
+            ],
+            "supporting_keyword_hits": [],
+            "taxonomy_evidence_ids": [
+              "NPPES-ROW-09680"
+            ],
+            "taxonomy_rows": 1,
+            "taxonomy_primary_count": 1,
+            "taxonomy_secondary_count": 0,
+            "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+          }
+        },
+        "match": {
+          "status": "MATCHED",
+          "tier": "TIER_2",
+          "confidence": 0.9083
+        },
+        "address": "4200 WASHINGTON ST",
+        "city": "HOLLYWOOD",
+        "county": "Broward",
+        "zip": "33021",
+        "phone": "9549816300",
+        "license_status": "active",
+        "licensed_beds_capacity": "240",
+        "ownership": "For profit - Limited Liability company",
+        "profit_nonprofit_status": "For profit - Limited Liability company",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105495"
+      },
+      {
+        "canonical_id": "CMS-105009",
+        "canonical_type": "CMS_ONLY",
+        "facility_name": "GOLFCREST NURSING CENTER",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "105009"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "105009",
+            "source_name": "GOLFCREST NURSING CENTER",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "105009",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": null
+        },
+        "match": {
+          "status": "UNMATCHED",
+          "tier": null,
+          "confidence": 0.0
+        },
+        "address": "600 NORTH 17TH AVE",
+        "city": "HOLLYWOOD",
+        "county": "Broward",
+        "zip": "33020",
+        "phone": "9549272531",
+        "license_status": "active",
+        "licensed_beds_capacity": "67",
+        "ownership": "Non profit - Corporation",
+        "profit_nonprofit_status": "Non profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "105009"
+      },
+      {
+        "canonical_id": "CMS-106109",
+        "canonical_type": "CMS_NPPES_MATCHED",
+        "facility_name": "KINDRED HOSPITAL SOUTH FLORIDA HOLLYWOOD",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "source_identity_ids": {
+          "cms_ccn": "106109",
+          "npi": "1518330315"
+        },
+        "source_evidence": {
+          "cms": {
+            "source_type": "CMS",
+            "source_id": "106109",
+            "source_name": "KINDRED HOSPITAL SOUTH FLORIDA HOLLYWOOD",
+            "source_role": "RESIDENTIAL_CANDIDATE",
+            "source_record_id": "106109",
+            "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+            "facility_type_raw": "Skilled Nursing",
+            "scope": "FACILITY"
+          },
+          "nppes": {
+            "npi": "1518330315",
+            "organization_name": "KINDRED HOSPITALS EAST, LLC",
+            "doing_business_as": "KINDRED HOSPITAL - SOUTH FLORIDA - HOLLYWOOD SAU",
+            "status": "A",
+            "taxonomy_primary_code": "314000000X",
+            "taxonomy_primary_desc": "Skilled Nursing Facility",
+            "taxonomy_primary_flag": true,
+            "license": null,
+            "license_state": null,
+            "address_1": "1859 VAN BUREN ST",
+            "address_2": "2ND FL",
+            "city": "HOLLYWOOD",
+            "state": "FL",
+            "postal_code": "330205127",
+            "address_key": "1859 van buren st|33020",
+            "city_key": "hollywood",
+            "name_key": "kindred hospitals east llc",
+            "dba_key": "kindred hospital south florida hollywood sau",
+            "telephone_number": "954-920-9000",
+            "fax_number": "954-926-3887",
+            "enumeration_date": "2015-11-03",
+            "last_updated": "2025-09-17",
+            "scope": "FACILITY",
+            "role_classification": "RESIDENTIAL_CANDIDATE",
+            "residential_keyword_hits": [
+              "skilled nursing facility",
+              "nursing facility"
+            ],
+            "supporting_keyword_hits": [],
+            "taxonomy_evidence_ids": [
+              "NPPES-ROW-09620"
+            ],
+            "taxonomy_rows": 1,
+            "taxonomy_primary_count": 1,
+            "taxonomy_secondary_count": 0,
+            "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+          }
+        },
+        "match": {
+          "status": "MATCHED",
+          "tier": "TIER_2",
+          "confidence": 0.9595
+        },
+        "address": "1859 VAN BUREN ST",
+        "city": "HOLLYWOOD",
+        "county": "Broward",
+        "zip": "33020",
+        "phone": "9549209000",
+        "license_status": "active",
+        "licensed_beds_capacity": "30",
+        "ownership": "For profit - Corporation",
+        "profit_nonprofit_status": "For profit - Corporation",
+        "facility_type_raw": "Skilled Nursing",
+        "availability": "UNKNOWN",
+        "availability_evidence_state": "UNKNOWN",
+        "source_retrieved_at": "2026-07-18T05:39:28+00:00",
+        "source_record_id": "106109"
+      }
+    ],
+    "multi_taxonomy": [
+      {
+        "npi": "1003009788",
+        "organization_name": "CENTRAL CARE SERVICES, INC.",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "251J00000X",
+        "taxonomy_primary_desc": "Nursing Care",
+        "taxonomy_primary_flag": true,
+        "license": null,
+        "license_state": null,
+        "address_1": "2001 PALM BEACH LAKES BLVD STE 300D",
+        "address_2": null,
+        "city": "WEST PALM BEACH",
+        "state": "FL",
+        "postal_code": "334096515",
+        "address_key": "2001 palm beach lakes boulevard ste 300d|33409",
+        "city_key": "west palm beach",
+        "name_key": "central care services inc",
+        "dba_key": "",
+        "telephone_number": "561-337-4338",
+        "fax_number": "561-337-9025",
+        "enumeration_date": "2007-08-24",
+        "last_updated": "2018-10-22",
+        "scope": "FACILITY",
+        "role_classification": "BOTH",
+        "residential_keyword_hits": [
+          "nursing care"
+        ],
+        "supporting_keyword_hits": [
+          "home health",
+          "in home supportive care",
+          "home health aide",
+          "homemaker",
+          "adult companion",
+          "day training",
+          "community/behavioral health",
+          "technician",
+          "registered nurse"
+        ],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-13220",
+          "NPPES-ROW-13221",
+          "NPPES-ROW-13222",
+          "NPPES-ROW-13223",
+          "NPPES-ROW-13224",
+          "NPPES-ROW-13225",
+          "NPPES-ROW-13226",
+          "NPPES-ROW-13227",
+          "NPPES-ROW-13228",
+          "NPPES-ROW-13229",
+          "NPPES-ROW-13230",
+          "NPPES-ROW-13231",
+          "NPPES-ROW-13232"
+        ],
+        "taxonomy_rows": 13,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 12,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003018482",
+        "organization_name": "EDEN GARDENS, LLC",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "3104A0625X",
+        "taxonomy_primary_desc": "Assisted Living Facility, Assisted Living, Mental Illness",
+        "taxonomy_primary_flag": true,
+        "license": "AL8209",
+        "license_state": "FL",
+        "address_1": "12221 W DIXIE HWY",
+        "address_2": null,
+        "city": "NORTH MIAMI",
+        "state": "FL",
+        "postal_code": "331615427",
+        "address_key": "12221 w dixie hwy|33161",
+        "city_key": "north miami",
+        "name_key": "eden gardens llc",
+        "dba_key": "",
+        "telephone_number": "305-893-2634",
+        "fax_number": null,
+        "enumeration_date": "2007-06-05",
+        "last_updated": "2025-09-11",
+        "scope": "FACILITY",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "residential_keyword_hits": [
+          "assisted living facility"
+        ],
+        "supporting_keyword_hits": [],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-02202",
+          "NPPES-ROW-02203"
+        ],
+        "taxonomy_rows": 2,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 1,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003019431",
+        "organization_name": "RAINBOW RETIREMENT LIVING, INC.",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "3104A0625X",
+        "taxonomy_primary_desc": "Assisted Living Facility, Assisted Living, Mental Illness",
+        "taxonomy_primary_flag": true,
+        "license": "AL7680",
+        "license_state": "FL",
+        "address_1": "75 E 7TH ST",
+        "address_2": null,
+        "city": "HIALEAH",
+        "state": "FL",
+        "postal_code": "330104409",
+        "address_key": "75 e 7th st|33010",
+        "city_key": "hialeah",
+        "name_key": "rainbow retirement living inc",
+        "dba_key": "",
+        "telephone_number": "305-883-1028",
+        "fax_number": null,
+        "enumeration_date": "2007-06-05",
+        "last_updated": "2025-09-11",
+        "scope": "FACILITY",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "residential_keyword_hits": [
+          "assisted living facility"
+        ],
+        "supporting_keyword_hits": [],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-02670",
+          "NPPES-ROW-02671"
+        ],
+        "taxonomy_rows": 2,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 1,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003159294",
+        "organization_name": "433 ORANGE DRIVE, LLC",
+        "doing_business_as": "GRAND VILLA OF ALTAMONTE SPRINGS",
+        "status": "A",
+        "taxonomy_primary_code": "310400000X",
+        "taxonomy_primary_desc": "Assisted Living Facility",
+        "taxonomy_primary_flag": true,
+        "license": "AL7103",
+        "license_state": "FL",
+        "address_1": "433 ORANGE DR",
+        "address_2": null,
+        "city": "ALTAMONTE SPRINGS",
+        "state": "FL",
+        "postal_code": "327015377",
+        "address_key": "433 orange dr|32701",
+        "city_key": "altamonte springs",
+        "name_key": "433 orange drive llc",
+        "dba_key": "grand villa of altamonte springs",
+        "telephone_number": "407-260-2433",
+        "fax_number": null,
+        "enumeration_date": "2013-04-05",
+        "last_updated": "2013-04-05",
+        "scope": "FACILITY",
+        "role_classification": "RESIDENTIAL_CANDIDATE",
+        "residential_keyword_hits": [
+          "assisted living facility",
+          "alzheimer center",
+          "dementia center"
+        ],
+        "supporting_keyword_hits": [],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-00901",
+          "NPPES-ROW-00902"
+        ],
+        "taxonomy_rows": 2,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 1,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003198565",
+        "organization_name": "ISLAND COAST PRIMARY CARE PROJECT, INC.",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "3140N1450X",
+        "taxonomy_primary_desc": "Skilled Nursing Facility, Nursing Care, Pediatric",
+        "taxonomy_primary_flag": true,
+        "license": null,
+        "license_state": null,
+        "address_1": "4150 FORD STREET EXT STE 1B",
+        "address_2": null,
+        "city": "FORT MYERS",
+        "state": "FL",
+        "postal_code": "339169498",
+        "address_key": "4150 ford street ext ste 1b|33916",
+        "city_key": "fort myers",
+        "name_key": "island coast primary care project inc",
+        "dba_key": "",
+        "telephone_number": "239-467-8375",
+        "fax_number": "239-461-7639",
+        "enumeration_date": "2011-09-12",
+        "last_updated": "2011-09-12",
+        "scope": "FACILITY",
+        "role_classification": "BOTH",
+        "residential_keyword_hits": [
+          "skilled nursing facility",
+          "nursing care",
+          "nursing facility"
+        ],
+        "supporting_keyword_hits": [
+          "case management"
+        ],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-10479",
+          "NPPES-ROW-10480"
+        ],
+        "taxonomy_rows": 2,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 1,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003202029",
+        "organization_name": "A TRIANGLE CARE SERVICES, LLC",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "385HR2060X",
+        "taxonomy_primary_desc": "Respite Care, Respite Care, Intellectual and/or Developmental Disabilities, Child",
+        "taxonomy_primary_flag": true,
+        "license": null,
+        "license_state": null,
+        "address_1": "7708 RIFFLE LN",
+        "address_2": null,
+        "city": "ORLANDO",
+        "state": "FL",
+        "postal_code": "328181200",
+        "address_key": "7708 riffle ln|32818",
+        "city_key": "orlando",
+        "name_key": "a triangle care services llc",
+        "dba_key": "",
+        "telephone_number": "407-202-6418",
+        "fax_number": "954-212-0227",
+        "enumeration_date": "2015-04-07",
+        "last_updated": "2015-04-07",
+        "scope": "SERVICE",
+        "role_classification": "SUPPORTING_PROVIDER",
+        "residential_keyword_hits": [],
+        "supporting_keyword_hits": [
+          "respite care",
+          "adult companion",
+          "non-emergency medical transport",
+          "technician"
+        ],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-14749",
+          "NPPES-ROW-14750",
+          "NPPES-ROW-14751",
+          "NPPES-ROW-14752",
+          "NPPES-ROW-14753"
+        ],
+        "taxonomy_rows": 5,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 4,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003319385",
+        "organization_name": "LEAP HOME CARE SERVICES, INC.",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "251E00000X",
+        "taxonomy_primary_desc": "Home Health",
+        "taxonomy_primary_flag": true,
+        "license": null,
+        "license_state": null,
+        "address_1": "25343 SW 121ST CT",
+        "address_2": null,
+        "city": "HOMESTEAD",
+        "state": "FL",
+        "postal_code": "330325916",
+        "address_key": "25343 sw 121st ct|33032",
+        "city_key": "homestead",
+        "name_key": "leap home care services inc",
+        "dba_key": "",
+        "telephone_number": "786-406-2937",
+        "fax_number": null,
+        "enumeration_date": "2018-03-13",
+        "last_updated": "2018-03-13",
+        "scope": "SERVICE",
+        "role_classification": "SUPPORTING_PROVIDER",
+        "residential_keyword_hits": [],
+        "supporting_keyword_hits": [
+          "home health",
+          "in home supportive care",
+          "respite care"
+        ],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-16309",
+          "NPPES-ROW-16310",
+          "NPPES-ROW-16311",
+          "NPPES-ROW-16312"
+        ],
+        "taxonomy_rows": 4,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 3,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003358078",
+        "organization_name": "FLORIDA CAREGIVERS, INC.",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "253Z00000X",
+        "taxonomy_primary_desc": "In Home Supportive Care",
+        "taxonomy_primary_flag": true,
+        "license": "NR30211698",
+        "license_state": "FL",
+        "address_1": "7647 W GULF TO LAKE HWY",
+        "address_2": "SUITE 1",
+        "city": "CRYSTAL RIVER",
+        "state": "FL",
+        "postal_code": "344297962",
+        "address_key": "7647 w gulf to lake hwy|34429",
+        "city_key": "crystal river",
+        "name_key": "florida caregivers inc",
+        "dba_key": "",
+        "telephone_number": "352-795-7800",
+        "fax_number": null,
+        "enumeration_date": "2016-11-08",
+        "last_updated": "2016-11-08",
+        "scope": "FACILITY",
+        "role_classification": "BOTH",
+        "residential_keyword_hits": [
+          "nursing care"
+        ],
+        "supporting_keyword_hits": [
+          "in home supportive care"
+        ],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-14319",
+          "NPPES-ROW-14320"
+        ],
+        "taxonomy_rows": 2,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 1,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003411794",
+        "organization_name": "BIG HEARTS IN MOTION LLC",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "251E00000X",
+        "taxonomy_primary_desc": "Home Health",
+        "taxonomy_primary_flag": true,
+        "license": null,
+        "license_state": null,
+        "address_1": "550 BALMORAL CIR N STE 301",
+        "address_2": null,
+        "city": "JACKSONVILLE",
+        "state": "FL",
+        "postal_code": "322185574",
+        "address_key": "550 balmoral cir n ste 301|32218",
+        "city_key": "jacksonville",
+        "name_key": "big hearts in motion llc",
+        "dba_key": "",
+        "telephone_number": "904-894-1436",
+        "fax_number": null,
+        "enumeration_date": "2020-12-01",
+        "last_updated": "2020-12-01",
+        "scope": "SERVICE",
+        "role_classification": "BOTH",
+        "residential_keyword_hits": [
+          "assisted living facility",
+          "nursing care",
+          "community based residential treatment facility",
+          "residential"
+        ],
+        "supporting_keyword_hits": [
+          "home health",
+          "in home supportive care",
+          "respite care"
+        ],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-00392",
+          "NPPES-ROW-00393",
+          "NPPES-ROW-00394",
+          "NPPES-ROW-00395",
+          "NPPES-ROW-00396",
+          "NPPES-ROW-00397",
+          "NPPES-ROW-00398",
+          "NPPES-ROW-00399"
+        ],
+        "taxonomy_rows": 8,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 7,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      },
+      {
+        "npi": "1003434770",
+        "organization_name": "WHOLE CARE SOLUTIONS LLC",
+        "doing_business_as": null,
+        "status": "A",
+        "taxonomy_primary_code": "251E00000X",
+        "taxonomy_primary_desc": "Home Health",
+        "taxonomy_primary_flag": true,
+        "license": null,
+        "license_state": null,
+        "address_1": "7951 RIVIERA BLVD STE 303",
+        "address_2": null,
+        "city": "MIRAMAR",
+        "state": "FL",
+        "postal_code": "330236437",
+        "address_key": "7951 riviera boulevard ste 303|33023",
+        "city_key": "miramar",
+        "name_key": "whole care solutions llc",
+        "dba_key": "",
+        "telephone_number": "786-295-1812",
+        "fax_number": null,
+        "enumeration_date": "2020-07-09",
+        "last_updated": "2020-07-09",
+        "scope": "SERVICE",
+        "role_classification": "BOTH",
+        "residential_keyword_hits": [
+          "nursing care"
+        ],
+        "supporting_keyword_hits": [
+          "home health"
+        ],
+        "taxonomy_evidence_ids": [
+          "NPPES-ROW-12615",
+          "NPPES-ROW-12616",
+          "NPPES-ROW-12617"
+        ],
+        "taxonomy_rows": 3,
+        "taxonomy_primary_count": 1,
+        "taxonomy_secondary_count": 2,
+        "source_retrieved_at": "2026-07-21T14:46:06+00:00"
+      }
+    ]
+  },
+  "crosswalk": {
+    "matched": 267,
+    "review_required": 40,
+    "unmatched_cms": 387,
+    "unmatched_nppes": 10396
+  },
+  "source_provenance": {
+    "cms": {
+      "source_file": "database/florida_senior_living_inventory.json",
+      "record_count": 694
+    },
+    "nppes": {
+      "source_file": "data/nppes/raw/fl_facilities_nppes.csv",
+      "row_count": 17684,
+      "unique_npis": 10663
+    }
+  }
+}

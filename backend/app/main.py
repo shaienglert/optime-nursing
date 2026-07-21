@@ -84,6 +84,12 @@ from app.services.cms_service import (
     stars_to_score,
     to_float,
 )
+from app.services.facility_parameter_service import (
+    compare_facility_parameter_tables,
+    get_facility_parameter_table,
+    get_parameter_registry_payload,
+    get_personalized_parameter_order,
+)
 
 app = FastAPI(
     title="OPTIME Nursing API",
@@ -211,6 +217,75 @@ class FacilityDetailsOut(BaseModel):
     visual_confidence_score: Optional[float] = None
     visual_coverage_score: Optional[float] = None
     score_breakdown: ScoreBreakdownOut
+
+
+class ParameterTableRowOut(BaseModel):
+    parameter_id: str
+    category: str
+    parameter: str
+    status_value: Any
+    raw_value: Any = None
+    detail_scope: str
+    scope_name: Optional[str] = None
+    source: str
+    last_verified: Optional[str] = None
+    evidence_count: int
+
+
+class FacilityParameterTableOut(BaseModel):
+    canonical_facility_id: str
+    facility_name: str
+    canonical_type: Optional[str] = None
+    role_classification: Optional[str] = None
+    match_status: Optional[str] = None
+    need_tags: List[str] = Field(default_factory=list)
+    priority_parameter_ids: List[str] = Field(default_factory=list)
+    profile_key: Optional[str] = None
+    rows: List[ParameterTableRowOut]
+
+
+class FacilityParameterComparisonIn(BaseModel):
+    canonical_facility_ids: List[str]
+    need_tags: List[str] = Field(default_factory=list)
+    priority_parameter_ids: List[str] = Field(default_factory=list)
+    profile_key: Optional[str] = None
+
+
+class FacilityParameterComparisonOut(BaseModel):
+    parameter_ids: List[str]
+    need_tags: List[str] = Field(default_factory=list)
+    priority_parameter_ids: List[str] = Field(default_factory=list)
+    profile_key: Optional[str] = None
+    facilities: List[FacilityParameterTableOut]
+
+
+class PersonalizedParameterOrderIn(BaseModel):
+    need_tags: List[str] = Field(default_factory=list)
+    priority_parameter_ids: List[str] = Field(default_factory=list)
+    profile_key: Optional[str] = None
+
+
+class PersonalizedParameterOrderRowOut(BaseModel):
+    parameter_id: str
+    family: str
+    display_name: str
+    applicable_scope: str
+    sort_score: float
+
+
+class PersonalizedParameterOrderOut(BaseModel):
+    generated_at_utc: Optional[str] = None
+    profile_key: Optional[str] = None
+    need_tags: List[str] = Field(default_factory=list)
+    priority_parameter_ids: List[str] = Field(default_factory=list)
+    ordered_parameters: List[PersonalizedParameterOrderRowOut]
+
+
+class ParameterRegistryOut(BaseModel):
+    generated_at_utc: Optional[str] = None
+    record_count: int
+    missing_registry_definitions: List[str] = Field(default_factory=list)
+    records: List[Dict[str, Any]]
 
 
 class ImportSummaryOut(BaseModel):
@@ -1271,6 +1346,53 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
             staffing_components=staffing_components,
             safety_components=safety_components,
         ),
+    )
+
+
+@app.get("/optime-parameter-registry", response_model=ParameterRegistryOut)
+async def get_optime_parameter_registry():
+    return get_parameter_registry_payload()
+
+
+@app.get("/canonical-facilities/{canonical_id}/parameter-table", response_model=FacilityParameterTableOut)
+async def get_canonical_facility_parameter_table(
+    canonical_id: str,
+    need_tags: Optional[str] = Query(default=None),
+    priority_parameter_ids: Optional[str] = Query(default=None),
+    profile_key: Optional[str] = Query(default=None),
+):
+    parsed_need_tags = [item.strip() for item in (need_tags or "").split(",") if item.strip()]
+    parsed_priority_ids = [item.strip() for item in (priority_parameter_ids or "").split(",") if item.strip()]
+    try:
+        return get_facility_parameter_table(
+            canonical_id,
+            need_tags=parsed_need_tags,
+            priority_parameter_ids=parsed_priority_ids,
+            profile_key=profile_key,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Canonical facility not found") from exc
+
+
+@app.post("/canonical-facilities/parameter-comparison", response_model=FacilityParameterComparisonOut)
+async def post_canonical_facility_parameter_comparison(payload: FacilityParameterComparisonIn):
+    try:
+        return compare_facility_parameter_tables(
+            payload.canonical_facility_ids,
+            need_tags=payload.need_tags,
+            priority_parameter_ids=payload.priority_parameter_ids,
+            profile_key=payload.profile_key,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=f"Canonical facility not found: {exc.args[0]}") from exc
+
+
+@app.post("/canonical-facilities/personalized-parameter-order", response_model=PersonalizedParameterOrderOut)
+async def post_personalized_parameter_order(payload: PersonalizedParameterOrderIn):
+    return get_personalized_parameter_order(
+        need_tags=payload.need_tags,
+        priority_parameter_ids=payload.priority_parameter_ids,
+        profile_key=payload.profile_key,
     )
 
 

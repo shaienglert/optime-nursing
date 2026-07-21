@@ -176,6 +176,68 @@ export type FacilityDetailsData = SearchFacility & {
   };
 };
 
+export type ParameterTableRow = {
+  parameter_id: string;
+  category: string;
+  parameter: string;
+  status_value: string | number | boolean | null;
+  raw_value?: string | number | boolean | null;
+  detail_scope: string;
+  scope_name?: string | null;
+  source: string;
+  last_verified?: string | null;
+  evidence_count: number;
+};
+
+export type FacilityParameterTable = {
+  canonical_facility_id: string;
+  facility_name: string;
+  canonical_type?: string | null;
+  role_classification?: string | null;
+  match_status?: string | null;
+  need_tags: string[];
+  priority_parameter_ids: string[];
+  profile_key?: string | null;
+  rows: ParameterTableRow[];
+};
+
+export type FacilityParameterComparisonRequest = {
+  canonical_facility_ids: string[];
+  need_tags?: string[];
+  priority_parameter_ids?: string[];
+  profile_key?: string;
+};
+
+export type FacilityParameterComparison = {
+  parameter_ids: string[];
+  need_tags: string[];
+  priority_parameter_ids: string[];
+  profile_key?: string | null;
+  facilities: FacilityParameterTable[];
+};
+
+export type PersonalizedParameterOrderRequest = {
+  need_tags?: string[];
+  priority_parameter_ids?: string[];
+  profile_key?: string;
+};
+
+export type PersonalizedParameterOrderRow = {
+  parameter_id: string;
+  family: string;
+  display_name: string;
+  applicable_scope: string;
+  sort_score: number;
+};
+
+export type PersonalizedParameterOrderResponse = {
+  generated_at_utc?: string | null;
+  profile_key?: string | null;
+  need_tags: string[];
+  priority_parameter_ids: string[];
+  ordered_parameters: PersonalizedParameterOrderRow[];
+};
+
 export type GovernedRule = {
   rule_id: string;
   authority_level: "A" | "B" | "C" | "D" | "UNKNOWN";
@@ -1616,4 +1678,28 @@ export async function fetchExecutiveReportHistory(limit = 30): Promise<{ reports
 
 export async function fetchExecutiveReportById(reportId: string): Promise<ExecutiveReportPayload> {
   return fetchJson<ExecutiveReportPayload>(`/executive-report/by-id/${encodeURIComponent(reportId)}`);
+}
+
+export async function fetchFacilityParameterTable(
+  canonicalFacilityId: string,
+  options?: { needTags?: string[]; priorityParameterIds?: string[]; profileKey?: string }
+): Promise<FacilityParameterTable> {
+  const params = new URLSearchParams();
+  if (options?.needTags?.length) params.set("need_tags", options.needTags.join(","));
+  if (options?.priorityParameterIds?.length) params.set("priority_parameter_ids", options.priorityParameterIds.join(","));
+  if (options?.profileKey) params.set("profile_key", options.profileKey);
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return fetchJson<FacilityParameterTable>(`/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/parameter-table${suffix}`);
+}
+
+export async function compareFacilityParameters(
+  payload: FacilityParameterComparisonRequest
+): Promise<FacilityParameterComparison> {
+  return postJson<FacilityParameterComparisonRequest, FacilityParameterComparison>("/canonical-facilities/parameter-comparison", payload);
+}
+
+export async function fetchPersonalizedParameterOrder(
+  payload: PersonalizedParameterOrderRequest
+): Promise<PersonalizedParameterOrderResponse> {
+  return postJson<PersonalizedParameterOrderRequest, PersonalizedParameterOrderResponse>("/canonical-facilities/personalized-parameter-order", payload);
 }
