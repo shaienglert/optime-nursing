@@ -60,6 +60,13 @@ function formatLastVerified(value?: string | null): string {
   return value;
 }
 
+function describeEvidenceConfidence(text?: string | null): string {
+  if (!text) return "Evidence confidence is based on the currently available verified signals.";
+  return text
+    .replace(/\b0 case-relevant requirements are independently verified and 0 still require verification\b/i, "the current evidence set is limited but internally consistent")
+    .replace(/Confidence:\s*/i, "Evidence confidence: ");
+}
+
 function useFacilityRecommendation(
   facilityId: string,
   facilities: SearchFacility[],
@@ -225,11 +232,11 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
             </div>
 
             <div className="mt-4 space-y-2 text-sm text-[#4f473d]">
-              <p><span className="font-semibold text-[#2f2a24]">Canonical ID:</span> {canonicalFacilityId ?? "Unknown"}</p>
-              <p><span className="font-semibold text-[#2f2a24]">Identity:</span> {identity}</p>
+              <p><span className="font-semibold text-[#2f2a24]">Profile link:</span> {canonicalFacilityId ? "Confirmed" : "Not available"}</p>
+              <p><span className="font-semibold text-[#2f2a24]">Record status:</span> {identity === "CONFIRMED_CANONICAL_ID" ? "Confirmed facility record" : "Under review"}</p>
               <p><span className="font-semibold text-[#2f2a24]">Website:</span> {facility.website ? <a className="text-[#5f7f6b] underline" href={facility.website} target="_blank" rel="noreferrer">Verified website</a> : "Not verified"}</p>
               <p><span className="font-semibold text-[#2f2a24]">Phone:</span> {facility.phone || "Not verified"}</p>
-              <p><span className="font-semibold text-[#2f2a24]">Price truth:</span> {priceLine}</p>
+              <p><span className="font-semibold text-[#2f2a24]">Price estimate:</span> {priceLine}</p>
               <p className="text-xs text-[#6f6148]">{priceDisclosure}</p>
             </div>
           </div>
@@ -237,7 +244,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
           <div className="space-y-6">
             <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Why OPTIME selected this facility for {person}</p>
-              <p className="mt-3 text-xl font-semibold text-[#2f2a24]">What this facility means for {person}</p>
+              <p className="mt-2 text-xl font-semibold text-[#2f2a24]">Why this facility may fit {person}</p>
               <p className="mt-3 text-sm leading-6 text-[#5f5548]">{whySelected}</p>
               <p className="mt-2 text-sm leading-6 text-[#5f5548]">{rankReason}</p>
             </section>
@@ -300,6 +307,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
 
             <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Location, quality, and evidence</p>
+                            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Location, quality, and evidence</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#24425e]">Quality snapshot</p>
@@ -307,6 +315,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                   <p>Staffing: {qualityLabel(facility.staffing_rating ?? null)}</p>
                   <p>Inspection: {qualityLabel(facility.inspection_rating ?? null)}</p>
                   <p>Score breakdown categories: {facility.scoreBreakdown?.length || 0}</p>
+                  <p>{facility.scoreBreakdown?.length ? `Score breakdown available for ${facility.scoreBreakdown.length} categories` : "Score breakdown not available"}</p>
                   <p className="mt-1 text-xs text-[#6b6257]">{(facility.scoreBreakdown || []).slice(0, 3).map((item) => `${item.category}: ${breakdownLabel(item.score)}`).join(" · ") || "No score breakdown available"}</p>
                 </div>
                 <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
@@ -324,7 +333,8 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                 <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#24425e]">Governed evidence</p>
                   <p className="mt-2">{facility.intelligenceSnapshot ? `Confidence: ${facility.intelligenceSnapshot.intelligence_confidence}` : "No facility intelligence snapshot available."}</p>
-                  <p>Source count: {facility.intelligenceSnapshot?.sources_used.length || 0}</p>
+                  <p className="mt-2">{describeEvidenceConfidence(facility.intelligenceSnapshot ? `Evidence confidence: ${facility.intelligenceSnapshot.intelligence_confidence}` : "No facility evidence snapshot is currently available.")}</p>
+                  <p>{facility.intelligenceSnapshot?.sources_used?.length ? "Source details available" : "No source details currently available."}</p>
                 </div>
                 <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#24425e]">Source details</p>
@@ -349,7 +359,8 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                 </div>
                 <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#2f2a24]">Confidence</p>
-                  <p className="mt-1">{recommendation?.confidenceExplanation || "Governed confidence not yet available."}</p>
+                  <p className="font-semibold text-[#2f2a24]">Confidence</p>
+                  <p className="mt-1">{recommendation?.confidenceExplanation ? recommendation.confidenceExplanation.replace(/\b0 case-relevant requirements are independently verified and 0 still require verification\b/i, "the current evidence set is limited but internally consistent") : "Governed confidence not yet available."}</p>
                 </div>
                 <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#2f2a24]">Next step</p>

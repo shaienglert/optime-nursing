@@ -86,6 +86,24 @@ PRACTICAL_FIT_PARAMETER_IDS = {
     "activities",
 }
 
+DISPLAY_PARAMETER_LABELS = {
+    "nursing_24_7": "24/7 nursing support",
+    "skilled_nursing_capabilities": "Skilled nursing",
+    "transfer_assistance": "Transfer assistance",
+    "medication_support": "Medication management",
+    "adl_support": "Help with daily activities",
+    "pt": "Physical therapy",
+    "ot": "Occupational therapy",
+    "speech_therapy": "Speech therapy",
+    "post_stroke_neuro_evidence": "Stroke and neuro rehabilitation",
+    "memory_care": "Memory care",
+    "dementia_alz_programs": "Memory and dementia support",
+    "languages": "Language support",
+    "published_rates": "Transparent pricing",
+    "transportation": "Transportation support",
+    "medicare_attributes": "Medicare acceptance",
+}
+
 _DECISION_RESULT_CACHE: Dict[str, Dict[str, Any]] = {}
 _DECISION_RESULT_CACHE_ORDER: List[str] = []
 _DECISION_RESULT_CACHE_LIMIT = 12
@@ -105,6 +123,23 @@ class NeedItem:
 
 def _normalize(value: Any) -> str:
     return str(value or "").strip().lower()
+
+
+def _display_parameter_label(parameter_id: str) -> str:
+    return DISPLAY_PARAMETER_LABELS.get(parameter_id, parameter_id.replace("_", " ").strip().title())
+
+
+def _display_source_label(source: Any) -> str:
+    text = _normalize(source)
+    if not text:
+        return "verified evidence"
+    if "cms" in text or "medicare" in text or "survey" in text or "claims" in text:
+        return "CMS-verified evidence"
+    if "nppes" in text or "taxonomy" in text:
+        return "provider taxonomy evidence"
+    if "facility" in text or "provider" in text:
+        return "facility-reported evidence"
+    return "verified evidence"
 
 
 def _to_number(value: Any) -> Optional[float]:
@@ -910,7 +945,7 @@ def _compare_ranked_facilities(left: Dict[str, Any], right: Dict[str, Any]) -> T
             -1 if winner is left else 1,
             {
                 "decision_dimension": "eligibility_status",
-                "reason": f"{winner['canonical_facility_id']} ranked above {loser['canonical_facility_id']} due to better eligibility status.",
+                    "reason": f"{winner['facility_name']} ranked above {loser['facility_name']} because it has a stronger fit for the current critical needs.",
                 "equal_dimensions": [],
                 "unknown_dimensions": [],
             },
@@ -950,8 +985,7 @@ def _compare_ranked_facilities(left: Dict[str, Any], right: Dict[str, Any]) -> T
             {
                 "decision_dimension": dimension_name,
                 "reason": (
-                    f"{winner['canonical_facility_id']} ranked above {loser['canonical_facility_id']} by verified {dimension_name} "
-                    f"({winner_value} vs {loser_value}; tie threshold={threshold})."
+                    f"{winner['facility_name']} ranked above {loser['facility_name']} on verified {dimension_name.replace('_', ' ')} evidence."
                 ),
                 "equal_dimensions": equal_dimensions,
                 "unknown_dimensions": unknown_dimensions,
@@ -1065,15 +1099,15 @@ def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) 
     strong = []
     for item in eligibility["matched_needs"][:5]:
         row = row_by_param.get(item["parameter_id"], {})
-        strong.append(f"{item['parameter_id']} matched ({row.get('source', 'source unknown')})")
+        strong.append(f"{_display_parameter_label(item['parameter_id'])} is supported by {_display_source_label(row.get('source'))}")
 
     verify = []
     for item in eligibility["unknown_critical_needs"][:5]:
-        verify.append(f"{item['parameter_id']} not verified")
+        verify.append(f"{_display_parameter_label(item['parameter_id'])} is not yet verified")
 
     concerns = []
     for item in eligibility["unmet_verified_needs"][:5]:
-        concerns.append(f"{item['parameter_id']} verified gap")
+        concerns.append(f"{_display_parameter_label(item['parameter_id'])} has a verified gap")
 
     if any(row["parameter_id"] == "current_availability" for row in table_rows):
         verify.append("Current availability must be confirmed directly with the facility")

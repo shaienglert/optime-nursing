@@ -42,8 +42,33 @@ function eligibilityTone(status: string): string {
   return "text-[#8b4f3f] bg-[#fff3ef] border-[#f0c9bf]";
 }
 
-function buildNeedChip(need: { parameter_id: string; requirement_level: string }): string {
-  return `${need.requirement_level}: ${need.parameter_id}`;
+function displayNeedLabel(parameterId: string): string {
+  const labels: Record<string, string> = {
+    nursing_24_7: "24/7 nursing support",
+    skilled_nursing_capabilities: "Skilled nursing",
+    adl_support: "Daily living assistance",
+    medication_support: "Medication management",
+    ot: "Occupational therapy",
+    pt: "Physical therapy",
+    speech_therapy: "Speech therapy",
+    transfer_assistance: "Transfer assistance",
+    post_stroke_neuro_evidence: "Stroke / neuro rehabilitation",
+    languages: "Language support",
+    medicare_attributes: "Medicare acceptance",
+    memory_care: "Memory care",
+    published_rates: "Transparent pricing",
+    transportation: "Transportation support",
+  };
+  return labels[parameterId] || parameterId.replace(/_/g, " ");
+}
+
+function displayScope(scope?: string | null): string {
+  const normalized = (scope || "").toUpperCase();
+  if (normalized === "FACILITY") return "Facility-wide";
+  if (normalized === "PROGRAM") return "Program-level";
+  if (normalized === "UNIT") return "Unit-level";
+  if (normalized === "SERVICE") return "Service-level";
+  return "Facility-wide";
 }
 
 function qualitativeScoreLabel(value: number | null | undefined): string {
@@ -150,6 +175,11 @@ export function ResultsPageClient() {
     const allNeeds = decisionResponse?.patient_needs_profile.needs || [];
     return allNeeds.filter((need) => !hiddenNeedIds.includes(need.parameter_id));
   }, [decisionResponse, hiddenNeedIds]);
+
+  const visibleNeedLabels = useMemo(
+    () => visibleNeeds.map((need) => ({ ...need, label: displayNeedLabel(need.parameter_id) })),
+    [visibleNeeds],
+  );
 
   const comparisonNeeds = useMemo(() => {
     const allNeeds = decisionResponse?.patient_needs_profile.needs || [];
@@ -326,14 +356,14 @@ export function ResultsPageClient() {
             <div className="mt-5">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5f7f6b]">Active patient needs</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {visibleNeeds.map((need) => (
+                {visibleNeedLabels.map((need) => (
                   <button
                     key={need.parameter_id}
                     type="button"
                     onClick={() => setHiddenNeedIds((current) => [...current, need.parameter_id])}
                     className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-3 py-1 text-sm text-[#534a3d] hover:bg-[#efe8db]"
                   >
-                    {buildNeedChip(need)} x
+                    {need.requirement_level}: {need.label} x
                   </button>
                 ))}
               </div>
@@ -354,7 +384,7 @@ export function ResultsPageClient() {
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Results Summary</p>
               <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Personalized Recommendations</h2>
               <p className="mt-2 text-sm text-[#5c5347]">
-                {decisionResponse?.result_count || 0} facilities shown from {decisionResponse?.total_candidates_scored || 0} scored canonical facilities.
+                {decisionResponse?.result_count || 0} communities shown from {decisionResponse?.total_candidates_scored || 0} scored facilities.
               </p>
               <p className="mt-2 text-sm text-[#5c5347]">{decisionResponse?.availability_policy}</p>
               {decisionResponse?.tie_break_policy ? (
@@ -423,11 +453,11 @@ export function ResultsPageClient() {
                     <tbody>
                       {comparisonRows.map(({ need, facilities }) => (
                         <tr key={`cmp-${need.parameter_id}`}>
-                          <td className="border border-[#d9e3ec] bg-white px-2 py-1">{need.requirement_level} · {need.parameter_id}</td>
+                          <td className="border border-[#d9e3ec] bg-white px-2 py-1">{need.requirement_level} · {displayNeedLabel(need.parameter_id)}</td>
                           {facilities.map(({ recommendation, status }) => {
                             return (
                               <td key={`${recommendation.canonical_facility_id}-${need.parameter_id}`} className="border border-[#d9e3ec] bg-white px-2 py-1">
-                                {`${comparisonStatusLabel(status)} (${need.applicable_scope || "FACILITY"})`}
+                                  {`${comparisonStatusLabel(status)} (${displayScope(need.applicable_scope)})`}
                               </td>
                             );
                           })}

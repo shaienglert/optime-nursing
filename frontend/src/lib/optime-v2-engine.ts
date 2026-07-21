@@ -3414,7 +3414,7 @@ export function runOptimeV2Engine(facilities: SearchFacility[], state: Questionn
       tradeoff: clinicalReasoning.narrative.verificationNeeded,
       whyThisFits: clinicalReasoning.narrative.whyThisCommunity,
       rankReason: "",
-      confidenceExplanation: `Confidence is ${confidenceScore >= 75 ? "high" : confidenceScore >= 55 ? "moderate" : "limited"} because ${verifiedYes + verifiedNo} case-relevant requirements are independently verified and ${unresolved} still require verification.`,
+      confidenceExplanation: `Confidence is ${confidenceScore >= 75 ? "high" : confidenceScore >= 55 ? "moderate" : "limited"} because the current evidence set is ${confidenceScore >= 75 ? "strong" : confidenceScore >= 55 ? "mixed" : "limited"} and still includes some open verification items.`,
       missingInformation: Array.from(new Set([...clinicalReasoning.narrative.unknownCapabilities, ...criticalUnknowns])),
       hardRejectionReasons,
       contributionHighlights: contributions,
