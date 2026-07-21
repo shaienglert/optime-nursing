@@ -642,6 +642,69 @@ def _upsert_capability(db: Session, facility: Facility, capability: str, value: 
     row.notes = evidence_text[:500]
 
 
+def _capability_state(value: Optional[AnswerState]) -> str:
+    if value == AnswerState.YES:
+        return "VERIFIED_YES"
+    if value == AnswerState.NO:
+        return "VERIFIED_NO"
+    if value == AnswerState.LIMITED:
+        return "LIMITED"
+    return "UNKNOWN"
+
+
+def _decision_field_states_for_facility(db: Session, facility: Facility) -> Dict[str, str]:
+    caps = {
+        str(row.capability): row.value
+        for row in db.query(FacilityCapability).filter(FacilityCapability.facility_id == facility.id).all()
+    }
+    activity_known = (
+        db.query(FacilityActivityCategory)
+        .filter(FacilityActivityCategory.facility_id == facility.id, FacilityActivityCategory.availability != AnswerState.UNKNOWN)
+        .count()
+        > 0
+    )
+
+    nutrition_keys = {
+        "restaurant_style_dining",
+        "meal_preparation",
+        "chef",
+        "special_dietary_restrictions",
+        "kosher_meals",
+        "therapeutic_diets",
+    }
+    nutrition_known = any(caps.get(key) in {AnswerState.YES, AnswerState.NO, AnswerState.LIMITED} for key in nutrition_keys)
+
+    return {
+        "24_7_skilled_nursing": _capability_state(caps.get("specialized_nursing")),
+        "post_stroke_neuro_rehab": _capability_state(caps.get("stroke_rehabilitation")),
+        "physical_therapy": _capability_state(caps.get("physical_therapy")),
+        "occupational_therapy": _capability_state(caps.get("occupational_therapy")),
+        "speech_therapy": _capability_state(caps.get("speech_therapy")),
+        "mobility_transfer_assistance": _capability_state(caps.get("mobility_transfer_assistance")),
+        "medication_management": _capability_state(caps.get("medication_management")),
+        "language_cultural_info": _capability_state(caps.get("hebrew_jewish")),
+        "activities": "VERIFIED_VALUE" if activity_known else "UNKNOWN",
+        "nutrition_dietary": "VERIFIED_VALUE" if nutrition_known else "UNKNOWN",
+        "transportation": _capability_state(caps.get("transportation")),
+        "pricing": "VERIFIED_VALUE" if caps.get("published_pricing") in {AnswerState.YES, AnswerState.NO, AnswerState.LIMITED} else "UNKNOWN",
+        "availability": _capability_state(caps.get("availability")),
+    }
+
+
+def _count_unknown_fields(states: Dict[str, str]) -> int:
+    return sum(1 for value in states.values() if value == "UNKNOWN")
+
+
+def _count_unknown_transitions(before_states: Dict[str, str], after_states: Dict[str, str]) -> int:
+    resolved_states = {"VERIFIED_YES", "VERIFIED_NO", "VERIFIED_VALUE", "LIMITED"}
+    count = 0
+    for key, before in before_states.items():
+        after = after_states.get(key, "UNKNOWN")
+        if before == "UNKNOWN" and after in resolved_states:
+            count += 1
+    return count
+
+
 def _latest_existing_object(db: Session, facility: Facility, claim_type: str) -> Optional[KnowledgeObject]:
     return (
         db.query(KnowledgeObject)
@@ -654,6 +717,7 @@ def _latest_existing_object(db: Session, facility: Facility, claim_type: str) ->
 def _persist_claim(
     db: Session,
     *,
+    run_id: str,
     facility: Facility,
     source: SourceDescriptor,
     claim_type: str,
@@ -755,7 +819,7 @@ def _persist_claim(
         )
 
     log = ExternalSourceRequestLog(
-        run_id=now.strftime("%Y%m%dT%H%M%SZ"),
+        run_id=run_id,
         agent_key=agent_key or source.agent_key,
         facility_id=facility.id,
         facility_cms_id=str(facility.cms_id),
@@ -814,7 +878,7 @@ def _cms_quality_rows() -> Dict[str, Dict[str, Any]]:
     return rows
 
 
-def _parse_cms_source(db: Session, facility: Facility, provider_rows: Dict[str, Dict[str, Any]], inspection_rows: Dict[str, Dict[str, Any]], quality_rows: Dict[str, Dict[str, Any]], agent_key: str) -> List[Dict[str, Any]]:
+def _parse_cms_source(db: Session, facility: Facility, provider_rows: Dict[str, Dict[str, Any]], inspection_rows: Dict[str, Dict[str, Any]], quality_rows: Dict[str, Dict[str, Any]], agent_key: str, run_id: str) -> List[Dict[str, Any]]:
     discovered: List[Dict[str, Any]] = []
     provider = provider_rows.get(str(facility.cms_id))
     if provider:
@@ -834,6 +898,7 @@ def _parse_cms_source(db: Session, facility: Facility, provider_rows: Dict[str, 
             baseline = str(getattr(facility, claim_type, "")) if hasattr(facility, claim_type) else None
             status, object_key, evidence_key, value_text = _persist_claim(
                 db,
+                run_id=run_id,
                 facility=facility,
                 source=source,
                 claim_type=claim_type,
@@ -849,7 +914,7 @@ def _parse_cms_source(db: Session, facility: Facility, provider_rows: Dict[str, 
     return discovered
 
 
-def _parse_cms_inspections(db: Session, facility: Facility, inspection_rows: Dict[str, Dict[str, Any]], agent_key: str) -> List[Dict[str, Any]]:
+def _parse_cms_inspections(db: Session, facility: Facility, inspection_rows: Dict[str, Dict[str, Any]], agent_key: str, run_id: str) -> List[Dict[str, Any]]:
     bucket = inspection_rows.get(str(facility.cms_id)) or {}
     rows = bucket.get("rows") or []
     if not rows:
@@ -862,6 +927,7 @@ def _parse_cms_inspections(db: Session, facility: Facility, inspection_rows: Dic
     claim_value = {"survey_dates": survey_dates[-5:], "deficiency_count": deficiency_count, "severe_deficiency_count": severe_count}
     status, object_key, evidence_key, value_text = _persist_claim(
         db,
+        run_id=run_id,
         facility=facility,
         source=source,
         claim_type="inspection_summary",
@@ -874,7 +940,7 @@ def _parse_cms_inspections(db: Session, facility: Facility, inspection_rows: Dic
     return [{"claim_type": "inspection_summary", "status": status, "value": value_text, "source": source.source_name, "object_key": object_key, "evidence_key": evidence_key}]
 
 
-def _parse_cms_quality(db: Session, facility: Facility, quality_rows: Dict[str, Dict[str, Any]], agent_key: str) -> List[Dict[str, Any]]:
+def _parse_cms_quality(db: Session, facility: Facility, quality_rows: Dict[str, Dict[str, Any]], agent_key: str, run_id: str) -> List[Dict[str, Any]]:
     bucket = quality_rows.get(str(facility.cms_id)) or {}
     rows = bucket.get("rows") or []
     if not rows:
@@ -883,6 +949,7 @@ def _parse_cms_quality(db: Session, facility: Facility, quality_rows: Dict[str, 
     claim_value = {"quality_rows": len(rows), "measure_codes": sorted({str(row.get('Measure Code') or '') for row in rows if row.get('Measure Code')})[:10]}
     status, object_key, evidence_key, value_text = _persist_claim(
         db,
+        run_id=run_id,
         facility=facility,
         source=source,
         claim_type="quality_summary",
@@ -973,17 +1040,31 @@ def _apply_claim_side_effects(db: Session, facility: Facility, source: SourceDes
             value = AnswerState.YES if capability not in {"special_dietary_restrictions", "therapeutic_diets"} else AnswerState.LIMITED
             _upsert_capability(db, facility, str(capability), value, source.source_name, 0.9 if source.source_type == "official_facility" else 0.75, evidence_text)
 
+    if claim_type == "clinical_services" and isinstance(claim_value, list):
+        capability_map = {
+            "physical_therapy": "physical_therapy",
+            "occupational_therapy": "occupational_therapy",
+            "speech_therapy": "speech_therapy",
+            "stroke_rehabilitation": "stroke_rehabilitation",
+            "specialized_nursing": "specialized_nursing",
+        }
+        for item in claim_value:
+            name = str(item)
+            mapped = capability_map.get(name)
+            if mapped:
+                _upsert_capability(db, facility, mapped, AnswerState.YES, source.source_name, 0.9 if source.source_type == "official_facility" else 0.75, evidence_text)
+
     if claim_type == "pricing" and isinstance(claim_value, dict) and claim_value.get("amount"):
         _upsert_capability(db, facility, "published_pricing", AnswerState.YES, source.source_name, 0.9 if source.source_type == "official_facility" else 0.75, evidence_text)
 
 
-def _process_source(db: Session, facility: Facility, source: SourceDescriptor, *, registry_row: Optional[Dict[str, Any]], provider_rows: Dict[str, Dict[str, Any]], inspection_rows: Dict[str, Dict[str, Any]], quality_rows: Dict[str, Dict[str, Any]], agent_key: str, probe_cache: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def _process_source(db: Session, facility: Facility, source: SourceDescriptor, *, run_id: str, registry_row: Optional[Dict[str, Any]], provider_rows: Dict[str, Dict[str, Any]], inspection_rows: Dict[str, Dict[str, Any]], quality_rows: Dict[str, Dict[str, Any]], agent_key: str, probe_cache: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     if source.request_kind == "cms_provider":
         probe = probe_cache.get(source.source_locator)
         if probe is None:
             probe = _probe_source(source.source_locator)
             probe_cache[source.source_locator] = probe
-        claims = _parse_cms_source(db, facility, provider_rows, inspection_rows, quality_rows, agent_key)
+        claims = _parse_cms_source(db, facility, provider_rows, inspection_rows, quality_rows, agent_key, run_id)
         if not claims and probe.get("connected"):
             return {
                 "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
@@ -1032,7 +1113,7 @@ def _process_source(db: Session, facility: Facility, source: SourceDescriptor, *
         if probe is None:
             probe = _probe_source(source.source_locator)
             probe_cache[source.source_locator] = probe
-        claims = _parse_cms_inspections(db, facility, inspection_rows, agent_key)
+        claims = _parse_cms_inspections(db, facility, inspection_rows, agent_key, run_id)
         for claim in claims:
             _apply_claim_side_effects(db, facility, source, claim, claim.get("status", "NEW"))
         if claims:
@@ -1062,7 +1143,7 @@ def _process_source(db: Session, facility: Facility, source: SourceDescriptor, *
         if probe is None:
             probe = _probe_source(source.source_locator)
             probe_cache[source.source_locator] = probe
-        claims = _parse_cms_quality(db, facility, quality_rows, agent_key)
+        claims = _parse_cms_quality(db, facility, quality_rows, agent_key, run_id)
         for claim in claims:
             _apply_claim_side_effects(db, facility, source, claim, claim.get("status", "NEW"))
         if claims:
@@ -1141,6 +1222,7 @@ def _process_source(db: Session, facility: Facility, source: SourceDescriptor, *
     for claim in claims:
         claim_status, object_key, evidence_key, value_text = _persist_claim(
             db,
+            run_id=run_id,
             facility=facility,
             source=source,
             claim_type=str(claim.get("claim_type") or "claim"),
@@ -1224,6 +1306,10 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
         "external_source_requests": 0,
         "source_successes": 0,
         "source_failures": 0,
+        "source_access_successes": 0,
+        "content_retrieval_successes": 0,
+        "relevant_evidence_found": 0,
+        "verified_fact_created": 0,
         "new_external_verified_facts": 0,
         "external_changed_facts": 0,
         "derived_insights": 0,
@@ -1253,7 +1339,9 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
         registry_row = _facility_record(facility, registry)
 
         result["facilities_successfully_discovered"] += 1
-        before = _unknown_state_for_facility(db, facility)["unknown_before"]
+        db.flush()
+        before_states = _decision_field_states_for_facility(db, facility)
+        before = _count_unknown_fields(before_states)
         result["unknown_before"] += before
 
         descriptors = _source_descriptors(facility, registry_row)
@@ -1267,6 +1355,7 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
                     db,
                     facility,
                     source,
+                    run_id=run_id,
                     registry_row=registry_row,
                     provider_rows=provider_rows,
                     inspection_rows=inspection_rows,
@@ -1328,6 +1417,19 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
                 result["source_failures"] += 1
                 result["source_failures_detail"].append({"facility": facility.name, "source": source.source_name, "status": request_status, "reason": outcome.get("failure_reason")})
 
+            response_code = outcome.get("response_code")
+            if isinstance(response_code, int) and 200 <= response_code < 400:
+                result["source_access_successes"] += 1
+
+            if int(outcome.get("response_size") or 0) > 0:
+                result["content_retrieval_successes"] += 1
+
+            if claims:
+                result["relevant_evidence_found"] += 1
+
+            if any(str(claim.get("status") or "") in {"NEW", "CHANGED"} for claim in claims):
+                result["verified_fact_created"] += 1
+
             result["source_requests_by_status"][request_status] = int(result["source_requests_by_status"].get(request_status, 0)) + 1
 
             _upsert_connector_health(db, source=source, status=request_status, new_value=request_status == "NEW_VALUE", failure_reason=outcome.get("failure_reason") if request_status not in {"NEW_VALUE", "RAN_CONNECTED_NO_NEW_VALUE"} else None)
@@ -1342,9 +1444,6 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
                     result["external_changed_facts"] += 1
                 elif status == "CONTRADICTION":
                     result["contradictions"] += 1
-                elif status == "STALE_REFRESHED":
-                    result["unknown_resolved"] += 1
-
                 claim_group = str(claim.get("claim_group") or "FACILITY_ENRICHMENT")
                 if claim_group == "REGULATORY" and status in {"NEW", "CHANGED"}:
                     result["new_regulatory_findings"] += 1
@@ -1372,9 +1471,15 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
                         }
                     )
 
-        after = _unknown_state_for_facility(db, facility)["unknown_before"]
+            db.flush()
+            after_states = _decision_field_states_for_facility(db, facility)
+            if claims and any(claim.get("evidence_key") for claim in claims):
+                result["unknown_resolved"] += _count_unknown_transitions(before_states, after_states)
+            before_states = after_states
+
+        db.flush()
+        after = _count_unknown_fields(_decision_field_states_for_facility(db, facility))
         result["unknown_remaining"] += after
-        result["unknown_resolved"] += max(0, before - after)
         result["unknowns_by_facility"].append({"facility": facility.name, "unknown_before": before, "unknown_after": after, "sources": source_counts})
         result["new_discoveries"].extend(facility_discoveries)
 

@@ -1,0 +1,3454 @@
+{
+  "generated_at_utc": "2026-07-21T06:48:20.648291+00:00",
+  "run_id": "20260720T222246Z",
+  "total_requests": 40,
+  "ledger": [
+    {
+      "request_id": 10119,
+      "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "cms_id": "105008",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=utf-8",
+        "response_size": 175891,
+        "final_url": "https://biscaynerehab.com/",
+        "request_time": "2026-07-20T22:22:47.969953+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "[\"cardiac_pulmonary\", \"dialysis\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+        "[\"cultural\", \"religious\", \"social\"]",
+        "[\"therapeutic_diets\"]"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10116,
+          "run_id": "20260720T222248Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://biscaynerehab.com/",
+          "claim_type": "clinical_services",
+          "claim_value": "[\"cardiac_pulmonary\", \"dialysis\", \"specialized_nursing\", \"stroke_rehabilitation\", \"wound_care\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "bb2ebaeecc9f314fd3ad67ab286c2e7813155aa2",
+          "knowledge_object_key": "external:105008:clinical-services:d7d60f41da70ee18",
+          "raw_text_snippet": "-hour skilled nursing nutrition services enteral nutrition hospice/respite care post-stroke care neuropsychology with cognitive therapy iv therapy sports medicine rehabilitation pulmonary care in-house dialysis advanced wound care trach care cardiac r; herapy sports medicine rehabilitation pulmonary care in-house dialysis advanced wound care trach care cardiac recovery social services + discharge planning careers it’s more than a job. it’s a promising career. looking for a rewarding and successful; itive therapy iv therapy sports medicine rehabilitation pulmonary care in-house dialysis advanced wound care trach care cardiac recovery social services + discharge planning careers it’s more than a job. it’s a promising career. looking for a rewar; rehabilitation pulmonary care in-house dialysis advanced wound care trach care cardiac recovery social services + discharge planning careers it’s more than a job. it’s a promising career. looking for a rewarding and successful career? join the bi",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10117,
+          "run_id": "20260720T222248Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://biscaynerehab.com/",
+          "claim_type": "activities",
+          "claim_value": "[\"cultural\", \"religious\", \"social\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "ce0137f0d82a48d50b21e524b4c773119a4577d6",
+          "knowledge_object_key": "external:105008:activities:b6abbcc2e0a8192b",
+          "raw_text_snippet": "in the heart of your community offering the best in nursing and rehabilitative services? biscayne health & rehabilitation center boasts a community-based atmosphere that provides all the comforts of home — while upholding the highest levels of pro; ulmonary care in-house dialysis advanced wound care trach care cardiac recovery social services + discharge planning careers it’s more than a job. it’s a promising career. looking for a rewarding and successful career? join the biscayne health te; north miami, fl 33161 (305) 891-1710 contemporary wellness in the heart of your community about the nursing & rehabilitative care experts the mission of biscayne health is to provide our residents with exceptional skilled nursing and rehabilitative",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10118,
+          "run_id": "20260720T222248Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://biscaynerehab.com/",
+          "claim_type": "nutrition_support",
+          "claim_value": "[\"therapeutic_diets\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "51a2e8418ab06e8a6e8a53cbe4ac877bda4a4050",
+          "knowledge_object_key": "external:105008:nutrition-support:308ff686315abffc",
+          "raw_text_snippet": "rehabilitation pulmonary care in-house dialysis advanced wound care trach care cardiac recovery social services + discharge planning careers it’s more than a job. it’s a promising career. looking for a rewarding and successful career? join the bi",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10127,
+      "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "cms_id": "105008",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "BISCAYNE HEALTH AND REHABILITATION CENTER",
+        "12505 NE 16TH AVE",
+        "5",
+        "4",
+        "5"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10120,
+          "run_id": "20260720T222250Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "0a424f41b2135953707d47d007757cdfbae5db66",
+          "knowledge_object_key": "external:105008:provider-name:82b6340360228b36",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10121,
+          "run_id": "20260720T222250Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "12505 NE 16TH AVE",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "f120a69923d5d72a8e9d962c5e1ed357b492bde8",
+          "knowledge_object_key": "external:105008:address:02adb8440e4b5885",
+          "raw_text_snippet": "CMS provider dataset current value for address: 12505 NE 16TH AVE",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10122,
+          "run_id": "20260720T222250Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "b210ecc372f9d414ed72397280a05d0c3b353e1a",
+          "knowledge_object_key": "external:105008:overall-rating:3f8ce514a2d4f1ce",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10123,
+          "run_id": "20260720T222250Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "d638a85fe79f320ea764c835efc2e7534cd80e7a",
+          "knowledge_object_key": "external:105008:staffing-rating:d990c8e73960a505",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10124,
+          "run_id": "20260720T222250Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "f1603c4c2779f0f4ce20ba6a71dc2270a393b615",
+          "knowledge_object_key": "external:105008:quality-rating:1dedbb1c547cdaf7",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10125,
+          "run_id": "20260720T222250Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "31a78eb3117771728f29bd981a35a109c0f75870",
+          "knowledge_object_key": "external:105008:inspection-rating:c4f3dcf08315e30c",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10126,
+          "run_id": "20260720T222250Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "98",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "d2780153b28ffde02e1dbbe54e3b7bf37d38dcb3",
+          "knowledge_object_key": "external:105008:beds:baba934e0f8f3f8f",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 98",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10129,
+      "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "cms_id": "105008",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 13, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-07-14\", \"2023-07-27\", \"2024-10-31\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10128,
+          "run_id": "20260720T222252Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 13, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-07-14\", \"2023-07-27\", \"2024-10-31\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "a14ff5c815c3088ab153c73f846686ac499a623a",
+          "knowledge_object_key": "external:105008:inspection-summary:e96086b67f392fd5",
+          "raw_text_snippet": "CMS inspection dataset current summary: 13 deficiencies across 3 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10131,
+      "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "cms_id": "105008",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10130,
+          "run_id": "20260720T222253Z",
+          "facility_id": 4,
+          "facility_cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "cd7e6e2f8eb74111fb9a056a78e88f1293663c84",
+          "knowledge_object_key": "external:105008:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10132,
+      "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "cms_id": "105005",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "SOURCE_RATE_LIMITED",
+      "http_access_result": {
+        "response_code": 429,
+        "failure_reason": "http_429"
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=utf-8",
+        "response_size": 33788,
+        "final_url": "https://www.miradorliving.com/assisted-living/florida/miami/coral-gables-nursing-and-rehabilitation",
+        "request_time": "2026-07-20T22:22:54.240105+00:00",
+        "classification": "HTTP_429"
+      },
+      "relevant_information_present_in_content": "NO",
+      "extractor_ran": "NO",
+      "claim_extracted": "NO",
+      "extracted_value": [],
+      "facility_identity_matched": "YES",
+      "field_mapped": "NO",
+      "normalization_result": [],
+      "evidence_created": "NO",
+      "verification_status": [],
+      "persisted": "NO",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "SOURCE_ACCESS_FAILURE",
+      "claim_rows": []
+    },
+    {
+      "request_id": 10140,
+      "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "cms_id": "105005",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "7060 SW 8TH STREET",
+        "5",
+        "5",
+        "4"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10133,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "b0c630918de584517c43de784a00586b09e66b14",
+          "knowledge_object_key": "external:105005:provider-name:deae034b6ba12a92",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10134,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "7060 SW 8TH STREET",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "ebb17c402628168bee5aa99671e51e9237004efe",
+          "knowledge_object_key": "external:105005:address:729c46518235984a",
+          "raw_text_snippet": "CMS provider dataset current value for address: 7060 SW 8TH STREET",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10135,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "b1d3a265bb30353ba0a77efb6bc97b9adcafcb34",
+          "knowledge_object_key": "external:105005:overall-rating:3f8ce514a2d4f1ce",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10136,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "c82af5f6c03ba9f47282e3bac2caed91fea1b586",
+          "knowledge_object_key": "external:105005:staffing-rating:efe760d6cc130376",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10137,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "9ae2a1442ea4b7c1ccbed16064aeb5a9b16be7b1",
+          "knowledge_object_key": "external:105005:quality-rating:bcf36074d5a902fb",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10138,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "5bc74e2412e9cddfca204ff8f41001f6ec02d5d3",
+          "knowledge_object_key": "external:105005:inspection-rating:6c2816a52140363b",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10139,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "87",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "73593d55eb445dffd1e655ed6e24c6ede897f8e9",
+          "knowledge_object_key": "external:105005:beds:75383d9472dba0e7",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 87",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10142,
+      "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "cms_id": "105005",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 2, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2024-07-11\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10141,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 2, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2024-07-11\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "9b7a2934cb6447e8d7c5abcd9a452efc4f97a428",
+          "knowledge_object_key": "external:105005:inspection-summary:e5dc62fa2f491ae2",
+          "raw_text_snippet": "CMS inspection dataset current summary: 2 deficiencies across 1 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10144,
+      "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "cms_id": "105005",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10143,
+          "run_id": "20260720T222254Z",
+          "facility_id": 3,
+          "facility_cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "ece785603fa0a71edb8f14802a2e71d66c03e850",
+          "knowledge_object_key": "external:105005:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10148,
+      "facility": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "cms_id": "105172",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html;charset=utf-8",
+        "response_size": 250061,
+        "final_url": "https://www.fountainmanorhealth.com/",
+        "request_time": "2026-07-20T22:22:55.455837+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "[\"occupational_therapy\", \"specialized_nursing\", \"speech_therapy\", \"wound_care\"]",
+        "[\"cultural\", \"religious\", \"social\"]",
+        "[\"therapeutic_diets\"]"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10145,
+          "run_id": "20260720T222255Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.fountainmanorhealth.com/",
+          "claim_type": "clinical_services",
+          "claim_value": "[\"occupational_therapy\", \"specialized_nursing\", \"speech_therapy\", \"wound_care\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "0e8067591d43c1bea79f755bb75e98c6f1e37ed5",
+          "knowledge_object_key": "external:105172:clinical-services:038d8f68406503a9",
+          "raw_text_snippet": "services such as: skilled nursing care short-term rehabilitation long-term care occupational therapy regain independence in daily activities. personalized therapy programs. overcome physical and cognitive challenges. read more speech therapy improve communicat; age wounds, and monitor vital signs, etc. we provide physical, occupational and speech therapy seven days a week to help our patients regain their independence. we also provide 24/7 respiratory therapy for our patients with complex respiratory needs. add; . personalized treatment plans with social workers and psychologists. read more wound care specialized treatment for chronic wounds. latest techniques for healing and infection prevention. expert care for pressure ulcers and diabetic foot ulcers. rea; ation services. contact us our services we provide a range of services such as: skilled nursing care short-term rehabilitation long-term care occupational therapy regain independence in daily activities. personalized therapy progr",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10146,
+          "run_id": "20260720T222255Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.fountainmanorhealth.com/",
+          "claim_type": "activities",
+          "claim_value": "[\"cultural\", \"religious\", \"social\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "3a9626af6a8ea7343ffb2f0adbf738083957a902",
+          "knowledge_object_key": "external:105172:activities:b6abbcc2e0a8192b",
+          "raw_text_snippet": "fountain manor health & rehabilitation center 0 skip to content home about us services our facility careers contact us open menu close menu home about us services our facility careers contact us open menu close menu home about us services our fac; rapy for our patients with complex respiratory needs. additionally, our team of social workers supports the mental health and emotional well being of our patients and their families. we appreciate the opportunity to treat our patients and are com; -being support. help navigating the healthcare system. counseling and access to community resources. read more primary care physicians comprehensive medical care. expertise in complex medical needs. collaborative care with nursing staff. read more p",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10147,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.fountainmanorhealth.com/",
+          "claim_type": "nutrition_support",
+          "claim_value": "[\"therapeutic_diets\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "54e97e0e1b534393e2dd9582be8fc0f7f3ab7310",
+          "knowledge_object_key": "external:105172:nutrition-support:308ff686315abffc",
+          "raw_text_snippet": "iques for healing and infection prevention. expert care for pressure ulcers and diabetic foot ulcers. read more accepted payers we provide a range of services including outpatient and inpatient sub-acute care such as private medicare medicaid (incl",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10156,
+      "facility": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "cms_id": "105172",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+        "390 NE 135TH ST",
+        "5",
+        "3",
+        "5"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10149,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "49e88e62b69ce55e679d2710d15f2e0bc4b23857",
+          "knowledge_object_key": "external:105172:provider-name:964382a44351d98d",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10150,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "390 NE 135TH ST",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "df2c54fe8ae2cf80b349e239cc23613306858cc1",
+          "knowledge_object_key": "external:105172:address:c0f04c215a6b19a6",
+          "raw_text_snippet": "CMS provider dataset current value for address: 390 NE 135TH ST",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10151,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "14bd3c490f2294914f3bef45d6b80a243dbdb4f1",
+          "knowledge_object_key": "external:105172:overall-rating:3f8ce514a2d4f1ce",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10152,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "3",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "2877061f11a6d2650abcb4fd95c5fc29ea3cf0ec",
+          "knowledge_object_key": "external:105172:staffing-rating:8eb4b1620d9b0c3f",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 3",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10153,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "0890cc651d8656e9c47b77036add38e6841df679",
+          "knowledge_object_key": "external:105172:quality-rating:1dedbb1c547cdaf7",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10154,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "490fb216866d4533fda1a456526289b87f12ee58",
+          "knowledge_object_key": "external:105172:inspection-rating:c4f3dcf08315e30c",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10155,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "139",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "fe2a93116f24e9160f45ca39f9e59a4f846d41e8",
+          "knowledge_object_key": "external:105172:beds:51ed131fb23640a0",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 139",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10158,
+      "facility": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "cms_id": "105172",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 13, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2023-10-30\", \"2024-11-15\", \"2025-02-10\", \"2025-06-18\", \"2025-07-28\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10157,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 13, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2023-10-30\", \"2024-11-15\", \"2025-02-10\", \"2025-06-18\", \"2025-07-28\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "d2dbf00f584d9f57a0a032498011ce8f318f8cdd",
+          "knowledge_object_key": "external:105172:inspection-summary:b6077bd2afbb267b",
+          "raw_text_snippet": "CMS inspection dataset current summary: 13 deficiencies across 7 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10160,
+      "facility": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "cms_id": "105172",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10159,
+          "run_id": "20260720T222256Z",
+          "facility_id": 41,
+          "facility_cms_id": "105172",
+          "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "81169289f8e9276c55e82836f0fc86dd969a717e",
+          "knowledge_object_key": "external:105172:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10161,
+      "facility": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "cms_id": "105030",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "SOURCE_GEO_BLOCKED_OR_SUSPECTED",
+      "http_access_result": {
+        "response_code": 403,
+        "failure_reason": "http_403"
+      },
+      "content_actually_received": {
+        "response_type": "text/html",
+        "response_size": 75193,
+        "final_url": "https://www.miamijewishhealth.org/",
+        "request_time": "2026-07-20T22:22:57.015502+00:00",
+        "classification": "GEO_BLOCK_SUSPECTED"
+      },
+      "relevant_information_present_in_content": "NO",
+      "extractor_ran": "NO",
+      "claim_extracted": "NO",
+      "extracted_value": [],
+      "facility_identity_matched": "YES",
+      "field_mapped": "NO",
+      "normalization_result": [],
+      "evidence_created": "NO",
+      "verification_status": [],
+      "persisted": "NO",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "SOURCE_ACCESS_FAILURE",
+      "claim_rows": []
+    },
+    {
+      "request_id": 10169,
+      "facility": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "cms_id": "105030",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "MIAMI JEWISH HEALTH SYSTEMS, INC",
+        "5200 NE 2ND AVENUE",
+        "4",
+        "5",
+        "4"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10162,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "0505d9939a447bf707fff3afba50724c2cc158ec",
+          "knowledge_object_key": "external:105030:provider-name:67b3125acac257c9",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10163,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "5200 NE 2ND AVENUE",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "97b20976ef0e72958f9a1c6e9d56e3c431b155ad",
+          "knowledge_object_key": "external:105030:address:c69d899d17e58ca8",
+          "raw_text_snippet": "CMS provider dataset current value for address: 5200 NE 2ND AVENUE",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10164,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "8fd136d54646763048814fd60404ee1fc1420e6d",
+          "knowledge_object_key": "external:105030:overall-rating:b623c84ebc247407",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10165,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "e0722840d87694ab7fbefc48647fe0d2e49df083",
+          "knowledge_object_key": "external:105030:staffing-rating:efe760d6cc130376",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10166,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "a8b58bb7175fecb23559326e4a76bf2b41b78d09",
+          "knowledge_object_key": "external:105030:quality-rating:bcf36074d5a902fb",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10167,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "3",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "494026a0f414f39a61ed3e2498255365f1f38dbf",
+          "knowledge_object_key": "external:105030:inspection-rating:64da96ff47502c18",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 3",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10168,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "393",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "be92b03f7b65e73f107c250cde755a150dcdadd5",
+          "knowledge_object_key": "external:105030:beds:e5d3ca8fc24d2471",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 393",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10171,
+      "facility": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "cms_id": "105030",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 11, \"severe_deficiency_count\": 1, \"survey_dates\": [\"2024-05-09\", \"2025-02-25\", \"2025-06-02\", \"2025-09-19\", \"2026-03-18\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10170,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 11, \"severe_deficiency_count\": 1, \"survey_dates\": [\"2024-05-09\", \"2025-02-25\", \"2025-06-02\", \"2025-09-19\", \"2026-03-18\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "7c73e2108a3d49d09cd0bfa6f63caa57bb119f41",
+          "knowledge_object_key": "external:105030:inspection-summary:5a4ed25214e994ee",
+          "raw_text_snippet": "CMS inspection dataset current summary: 11 deficiencies across 6 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10173,
+      "facility": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "cms_id": "105030",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10172,
+          "run_id": "20260720T222258Z",
+          "facility_id": 9,
+          "facility_cms_id": "105030",
+          "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "08dd66c7dd77cf9c10cdbe1c5297ae42a91b5963",
+          "knowledge_object_key": "external:105030:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10175,
+      "facility": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "cms_id": "105217",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=utf-8",
+        "response_size": 5499,
+        "final_url": "https://northbeachrehab.com/",
+        "request_time": "2026-07-20T22:22:58.987819+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "[\"specialized_nursing\"]"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10174,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://northbeachrehab.com/",
+          "claim_type": "clinical_services",
+          "claim_value": "[\"specialized_nursing\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "554648decdf26e2ad1d2d6806fd253df6c84ebcb",
+          "knowledge_object_key": "external:105217:clinical-services:33173cb784277959",
+          "raw_text_snippet": "north beach rehab — skilled nursing in north miami beach fl",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10183,
+      "facility": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "cms_id": "105217",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+        "2201 NE 170TH STREET",
+        "1",
+        "4",
+        "4"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10176,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "ff5c22fed21ca317ae333c49de2101e0b8b8f6c9",
+          "knowledge_object_key": "external:105217:provider-name:aeed23c7216208bf",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10177,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "2201 NE 170TH STREET",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "d31f3805a97698e941afd4836b18fdcd424c15b9",
+          "knowledge_object_key": "external:105217:address:a36c612a41cc2fc0",
+          "raw_text_snippet": "CMS provider dataset current value for address: 2201 NE 170TH STREET",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10178,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "1",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "fd751c7774eda59ac83371ae53f28644504376a7",
+          "knowledge_object_key": "external:105217:overall-rating:811d1ead49a115c2",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 1",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10179,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "994816834f18e71e89b8d6b9cbf7a820b9235e06",
+          "knowledge_object_key": "external:105217:staffing-rating:d990c8e73960a505",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10180,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "bf3019f9d4d428526af3d4949afd82eba7ff45af",
+          "knowledge_object_key": "external:105217:quality-rating:bcf36074d5a902fb",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10181,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "1",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "4dcac3868b93dc19f33277e9fff61cec1eff6226",
+          "knowledge_object_key": "external:105217:inspection-rating:7d0ff247070dbad8",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 1",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10182,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "99",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "cbe7bfdf8c7d03a2cddfb615e4d653c73d572e2f",
+          "knowledge_object_key": "external:105217:beds:28c4bd37f8bc2198",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 99",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10185,
+      "facility": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "cms_id": "105217",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 37, \"severe_deficiency_count\": 5, \"survey_dates\": [\"2023-06-15\", \"2023-08-31\", \"2024-02-01\", \"2025-01-09\", \"2026-02-11\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10184,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 37, \"severe_deficiency_count\": 5, \"survey_dates\": [\"2023-06-15\", \"2023-08-31\", \"2024-02-01\", \"2025-01-09\", \"2026-02-11\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "e6c2a1794786458fecae63c5e3f66723d87de5e4",
+          "knowledge_object_key": "external:105217:inspection-summary:93c3a56c236b4635",
+          "raw_text_snippet": "CMS inspection dataset current summary: 37 deficiencies across 5 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10187,
+      "facility": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "cms_id": "105217",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10186,
+          "run_id": "20260720T222259Z",
+          "facility_id": 51,
+          "facility_cms_id": "105217",
+          "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "2fe96ed3e1978a0e083844a07ae27312fc56ab00",
+          "knowledge_object_key": "external:105217:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10190,
+      "facility": "PINES NURSING HOME",
+      "cms_id": "105057",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 99451,
+        "final_url": "https://npino.com/nursing-home/1326423682-pines-nursing-home-2015",
+        "request_time": "2026-07-20T22:23:00.567905+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "[\"dialysis\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\"]",
+        "[\"cultural\", \"lectures\", \"religious\", \"social\"]"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10188,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://npino.com/nursing-home/1326423682-pines-nursing-home-2015",
+          "claim_type": "clinical_services",
+          "claim_value": "[\"dialysis\", \"occupational_therapy\", \"physical_therapy\", \"specialized_nursing\", \"speech_therapy\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "936a18baf12fd35b1e7608b3cbc276990ce3b00f",
+          "knowledge_object_key": "external:105057:clinical-services:86d83ac0402054a0",
+          "raw_text_snippet": "s behavior analysts behavior technicians case managers therapists chiropractors physical therapy occupational therapy speech-language pathology dietitians massage therapy acupuncture audiologists medical students home health aides legal contact us disclaim; ts behavior technicians case managers therapists chiropractors physical therapy occupational therapy speech-language pathology dietitians massage therapy acupuncture audiologists medical students home health aides legal contact us disclaimer privacy policy phy; ns case managers therapists chiropractors physical therapy occupational therapy speech-language pathology dietitians massage therapy acupuncture audiologists medical students home health aides legal contact us disclaimer privacy policy physicians doctors; mental health clinics obgyn clinics day surgery centers drug rehabs urgent care dialysis centers hospitals hospitals nursing homes home health hospices assisted living ambulance services pharmacy pharmacy pharmacists medical",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10189,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://npino.com/nursing-home/1326423682-pines-nursing-home-2015",
+          "claim_type": "activities",
+          "claim_value": "[\"cultural\", \"lectures\", \"religious\", \"social\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "99c395520af00a11ac1ae394a520adb58448c70d",
+          "knowledge_object_key": "external:105057:activities:f9f4ec2472530f85",
+          "raw_text_snippet": "facility designed and staffed for the provision of nursing care and appropriate educational and habilitative/rehabilitative services to children with multiple, complex or profound disabilities that can not be cared for in a less restrictive environmen; ospitals hospitals nursing homes home health hospices assisted living ambulance services pharmacy pharmacy pharmacists medical supplies counselors psychologists counselors clinical social workers marriage counselors behavioral health centers behavi; rmacy pharmacists medical supplies counselors psychologists counselors clinical social workers marriage counselors behavioral health centers behavior analysts behavior technicians case managers therapists chiropractors physical therapy occupation; managers therapists chiropractors physical therapy occupational therapy speech-language pathology dietitians massage therapy acupuncture audiologists medical students home health aides legal contact us disclaimer privacy policy physicians doctors",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10198,
+      "facility": "PINES NURSING HOME",
+      "cms_id": "105057",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "PINES NURSING HOME",
+        "301 NE 141 STREET",
+        "3",
+        "4",
+        "4"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10191,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "PINES NURSING HOME",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "67104118406e5e57c5787423a37c37bf52cad9a1",
+          "knowledge_object_key": "external:105057:provider-name:37a9967ccdeaf0cb",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: PINES NURSING HOME",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10192,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "301 NE 141 STREET",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "fbaf56a82a2951b270576d6f5bc709888e2a9c70",
+          "knowledge_object_key": "external:105057:address:ff07c16ae91e0ee0",
+          "raw_text_snippet": "CMS provider dataset current value for address: 301 NE 141 STREET",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10193,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "3",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "5c6b4a8ee3533b42d3d83829b9761c3339bfbf1f",
+          "knowledge_object_key": "external:105057:overall-rating:1810486efccd5f40",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 3",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10194,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "692b85be27d04c38ee785dc79b97fc20179300e8",
+          "knowledge_object_key": "external:105057:staffing-rating:d990c8e73960a505",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10195,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "6610257ca3cd71abb9545514dc9b60fa1b898116",
+          "knowledge_object_key": "external:105057:quality-rating:bcf36074d5a902fb",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10196,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "3",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "841ed61652eaf9cd72d69c75444ecabd4c8cc7b7",
+          "knowledge_object_key": "external:105057:inspection-rating:64da96ff47502c18",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 3",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10197,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "46",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "b474857f8629567d33e62f26e7ed69139baec7f5",
+          "knowledge_object_key": "external:105057:beds:89123dda2a3242e3",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 46",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10200,
+      "facility": "PINES NURSING HOME",
+      "cms_id": "105057",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 25, \"severe_deficiency_count\": 1, \"survey_dates\": [\"2022-10-06\", \"2023-07-07\", \"2023-12-07\", \"2025-04-30\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10199,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 25, \"severe_deficiency_count\": 1, \"survey_dates\": [\"2022-10-06\", \"2023-07-07\", \"2023-12-07\", \"2025-04-30\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "e2df69372b00274e672598db5302b056bf648f8c",
+          "knowledge_object_key": "external:105057:inspection-summary:f6352d48a4068ee3",
+          "raw_text_snippet": "CMS inspection dataset current summary: 25 deficiencies across 4 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10202,
+      "facility": "PINES NURSING HOME",
+      "cms_id": "105057",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10201,
+          "run_id": "20260720T222301Z",
+          "facility_id": 16,
+          "facility_cms_id": "105057",
+          "facility_name": "PINES NURSING HOME",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "94912d3278d2d7713e301ec332fff64d28a750c3",
+          "knowledge_object_key": "external:105057:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10203,
+      "facility": "Pinecrest Center for Rehabilitation and Healing",
+      "cms_id": "105153",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "SOURCE_GEO_BLOCKED_OR_SUSPECTED",
+      "http_access_result": {
+        "response_code": 403,
+        "failure_reason": "http_403"
+      },
+      "content_actually_received": {
+        "response_type": "text/html",
+        "response_size": 75193,
+        "final_url": "https://pinecrestrehab.com/",
+        "request_time": "2026-07-20T22:23:02.199104+00:00",
+        "classification": "GEO_BLOCK_SUSPECTED"
+      },
+      "relevant_information_present_in_content": "NO",
+      "extractor_ran": "NO",
+      "claim_extracted": "NO",
+      "extracted_value": [],
+      "facility_identity_matched": "YES",
+      "field_mapped": "NO",
+      "normalization_result": [],
+      "evidence_created": "NO",
+      "verification_status": [],
+      "persisted": "NO",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "SOURCE_ACCESS_FAILURE",
+      "claim_rows": []
+    },
+    {
+      "request_id": 10211,
+      "facility": "Pinecrest Center for Rehabilitation and Healing",
+      "cms_id": "105153",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "Pinecrest Center for Rehabilitation and Healing",
+        "13650 NE 3RD COURT",
+        "5",
+        "3",
+        "5"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10204,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "Pinecrest Center for Rehabilitation and Healing",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "fb9cc452e5d5b2e394a3766d252f06ffc2f7b7a2",
+          "knowledge_object_key": "external:105153:provider-name:f67e9eaacbc8e74c",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: Pinecrest Center for Rehabilitation and Healing",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10205,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "13650 NE 3RD COURT",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "b12b8172829824daa135bd5b6021862183303f69",
+          "knowledge_object_key": "external:105153:address:fdbe2098ca79b490",
+          "raw_text_snippet": "CMS provider dataset current value for address: 13650 NE 3RD COURT",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10206,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "205294449f296e8b4a40e6def1598caddec66c2b",
+          "knowledge_object_key": "external:105153:overall-rating:3f8ce514a2d4f1ce",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10207,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "3",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "bf46444f402d23b224906bddbe05bf319599f4f4",
+          "knowledge_object_key": "external:105153:staffing-rating:8eb4b1620d9b0c3f",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 3",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10208,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "3ee1693920dde63289e1f05099d2eb5cdab006f2",
+          "knowledge_object_key": "external:105153:quality-rating:1dedbb1c547cdaf7",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10209,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "95004ed9682be4b58c28d7c04b8264fa58cdd5e1",
+          "knowledge_object_key": "external:105153:inspection-rating:c4f3dcf08315e30c",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10210,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "100",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "745f990b4f86dc67e1eb15e87689795f12e44606",
+          "knowledge_object_key": "external:105153:beds:44afbeecfd2fb889",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 100",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10213,
+      "facility": "Pinecrest Center for Rehabilitation and Healing",
+      "cms_id": "105153",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 19, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-11-03\", \"2023-10-12\", \"2025-03-13\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10212,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 19, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-11-03\", \"2023-10-12\", \"2025-03-13\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "2440cacd483492af191fd90fcc2938d6f3465ec3",
+          "knowledge_object_key": "external:105153:inspection-summary:a2413c68fee561a0",
+          "raw_text_snippet": "CMS inspection dataset current summary: 19 deficiencies across 3 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10215,
+      "facility": "Pinecrest Center for Rehabilitation and Healing",
+      "cms_id": "105153",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10214,
+          "run_id": "20260720T222303Z",
+          "facility_id": 36,
+          "facility_cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "f3b387ebb00c220c3570e462e392238cca4b1c7c",
+          "knowledge_object_key": "external:105153:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10216,
+      "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "cms_id": "105229",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "SOURCE_GEO_BLOCKED_OR_SUSPECTED",
+      "http_access_result": {
+        "response_code": 403,
+        "failure_reason": "http_403"
+      },
+      "content_actually_received": {
+        "response_type": "text/html",
+        "response_size": 92805,
+        "final_url": "https://www.seniorlivingguide.com/communities/the-sands-at-south-beach-care-center-42-collins-ave-miami-beach-fl-33139/",
+        "request_time": "2026-07-20T22:23:04.067598+00:00",
+        "classification": "GEO_BLOCK_SUSPECTED"
+      },
+      "relevant_information_present_in_content": "NO",
+      "extractor_ran": "NO",
+      "claim_extracted": "NO",
+      "extracted_value": [],
+      "facility_identity_matched": "YES",
+      "field_mapped": "NO",
+      "normalization_result": [],
+      "evidence_created": "NO",
+      "verification_status": [],
+      "persisted": "NO",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "SOURCE_ACCESS_FAILURE",
+      "claim_rows": []
+    },
+    {
+      "request_id": 10224,
+      "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "cms_id": "105229",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "SANDS AT SOUTH BEACH CARE CENTER, THE",
+        "42 COLLINS AVENUE",
+        "5",
+        "4",
+        "5"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10217,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "bd0ddf70c0f0a2a4645c1986ab55721dd0203d53",
+          "knowledge_object_key": "external:105229:provider-name:2b82e41d11926b49",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10218,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "42 COLLINS AVENUE",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "ce5f110ecf24f5eaaea0d3fd175c5154e099c5c4",
+          "knowledge_object_key": "external:105229:address:ab53050fa20de238",
+          "raw_text_snippet": "CMS provider dataset current value for address: 42 COLLINS AVENUE",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10219,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "2934b59b11dacb1d5cb804eacc07f6b16af4f5d1",
+          "knowledge_object_key": "external:105229:overall-rating:3f8ce514a2d4f1ce",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10220,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "d5cc8648091f5b56e84e7e1a95be98cf66a8d1d7",
+          "knowledge_object_key": "external:105229:staffing-rating:d990c8e73960a505",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10221,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "82d65d9bec560435fc477783c0661deb2767fbb8",
+          "knowledge_object_key": "external:105229:quality-rating:1dedbb1c547cdaf7",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10222,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "a68f58ce04e177dd70949c5caff98ed7103d95c7",
+          "knowledge_object_key": "external:105229:inspection-rating:c4f3dcf08315e30c",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10223,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "230",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "4cfc9075bcea3c9001ddeeded997028587aa2909",
+          "knowledge_object_key": "external:105229:beds:1ce88b39f47da94a",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 230",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10226,
+      "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "cms_id": "105229",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 26, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-12-01\", \"2024-03-07\", \"2025-06-03\", \"2025-07-24\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10225,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 26, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2022-12-01\", \"2024-03-07\", \"2025-06-03\", \"2025-07-24\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "a92ca83b2087e67a384152d8e29b6e5a539bea9c",
+          "knowledge_object_key": "external:105229:inspection-summary:b15713673b8ae1a4",
+          "raw_text_snippet": "CMS inspection dataset current summary: 26 deficiencies across 4 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10228,
+      "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "cms_id": "105229",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10227,
+          "run_id": "20260720T222304Z",
+          "facility_id": 54,
+          "facility_cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "2c74ca8162018fc57b821ff7a95d2419177292f8",
+          "knowledge_object_key": "external:105229:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10231,
+      "facility": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "cms_id": "105120",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 112538,
+        "final_url": "https://serenitybaycare.com/",
+        "request_time": "2026-07-20T22:23:05.971552+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "[\"dialysis\", \"specialized_nursing\"]",
+        "[\"religious\"]"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10229,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://serenitybaycare.com/",
+          "claim_type": "clinical_services",
+          "claim_value": "[\"dialysis\", \"specialized_nursing\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "f7088101928bc0b5178da76354caf6bcd8290c4c",
+          "knowledge_object_key": "external:105120:clinical-services:61d679b3c78dc16e",
+          "raw_text_snippet": "modalities vital-slim therapy (fda approved) therapeutic adl suites in-patient dialysis rapid recovery rehabilitation services skilled nursing care services tracheostomy --> --> --> serenity bay nursing & rehabilitation center © 2026. all rights r; ide comprehensive solutions for you or your loved one’s journey back to health. skilled nursing care services main services our devoted medical director and compassionate team provide exceptional skilled nursing care, ensuring that our residents’ needs ar",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10230,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://serenitybaycare.com/",
+          "claim_type": "activities",
+          "claim_value": "[\"religious\"]",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "fd3f0ddf829d53e40cc886c653ce2cfc1680d7ad",
+          "knowledge_object_key": "external:105120:activities:a38ced93e595c24f",
+          "raw_text_snippet": "on your road to recovery! +1 (305) 945-7447 license no.: 1042096 home about us services schedule a tour contact us home home about us services schedule a tour contact us quality approach to senior care taking care of relatives the foundation of ou",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10238,
+      "facility": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "cms_id": "105120",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "SERENITY BAY NURSING AND REHABILITATION CENTER",
+        "16650 W DIXIE HWY",
+        "3",
+        "5",
+        "2"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10232,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "ba7a38f55c8784e1e4c3ead0fa7cc267feefa147",
+          "knowledge_object_key": "external:105120:provider-name:c9afe4c600008d7c",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10233,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "16650 W DIXIE HWY",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "4dc0100e14971dc203848566cdc1b6a0fdd41f08",
+          "knowledge_object_key": "external:105120:address:9e1f402dc9e1bc5d",
+          "raw_text_snippet": "CMS provider dataset current value for address: 16650 W DIXIE HWY",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10234,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "3",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "ec844a51216faebef5aeb5096d3568b38f49d5b6",
+          "knowledge_object_key": "external:105120:overall-rating:1810486efccd5f40",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 3",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10235,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "8c804d3e3b4ae7f26cb79cf648988a949af026db",
+          "knowledge_object_key": "external:105120:staffing-rating:efe760d6cc130376",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10236,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "2",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "d81b06d1fa86b393f3307ca06d525a1969bdfc5e",
+          "knowledge_object_key": "external:105120:inspection-rating:59f14d1a519a0cce",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 2",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10237,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "143",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "47f2a766f210237dc28374675d5d6906b22dbae8",
+          "knowledge_object_key": "external:105120:beds:d3d9dbc0f85810ff",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 143",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10240,
+      "facility": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "cms_id": "105120",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 29, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2023-01-20\", \"2024-06-20\", \"2025-12-04\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10239,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 29, \"severe_deficiency_count\": 0, \"survey_dates\": [\"2023-01-20\", \"2024-06-20\", \"2025-12-04\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "2805c35bde4a0d1a63ebb4096e53fbc5976a0acf",
+          "knowledge_object_key": "external:105120:inspection-summary:1db1abd35d7b34a7",
+          "raw_text_snippet": "CMS inspection dataset current summary: 29 deficiencies across 3 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10242,
+      "facility": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "cms_id": "105120",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10241,
+          "run_id": "20260720T222308Z",
+          "facility_id": 24,
+          "facility_cms_id": "105120",
+          "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "653d534ad4df02ac8ba3f39dd91ae50dae6346f8",
+          "knowledge_object_key": "external:105120:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10243,
+      "facility": "VILLA MARIA NURSING CENTER",
+      "cms_id": "105232",
+      "target_unknown_or_field": "24_7_skilled_nursing|post_stroke_neuro_rehab|physical_therapy|occupational_therapy|speech_therapy|language_cultural_info|activities|nutrition_dietary|pricing",
+      "source": "Official website",
+      "source_authority_type": "official_facility",
+      "request_result": "SOURCE_ACCESS_FAILED",
+      "http_access_result": {
+        "response_code": 403,
+        "failure_reason": "http_403"
+      },
+      "content_actually_received": {
+        "response_type": "text/html",
+        "response_size": 986,
+        "final_url": "https://www.catholichealthservices.org/location/villa-maria-nursing-center/",
+        "request_time": "2026-07-20T22:23:09.111788+00:00",
+        "classification": "HTTP_403"
+      },
+      "relevant_information_present_in_content": "NO",
+      "extractor_ran": "NO",
+      "claim_extracted": "NO",
+      "extracted_value": [],
+      "facility_identity_matched": "YES",
+      "field_mapped": "NO",
+      "normalization_result": [],
+      "evidence_created": "NO",
+      "verification_status": [],
+      "persisted": "NO",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "SOURCE_ACCESS_FAILURE",
+      "claim_rows": []
+    },
+    {
+      "request_id": 10251,
+      "facility": "VILLA MARIA NURSING CENTER",
+      "cms_id": "105232",
+      "target_unknown_or_field": "cms_overall_quality|staffing|certified_beds|ownership",
+      "source": "CMS Provider Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+        "request_time": "2026-07-20T22:22:48.629196+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "VILLA MARIA NURSING CENTER",
+        "1050 NE 125TH STREET",
+        "2",
+        "4",
+        "5"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "STALE_REFRESHED",
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10244,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "provider_name",
+          "claim_value": "VILLA MARIA NURSING CENTER",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "2f2e2b7b3f620e8a8aa54ae850ffd8d3bad344b9",
+          "knowledge_object_key": "external:105232:provider-name:c988cac929d0f492",
+          "raw_text_snippet": "CMS provider dataset current value for provider_name: VILLA MARIA NURSING CENTER",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10245,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "address",
+          "claim_value": "1050 NE 125TH STREET",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "593770ae96cf0bb9a797615286002d66b0f92b93",
+          "knowledge_object_key": "external:105232:address:26dfd1951791295c",
+          "raw_text_snippet": "CMS provider dataset current value for address: 1050 NE 125TH STREET",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10246,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "overall_rating",
+          "claim_value": "2",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "267af0257521dc9290993ed0d0f31f6f14435df7",
+          "knowledge_object_key": "external:105232:overall-rating:969b97da68cd1786",
+          "raw_text_snippet": "CMS provider dataset current value for overall_rating: 2",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10247,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "staffing_rating",
+          "claim_value": "4",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "86de1ea16c80f1c43bd62bddc3ed9762fd1aa6d8",
+          "knowledge_object_key": "external:105232:staffing-rating:d990c8e73960a505",
+          "raw_text_snippet": "CMS provider dataset current value for staffing_rating: 4",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10248,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "quality_rating",
+          "claim_value": "5",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "7597c1028fd3b7d3f54b531bb1c84d2252831b9c",
+          "knowledge_object_key": "external:105232:quality-rating:1dedbb1c547cdaf7",
+          "raw_text_snippet": "CMS provider dataset current value for quality_rating: 5",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10249,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "inspection_rating",
+          "claim_value": "1",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "24e6679823be305297ccb9388293b623926e1ea3",
+          "knowledge_object_key": "external:105232:inspection-rating:7d0ff247070dbad8",
+          "raw_text_snippet": "CMS provider dataset current value for inspection_rating: 1",
+          "created_at": "2026-07-20 22:23:09"
+        },
+        {
+          "id": 10250,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "claim_type": "beds",
+          "claim_value": "212",
+          "change_status": "STALE_REFRESHED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "9dd8c2b609e7339745b7065d79807a8bed5344a7",
+          "knowledge_object_key": "external:105232:beds:4f2133005a0314ef",
+          "raw_text_snippet": "CMS provider dataset current value for beds: 212",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10253,
+      "facility": "VILLA MARIA NURSING CENTER",
+      "cms_id": "105232",
+      "target_unknown_or_field": "health_inspection|regulatory_findings|penalties_fines",
+      "source": "CMS Inspection Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+        "request_time": "2026-07-20T22:22:50.780945+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"deficiency_count\": 23, \"severe_deficiency_count\": 3, \"survey_dates\": [\"2022-12-01\", \"2024-03-15\", \"2025-07-31\", \"2025-09-05\"]}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10252,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "claim_type": "inspection_summary",
+          "claim_value": "{\"deficiency_count\": 23, \"severe_deficiency_count\": 3, \"survey_dates\": [\"2022-12-01\", \"2024-03-15\", \"2025-07-31\", \"2025-09-05\"]}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "a29882ad9a327091f3d4582e5ab8ae6c77798305",
+          "knowledge_object_key": "external:105232:inspection-summary:657103afec239428",
+          "raw_text_snippet": "CMS inspection dataset current summary: 23 deficiencies across 4 survey dates.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    },
+    {
+      "request_id": 10255,
+      "facility": "VILLA MARIA NURSING CENTER",
+      "cms_id": "105232",
+      "target_unknown_or_field": "quality_measures",
+      "source": "CMS Quality Dataset",
+      "source_authority_type": "government",
+      "request_result": "RAN_CONNECTED_NO_NEW_VALUE",
+      "http_access_result": {
+        "response_code": 200,
+        "failure_reason": null
+      },
+      "content_actually_received": {
+        "response_type": "text/html; charset=UTF-8",
+        "response_size": 2196,
+        "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+        "request_time": "2026-07-20T22:22:52.495580+00:00",
+        "classification": "CONNECTED_NO_DATA"
+      },
+      "relevant_information_present_in_content": "YES",
+      "extractor_ran": "YES",
+      "claim_extracted": "YES",
+      "extracted_value": [
+        "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}"
+      ],
+      "facility_identity_matched": "YES",
+      "field_mapped": "YES",
+      "normalization_result": [
+        "UNCHANGED"
+      ],
+      "evidence_created": "YES",
+      "verification_status": [
+        "VERIFIED"
+      ],
+      "persisted": "YES",
+      "unknown_resolved": "NO",
+      "exact_failure_point": "OTHER",
+      "claim_rows": [
+        {
+          "id": 10254,
+          "run_id": "20260720T222309Z",
+          "facility_id": 55,
+          "facility_cms_id": "105232",
+          "facility_name": "VILLA MARIA NURSING CENTER",
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "claim_type": "quality_summary",
+          "claim_value": "{\"measure_codes\": [\"401\", \"404\", \"406\", \"407\", \"408\", \"409\", \"410\", \"415\", \"430\", \"434\"], \"quality_rows\": 17}",
+          "change_status": "UNCHANGED",
+          "verification_status": "VERIFIED",
+          "evidence_key": "ed511a8f6c8477d81cbd137508c8fed9afe05b37",
+          "knowledge_object_key": "external:105232:quality-summary:18a72129cebbd0ac",
+          "raw_text_snippet": "CMS quality dataset current summary: 17 measures.",
+          "created_at": "2026-07-20 22:23:09"
+        }
+      ]
+    }
+  ],
+  "reconciliation": {
+    "RESOLVED": 0,
+    "NO_RELEVANT_INFORMATION": 0,
+    "EXTRACTION_FAILURE": 0,
+    "IDENTITY_FAILURE": 0,
+    "FIELD_MAPPING_FAILURE": 0,
+    "VERIFICATION_FAILURE": 0,
+    "PERSISTENCE_FAILURE": 0,
+    "SOURCE_ACCESS_FAILURE": 5,
+    "OTHER": 35
+  },
+  "ah_counts_for_35_successes": {
+    "G_ALREADY_EXISTS_NOT_NEW": 35,
+    "A_NO_INFORMATION_ABSENT": 0,
+    "B_PRESENT_BUT_EXTRACTOR_MISSED": 0,
+    "C_WRONG_FIELD_MAPPING": 0,
+    "D_IDENTITY_REJECTED": 0,
+    "E_VERIFICATION_REJECTED": 0,
+    "F_PERSISTENCE_FAILED": 0,
+    "H_POOR_TARGETING": 0
+  },
+  "source_successes": 35,
+  "source_failures": 5,
+  "relevant_evidence_found": 35,
+  "verified_fact_created": 0,
+  "unknowns_actually_resolved": 0
+}

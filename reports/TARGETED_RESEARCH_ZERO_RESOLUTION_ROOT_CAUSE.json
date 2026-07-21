@@ -1,0 +1,1842 @@
+{
+  "generated_at_utc": "2026-07-21T06:49:44.101151+00:00",
+  "why_35_successes_zero_resolutions": "All 35 were source-level successes but none produced UNKNOWN->VERIFIED_* transitions for canonical decision fields; extracted facts were already known (UNCHANGED/STALE_REFRESHED).",
+  "primary_root_cause": "Telemetry bug: unknown_resolved previously used a heuristic before/after state counter (activity+capability+license+domain side effects), not canonical field transition evidence.",
+  "secondary_root_causes": [
+    "Run-level provenance bug: claim rows were stored under per-claim timestamp run_id, not the discovery run_id.",
+    "Success semantics conflation: source connectivity success was conflated with research/intelligence success.",
+    "Extractor capability limits for several decision fields (mobility_transfer_assistance, medication_management, availability)."
+  ],
+  "forensic_40_reconciliation": {
+    "RESOLVED": 0,
+    "NO_RELEVANT_INFORMATION": 0,
+    "EXTRACTION_FAILURE": 0,
+    "IDENTITY_FAILURE": 0,
+    "FIELD_MAPPING_FAILURE": 0,
+    "VERIFICATION_FAILURE": 0,
+    "PERSISTENCE_FAILURE": 0,
+    "SOURCE_ACCESS_FAILURE": 5,
+    "OTHER": 35
+  },
+  "ah_counts_for_35_successes": {
+    "G_ALREADY_EXISTS_NOT_NEW": 35,
+    "A_NO_INFORMATION_ABSENT": 0,
+    "B_PRESENT_BUT_EXTRACTOR_MISSED": 0,
+    "C_WRONG_FIELD_MAPPING": 0,
+    "D_IDENTITY_REJECTED": 0,
+    "E_VERIFICATION_REJECTED": 0,
+    "F_PERSISTENCE_FAILED": 0,
+    "H_POOR_TARGETING": 0
+  },
+  "false_resolution_59_cause": "unknown_resolved incremented via before-after heuristic deltas and STALE_REFRESHED path, even without canonical UNKNOWN->VERIFIED_* transitions.",
+  "fixes_made": [
+    "Persist claim logs with the parent discovery run_id.",
+    "Count unknown_resolved only for canonical UNKNOWN->VERIFIED_YES/VERIFIED_NO/VERIFIED_VALUE/LIMITED transitions with evidence-backed persisted claims.",
+    "Separate telemetry: source_access_successes, content_retrieval_successes, relevant_evidence_found, verified_fact_created, unknown_resolved.",
+    "Map extracted clinical_services into capability fields used by decision coverage."
+  ],
+  "small_proof_set_results": {
+    "generated_at_utc": "2026-07-21T06:49:43.979726+00:00",
+    "run_id": "20260721T064934Z",
+    "targeted_questions": 20,
+    "source_access_successes": 13,
+    "content_retrieval_successes": 16,
+    "relevant_evidence_found": 13,
+    "verified_facts_created": 0,
+    "unknowns_actually_resolved": 0,
+    "no_information_found": 20,
+    "technical_failures": 3,
+    "questions": [
+      {
+        "question": "Does facility provide 24/7 skilled nursing? (BISCAYNE HEALTH AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=4 claim_id=10399",
+        "retrieved_at": "2026-07-21T06:49:43.969991+00:00",
+        "facility_identity": {
+          "facility_id": 4,
+          "cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER"
+        },
+        "persisted_field": "24_7_skilled_nursing",
+        "provenance": "YES",
+        "previous_status": "VERIFIED_YES",
+        "new_status": "VERIFIED_YES"
+      },
+      {
+        "question": "Does facility provide stroke/neurological rehabilitation? (BISCAYNE HEALTH AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=4 claim_id=10399",
+        "retrieved_at": "2026-07-21T06:49:43.970041+00:00",
+        "facility_identity": {
+          "facility_id": 4,
+          "cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER"
+        },
+        "persisted_field": "post_stroke_neuro_rehab",
+        "provenance": "YES",
+        "previous_status": "VERIFIED_YES",
+        "new_status": "VERIFIED_YES"
+      },
+      {
+        "question": "Does facility provide PT? (BISCAYNE HEALTH AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=4 claim_id=10399",
+        "retrieved_at": "2026-07-21T06:49:43.970050+00:00",
+        "facility_identity": {
+          "facility_id": 4,
+          "cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER"
+        },
+        "persisted_field": "physical_therapy",
+        "provenance": "YES",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide OT? (BISCAYNE HEALTH AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=4 claim_id=10399",
+        "retrieved_at": "2026-07-21T06:49:43.970056+00:00",
+        "facility_identity": {
+          "facility_id": 4,
+          "cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER"
+        },
+        "persisted_field": "occupational_therapy",
+        "provenance": "YES",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide speech therapy? (BISCAYNE HEALTH AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=4 claim_id=10399",
+        "retrieved_at": "2026-07-21T06:49:43.970061+00:00",
+        "facility_identity": {
+          "facility_id": 4,
+          "cms_id": "105008",
+          "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER"
+        },
+        "persisted_field": "speech_therapy",
+        "provenance": "YES",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide 24/7 skilled nursing? (CORAL GABLES NURSING AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=3 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.971060+00:00",
+        "facility_identity": {
+          "facility_id": 3,
+          "cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER"
+        },
+        "persisted_field": "24_7_skilled_nursing",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide stroke/neurological rehabilitation? (CORAL GABLES NURSING AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=3 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.971078+00:00",
+        "facility_identity": {
+          "facility_id": 3,
+          "cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER"
+        },
+        "persisted_field": "post_stroke_neuro_rehab",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide PT? (CORAL GABLES NURSING AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=3 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.971088+00:00",
+        "facility_identity": {
+          "facility_id": 3,
+          "cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER"
+        },
+        "persisted_field": "physical_therapy",
+        "provenance": "NO",
+        "previous_status": "VERIFIED_YES",
+        "new_status": "VERIFIED_YES"
+      },
+      {
+        "question": "Does facility provide OT? (CORAL GABLES NURSING AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=3 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.971097+00:00",
+        "facility_identity": {
+          "facility_id": 3,
+          "cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER"
+        },
+        "persisted_field": "occupational_therapy",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide speech therapy? (CORAL GABLES NURSING AND REHABILITATION CENTER)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=3 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.971107+00:00",
+        "facility_identity": {
+          "facility_id": 3,
+          "cms_id": "105005",
+          "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER"
+        },
+        "persisted_field": "speech_therapy",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide 24/7 skilled nursing? (Pinecrest Center for Rehabilitation and Healing)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=36 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.973378+00:00",
+        "facility_identity": {
+          "facility_id": 36,
+          "cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing"
+        },
+        "persisted_field": "24_7_skilled_nursing",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide stroke/neurological rehabilitation? (Pinecrest Center for Rehabilitation and Healing)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=36 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.973535+00:00",
+        "facility_identity": {
+          "facility_id": 36,
+          "cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing"
+        },
+        "persisted_field": "post_stroke_neuro_rehab",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide PT? (Pinecrest Center for Rehabilitation and Healing)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=36 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.973558+00:00",
+        "facility_identity": {
+          "facility_id": 36,
+          "cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing"
+        },
+        "persisted_field": "physical_therapy",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide OT? (Pinecrest Center for Rehabilitation and Healing)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=36 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.973577+00:00",
+        "facility_identity": {
+          "facility_id": 36,
+          "cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing"
+        },
+        "persisted_field": "occupational_therapy",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide speech therapy? (Pinecrest Center for Rehabilitation and Healing)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=36 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.973593+00:00",
+        "facility_identity": {
+          "facility_id": 36,
+          "cms_id": "105153",
+          "facility_name": "Pinecrest Center for Rehabilitation and Healing"
+        },
+        "persisted_field": "speech_therapy",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide 24/7 skilled nursing? (SANDS AT SOUTH BEACH CARE CENTER, THE)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=54 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.976721+00:00",
+        "facility_identity": {
+          "facility_id": 54,
+          "cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE"
+        },
+        "persisted_field": "24_7_skilled_nursing",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide stroke/neurological rehabilitation? (SANDS AT SOUTH BEACH CARE CENTER, THE)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=54 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.976804+00:00",
+        "facility_identity": {
+          "facility_id": 54,
+          "cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE"
+        },
+        "persisted_field": "post_stroke_neuro_rehab",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide PT? (SANDS AT SOUTH BEACH CARE CENTER, THE)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=54 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.976995+00:00",
+        "facility_identity": {
+          "facility_id": 54,
+          "cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE"
+        },
+        "persisted_field": "physical_therapy",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide OT? (SANDS AT SOUTH BEACH CARE CENTER, THE)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=54 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.977016+00:00",
+        "facility_identity": {
+          "facility_id": 54,
+          "cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE"
+        },
+        "persisted_field": "occupational_therapy",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      },
+      {
+        "question": "Does facility provide speech therapy? (SANDS AT SOUTH BEACH CARE CENTER, THE)",
+        "answer": "NOT_RESOLVED",
+        "status": "UNKNOWN_REMAINS",
+        "source": "Official website",
+        "exact_supporting_evidence_location": "external_source_request_logs run_id=20260721T064934Z facility_id=54 claim_id=NONE",
+        "retrieved_at": "2026-07-21T06:49:43.977032+00:00",
+        "facility_identity": {
+          "facility_id": 54,
+          "cms_id": "105229",
+          "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE"
+        },
+        "persisted_field": "speech_therapy",
+        "provenance": "NO",
+        "previous_status": "UNKNOWN",
+        "new_status": "UNKNOWN"
+      }
+    ],
+    "concrete_before_after_examples": [],
+    "regression_tests": {
+      "unknown_resolved_matches_transition_counter": "PASS",
+      "claims_linked_to_same_run_id": "PASS",
+      "source_access_alone_not_counted_as_resolution": "PASS"
+    },
+    "raw_result": {
+      "run_id": "20260721T064934Z",
+      "agent_key": "provider_intelligence",
+      "facilities_targeted": 4,
+      "facilities_successfully_discovered": 4,
+      "external_sources_identified": 16,
+      "external_source_requests": 16,
+      "source_successes": 13,
+      "source_failures": 3,
+      "source_access_successes": 13,
+      "content_retrieval_successes": 16,
+      "relevant_evidence_found": 13,
+      "verified_fact_created": 0,
+      "new_external_verified_facts": 0,
+      "external_changed_facts": 0,
+      "derived_insights": 0,
+      "unknown_before": 44,
+      "unknown_resolved": 0,
+      "unknown_remaining": 44,
+      "new_regulatory_findings": 0,
+      "new_verified_services": 0,
+      "new_activity_findings": 0,
+      "new_nutrition_findings": 0,
+      "new_ownership_identity_findings": 0,
+      "new_verified_prices": 0,
+      "contradictions": 0,
+      "first_run_new_external_value": 0,
+      "second_run_duplicates": 0,
+      "idempotency": "PASS",
+      "source_requests_by_status": {
+        "RAN_CONNECTED_NO_NEW_VALUE": 13,
+        "SOURCE_RATE_LIMITED": 1,
+        "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 2
+      },
+      "new_discoveries": [
+        {
+          "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "address",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "overall_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "staffing_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "quality_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "inspection_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "beds",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "address",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "overall_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "staffing_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "quality_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "inspection_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "beds",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "Pinecrest Center for Rehabilitation and Healing",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "address",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "Pinecrest Center for Rehabilitation and Healing",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "overall_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "Pinecrest Center for Rehabilitation and Healing",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "staffing_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "Pinecrest Center for Rehabilitation and Healing",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "quality_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "Pinecrest Center for Rehabilitation and Healing",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "inspection_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "Pinecrest Center for Rehabilitation and Healing",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "beds",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "address",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "overall_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "staffing_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "quality_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "inspection_rating",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        },
+        {
+          "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source": "CMS Provider Dataset",
+          "source_type": "government",
+          "claim_type": "beds",
+          "claim_value": "",
+          "status": "STALE_REFRESHED",
+          "retrieved_at": "2026-07-21T06:49:34.042681+00:00"
+        }
+      ],
+      "source_failures_detail": [
+        {
+          "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "source": "Official website",
+          "status": "SOURCE_RATE_LIMITED",
+          "reason": "http_429"
+        },
+        {
+          "facility": "Pinecrest Center for Rehabilitation and Healing",
+          "source": "Official website",
+          "status": "SOURCE_GEO_BLOCKED_OR_SUSPECTED",
+          "reason": "http_403"
+        },
+        {
+          "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "source": "Official website",
+          "status": "SOURCE_GEO_BLOCKED_OR_SUSPECTED",
+          "reason": "http_403"
+        }
+      ],
+      "source_health": [
+        {
+          "source_name": "CMS Inspection Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "last_success": "2026-07-21T06:49:42.065864",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 694,
+          "last_new_value": "2026-07-20T18:22:14.582712",
+          "failure_reason": null,
+          "next_refresh": "2026-07-22T06:49:42.065864"
+        },
+        {
+          "source_name": "CMS Provider Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "last_success": "2026-07-21T06:49:42.050609",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 694,
+          "last_new_value": "2026-07-20T18:22:14.576148",
+          "failure_reason": null,
+          "next_refresh": "2026-07-22T06:49:42.050609"
+        },
+        {
+          "source_name": "CMS Quality Dataset",
+          "source_type": "government",
+          "source_locator": "https://data.cms.gov/provider-data/djen-97ju",
+          "last_success": "2026-07-21T06:49:42.069656",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 694,
+          "last_new_value": "2026-07-20T18:22:14.584715",
+          "failure_reason": null,
+          "next_refresh": "2026-07-22T06:49:42.069656"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.miradorliving.com/assisted-living/florida/miami/coral-gables-nursing-and-rehabilitation",
+          "last_success": null,
+          "last_failure": "2026-07-21T06:49:38.379008",
+          "success_rate": 0.0,
+          "facilities_covered": 17,
+          "last_new_value": null,
+          "failure_reason": "http_429",
+          "next_refresh": "2026-07-21T13:49:38.379008"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://aventurarehab.com/",
+          "last_success": "2026-07-20T21:44:44.757066",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:18.872340",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:44:44.757066"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ultimateseniorresource.com/states/florida/miami/azure-shores-rehab",
+          "last_success": "2026-07-20T21:44:47.437337",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 11,
+          "last_new_value": "2026-07-20T18:20:21.574452",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:44:47.437337"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://biscaynerehab.com/",
+          "last_success": "2026-07-21T06:49:35.741961",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 20,
+          "last_new_value": "2026-07-20T18:20:23.158510",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T13:49:35.741961"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://brookwoodhc.com/",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:44:50.746100",
+          "success_rate": 0.0,
+          "facilities_covered": 12,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T04:44:50.746100"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://claridgehouse.care/",
+          "last_success": "2026-07-20T21:44:53.203281",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:27.339933",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:44:53.203281"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://coralreefsubacute.com/",
+          "last_success": "2026-07-20T21:44:55.947055",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:30.181338",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:44:55.947055"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://eastridgeatcutlerbay.com/",
+          "last_success": "2026-07-20T21:44:57.654461",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:32.062596",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:44:57.654461"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://florideanrehab.com/",
+          "last_success": "2026-07-20T21:44:59.190687",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:33.664417",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:44:59.190687"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.fountainmanorhealth.com/",
+          "last_success": "2026-07-20T22:22:56.009558",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 15,
+          "last_new_value": "2026-07-20T18:20:35.070672",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T05:22:56.009558"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.nursinghomes.us/facility/gardens-nursing-and-rehab-center-105765",
+          "last_success": "2026-07-20T21:45:01.655094",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:36.476739",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:01.655094"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.hamptoncourtnursing.com/",
+          "last_success": "2026-07-20T21:45:03.110700",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:38.061053",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:03.110700"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://harmonyhealth.care/",
+          "last_success": "2026-07-20T21:45:05.016202",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:40.194354",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:05.016202"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://hialeahshoresrehab.com/",
+          "last_success": "2026-07-20T21:45:07.233632",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:42.489229",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:07.233632"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://npino.com/nursing-home/1356612774-homestead-manor,-a-palace-community/",
+          "last_success": "2026-07-20T21:45:09.023256",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:44.313574",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:09.023256"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://jacksongardensrehab.com/",
+          "last_success": "2026-07-20T21:45:10.734837",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:45.950879",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:10.734837"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://jacksonhealth.org/locations/jackson-memorial-long-term-care-center/",
+          "last_success": "2026-07-20T21:45:12.893004",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:48.420221",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:12.893004"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://jacksonhealth.org/locations/jackson-memorial-perdue-medical-center/",
+          "last_success": "2026-07-20T21:45:16.085001",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:50.963297",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:16.085001"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ultimateseniorresource.com/states/florida/miami/kendall-lakes-healthcare-and-rehab-center",
+          "last_success": "2026-07-20T21:45:17.425698",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 11,
+          "last_new_value": "2026-07-20T18:20:52.300861",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:17.425698"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.miamijewishhealth.org/",
+          "last_success": null,
+          "last_failure": "2026-07-20T22:22:58.020109",
+          "success_rate": 0.0,
+          "facilities_covered": 15,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T05:22:58.020109"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://miamishoresrehab.com/",
+          "last_success": "2026-07-20T21:45:21.228288",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:56.308618",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:21.228288"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.cms.gov",
+          "last_success": "2026-07-20T21:45:21.561112",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:56.624976",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:21.561112"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://northbeachrehab.com/",
+          "last_success": "2026-07-20T22:22:59.532685",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 15,
+          "last_new_value": "2026-07-20T18:20:58.507363",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T05:22:59.532685"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ultimateseniorresource.com/states/florida/north-miami/north-dade-nursing-and-rehabilitation-center",
+          "last_success": "2026-07-20T21:45:24.411289",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:59.906337",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:24.411289"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://nspirehc.com/",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:45:39.504946",
+          "success_rate": 0.0,
+          "facilities_covered": 12,
+          "last_new_value": null,
+          "failure_reason": "timeout",
+          "next_refresh": "2026-07-21T04:45:39.504946"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ourhealthnetwork.com/nursing-home/nspire-healthcare-miami-lakes-hialeah-fl-105709",
+          "last_success": "2026-07-20T18:21:17.177194",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 1,
+          "last_new_value": "2026-07-20T18:21:17.177194",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T01:21:17.177194"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ultimateseniorresource.com/states/florida/miami/palace-at-kendall-nursing-and-rehabilitation-cente",
+          "last_success": "2026-07-20T20:50:16.664106",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 3,
+          "last_new_value": "2026-07-20T18:21:18.693853",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T03:50:16.664106"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://palmgardenofaventura.com/",
+          "last_success": "2026-07-20T21:45:44.767874",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:21.626743",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:44.767874"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://palmettocarecenter.com/",
+          "last_success": "2026-07-20T21:45:46.223812",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:23.194653",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:46.223812"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://palmettosubacute.com/",
+          "last_success": "2026-07-20T21:45:47.824630",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:24.809372",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:47.824630"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://npino.com/nursing-home/1326423682-pines-nursing-home-2015",
+          "last_success": "2026-07-20T22:23:01.260156",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 15,
+          "last_new_value": "2026-07-20T18:21:26.600865",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T05:23:01.260156"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://pinecrestrehab.com/",
+          "last_success": null,
+          "last_failure": "2026-07-21T06:49:40.114358",
+          "success_rate": 0.0,
+          "facilities_covered": 18,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T13:49:40.114358"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.seniorlivingguide.com/communities/ponce-health-rehabilitation-center-335-sw-12th-avenue-miami-fl-33130/",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:45:53.229536",
+          "success_rate": 0.0,
+          "facilities_covered": 12,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T04:45:53.229536"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://regentspark.care/",
+          "last_success": "2026-07-20T21:45:55.244239",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:32.303362",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:55.244239"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://npino.com/nursing-home/1215926910-stacey-health-care-centers-inc-riverside-care-center/",
+          "last_success": "2026-07-20T21:45:56.884993",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 7,
+          "last_new_value": "2026-07-20T18:21:33.987457",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:56.884993"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://rivierahealthresort.com/",
+          "last_success": "2026-07-20T21:45:59.120540",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:36.350618",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:59.120540"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.seniorlivingguide.com/communities/the-sands-at-south-beach-care-center-42-collins-ave-miami-beach-fl-33139/",
+          "last_success": null,
+          "last_failure": "2026-07-21T06:49:42.018222",
+          "success_rate": 0.0,
+          "facilities_covered": 15,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T13:49:42.018222"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://serenitybaycare.com/",
+          "last_success": "2026-07-20T22:23:08.117876",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 15,
+          "last_new_value": "2026-07-20T18:21:40.958671",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T05:23:08.117876"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://shoresiderehab.com/",
+          "last_success": "2026-07-20T21:46:05.207405",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:42.541258",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:05.207405"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://sierralakesrehab.com/",
+          "last_success": "2026-07-20T21:46:07.504686",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:45.180846",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:07.504686"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.southdadenursing.com/",
+          "last_success": "2026-07-20T21:46:09.543141",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:47.387453",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:09.543141"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.catholichealthservices.org/location/st-annes-nursing-center/",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:46:10.774360",
+          "success_rate": 0.0,
+          "facilities_covered": 11,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T04:46:10.774360"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://susannawesleyrehab.com/",
+          "last_success": "2026-07-20T21:46:17.230977",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:55.068328",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:17.230977"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://elevatecare.com/locations-florida/terrace-of-hialeah/",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:46:19.014481",
+          "success_rate": 0.0,
+          "facilities_covered": 12,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T04:46:19.014481"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ultimateseniorresource.com/states/florida/north-miami/the-lilac-at-silver-palms",
+          "last_success": "2026-07-20T21:46:20.494508",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 8,
+          "last_new_value": "2026-07-20T18:21:58.296502",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:20.494508"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://treasureislecarecenter.com/",
+          "last_success": "2026-07-20T21:46:23.129398",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:22:01.361141",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:23.129398"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.nursinghomes.us/facility/unity-healthcare-and-rehabilitation-center-105510",
+          "last_success": "2026-07-20T21:46:24.540840",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:22:02.772585",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:24.540840"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://universityrehabilitation.com/",
+          "last_success": "2026-07-20T21:46:26.171552",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:22:04.462512",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:26.171552"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.viliving.com/locations/fl/miami-aventura",
+          "last_success": "2026-07-20T21:46:27.874747",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:22:06.356357",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:27.874747"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://victorianursing.net/",
+          "last_success": "2026-07-20T21:46:28.879835",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 9,
+          "last_new_value": "2026-07-20T18:22:08.286228",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:28.879835"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.catholichealthservices.org/location/villa-maria-nursing-center/",
+          "last_success": null,
+          "last_failure": "2026-07-20T22:23:09.328059",
+          "success_rate": 0.0,
+          "facilities_covered": 15,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T05:23:09.328059"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.catholichealthservices.org/location/villa-maria-west-skilled-nursing-facility/",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:46:30.938193",
+          "success_rate": 0.0,
+          "facilities_covered": 12,
+          "last_new_value": null,
+          "failure_reason": "http_403",
+          "next_refresh": "2026-07-21T04:46:30.938193"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.waterford.care/",
+          "last_success": "2026-07-20T21:46:33.223032",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:22:13.238996",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:46:33.223032"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.miradorliving.com/assisted-living/florida/miami/west-gables-health-care-center",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:46:34.477580",
+          "success_rate": 0.0,
+          "facilities_covered": 7,
+          "last_new_value": null,
+          "failure_reason": "http_429",
+          "next_refresh": "2026-07-21T04:46:34.477580"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.miradorliving.com/skilled-nursing/florida/hialeah/nspire-healthcare-miami-lakes",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:45:40.967510",
+          "success_rate": 0.0,
+          "facilities_covered": 11,
+          "last_new_value": null,
+          "failure_reason": "http_429",
+          "next_refresh": "2026-07-21T04:45:40.967510"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ourhealthnetwork.com/nursing-home/west-gables-health-care-center-miami-fl-105623",
+          "last_success": "2026-07-20T21:43:22.002718",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 3,
+          "last_new_value": "2026-07-20T18:25:23.284725",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:43:22.002718"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://npino.com/nursing-home/1952309874-the-palace-at-kendall-nursing-and-rehab-center/",
+          "last_success": "2026-07-20T21:45:42.596778",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 9,
+          "last_new_value": "2026-07-20T20:03:13.504413",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:42.596778"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://health.usnews.com/best-nursing-homes/area/fl/riverside-care-center-miami-105432",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:42:42.130695",
+          "success_rate": 0.0,
+          "facilities_covered": 4,
+          "last_new_value": null,
+          "failure_reason": "timeout",
+          "next_refresh": "2026-07-21T04:42:42.130695"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.nursinghomes.us/facility/the-lilac-at-silver-palms-686125",
+          "last_success": "2026-07-20T21:43:05.975371",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 4,
+          "last_new_value": "2026-07-20T20:04:05.729593",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:43:05.975371"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://seniorcarefinder.com/providers/18480/fl/miami/azure-shores-rehab",
+          "last_success": "2026-07-20T20:43:48.407016",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 1,
+          "last_new_value": "2026-07-20T20:43:48.407016",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T03:43:48.407016"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ourhealthnetwork.com/nursing-home/sands-at-south-beach-care-center-the-miami-beach-fl-105229",
+          "last_success": "2026-07-20T21:42:45.368340",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 2,
+          "last_new_value": "2026-07-20T20:45:17.622608",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:42:45.368340"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ultimateseniorresource.com/states/florida/miami-beach/sands-at-south-beach-care-center-the",
+          "last_success": "2026-07-20T20:47:27.368117",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 1,
+          "last_new_value": "2026-07-20T20:47:27.368117",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T03:47:27.368117"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.nursinghomes.com/fl/miami/victoria-nursing-and-rehabilitation-center-inc/",
+          "last_success": "2026-07-20T21:24:59.482787",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 3,
+          "last_new_value": null,
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:24:59.482787"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://riversidecarecenter.com/",
+          "last_success": "2026-07-20T20:53:42.193796",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 1,
+          "last_new_value": null,
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T03:53:42.193796"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://npino.com/nursing-home/1598945651-coral-gables-nursing-and-rehabilitation-center/",
+          "last_success": "2026-07-20T21:19:26.688395",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 1,
+          "last_new_value": "2026-07-20T21:19:26.688395",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:19:26.688395"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://southfloridahospitalnews.com/west-gables-health-care-center-breaks-ground-on-new-skilled-nursing-facility-in-southwestern-miami/",
+          "last_success": "2026-07-20T21:25:05.879790",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 1,
+          "last_new_value": null,
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:25:05.879790"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://ourhealthnetwork.com/nursing-home/st-annes-nursing-center-st-annes-residence-inc-miami-fl-105560",
+          "last_success": "2026-07-20T21:28:22.365641",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 1,
+          "last_new_value": "2026-07-20T21:28:22.365641",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:28:22.365641"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://health.usnews.com/best-nursing-homes/area/fl/west-gables-health-care-center-105623",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:29:01.637965",
+          "success_rate": 0.0,
+          "facilities_covered": 1,
+          "last_new_value": null,
+          "failure_reason": "timeout",
+          "next_refresh": "2026-07-21T04:29:01.637965"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://www.nursinghomes.us/facility/coral-gables-nursing-and-rehabilitation-center-105005",
+          "last_success": "2026-07-21T06:47:59.339019",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 2,
+          "last_new_value": "2026-07-20T21:41:10.318850",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T13:47:59.339019"
+        },
+        {
+          "source_name": "Official website",
+          "source_type": "official_facility",
+          "source_locator": "https://health.usnews.com/best-nursing-homes/area/fl/kendall-lakes-health-and-rehabilitation-center-686123",
+          "last_success": null,
+          "last_failure": "2026-07-20T21:41:47.852182",
+          "success_rate": 0.0,
+          "facilities_covered": 1,
+          "last_new_value": null,
+          "failure_reason": "timeout",
+          "next_refresh": "2026-07-21T04:41:47.852182"
+        },
+        {
+          "source_name": "Seniorly profile",
+          "source_type": "secondary_profile",
+          "source_locator": "https://www.seniorly.com/assisted-living/florida/miami-springs/fair-havens-center",
+          "last_success": "2026-07-20T21:45:21.738272",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:20:56.877240",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:21.738272"
+        },
+        {
+          "source_name": "Seniorly profile",
+          "source_type": "secondary_profile",
+          "source_locator": "https://www.seniorly.com/memory-care/florida/kendall/nspire-healthcare-kendall",
+          "last_success": "2026-07-20T21:45:39.669619",
+          "last_failure": null,
+          "success_rate": 100.0,
+          "facilities_covered": 12,
+          "last_new_value": "2026-07-20T18:21:15.252058",
+          "failure_reason": null,
+          "next_refresh": "2026-07-21T04:45:39.669619"
+        }
+      ],
+      "unknowns_by_facility": [
+        {
+          "facility": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+          "unknown_before": 9,
+          "unknown_after": 9,
+          "sources": {
+            "RAN_CONNECTED_NO_NEW_VALUE": 4
+          }
+        },
+        {
+          "facility": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+          "unknown_before": 11,
+          "unknown_after": 11,
+          "sources": {
+            "SOURCE_RATE_LIMITED": 1,
+            "RAN_CONNECTED_NO_NEW_VALUE": 3
+          }
+        },
+        {
+          "facility": "Pinecrest Center for Rehabilitation and Healing",
+          "unknown_before": 13,
+          "unknown_after": 13,
+          "sources": {
+            "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1,
+            "RAN_CONNECTED_NO_NEW_VALUE": 3
+          }
+        },
+        {
+          "facility": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+          "unknown_before": 11,
+          "unknown_after": 11,
+          "sources": {
+            "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 1,
+            "RAN_CONNECTED_NO_NEW_VALUE": 3
+          }
+        }
+      ],
+      "source_attempt_telemetry": [
+        {
+          "source": "Official website",
+          "url": "https://biscaynerehab.com/",
+          "agent": "provider_intelligence",
+          "request_time": "2026-07-21T06:49:35.044427+00:00",
+          "http_status": 200,
+          "final_url": "https://biscaynerehab.com/",
+          "response_type": "text/html; charset=utf-8",
+          "response_size": 175891,
+          "latency_ms": 623,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Provider Dataset",
+          "url": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "agent": "senior_living_research",
+          "request_time": "2026-07-21T06:49:35.776517+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 564,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Inspection Dataset",
+          "url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "agent": "senior_living_research",
+          "request_time": "2026-07-21T06:49:36.377381+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 401,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Quality Dataset",
+          "url": "https://data.cms.gov/provider-data/djen-97ju",
+          "agent": "clinical_knowledge",
+          "request_time": "2026-07-21T06:49:36.805943+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 353,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "Official website",
+          "url": "https://www.miradorliving.com/assisted-living/florida/miami/coral-gables-nursing-and-rehabilitation",
+          "agent": "provider_intelligence",
+          "request_time": "2026-07-21T06:49:38.080307+00:00",
+          "http_status": 429,
+          "final_url": "https://www.miradorliving.com/assisted-living/florida/miami/coral-gables-nursing-and-rehabilitation",
+          "response_type": "text/html; charset=utf-8",
+          "response_size": 33793,
+          "latency_ms": 297,
+          "result_classification": "HTTP_429",
+          "reason": "http_429"
+        },
+        {
+          "source": "CMS Provider Dataset",
+          "url": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "agent": "senior_living_research",
+          "request_time": "2026-07-21T06:49:35.776517+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 564,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Inspection Dataset",
+          "url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "agent": "senior_living_research",
+          "request_time": "2026-07-21T06:49:36.377381+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 401,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Quality Dataset",
+          "url": "https://data.cms.gov/provider-data/djen-97ju",
+          "agent": "clinical_knowledge",
+          "request_time": "2026-07-21T06:49:36.805943+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 353,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "Official website",
+          "url": "https://pinecrestrehab.com/",
+          "agent": "provider_intelligence",
+          "request_time": "2026-07-21T06:49:39.379854+00:00",
+          "http_status": 403,
+          "final_url": "https://pinecrestrehab.com/",
+          "response_type": "text/html",
+          "response_size": 75193,
+          "latency_ms": 733,
+          "result_classification": "GEO_BLOCK_SUSPECTED",
+          "reason": "http_403"
+        },
+        {
+          "source": "CMS Provider Dataset",
+          "url": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "agent": "senior_living_research",
+          "request_time": "2026-07-21T06:49:35.776517+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 564,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Inspection Dataset",
+          "url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "agent": "senior_living_research",
+          "request_time": "2026-07-21T06:49:36.377381+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 401,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Quality Dataset",
+          "url": "https://data.cms.gov/provider-data/djen-97ju",
+          "agent": "clinical_knowledge",
+          "request_time": "2026-07-21T06:49:36.805943+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 353,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "Official website",
+          "url": "https://www.seniorlivingguide.com/communities/the-sands-at-south-beach-care-center-42-collins-ave-miami-beach-fl-33139/",
+          "agent": "provider_intelligence",
+          "request_time": "2026-07-21T06:49:41.117410+00:00",
+          "http_status": 403,
+          "final_url": "https://www.seniorlivingguide.com/communities/the-sands-at-south-beach-care-center-42-collins-ave-miami-beach-fl-33139/",
+          "response_type": "text/html",
+          "response_size": 92805,
+          "latency_ms": 899,
+          "result_classification": "GEO_BLOCK_SUSPECTED",
+          "reason": "http_403"
+        },
+        {
+          "source": "CMS Provider Dataset",
+          "url": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "agent": "senior_living_research",
+          "request_time": "2026-07-21T06:49:35.776517+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/4pq5-n9py",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 564,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Inspection Dataset",
+          "url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "agent": "senior_living_research",
+          "request_time": "2026-07-21T06:49:36.377381+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/r5ix-sfxw",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 401,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        },
+        {
+          "source": "CMS Quality Dataset",
+          "url": "https://data.cms.gov/provider-data/djen-97ju",
+          "agent": "clinical_knowledge",
+          "request_time": "2026-07-21T06:49:36.805943+00:00",
+          "http_status": 200,
+          "final_url": "https://data.cms.gov/provider-data/djen-97ju",
+          "response_type": "text/html; charset=UTF-8",
+          "response_size": 2196,
+          "latency_ms": 353,
+          "result_classification": "CONNECTED_NO_DATA",
+          "reason": null
+        }
+      ]
+    }
+  },
+  "what_engine_can_do_today": {
+    "targeted_field_discovery": "PARTIAL",
+    "can_do": [
+      "Fetch authoritative CMS datasets and persist summaries with provenance.",
+      "Parse selected official website keywords for services/activities/nutrition/pricing.",
+      "Persist evidence and knowledge objects with verification metadata."
+    ],
+    "cannot_yet_do": [
+      "Reliable deep extraction for mobility transfer assistance and medication management from varied site language.",
+      "Guaranteed extraction when official websites are blocked/rate-limited.",
+      "Broad semantic inference beyond current keyword and fixed-claim extractors."
+    ]
+  },
+  "next_5_high_value_improvements": [
+    "Field-specific extractors for mobility transfer, medication management, availability, language/cultural support.",
+    "Persist extractor diagnostics per request (matched phrases, rejected candidates, mapping reasons).",
+    "Add identity alias matching diagnostics for provider/operator name variants.",
+    "Add parser fallback for blocked official websites to governed alternates where permitted.",
+    "Regression tests for run_id provenance and unknown_resolved strict counting."
+  ],
+  "product_principles_changed": "NO",
+  "scoring_ranking_semantics_changed": "NO"
+}
