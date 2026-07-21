@@ -11,8 +11,28 @@ const targets = [
   { key: 'adult_family_care', url: 'https://quality.healthfinder.fl.gov/Facility-Provider/Adult-FamilyCare?type=1' },
 ];
 
-const browser = await chromium.launch({ headless: false });
-const context = await browser.newContext({ acceptDownloads: true });
+const targetKeyFilter = String(process.env.AHCA_TARGET_KEY || '').trim();
+const selectedTargets = targetKeyFilter
+  ? targets.filter((target) => target.key === targetKeyFilter)
+  : targets;
+
+if (targetKeyFilter && selectedTargets.length === 0) {
+  throw new Error(`Unknown AHCA_TARGET_KEY: ${targetKeyFilter}`);
+}
+
+const browser = await chromium.launch({
+  headless: false,
+  channel: 'chrome',
+  args: ['--disable-blink-features=AutomationControlled'],
+});
+const context = await browser.newContext({
+  acceptDownloads: true,
+  locale: 'en-US',
+  extraHTTPHeaders: {
+    'accept-language': 'en-US,en;q=0.9',
+    referer: 'https://quality.healthfinder.fl.gov/',
+  },
+});
 const manifest = { started_at: new Date().toISOString(), targets: [] };
 
 async function extractTables(page) {
@@ -47,7 +67,7 @@ async function nextPage(page) {
   return false;
 }
 
-for (const target of targets) {
+for (const target of selectedTargets) {
   const page = await context.newPage();
   const record = { ...target, started_at: new Date().toISOString(), pages: 0, tables: 0, rows: 0, status: 'STARTED', errors: [] };
   manifest.targets.push(record);
@@ -56,6 +76,7 @@ for (const target of targets) {
     record.http_status = response?.status() ?? null;
     record.final_url = page.url();
     record.title = await page.title();
+    record.http_headers = response ? await response.allHeaders() : null;
     if (record.http_status === 403) throw new Error('HTTP 403/challenge in browser session');
 
     const all = [];
@@ -78,6 +99,9 @@ for (const target of targets) {
   } catch (e) {
     record.status = 'FAILED';
     record.errors.push(String(e?.stack || e));
+    const pngPath = path.join(OUT, `${target.key}_failure.png`);
+    await page.screenshot({ path: pngPath, fullPage: true }).catch(() => {});
+    record.failure_screenshot = pngPath.replaceAll('\\', '/');
     await fs.writeFile(path.join(OUT, `${target.key}_failure.html`), await page.content().catch(() => ''), 'utf8');
   } finally {
     record.finished_at = new Date().toISOString();

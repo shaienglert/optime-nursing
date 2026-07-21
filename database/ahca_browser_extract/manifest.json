@@ -1,0 +1,81 @@
+{
+  "started_at": "2026-07-21T13:15:54.849Z",
+  "targets": [
+    {
+      "key": "nursing_home",
+      "url": "https://quality.healthfinder.fl.gov/Facility-Provider/Nursing-Home?type=0",
+      "started_at": "2026-07-21T13:15:55.436Z",
+      "pages": 0,
+      "tables": 0,
+      "rows": 0,
+      "status": "FAILED",
+      "errors": [
+        "Error: HTTP 403/challenge in browser session\n    at file:///C:/Users/u4/Documents/GitHub/optime-nursing/scripts/ahca_browser_extractor.mjs:80:43"
+      ],
+      "http_status": 403,
+      "final_url": "https://quality.healthfinder.fl.gov/Facility-Provider/Nursing-Home?type=0",
+      "title": "Service unavailable",
+      "http_headers": {
+        "cache-control": "no-store",
+        "content-length": "1484",
+        "content-type": "text/html",
+        "date": "Tue, 21 Jul 2026 13:11:24 GMT",
+        "x-azure-ref": "20260721T131124Z-r1f9865c97djjsbchC1MADtc2w0000000va0000000000m7m",
+        "x-cache": "CONFIG_NOCACHE"
+      },
+      "failure_screenshot": "C:/Users/u4/Documents/GitHub/optime-nursing/database/ahca_browser_extract/nursing_home_failure.png",
+      "finished_at": "2026-07-21T13:15:55.882Z"
+    },
+    {
+      "key": "assisted_living",
+      "url": "https://quality.healthfinder.fl.gov/Facility-Provider/ALF?type=1",
+      "started_at": "2026-07-21T13:15:56.141Z",
+      "pages": 0,
+      "tables": 0,
+      "rows": 0,
+      "status": "FAILED",
+      "errors": [
+        "Error: HTTP 403/challenge in browser session\n    at file:///C:/Users/u4/Documents/GitHub/optime-nursing/scripts/ahca_browser_extractor.mjs:80:43"
+      ],
+      "http_status": 403,
+      "final_url": "https://quality.healthfinder.fl.gov/Facility-Provider/ALF?type=1",
+      "title": "Service unavailable",
+      "http_headers": {
+        "cache-control": "no-store",
+        "content-length": "1484",
+        "content-type": "text/html",
+        "date": "Tue, 21 Jul 2026 13:11:24 GMT",
+        "x-azure-ref": "20260721T131124Z-r1f9865c97dhzszwhC1MADy6es0000001as0000000006syn",
+        "x-cache": "CONFIG_NOCACHE"
+      },
+      "failure_screenshot": "C:/Users/u4/Documents/GitHub/optime-nursing/database/ahca_browser_extract/assisted_living_failure.png",
+      "finished_at": "2026-07-21T13:15:56.544Z"
+    },
+    {
+      "key": "adult_family_care",
+      "url": "https://quality.healthfinder.fl.gov/Facility-Provider/Adult-FamilyCare?type=1",
+      "started_at": "2026-07-21T13:15:56.769Z",
+      "pages": 0,
+      "tables": 0,
+      "rows": 0,
+      "status": "FAILED",
+      "errors": [
+        "Error: HTTP 403/challenge in browser session\n    at file:///C:/Users/u4/Documents/GitHub/optime-nursing/scripts/ahca_browser_extractor.mjs:80:43"
+      ],
+      "http_status": 403,
+      "final_url": "https://quality.healthfinder.fl.gov/Facility-Provider/Adult-FamilyCare?type=1",
+      "title": "Service unavailable",
+      "http_headers": {
+        "cache-control": "no-store",
+        "content-length": "1484",
+        "content-type": "text/html",
+        "date": "Tue, 21 Jul 2026 13:11:25 GMT",
+        "x-azure-ref": "20260721T131125Z-r1f9865c97df944khC1MADahuc0000001b10000000001azy",
+        "x-cache": "CONFIG_NOCACHE"
+      },
+      "failure_screenshot": "C:/Users/u4/Documents/GitHub/optime-nursing/database/ahca_browser_extract/adult_family_care_failure.png",
+      "finished_at": "2026-07-21T13:15:57.170Z"
+    }
+  ],
+  "finished_at": "2026-07-21T13:15:57.183Z"
+}
