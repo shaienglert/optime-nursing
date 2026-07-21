@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cmp_to_key
@@ -35,6 +36,14 @@ TIE_THRESHOLD_POLICY = {
     "capability_depth": 1.5,
     "patient_relevant_outcomes": 1.5,
     "practical_fit": 1.5,
+}
+
+MATCH_EVIDENCE_MULTIPLIER = {
+    "REGULATORY_VERIFIED": 1.0,
+    "VERIFIED": 0.95,
+    "FACILITY_REPORTED": 0.8,
+    "TAXONOMY_INFERRED": 0.55,
+    "UNKNOWN": 0.0,
 }
 
 QUALITY_SAFETY_PARAMETER_IDS = {
@@ -76,6 +85,10 @@ PRACTICAL_FIT_PARAMETER_IDS = {
     "religious_cultural_services",
     "activities",
 }
+
+_DECISION_RESULT_CACHE: Dict[str, Dict[str, Any]] = {}
+_DECISION_RESULT_CACHE_ORDER: List[str] = []
+_DECISION_RESULT_CACHE_LIMIT = 12
 
 
 @dataclass
@@ -337,6 +350,29 @@ def _evaluate_need(need: Dict[str, Any], row_by_param: Dict[str, Dict[str, Any]]
     return "MATCH", "Typed value exists and is considered acceptable for current rules."
 
 
+def _classify_match_evidence(row: Dict[str, Any]) -> Tuple[str, float]:
+    if not _is_verified_row(row):
+        return "UNKNOWN", MATCH_EVIDENCE_MULTIPLIER["UNKNOWN"]
+
+    source = _normalize(row.get("source"))
+    if "nppes" in source or "taxonomy" in source:
+        return "TAXONOMY_INFERRED", MATCH_EVIDENCE_MULTIPLIER["TAXONOMY_INFERRED"]
+
+    if any(token in source for token in ["facility", "self-report", "self report", "provider"]):
+        return "FACILITY_REPORTED", MATCH_EVIDENCE_MULTIPLIER["FACILITY_REPORTED"]
+
+    if any(token in source for token in ["cms", "ahca", "medicare", "medicaid", "inspection", "survey", "claims"]):
+        return "REGULATORY_VERIFIED", MATCH_EVIDENCE_MULTIPLIER["REGULATORY_VERIFIED"]
+
+    return "VERIFIED", MATCH_EVIDENCE_MULTIPLIER["VERIFIED"]
+
+
+def _has_taxonomy_only_critical_support(required_or_high_matches: List[Dict[str, Any]]) -> bool:
+    if not required_or_high_matches:
+        return False
+    return any(item.get("evidence_strength") == "TAXONOMY_INFERRED" for item in required_or_high_matches)
+
+
 def _eligibility_from_needs(
     needs: List[Dict[str, Any]],
     row_by_param: Dict[str, Dict[str, Any]],
@@ -349,11 +385,15 @@ def _eligibility_from_needs(
 
     for need in needs:
         status, reason = _evaluate_need(need, row_by_param)
+        row = row_by_param.get(need["parameter_id"]) or {}
+        evidence_strength, evidence_multiplier = _classify_match_evidence(row) if status == "MATCH" else ("UNKNOWN", MATCH_EVIDENCE_MULTIPLIER["UNKNOWN"])
         entry = {
             "parameter_id": need["parameter_id"],
             "requirement_level": need["requirement_level"],
             "status": status,
             "reason": reason,
+            "evidence_strength": evidence_strength,
+            "evidence_multiplier": evidence_multiplier,
         }
         if status == "MATCH":
             matched_needs.append(entry)
@@ -371,6 +411,7 @@ def _eligibility_from_needs(
     required_failures = [entry for entry in unmet_verified_needs if entry["requirement_level"] == "REQUIRED"]
     required_unknown = [entry for entry in unknown_critical_needs if entry["requirement_level"] == "REQUIRED"]
     required_matches = [entry for entry in matched_needs if entry["requirement_level"] == "REQUIRED"]
+    required_or_high_matches = [entry for entry in matched_needs if entry["requirement_level"] in {"REQUIRED", "HIGH"}]
 
     if required_high_failures:
         eligibility = "INELIGIBLE"
@@ -382,6 +423,8 @@ def _eligibility_from_needs(
         eligibility = "POTENTIALLY_ELIGIBLE"
     elif required_high_unknown and not required_high_matches:
         eligibility = "INSUFFICIENT_EVIDENCE"
+    elif _has_taxonomy_only_critical_support(required_or_high_matches):
+        eligibility = "POTENTIALLY_ELIGIBLE"
     else:
         eligibility = "ELIGIBLE"
 
@@ -390,6 +433,8 @@ def _eligibility_from_needs(
         reasons.append("Verified incompatible evidence exists for one or more required/high needs.")
     if required_high_unknown:
         reasons.append("Some required/high needs are not yet verified and need direct confirmation.")
+    if _has_taxonomy_only_critical_support(required_or_high_matches):
+        reasons.append("One or more required/high needs are supported by taxonomy-level evidence and still need direct capability verification.")
     if not reasons:
         reasons.append("Required and high-priority needs are currently supported by verified evidence.")
 
@@ -449,26 +494,36 @@ def _score_result(needs: List[Dict[str, Any]], eligibility: Dict[str, Any]) -> D
 
     matched_weight = 0.0
     unmet_weight = 0.0
+    discounted_weight = 0.0
     known_weight = 0.0
     total_weight = 0.0
 
     for need in needs:
         total_weight += REQUIREMENT_WEIGHTS[need["requirement_level"]]
 
+    proven_critical_matches = 0
+    taxonomy_critical_matches = 0
     for item in eligibility["matched_needs"]:
         weight = REQUIREMENT_WEIGHTS[by_id[item["parameter_id"]]["requirement_level"]]
-        matched_weight += weight
+        multiplier = float(item.get("evidence_multiplier", 1.0))
+        matched_weight += weight * multiplier
+        discounted_weight += weight * (1.0 - multiplier)
         known_weight += weight
+        if by_id[item["parameter_id"]]["requirement_level"] in {"REQUIRED", "HIGH"}:
+            if item.get("evidence_strength") == "TAXONOMY_INFERRED":
+                taxonomy_critical_matches += 1
+            else:
+                proven_critical_matches += 1
 
     for item in eligibility["unmet_verified_needs"]:
         weight = REQUIREMENT_WEIGHTS[by_id[item["parameter_id"]]["requirement_level"]]
         unmet_weight += weight
         known_weight += weight
 
-    if matched_weight + unmet_weight <= 0:
+    if matched_weight + unmet_weight + discounted_weight <= 0:
         match_score = 0.0
     else:
-        match_score = round((matched_weight / (matched_weight + unmet_weight)) * 100.0, 2)
+        match_score = round((matched_weight / (matched_weight + unmet_weight + discounted_weight)) * 100.0, 2)
 
     evidence_certainty = round((known_weight / total_weight) * 100.0, 2) if total_weight > 0 else 0.0
 
@@ -486,6 +541,12 @@ def _score_result(needs: List[Dict[str, Any]], eligibility: Dict[str, Any]) -> D
         "match_band": band,
         "evidence_certainty": evidence_certainty,
         "domain_breakdown": _domain_breakdown(needs, eligibility["matched_needs"], eligibility["unmet_verified_needs"]),
+        "match_evidence_profile": {
+            "proven_critical_matches": proven_critical_matches,
+            "taxonomy_supported_critical_matches": taxonomy_critical_matches,
+            "unknown_critical_needs": len([item for item in eligibility["unknown_critical_needs"] if item["requirement_level"] in {"REQUIRED", "HIGH"}]),
+            "verified_gap_critical_needs": len([item for item in eligibility["unmet_verified_needs"] if item["requirement_level"] in {"REQUIRED", "HIGH"}]),
+        },
     }
 
 
@@ -916,9 +977,23 @@ def _compare_ranked_facilities(left: Dict[str, Any], right: Dict[str, Any]) -> T
     )
 
 
-def _rank_with_true_ties(results: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    seeded = sorted(results, key=lambda item: item["facility_name"])
-    ranked = sorted(seeded, key=cmp_to_key(lambda left, right: _compare_ranked_facilities(left, right)[0]))
+def _rank_with_true_ties(
+    results: List[Dict[str, Any]],
+    decision_limit: Optional[int] = None,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    def sort_key(item: Dict[str, Any]) -> Tuple[Any, ...]:
+        return (
+            ELIGIBILITY_ORDER[item["eligibility_status"]],
+            -(item.get("patient_match_score") or 0.0),
+            -(item.get("quality_safety_score") or 0.0),
+            -(item.get("staffing_score") or 0.0),
+            -(item.get("capability_depth_score") or 0.0),
+            -(item.get("patient_relevant_outcomes_score") or 0.0),
+            -(item.get("practical_fit_score") or 0.0),
+            item["facility_name"],
+        )
+
+    ranked = sorted(results, key=sort_key)
 
     if not ranked:
         return ranked, []
@@ -928,7 +1003,9 @@ def _rank_with_true_ties(results: List[Dict[str, Any]]) -> Tuple[List[Dict[str, 
     ranked[0]["rank_position"] = current_rank
     ranked[0]["rank_tie_status"] = "UNIQUE"
 
-    for index in range(1, len(ranked)):
+    limit = len(ranked) if decision_limit is None else min(len(ranked), max(1, decision_limit))
+
+    for index in range(1, limit):
         previous = ranked[index - 1]
         current = ranked[index]
         compare_result, details = _compare_ranked_facilities(previous, current)
@@ -947,6 +1024,13 @@ def _rank_with_true_ties(results: List[Dict[str, Any]]) -> Tuple[List[Dict[str, 
             current_rank = index + 1
             current["rank_position"] = current_rank
             current["rank_tie_status"] = "UNIQUE"
+
+    if limit < len(ranked):
+        current_rank = ranked[limit - 1]["rank_position"]
+        for index in range(limit, len(ranked)):
+            current_rank = index + 1
+            ranked[index]["rank_position"] = current_rank
+            ranked[index]["rank_tie_status"] = "UNIQUE"
 
     groups: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
     for item in ranked:
@@ -1002,6 +1086,20 @@ def run_patient_decision_engine(
     natural_language_query: str = "",
     limit: int = 50,
 ) -> Dict[str, Any]:
+    cache_key = json.dumps(
+        {
+            "questionnaire_state": questionnaire_state,
+            "natural_language_query": natural_language_query,
+            "limit": limit,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
+    cached = _DECISION_RESULT_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
     profile = build_patient_needs_profile(questionnaire_state, natural_language_query)
     needs = profile["needs"]
 
@@ -1012,6 +1110,15 @@ def run_patient_decision_engine(
     )
     ordered_parameters = order_payload.get("ordered_parameters", [])
     ordered_parameter_ids = [row["parameter_id"] for row in ordered_parameters]
+    recommendation_parameter_ids = {
+        *profile["priority_parameter_ids"],
+        *profile["need_tags"],
+        *QUALITY_SAFETY_PARAMETER_IDS,
+        *STAFFING_PARAMETER_IDS,
+        *OUTCOME_PARAMETER_IDS,
+        *PRACTICAL_FIT_PARAMETER_IDS,
+        "current_availability",
+    }
     ordered_registry = [
         {
             "parameter_id": row["parameter_id"],
@@ -1021,6 +1128,7 @@ def run_patient_decision_engine(
         }
         for row in ordered_parameters
     ]
+    recommendation_registry = [row for row in ordered_registry if row["parameter_id"] in recommendation_parameter_ids]
 
     canonical_index = get_canonical_facility_index()
     discovered_ids = get_all_canonical_facility_ids()
@@ -1034,7 +1142,7 @@ def run_patient_decision_engine(
             need_tags=profile["need_tags"],
             priority_parameter_ids=profile["priority_parameter_ids"],
             profile_key=profile["profile_key"],
-            ordered_registry=ordered_registry,
+            ordered_registry=recommendation_registry,
         )
         canonical_meta = canonical_index.get(canonical_id, {})
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
@@ -1100,6 +1208,7 @@ def run_patient_decision_engine(
                 "patient_relevant_outcomes_score": outcomes_score,
                 "practical_fit_score": practical_fit_score,
                 "domain_breakdown": scoring["domain_breakdown"],
+                "match_evidence_profile": scoring["match_evidence_profile"],
                 "explanation": {
                     "why_matches": strong,
                     "needs_verification": verify,
@@ -1134,7 +1243,7 @@ def run_patient_decision_engine(
             }
         )
 
-    results, pairwise_decisions = _rank_with_true_ties(results)
+    results, pairwise_decisions = _rank_with_true_ties(results, decision_limit=limit)
 
     decision_lookup: Dict[Tuple[str, str], Dict[str, Any]] = {}
     for decision in pairwise_decisions:
@@ -1184,6 +1293,32 @@ def run_patient_decision_engine(
         },
         "tie_break_decisions": pairwise_decisions[: max(10, limit)],
     }
+
+
+    result = {
+        "patient_needs_profile": profile,
+        "results": top[:limit],
+        "result_count": len(top[:limit]),
+        "total_candidates_scored": len(results),
+        "availability_policy": "Current availability must be confirmed directly with the facility.",
+        "tie_break_policy": {
+            "thresholds": TIE_THRESHOLD_POLICY,
+            "true_tie_label": "JOINT_RANK / TIED",
+            "notes": [
+                "UNKNOWN availability is neutral and never improves or reduces ranking.",
+                "Evidence confidence is displayed separately and is not a ranking point.",
+                "Missing values do not grant tie-break advantage.",
+            ],
+        },
+        "tie_break_decisions": pairwise_decisions[: max(10, limit)],
+    }
+
+    _DECISION_RESULT_CACHE[cache_key] = result
+    _DECISION_RESULT_CACHE_ORDER.append(cache_key)
+    if len(_DECISION_RESULT_CACHE_ORDER) > _DECISION_RESULT_CACHE_LIMIT:
+        stale_key = _DECISION_RESULT_CACHE_ORDER.pop(0)
+        _DECISION_RESULT_CACHE.pop(stale_key, None)
+    return result
 
 
 def build_patient_comparison_context(canonical_facility_ids: List[str], patient_needs_profile: Dict[str, Any]) -> Dict[str, Any]:

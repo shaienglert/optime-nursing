@@ -164,6 +164,7 @@ export type SearchFacility = Facility & {
 };
 
 export type FacilityDetailsData = SearchFacility & {
+  canonical_facility_id?: string | null;
   website: string;
   gallery: string[];
   scoreBreakdown: ScoreBreakdownItem[];
@@ -289,6 +290,12 @@ export type DecisionEngineRecommendation = {
   capability_depth_score: number | null;
   patient_relevant_outcomes_score: number | null;
   practical_fit_score: number | null;
+  match_evidence_profile?: {
+    proven_critical_matches: number;
+    taxonomy_supported_critical_matches: number;
+    unknown_critical_needs: number;
+    verified_gap_critical_needs: number;
+  };
   rank_position?: number;
   rank_tie_status?: "UNIQUE" | "JOINT_RANK";
   rank_display?: string;

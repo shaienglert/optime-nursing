@@ -438,6 +438,36 @@ class GovernedTieBreakerTests(unittest.TestCase):
         self.assertEqual(by_id["A"]["explanation"]["availability_note"], "Current availability must be confirmed directly with the facility.")
         self.assertEqual(by_id["B"]["explanation"]["availability_note"], "Current availability must be confirmed directly with the facility.")
 
+    def test_direct_evidence_outranks_taxonomy_only_support(self) -> None:
+        table_direct = self._table(
+            "A",
+            [
+                {"parameter_id": "pt", "raw_value": "YES", "source": "CMS", "detail_scope": "SERVICE"},
+                {"parameter_id": "nursing_24_7", "raw_value": "YES", "source": "CMS", "detail_scope": "FACILITY"},
+                {"parameter_id": "post_stroke_neuro_evidence", "raw_value": "YES", "source": "CMS", "detail_scope": "PROGRAM"},
+            ]
+            + self._quality_good_rows(),
+        )
+        table_taxonomy = self._table(
+            "B",
+            [
+                {"parameter_id": "pt", "raw_value": "YES", "source": "NPPES taxonomy", "detail_scope": "SERVICE"},
+                {"parameter_id": "nursing_24_7", "raw_value": "YES", "source": "NPPES taxonomy", "detail_scope": "FACILITY"},
+                {"parameter_id": "post_stroke_neuro_evidence", "raw_value": "YES", "source": "NPPES taxonomy", "detail_scope": "PROGRAM"},
+            ]
+            + self._quality_good_rows(),
+        )
+
+        output = self._run_with_tables(["A", "B"], {"A": table_direct, "B": table_taxonomy})
+        ordered_ids = [item["canonical_facility_id"] for item in output["results"]]
+        by_id = {item["canonical_facility_id"]: item for item in output["results"]}
+
+        self.assertLess(ordered_ids.index("A"), ordered_ids.index("B"))
+        self.assertEqual(by_id["A"]["eligibility_status"], "ELIGIBLE")
+        self.assertEqual(by_id["B"]["eligibility_status"], "POTENTIALLY_ELIGIBLE")
+        self.assertGreater(by_id["A"]["patient_match_score"], by_id["B"]["patient_match_score"])
+        self.assertEqual(by_id["B"]["match_evidence_profile"]["taxonomy_supported_critical_matches"], 3)
+
 
 if __name__ == "__main__":
     unittest.main()

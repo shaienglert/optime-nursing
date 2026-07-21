@@ -1,10 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { fetchFacilityDetails, fetchGovernanceRuntimeContext, fetchSearchFacilities, FacilityDetailsData, GovernanceRuntimeContext, SearchFacility } from "@/lib/api";
+import {
+  FacilityDetailsData,
+  FacilityParameterTable,
+  GovernanceRuntimeContext,
+  SearchFacility,
+  fetchFacilityDetails,
+  fetchFacilityParameterTable,
+  fetchGovernanceRuntimeContext,
+  fetchSearchFacilities,
+} from "@/lib/api";
 import { personLabel, resolveFacilityImage, resolvePriceTruth } from "@/lib/facility-experience";
 import { runOptimeV2Engine } from "@/lib/optime-v2-engine";
 
@@ -22,14 +32,49 @@ function truthLabel(value?: string | null): string {
   return value || "Unknown";
 }
 
-function useFacilityRecommendation(facilityId: string, facilities: SearchFacility[], governanceContext: GovernanceRuntimeContext | null, state: ReturnType<typeof useQuestionnaire>["state"]) {
+function qualityLabel(value?: number | null): string {
+  if (value === null || value === undefined) return "Insufficient verified information";
+  if (value >= 5) return "Excellent";
+  if (value >= 4) return "Very Good";
+  if (value >= 3) return "Good";
+  if (value >= 2) return "Needs Attention";
+  return "Insufficient verified information";
+}
+
+function breakdownLabel(value?: number | null): string {
+  if (value === null || value === undefined) return "Insufficient verified information";
+  if (value >= 80) return "Excellent";
+  if (value >= 65) return "Very Good";
+  if (value >= 50) return "Good";
+  if (value >= 35) return "Needs Attention";
+  return "Insufficient verified information";
+}
+
+function formatStatusValue(value: string | number | boolean | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "UNKNOWN";
+  return String(value);
+}
+
+function formatLastVerified(value?: string | null): string {
+  if (!value) return "Not available";
+  return value;
+}
+
+function useFacilityRecommendation(
+  facilityId: string,
+  facilities: SearchFacility[],
+  governanceContext: GovernanceRuntimeContext | null,
+  state: ReturnType<typeof useQuestionnaire>["state"],
+) {
   return useMemo(() => {
     if (!governanceContext || facilities.length === 0) return null;
     const engineOutput = runOptimeV2Engine(facilities, state, { governanceContext });
-    return engineOutput.displayedRecommendations.find((item) => String(item.facility.id) === facilityId)
+    return (
+      engineOutput.displayedRecommendations.find((item) => String(item.facility.id) === facilityId)
       || engineOutput.accepted.find((item) => String(item.facility.id) === facilityId)
       || engineOutput.rejected.find((item) => String(item.facility.id) === facilityId)
-      || null;
+      || null
+    );
   }, [facilities, facilityId, governanceContext, state]);
 }
 
@@ -50,11 +95,16 @@ function badgeRow(title: string, values: string[]) {
 
 export function FacilityProfileClient({ facilityId, backHref, backLabel }: FacilityProfileClientProps) {
   const { state } = useQuestionnaire();
+  const searchParams = useSearchParams();
+
   const [facility, setFacility] = useState<FacilityDetailsData | null>(null);
   const [facilities, setFacilities] = useState<SearchFacility[]>([]);
   const [governanceContext, setGovernanceContext] = useState<GovernanceRuntimeContext | null>(null);
+  const [parameterTable, setParameterTable] = useState<FacilityParameterTable | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const canonicalFromQuery = searchParams.get("canonical");
 
   useEffect(() => {
     let mounted = true;
@@ -69,9 +119,18 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
           fetchGovernanceRuntimeContext(),
         ]);
         if (!mounted) return;
+
         setFacility(facilityDetails);
         setFacilities(governedFacilities);
         setGovernanceContext(runtimeContext);
+
+        const canonicalFacilityId = (canonicalFromQuery || facilityDetails.canonical_facility_id || "").trim();
+        if (canonicalFacilityId) {
+          const fullTable = await fetchFacilityParameterTable(canonicalFacilityId);
+          if (mounted) setParameterTable(fullTable);
+        } else {
+          setParameterTable(null);
+        }
       } catch (err) {
         if (mounted) {
           setError(err instanceof Error ? err.message : "Failed to load facility profile.");
@@ -88,7 +147,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
     return () => {
       mounted = false;
     };
-  }, [facilityId]);
+  }, [canonicalFromQuery, facilityId]);
 
   const recommendation = useFacilityRecommendation(facilityId, facilities, governanceContext, state);
   const person = personLabel(state.relationship || "your family member");
@@ -102,11 +161,17 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
   const mustFailed = recommendation?.report.audit.governedFacilityDecision?.must_failed || [];
   const mustUnknown = recommendation?.report.audit.governedFacilityDecision?.must_unknown || [];
   const identity = recommendation?.report.audit.governedFacilityDecision?.identity_status || "UNRESOLVED_IDENTITY";
-  const canonicalFacilityId = recommendation?.report.audit.governedFacilityDecision?.canonical_facility_id || facility?.id || null;
+  const canonicalFacilityId =
+    recommendation?.report.audit.governedFacilityDecision?.canonical_facility_id
+    || parameterTable?.canonical_facility_id
+    || facility?.canonical_facility_id
+    || canonicalFromQuery
+    || facility?.id
+    || null;
 
   const whySelected = recommendation?.report.audit.clinicalReasoning.whyThisCommunity || recommendation?.whyThisFits || facility?.shortExplanation || "OPTIME selected this facility based on the strongest verified fit signals currently available.";
   const rankReason = recommendation?.rankReason || recommendation?.confidenceExplanation || "One of the strongest available options for this search.";
-  const priceLine = priceTruth ? `${priceTruth.label}: ${priceTruth.value}` : "Current pricing not verified — contact facility";
+  const priceLine = priceTruth ? `${priceTruth.label}: ${priceTruth.value}` : "Current pricing not verified - contact facility";
   const priceDisclosure = priceTruth?.truthState === "UNKNOWN"
     ? "Pricing is not published by the backend for this facility."
     : "Pricing is a derived estimate from the governed frontend model, not a facility quote.";
@@ -182,7 +247,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                 <p className="font-semibold text-[#2f6d3e]">Strong matches</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {sectionItems(verifiedItems.slice(0, 6).map((item) => item.label), "No verified matches yet").map((item) => (
-                    <span key={`yes-${item}`} className="rounded-full border border-[#bcd9c0] bg-[#eef8f1] px-3 py-1 text-xs font-medium text-[#2f6d3e]">✔ {item}</span>
+                    <span key={`yes-${item}`} className="rounded-full border border-[#bcd9c0] bg-[#eef8f1] px-3 py-1 text-xs font-medium text-[#2f6d3e]">OK {item}</span>
                   ))}
                 </div>
               </section>
@@ -191,7 +256,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                 <p className="font-semibold text-[#8b4f3f]">Potential concerns</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {sectionItems(noItems.slice(0, 4).map((item) => item.label), "No confirmed negative items yet").map((item) => (
-                    <span key={`no-${item}`} className="rounded-full border border-[#e9c5bc] bg-[#fff7f4] px-3 py-1 text-xs font-medium text-[#8b4f3f]">✖ {item}</span>
+                    <span key={`no-${item}`} className="rounded-full border border-[#e9c5bc] bg-[#fff7f4] px-3 py-1 text-xs font-medium text-[#8b4f3f]">Gap {item}</span>
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-[#8b5f53]">{mustFailed.length > 0 ? mustFailed.join("; ") : "No governed MUST failure is currently confirmed."}</p>
@@ -203,7 +268,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                 <p className="font-semibold text-[#8a6a2f]">Still unknown</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {sectionItems(unknownItems.slice(0, 6).map((item) => item.label), "No unknowns currently surfaced").map((item) => (
-                    <span key={`unknown-${item}`} className="rounded-full border border-[#e3d2a6] bg-[#fffdf4] px-3 py-1 text-xs font-medium text-[#7a6847]">? {item}</span>
+                    <span key={`unknown-${item}`} className="rounded-full border border-[#e3d2a6] bg-[#fffdf4] px-3 py-1 text-xs font-medium text-[#7a6847]">Verify {item}</span>
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-[#7a6847]">{mustUnknown.length > 0 ? mustUnknown.join("; ") : "Unknown is preserved where evidence is incomplete."}</p>
@@ -238,11 +303,11 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#24425e]">Quality snapshot</p>
-                  <p className="mt-2">Overall: {truthLabel(String(facility.overall_rating ?? "N/A"))}</p>
-                  <p>Staffing: {truthLabel(String(facility.staffing_rating ?? "N/A"))}</p>
-                  <p>Inspection: {truthLabel(String(facility.inspection_rating ?? "N/A"))}</p>
+                  <p className="mt-2">Overall: {qualityLabel(facility.overall_rating ?? null)}</p>
+                  <p>Staffing: {qualityLabel(facility.staffing_rating ?? null)}</p>
+                  <p>Inspection: {qualityLabel(facility.inspection_rating ?? null)}</p>
                   <p>Score breakdown categories: {facility.scoreBreakdown?.length || 0}</p>
-                  <p className="mt-1 text-xs text-[#6b6257]">{(facility.scoreBreakdown || []).slice(0, 3).map((item) => `${item.category}: ${item.score}`).join(" · ") || "No score breakdown available"}</p>
+                  <p className="mt-1 text-xs text-[#6b6257]">{(facility.scoreBreakdown || []).slice(0, 3).map((item) => `${item.category}: ${breakdownLabel(item.score)}`).join(" · ") || "No score breakdown available"}</p>
                 </div>
                 <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fbff] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#24425e]">Location</p>
@@ -279,8 +344,8 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Personalized fit summary</p>
               <div className="mt-3 grid gap-3 md:grid-cols-3">
                 <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
-                  <p className="font-semibold text-[#2f2a24]">Match</p>
-                  <p className="mt-1">{recommendation ? `${Math.round(recommendation.totalScore)}%` : "Not yet ranked"}</p>
+                  <p className="font-semibold text-[#2f2a24]">Fit status</p>
+                  <p className="mt-1">{recommendation ? "Included in current governed recommendation set" : "Under review"}</p>
                 </div>
                 <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#2f2a24]">Confidence</p>
@@ -291,6 +356,44 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                   <p className="mt-1">{recommendation?.report.audit.verificationRequest.nextStepMessage || "Verify the unresolved items with the facility."}</p>
                 </div>
               </div>
+            </section>
+
+            <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5 shadow-[0_16px_50px_-34px_rgba(53,82,112,0.3)]">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Full governed parameter table</p>
+                <p className="text-xs text-[#4a6076]">{parameterTable ? `${parameterTable.rows.length} rows` : "Canonical mapping required"}</p>
+              </div>
+
+              {parameterTable ? (
+                <div className="mt-3 overflow-x-auto">
+                  <table className="min-w-full border-collapse text-xs">
+                    <thead>
+                      <tr>
+                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Category</th>
+                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Parameter</th>
+                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Status / Value</th>
+                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Detail / Scope</th>
+                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Source</th>
+                        <th className="border border-[#d9e3ec] bg-white px-2 py-2 text-left">Last verified</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {parameterTable.rows.map((row) => (
+                        <tr key={`${row.parameter_id}-${row.scope_name || "global"}`}>
+                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#24425e]">{row.category}</td>
+                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#2f2a24]">{row.parameter}</td>
+                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#2f2a24]">{formatStatusValue(row.status_value)}</td>
+                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#4a6076]">{row.detail_scope}{row.scope_name ? ` / ${row.scope_name}` : ""}</td>
+                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#4a6076]">{row.source}</td>
+                          <td className="border border-[#d9e3ec] bg-white px-2 py-2 text-[#4a6076]">{formatLastVerified(row.last_verified)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-[#4a6076]">Full parameter table is unavailable for this route unless a canonical facility ID is resolved.</p>
+              )}
             </section>
           </div>
         </section>

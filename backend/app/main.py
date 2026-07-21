@@ -86,6 +86,7 @@ from app.services.cms_service import (
 )
 from app.services.facility_parameter_service import (
     compare_facility_parameter_tables,
+    get_canonical_facility_index,
     get_facility_parameter_table,
     get_parameter_registry_payload,
     get_personalized_parameter_order,
@@ -204,6 +205,7 @@ class ScoreBreakdownOut(BaseModel):
 class FacilityDetailsOut(BaseModel):
     id: int
     cms_id: str
+    canonical_facility_id: Optional[str] = None
     name: str
     address: str
     city: str
@@ -1368,9 +1370,19 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
         "infection_control": 50.0,
     }
 
+    canonical_facility_id = None
+    if facility.cms_id:
+        canonical_index = get_canonical_facility_index()
+        for candidate_id, candidate in canonical_index.items():
+            source_identity_ids = candidate.get("source_identity_ids") or {}
+            if str(source_identity_ids.get("cms_ccn") or "") == str(facility.cms_id):
+                canonical_facility_id = candidate_id
+                break
+
     return FacilityDetailsOut(
         id=facility.id,
         cms_id=facility.cms_id,
+        canonical_facility_id=canonical_facility_id,
         name=facility.name,
         address=facility.address,
         city=facility.city,

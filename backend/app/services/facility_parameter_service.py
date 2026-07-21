@@ -60,8 +60,7 @@ def _base_priority(parameter: Dict[str, Any]) -> float:
 
 
 def _load_runtime() -> Dict[str, Any]:
-    signature = _signature()
-    if _CACHE["signature"] == signature and _CACHE["payload"] is not None:
+    if _CACHE["payload"] is not None:
         return _CACHE["payload"]
 
     registry_payload = _read_json(REGISTRY_PATH)
@@ -100,7 +99,6 @@ def _load_runtime() -> Dict[str, Any]:
         "evidence_lookup": evidence_lookup,
         "evidence_best_lookup": evidence_best_lookup,
     }
-    _CACHE["signature"] = signature
     _CACHE["payload"] = payload
     return payload
 

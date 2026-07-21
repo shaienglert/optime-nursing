@@ -9,8 +9,6 @@ import { useQuestionnaire } from "@/context/questionnaire-context";
 import {
   DecisionEngineRecommendation,
   DecisionEngineResponse,
-  PatientComparisonContextResponse,
-  fetchPatientComparisonContext,
   fetchPatientDecisionRecommendations,
 } from "@/lib/api";
 import { clearSearchSession } from "@/lib/search-session";
@@ -37,7 +35,6 @@ function recommendationTitle(index: number): string {
   return `#${index + 1} Recommendation`;
 }
 
-
 function eligibilityTone(status: string): string {
   if (status === "ELIGIBLE") return "text-[#2f6d3e] bg-[#f3fbf5] border-[#cde2d2]";
   if (status === "POTENTIALLY_ELIGIBLE") return "text-[#7a5a2f] bg-[#fff8ea] border-[#f0d9b0]";
@@ -49,9 +46,52 @@ function buildNeedChip(need: { parameter_id: string; requirement_level: string }
   return `${need.requirement_level}: ${need.parameter_id}`;
 }
 
-function scoreDisplay(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "N/A";
-  return `${Math.round(value)}%`;
+function qualitativeScoreLabel(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "Not enough verified evidence";
+  if (value >= 80) return "Strong";
+  if (value >= 65) return "Good";
+  if (value >= 45) return "Mixed";
+  return "Needs caution";
+}
+
+function confidenceBand(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "Insufficient evidence";
+  if (value >= 80) return "High confidence";
+  if (value >= 60) return "Medium confidence";
+  return "Low confidence";
+}
+
+function eligibilitySummary(status: DecisionEngineRecommendation["eligibility_status"]): string {
+  if (status === "ELIGIBLE") return "Verified fit for current critical needs";
+  if (status === "POTENTIALLY_ELIGIBLE") return "Potential fit pending direct verification";
+  if (status === "INSUFFICIENT_EVIDENCE") return "Insufficient evidence for critical needs";
+  return "Verified critical gaps present";
+}
+
+function comparisonStatusLabel(status: "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED"): string {
+  if (status === "MATCH") return "Supported";
+  if (status === "VERIFIED_GAP") return "Not supported";
+  return "Needs verification";
+}
+
+function buildNeedStatusMap(recommendation: DecisionEngineRecommendation): Map<string, "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED"> {
+  const statusMap = new Map<string, "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED">();
+  for (const item of recommendation.matched_needs || []) {
+    if (typeof item?.parameter_id === "string") {
+      statusMap.set(item.parameter_id, "MATCH");
+    }
+  }
+  for (const item of recommendation.unmet_verified_needs || []) {
+    if (typeof item?.parameter_id === "string") {
+      statusMap.set(item.parameter_id, "VERIFIED_GAP");
+    }
+  }
+  for (const item of recommendation.unknown_critical_needs || []) {
+    if (typeof item?.parameter_id === "string" && !statusMap.has(item.parameter_id)) {
+      statusMap.set(item.parameter_id, "NOT_VERIFIED");
+    }
+  }
+  return statusMap;
 }
 
 export function ResultsPageClient() {
@@ -60,12 +100,10 @@ export function ResultsPageClient() {
   const { state, resetState } = useQuestionnaire();
 
   const [decisionResponse, setDecisionResponse] = useState<DecisionEngineResponse | null>(null);
-  const [comparisonContext, setComparisonContext] = useState<PatientComparisonContextResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiLoadError, setApiLoadError] = useState<string | null>(null);
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
   const [savedCanonicalIds, setSavedCanonicalIds] = useState<string[]>([]);
-  const [compareCanonicalIds, setCompareCanonicalIds] = useState<string[]>([]);
   const [hiddenNeedIds, setHiddenNeedIds] = useState<string[]>([]);
 
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
@@ -104,38 +142,33 @@ export function ResultsPageClient() {
     };
   }, [decisionRequestKey]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadComparison() {
-      if (!decisionResponse || compareCanonicalIds.length < 2) {
-        setComparisonContext(null);
-        return;
-      }
-      try {
-        const payload = await fetchPatientComparisonContext({
-          canonical_facility_ids: compareCanonicalIds,
-          patient_needs_profile: decisionResponse.patient_needs_profile,
-        });
-        if (!cancelled) setComparisonContext(payload);
-      } catch {
-        if (!cancelled) setComparisonContext(null);
-      }
-    }
-
-    void loadComparison();
-    return () => {
-      cancelled = true;
-    };
-  }, [compareCanonicalIds, decisionResponse]);
+  const recommendations = decisionResponse?.results || [];
+  const topRecommendations = useMemo(() => recommendations.slice(0, TOP_RECOMMENDATION_COUNT), [recommendations]);
+  const remainingRecommendations = useMemo(() => recommendations.slice(TOP_RECOMMENDATION_COUNT), [recommendations]);
 
   const visibleNeeds = useMemo(() => {
     const allNeeds = decisionResponse?.patient_needs_profile.needs || [];
     return allNeeds.filter((need) => !hiddenNeedIds.includes(need.parameter_id));
   }, [decisionResponse, hiddenNeedIds]);
 
-  const recommendations = decisionResponse?.results || [];
-  const topRecommendations = recommendations.slice(0, TOP_RECOMMENDATION_COUNT);
-  const remainingRecommendations = recommendations.slice(TOP_RECOMMENDATION_COUNT);
+  const comparisonNeeds = useMemo(() => {
+    const allNeeds = decisionResponse?.patient_needs_profile.needs || [];
+    return allNeeds.filter((need) => need.requirement_level === "REQUIRED" || need.requirement_level === "HIGH" || need.requirement_level === "PREFERENCE");
+  }, [decisionResponse]);
+
+  const comparisonRows = useMemo(() => {
+    const topFacilities = topRecommendations.slice(0, TOP_RECOMMENDATION_COUNT).map((recommendation) => ({
+      recommendation,
+      statusMap: buildNeedStatusMap(recommendation),
+    }));
+    return comparisonNeeds.map((need) => ({
+      need,
+      facilities: topFacilities.map(({ recommendation, statusMap }) => ({
+        recommendation,
+        status: statusMap.get(need.parameter_id) || "NOT_VERIFIED",
+      })),
+    }));
+  }, [comparisonNeeds, topRecommendations]);
 
   const startNewSearch = () => {
     clearSearchSession();
@@ -149,7 +182,6 @@ export function ResultsPageClient() {
 
   const renderRecommendationCard = (recommendation: DecisionEngineRecommendation, index: number) => {
     const isSaved = savedCanonicalIds.includes(recommendation.canonical_facility_id);
-    const isCompared = compareCanonicalIds.includes(recommendation.canonical_facility_id);
 
     return (
       <article
@@ -169,24 +201,24 @@ export function ResultsPageClient() {
               </p>
             </div>
             <div className="rounded-2xl border border-[#d8e7dc] bg-[#f4fbf6] px-3 py-2 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Patient match</p>
-              <p className="mt-1 text-lg font-semibold text-[#2f6d3e]">{Math.round(recommendation.patient_match_score ?? recommendation.match_score)}%</p>
-              <p className="text-[10px] text-[#5e7264]">{recommendation.match_band}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Fit verdict</p>
+              <p className="mt-1 text-sm font-semibold text-[#2f6d3e]">{eligibilitySummary(recommendation.eligibility_status)}</p>
+              <p className="text-[10px] text-[#5e7264]">{recommendation.match_band.replace("_", " ")}</p>
             </div>
           </div>
 
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Quality & Safety</p>
-              <p className="text-sm font-semibold text-[#24425e]">{scoreDisplay(recommendation.quality_safety_score)}</p>
+              <p className="text-sm font-semibold text-[#24425e]">{qualitativeScoreLabel(recommendation.quality_safety_score)}</p>
             </div>
             <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Staffing</p>
-              <p className="text-sm font-semibold text-[#24425e]">{scoreDisplay(recommendation.staffing_score)}</p>
+              <p className="text-sm font-semibold text-[#24425e]">{qualitativeScoreLabel(recommendation.staffing_score)}</p>
             </div>
             <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Evidence confidence</p>
-              <p className="text-sm font-semibold text-[#24425e]">{scoreDisplay(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
+              <p className="text-sm font-semibold text-[#24425e]">{confidenceBand(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
             </div>
           </div>
 
@@ -208,7 +240,12 @@ export function ResultsPageClient() {
             Concerns: {recommendation.explanation.concerns.slice(0, 2).join("; ") || "No verified gap in current top needs"}
           </p>
 
-          <p className="text-xs text-[#24425e]">Evidence confidence: {Math.round(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}%</p>
+          <p className="text-xs text-[#24425e]">Evidence confidence: {confidenceBand(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
+          {recommendation.match_evidence_profile ? (
+            <p className="text-xs text-[#24425e]">
+              Critical evidence mix: {recommendation.match_evidence_profile.proven_critical_matches} proven, {recommendation.match_evidence_profile.taxonomy_supported_critical_matches} taxonomy-supported, {recommendation.match_evidence_profile.unknown_critical_needs} unknown.
+            </p>
+          ) : null}
           <p className="text-xs text-[#5b5245]">{recommendation.explanation.availability_note}</p>
 
           {recommendation.tie_break_explanation_vs_next ? (
@@ -234,7 +271,7 @@ export function ResultsPageClient() {
 
           <div className="flex flex-wrap gap-2">
             {recommendation.facility_profile_id ? (
-              <Link href={`/facility/${recommendation.facility_profile_id}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
+              <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
                 VIEW DETAILS
               </Link>
             ) : (
@@ -255,20 +292,6 @@ export function ResultsPageClient() {
               className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isSaved ? "border-[#6f9a86] bg-[#f1faf3] text-[#2f6d3e]" : "border-[#dccfb9] bg-white text-[#5b5245]"}`}
             >
               {isSaved ? "Saved" : "SAVE"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setCompareCanonicalIds((current) =>
-                  current.includes(recommendation.canonical_facility_id)
-                    ? current.filter((id) => id !== recommendation.canonical_facility_id)
-                    : [...current.slice(0, 2), recommendation.canonical_facility_id]
-                );
-              }}
-              className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isCompared ? "border-[#5f7f6b] bg-[#eef7f1] text-[#3f6a48]" : "border-[#dccfb9] bg-white text-[#5b5245]"}`}
-            >
-              {isCompared ? "Comparing" : "COMPARE"}
             </button>
 
             <a
@@ -336,7 +359,7 @@ export function ResultsPageClient() {
               <p className="mt-2 text-sm text-[#5c5347]">{decisionResponse?.availability_policy}</p>
               {decisionResponse?.tie_break_policy ? (
                 <p className="mt-2 text-xs text-[#5c5347]">
-                  True-tie support: {decisionResponse.tie_break_policy.true_tie_label}. Thresholds: {Object.entries(decisionResponse.tie_break_policy.thresholds).map(([key, value]) => `${key}=${value}`).join("; ")}.
+                  True-tie support is active: {decisionResponse.tie_break_policy.true_tie_label}. Recommendations preserve unknowns as neutral and keep confidence separate from ranking.
                 </p>
               ) : null}
             </article>
@@ -370,21 +393,19 @@ export function ResultsPageClient() {
               </div>
             ) : null}
 
-            {comparisonContext ? (
+            {comparisonRows.length > 0 ? (
               <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
                 <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Patient-specific comparison</p>
-                <p className="mt-2 text-sm text-[#4a6076]">Comparison uses identical governed parameter IDs. NOT_VERIFIED remains informational, not an automatic failure.</p>
+                <p className="mt-2 text-sm text-[#4a6076]">Top recommendations are compared on identical patient-need parameters. Needs verification is neutral and never treated as an automatic failure.</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {comparisonContext.facilities.map((facility) => {
-                    const recommendation = recommendations.find((item) => item.canonical_facility_id === facility.canonical_facility_id);
-                    if (!recommendation) return null;
+                  {topRecommendations.map((recommendation) => {
                     return (
-                      <div key={`summary-${facility.canonical_facility_id}`} className="rounded-xl border border-[#cddce5] bg-white px-3 py-2 text-xs text-[#24425e]">
-                        <p className="font-semibold">{facility.facility_name}</p>
+                      <div key={`summary-${recommendation.canonical_facility_id}`} className="rounded-xl border border-[#cddce5] bg-white px-3 py-2 text-xs text-[#24425e]">
+                        <p className="font-semibold">{recommendation.facility_name}</p>
                         <p>{recommendation.rank_display || "Unranked"}{recommendation.rank_tie_status === "JOINT_RANK" ? " (Tied)" : ""}</p>
-                        <p>Patient Match: {scoreDisplay(recommendation.patient_match_score ?? recommendation.match_score)}</p>
-                        <p>Quality & Safety: {scoreDisplay(recommendation.quality_safety_score)}</p>
-                        <p>Evidence Confidence: {scoreDisplay(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
+                        <p>Fit: {eligibilitySummary(recommendation.eligibility_status)}</p>
+                        <p>Quality & Safety: {qualitativeScoreLabel(recommendation.quality_safety_score)}</p>
+                        <p>Confidence: {confidenceBand(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
                       </div>
                     );
                   })}
@@ -394,33 +415,26 @@ export function ResultsPageClient() {
                     <thead>
                       <tr>
                         <th className="border border-[#d9e3ec] bg-white px-2 py-1 text-left">Need</th>
-                        {comparisonContext.facilities.map((facility) => (
-                          <th key={facility.canonical_facility_id} className="border border-[#d9e3ec] bg-white px-2 py-1 text-left">{facility.facility_name}</th>
+                        {topRecommendations.map((recommendation) => (
+                          <th key={recommendation.canonical_facility_id} className="border border-[#d9e3ec] bg-white px-2 py-1 text-left">{recommendation.facility_name}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {[...comparisonContext.required_needs, ...comparisonContext.high_priority_needs, ...comparisonContext.preferences].slice(0, 15).map((need) => (
+                      {comparisonRows.map(({ need, facilities }) => (
                         <tr key={`cmp-${need.parameter_id}`}>
                           <td className="border border-[#d9e3ec] bg-white px-2 py-1">{need.requirement_level} · {need.parameter_id}</td>
-                          {comparisonContext.facilities.map((facility) => {
-                            const row = facility.need_rows.find((item) => item.parameter_id === need.parameter_id);
-                            return <td key={`${facility.canonical_facility_id}-${need.parameter_id}`} className="border border-[#d9e3ec] bg-white px-2 py-1">{row?.status || "NOT_VERIFIED"}</td>;
+                          {facilities.map(({ recommendation, status }) => {
+                            return (
+                              <td key={`${recommendation.canonical_facility_id}-${need.parameter_id}`} className="border border-[#d9e3ec] bg-white px-2 py-1">
+                                {`${comparisonStatusLabel(status)} (${need.applicable_scope || "FACILITY"})`}
+                              </td>
+                            );
                           })}
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </div>
-              </section>
-            ) : compareCanonicalIds.length > 0 ? (
-              <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Compare tray</p>
-                <p className="mt-2 text-sm text-[#4a6076]">Select at least two facilities to run patient-specific comparison context.</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {compareCanonicalIds.map((id) => (
-                    <span key={`compare-${id}`} className="rounded-full border border-[#cddce5] bg-white px-3 py-1 text-xs font-semibold text-[#24425e]">{id}</span>
-                  ))}
                 </div>
               </section>
             ) : null}
