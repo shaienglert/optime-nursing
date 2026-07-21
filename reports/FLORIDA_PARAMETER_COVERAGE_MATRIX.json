@@ -1,0 +1,1303 @@
+{
+  "generated_at_utc": "2026-07-21T12:24:55.934Z",
+  "parameters": [
+    {
+      "parameter": "Skilled nursing capabilities",
+      "canonical_name": "skilled_nursing_capabilities",
+      "source": "cms_provider_type",
+      "raw_field": "cms_provider_type",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 694,
+        "total_records": 694,
+        "coverage_ratio": 1
+      },
+      "evidence_quality": "HIGH",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": null,
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "24/7 nursing",
+      "canonical_name": "nursing_24_7",
+      "source": "cms_provider_type",
+      "raw_field": "cms_provider_type",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 694,
+        "total_records": 694,
+        "coverage_ratio": 1
+      },
+      "evidence_quality": "HIGH",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": null,
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "Direct 24hr nurse availability",
+      "canonical_name": "direct_24hr_nurse_availability",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "Third Party 24hr nurse availability",
+      "canonical_name": "third_party_24hr_nurse_availability",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "RN hours per resident day",
+      "canonical_name": "rn_hours_per_resident_day",
+      "source": "rn_hours",
+      "raw_field": "rn_hours",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 676,
+        "total_records": 694,
+        "coverage_ratio": 0.9741
+      },
+      "evidence_quality": "HIGH",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": null,
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "Total nurse hours per resident day",
+      "canonical_name": "total_nurse_hours_per_resident_day",
+      "source": "total_nurse_hours",
+      "raw_field": "total_nurse_hours",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 676,
+        "total_records": 694,
+        "coverage_ratio": 0.9741
+      },
+      "evidence_quality": "HIGH",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": null,
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "ADL support",
+      "canonical_name": "adl_support",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "Medication support",
+      "canonical_name": "medication_support",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "Transfer assistance",
+      "canonical_name": "transfer_assistance",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "Higher-acuity capabilities",
+      "canonical_name": "higher_acuity_capabilities",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "CARE_NURSING"
+    },
+    {
+      "parameter": "Physical therapy",
+      "canonical_name": "pt",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "REHABILITATION"
+    },
+    {
+      "parameter": "Occupational therapy",
+      "canonical_name": "ot",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "REHABILITATION"
+    },
+    {
+      "parameter": "Speech therapy",
+      "canonical_name": "speech_therapy",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "REHABILITATION"
+    },
+    {
+      "parameter": "Short-term rehabilitation",
+      "canonical_name": "short_term_rehab",
+      "source": "cms_provider_type",
+      "raw_field": "cms_provider_type",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "REHABILITATION"
+    },
+    {
+      "parameter": "Post-stroke/neurological evidence",
+      "canonical_name": "post_stroke_neuro_evidence",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "REHABILITATION"
+    },
+    {
+      "parameter": "Therapy staffing",
+      "canonical_name": "therapy_staffing",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "REHABILITATION"
+    },
+    {
+      "parameter": "Memory Care",
+      "canonical_name": "memory_care",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Dementia/Alzheimer programs",
+      "canonical_name": "dementia_alz_programs",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Wound care",
+      "canonical_name": "wound_care",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Dialysis arrangements",
+      "canonical_name": "dialysis_arrangements",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Respiratory/tracheotomy/ventilator capabilities",
+      "canonical_name": "respiratory_trach_vent",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Hospice/palliative arrangements",
+      "canonical_name": "hospice_palliative_arrangements",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Specialty licenses",
+      "canonical_name": "specialty_licenses",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Extended Congregate Care",
+      "canonical_name": "extended_congregate_care",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Limited Nursing Services",
+      "canonical_name": "limited_nursing_services",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Limited Mental Health",
+      "canonical_name": "limited_mental_health",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Secured units",
+      "canonical_name": "secured_units",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "SPECIALIZED_CARE"
+    },
+    {
+      "parameter": "Inspection rating",
+      "canonical_name": "inspection_rating",
+      "source": "inspection_rating",
+      "raw_field": "inspection_rating",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 691,
+        "total_records": 694,
+        "coverage_ratio": 0.9957
+      },
+      "evidence_quality": "HIGH",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": null,
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Deficiency count",
+      "canonical_name": "deficiency_count",
+      "source": "deficiency_count",
+      "raw_field": "deficiency_count",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 688,
+        "total_records": 694,
+        "coverage_ratio": 0.9914
+      },
+      "evidence_quality": "HIGH",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": null,
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Deficiency severity",
+      "canonical_name": "deficiency_severity",
+      "source": "severe_deficiency_count",
+      "raw_field": "severe_deficiency_count",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Complaint-related findings",
+      "canonical_name": "complaint_related_findings",
+      "source": "complaint_deficiency_count",
+      "raw_field": "complaint_deficiency_count",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Fire safety deficiencies",
+      "canonical_name": "fire_safety_deficiencies",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 659,
+        "total_records": 694,
+        "coverage_ratio": 0.9496
+      },
+      "evidence_quality": "HIGH",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": null,
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Infection control findings",
+      "canonical_name": "infection_control_findings",
+      "source": "infection_control_count",
+      "raw_field": "infection_control_count",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Penalties/fines",
+      "canonical_name": "penalties_fines",
+      "source": "total_fines",
+      "raw_field": "total_fines",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Sanctions/final orders",
+      "canonical_name": "sanctions_final_orders",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Payment denials",
+      "canonical_name": "payment_denials",
+      "source": "total_payment_denials",
+      "raw_field": "total_payment_denials",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Quality measures",
+      "canonical_name": "quality_measures",
+      "source": "quality_measure_count",
+      "raw_field": "quality_measure_count",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Hospital/claims outcomes",
+      "canonical_name": "hospital_claims_outcomes",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Staffing turnover",
+      "canonical_name": "staffing_turnover",
+      "source": "turnover",
+      "raw_field": "turnover",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "QUALITY_SAFETY"
+    },
+    {
+      "parameter": "Languages",
+      "canonical_name": "languages",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Dietary capabilities",
+      "canonical_name": "dietary_capabilities",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Gluten-free",
+      "canonical_name": "gluten_free",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Kosher",
+      "canonical_name": "kosher",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Religious/cultural services",
+      "canonical_name": "religious_cultural_services",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Activities",
+      "canonical_name": "activities",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Transportation",
+      "canonical_name": "transportation",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Amenities",
+      "canonical_name": "amenities",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Private/shared rooms",
+      "canonical_name": "private_shared_rooms",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Accessibility",
+      "canonical_name": "accessibility",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "PERSONAL_FIT"
+    },
+    {
+      "parameter": "Payer information",
+      "canonical_name": "payer_information",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "FINANCIAL_ACCESS"
+    },
+    {
+      "parameter": "Medicaid attributes",
+      "canonical_name": "medicaid_attributes",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "FINANCIAL_ACCESS"
+    },
+    {
+      "parameter": "Medicare attributes",
+      "canonical_name": "medicare_attributes",
+      "source": "cms_certification_number",
+      "raw_field": "cms_certification_number",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": false,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "FINANCIAL_ACCESS"
+    },
+    {
+      "parameter": "Published rates",
+      "canonical_name": "published_rates",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "FINANCIAL_ACCESS"
+    },
+    {
+      "parameter": "Fees",
+      "canonical_name": "fees",
+      "source": "unknown",
+      "raw_field": "unknown",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "FINANCIAL_ACCESS"
+    },
+    {
+      "parameter": "Current bed/unit availability",
+      "canonical_name": "current_availability",
+      "source": "dynamic",
+      "raw_field": "dynamic",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": false,
+      "requires_facility_confirmation": true,
+      "dynamic": true,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "DYNAMIC"
+    },
+    {
+      "parameter": "Earliest admission date",
+      "canonical_name": "earliest_admission_date",
+      "source": "dynamic",
+      "raw_field": "dynamic",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": false,
+      "requires_facility_confirmation": true,
+      "dynamic": true,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "DYNAMIC"
+    },
+    {
+      "parameter": "Waiting list",
+      "canonical_name": "waiting_list",
+      "source": "dynamic",
+      "raw_field": "dynamic",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": false,
+      "requires_facility_confirmation": true,
+      "dynamic": true,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "DYNAMIC"
+    },
+    {
+      "parameter": "Current price",
+      "canonical_name": "current_price",
+      "source": "dynamic",
+      "raw_field": "dynamic",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": false,
+      "requires_facility_confirmation": true,
+      "dynamic": true,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "DYNAMIC"
+    },
+    {
+      "parameter": "Current promotions",
+      "canonical_name": "current_promotions",
+      "source": "dynamic",
+      "raw_field": "dynamic",
+      "facility_types_covered": [
+        "Nursing Home (CMS Provider Information 4pq5-n9py)"
+      ],
+      "record_coverage": {
+        "covered_records": 0,
+        "total_records": 694,
+        "coverage_ratio": 0
+      },
+      "evidence_quality": "UNKNOWN",
+      "update_freshness": "2026-07-21T12:24:55.934Z",
+      "can_affect_case_match": false,
+      "requires_facility_confirmation": true,
+      "dynamic": true,
+      "unknown_reason": "UNKNOWN",
+      "conflicting_records": 0,
+      "family": "DYNAMIC"
+    }
+  ]
+}

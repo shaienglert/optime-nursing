@@ -1,0 +1,5 @@
+URL: https://ahca.myflorida.com/robots.txt
+STATUS: 200
+REASON: reachable
+
+# As a condition of accessing this website, you agree to abide by the following # content signals: # (a) If a Content-Signal = yes, you may collect content for the corresponding # use. # (b) If a Content-Signal = no, you may not collect content for the # corresponding use. # (c) If the website operator does not include a Content-Signa

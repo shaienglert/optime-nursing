@@ -1,0 +1,163 @@
+{
+  "generated_at_utc": "2026-07-21T12:24:55.934Z",
+  "status": "PARTIAL",
+  "principle_impact": {
+    "relevant_principles": [
+      "PR-001",
+      "PR-002",
+      "PR-003",
+      "PR-004",
+      "PR-005",
+      "PR-007",
+      "PR-008"
+    ],
+    "alters_principle": "NO",
+    "owner_approval_required": "NO",
+    "classification": "B. Implementation Completion"
+  },
+  "required_docs_missing": [
+    "docs/OPTIME_MASTER_PARAMETER_REGISTRY.md",
+    "docs/FLORIDA_FACILITY_UNIVERSE_EXECUTION_PLAN.md"
+  ],
+  "counts": {
+    "total_authoritative_records": 694,
+    "active_licensed_facilities": "NOT VERIFIED - SOURCE ACCESS FAILED",
+    "inactive_facilities": "NOT VERIFIED - SOURCE ACCESS FAILED",
+    "active_cms_operational_facilities": 694,
+    "inactive_cms_operational_facilities": 0,
+    "by_raw_type": {
+      "Nursing Home (CMS Provider Information 4pq5-n9py)": 694
+    },
+    "residential_candidates": 694,
+    "supporting_providers": 0,
+    "both": 0,
+    "out_of_scope": 0,
+    "by_role": {
+      "RESIDENTIAL_CANDIDATE": 694
+    },
+    "nursing_homes": 694,
+    "assisted_living": "NOT VERIFIED - SOURCE ACCESS FAILED",
+    "adult_family_care_homes": "NOT VERIFIED - SOURCE ACCESS FAILED",
+    "cms_linked_facilities": 694,
+    "ahca_only_facilities": "NOT VERIFIED - SOURCE ACCESS FAILED"
+  },
+  "cms_crosswalk": {
+    "exact_matched_count": 694,
+    "unmatched_count": 0,
+    "ambiguous_matches": 0,
+    "duplicate_conflicts": 0
+  },
+  "source_access_failures": [
+    {
+      "source": "FloridaHealthFinder Root",
+      "url": "https://quality.healthfinder.fl.gov/",
+      "reason": "HTTP 403 bot/challenge blocked"
+    },
+    {
+      "source": "FloridaHealthFinder Facility Search",
+      "url": "https://quality.healthfinder.fl.gov/Facility-Provider/",
+      "reason": "HTTP 403 bot/challenge blocked"
+    },
+    {
+      "source": "FloridaHealthFinder County Search",
+      "url": "https://quality.healthfinder.fl.gov/Facility-Provider/CountySearch/",
+      "reason": "HTTP 403 bot/challenge blocked"
+    },
+    {
+      "source": "AHCA Root",
+      "url": "https://ahca.myflorida.com/",
+      "reason": "HTTP 403 bot/challenge blocked"
+    },
+    {
+      "source": "AHCA Bureau of Health Facility Regulation",
+      "url": "https://ahca.myflorida.com/health-care-policy-and-oversight/bureau-of-health-facility-regulation/",
+      "reason": "HTTP 403 bot/challenge blocked"
+    },
+    {
+      "source": "FloridaHealthFinder robots",
+      "url": "https://quality.healthfinder.fl.gov/robots.txt",
+      "reason": "HTTP 403 bot/challenge blocked"
+    }
+  ],
+  "top10_verification_contract": {
+    "version": "1.0.0",
+    "sections": {
+      "case_summary_template": "We are looking for the best match for our client based on verified needs and constraints.",
+      "unknown_questions_required": true,
+      "known_fact_confirmation_required": true,
+      "availability_questions_required": [
+        "appropriate unit/bed availability",
+        "earliest admission",
+        "room/bed type",
+        "waiting list",
+        "current price/fees",
+        "promotions"
+      ]
+    },
+    "payload_fields": [
+      "facility_id",
+      "facility_name",
+      "case_id",
+      "case_summary",
+      "unknown_parameters",
+      "known_parameters_to_confirm",
+      "availability_questions",
+      "response_timestamp",
+      "respondent_role",
+      "evidence_source"
+    ]
+  },
+  "customer_disclosure_requirement": "Recommendations are based on the information you provided and the data currently available to OPTIME at the time of analysis. Some important details may still need verification before a final decision is made. Current bed availability and admission timing must always be confirmed directly with each facility. OPTIME can contact the most relevant facilities to verify missing details and real-time availability for your case. If new verified information is received, the recommendation table and ordering may change to reflect the stronger evidence.",
+  "validation_checks": [
+    {
+      "check": "UNKNOWN never became NO",
+      "status": "PASS",
+      "detail": "No UNKNOWN mapped to VERIFIED_NO"
+    },
+    {
+      "check": "Facility Type did not become a blanket exclusion rule",
+      "status": "PASS",
+      "detail": "Records retained across available provider types"
+    },
+    {
+      "check": "Unit/program capabilities are preserved",
+      "status": "PASS",
+      "detail": "Scope field preserved on every parameter evidence row"
+    },
+    {
+      "check": "Generic completeness does not improve ranking",
+      "status": "PASS",
+      "detail": "No ranking computation changed in this pipeline"
+    },
+    {
+      "check": "No commercial field affects organic ranking",
+      "status": "PASS",
+      "detail": "No commercial fields read or written to ranking logic"
+    },
+    {
+      "check": "Availability is not inferred",
+      "status": "PASS",
+      "detail": "All dynamic availability fields remain UNKNOWN"
+    },
+    {
+      "check": "Counts come from authoritative ingested records",
+      "status": "PASS",
+      "detail": "Counts derived from ingested CMS authoritative datasets"
+    },
+    {
+      "check": "No duplicate canonical facilities were silently created",
+      "status": "PASS",
+      "detail": "Canonical IDs unique"
+    },
+    {
+      "check": "No existing PASS artifacts were falsely overwritten",
+      "status": "PASS",
+      "detail": "Only Florida-specific new audit files were written"
+    },
+    {
+      "check": "No product ranking/scoring semantics changed",
+      "status": "PASS",
+      "detail": "No ranking/scoring implementation files changed"
+    }
+  ]
+}

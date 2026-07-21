@@ -1,0 +1,229 @@
+{
+  "generated_at_utc": "2026-07-21T12:24:55.934Z",
+  "source_retrieval": {
+    "ahca": [
+      {
+        "name": "FloridaHealthFinder Root",
+        "url": "https://quality.healthfinder.fl.gov/",
+        "status": "SOURCE_ACCESS_FAILED",
+        "reason": "HTTP 403 bot/challenge blocked",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "name": "FloridaHealthFinder Facility Search",
+        "url": "https://quality.healthfinder.fl.gov/Facility-Provider/",
+        "status": "SOURCE_ACCESS_FAILED",
+        "reason": "HTTP 403 bot/challenge blocked",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "name": "FloridaHealthFinder County Search",
+        "url": "https://quality.healthfinder.fl.gov/Facility-Provider/CountySearch/",
+        "status": "SOURCE_ACCESS_FAILED",
+        "reason": "HTTP 403 bot/challenge blocked",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "name": "AHCA Root",
+        "url": "https://ahca.myflorida.com/",
+        "status": "SOURCE_ACCESS_FAILED",
+        "reason": "HTTP 403 bot/challenge blocked",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "name": "AHCA Bureau of Health Facility Regulation",
+        "url": "https://ahca.myflorida.com/health-care-policy-and-oversight/bureau-of-health-facility-regulation/",
+        "status": "SOURCE_ACCESS_FAILED",
+        "reason": "HTTP 403 bot/challenge blocked",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "name": "FloridaHealthFinder robots",
+        "url": "https://quality.healthfinder.fl.gov/robots.txt",
+        "status": "SOURCE_ACCESS_FAILED",
+        "reason": "HTTP 403 bot/challenge blocked",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "name": "AHCA robots",
+        "url": "https://ahca.myflorida.com/robots.txt",
+        "status": "VERIFIED_YES",
+        "reason": "reachable",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      }
+    ],
+    "cms": [
+      {
+        "dataset_id": "4pq5-n9py",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 14695,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/bc7015f6a981fa7e209809e021f8f0cc_1781194538/NH_ProviderInfo_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/4pq5-n9py.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "r5ix-sfxw",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 418479,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/a10af81bcb17bd0ae040383b3da50d10_1781194536/NH_HealthCitations_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/r5ix-sfxw.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "djen-97ju",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 249815,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/954f3050edf6e207d4c7a38da9c2b8d4_1781194536/NH_QualityMsr_MDS_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/djen-97ju.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "svdt-c123",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 150000,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/2108ac6f52c67225bd79529dcf3ca8db_1781194540/NH_SurveyDates_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/svdt-c123.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "azum-44iv",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 311,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/c3ce320ddf464b5df1bceae3f55da0d5_1781037952/Long-Term_Care_Hospital-General_Information_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/azum-44iv.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "fp6g-2gsn",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 24258,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/217fdde941fd3ba9e7b77277a6610b01_1781037952/Long-Term_Care_Hospital-Provider_Data_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/fp6g-2gsn.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "ifjz-ge4w",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 200030,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/052a4fd9573da7245856c043d6536910_1781194535/NH_FireSafetyCitations_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/ifjz-ge4w.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "ijh5-nb2v",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 58780,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/236a07ef8100190a421a2e072b305551_1781194536/NH_QualityMsr_Claims_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/ijh5-nb2v.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "y2hd-n93e",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 245354,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/211fec82817d05edbce24f590f73fa9e_1781194537/NH_Ownership_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/y2hd-n93e.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "g6vv-u9sr",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 16180,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/774fbb566fa65ae3d0d099efe6e41d6e_1781194537/NH_Penalties_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/g6vv-u9sr.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "fykj-qjee",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 837615,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/d672bb70fe3ec90261fdf65855b6acbc_1781194538/Skilled_Nursing_Facility_Quality_Reporting_Program_Provider_Data_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/fykj-qjee.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "6uyb-waub",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 43947,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/e02c19750dd816ce1fdaa897033dcac3_1776435360/Swing_Bed_SNF_data_Apr2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/6uyb-waub.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "tbry-pc2d",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 43952,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/dbad3e484bdbc52e572454ddcff02919_1781194539/NH_SurveySummary_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/tbry-pc2d.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "284v-j9fz",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 13900,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/24625f7ba546a31aafbd5057da94a0e2_1767384370/FY_2026_SNF_VBP_Facility_Performance.csv",
+        "raw_path": "data/florida_universe/raw/cms/284v-j9fz.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "ujcx-uaut",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 1,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/9edb8fc369e3adecc5c8d50906d2ffc9_1764720378/FY_2026_SNF_VBP_Aggregate_Performance.csv",
+        "raw_path": "data/florida_universe/raw/cms/ujcx-uaut.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "qmdc-9999",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 47,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/bf7223e1e315e1cb1ea4150d62cb55d4_1781194539/NH_DataCollectionIntervals_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/qmdc-9999.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "tagd-9999",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 643,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/4a06750f1b5c7db8059d83da78bca293_1781194540/NH_CitationDescriptions_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/tagd-9999.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "5zdx-ny2x",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 27,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/b3aa416484a408c3613270a9742de5be_1781037953/Long-Term_Care_Hospital-National_Data_Jun2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/5zdx-ny2x.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      },
+      {
+        "dataset_id": "5sqm-2qku",
+        "status": "VERIFIED_YES",
+        "reason": "downloaded",
+        "row_count": 27,
+        "download_url": "https://data.cms.gov/provider-data/sites/default/files/resources/1bf5c5a9da539c53ec929b60c2b3e7e7_1776435357/Skilled_Nursing_Facility_Quality_Reporting_Program_National_Data_Apr2026.csv",
+        "raw_path": "data/florida_universe/raw/cms/5sqm-2qku.csv",
+        "retrieved_at": "2026-07-21T12:24:55.934Z"
+      }
+    ]
+  }
+}
