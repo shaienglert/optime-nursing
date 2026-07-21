@@ -936,6 +936,8 @@ export default function Home() {
       return;
     }
 
+    // Intentional one-time draft hydration from session storage.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRelationship(String(source.relationship || ""));
     setGender(String(source.gender || ""));
     setCoupleAssistance(String(source.coupleAssistance || ""));

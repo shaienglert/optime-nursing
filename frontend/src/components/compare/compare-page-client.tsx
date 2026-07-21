@@ -123,7 +123,11 @@ export function ComparePageClient() {
   const returnTo = searchParams.get("returnTo") || "/results";
   const relationship = relationshipCopy(String(searchParams.get("relationship") || state.relationship || "your loved one"));
   const naturalLanguageQuery = String(searchParams.get("notes") || state.notes || "").trim();
-  const selectedIdsKey = useMemo(() => JSON.stringify({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }), [state, naturalLanguageQuery]);
+  const decisionRequestPayload = useMemo(
+    () => ({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
+    [state, naturalLanguageQuery],
+  );
+  const selectedIdsKey = useMemo(() => JSON.stringify(decisionRequestPayload), [decisionRequestPayload]);
 
   useEffect(() => {
     if (selectedFacilityIds.length > 0) {
@@ -165,28 +169,24 @@ export function ComparePageClient() {
       setIsLoading(true);
       setError(null);
       try {
-        const recommendations = await fetchPatientDecisionRecommendations(JSON.parse(selectedIdsKey) as {
-          questionnaire_state: Record<string, unknown>;
-          natural_language_query: string;
-          limit: number;
-        });
+        const recommendations = await fetchPatientDecisionRecommendations(decisionRequestPayload);
         if (!mounted) return;
         setDecisionResponse(recommendations);
 
-        const comparisonContextResponse = await fetchPatientComparisonContext({
-          canonical_facility_ids: selectedFacilityIds,
-          patient_needs_profile: recommendations.patient_needs_profile,
-        });
+        const [comparisonContextResponse, comparisonTableResponse] = await Promise.all([
+          fetchPatientComparisonContext({
+            canonical_facility_ids: selectedFacilityIds,
+            patient_needs_profile: recommendations.patient_needs_profile,
+          }),
+          compareFacilityParameters({
+            canonical_facility_ids: selectedFacilityIds,
+            need_tags: recommendations.patient_needs_profile.need_tags,
+            priority_parameter_ids: recommendations.patient_needs_profile.priority_parameter_ids,
+            profile_key: recommendations.patient_needs_profile.profile_key || undefined,
+          }),
+        ]);
         if (!mounted) return;
         setComparisonContext(comparisonContextResponse);
-
-        const comparisonTableResponse = await compareFacilityParameters({
-          canonical_facility_ids: selectedFacilityIds,
-          need_tags: recommendations.patient_needs_profile.need_tags,
-          priority_parameter_ids: recommendations.patient_needs_profile.priority_parameter_ids,
-          profile_key: recommendations.patient_needs_profile.profile_key || undefined,
-        });
-        if (!mounted) return;
         setComparisonTable(comparisonTableResponse);
       } catch (fetchError) {
         if (!mounted) return;
@@ -204,7 +204,7 @@ export function ComparePageClient() {
     return () => {
       mounted = false;
     };
-  }, [selectedFacilityIds, selectedIdsKey]);
+  }, [decisionRequestPayload, selectedFacilityIds, selectedIdsKey]);
 
   const recommendationById = useMemo(() => {
     const map = new Map<string, DecisionEngineRecommendation>();
