@@ -190,11 +190,23 @@ export function ResultsPageClient() {
     [visibleNeeds],
   );
 
-  const compareSelectedFacilities = useMemo(
-    () => compareSelectedIds
-      .map((facilityId) => recommendations.find((recommendation) => recommendation.canonical_facility_id === facilityId))
-      .filter((recommendation): recommendation is DecisionEngineRecommendation => Boolean(recommendation)),
-    [compareSelectedIds, recommendations],
+  const recommendationByCanonicalId = useMemo(() => {
+    const map = new Map<string, DecisionEngineRecommendation>();
+    for (const recommendation of recommendations) {
+      map.set(recommendation.canonical_facility_id, recommendation);
+    }
+    return map;
+  }, [recommendations]);
+
+  const compareTrayItems = useMemo(
+    () => compareSelectedIds.map((facilityId) => {
+      const recommendation = recommendationByCanonicalId.get(facilityId);
+      return {
+        facilityId,
+        facilityName: recommendation?.facility_name || facilityId,
+      };
+    }),
+    [compareSelectedIds, recommendationByCanonicalId],
   );
   const currentResultsPath = `/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
@@ -416,16 +428,16 @@ export function ResultsPageClient() {
             </div>
           ) : null}
 
-          {compareSelectedFacilities.length > 0 ? (
+          {compareTrayItems.length > 0 ? (
             <div className="mt-5 rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#24425e]">Compare tray</p>
-                  <p className="mt-1 text-sm text-[#4a6076]">Compare selected ({compareSelectedFacilities.length})</p>
+                  <p className="mt-1 text-sm text-[#4a6076]">Compare selected ({compareTrayItems.length})</p>
                 </div>
                 <button
                   type="button"
-                  disabled={compareSelectedFacilities.length < 2}
+                  disabled={compareTrayItems.length < 2}
                   onClick={() => router.push(buildCompareHref())}
                   className="rounded-full bg-[#24425e] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#9bb0c1]"
                 >
@@ -433,14 +445,14 @@ export function ResultsPageClient() {
                 </button>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {compareSelectedFacilities.map((facility) => (
+                {compareTrayItems.map((facility) => (
                   <button
-                    key={`tray-${facility.canonical_facility_id}`}
+                    key={`tray-${facility.facilityId}`}
                     type="button"
-                    onClick={() => toggleCompareSelection(facility)}
+                    onClick={() => setCompareSelectedIds((current) => current.filter((id) => id !== facility.facilityId))}
                     className="inline-flex items-center gap-2 rounded-full border border-[#cddce5] bg-white px-3 py-1.5 text-sm text-[#24425e] hover:bg-[#edf6fb]"
                   >
-                    <span>{facility.facility_name}</span>
+                    <span>{facility.facilityName}</span>
                     <span aria-hidden="true">x</span>
                   </button>
                 ))}

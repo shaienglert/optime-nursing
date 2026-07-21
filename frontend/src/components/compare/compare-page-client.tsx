@@ -286,6 +286,7 @@ export function ComparePageClient() {
   };
 
   const addAnotherFacility = () => {
+    saveCompareSelection(selectedFacilityIds);
     router.push(returnTo);
   };
 
@@ -443,47 +444,42 @@ export function ComparePageClient() {
             <p className="text-xs text-[#4a6076]">Same governed parameter IDs underneath</p>
           </div>
 
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full border-collapse text-xs">
-              <thead>
-                <tr>
-                  <th className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 text-left">Need</th>
-                  {selectedFacilities.map((facility) => (
-                    <th key={facility.facilityId} className="border border-[#d9e3ec] bg-white px-3 py-2 text-left align-top">
-                      <p className="font-semibold text-[#2f2a24]">{facility.facilityName}</p>
-                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">OPTIME Recommendation</p>
-                      <p className="mt-1 text-[#24425e]">Patient Match: {summarizeRecommendation(facility.recommendation).patientMatch}</p>
-                      <p className="text-[#24425e]">Quality & Safety: {summarizeRecommendation(facility.recommendation).qualitySafety}</p>
-                      <p className="text-[#24425e]">Evidence Confidence: {summarizeRecommendation(facility.recommendation).evidenceConfidence}</p>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {patientNeedsRows.map((need) => {
-                  const statuses = selectedFacilities.map((facility) => facility.comparisonFacility?.need_rows.find((row) => row.parameter_id === need.parameter_id));
-                  return (
-                    <tr key={`patient-${need.parameter_id}`}>
-                      <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2">
-                        <p className="font-semibold text-[#2f2a24]">{need.requirement_level}: {needLabel(need.parameter_id)}</p>
-                        <p className="mt-1 text-[10px] text-[#6b6257]">{need.applicable_scope === "FACILITY" ? "Facility-wide" : need.applicable_scope === "PROGRAM" ? "Program-level" : need.applicable_scope === "UNIT" ? "Unit-level" : "Service-level"}</p>
-                      </td>
-                      {statuses.map((status, index) => {
-                        const facility = selectedFacilities[index];
-                        if (!facility) return null;
-                        return (
-                        <td key={`${facility.facilityId}-${need.parameter_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 align-top">
-                          <p className="font-semibold text-[#2f2a24]">{statusLabel(status?.status || "NOT_VERIFIED")}</p>
-                          <p className="mt-1 text-[10px] text-[#6b6257]">{status?.scope === "FACILITY" ? "Available facility-wide" : status?.scope === "PROGRAM" ? `Available in a specific program${status?.scope_name ? ` (${status.scope_name})` : ""}` : status?.scope === "UNIT" ? `Available in a specific unit${status?.scope_name ? ` (${status.scope_name})` : ""}` : status?.scope === "SERVICE" ? "Verified service" : "Needs verification"}</p>
+          <div className="mt-4 space-y-3">
+            {patientNeedsRows.map((need) => {
+              const statuses = selectedFacilities.map((facility) => facility.comparisonFacility?.need_rows.find((row) => row.parameter_id === need.parameter_id));
+              return (
+                <div key={`patient-${need.parameter_id}`} className="rounded-2xl border border-[#d9e3ec] bg-[#f8fcff] p-3">
+                  <p className="font-semibold text-[#2f2a24]">{need.requirement_level}: {needLabel(need.parameter_id)}</p>
+                  <p className="mt-1 text-[10px] text-[#6b6257]">
+                    {need.applicable_scope === "FACILITY" ? "Facility-wide" : need.applicable_scope === "PROGRAM" ? "Program-level" : need.applicable_scope === "UNIT" ? "Unit-level" : "Service-level"}
+                  </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {statuses.map((status, index) => {
+                      const facility = selectedFacilities[index];
+                      if (!facility) return null;
+                      return (
+                        <div key={`${facility.facilityId}-${need.parameter_id}`} className="rounded-xl border border-[#d9e3ec] bg-white px-3 py-2">
+                          <p className="font-semibold text-[#2f2a24]">{facility.facilityName}</p>
+                          <p className="mt-1 text-[#4f473d]">{statusLabel(status?.status || "NOT_VERIFIED")}</p>
+                          <p className="mt-1 text-[10px] text-[#6b6257]">
+                            {status?.scope === "FACILITY"
+                              ? "Available facility-wide"
+                              : status?.scope === "PROGRAM"
+                                ? `Available in a specific program${status?.scope_name ? ` (${status.scope_name})` : ""}`
+                                : status?.scope === "UNIT"
+                                  ? `Available in a specific unit${status?.scope_name ? ` (${status.scope_name})` : ""}`
+                                  : status?.scope === "SERVICE"
+                                    ? "Verified service"
+                                    : "Needs verification"}
+                          </p>
                           <p className="text-[10px] text-[#6b6257]">Source: {status?.source || "Not verified"}</p>
-                        </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
