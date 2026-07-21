@@ -13,9 +13,38 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optime-nursing.vercel.app";
+
 export const metadata: Metadata = {
-  title: "OPTIME Nursing",
-  description: "Decision Intelligence for Senior Living",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "OPTIME | Find the Right Senior Care, Based on What Matters",
+    template: "%s | OPTIME",
+  },
+  description:
+    "OPTIME helps families compare senior care and nursing home options using care needs, verified evidence, quality signals, and the details that matter to each family.",
+  applicationName: "OPTIME",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "OPTIME",
+    title: "OPTIME | Find the Right Senior Care, Based on What Matters",
+    description:
+      "Compare senior care options using care needs, verified evidence, quality signals, and family-specific priorities.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OPTIME | Find the Right Senior Care, Based on What Matters",
+    description:
+      "Compare senior care options using care needs, verified evidence, quality signals, and family-specific priorities.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
