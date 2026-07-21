@@ -295,10 +295,6 @@ export function ComparePageClient() {
   currentCompareParams.set("returnTo", returnTo);
   const currentComparePath = `/compare${currentCompareParams.toString() ? `?${currentCompareParams.toString()}` : ""}`;
 
-  if (isLoading) {
-    return <main className="min-h-screen bg-[#fffdf8] px-6 py-12 text-[#5d5548]">Loading compare view...</main>;
-  }
-
   if (error) {
     return (
       <main className="min-h-screen bg-[#fffdf8] px-6 py-12">
@@ -310,7 +306,7 @@ export function ComparePageClient() {
     );
   }
 
-  if (selectedFacilityIds.length < 2 || !comparisonContext || !comparisonTable) {
+  if (selectedFacilityIds.length < 2) {
     return (
       <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
         <section className="mx-auto max-w-5xl rounded-3xl border border-[#e8ddcc] bg-white p-6">
@@ -320,6 +316,40 @@ export function ComparePageClient() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link href={compareBackHref} className="rounded-full bg-[#5f7f6b] px-4 py-2 text-sm font-semibold text-white">Back to results</Link>
           </div>
+        </section>
+      </main>
+    );
+  }
+
+  if ((isLoading || !comparisonContext || !comparisonTable) && selectedFacilityIds.length >= 2) {
+    return (
+      <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
+        <section className="mx-auto max-w-7xl space-y-6">
+          <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">Compare</p>
+            <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">Comparing facilities for {relationship}</h1>
+            <p className="mt-2 text-[#6b645a]">Compare selected facilities using the same governed parameter IDs and patient context.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button type="button" onClick={addAnotherFacility} className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">Add another facility</button>
+              <Link href={compareBackHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">Back to results</Link>
+            </div>
+          </header>
+
+          <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Selected facilities</p>
+                <p className="mt-1 text-sm text-[#4a6076]">Loading compare details...</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {selectedFacilityIds.map((facilityId) => (
+                <span key={facilityId} className="inline-flex items-center gap-2 rounded-full border border-[#cddce5] bg-white px-3 py-1.5 text-sm text-[#24425e]">
+                  <span>{facilityId}</span>
+                </span>
+              ))}
+            </div>
+          </section>
         </section>
       </main>
     );
