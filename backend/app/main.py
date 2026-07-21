@@ -90,6 +90,11 @@ from app.services.facility_parameter_service import (
     get_parameter_registry_payload,
     get_personalized_parameter_order,
 )
+from app.services.patient_decision_engine import (
+    build_patient_comparison_context,
+    build_patient_needs_profile,
+    run_patient_decision_engine,
+)
 
 app = FastAPI(
     title="OPTIME Nursing API",
@@ -235,6 +240,10 @@ class ParameterTableRowOut(BaseModel):
 class FacilityParameterTableOut(BaseModel):
     canonical_facility_id: str
     facility_name: str
+    city: Optional[str] = None
+    state: Optional[str] = None
+    county: Optional[str] = None
+    zip: Optional[str] = None
     canonical_type: Optional[str] = None
     role_classification: Optional[str] = None
     match_status: Optional[str] = None
@@ -286,6 +295,48 @@ class ParameterRegistryOut(BaseModel):
     record_count: int
     missing_registry_definitions: List[str] = Field(default_factory=list)
     records: List[Dict[str, Any]]
+
+
+class PatientDecisionEngineRequestIn(BaseModel):
+    questionnaire_state: Dict[str, Any]
+    natural_language_query: Optional[str] = ""
+    limit: int = 50
+
+
+class PatientNeedsProfileRequestIn(BaseModel):
+    questionnaire_state: Dict[str, Any]
+    natural_language_query: Optional[str] = ""
+
+
+class PatientComparisonContextRequestIn(BaseModel):
+    canonical_facility_ids: List[str]
+    patient_needs_profile: Dict[str, Any]
+
+
+class PatientDecisionEngineOut(BaseModel):
+    patient_needs_profile: Dict[str, Any]
+    results: List[Dict[str, Any]]
+    result_count: int
+    total_candidates_scored: int
+    availability_policy: str
+
+
+class PatientNeedsProfileOut(BaseModel):
+    generated_from: Dict[str, Any]
+    needs: List[Dict[str, Any]]
+    need_tags: List[str]
+    priority_parameter_ids: List[str]
+    profile_key: Optional[str] = None
+    location_city: Optional[str] = None
+    natural_language_mapping: Dict[str, Any]
+
+
+class PatientComparisonContextOut(BaseModel):
+    required_needs: List[Dict[str, Any]]
+    high_priority_needs: List[Dict[str, Any]]
+    preferences: List[Dict[str, Any]]
+    comparison_parameter_ids: List[str]
+    facilities: List[Dict[str, Any]]
 
 
 class ImportSummaryOut(BaseModel):
@@ -1394,6 +1445,36 @@ async def post_personalized_parameter_order(payload: PersonalizedParameterOrderI
         priority_parameter_ids=payload.priority_parameter_ids,
         profile_key=payload.profile_key,
     )
+
+
+@app.post("/decision-engine/patient-needs-profile", response_model=PatientNeedsProfileOut)
+async def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn):
+    return build_patient_needs_profile(payload.questionnaire_state, payload.natural_language_query or "")
+
+
+@app.post("/decision-engine/recommendations", response_model=PatientDecisionEngineOut)
+async def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestIn, db: Session = Depends(get_db)):
+    response = run_patient_decision_engine(
+        questionnaire_state=payload.questionnaire_state,
+        natural_language_query=payload.natural_language_query or "",
+        limit=payload.limit,
+    )
+
+    ccn_to_facility_id = {
+        str(facility.cms_id): int(facility.id)
+        for facility in db.query(Facility.id, Facility.cms_id).filter(Facility.state == "FL").all()
+    }
+    for result in response.get("results", []):
+        source_identity_ids = result.get("source_identity_ids") or {}
+        cms_ccn = str(source_identity_ids.get("cms_ccn") or "")
+        result["facility_profile_id"] = ccn_to_facility_id.get(cms_ccn)
+
+    return response
+
+
+@app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
+async def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
+    return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
 
 
 @app.post("/intelligence/run", response_model=IntelligenceRunSummaryOut)
