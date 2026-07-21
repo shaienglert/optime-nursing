@@ -145,6 +145,8 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
         "unrecognized_segments": [],
     }
 
+    has_explicit_no_dementia = any(token in normalized for token in ["no dementia", "mentally alert"])
+
     keyword_rules = [
         (["stroke", "neurolog"], ("post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")),
         (["24/7 nursing", "24x7 nursing", "round the clock nursing", "skilled nursing"], ("nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "natural_language", 0.98, "24/7 nursing required")),
@@ -159,6 +161,8 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     ]
 
     for keywords, need_tuple in keyword_rules:
+        if need_tuple[0] == "memory_care" and need_tuple[2] == "YES" and has_explicit_no_dementia:
+            continue
         if any(keyword in normalized for keyword in keywords):
             _add_need(needs_by_id, *need_tuple)
             extraction_meta["recognized_tokens"].append(keywords[0])
