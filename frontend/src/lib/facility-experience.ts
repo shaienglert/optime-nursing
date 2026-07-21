@@ -16,10 +16,12 @@ export type PriceTruth = {
 
 export function resolveFacilityImage(facility: SearchFacility): FacilityImageTruth {
   const hero = facility.visualIntelligence.heroImage;
-  const isPlaceholder = hero.source === "CMS Placeholder" || !hero.url;
+  const normalizedUrl = String(hero.url || "").trim().toLowerCase();
+  const usesGenericUnsplash = normalizedUrl.includes("source.unsplash.com");
+  const isPlaceholder = hero.source === "CMS Placeholder" || !hero.url || usesGenericUnsplash;
   return {
     url: isPlaceholder ? "/cms-placeholder.svg" : hero.url,
-    sourceLabel: isPlaceholder ? "Placeholder" : hero.source,
+    sourceLabel: isPlaceholder ? "Neutral placeholder" : hero.source,
     isPlaceholder,
   };
 }

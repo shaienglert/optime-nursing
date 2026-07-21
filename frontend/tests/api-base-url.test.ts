@@ -47,6 +47,27 @@ describe("getApiBaseUrl", () => {
     expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
   });
 
+  it("guards against loopback alias mismatch when frontend is 127.0.0.1 and API is localhost:3000", () => {
+    process.env.NODE_ENV = "development";
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
+    (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
+      location: {
+        origin: "http://127.0.0.1:3000",
+        hostname: "127.0.0.1",
+      },
+    };
+
+    expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
+  });
+
+  it("guards against local frontend :3000 base even when window is unavailable", () => {
+    process.env.NODE_ENV = "development";
+    process.env.NEXT_PUBLIC_API_URL = "http://127.0.0.1:3000";
+    delete (globalThis as { window?: unknown }).window;
+
+    expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
+  });
+
   it("uses configured backend base when provided", () => {
     process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://127.0.0.1:8000";

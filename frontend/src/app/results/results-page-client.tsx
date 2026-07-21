@@ -9,11 +9,22 @@ import { useQuestionnaire } from "@/context/questionnaire-context";
 import {
   DecisionEngineRecommendation,
   DecisionEngineResponse,
+  FacilityDetailsData,
+  fetchFacilityDetails,
   fetchPatientDecisionRecommendations,
 } from "@/lib/api";
+import { resolveFacilityImage } from "@/lib/facility-experience";
 import { clearSearchSession, clearCompareSelection, loadCompareSelection, saveCompareSelection } from "@/lib/search-session";
 
 const TOP_RECOMMENDATION_COUNT = 5;
+const NEUTRAL_PLACEHOLDER_IMAGE = "/cms-placeholder.svg";
+
+type RecommendationImageInfo = {
+  url: string;
+  sourceLabel: string;
+  isVerifiedFacilityImage: boolean;
+  isFallback: boolean;
+};
 
 function relationshipCopy(relationship: string): string {
   if (relationship === "Myself") return "You";
@@ -62,15 +73,6 @@ function displayNeedLabel(parameterId: string): string {
   return labels[parameterId] || parameterId.replace(/_/g, " ");
 }
 
-function displayScope(scope?: string | null): string {
-  const normalized = (scope || "").toUpperCase();
-  if (normalized === "FACILITY") return "Facility-wide";
-  if (normalized === "PROGRAM") return "Program-level";
-  if (normalized === "UNIT") return "Unit-level";
-  if (normalized === "SERVICE") return "Service-level";
-  return "Facility-wide";
-}
-
 function qualitativeScoreLabel(value: number | null | undefined): string {
   if (value === null || value === undefined) return "Not enough verified evidence";
   if (value >= 80) return "Strong";
@@ -95,8 +97,50 @@ function eligibilitySummary(status: DecisionEngineRecommendation["eligibility_st
 
 function comparisonStatusLabel(status: "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED"): string {
   if (status === "MATCH") return "Supported";
-  if (status === "VERIFIED_GAP") return "Not supported";
+  if (status === "VERIFIED_GAP") return "Not currently supported";
   return "Needs verification";
+}
+
+function matchBandLabel(band: DecisionEngineRecommendation["match_band"]): string {
+  if (band === "STRONG_MATCH") return "Best fit";
+  if (band === "GOOD_MATCH") return "Strong fit";
+  if (band === "PARTIAL_MATCH") return "Good fit";
+  return "Limited fit";
+}
+
+function summarizeVerificationNeeds(recommendation: DecisionEngineRecommendation): string {
+  const items = recommendation.explanation.needs_verification || [];
+  if (items.length === 0) return "No critical verification items flagged right now.";
+  return items.slice(0, 2).join("; ");
+}
+
+function summarizeRankReason(recommendation: DecisionEngineRecommendation, index: number): string {
+  const primary = recommendation.explanation.why_matches?.[0] || "Strong governed match for this patient profile.";
+  const tie = recommendation.tie_break_explanation_vs_next?.why_ranked_above || "";
+  if (index === 0) {
+    return primary;
+  }
+  return tie || primary;
+}
+
+function toRecommendationImageInfo(details: FacilityDetailsData | null): RecommendationImageInfo {
+  if (!details) {
+    return {
+      url: NEUTRAL_PLACEHOLDER_IMAGE,
+      sourceLabel: "Neutral placeholder",
+      isVerifiedFacilityImage: false,
+      isFallback: true,
+    };
+  }
+
+  const imageTruth = resolveFacilityImage(details);
+  const hasVerifiedImage = !imageTruth.isPlaceholder && Boolean(imageTruth.url);
+  return {
+    url: hasVerifiedImage ? imageTruth.url : NEUTRAL_PLACEHOLDER_IMAGE,
+    sourceLabel: hasVerifiedImage ? imageTruth.sourceLabel : "Neutral placeholder",
+    isVerifiedFacilityImage: hasVerifiedImage,
+    isFallback: !hasVerifiedImage,
+  };
 }
 
 function buildNeedStatusMap(recommendation: DecisionEngineRecommendation): Map<string, "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED"> {
@@ -131,6 +175,9 @@ export function ResultsPageClient() {
   const [savedCanonicalIds, setSavedCanonicalIds] = useState<string[]>([]);
   const [hiddenNeedIds, setHiddenNeedIds] = useState<string[]>([]);
   const [compareSelectedIds, setCompareSelectedIds] = useState<string[]>(() => loadCompareSelection());
+  const [facilityImagesByCanonicalId, setFacilityImagesByCanonicalId] = useState<Record<string, RecommendationImageInfo>>({});
+  const [brokenImageByCanonicalId, setBrokenImageByCanonicalId] = useState<Record<string, boolean>>({});
+  const [imageFetchAttemptedByCanonicalId, setImageFetchAttemptedByCanonicalId] = useState<Record<string, boolean>>({});
 
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
   const textQuery = searchParams.get("q") || searchParams.get("search") || "";
@@ -210,24 +257,133 @@ export function ResultsPageClient() {
   );
   const currentResultsPath = `/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
+  const visibleRecommendations = useMemo(() => {
+    if (showMoreCommunities) return recommendations;
+    return topRecommendations;
+  }, [recommendations, showMoreCommunities, topRecommendations]);
+
   const comparisonNeeds = useMemo(() => {
     const allNeeds = decisionResponse?.patient_needs_profile.needs || [];
     return allNeeds.filter((need) => need.requirement_level === "REQUIRED" || need.requirement_level === "HIGH" || need.requirement_level === "PREFERENCE");
   }, [decisionResponse]);
 
-  const comparisonRows = useMemo(() => {
-    const topFacilities = topRecommendations.slice(0, TOP_RECOMMENDATION_COUNT).map((recommendation) => ({
-      recommendation,
-      statusMap: buildNeedStatusMap(recommendation),
-    }));
-    return comparisonNeeds.map((need) => ({
-      need,
-      facilities: topFacilities.map(({ recommendation, statusMap }) => ({
-        recommendation,
-        status: statusMap.get(need.parameter_id) || "NOT_VERIFIED",
-      })),
-    }));
+  useEffect(() => {
+    let cancelled = false;
+
+    async function hydrateFacilityImages() {
+      const nextDefaults: Record<string, RecommendationImageInfo> = {};
+      for (const recommendation of visibleRecommendations) {
+        if (!facilityImagesByCanonicalId[recommendation.canonical_facility_id]) {
+          nextDefaults[recommendation.canonical_facility_id] = toRecommendationImageInfo(null);
+        }
+      }
+
+      if (Object.keys(nextDefaults).length > 0) {
+        setFacilityImagesByCanonicalId((current) => ({ ...nextDefaults, ...current }));
+      }
+
+      const pending = visibleRecommendations.filter(
+        (recommendation) =>
+          recommendation.facility_profile_id &&
+          !imageFetchAttemptedByCanonicalId[recommendation.canonical_facility_id],
+      );
+
+      if (pending.length === 0) return;
+
+      const updates = await Promise.all(
+        pending.map(async (recommendation) => {
+          try {
+            const details = await fetchFacilityDetails(String(recommendation.facility_profile_id));
+            return [recommendation.canonical_facility_id, toRecommendationImageInfo(details)] as const;
+          } catch {
+            return [recommendation.canonical_facility_id, toRecommendationImageInfo(null)] as const;
+          }
+        }),
+      );
+
+      if (cancelled) return;
+      setImageFetchAttemptedByCanonicalId((current) => {
+        const merged = { ...current };
+        for (const recommendation of pending) {
+          merged[recommendation.canonical_facility_id] = true;
+        }
+        return merged;
+      });
+      setFacilityImagesByCanonicalId((current) => {
+        const merged = { ...current };
+        for (const [canonicalId, imageInfo] of updates) {
+          merged[canonicalId] = imageInfo;
+        }
+        return merged;
+      });
+    }
+
+    void hydrateFacilityImages();
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleRecommendations, facilityImagesByCanonicalId, imageFetchAttemptedByCanonicalId]);
+
+  const topFiveComparisonRows = useMemo(() => {
+    const requirementWeight: Record<string, number> = {
+      REQUIRED: 0,
+      HIGH: 1,
+      MEDIUM: 2,
+      PREFERENCE: 3,
+    };
+    const patientPriorityOrder = [
+      "nursing_24_7",
+      "skilled_nursing_capabilities",
+      "pt",
+      "ot",
+      "speech_therapy",
+      "post_stroke_neuro_evidence",
+      "transfer_assistance",
+      "adl_support",
+      "medication_support",
+    ];
+    const priorityMap = new Map(patientPriorityOrder.map((id, index) => [id, index]));
+
+    const sortedNeeds = [...comparisonNeeds].sort((left, right) => {
+      const reqDelta = (requirementWeight[left.requirement_level] ?? 99) - (requirementWeight[right.requirement_level] ?? 99);
+      if (reqDelta !== 0) return reqDelta;
+      const leftPriority = priorityMap.get(left.parameter_id) ?? 999;
+      const rightPriority = priorityMap.get(right.parameter_id) ?? 999;
+      if (leftPriority !== rightPriority) return leftPriority - rightPriority;
+      return displayNeedLabel(left.parameter_id).localeCompare(displayNeedLabel(right.parameter_id));
+    });
+
+    const rows = sortedNeeds
+      .map((need) => {
+        const cells = topRecommendations.map((recommendation) => {
+          const status = buildNeedStatusMap(recommendation).get(need.parameter_id) || "NOT_VERIFIED";
+          return comparisonStatusLabel(status);
+        });
+
+        const allEqual = new Set(cells).size === 1;
+        const isCritical = need.requirement_level === "REQUIRED" || need.requirement_level === "HIGH";
+        if (allEqual && !isCritical) {
+          return null;
+        }
+
+        return {
+          rowId: need.parameter_id,
+          label: displayNeedLabel(need.parameter_id),
+          requirementLevel: need.requirement_level,
+          cells,
+        };
+      })
+      .filter(Boolean) as Array<{ rowId: string; label: string; requirementLevel: string; cells: string[] }>;
+
+    return rows;
   }, [comparisonNeeds, topRecommendations]);
+
+  const topFiveCompareHref = useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("facilities", topRecommendations.map((item) => item.canonical_facility_id).join(","));
+    params.set("returnTo", currentResultsPath);
+    return `/compare?${params.toString()}`;
+  }, [currentResultsPath, searchParams, topRecommendations]);
 
   const startNewSearch = () => {
     clearSearchSession();
@@ -257,10 +413,20 @@ export function ResultsPageClient() {
     return `/compare?${params.toString()}`;
   };
 
+  const getRecommendationImage = (recommendation: DecisionEngineRecommendation): RecommendationImageInfo => {
+    const imageInfo = facilityImagesByCanonicalId[recommendation.canonical_facility_id];
+    if (!imageInfo) return toRecommendationImageInfo(null);
+    if (brokenImageByCanonicalId[recommendation.canonical_facility_id]) {
+      return toRecommendationImageInfo(null);
+    }
+    return imageInfo;
+  };
+
   const renderRecommendationCard = (recommendation: DecisionEngineRecommendation, index: number) => {
     const isSaved = savedCanonicalIds.includes(recommendation.canonical_facility_id);
     const isSelectedForCompare = compareSelectedIds.includes(recommendation.canonical_facility_id);
     const compareDisabled = !isSelectedForCompare && compareSelectedIds.length >= 5;
+    const imageInfo = getRecommendationImage(recommendation);
 
     return (
       <article
@@ -268,12 +434,29 @@ export function ResultsPageClient() {
         className={`rounded-2xl border bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)] ${isSelectedForCompare ? "border-[#6f9a86] ring-1 ring-[#6f9a86]/30" : "border-[#e8ddcc]"}`}
       >
         <div className="space-y-3">
+          <div className="overflow-hidden rounded-2xl border border-[#dfd4c3] bg-[linear-gradient(140deg,#f5efe3_0%,#ffffff_70%)]">
+            <div className="relative h-44 w-full">
+              <img
+                src={imageInfo.url}
+                alt={`${recommendation.facility_name} photo`}
+                loading="lazy"
+                className="h-full w-full object-cover"
+                onError={() => {
+                  setBrokenImageByCanonicalId((current) => ({ ...current, [recommendation.canonical_facility_id]: true }));
+                }}
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#dfd4c3] bg-white px-3 py-2 text-xs text-[#6d655b]">
+              <span>{imageInfo.isVerifiedFacilityImage ? `Photo source: ${imageInfo.sourceLabel}` : "No verified facility photo yet"}</span>
+              <span>{imageInfo.isVerifiedFacilityImage ? "Facility-specific image" : "Neutral placeholder"}</span>
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(index)}</p>
               <h3 className="mt-2 text-xl font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
               <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
-              <p className="mt-1 text-xs font-medium text-[#5f7f6b]">{recommendation.canonical_facility_id}</p>
               <p className="mt-1 text-xs font-semibold text-[#2f6d3e]">
                 {recommendation.rank_display || `#${index + 1}`}
                 {recommendation.rank_tie_status === "JOINT_RANK" ? " (Tied)" : ""}
@@ -296,7 +479,7 @@ export function ResultsPageClient() {
               <p className="text-sm font-semibold text-[#24425e]">{qualitativeScoreLabel(recommendation.staffing_score)}</p>
             </div>
             <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Evidence confidence</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Evidence certainty</p>
               <p className="text-sm font-semibold text-[#24425e]">{confidenceBand(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
             </div>
           </div>
@@ -318,13 +501,6 @@ export function ResultsPageClient() {
           <p className="text-xs text-[#8b4f3f]">
             Concerns: {recommendation.explanation.concerns.slice(0, 2).join("; ") || "No verified gap in current top needs"}
           </p>
-
-          <p className="text-xs text-[#24425e]">Evidence confidence: {confidenceBand(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
-          {recommendation.match_evidence_profile ? (
-            <p className="text-xs text-[#24425e]">
-              Critical evidence mix: {recommendation.match_evidence_profile.proven_critical_matches} proven, {recommendation.match_evidence_profile.taxonomy_supported_critical_matches} taxonomy-supported, {recommendation.match_evidence_profile.unknown_critical_needs} unknown.
-            </p>
-          ) : null}
           <p className="text-xs text-[#5b5245]">{recommendation.explanation.availability_note}</p>
 
           {recommendation.tie_break_explanation_vs_next ? (
@@ -391,8 +567,6 @@ export function ResultsPageClient() {
               MAP
             </a>
           </div>
-
-          {recommendation.facility_profile_id ? <p className="text-xs text-[#6d655b]">Profile-connected facility record: {recommendation.facility_profile_id}</p> : null}
         </div>
       </article>
     );
@@ -514,49 +688,113 @@ export function ResultsPageClient() {
               </div>
             ) : null}
 
-            {comparisonRows.length > 0 ? (
+            {topRecommendations.length > 0 ? (
               <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Patient-specific comparison</p>
-                <p className="mt-2 text-sm text-[#4a6076]">Top recommendations are compared on identical patient-need parameters. Needs verification is neutral and never treated as an automatic failure.</p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {topRecommendations.map((recommendation) => {
-                    return (
-                      <div key={`summary-${recommendation.canonical_facility_id}`} className="rounded-xl border border-[#cddce5] bg-white px-3 py-2 text-xs text-[#24425e]">
-                        <p className="font-semibold">{recommendation.facility_name}</p>
-                        <p>{recommendation.rank_display || "Unranked"}{recommendation.rank_tie_status === "JOINT_RANK" ? " (Tied)" : ""}</p>
-                        <p>Fit: {eligibilitySummary(recommendation.eligibility_status)}</p>
-                        <p>Quality & Safety: {qualitativeScoreLabel(recommendation.quality_safety_score)}</p>
-                        <p>Confidence: {confidenceBand(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
-                      </div>
-                    );
-                  })}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Top 5 recommendations for {relationship}</p>
+                    <p className="mt-2 text-sm text-[#4a6076]">A fast, patient-first view of meaningful differences across the current Top 5.</p>
+                  </div>
+                  <Link href={topFiveCompareHref} className="rounded-full bg-[#24425e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d3650]">
+                    Compare these facilities
+                  </Link>
                 </div>
-                <div className="mt-3 overflow-x-auto">
-                  <table className="min-w-full border-collapse text-xs">
+
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-[980px] border-collapse text-xs sm:text-sm">
                     <thead>
                       <tr>
-                        <th className="border border-[#d9e3ec] bg-white px-2 py-1 text-left">Need</th>
-                        {topRecommendations.map((recommendation) => (
-                          <th key={recommendation.canonical_facility_id} className="border border-[#d9e3ec] bg-white px-2 py-1 text-left">{recommendation.facility_name}</th>
-                        ))}
+                        <th className="sticky left-0 z-20 w-52 border border-[#d9e3ec] bg-[#f6fbff] px-3 py-3 text-left text-[#24425e]">Patient priorities</th>
+                        {topRecommendations.map((recommendation, index) => {
+                          const imageInfo = getRecommendationImage(recommendation);
+                          return (
+                            <th key={`top5-head-${recommendation.canonical_facility_id}`} className="w-64 border border-[#d9e3ec] bg-white p-3 align-top text-left">
+                              <div className="overflow-hidden rounded-xl border border-[#e2d8c8]">
+                                <img
+                                  src={imageInfo.url}
+                                  alt={`${recommendation.facility_name} image`}
+                                  loading="lazy"
+                                  className="h-28 w-full object-cover"
+                                  onError={() => {
+                                    setBrokenImageByCanonicalId((current) => ({ ...current, [recommendation.canonical_facility_id]: true }));
+                                  }}
+                                />
+                              </div>
+                              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
+                              <p className="mt-1 text-sm font-semibold text-[#2f2a24]">{recommendation.facility_name}</p>
+                              <p className="mt-1 text-xs text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
+                              <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Photo: ${imageInfo.sourceLabel}` : "Photo: neutral placeholder"}</p>
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {recommendation.facility_profile_id ? (
+                                  <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="rounded-full bg-[#6f9a86] px-3 py-1 text-xs font-semibold text-white hover:bg-[#618a77]">
+                                    Facility profile
+                                  </Link>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleCompareSelection(recommendation)}
+                                  className="rounded-full border border-[#cddce5] bg-white px-3 py-1 text-xs font-semibold text-[#24425e] hover:bg-[#edf6fb]"
+                                >
+                                  {compareSelectedIds.includes(recommendation.canonical_facility_id) ? "Selected" : "Add to compare"}
+                                </button>
+                              </div>
+                            </th>
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody>
-                      {comparisonRows.map(({ need, facilities }) => (
-                        <tr key={`cmp-${need.parameter_id}`}>
-                          <td className="border border-[#d9e3ec] bg-white px-2 py-1">{need.requirement_level} · {displayNeedLabel(need.parameter_id)}</td>
-                          {facilities.map(({ recommendation, status }) => {
-                            return (
-                              <td key={`${recommendation.canonical_facility_id}-${need.parameter_id}`} className="border border-[#d9e3ec] bg-white px-2 py-1">
-                                  {`${comparisonStatusLabel(status)} (${displayScope(need.applicable_scope)})`}
-                              </td>
-                            );
-                          })}
+                      <tr>
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Overall recommendation</td>
+                        {topRecommendations.map((recommendation, index) => (
+                          <td key={`overall-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{highlightLabel(index)}</td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Patient match</td>
+                        {topRecommendations.map((recommendation) => (
+                          <td key={`match-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{matchBandLabel(recommendation.match_band)}</td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Quality &amp; Safety</td>
+                        {topRecommendations.map((recommendation) => (
+                          <td key={`quality-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{qualitativeScoreLabel(recommendation.quality_safety_score)}</td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Staffing</td>
+                        {topRecommendations.map((recommendation) => (
+                          <td key={`staff-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{qualitativeScoreLabel(recommendation.staffing_score)}</td>
+                        ))}
+                      </tr>
+                      {topFiveComparisonRows.map((row) => (
+                        <tr key={`table-${row.rowId}`}>
+                          <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">
+                            {row.label}
+                            <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[#6d655b]">{row.requirementLevel}</p>
+                          </td>
+                          {row.cells.map((cell, index) => (
+                            <td key={`cell-${row.rowId}-${topRecommendations[index].canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{cell}</td>
+                          ))}
                         </tr>
                       ))}
+                      <tr>
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Why this rank</td>
+                        {topRecommendations.map((recommendation, index) => (
+                          <td key={`why-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{summarizeRankReason(recommendation, index)}</td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Important things to verify</td>
+                        {topRecommendations.map((recommendation) => (
+                          <td key={`verify-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{summarizeVerificationNeeds(recommendation)}</td>
+                        ))}
+                      </tr>
                     </tbody>
                   </table>
                 </div>
+                <p className="mt-3 text-xs text-[#4a6076]">Needs verification is neutral. Unknown never means no.</p>
               </section>
             ) : null}
           </section>

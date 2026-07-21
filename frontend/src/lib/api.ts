@@ -1564,6 +1564,42 @@ function normalizeApiBaseUrl(raw: string): string {
   return raw.trim().replace(/\/+$/, "");
 }
 
+function parseApiUrl(raw: string): URL | null {
+  try {
+    return new URL(raw);
+  } catch {
+    return null;
+  }
+}
+
+function isLocalLoopbackHost(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
+function shouldRouteToLocalBackend(configuredBase: string): boolean {
+  const configuredUrl = parseApiUrl(configuredBase);
+  if (!configuredUrl || !isLocalLoopbackHost(configuredUrl.hostname)) {
+    return false;
+  }
+
+  // Any local frontend endpoint on :3000 should never be treated as backend.
+  if (configuredUrl.port === "3000") {
+    return true;
+  }
+
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const currentOriginUrl = parseApiUrl(window.location.origin);
+  if (!currentOriginUrl || !isLocalLoopbackHost(currentOriginUrl.hostname)) {
+    return false;
+  }
+
+  // Handle localhost/127.0.0.1 alias mismatch while keeping the same origin semantics.
+  return configuredUrl.port === currentOriginUrl.port;
+}
+
 function joinApiUrl(baseUrl: string, routePath: string): string {
   const normalizedBase = normalizeApiBaseUrl(baseUrl);
   const normalizedRoute = routePath.startsWith("/") ? routePath : `/${routePath}`;
@@ -1574,18 +1610,15 @@ export function getApiBaseUrl(): string {
   const configuredBase = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || "");
 
   if (configuredBase) {
+    if (shouldRouteToLocalBackend(configuredBase)) {
+      return "http://127.0.0.1:8000";
+    }
+
     if (typeof window !== "undefined") {
       const currentOrigin = normalizeApiBaseUrl(window.location.origin);
       // Guard against self-referential production config that points API requests back to the Vercel frontend.
       if (configuredBase === currentOrigin && window.location.hostname.endsWith("vercel.app")) {
         return EXPECTED_RENDER_BACKEND_URL;
-      }
-      // Guard against local self-reference (frontend on :3000 calling itself for backend endpoints).
-      if (
-        configuredBase === currentOrigin &&
-        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-      ) {
-        return "http://127.0.0.1:8000";
       }
     }
     return configuredBase;
