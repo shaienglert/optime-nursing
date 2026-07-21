@@ -93,6 +93,16 @@ def get_parameter_registry_payload() -> Dict[str, Any]:
     return _load_runtime()["registry_payload"]
 
 
+def get_all_canonical_facility_ids() -> List[str]:
+    runtime = _load_runtime()
+    return list(runtime["canonical_by_id"].keys())
+
+
+def get_canonical_facility_index() -> Dict[str, Dict[str, Any]]:
+    runtime = _load_runtime()
+    return runtime["canonical_by_id"]
+
+
 def _ordered_registry(
     registry: List[Dict[str, Any]],
     need_tags: Optional[List[str]] = None,
@@ -214,6 +224,10 @@ def get_facility_parameter_table(
     return {
         "canonical_facility_id": canonical_facility_id,
         "facility_name": facility.get("facility_name"),
+        "city": facility.get("city"),
+        "state": facility.get("state"),
+        "county": facility.get("county"),
+        "zip": facility.get("zip"),
         "canonical_type": facility.get("canonical_type"),
         "role_classification": facility.get("role_classification"),
         "match_status": (facility.get("match") or {}).get("status"),
