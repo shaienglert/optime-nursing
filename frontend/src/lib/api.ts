@@ -1580,6 +1580,13 @@ export function getApiBaseUrl(): string {
       if (configuredBase === currentOrigin && window.location.hostname.endsWith("vercel.app")) {
         return EXPECTED_RENDER_BACKEND_URL;
       }
+      // Guard against local self-reference (frontend on :3000 calling itself for backend endpoints).
+      if (
+        configuredBase === currentOrigin &&
+        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+      ) {
+        return "http://127.0.0.1:8000";
+      }
     }
     return configuredBase;
   }
@@ -1604,7 +1611,8 @@ async function fetchJson<T>(path: string): Promise<T> {
 }
 
 async function postJson<TReq, TRes>(path: string, payload: TReq): Promise<TRes> {
-  const response = await fetch(joinApiUrl(getApiBaseUrl(), path), {
+  const requestUrl = joinApiUrl(getApiBaseUrl(), path);
+  const response = await fetch(requestUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
