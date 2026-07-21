@@ -10,10 +10,8 @@ import {
   DecisionEngineRecommendation,
   DecisionEngineResponse,
   PatientComparisonContextResponse,
-  SearchFacility,
   fetchPatientComparisonContext,
   fetchPatientDecisionRecommendations,
-  fetchSearchFacilities,
 } from "@/lib/api";
 import { clearSearchSession } from "@/lib/search-session";
 
@@ -61,7 +59,6 @@ export function ResultsPageClient() {
   const searchParams = useSearchParams();
   const { state, resetState } = useQuestionnaire();
 
-  const [searchFacilities, setSearchFacilities] = useState<SearchFacility[]>([]);
   const [decisionResponse, setDecisionResponse] = useState<DecisionEngineResponse | null>(null);
   const [comparisonContext, setComparisonContext] = useState<PatientComparisonContextResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +70,12 @@ export function ResultsPageClient() {
 
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
   const textQuery = searchParams.get("q") || searchParams.get("search") || "";
+  const notesQuery = searchParams.get("notes") || "";
+  const naturalLanguageQuery = (textQuery || notesQuery || state.notes || "").trim();
+  const decisionRequestKey = useMemo(
+    () => JSON.stringify({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
+    [state, naturalLanguageQuery],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -80,20 +83,15 @@ export function ResultsPageClient() {
       setIsLoading(true);
       setApiLoadError(null);
       try {
-        const [searchData, recommendations] = await Promise.all([
-          fetchSearchFacilities(textQuery),
-          fetchPatientDecisionRecommendations({
-            questionnaire_state: state as unknown as Record<string, unknown>,
-            natural_language_query: textQuery,
-            limit: 50,
-          }),
-        ]);
+        const recommendations = await fetchPatientDecisionRecommendations(JSON.parse(decisionRequestKey) as {
+          questionnaire_state: Record<string, unknown>;
+          natural_language_query: string;
+          limit: number;
+        });
         if (!isMounted) return;
-        setSearchFacilities(searchData);
         setDecisionResponse(recommendations);
       } catch (error) {
         if (!isMounted) return;
-        setSearchFacilities([]);
         setDecisionResponse(null);
         setApiLoadError(error instanceof Error ? error.message : "Unable to load decision recommendations from backend API.");
       } finally {
@@ -104,7 +102,7 @@ export function ResultsPageClient() {
     return () => {
       isMounted = false;
     };
-  }, [state, textQuery]);
+  }, [decisionRequestKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -149,14 +147,7 @@ export function ResultsPageClient() {
     router.push("/");
   };
 
-  const searchFacilityByProfileId = useMemo(() => {
-    const index = new Map<number, SearchFacility>();
-    for (const item of searchFacilities) index.set(item.id, item);
-    return index;
-  }, [searchFacilities]);
-
   const renderRecommendationCard = (recommendation: DecisionEngineRecommendation, index: number) => {
-    const profileFacility = recommendation.facility_profile_id ? searchFacilityByProfileId.get(recommendation.facility_profile_id) : undefined;
     const isSaved = savedCanonicalIds.includes(recommendation.canonical_facility_id);
     const isCompared = compareCanonicalIds.includes(recommendation.canonical_facility_id);
 
@@ -290,9 +281,7 @@ export function ResultsPageClient() {
             </a>
           </div>
 
-          {profileFacility ? (
-            <p className="text-xs text-[#6d655b]">Profile-connected facility record: {profileFacility.id}</p>
-          ) : null}
+          {recommendation.facility_profile_id ? <p className="text-xs text-[#6d655b]">Profile-connected facility record: {recommendation.facility_profile_id}</p> : null}
         </div>
       </article>
     );

@@ -74,15 +74,31 @@ def _load_runtime() -> Dict[str, Any]:
 
     canonical_by_id = {row["canonical_id"]: row for row in canonical}
     evidence_lookup: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
+    evidence_best_lookup: Dict[str, Dict[str, Dict[str, Any]]] = {}
     for row in evidence:
         facility_rows = evidence_lookup.setdefault(row["canonical_facility_id"], {})
         facility_rows.setdefault(row["parameter_id"], []).append(row)
+
+    for canonical_facility_id, facility_rows in evidence_lookup.items():
+        best_for_facility: Dict[str, Dict[str, Any]] = {}
+        for parameter_id, rows in facility_rows.items():
+            best_for_facility[parameter_id] = sorted(
+                rows,
+                key=lambda item: (
+                    _scope_rank(str(item.get("scope") or "")),
+                    1 if str(item.get("confidence") or "") == "HIGH" else 0,
+                    str(item.get("last_verified") or ""),
+                ),
+                reverse=True,
+            )[0]
+        evidence_best_lookup[canonical_facility_id] = best_for_facility
 
     payload = {
         "registry_payload": registry_payload,
         "registry": registry,
         "canonical_by_id": canonical_by_id,
         "evidence_lookup": evidence_lookup,
+        "evidence_best_lookup": evidence_best_lookup,
     }
     _CACHE["signature"] = signature
     _CACHE["payload"] = payload
@@ -152,22 +168,16 @@ def _resolve_rows_for_facility(
     canonical_facility_id: str,
     ordered_registry: List[Dict[str, Any]],
     evidence_lookup: Dict[str, Dict[str, List[Dict[str, Any]]]],
+    evidence_best_lookup: Dict[str, Dict[str, Dict[str, Any]]],
 ) -> List[Dict[str, Any]]:
     facility_rows = evidence_lookup.get(canonical_facility_id, {})
+    facility_best_rows = evidence_best_lookup.get(canonical_facility_id, {})
     resolved = []
 
     for parameter in ordered_registry:
         rows = facility_rows.get(parameter["parameter_id"], [])
         if rows:
-            best = sorted(
-                rows,
-                key=lambda item: (
-                    _scope_rank(str(item.get("scope") or "")),
-                    1 if str(item.get("confidence") or "") == "HIGH" else 0,
-                    str(item.get("last_verified") or ""),
-                ),
-                reverse=True,
-            )[0]
+            best = facility_best_rows.get(parameter["parameter_id"]) or rows[0]
             raw_value = best.get("value")
             display_value = raw_value
             if raw_value == "UNKNOWN":
@@ -213,14 +223,20 @@ def get_facility_parameter_table(
     need_tags: Optional[List[str]] = None,
     priority_parameter_ids: Optional[List[str]] = None,
     profile_key: Optional[str] = None,
+    ordered_registry: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     runtime = _load_runtime()
     facility = runtime["canonical_by_id"].get(canonical_facility_id)
     if not facility:
         raise KeyError(canonical_facility_id)
 
-    ordered = _ordered_registry(runtime["registry"], need_tags=need_tags, priority_parameter_ids=priority_parameter_ids, profile_key=profile_key)
-    rows = _resolve_rows_for_facility(canonical_facility_id, ordered, runtime["evidence_lookup"])
+    ordered = ordered_registry or _ordered_registry(runtime["registry"], need_tags=need_tags, priority_parameter_ids=priority_parameter_ids, profile_key=profile_key)
+    rows = _resolve_rows_for_facility(
+        canonical_facility_id,
+        ordered,
+        runtime["evidence_lookup"],
+        runtime["evidence_best_lookup"],
+    )
     return {
         "canonical_facility_id": canonical_facility_id,
         "facility_name": facility.get("facility_name"),
@@ -254,6 +270,7 @@ def compare_facility_parameter_tables(
             need_tags=need_tags,
             priority_parameter_ids=priority_parameter_ids,
             profile_key=profile_key,
+            ordered_registry=ordered,
         )
         for item in canonical_facility_ids
     ]

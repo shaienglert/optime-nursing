@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 
 type LegacyFacilityPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function LegacyFacilityPage({ params }: LegacyFacilityPageProps) {
-  redirect(`/facility/${params.id}`);
+  const resolved = await params;
+  redirect(`/facility/${resolved.id}`);
 }

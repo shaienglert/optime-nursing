@@ -1,9 +1,10 @@
 import { FacilityProfileClient } from "@/components/facility/facility-profile-client";
 
 type FacilityPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function FacilityPage({ params }: FacilityPageProps) {
-  return <FacilityProfileClient facilityId={String(params.id || "")} backHref="/results" backLabel="Back to results" />;
+  const resolved = await params;
+  return <FacilityProfileClient facilityId={String(resolved.id || "")} backHref="/results" backLabel="Back to results" />;
 }

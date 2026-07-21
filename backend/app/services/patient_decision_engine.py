@@ -163,7 +163,7 @@ def _add_need(
 
 def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     level = _normalize(questionnaire.get("assistanceLevel"))
-    if "skilled nursing" in level or "complex" in level:
+    if "24/7" in level or "24x7" in level or "round the clock" in level or "skilled nursing" in level or "complex" in level:
         _add_need(needs_by_id, "skilled_nursing_capabilities", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs skilled nursing capability")
         _add_need(needs_by_id, "nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs 24/7 nursing")
         _add_need(needs_by_id, "transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs transfer assistance")
@@ -245,6 +245,18 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
             continue
         if any(keyword in normalized for keyword in keywords):
             _add_need(needs_by_id, *need_tuple)
+            if need_tuple[0] == "nursing_24_7":
+                _add_need(
+                    needs_by_id,
+                    "skilled_nursing_capabilities",
+                    "REQUIRED",
+                    "YES",
+                    ["YES"],
+                    "FACILITY",
+                    "natural_language",
+                    0.95,
+                    "Skilled nursing capability required",
+                )
             extraction_meta["recognized_tokens"].append(keywords[0])
 
     location_city = None
@@ -356,9 +368,16 @@ def _eligibility_from_needs(
     required_high_failures = [entry for entry in unmet_verified_needs if entry["requirement_level"] in {"REQUIRED", "HIGH"}]
     required_high_unknown = [entry for entry in unknown_critical_needs if entry["requirement_level"] in {"REQUIRED", "HIGH"}]
     required_high_matches = [entry for entry in matched_needs if entry["requirement_level"] in {"REQUIRED", "HIGH"}]
+    required_failures = [entry for entry in unmet_verified_needs if entry["requirement_level"] == "REQUIRED"]
+    required_unknown = [entry for entry in unknown_critical_needs if entry["requirement_level"] == "REQUIRED"]
+    required_matches = [entry for entry in matched_needs if entry["requirement_level"] == "REQUIRED"]
 
     if required_high_failures:
         eligibility = "INELIGIBLE"
+    elif required_failures:
+        eligibility = "INELIGIBLE"
+    elif required_unknown and not required_matches:
+        eligibility = "INSUFFICIENT_EVIDENCE"
     elif required_high_unknown and required_high_matches:
         eligibility = "POTENTIALLY_ELIGIBLE"
     elif required_high_unknown and not required_high_matches:
@@ -991,7 +1010,17 @@ def run_patient_decision_engine(
         priority_parameter_ids=profile["priority_parameter_ids"],
         profile_key=profile["profile_key"],
     )
-    ordered_parameter_ids = [row["parameter_id"] for row in order_payload.get("ordered_parameters", [])]
+    ordered_parameters = order_payload.get("ordered_parameters", [])
+    ordered_parameter_ids = [row["parameter_id"] for row in ordered_parameters]
+    ordered_registry = [
+        {
+            "parameter_id": row["parameter_id"],
+            "family": row.get("family", "CARE_NURSING"),
+            "display_name": row.get("display_name", row["parameter_id"]),
+            "applicable_scope": row.get("applicable_scope", "FACILITY"),
+        }
+        for row in ordered_parameters
+    ]
 
     canonical_index = get_canonical_facility_index()
     discovered_ids = get_all_canonical_facility_ids()
@@ -1005,6 +1034,7 @@ def run_patient_decision_engine(
             need_tags=profile["need_tags"],
             priority_parameter_ids=profile["priority_parameter_ids"],
             profile_key=profile["profile_key"],
+            ordered_registry=ordered_registry,
         )
         canonical_meta = canonical_index.get(canonical_id, {})
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
