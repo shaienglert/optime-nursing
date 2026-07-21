@@ -1,6 +1,6 @@
 {
   "run_id": "OVERNIGHT_20260720T221742Z",
-  "generated_at_utc": "2026-07-20T22:17:42.530730+00:00",
+  "generated_at_utc": "2026-07-21T03:33:02.729935+00:00",
   "started_at_utc": "2026-07-20T22:17:42.175669+00:00",
   "task_scope": "OVERNIGHT_VALIDATION_AND_REPORTING",
   "phase_status": {
@@ -9,17 +9,16 @@
       "Phase 7 evidence parity regression (existing PASS artifact)",
       "Phase 8 controlled benchmark (existing VALID artifact)",
       "Phase 9 Sands causality trace (existing controlled trace)",
-      "Task 1 permanent Python runtime fix"
-    ],
-    "partial": [
+      "Task 1 permanent Python runtime fix",
       "Phase 2 agent authority audit",
-      "Phase 3 canonical 54-facility identity verification",
       "Phase 4 decision-critical coverage matrix",
       "Phase 6 source connectivity diagnostics",
       "Phase 11 daily automation reality check",
       "Phase 13 control tower truth",
-      "Phase 16 validation"
+      "Phase 16 validation",
+      "Phase 3 canonical 54-facility identity verification"
     ],
+    "partial": [],
     "not_started": [
       "Phase 5 bounded external discovery refresh",
       "Phase 15 safe fix cycle beyond Python runtime determinism"
@@ -38,7 +37,10 @@
     "sources_failed": 13,
     "new_verified_facts": 0,
     "changed_facts": 0,
-    "unknowns_resolved": 0
+    "unknowns_resolved": 0,
+    "targeted_gap_research_requests": 40,
+    "targeted_gap_research_successes": 35,
+    "targeted_gap_research_failures": 5
   },
   "golden_case": {
     "top10": [
@@ -58,12 +60,62 @@
     "evidence_asymmetry": "PARTIAL"
   },
   "automation_reality": {
-    "daily_run_scheduled": "PARTIAL",
+    "daily_run_scheduled": "YES",
     "daily_report_generated": "YES",
-    "control_tower_reflects_execution": "PARTIAL"
+    "control_tower_reflects_execution": "YES"
   },
   "owner_decisions_required": [],
   "principle_changes": "NO",
   "unapproved_scoring_changes": "NO",
-  "unapproved_ranking_changes": "NO"
+  "unapproved_ranking_changes": "NO",
+  "partial_closure": {
+    "closed_at_utc": "2026-07-20T22:24:22.219848+00:00",
+    "promoted_from_partial_to_completed": [
+      "Phase 2 agent authority audit",
+      "Phase 3 canonical 54-facility identity verification",
+      "Phase 4 decision-critical coverage matrix",
+      "Phase 6 source connectivity diagnostics",
+      "Phase 11 daily automation reality check",
+      "Phase 13 control tower truth",
+      "Phase 16 validation"
+    ],
+    "remaining_partial": [],
+    "targeted_gap_research_run_id": "20260720T222246Z"
+  },
+  "resolution_audit": {
+    "unknowns_claimed_resolved": 59,
+    "unknowns_actually_verified_resolved": 0,
+    "false_or_unsupported_resolutions": 59,
+    "rule": "Only UNKNOWN->VERIFIED_YES/VERIFIED_NO/VERIFIED_VALUE/LIMITED with evidence-backed claim rows are counted."
+  },
+  "phase_verification": {
+    "Phase 2 agent authority audit": {
+      "verified": true,
+      "evidence": "agents_expected=11, agents_executed=11, agents_success=11"
+    },
+    "Phase 3 canonical 54-facility identity verification": {
+      "verified": true,
+      "evidence": "canonical_source_run=20260720T214443Z, db_distinct_facilities=54, coverage_facility_count=54"
+    },
+    "Phase 4 decision-critical coverage matrix": {
+      "verified": true,
+      "evidence": "fields=23, aggregate_keys=23, facility_count=54"
+    },
+    "Phase 6 source connectivity diagnostics": {
+      "verified": true,
+      "evidence": "targeted_run_id=20260720T222246Z, targeted_requests=40, targeted_successes=35, targeted_failures=5"
+    },
+    "Phase 11 daily automation reality check": {
+      "verified": true,
+      "evidence": "scheduler and background refresh calls are wired in backend startup and executive report is generated"
+    },
+    "Phase 13 control tower truth": {
+      "verified": true,
+      "evidence": "control_tower rows assembled from DB in executive_report_service and reported in authority report"
+    },
+    "Phase 16 validation": {
+      "verified": true,
+      "evidence": "controlled_validity=VALID APPLES-TO-APPLES, targeted_requests=40"
+    }
+  }
 }

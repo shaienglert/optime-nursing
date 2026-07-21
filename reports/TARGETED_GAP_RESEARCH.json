@@ -1,0 +1,373 @@
+{
+  "generated_at_utc": "2026-07-20T22:23:10.302235+00:00",
+  "run_id": "20260720T222246Z",
+  "target_facility_count": 12,
+  "target_facilities": [
+    {
+      "facility_id": 62,
+      "cms_id": "105255",
+      "facility_name": "JOHN KNOX VILLAGE OF POMPANO BEACH",
+      "city": "POMPANO BEACH",
+      "state": "FL"
+    },
+    {
+      "facility_id": 7,
+      "cms_id": "105016",
+      "facility_name": "RIVER GARDEN HEBREW HOME FOR THE AGED",
+      "city": "JACKSONVILLE",
+      "state": "FL"
+    },
+    {
+      "facility_id": 54,
+      "cms_id": "105229",
+      "facility_name": "SANDS AT SOUTH BEACH CARE CENTER, THE",
+      "city": "MIAMI BEACH",
+      "state": "FL"
+    },
+    {
+      "facility_id": 4,
+      "cms_id": "105008",
+      "facility_name": "BISCAYNE HEALTH AND REHABILITATION CENTER",
+      "city": "NORTH MIAMI",
+      "state": "FL"
+    },
+    {
+      "facility_id": 3,
+      "cms_id": "105005",
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "city": "MIAMI",
+      "state": "FL"
+    },
+    {
+      "facility_id": 36,
+      "cms_id": "105153",
+      "facility_name": "Pinecrest Center for Rehabilitation and Healing",
+      "city": "NORTH MIAMI",
+      "state": "FL"
+    },
+    {
+      "facility_id": 41,
+      "cms_id": "105172",
+      "facility_name": "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER",
+      "city": "NORTH MIAMI",
+      "state": "FL"
+    },
+    {
+      "facility_id": 9,
+      "cms_id": "105030",
+      "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "city": "MIAMI",
+      "state": "FL"
+    },
+    {
+      "facility_id": 16,
+      "cms_id": "105057",
+      "facility_name": "PINES NURSING HOME",
+      "city": "MIAMI",
+      "state": "FL"
+    },
+    {
+      "facility_id": 24,
+      "cms_id": "105120",
+      "facility_name": "SERENITY BAY NURSING AND REHABILITATION CENTER",
+      "city": "NORTH MIAMI BEACH",
+      "state": "FL"
+    },
+    {
+      "facility_id": 55,
+      "cms_id": "105232",
+      "facility_name": "VILLA MARIA NURSING CENTER",
+      "city": "NORTH MIAMI",
+      "state": "FL"
+    },
+    {
+      "facility_id": 51,
+      "cms_id": "105217",
+      "facility_name": "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER",
+      "city": "NORTH MIAMI BEACH",
+      "state": "FL"
+    }
+  ],
+  "external_source_requests": 40,
+  "source_successes": 35,
+  "source_failures": 5,
+  "new_external_verified_facts": 0,
+  "external_changed_facts": 0,
+  "unknown_resolved": 0,
+  "new_regulatory_findings": 0,
+  "new_verified_services": 0,
+  "new_activity_findings": 0,
+  "new_nutrition_findings": 0,
+  "new_verified_prices": 0,
+  "source_requests_by_status": {
+    "RAN_CONNECTED_NO_NEW_VALUE": 35,
+    "SOURCE_RATE_LIMITED": 1,
+    "SOURCE_GEO_BLOCKED_OR_SUSPECTED": 3,
+    "SOURCE_ACCESS_FAILED": 1
+  },
+  "claims_by_facility": {},
+  "source_attempts_by_facility": {
+    "BISCAYNE HEALTH AND REHABILITATION CENTER": [
+      {
+        "source_name": "Official website",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "CORAL GABLES NURSING AND REHABILITATION CENTER": [
+      {
+        "source_name": "Official website",
+        "request_status": "SOURCE_RATE_LIMITED",
+        "response_code": 429,
+        "failure_reason": "http_429"
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "FOUNTAIN MANOR HEALTH & REHABILITATION CENTER": [
+      {
+        "source_name": "Official website",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "MIAMI JEWISH HEALTH SYSTEMS, INC": [
+      {
+        "source_name": "Official website",
+        "request_status": "SOURCE_GEO_BLOCKED_OR_SUSPECTED",
+        "response_code": 403,
+        "failure_reason": "http_403"
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "NORTH BEACH HEALTHCARE AND REHABILITATION CENTER": [
+      {
+        "source_name": "Official website",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "PINES NURSING HOME": [
+      {
+        "source_name": "Official website",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "Pinecrest Center for Rehabilitation and Healing": [
+      {
+        "source_name": "Official website",
+        "request_status": "SOURCE_GEO_BLOCKED_OR_SUSPECTED",
+        "response_code": 403,
+        "failure_reason": "http_403"
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "SANDS AT SOUTH BEACH CARE CENTER, THE": [
+      {
+        "source_name": "Official website",
+        "request_status": "SOURCE_GEO_BLOCKED_OR_SUSPECTED",
+        "response_code": 403,
+        "failure_reason": "http_403"
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "SERENITY BAY NURSING AND REHABILITATION CENTER": [
+      {
+        "source_name": "Official website",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ],
+    "VILLA MARIA NURSING CENTER": [
+      {
+        "source_name": "Official website",
+        "request_status": "SOURCE_ACCESS_FAILED",
+        "response_code": 403,
+        "failure_reason": "http_403"
+      },
+      {
+        "source_name": "CMS Provider Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Inspection Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      },
+      {
+        "source_name": "CMS Quality Dataset",
+        "request_status": "RAN_CONNECTED_NO_NEW_VALUE",
+        "response_code": 200,
+        "failure_reason": null
+      }
+    ]
+  },
+  "unknown_resolved_claimed": 59,
+  "unknown_resolved_false_or_unsupported": 59
+}
