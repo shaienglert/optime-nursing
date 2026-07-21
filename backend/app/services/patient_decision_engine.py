@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+from functools import cmp_to_key
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.services.facility_parameter_service import (
@@ -27,6 +28,55 @@ ELIGIBILITY_ORDER = {
     "INELIGIBLE": 3,
 }
 
+TIE_THRESHOLD_POLICY = {
+    "patient_match": 1.0,
+    "quality_safety": 2.0,
+    "staffing": 2.0,
+    "capability_depth": 1.5,
+    "patient_relevant_outcomes": 1.5,
+    "practical_fit": 1.5,
+}
+
+QUALITY_SAFETY_PARAMETER_IDS = {
+    "inspection_rating",
+    "deficiency_count",
+    "deficiency_severity",
+    "complaint_related_findings",
+    "fire_safety_deficiencies",
+    "infection_control_findings",
+    "penalties_fines",
+    "payment_denials",
+    "sanctions_final_orders",
+    "quality_measures",
+    "hospital_claims_outcomes",
+}
+
+STAFFING_PARAMETER_IDS = {
+    "rn_hours_per_resident_day",
+    "total_nurse_hours_per_resident_day",
+    "staffing_turnover",
+    "therapy_staffing",
+}
+
+OUTCOME_PARAMETER_IDS = {
+    "quality_measures",
+    "hospital_claims_outcomes",
+}
+
+PRACTICAL_FIT_PARAMETER_IDS = {
+    "languages",
+    "transportation",
+    "medicare_attributes",
+    "medicaid_attributes",
+    "payer_information",
+    "published_rates",
+    "fees",
+    "gluten_free",
+    "kosher",
+    "religious_cultural_services",
+    "activities",
+}
+
 
 @dataclass
 class NeedItem:
@@ -42,6 +92,36 @@ class NeedItem:
 
 def _normalize(value: Any) -> str:
     return str(value or "").strip().lower()
+
+
+def _to_number(value: Any) -> Optional[float]:
+    if isinstance(value, (int, float)):
+        return float(value)
+    raw = str(value or "").strip().replace(",", "")
+    if not raw or raw.upper() == "UNKNOWN":
+        return None
+    if raw.startswith("$"):
+        raw = raw[1:]
+    if raw.endswith("%"):
+        raw = raw[:-1]
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
+def _is_verified_row(row: Dict[str, Any]) -> bool:
+    raw = row.get("raw_value")
+    source = _normalize(row.get("source"))
+    if raw in {None, "UNKNOWN"}:
+        return False
+    if source in {"", "not verified"}:
+        return False
+    return True
+
+
+def _clamp_score(value: float) -> float:
+    return round(max(0.0, min(100.0, value)), 2)
 
 
 def _add_need(
@@ -390,6 +470,483 @@ def _score_result(needs: List[Dict[str, Any]], eligibility: Dict[str, Any]) -> D
     }
 
 
+def _build_need_status_map(eligibility: Dict[str, Any]) -> Dict[str, str]:
+    statuses: Dict[str, str] = {}
+    for item in eligibility.get("matched_needs", []):
+        statuses[item["parameter_id"]] = "MATCH"
+    for item in eligibility.get("unmet_verified_needs", []):
+        statuses[item["parameter_id"]] = "GAP"
+    for item in eligibility.get("unknown_critical_needs", []):
+        statuses[item["parameter_id"]] = "UNKNOWN"
+    return statuses
+
+
+def _dimension_quality_safety(table_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    rows = {row["parameter_id"]: row for row in table_rows}
+    known_signals: List[str] = []
+    unknown_signals: List[str] = []
+    score = 50.0
+    known = 0
+
+    inspection = _to_number((rows.get("inspection_rating") or {}).get("raw_value"))
+    if inspection is not None and _is_verified_row(rows["inspection_rating"]):
+        known += 1
+        score += (inspection - 2.5) * 8.0
+        known_signals.append(f"inspection_rating={inspection}")
+    else:
+        unknown_signals.append("inspection_rating")
+
+    quality_measures = _to_number((rows.get("quality_measures") or {}).get("raw_value"))
+    if quality_measures is not None and _is_verified_row(rows["quality_measures"]):
+        known += 1
+        score += (quality_measures - 10.0) * 1.5
+        known_signals.append(f"quality_measures={quality_measures}")
+    else:
+        unknown_signals.append("quality_measures")
+
+    deficiency_count = _to_number((rows.get("deficiency_count") or {}).get("raw_value"))
+    if deficiency_count is not None and _is_verified_row(rows["deficiency_count"]):
+        known += 1
+        score -= min(deficiency_count * 1.2, 35.0)
+        known_signals.append(f"deficiency_count={deficiency_count}")
+    else:
+        unknown_signals.append("deficiency_count")
+
+    deficiency_severity = _to_number((rows.get("deficiency_severity") or {}).get("raw_value"))
+    if deficiency_severity is not None and _is_verified_row(rows["deficiency_severity"]):
+        known += 1
+        score -= min(deficiency_severity * 8.0, 45.0)
+        known_signals.append(f"deficiency_severity={deficiency_severity}")
+    else:
+        unknown_signals.append("deficiency_severity")
+
+    complaint_related = _to_number((rows.get("complaint_related_findings") or {}).get("raw_value"))
+    if complaint_related is not None and _is_verified_row(rows["complaint_related_findings"]):
+        known += 1
+        score -= min(complaint_related * 2.5, 25.0)
+        known_signals.append(f"complaint_related_findings={complaint_related}")
+    else:
+        unknown_signals.append("complaint_related_findings")
+
+    infection_control = _to_number((rows.get("infection_control_findings") or {}).get("raw_value"))
+    if infection_control is not None and _is_verified_row(rows["infection_control_findings"]):
+        known += 1
+        score -= min(infection_control * 3.0, 30.0)
+        known_signals.append(f"infection_control_findings={infection_control}")
+    else:
+        unknown_signals.append("infection_control_findings")
+
+    fire_safety = _to_number((rows.get("fire_safety_deficiencies") or {}).get("raw_value"))
+    if fire_safety is not None and _is_verified_row(rows["fire_safety_deficiencies"]):
+        known += 1
+        score -= min(fire_safety * 2.0, 20.0)
+        known_signals.append(f"fire_safety_deficiencies={fire_safety}")
+    else:
+        unknown_signals.append("fire_safety_deficiencies")
+
+    penalties_fines = _to_number((rows.get("penalties_fines") or {}).get("raw_value"))
+    if penalties_fines is not None and _is_verified_row(rows["penalties_fines"]):
+        known += 1
+        score -= min(penalties_fines / 5000.0, 20.0)
+        known_signals.append(f"penalties_fines={penalties_fines}")
+    else:
+        unknown_signals.append("penalties_fines")
+
+    payment_denials = _to_number((rows.get("payment_denials") or {}).get("raw_value"))
+    if payment_denials is not None and _is_verified_row(rows["payment_denials"]):
+        known += 1
+        score -= min(payment_denials * 4.0, 20.0)
+        known_signals.append(f"payment_denials={payment_denials}")
+    else:
+        unknown_signals.append("payment_denials")
+
+    sanctions_value = _normalize((rows.get("sanctions_final_orders") or {}).get("raw_value"))
+    if sanctions_value and sanctions_value != "unknown" and _is_verified_row(rows["sanctions_final_orders"]):
+        known += 1
+        if sanctions_value not in {"no", "none", "0"}:
+            score -= 35.0
+            known_signals.append("sanctions_final_orders=adverse")
+        else:
+            known_signals.append("sanctions_final_orders=none")
+    else:
+        unknown_signals.append("sanctions_final_orders")
+
+    if known == 0:
+        return {
+            "score": None,
+            "known_signals": known_signals,
+            "unknown_signals": unknown_signals,
+        }
+    return {
+        "score": _clamp_score(score),
+        "known_signals": known_signals,
+        "unknown_signals": unknown_signals,
+    }
+
+
+def _dimension_staffing(table_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    rows = {row["parameter_id"]: row for row in table_rows}
+    known_signals: List[str] = []
+    unknown_signals: List[str] = []
+    score = 50.0
+    known = 0
+
+    rn_hours = _to_number((rows.get("rn_hours_per_resident_day") or {}).get("raw_value"))
+    if rn_hours is not None and _is_verified_row(rows["rn_hours_per_resident_day"]):
+        known += 1
+        score += min(rn_hours * 8.0, 20.0)
+        known_signals.append(f"rn_hours_per_resident_day={rn_hours}")
+    else:
+        unknown_signals.append("rn_hours_per_resident_day")
+
+    total_nurse_hours = _to_number((rows.get("total_nurse_hours_per_resident_day") or {}).get("raw_value"))
+    if total_nurse_hours is not None and _is_verified_row(rows["total_nurse_hours_per_resident_day"]):
+        known += 1
+        score += min(total_nurse_hours * 5.0, 20.0)
+        known_signals.append(f"total_nurse_hours_per_resident_day={total_nurse_hours}")
+    else:
+        unknown_signals.append("total_nurse_hours_per_resident_day")
+
+    turnover = _to_number((rows.get("staffing_turnover") or {}).get("raw_value"))
+    if turnover is not None and _is_verified_row(rows["staffing_turnover"]):
+        known += 1
+        score -= min(turnover * 0.35, 25.0)
+        known_signals.append(f"staffing_turnover={turnover}")
+    else:
+        unknown_signals.append("staffing_turnover")
+
+    therapy_staffing_row = rows.get("therapy_staffing")
+    if therapy_staffing_row and _is_verified_row(therapy_staffing_row):
+        known += 1
+        raw = therapy_staffing_row.get("raw_value")
+        if raw == "YES":
+            score += 8.0
+            known_signals.append("therapy_staffing=YES")
+        elif raw == "NO":
+            score -= 8.0
+            known_signals.append("therapy_staffing=NO")
+    else:
+        unknown_signals.append("therapy_staffing")
+
+    if known == 0:
+        return {
+            "score": None,
+            "known_signals": known_signals,
+            "unknown_signals": unknown_signals,
+        }
+    return {
+        "score": _clamp_score(score),
+        "known_signals": known_signals,
+        "unknown_signals": unknown_signals,
+    }
+
+
+def _dimension_capability_depth(
+    needs: List[Dict[str, Any]],
+    eligibility: Dict[str, Any],
+    row_by_param: Dict[str, Dict[str, Any]],
+) -> Dict[str, Any]:
+    need_by_id = {need["parameter_id"]: need for need in needs}
+    matched_ids = {item["parameter_id"] for item in eligibility.get("matched_needs", [])}
+    known_signals: List[str] = []
+    unknown_signals: List[str] = []
+
+    scope_weight = {
+        "FACILITY": 1.0,
+        "SERVICE": 1.1,
+        "PROGRAM": 1.25,
+        "UNIT": 1.35,
+    }
+
+    points = 0.0
+    max_points = 0.0
+    known = 0
+    for parameter_id in matched_ids:
+        need = need_by_id.get(parameter_id)
+        row = row_by_param.get(parameter_id)
+        if not need or not row or row.get("raw_value") != "YES" or not _is_verified_row(row):
+            continue
+        req_weight = REQUIREMENT_WEIGHTS.get(need["requirement_level"], 1.0)
+        scope = str(row.get("detail_scope") or "FACILITY")
+        multiplier = scope_weight.get(scope, 1.0)
+        known += 1
+        points += req_weight * multiplier
+        max_points += req_weight * 1.35
+        known_signals.append(f"{parameter_id}@{scope}")
+
+    for need in needs:
+        if need["parameter_id"] not in matched_ids and need["parameter_id"] in row_by_param:
+            row = row_by_param[need["parameter_id"]]
+            if row.get("raw_value") in {"UNKNOWN", None}:
+                unknown_signals.append(need["parameter_id"])
+
+    if known == 0 or max_points <= 0:
+        return {
+            "score": None,
+            "known_signals": known_signals,
+            "unknown_signals": unknown_signals,
+        }
+    return {
+        "score": _clamp_score((points / max_points) * 100.0),
+        "known_signals": known_signals,
+        "unknown_signals": unknown_signals,
+    }
+
+
+def _dimension_outcomes(table_rows: List[Dict[str, Any]], needs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    rows = {row["parameter_id"]: row for row in table_rows}
+    known_signals: List[str] = []
+    unknown_signals: List[str] = []
+    score = 50.0
+    known = 0
+
+    quality_measures = _to_number((rows.get("quality_measures") or {}).get("raw_value"))
+    if quality_measures is not None and _is_verified_row(rows["quality_measures"]):
+        known += 1
+        score += (quality_measures - 10.0) * 2.0
+        known_signals.append(f"quality_measures={quality_measures}")
+    else:
+        unknown_signals.append("quality_measures")
+
+    hospital_outcomes = _to_number((rows.get("hospital_claims_outcomes") or {}).get("raw_value"))
+    if hospital_outcomes is not None and _is_verified_row(rows["hospital_claims_outcomes"]):
+        known += 1
+        score -= min(hospital_outcomes * 1.5, 20.0)
+        known_signals.append(f"hospital_claims_outcomes={hospital_outcomes}")
+    else:
+        unknown_signals.append("hospital_claims_outcomes")
+
+    needs_requiring_outcomes = any(
+        need["parameter_id"] in {"post_stroke_neuro_evidence", "pt", "ot", "speech_therapy", "nursing_24_7"}
+        for need in needs
+    )
+    if not needs_requiring_outcomes:
+        return {
+            "score": None,
+            "known_signals": known_signals,
+            "unknown_signals": unknown_signals,
+        }
+
+    if known == 0:
+        return {
+            "score": None,
+            "known_signals": known_signals,
+            "unknown_signals": unknown_signals,
+        }
+    return {
+        "score": _clamp_score(score),
+        "known_signals": known_signals,
+        "unknown_signals": unknown_signals,
+    }
+
+
+def _dimension_practical_fit(
+    needs: List[Dict[str, Any]],
+    need_statuses: Dict[str, str],
+    requested_city: Optional[str],
+    facility_city: Optional[str],
+) -> Dict[str, Any]:
+    known_signals: List[str] = []
+    unknown_signals: List[str] = []
+    matched = 0.0
+    known = 0.0
+
+    for need in needs:
+        parameter_id = need["parameter_id"]
+        if parameter_id not in PRACTICAL_FIT_PARAMETER_IDS:
+            continue
+        status = need_statuses.get(parameter_id, "UNKNOWN")
+        if status == "MATCH":
+            known += 1.0
+            matched += 1.0
+            known_signals.append(f"{parameter_id}=MATCH")
+        elif status == "GAP":
+            known += 1.0
+            known_signals.append(f"{parameter_id}=GAP")
+        else:
+            unknown_signals.append(parameter_id)
+
+    if requested_city:
+        known += 1.0
+        if _normalize(facility_city) == _normalize(requested_city):
+            matched += 1.0
+            known_signals.append("location_city=MATCH")
+        else:
+            known_signals.append("location_city=MISMATCH")
+
+    if known <= 0:
+        return {
+            "score": None,
+            "known_signals": known_signals,
+            "unknown_signals": unknown_signals,
+        }
+
+    return {
+        "score": _clamp_score((matched / known) * 100.0),
+        "known_signals": known_signals,
+        "unknown_signals": unknown_signals,
+    }
+
+
+def _compute_dimensions(
+    *,
+    needs: List[Dict[str, Any]],
+    eligibility: Dict[str, Any],
+    table_rows: List[Dict[str, Any]],
+    row_by_param: Dict[str, Dict[str, Any]],
+    requested_city: Optional[str],
+    facility_city: Optional[str],
+    match_evidence_certainty: float,
+) -> Dict[str, Any]:
+    need_statuses = _build_need_status_map(eligibility)
+    quality_safety = _dimension_quality_safety(table_rows)
+    staffing = _dimension_staffing(table_rows)
+    capability_depth = _dimension_capability_depth(needs, eligibility, row_by_param)
+    outcomes = _dimension_outcomes(table_rows, needs)
+    practical_fit = _dimension_practical_fit(needs, need_statuses, requested_city, facility_city)
+
+    scored_dimensions = [quality_safety, staffing, capability_depth, outcomes, practical_fit]
+    available_dimension_count = sum(1 for item in scored_dimensions if item["score"] is not None)
+    coverage_ratio = (available_dimension_count / len(scored_dimensions)) * 100.0 if scored_dimensions else 0.0
+    evidence_confidence = round((match_evidence_certainty * 0.7) + (coverage_ratio * 0.3), 2)
+
+    return {
+        "quality_safety": quality_safety,
+        "staffing": staffing,
+        "capability_depth": capability_depth,
+        "patient_relevant_outcomes": outcomes,
+        "practical_fit": practical_fit,
+        "evidence_confidence": _clamp_score(evidence_confidence),
+    }
+
+
+def _compare_ranked_facilities(left: Dict[str, Any], right: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+    left_eligibility = ELIGIBILITY_ORDER[left["eligibility_status"]]
+    right_eligibility = ELIGIBILITY_ORDER[right["eligibility_status"]]
+    if left_eligibility != right_eligibility:
+        winner = left if left_eligibility < right_eligibility else right
+        loser = right if winner is left else left
+        return (
+            -1 if winner is left else 1,
+            {
+                "decision_dimension": "eligibility_status",
+                "reason": f"{winner['canonical_facility_id']} ranked above {loser['canonical_facility_id']} due to better eligibility status.",
+                "equal_dimensions": [],
+                "unknown_dimensions": [],
+            },
+        )
+
+    comparisons = [
+        ("patient_match", "patient_match_score"),
+        ("quality_safety", "quality_safety_score"),
+        ("staffing", "staffing_score"),
+        ("capability_depth", "capability_depth_score"),
+        ("patient_relevant_outcomes", "patient_relevant_outcomes_score"),
+        ("practical_fit", "practical_fit_score"),
+    ]
+
+    equal_dimensions: List[str] = []
+    unknown_dimensions: List[str] = []
+    for dimension_name, field_name in comparisons:
+        left_value = left.get(field_name)
+        right_value = right.get(field_name)
+
+        if left_value is None or right_value is None:
+            unknown_dimensions.append(dimension_name)
+            continue
+
+        threshold = TIE_THRESHOLD_POLICY[dimension_name]
+        delta = float(left_value) - float(right_value)
+        if abs(delta) <= threshold:
+            equal_dimensions.append(dimension_name)
+            continue
+
+        winner = left if delta > 0 else right
+        loser = right if winner is left else left
+        winner_value = left_value if winner is left else right_value
+        loser_value = right_value if winner is left else left_value
+        return (
+            -1 if winner is left else 1,
+            {
+                "decision_dimension": dimension_name,
+                "reason": (
+                    f"{winner['canonical_facility_id']} ranked above {loser['canonical_facility_id']} by verified {dimension_name} "
+                    f"({winner_value} vs {loser_value}; tie threshold={threshold})."
+                ),
+                "equal_dimensions": equal_dimensions,
+                "unknown_dimensions": unknown_dimensions,
+            },
+        )
+
+    if left["facility_name"] < right["facility_name"]:
+        deterministic = -1
+    elif left["facility_name"] > right["facility_name"]:
+        deterministic = 1
+    else:
+        deterministic = 0
+
+    return (
+        0,
+        {
+            "decision_dimension": "true_tie",
+            "reason": "Materially equal across patient match and all governed tie-breaker dimensions with available evidence.",
+            "equal_dimensions": equal_dimensions,
+            "unknown_dimensions": unknown_dimensions,
+            "deterministic_display_order": deterministic,
+        },
+    )
+
+
+def _rank_with_true_ties(results: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    seeded = sorted(results, key=lambda item: item["facility_name"])
+    ranked = sorted(seeded, key=cmp_to_key(lambda left, right: _compare_ranked_facilities(left, right)[0]))
+
+    if not ranked:
+        return ranked, []
+
+    pairwise_decisions: List[Dict[str, Any]] = []
+    current_rank = 1
+    ranked[0]["rank_position"] = current_rank
+    ranked[0]["rank_tie_status"] = "UNIQUE"
+
+    for index in range(1, len(ranked)):
+        previous = ranked[index - 1]
+        current = ranked[index]
+        compare_result, details = _compare_ranked_facilities(previous, current)
+        decision_record = {
+            "higher_canonical_facility_id": previous["canonical_facility_id"],
+            "lower_canonical_facility_id": current["canonical_facility_id"],
+            **details,
+        }
+        pairwise_decisions.append(decision_record)
+
+        if compare_result == 0:
+            current["rank_position"] = previous["rank_position"]
+            previous["rank_tie_status"] = "JOINT_RANK"
+            current["rank_tie_status"] = "JOINT_RANK"
+        else:
+            current_rank = index + 1
+            current["rank_position"] = current_rank
+            current["rank_tie_status"] = "UNIQUE"
+
+    groups: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
+    for item in ranked:
+        groups[item["rank_position"]].append(item)
+
+    for rank_position, items in groups.items():
+        if len(items) > 1:
+            group_ids = [item["canonical_facility_id"] for item in items]
+            for item in items:
+                item["rank_tie_status"] = "JOINT_RANK"
+                item["rank_display"] = f"Joint #{rank_position}"
+                item["tied_with"] = [facility_id for facility_id in group_ids if facility_id != item["canonical_facility_id"]]
+        else:
+            items[0]["rank_display"] = f"#{rank_position}"
+            items[0]["tied_with"] = []
+
+    return ranked, pairwise_decisions
+
+
 def _facility_geo_match(facility: Dict[str, Any], requested_city: Optional[str]) -> Tuple[str, float]:
     if not requested_city:
         return "No city constraint provided.", 0.0
@@ -457,6 +1014,35 @@ def run_patient_decision_engine(
         geo_note, geo_bonus = _facility_geo_match({"city": table.get("city")}, requested_city)
         strong, verify, concerns = _top_reasons(eligibility, table["rows"])
 
+        dimensions = _compute_dimensions(
+            needs=needs,
+            eligibility=eligibility,
+            table_rows=table["rows"],
+            row_by_param=row_by_param,
+            requested_city=requested_city,
+            facility_city=table.get("city"),
+            match_evidence_certainty=scoring["evidence_certainty"],
+        )
+
+        quality_safety_score = dimensions["quality_safety"]["score"]
+        staffing_score = dimensions["staffing"]["score"]
+        capability_depth_score = dimensions["capability_depth"]["score"]
+        outcomes_score = dimensions["patient_relevant_outcomes"]["score"]
+        practical_fit_score = dimensions["practical_fit"]["score"]
+        evidence_confidence = dimensions["evidence_confidence"]
+
+        unknown_dimensions = [
+            name
+            for name, payload in [
+                ("quality_safety", dimensions["quality_safety"]),
+                ("staffing", dimensions["staffing"]),
+                ("capability_depth", dimensions["capability_depth"]),
+                ("patient_relevant_outcomes", dimensions["patient_relevant_outcomes"]),
+                ("practical_fit", dimensions["practical_fit"]),
+            ]
+            if payload["score"] is None
+        ]
+
         results.append(
             {
                 "canonical_facility_id": canonical_id,
@@ -470,12 +1056,19 @@ def run_patient_decision_engine(
                 "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
                 "eligibility_status": eligibility["eligibility_status"],
                 "match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
+                "patient_match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "match_band": scoring["match_band"],
                 "matched_needs": eligibility["matched_needs"],
                 "unmet_verified_needs": eligibility["unmet_verified_needs"],
                 "unknown_critical_needs": eligibility["unknown_critical_needs"],
                 "preference_matches": eligibility["preference_matches"],
                 "evidence_certainty": scoring["evidence_certainty"],
+                "evidence_confidence": evidence_confidence,
+                "quality_safety_score": quality_safety_score,
+                "staffing_score": staffing_score,
+                "capability_depth_score": capability_depth_score,
+                "patient_relevant_outcomes_score": outcomes_score,
+                "practical_fit_score": practical_fit_score,
                 "domain_breakdown": scoring["domain_breakdown"],
                 "explanation": {
                     "why_matches": strong,
@@ -484,19 +1077,64 @@ def run_patient_decision_engine(
                     "eligibility_reasons": eligibility["reasons"],
                     "availability_note": "Current availability must be confirmed directly with the facility.",
                     "location_note": geo_note,
+                    "quality_safety": {
+                        "known": dimensions["quality_safety"]["known_signals"],
+                        "unknown": dimensions["quality_safety"]["unknown_signals"],
+                    },
+                    "staffing": {
+                        "known": dimensions["staffing"]["known_signals"],
+                        "unknown": dimensions["staffing"]["unknown_signals"],
+                    },
+                    "capability_depth": {
+                        "known": dimensions["capability_depth"]["known_signals"],
+                        "unknown": dimensions["capability_depth"]["unknown_signals"],
+                    },
+                    "patient_relevant_outcomes": {
+                        "known": dimensions["patient_relevant_outcomes"]["known_signals"],
+                        "unknown": dimensions["patient_relevant_outcomes"]["unknown_signals"],
+                    },
+                    "practical_fit": {
+                        "known": dimensions["practical_fit"]["known_signals"],
+                        "unknown": dimensions["practical_fit"]["unknown_signals"],
+                    },
+                    "unknown_tie_break_dimensions": unknown_dimensions,
                 },
                 "parameter_badges": [item["parameter_id"] for item in eligibility["matched_needs"][:6]],
                 "comparison_parameter_ids": ordered_parameter_ids,
             }
         )
 
-    results.sort(
-        key=lambda item: (
-            ELIGIBILITY_ORDER[item["eligibility_status"]],
-            -item["match_score"],
-            item["facility_name"],
+    results, pairwise_decisions = _rank_with_true_ties(results)
+
+    decision_lookup: Dict[Tuple[str, str], Dict[str, Any]] = {}
+    for decision in pairwise_decisions:
+        key = (
+            decision["higher_canonical_facility_id"],
+            decision["lower_canonical_facility_id"],
         )
-    )
+        decision_lookup[key] = decision
+
+    for index, item in enumerate(results):
+        if index + 1 < len(results):
+            next_item = results[index + 1]
+            key = (item["canonical_facility_id"], next_item["canonical_facility_id"])
+            forward = decision_lookup.get(key)
+            if forward:
+                item["tie_break_explanation_vs_next"] = {
+                    "why_ranked_above": forward["reason"],
+                    "deciding_dimension": forward["decision_dimension"],
+                    "remained_equal": forward.get("equal_dimensions", []),
+                    "remaining_unknown": forward.get("unknown_dimensions", []),
+                }
+            else:
+                item["tie_break_explanation_vs_next"] = {
+                    "why_ranked_above": "Materially tied after all governed dimensions.",
+                    "deciding_dimension": "true_tie",
+                    "remained_equal": list(TIE_THRESHOLD_POLICY.keys()),
+                    "remaining_unknown": item.get("explanation", {}).get("unknown_tie_break_dimensions", []),
+                }
+        else:
+            item["tie_break_explanation_vs_next"] = None
 
     top = results[: max(10, limit)]
     return {
@@ -505,6 +1143,16 @@ def run_patient_decision_engine(
         "result_count": len(top[:limit]),
         "total_candidates_scored": len(results),
         "availability_policy": "Current availability must be confirmed directly with the facility.",
+        "tie_break_policy": {
+            "thresholds": TIE_THRESHOLD_POLICY,
+            "true_tie_label": "JOINT_RANK / TIED",
+            "notes": [
+                "UNKNOWN availability is neutral and never improves or reduces ranking.",
+                "Evidence confidence is displayed separately and is not a ranking point.",
+                "Missing values do not grant tie-break advantage.",
+            ],
+        },
+        "tie_break_decisions": pairwise_decisions[: max(10, limit)],
     }
 
 

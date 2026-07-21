@@ -276,12 +276,23 @@ export type DecisionEngineRecommendation = {
   facility_profile_id?: number | null;
   eligibility_status: "ELIGIBLE" | "POTENTIALLY_ELIGIBLE" | "INSUFFICIENT_EVIDENCE" | "INELIGIBLE";
   match_score: number;
+  patient_match_score: number;
   match_band: "STRONG_MATCH" | "GOOD_MATCH" | "PARTIAL_MATCH" | "LIMITED_MATCH";
   matched_needs: Array<Record<string, unknown>>;
   unmet_verified_needs: Array<Record<string, unknown>>;
   unknown_critical_needs: Array<Record<string, unknown>>;
   preference_matches: Array<Record<string, unknown>>;
   evidence_certainty: number;
+  evidence_confidence: number;
+  quality_safety_score: number | null;
+  staffing_score: number | null;
+  capability_depth_score: number | null;
+  patient_relevant_outcomes_score: number | null;
+  practical_fit_score: number | null;
+  rank_position?: number;
+  rank_tie_status?: "UNIQUE" | "JOINT_RANK";
+  rank_display?: string;
+  tied_with?: string[];
   domain_breakdown: Record<string, number>;
   explanation: {
     why_matches: string[];
@@ -290,7 +301,19 @@ export type DecisionEngineRecommendation = {
     eligibility_reasons: string[];
     availability_note: string;
     location_note: string;
+    quality_safety?: { known: string[]; unknown: string[] };
+    staffing?: { known: string[]; unknown: string[] };
+    capability_depth?: { known: string[]; unknown: string[] };
+    patient_relevant_outcomes?: { known: string[]; unknown: string[] };
+    practical_fit?: { known: string[]; unknown: string[] };
+    unknown_tie_break_dimensions?: string[];
   };
+  tie_break_explanation_vs_next?: {
+    why_ranked_above: string;
+    deciding_dimension: string;
+    remained_equal: string[];
+    remaining_unknown: string[];
+  } | null;
   parameter_badges: string[];
   comparison_parameter_ids: string[];
 };
@@ -301,6 +324,19 @@ export type DecisionEngineResponse = {
   result_count: number;
   total_candidates_scored: number;
   availability_policy: string;
+  tie_break_policy?: {
+    thresholds: Record<string, number>;
+    true_tie_label: string;
+    notes: string[];
+  };
+  tie_break_decisions?: Array<{
+    higher_canonical_facility_id: string;
+    lower_canonical_facility_id: string;
+    decision_dimension: string;
+    reason: string;
+    equal_dimensions: string[];
+    unknown_dimensions: string[];
+  }>;
 };
 
 export type DecisionEngineRequest = {

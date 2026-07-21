@@ -51,6 +51,11 @@ function buildNeedChip(need: { parameter_id: string; requirement_level: string }
   return `${need.requirement_level}: ${need.parameter_id}`;
 }
 
+function scoreDisplay(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "N/A";
+  return `${Math.round(value)}%`;
+}
+
 export function ResultsPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -167,11 +172,30 @@ export function ResultsPageClient() {
               <h3 className="mt-2 text-xl font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
               <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
               <p className="mt-1 text-xs font-medium text-[#5f7f6b]">{recommendation.canonical_facility_id}</p>
+              <p className="mt-1 text-xs font-semibold text-[#2f6d3e]">
+                {recommendation.rank_display || `#${index + 1}`}
+                {recommendation.rank_tie_status === "JOINT_RANK" ? " (Tied)" : ""}
+              </p>
             </div>
             <div className="rounded-2xl border border-[#d8e7dc] bg-[#f4fbf6] px-3 py-2 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Personalized match</p>
-              <p className="mt-1 text-lg font-semibold text-[#2f6d3e]">{Math.round(recommendation.match_score)}%</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Patient match</p>
+              <p className="mt-1 text-lg font-semibold text-[#2f6d3e]">{Math.round(recommendation.patient_match_score ?? recommendation.match_score)}%</p>
               <p className="text-[10px] text-[#5e7264]">{recommendation.match_band}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Quality & Safety</p>
+              <p className="text-sm font-semibold text-[#24425e]">{scoreDisplay(recommendation.quality_safety_score)}</p>
+            </div>
+            <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Staffing</p>
+              <p className="text-sm font-semibold text-[#24425e]">{scoreDisplay(recommendation.staffing_score)}</p>
+            </div>
+            <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Evidence confidence</p>
+              <p className="text-sm font-semibold text-[#24425e]">{scoreDisplay(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
             </div>
           </div>
 
@@ -193,8 +217,21 @@ export function ResultsPageClient() {
             Concerns: {recommendation.explanation.concerns.slice(0, 2).join("; ") || "No verified gap in current top needs"}
           </p>
 
-          <p className="text-xs text-[#24425e]">Evidence certainty: {Math.round(recommendation.evidence_certainty)}%</p>
+          <p className="text-xs text-[#24425e]">Evidence confidence: {Math.round(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}%</p>
           <p className="text-xs text-[#5b5245]">{recommendation.explanation.availability_note}</p>
+
+          {recommendation.tie_break_explanation_vs_next ? (
+            <div className="rounded-xl border border-[#d9e3ec] bg-[#f8fcff] px-3 py-2 text-xs text-[#355270]">
+              <p className="font-semibold">Tie-break explanation</p>
+              <p className="mt-1">{recommendation.tie_break_explanation_vs_next.why_ranked_above}</p>
+              {recommendation.tie_break_explanation_vs_next.remained_equal.length > 0 ? (
+                <p className="mt-1">Remained equal: {recommendation.tie_break_explanation_vs_next.remained_equal.join(", ")}</p>
+              ) : null}
+              {recommendation.tie_break_explanation_vs_next.remaining_unknown.length > 0 ? (
+                <p className="mt-1">Unknown: {recommendation.tie_break_explanation_vs_next.remaining_unknown.join(", ")}</p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap gap-2">
             {recommendation.parameter_badges.slice(0, 6).map((badge) => (
@@ -308,6 +345,11 @@ export function ResultsPageClient() {
                 {decisionResponse?.result_count || 0} facilities shown from {decisionResponse?.total_candidates_scored || 0} scored canonical facilities.
               </p>
               <p className="mt-2 text-sm text-[#5c5347]">{decisionResponse?.availability_policy}</p>
+              {decisionResponse?.tie_break_policy ? (
+                <p className="mt-2 text-xs text-[#5c5347]">
+                  True-tie support: {decisionResponse.tie_break_policy.true_tie_label}. Thresholds: {Object.entries(decisionResponse.tie_break_policy.thresholds).map(([key, value]) => `${key}=${value}`).join("; ")}.
+                </p>
+              ) : null}
             </article>
 
             <VerificationOffer />
@@ -343,6 +385,21 @@ export function ResultsPageClient() {
               <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
                 <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Patient-specific comparison</p>
                 <p className="mt-2 text-sm text-[#4a6076]">Comparison uses identical governed parameter IDs. NOT_VERIFIED remains informational, not an automatic failure.</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {comparisonContext.facilities.map((facility) => {
+                    const recommendation = recommendations.find((item) => item.canonical_facility_id === facility.canonical_facility_id);
+                    if (!recommendation) return null;
+                    return (
+                      <div key={`summary-${facility.canonical_facility_id}`} className="rounded-xl border border-[#cddce5] bg-white px-3 py-2 text-xs text-[#24425e]">
+                        <p className="font-semibold">{facility.facility_name}</p>
+                        <p>{recommendation.rank_display || "Unranked"}{recommendation.rank_tie_status === "JOINT_RANK" ? " (Tied)" : ""}</p>
+                        <p>Patient Match: {scoreDisplay(recommendation.patient_match_score ?? recommendation.match_score)}</p>
+                        <p>Quality & Safety: {scoreDisplay(recommendation.quality_safety_score)}</p>
+                        <p>Evidence Confidence: {scoreDisplay(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
+                      </div>
+                    );
+                  })}
+                </div>
                 <div className="mt-3 overflow-x-auto">
                   <table className="min-w-full border-collapse text-xs">
                     <thead>
