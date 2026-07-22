@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from html import unescape
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 from urllib.parse import parse_qs, unquote, urlparse
 
 import requests
@@ -844,34 +844,34 @@ def _persist_claim(
     return change_status, object_key, evidence_key, value_text
 
 
-def _cms_provider_rows() -> Dict[str, Dict[str, Any]]:
+def _cms_provider_rows(allowed_ccns: Optional[Set[str]] = None) -> Dict[str, Dict[str, Any]]:
     path = download_dataset(CMS_PROVIDER_DATASET_ID, "provider_information.csv", force=True)
     rows: Dict[str, Dict[str, Any]] = {}
     for row in iter_csv_rows(path):
         ccn = str(row.get("CMS Certification Number (CCN)") or "").strip()
-        if ccn:
+        if ccn and (allowed_ccns is None or ccn in allowed_ccns):
             rows[ccn] = row
     return rows
 
 
-def _cms_inspection_rows() -> Dict[str, Dict[str, Any]]:
+def _cms_inspection_rows(allowed_ccns: Optional[Set[str]] = None) -> Dict[str, Dict[str, Any]]:
     path = download_dataset(CMS_INSPECTION_DATASET_ID, "inspection_citations.csv", force=True)
     rows: Dict[str, Dict[str, Any]] = {}
     for row in iter_csv_rows(path):
         ccn = str(row.get("CMS Certification Number (CCN)") or "").strip()
-        if not ccn:
+        if not ccn or (allowed_ccns is not None and ccn not in allowed_ccns):
             continue
         bucket = rows.setdefault(ccn, {"rows": []})
         bucket["rows"].append(row)
     return rows
 
 
-def _cms_quality_rows() -> Dict[str, Dict[str, Any]]:
+def _cms_quality_rows(allowed_ccns: Optional[Set[str]] = None) -> Dict[str, Dict[str, Any]]:
     path = download_dataset(CMS_QUALITY_DATASET_ID, "quality_measures.csv", force=True)
     rows: Dict[str, Dict[str, Any]] = {}
     for row in iter_csv_rows(path):
         ccn = str(row.get("CMS Certification Number (CCN)") or "").strip()
-        if not ccn:
+        if not ccn or (allowed_ccns is not None and ccn not in allowed_ccns):
             continue
         bucket = rows.setdefault(ccn, {"rows": []})
         bucket["rows"].append(row)
@@ -1291,9 +1291,10 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
         wanted = set(facility_ids)
         facilities = [facility for facility in facilities if facility.id in wanted]
 
-    provider_rows = _cms_provider_rows()
-    inspection_rows = _cms_inspection_rows()
-    quality_rows = _cms_quality_rows()
+    target_ccns = {str(facility.cms_id or "").strip() for facility in facilities if str(facility.cms_id or "").strip()}
+    provider_rows = _cms_provider_rows(target_ccns)
+    inspection_rows = _cms_inspection_rows(target_ccns)
+    quality_rows = _cms_quality_rows(target_ccns)
 
     now = _now()
     run_id = now.strftime("%Y%m%dT%H%M%SZ")

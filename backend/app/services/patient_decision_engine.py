@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cmp_to_key
+import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.services.facility_parameter_service import (
@@ -1235,6 +1236,7 @@ def run_patient_decision_engine(
     natural_language_query: str = "",
     limit: int = 50,
 ) -> Dict[str, Any]:
+    cache_enabled = os.getenv("OPTIME_DECISION_RESULT_CACHE", "0") == "1"
     cache_key = json.dumps(
         {
             "questionnaire_state": questionnaire_state,
@@ -1245,9 +1247,10 @@ def run_patient_decision_engine(
         separators=(",", ":"),
         default=str,
     )
-    cached = _DECISION_RESULT_CACHE.get(cache_key)
-    if cached is not None:
-        return cached
+    if cache_enabled:
+        cached = _DECISION_RESULT_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
 
     profile = build_patient_needs_profile(questionnaire_state, natural_language_query)
     needs = profile["needs"]
@@ -1378,7 +1381,7 @@ def run_patient_decision_engine(
         detail["tie_break_explanation_vs_next"] = item.get("tie_break_explanation_vs_next")
         detailed_top.append(detail)
 
-    return {
+    result = {
         "patient_needs_profile": profile,
         "results": detailed_top[:limit],
         "result_count": len(detailed_top[:limit]),
@@ -1396,30 +1399,12 @@ def run_patient_decision_engine(
         "tie_break_decisions": pairwise_decisions[: max(10, limit)],
     }
 
-
-    result = {
-        "patient_needs_profile": profile,
-        "results": top[:limit],
-        "result_count": len(top[:limit]),
-        "total_candidates_scored": len(results),
-        "availability_policy": "Current availability must be confirmed directly with the facility.",
-        "tie_break_policy": {
-            "thresholds": TIE_THRESHOLD_POLICY,
-            "true_tie_label": "JOINT_RANK / TIED",
-            "notes": [
-                "UNKNOWN availability is neutral and never improves or reduces ranking.",
-                "Evidence confidence is displayed separately and is not a ranking point.",
-                "Missing values do not grant tie-break advantage.",
-            ],
-        },
-        "tie_break_decisions": pairwise_decisions[: max(10, limit)],
-    }
-
-    _DECISION_RESULT_CACHE[cache_key] = result
-    _DECISION_RESULT_CACHE_ORDER.append(cache_key)
-    if len(_DECISION_RESULT_CACHE_ORDER) > _DECISION_RESULT_CACHE_LIMIT:
-        stale_key = _DECISION_RESULT_CACHE_ORDER.pop(0)
-        _DECISION_RESULT_CACHE.pop(stale_key, None)
+    if cache_enabled:
+        _DECISION_RESULT_CACHE[cache_key] = result
+        _DECISION_RESULT_CACHE_ORDER.append(cache_key)
+        if len(_DECISION_RESULT_CACHE_ORDER) > _DECISION_RESULT_CACHE_LIMIT:
+            stale_key = _DECISION_RESULT_CACHE_ORDER.pop(0)
+            _DECISION_RESULT_CACHE.pop(stale_key, None)
     return result
 
 
