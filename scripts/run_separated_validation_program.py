@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
+PYTHON = ROOT / "backend" / "venv" / "Scripts" / "python.exe"
 REGISTRY_PATH = ROOT / "database" / "validation_program_registry.json"
 OUTPUT_PATH = ROOT / "reports" / "VALIDATION_PROGRAM_STATUS.json"
 
@@ -28,7 +29,7 @@ def _run_validator(script_path: str) -> dict:
             "stderr": f"Script not found: {script_path}",
         }
 
-    cmd = [str(ROOT / ".venv" / "Scripts" / "python.exe"), str(full_path)]
+    cmd = [str(PYTHON), str(full_path)]
     completed = subprocess.run(cmd, cwd=str(ROOT), text=True, capture_output=True)
     return {
         "status": "PASS" if completed.returncode == 0 else "FAIL",

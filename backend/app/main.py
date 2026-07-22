@@ -1,6 +1,8 @@
 import os
 import json
 import hashlib
+import logging
+import time
 from datetime import datetime
 from statistics import mean
 from pathlib import Path
@@ -103,6 +105,8 @@ app = FastAPI(
     version="0.3.0",
     description="OPTIME Phase 1 CMS ingestion pipeline for Florida nursing homes",
 )
+
+logger = logging.getLogger("optime.api")
 
 REQUIRED_FRONTEND_ORIGINS = ["https://optime-nursing.vercel.app"]
 DEVELOPMENT_FRONTEND_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
@@ -1112,8 +1116,10 @@ def startup() -> None:
                 "score_distributions": {},
             }
 
-        # Prepared knowledge reports must always be instantly retrievable.
-        ensure_reports_available(db)
+        # Prepared knowledge reports can be generated lazily to keep startup memory bounded.
+        eager_reports = os.getenv("OPTIME_EAGER_REPORTS_ON_STARTUP", "0") == "1"
+        if eager_reports:
+            ensure_reports_available(db)
     finally:
         db.close()
 
@@ -1133,6 +1139,35 @@ def startup() -> None:
     start_background_refresh_loop()
     # Trigger daily executive intelligence report at 08:00 local server time.
     start_executive_report_scheduler()
+    logger.info(
+        "startup_completed facilities_imported=%s origins=%s",
+        app.state.import_summary.get("facilities_imported"),
+        len(allowed_origins),
+    )
+
+
+@app.middleware("http")
+async def request_observability_middleware(request, call_next):
+    start = time.perf_counter()
+    path = request.url.path
+    method = request.method
+    try:
+        response = await call_next(request)
+    except Exception:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        logger.exception("request_failed method=%s path=%s duration_ms=%s", method, path, duration_ms)
+        raise
+
+    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    if path in {"/health", "/decision-engine/recommendations", "/facilities"}:
+        logger.info(
+            "request_completed method=%s path=%s status=%s duration_ms=%s",
+            method,
+            path,
+            response.status_code,
+            duration_ms,
+        )
+    return response
 
 
 @app.get("/")
@@ -1489,6 +1524,8 @@ async def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn):
 
 @app.post("/decision-engine/recommendations", response_model=PatientDecisionEngineOut)
 async def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestIn, db: Session = Depends(get_db)):
+    started = time.perf_counter()
+    logger.info("decision_request_received limit=%s", payload.limit)
     response = run_patient_decision_engine(
         questionnaire_state=payload.questionnaire_state,
         natural_language_query=payload.natural_language_query or "",
@@ -1503,6 +1540,14 @@ async def post_patient_decision_recommendations(payload: PatientDecisionEngineRe
         source_identity_ids = result.get("source_identity_ids") or {}
         cms_ccn = str(source_identity_ids.get("cms_ccn") or "")
         result["facility_profile_id"] = ccn_to_facility_id.get(cms_ccn)
+
+    duration_ms = round((time.perf_counter() - started) * 1000, 2)
+    logger.info(
+        "decision_request_completed result_count=%s total_candidates_scored=%s duration_ms=%s",
+        response.get("result_count"),
+        response.get("total_candidates_scored"),
+        duration_ms,
+    )
 
     return response
 

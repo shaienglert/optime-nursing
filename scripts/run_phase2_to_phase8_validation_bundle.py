@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
+PYTHON = ROOT / "backend" / "venv" / "Scripts" / "python.exe"
 
 VALIDATORS = [
     "scripts/validate_professional_rule_governance.py",

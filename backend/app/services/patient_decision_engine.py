@@ -1177,6 +1177,7 @@ def run_patient_decision_engine(
             priority_parameter_ids=profile["priority_parameter_ids"],
             profile_key=profile["profile_key"],
             ordered_registry=recommendation_registry,
+            include_evidence_records=False,
         )
         canonical_meta = canonical_index.get(canonical_id, {})
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
