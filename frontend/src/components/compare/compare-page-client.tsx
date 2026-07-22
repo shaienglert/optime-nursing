@@ -14,7 +14,19 @@ import {
   fetchPatientDecisionRecommendations,
   compareFacilityParameters,
 } from "@/lib/api";
-import { clearCompareSelection, loadCompareSelection, saveCompareSelection } from "@/lib/search-session";
+import {
+  deriveRelevantParameterIds,
+  displayParameterLabel,
+  isPatientNeed,
+  sortRelevantParameterIds,
+} from "@/lib/comparison-flow";
+import {
+  clearCompareSelection,
+  loadCompareSelection,
+  loadFavoriteFacilities,
+  saveCompareSelection,
+  saveFavoriteFacilities,
+} from "@/lib/search-session";
 
 type ComparisonCell = {
   rawValue: string;
@@ -42,28 +54,7 @@ function summarizeRecommendation(recommendation?: DecisionEngineRecommendation):
 }
 
 function needLabel(parameterId: string): string {
-  const labels: Record<string, string> = {
-    nursing_24_7: "24/7 nursing",
-    skilled_nursing_capabilities: "Skilled nursing",
-    adl_support: "ADL support",
-    medication_support: "Medication management",
-    ot: "Occupational therapy",
-    pt: "Physical therapy",
-    speech_therapy: "Speech therapy",
-    transfer_assistance: "Transfer assistance",
-    post_stroke_neuro_evidence: "Stroke / neurological rehabilitation",
-    memory_care: "Memory care",
-    published_rates: "Transparent pricing",
-    transportation: "Transportation support",
-    medicare_attributes: "Medicare acceptance",
-  };
-  return labels[parameterId] || parameterId.replace(/_/g, " ");
-}
-
-function statusLabel(status: "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED"): string {
-  if (status === "MATCH") return "Verified match";
-  if (status === "VERIFIED_GAP") return "Verified gap";
-  return "Needs verification";
+  return displayParameterLabel(parameterId);
 }
 
 function fullCellStatusLabel(rawValue: string): string {
@@ -96,28 +87,30 @@ function parseSelectedIds(raw?: string | null): string[] {
   return normalizeSelectedIds((raw || "").split(","));
 }
 
-function isInterestingParameter(parameterId: string, visibleNeedIds: Set<string>, rowCells: ComparisonCell[]): boolean {
-  if (visibleNeedIds.has(parameterId)) return true;
-  const values = new Set(rowCells.map((cell) => cell.displayValue));
-  return values.size > 1 || values.has("Needs verification") || values.has("Verified gap");
-}
-
 export function ComparePageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { state } = useQuestionnaire();
+  const comparisonMode = searchParams.get("comparison_mode") || "standard";
+  const favoriteFacilityId = searchParams.get("favorite") || "";
+  const optimeReferenceId = searchParams.get("optime_reference") || "";
+  const isFavoritesComparison = comparisonMode === "favorites";
+  const isFocusedComparison = comparisonMode === "favorite-vs-optime";
 
   const [decisionResponse, setDecisionResponse] = useState<DecisionEngineResponse | null>(null);
   const [comparisonContext, setComparisonContext] = useState<PatientComparisonContextResponse | null>(null);
   const [comparisonTable, setComparisonTable] = useState<FacilityParameterComparison | null>(null);
   const [selectedFacilityIds, setSelectedFacilityIds] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
-    const fromQuery = parseSelectedIds(new URLSearchParams(window.location.search).get("facilities"));
-    return fromQuery.length > 0 ? fromQuery : normalizeSelectedIds(loadCompareSelection());
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = parseSelectedIds(params.get("facilities"));
+    if (fromQuery.length > 0) return fromQuery;
+    if (params.get("comparison_mode") === "favorites") return normalizeSelectedIds(loadFavoriteFacilities());
+    return normalizeSelectedIds(loadCompareSelection());
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDifferencesOnly, setShowDifferencesOnly] = useState(true);
+  const [showAllParameters, setShowAllParameters] = useState(false);
 
   const searchParamsString = searchParams.toString();
   const returnTo = searchParams.get("returnTo") || "/results";
@@ -130,12 +123,15 @@ export function ComparePageClient() {
   const selectedIdsKey = useMemo(() => JSON.stringify(decisionRequestPayload), [decisionRequestPayload]);
 
   useEffect(() => {
+    if (isFavoritesComparison) {
+      saveFavoriteFacilities(selectedFacilityIds);
+    }
     if (selectedFacilityIds.length > 0) {
       saveCompareSelection(selectedFacilityIds);
     } else {
       clearCompareSelection();
     }
-  }, [selectedFacilityIds]);
+  }, [isFavoritesComparison, selectedFacilityIds]);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParamsString);
@@ -251,11 +247,25 @@ export function ComparePageClient() {
     return rows;
   }, [comparisonContext]);
 
-  const visibleComparisonRows = useMemo(() => {
-    if (!comparisonTable || !comparisonContext) return [];
-    const visibleNeedIds = new Set(patientNeedsRows.map((need) => need.parameter_id));
-    return comparisonRows.filter((row) => !showDifferencesOnly || isInterestingParameter(row.parameterId, visibleNeedIds, row.cells));
-  }, [comparisonContext, comparisonRows, patientNeedsRows, showDifferencesOnly, comparisonTable]);
+  const fullParameterIds = useMemo(
+    () => comparisonContext?.comparison_parameter_ids || comparisonTable?.parameter_ids || [],
+    [comparisonContext?.comparison_parameter_ids, comparisonTable?.parameter_ids]
+  );
+  const relevantParameterIds = useMemo(() => {
+    return sortRelevantParameterIds(
+      decisionResponse?.patient_needs_profile,
+      deriveRelevantParameterIds(decisionResponse?.patient_needs_profile, fullParameterIds)
+    );
+  }, [decisionResponse?.patient_needs_profile, fullParameterIds]);
+
+  const relevantComparisonRows = useMemo(() => {
+    const relevantSet = new Set(relevantParameterIds);
+    return comparisonRows.filter((row) => {
+      if (!relevantSet.has(row.parameterId)) return false;
+      const values = new Set(row.cells.map((cell) => cell.displayValue));
+      return isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId) || values.size > 1 || values.has("Needs verification") || values.has("Verified gap");
+    });
+  }, [comparisonRows, decisionResponse?.patient_needs_profile, relevantParameterIds]);
 
   const whatToVerify = useMemo(() => {
     if (!comparisonContext) return [];
@@ -282,7 +292,13 @@ export function ComparePageClient() {
   });
 
   const removeFacility = (facilityId: string) => {
-    setSelectedFacilityIds((current) => current.filter((item) => item !== facilityId));
+    setSelectedFacilityIds((current) => {
+      const next = current.filter((item) => item !== facilityId);
+      if (isFavoritesComparison) {
+        saveFavoriteFacilities(next);
+      }
+      return next;
+    });
   };
 
   const addAnotherFacility = () => {
@@ -295,6 +311,91 @@ export function ComparePageClient() {
   currentCompareParams.set("facilities", selectedFacilityIds.join(","));
   currentCompareParams.set("returnTo", returnTo);
   const currentComparePath = `/compare${currentCompareParams.toString() ? `?${currentCompareParams.toString()}` : ""}`;
+  const currentOptimeRecommendation = decisionResponse?.results?.[0];
+
+  const buildFavoriteVsOptimeHref = (canonicalFacilityId: string) => {
+    if (!currentOptimeRecommendation) return currentComparePath;
+    const params = new URLSearchParams(searchParamsString);
+    params.set("comparison_mode", "favorite-vs-optime");
+    params.set("favorite", canonicalFacilityId);
+    params.set("optime_reference", currentOptimeRecommendation.canonical_facility_id);
+    params.set("facilities", [canonicalFacilityId, currentOptimeRecommendation.canonical_facility_id].join(","));
+    params.set("returnTo", returnTo);
+    return `/compare?${params.toString()}`;
+  };
+
+  const focusedNarrative = useMemo(() => {
+    if (!isFocusedComparison || selectedFacilities.length < 2) return [] as string[];
+
+    const favoriteFacility = selectedFacilities.find((facility) => facility.facilityId === favoriteFacilityId) || selectedFacilities[0];
+    const optimeFacility = selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId) || selectedFacilities[1];
+    if (!favoriteFacility || !optimeFacility) return [] as string[];
+
+    const favoriteNeeds = new Map((favoriteFacility.comparisonFacility?.need_rows || []).map((row) => [row.parameter_id, row] as const));
+    const optimeNeeds = new Map((optimeFacility.comparisonFacility?.need_rows || []).map((row) => [row.parameter_id, row] as const));
+
+    const sharedStrengths = patientNeedsRows
+      .filter((need) => favoriteNeeds.get(need.parameter_id)?.status === "MATCH" && optimeNeeds.get(need.parameter_id)?.status === "MATCH")
+      .slice(0, 3)
+      .map((need) => needLabel(need.parameter_id));
+
+    const optimeAdvantages = patientNeedsRows
+      .filter((need) => optimeNeeds.get(need.parameter_id)?.status === "MATCH" && favoriteNeeds.get(need.parameter_id)?.status !== "MATCH")
+      .slice(0, 3)
+      .map((need) => needLabel(need.parameter_id));
+
+    const favoriteAdvantages = patientNeedsRows
+      .filter((need) => favoriteNeeds.get(need.parameter_id)?.status === "MATCH" && optimeNeeds.get(need.parameter_id)?.status !== "MATCH")
+      .slice(0, 3)
+      .map((need) => needLabel(need.parameter_id));
+
+    const verificationGaps = patientNeedsRows
+      .filter((need) => favoriteNeeds.get(need.parameter_id)?.status === "NOT_VERIFIED" || optimeNeeds.get(need.parameter_id)?.status === "NOT_VERIFIED")
+      .slice(0, 3)
+      .map((need) => needLabel(need.parameter_id));
+
+    const lines: string[] = [];
+
+    if (sharedStrengths.length > 0) {
+      lines.push(`Both facilities are similarly strong for ${sharedStrengths.join(", ")}.`);
+    }
+
+    if (optimeAdvantages.length > 0) {
+      lines.push(`${optimeFacility.facilityName} has stronger verified evidence for ${optimeAdvantages.join(", ")}.`);
+    }
+
+    if (favoriteAdvantages.length > 0) {
+      lines.push(`${favoriteFacility.facilityName} has a supported advantage for ${favoriteAdvantages.join(", ")}.`);
+    }
+
+    if (verificationGaps.length > 0) {
+      lines.push(`${verificationGaps.join(", ")} is not currently verified for at least one of these facilities and should be confirmed directly.`);
+    }
+
+    const favoriteSummary = summarizeRecommendation(favoriteFacility.recommendation);
+    const optimeSummary = summarizeRecommendation(optimeFacility.recommendation);
+    if (favoriteSummary.qualitySafety !== optimeSummary.qualitySafety) {
+      lines.push(`Quality and safety differ: ${favoriteFacility.facilityName} is currently assessed as ${favoriteSummary.qualitySafety.toLowerCase()}, while ${optimeFacility.facilityName} is currently assessed as ${optimeSummary.qualitySafety.toLowerCase()}.`);
+    }
+
+    if (favoriteSummary.patientMatch !== optimeSummary.patientMatch) {
+      lines.push(`Overall patient fit differs: ${favoriteFacility.facilityName} is shown as ${favoriteSummary.patientMatch.toLowerCase()}, while ${optimeFacility.facilityName} is shown as ${optimeSummary.patientMatch.toLowerCase()}.`);
+    }
+
+    return lines;
+  }, [favoriteFacilityId, isFocusedComparison, optimeReferenceId, patientNeedsRows, selectedFacilities]);
+
+  const compareTitle = isFocusedComparison
+    ? "Your choice vs OPTIME's current recommendation"
+    : isFavoritesComparison
+      ? "Compare My Favorites"
+      : "Compare Facilities";
+
+  const compareSubtitle = isFocusedComparison
+    ? "See where your chosen facility and OPTIME's current best recommendation are similarly strong, where verified differences exist, and what still needs direct confirmation."
+    : isFavoritesComparison
+      ? "Compare your saved shortlist using the same patient-specific questions and verified evidence that shaped the recommendations."
+      : "Compare facilities using the same patient-specific questions and verified evidence that shaped the recommendations.";
 
   if (error) {
     return (
@@ -312,7 +413,7 @@ export function ComparePageClient() {
       <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
         <section className="mx-auto max-w-5xl rounded-3xl border border-[#e8ddcc] bg-white p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5f7f6b]">Compare</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#2f2a24]">Comparing facilities for {relationship}</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-[#2f2a24]">{compareTitle} for {relationship}</h1>
           <p className="mt-3 text-sm text-[#5c5347]">Select at least 2 facilities on the results page to build a comparison.</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link href={compareBackHref} className="rounded-full bg-[#5f7f6b] px-4 py-2 text-sm font-semibold text-white">Back to results</Link>
@@ -328,8 +429,8 @@ export function ComparePageClient() {
         <section className="mx-auto max-w-7xl space-y-6">
           <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">Compare</p>
-            <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">Comparing facilities for {relationship}</h1>
-            <p className="mt-2 text-[#6b645a]">Compare selected facilities using the same governed parameter IDs and patient context.</p>
+            <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">{compareTitle} for {relationship}</h1>
+            <p className="mt-2 text-[#6b645a]">{compareSubtitle}</p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <button type="button" onClick={addAnotherFacility} className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">Add another facility</button>
               <Link href={compareBackHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">Back to results</Link>
@@ -340,7 +441,7 @@ export function ComparePageClient() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Selected facilities</p>
-                <p className="mt-1 text-sm text-[#4a6076]">Loading compare details...</p>
+                <p className="mt-1 text-sm text-[#4a6076]">Loading patient-specific comparison details...</p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -361,8 +462,8 @@ export function ComparePageClient() {
       <section className="mx-auto max-w-7xl space-y-6">
         <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">Compare</p>
-          <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">Comparing facilities for {relationship}</h1>
-          <p className="mt-2 text-[#6b645a]">Compare selected facilities using the same governed parameter IDs and patient context.</p>
+          <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">{compareTitle} for {relationship}</h1>
+          <p className="mt-2 text-[#6b645a]">{compareSubtitle}</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button type="button" onClick={addAnotherFacility} className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">Add another facility</button>
             <Link href={compareBackHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">Back to results</Link>
@@ -373,14 +474,14 @@ export function ComparePageClient() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Selected facilities</p>
-              <p className="mt-1 text-sm text-[#4a6076]">Remove or add facilities, then compare again. Selected facilities stay in session while you move between pages.</p>
+              <p className="mt-1 text-sm text-[#4a6076]">Remove or add facilities, then compare again. Favorites stay in session while you move between pages.</p>
             </div>
             <button
               type="button"
-              onClick={() => setShowDifferencesOnly((current) => !current)}
+              onClick={() => setShowAllParameters((current) => !current)}
               className="rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]"
             >
-              {showDifferencesOnly ? "Show all 59 parameters" : "Show key differences"}
+              {showAllParameters ? "Show patient-relevant parameters" : `View all ${fullParameterIds.length || 59} parameters`}
             </button>
           </div>
 
@@ -404,7 +505,7 @@ export function ComparePageClient() {
             const summary = summarizeRecommendation(recommendation);
             return (
               <article key={facilityId} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">OPTIME Recommendation</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Comparison overview</p>
                 <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">{facilityName}</h2>
                 <p className="mt-1 text-sm text-[#6d655b]">{recommendation?.city || "City unknown"}, {recommendation?.state || "FL"}</p>
                 <div className="mt-4 space-y-2 text-sm text-[#4f473d]">
@@ -426,6 +527,11 @@ export function ComparePageClient() {
                       Open facility
                     </Link>
                   ) : null}
+                  {currentOptimeRecommendation && currentOptimeRecommendation.canonical_facility_id !== facilityId ? (
+                    <Link href={buildFavoriteVsOptimeHref(facilityId)} className="rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]">
+                      Compare with OPTIME recommendation
+                    </Link>
+                  ) : null}
                   <button type="button" onClick={() => removeFacility(facilityId)} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">
                     Remove
                   </button>
@@ -435,62 +541,73 @@ export function ComparePageClient() {
           })}
         </section>
 
+        {isFocusedComparison && focusedNarrative.length > 0 ? (
+          <section className="rounded-3xl border border-[#d9e3ec] bg-[#f8fcff] p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Difference summary</p>
+            <p className="mt-2 text-sm text-[#4a6076]">
+              Current OPTIME reference: {selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId)?.facilityName || "current highest applicable recommendation"}.
+            </p>
+            <div className="mt-4 space-y-3 text-sm text-[#355270]">
+              {focusedNarrative.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <section className="rounded-3xl border border-[#d9e3ec] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Patient-first comparison</p>
-              <p className="mt-2 text-sm text-[#4a6076]">Required and high-priority needs stay at the top. Unknown remains neutral and not treated as a failure.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Patient-relevant comparison</p>
+              <p className="mt-2 text-sm text-[#4a6076]">Selected patient needs and OPTIME-recommended relevant parameters appear first. UNKNOWN remains neutral and never becomes NO.</p>
             </div>
-            <p className="text-xs text-[#4a6076]">Same governed parameter IDs underneath</p>
+            <p className="text-xs text-[#4a6076]">Required and high-priority needs stay visible even when facilities are tied.</p>
           </div>
 
-          <div className="mt-4 space-y-3">
-            {patientNeedsRows.map((need) => {
-              const statuses = selectedFacilities.map((facility) => facility.comparisonFacility?.need_rows.find((row) => row.parameter_id === need.parameter_id));
-              return (
-                <div key={`patient-${need.parameter_id}`} className="rounded-2xl border border-[#d9e3ec] bg-[#f8fcff] p-3">
-                  <p className="font-semibold text-[#2f2a24]">{need.requirement_level}: {needLabel(need.parameter_id)}</p>
-                  <p className="mt-1 text-[10px] text-[#6b6257]">
-                    {need.applicable_scope === "FACILITY" ? "Facility-wide" : need.applicable_scope === "PROGRAM" ? "Program-level" : need.applicable_scope === "UNIT" ? "Unit-level" : "Service-level"}
-                  </p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                    {statuses.map((status, index) => {
-                      const facility = selectedFacilities[index];
-                      if (!facility) return null;
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr>
+                  <th className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 text-left">Parameter</th>
+                  {selectedFacilities.map((facility) => (
+                    <th key={`relevant-${facility.facilityId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-left">{facility.facilityName}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {relevantComparisonRows.map((row) => (
+                  <tr key={`relevant-row-${row.parameterId}`}>
+                    <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 align-top">
+                      <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
+                      <p className="mt-1 text-[10px] text-[#6b6257]">{isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId) ? "Selected or implied need" : "OPTIME-recommended relevant parameter"}</p>
+                    </td>
+                    {row.cells.map((cell, cellIndex) => {
+                      const facility = selectedFacilities[cellIndex];
                       return (
-                        <div key={`${facility.facilityId}-${need.parameter_id}`} className="rounded-xl border border-[#d9e3ec] bg-white px-3 py-2">
-                          <p className="font-semibold text-[#2f2a24]">{facility.facilityName}</p>
-                          <p className="mt-1 text-[#4f473d]">{statusLabel(status?.status || "NOT_VERIFIED")}</p>
-                          <p className="mt-1 text-[10px] text-[#6b6257]">
-                            {status?.scope === "FACILITY"
-                              ? "Available facility-wide"
-                              : status?.scope === "PROGRAM"
-                                ? `Available in a specific program${status?.scope_name ? ` (${status.scope_name})` : ""}`
-                                : status?.scope === "UNIT"
-                                  ? `Available in a specific unit${status?.scope_name ? ` (${status.scope_name})` : ""}`
-                                  : status?.scope === "SERVICE"
-                                    ? "Verified service"
-                                    : "Needs verification"}
-                          </p>
-                          <p className="text-[10px] text-[#6b6257]">Source: {status?.source || "Not verified"}</p>
-                        </div>
+                        <td key={`relevant-cell-${facility.facilityId}-${row.parameterId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 align-top">
+                          <p className="font-semibold text-[#2f2a24]">{cell.statusLabel}</p>
+                          <p className="mt-1 text-[#4f473d]">{cell.displayValue}</p>
+                          <p className="mt-1 text-[10px] text-[#6b6257]">{cell.scopeLabel}</p>
+                          <p className="text-[10px] text-[#6b6257]">Source: {cell.source}</p>
+                        </td>
                       );
                     })}
-                  </div>
-                </div>
-              );
-            })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-[#d9e3ec] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
+        {showAllParameters ? (
+          <section className="rounded-3xl border border-[#d9e3ec] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">All 59 parameters</p>
-              <p className="mt-2 text-sm text-[#4a6076]">This section uses the same governed parameter IDs for every facility. Toggle key differences to reduce noise.</p>
+              <p className="mt-2 text-sm text-[#4a6076]">This is the full canonical comparison. Missing evidence stays visible as needs verification or not verified.</p>
             </div>
-            <button type="button" onClick={() => setShowDifferencesOnly((current) => !current)} className="rounded-full border border-[#cddce5] bg-[#f6fbff] px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]">
-              {showDifferencesOnly ? "Show all rows" : "Show key differences"}
+            <button type="button" onClick={() => setShowAllParameters(false)} className="rounded-full border border-[#cddce5] bg-[#f6fbff] px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]">
+              Return to patient-relevant view
             </button>
           </div>
 
@@ -505,7 +622,7 @@ export function ComparePageClient() {
                 </tr>
               </thead>
               <tbody>
-                {visibleComparisonRows.map((row) => (
+                {comparisonRows.map((row) => (
                   <tr key={row.parameterId}>
                     <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 align-top">
                       <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
@@ -528,7 +645,8 @@ export function ComparePageClient() {
               </tbody>
             </table>
           </div>
-        </section>
+          </section>
+        ) : null}
       </section>
     </main>
   );

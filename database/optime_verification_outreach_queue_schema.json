@@ -1,0 +1,141 @@
+{
+  "schema_name": "optime_verification_outreach_queue",
+  "version": 1,
+  "status": "SCHEMA_ONLY",
+  "purpose": "Internal operational queue for Top 10 verification and outreach. Not a consumer-facing result limit. Dynamic operational facts remain separate from clinical capability truth.",
+  "queue_scope": {
+    "type": "string",
+    "allowed_values": [
+      "TOP_10_DECISION_QUEUE"
+    ]
+  },
+  "fields": [
+    {
+      "name": "queue_entry_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "canonical_facility_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "current_rank_position",
+      "type": "integer",
+      "required": true,
+      "notes": "Initial scope is ranked positions 1 through 10."
+    },
+    {
+      "name": "queue_reason",
+      "type": "string",
+      "required": true,
+      "allowed_values": [
+        "PRIMARY_TOP_5",
+        "BACKUP_CANDIDATE",
+        "RECHECK_REQUIRED",
+        "POST_VERIFICATION_RERANK"
+      ]
+    },
+    {
+      "name": "availability_status",
+      "type": "string",
+      "required": true,
+      "allowed_values": [
+        "UNKNOWN",
+        "CONFIRM_DIRECTLY",
+        "CONFIRMED_AVAILABLE",
+        "CONFIRMED_NOT_AVAILABLE",
+        "WAITLIST"
+      ]
+    },
+    {
+      "name": "insurance_payment_status",
+      "type": "string",
+      "required": true,
+      "allowed_values": [
+        "UNKNOWN",
+        "CONFIRM_DIRECTLY",
+        "COMPATIBLE",
+        "INCOMPATIBLE",
+        "PARTIAL"
+      ]
+    },
+    {
+      "name": "required_service_confirmation_status",
+      "type": "string",
+      "required": true,
+      "allowed_values": [
+        "UNKNOWN",
+        "CONFIRM_DIRECTLY",
+        "CONFIRMED_MATCH",
+        "CONFIRMED_GAP",
+        "PARTIAL"
+      ]
+    },
+    {
+      "name": "contact_status",
+      "type": "string",
+      "required": true,
+      "allowed_values": [
+        "NOT_STARTED",
+        "ATTEMPTED",
+        "CONNECTED",
+        "WAITING_RESPONSE",
+        "CLOSED"
+      ]
+    },
+    {
+      "name": "contact_attempts",
+      "type": "integer",
+      "required": true
+    },
+    {
+      "name": "last_contact_at",
+      "type": "datetime",
+      "required": false
+    },
+    {
+      "name": "verified_at",
+      "type": "datetime",
+      "required": false
+    },
+    {
+      "name": "verified_by",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "verification_outcome",
+      "type": "string",
+      "required": true,
+      "allowed_values": [
+        "UNKNOWN",
+        "PENDING",
+        "CONFIRMED",
+        "DISQUALIFIED",
+        "REQUIRES_RERANK"
+      ]
+    },
+    {
+      "name": "verification_notes",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "source_truth_boundary",
+      "type": "string",
+      "required": true,
+      "allowed_values": [
+        "OPERATIONAL_STATUS_ONLY_DOES_NOT_IMPLY_CLINICAL_CAPABILITY"
+      ]
+    }
+  ],
+  "governance_rules": [
+    "UNKNOWN is not NO.",
+    "Availability is never inferred.",
+    "Operational outreach status does not fabricate clinical evidence.",
+    "Any ranking change must be driven by newly verified governed evidence, not contact activity alone.",
+    "This queue is internal and separate from the consumer-facing result count."
+  ]
+}

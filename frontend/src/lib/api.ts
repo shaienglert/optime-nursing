@@ -630,24 +630,6 @@ const FALLBACK_BACKEND_FACILITIES: BackendFacility[] = [
   },
 ];
 
-const GALLERY_SETS: string[][] = [
-  [
-    "https://images.unsplash.com/photo-1512915922686-57c11dde9b6b?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80",
-  ],
-  [
-    "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1400&q=80",
-  ],
-  [
-    "https://images.unsplash.com/photo-1519643381401-22c77e60520e?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1464890100898-a385f744067f?auto=format&fit=crop&w=1400&q=80",
-    "https://images.unsplash.com/photo-1430285561322-7808604715df?auto=format&fit=crop&w=1400&q=80",
-  ],
-];
-
 const CMS_PLACEHOLDER_IMAGE = "/cms-placeholder.svg";
 
 function pickVisualSource(value: unknown): VisualImageAsset["source"] {
@@ -683,26 +665,21 @@ function sourcePriorityRank(source: VisualImageAsset["source"]): number {
   }
 }
 
-function buildFallbackVisualIntelligence(facilityId: number): FacilityVisualIntelligence {
-  const fallbackGallery = (GALLERY_SETS[facilityId % GALLERY_SETS.length] || []).map((url, index) => ({
-    category: ["exterior", "apartments", "dining room"][index] || "exterior",
-    url,
-    source: "CMS Placeholder" as const,
-    collected_at: "",
-  }));
-  const heroImage = fallbackGallery[0] || {
+function buildFallbackVisualIntelligence(_facilityId: number): FacilityVisualIntelligence {
+  const heroImage = {
     category: "exterior",
     url: CMS_PLACEHOLDER_IMAGE,
     source: "CMS Placeholder" as const,
     collected_at: "",
   };
+  const fallbackGallery = [heroImage];
 
   return {
     heroImage,
     galleryImages: fallbackGallery,
     lifestyleTags: [],
-    visualConfidenceScore: fallbackGallery.length > 0 ? 50 : 0,
-    visualCoverageScore: fallbackGallery.length > 0 ? 37.5 : 0,
+    visualConfidenceScore: 0,
+    visualCoverageScore: 0,
   };
 }
 
@@ -1465,7 +1442,6 @@ function toFacility(facility: BackendFacility): Facility {
 
 function toSearchFacility(facility: BackendFacility): SearchFacility {
   const base = toFacility(facility);
-  const gallery = GALLERY_SETS[facility.id % GALLERY_SETS.length];
   const optimeScore = Math.round(facility.overall_optime_score ?? 70);
   const taxonomy = inferCareTaxonomy(facility);
   const ageRange = deriveAgeRange(taxonomy.careTypes);
@@ -1478,7 +1454,7 @@ function toSearchFacility(facility: BackendFacility): SearchFacility {
   const result: SearchFacility = {
     ...base,
     matching_confidence: combineConfidence(base.matching_confidence, taxonomy.confidence),
-    imageUrl: gallery[0],
+    imageUrl: visualIntelligence.heroImage.url,
     optimeScore,
     matchLabel: scoreLabel(optimeScore),
     shortExplanation: buildShortExplanation(facility),

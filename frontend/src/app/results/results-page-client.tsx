@@ -13,8 +13,21 @@ import {
   fetchFacilityDetails,
   fetchPatientDecisionRecommendations,
 } from "@/lib/api";
+import {
+  buildNeedStatusMap,
+  deriveRelevantParameterIds,
+  displayParameterLabel,
+  isPatientNeed,
+  sortRelevantParameterIds,
+} from "@/lib/comparison-flow";
 import { resolveFacilityImage } from "@/lib/facility-experience";
-import { clearSearchSession, clearCompareSelection, loadCompareSelection, saveCompareSelection } from "@/lib/search-session";
+import {
+  clearCompareSelection,
+  clearFavoriteFacilities,
+  clearSearchSession,
+  loadFavoriteFacilities,
+  saveFavoriteFacilities,
+} from "@/lib/search-session";
 
 const TOP_RECOMMENDATION_COUNT = 5;
 const NEUTRAL_PLACEHOLDER_IMAGE = "/cms-placeholder.svg";
@@ -51,26 +64,6 @@ function eligibilityTone(status: string): string {
   if (status === "POTENTIALLY_ELIGIBLE") return "text-[#7a5a2f] bg-[#fff8ea] border-[#f0d9b0]";
   if (status === "INSUFFICIENT_EVIDENCE") return "text-[#24425e] bg-[#f6fbff] border-[#d9e3ec]";
   return "text-[#8b4f3f] bg-[#fff3ef] border-[#f0c9bf]";
-}
-
-function displayNeedLabel(parameterId: string): string {
-  const labels: Record<string, string> = {
-    nursing_24_7: "24/7 nursing support",
-    skilled_nursing_capabilities: "Skilled nursing",
-    adl_support: "Daily living assistance",
-    medication_support: "Medication management",
-    ot: "Occupational therapy",
-    pt: "Physical therapy",
-    speech_therapy: "Speech therapy",
-    transfer_assistance: "Transfer assistance",
-    post_stroke_neuro_evidence: "Stroke / neuro rehabilitation",
-    languages: "Language support",
-    medicare_attributes: "Medicare acceptance",
-    memory_care: "Memory care",
-    published_rates: "Transparent pricing",
-    transportation: "Transportation support",
-  };
-  return labels[parameterId] || parameterId.replace(/_/g, " ");
 }
 
 function qualitativeScoreLabel(value: number | null | undefined): string {
@@ -123,6 +116,13 @@ function summarizeRankReason(recommendation: DecisionEngineRecommendation, index
   return tie || primary;
 }
 
+function recommendationFitLabel(band: DecisionEngineRecommendation["match_band"]): string {
+  if (band === "STRONG_MATCH") return "Best fit";
+  if (band === "GOOD_MATCH") return "Strong fit";
+  if (band === "PARTIAL_MATCH") return "Good fit";
+  return "Needs closer review";
+}
+
 function toRecommendationImageInfo(details: FacilityDetailsData | null): RecommendationImageInfo {
   if (!details) {
     return {
@@ -143,26 +143,6 @@ function toRecommendationImageInfo(details: FacilityDetailsData | null): Recomme
   };
 }
 
-function buildNeedStatusMap(recommendation: DecisionEngineRecommendation): Map<string, "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED"> {
-  const statusMap = new Map<string, "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED">();
-  for (const item of recommendation.matched_needs || []) {
-    if (typeof item?.parameter_id === "string") {
-      statusMap.set(item.parameter_id, "MATCH");
-    }
-  }
-  for (const item of recommendation.unmet_verified_needs || []) {
-    if (typeof item?.parameter_id === "string") {
-      statusMap.set(item.parameter_id, "VERIFIED_GAP");
-    }
-  }
-  for (const item of recommendation.unknown_critical_needs || []) {
-    if (typeof item?.parameter_id === "string" && !statusMap.has(item.parameter_id)) {
-      statusMap.set(item.parameter_id, "NOT_VERIFIED");
-    }
-  }
-  return statusMap;
-}
-
 export function ResultsPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -172,9 +152,9 @@ export function ResultsPageClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiLoadError, setApiLoadError] = useState<string | null>(null);
   const [showMoreCommunities, setShowMoreCommunities] = useState(false);
-  const [savedCanonicalIds, setSavedCanonicalIds] = useState<string[]>([]);
+  const [favoriteCanonicalIds, setFavoriteCanonicalIds] = useState<string[]>(() => loadFavoriteFacilities());
   const [hiddenNeedIds, setHiddenNeedIds] = useState<string[]>([]);
-  const [compareSelectedIds, setCompareSelectedIds] = useState<string[]>(() => loadCompareSelection());
+  const [showAllTopFiveParameters, setShowAllTopFiveParameters] = useState(false);
   const [facilityImagesByCanonicalId, setFacilityImagesByCanonicalId] = useState<Record<string, RecommendationImageInfo>>({});
   const [brokenImageByCanonicalId, setBrokenImageByCanonicalId] = useState<Record<string, boolean>>({});
   const [imageFetchAttemptedByCanonicalId, setImageFetchAttemptedByCanonicalId] = useState<Record<string, boolean>>({});
@@ -216,14 +196,14 @@ export function ResultsPageClient() {
   }, [decisionRequestKey]);
 
   useEffect(() => {
-    if (compareSelectedIds.length > 0) {
-      saveCompareSelection(compareSelectedIds.slice(0, 5));
+    if (favoriteCanonicalIds.length > 0) {
+      saveFavoriteFacilities(favoriteCanonicalIds);
       return;
     }
-    clearCompareSelection();
-  }, [compareSelectedIds]);
+    clearFavoriteFacilities();
+  }, [favoriteCanonicalIds]);
 
-  const recommendations = decisionResponse?.results || [];
+  const recommendations = useMemo(() => decisionResponse?.results || [], [decisionResponse?.results]);
   const topRecommendations = useMemo(() => recommendations.slice(0, TOP_RECOMMENDATION_COUNT), [recommendations]);
   const remainingRecommendations = useMemo(() => recommendations.slice(TOP_RECOMMENDATION_COUNT), [recommendations]);
 
@@ -233,7 +213,7 @@ export function ResultsPageClient() {
   }, [decisionResponse, hiddenNeedIds]);
 
   const visibleNeedLabels = useMemo(
-    () => visibleNeeds.map((need) => ({ ...need, label: displayNeedLabel(need.parameter_id) })),
+    () => visibleNeeds.map((need) => ({ ...need, label: displayParameterLabel(need.parameter_id) })),
     [visibleNeeds],
   );
 
@@ -245,15 +225,15 @@ export function ResultsPageClient() {
     return map;
   }, [recommendations]);
 
-  const compareTrayItems = useMemo(
-    () => compareSelectedIds.map((facilityId) => {
+  const favoriteTrayItems = useMemo(
+    () => favoriteCanonicalIds.map((facilityId) => {
       const recommendation = recommendationByCanonicalId.get(facilityId);
       return {
         facilityId,
         facilityName: recommendation?.facility_name || facilityId,
       };
     }),
-    [compareSelectedIds, recommendationByCanonicalId],
+    [favoriteCanonicalIds, recommendationByCanonicalId],
   );
   const currentResultsPath = `/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
@@ -262,10 +242,15 @@ export function ResultsPageClient() {
     return topRecommendations;
   }, [recommendations, showMoreCommunities, topRecommendations]);
 
-  const comparisonNeeds = useMemo(() => {
-    const allNeeds = decisionResponse?.patient_needs_profile.needs || [];
-    return allNeeds.filter((need) => need.requirement_level === "REQUIRED" || need.requirement_level === "HIGH" || need.requirement_level === "PREFERENCE");
-  }, [decisionResponse]);
+  const primaryRecommendation = topRecommendations[0] || null;
+  const allComparisonParameterIds = useMemo(() => primaryRecommendation?.comparison_parameter_ids || [], [primaryRecommendation?.comparison_parameter_ids]);
+  const relevantParameterIds = useMemo(() => {
+    return sortRelevantParameterIds(
+      decisionResponse?.patient_needs_profile,
+      deriveRelevantParameterIds(decisionResponse?.patient_needs_profile, allComparisonParameterIds)
+    );
+  }, [allComparisonParameterIds, decisionResponse?.patient_needs_profile]);
+  const visibleTopFiveParameterIds = showAllTopFiveParameters ? allComparisonParameterIds : relevantParameterIds;
 
   useEffect(() => {
     let cancelled = false;
@@ -325,58 +310,31 @@ export function ResultsPageClient() {
   }, [visibleRecommendations, facilityImagesByCanonicalId, imageFetchAttemptedByCanonicalId]);
 
   const topFiveComparisonRows = useMemo(() => {
-    const requirementWeight: Record<string, number> = {
-      REQUIRED: 0,
-      HIGH: 1,
-      MEDIUM: 2,
-      PREFERENCE: 3,
-    };
-    const patientPriorityOrder = [
-      "nursing_24_7",
-      "skilled_nursing_capabilities",
-      "pt",
-      "ot",
-      "speech_therapy",
-      "post_stroke_neuro_evidence",
-      "transfer_assistance",
-      "adl_support",
-      "medication_support",
-    ];
-    const priorityMap = new Map(patientPriorityOrder.map((id, index) => [id, index]));
+    const needsById = new Map((decisionResponse?.patient_needs_profile.needs || []).map((need) => [need.parameter_id, need] as const));
 
-    const sortedNeeds = [...comparisonNeeds].sort((left, right) => {
-      const reqDelta = (requirementWeight[left.requirement_level] ?? 99) - (requirementWeight[right.requirement_level] ?? 99);
-      if (reqDelta !== 0) return reqDelta;
-      const leftPriority = priorityMap.get(left.parameter_id) ?? 999;
-      const rightPriority = priorityMap.get(right.parameter_id) ?? 999;
-      if (leftPriority !== rightPriority) return leftPriority - rightPriority;
-      return displayNeedLabel(left.parameter_id).localeCompare(displayNeedLabel(right.parameter_id));
-    });
-
-    const rows = sortedNeeds
-      .map((need) => {
+    return visibleTopFiveParameterIds
+      .map((parameterId) => {
+        const need = needsById.get(parameterId);
         const cells = topRecommendations.map((recommendation) => {
-          const status = buildNeedStatusMap(recommendation).get(need.parameter_id) || "NOT_VERIFIED";
+          const status = buildNeedStatusMap(recommendation).get(parameterId) || "NOT_VERIFIED";
           return comparisonStatusLabel(status);
         });
 
         const allEqual = new Set(cells).size === 1;
-        const isCritical = need.requirement_level === "REQUIRED" || need.requirement_level === "HIGH";
-        if (allEqual && !isCritical) {
+        const keepVisible = showAllTopFiveParameters || isPatientNeed(decisionResponse?.patient_needs_profile, parameterId) || !allEqual;
+        if (!keepVisible) {
           return null;
         }
 
         return {
-          rowId: need.parameter_id,
-          label: displayNeedLabel(need.parameter_id),
-          requirementLevel: need.requirement_level,
+          rowId: parameterId,
+          label: displayParameterLabel(parameterId),
+          requirementLevel: need?.requirement_level || "OPTIME_RECOMMENDED",
           cells,
         };
       })
       .filter(Boolean) as Array<{ rowId: string; label: string; requirementLevel: string; cells: string[] }>;
-
-    return rows;
-  }, [comparisonNeeds, topRecommendations]);
+  }, [decisionResponse?.patient_needs_profile, showAllTopFiveParameters, topRecommendations, visibleTopFiveParameterIds]);
 
   const topFiveCompareHref = useMemo(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -385,9 +343,18 @@ export function ResultsPageClient() {
     return `/compare?${params.toString()}`;
   }, [currentResultsPath, searchParams, topRecommendations]);
 
+  const compareFavoritesHref = useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("facilities", favoriteCanonicalIds.join(","));
+    params.set("comparison_mode", "favorites");
+    params.set("returnTo", currentResultsPath);
+    return `/compare?${params.toString()}`;
+  }, [currentResultsPath, favoriteCanonicalIds, searchParams]);
+
   const startNewSearch = () => {
     clearSearchSession();
     clearCompareSelection();
+    clearFavoriteFacilities();
     resetState();
     router.replace("/");
   };
@@ -396,19 +363,21 @@ export function ResultsPageClient() {
     router.push("/");
   };
 
-  const toggleCompareSelection = (recommendation: DecisionEngineRecommendation) => {
-    setCompareSelectedIds((current) => {
-      if (current.includes(recommendation.canonical_facility_id)) {
-        return current.filter((item) => item !== recommendation.canonical_facility_id);
-      }
-      if (current.length >= 5) return current;
-      return [...current, recommendation.canonical_facility_id];
-    });
+  const toggleFavoriteFacility = (canonicalFacilityId: string) => {
+    setFavoriteCanonicalIds((current) =>
+      current.includes(canonicalFacilityId)
+        ? current.filter((item) => item !== canonicalFacilityId)
+        : [...current, canonicalFacilityId]
+    );
   };
 
-  const buildCompareHref = () => {
+  const buildFavoriteVsOptimeHref = (favoriteFacilityId: string) => {
+    if (!primaryRecommendation) return currentResultsPath;
     const params = new URLSearchParams(searchParams.toString());
-    params.set("facilities", compareSelectedIds.join(","));
+    params.set("facilities", [favoriteFacilityId, primaryRecommendation.canonical_facility_id].join(","));
+    params.set("comparison_mode", "favorite-vs-optime");
+    params.set("favorite", favoriteFacilityId);
+    params.set("optime_reference", primaryRecommendation.canonical_facility_id);
     params.set("returnTo", currentResultsPath);
     return `/compare?${params.toString()}`;
   };
@@ -423,15 +392,15 @@ export function ResultsPageClient() {
   };
 
   const renderRecommendationCard = (recommendation: DecisionEngineRecommendation, index: number) => {
-    const isSaved = savedCanonicalIds.includes(recommendation.canonical_facility_id);
-    const isSelectedForCompare = compareSelectedIds.includes(recommendation.canonical_facility_id);
-    const compareDisabled = !isSelectedForCompare && compareSelectedIds.length >= 5;
+    const isFavorite = favoriteCanonicalIds.includes(recommendation.canonical_facility_id);
     const imageInfo = getRecommendationImage(recommendation);
+    const importantStrengths = recommendation.explanation.why_matches.slice(0, 2);
+    const importantVerificationItems = recommendation.explanation.needs_verification.slice(0, 2);
 
     return (
       <article
         key={recommendation.canonical_facility_id}
-        className={`rounded-2xl border bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)] ${isSelectedForCompare ? "border-[#6f9a86] ring-1 ring-[#6f9a86]/30" : "border-[#e8ddcc]"}`}
+        className={`rounded-2xl border bg-white p-4 shadow-[0_10px_30px_-24px_rgba(69,58,43,0.45)] ${isFavorite ? "border-[#6f9a86] ring-1 ring-[#6f9a86]/30" : "border-[#e8ddcc]"}`}
       >
         <div className="space-y-3">
           <div className="overflow-hidden rounded-2xl border border-[#dfd4c3] bg-[linear-gradient(140deg,#f5efe3_0%,#ffffff_70%)]">
@@ -463,9 +432,9 @@ export function ResultsPageClient() {
               </p>
             </div>
             <div className="rounded-2xl border border-[#d8e7dc] bg-[#f4fbf6] px-3 py-2 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Fit verdict</p>
-              <p className="mt-1 text-sm font-semibold text-[#2f6d3e]">{eligibilitySummary(recommendation.eligibility_status)}</p>
-              <p className="text-[10px] text-[#5e7264]">{recommendation.match_band.replace("_", " ")}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#3e7a4d]">Recommendation</p>
+              <p className="mt-1 text-sm font-semibold text-[#2f6d3e]">{recommendationFitLabel(recommendation.match_band)}</p>
+              <p className="text-[10px] text-[#5e7264]">{eligibilitySummary(recommendation.eligibility_status)}</p>
             </div>
           </div>
 
@@ -488,19 +457,25 @@ export function ResultsPageClient() {
             Eligibility: {recommendation.eligibility_status}
           </div>
 
-          <p className="text-sm text-[#4f473d]">
-            {recommendation.explanation.why_matches.length > 0
-              ? `Strong match because: ${recommendation.explanation.why_matches.slice(0, 3).join("; ")}.`
-              : "Evidence-based match assessment available."}
-          </p>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fcff] p-3 text-sm text-[#355270]">
+              <p className="font-semibold text-[#24425e]">Important strengths</p>
+              <ul className="mt-2 space-y-1">
+                {(importantStrengths.length > 0 ? importantStrengths : ["Strong governed match for this patient profile."]).map((item) => (
+                  <li key={`${recommendation.canonical_facility_id}-strength-${item}`}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-[#efe1cb] bg-[#fffaf0] p-3 text-sm text-[#6a5431]">
+              <p className="font-semibold text-[#6a5431]">Important items to verify</p>
+              <ul className="mt-2 space-y-1">
+                {(importantVerificationItems.length > 0 ? importantVerificationItems : ["No critical verification item is currently flagged."]).map((item) => (
+                  <li key={`${recommendation.canonical_facility_id}-verify-${item}`}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
 
-          <p className="text-xs text-[#6b6257]">
-            Needs verification: {recommendation.explanation.needs_verification.slice(0, 3).join("; ") || "None currently flagged"}
-          </p>
-
-          <p className="text-xs text-[#8b4f3f]">
-            Concerns: {recommendation.explanation.concerns.slice(0, 2).join("; ") || "No verified gap in current top needs"}
-          </p>
           <p className="text-xs text-[#5b5245]">{recommendation.explanation.availability_note}</p>
 
           {recommendation.tie_break_explanation_vs_next ? (
@@ -525,15 +500,6 @@ export function ResultsPageClient() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => toggleCompareSelection(recommendation)}
-              disabled={compareDisabled}
-              className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isSelectedForCompare ? "border-[#6f9a86] bg-[#f1faf3] text-[#2f6d3e]" : compareDisabled ? "border-[#e1d8c9] bg-[#f7f3eb] text-[#a0907d]" : "border-[#cddce5] bg-white text-[#24425e] hover:bg-[#f6fbff]"}`}
-            >
-              {isSelectedForCompare ? "Selected for compare" : compareDisabled ? "Compare limit reached" : "Compare"}
-            </button>
-
             {recommendation.facility_profile_id ? (
               <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
                 VIEW DETAILS
@@ -546,17 +512,17 @@ export function ResultsPageClient() {
 
             <button
               type="button"
-              onClick={() => {
-                setSavedCanonicalIds((current) =>
-                  current.includes(recommendation.canonical_facility_id)
-                    ? current.filter((id) => id !== recommendation.canonical_facility_id)
-                    : [...current, recommendation.canonical_facility_id]
-                );
-              }}
-              className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isSaved ? "border-[#6f9a86] bg-[#f1faf3] text-[#2f6d3e]" : "border-[#dccfb9] bg-white text-[#5b5245]"}`}
+              onClick={() => toggleFavoriteFacility(recommendation.canonical_facility_id)}
+              className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold ${isFavorite ? "border-[#6f9a86] bg-[#f1faf3] text-[#2f6d3e]" : "border-[#dccfb9] bg-white text-[#5b5245]"}`}
             >
-              {isSaved ? "Saved" : "SAVE"}
+              {isFavorite ? "Favorited" : "Favorite"}
             </button>
+
+            {primaryRecommendation && primaryRecommendation.canonical_facility_id !== recommendation.canonical_facility_id ? (
+              <Link href={buildFavoriteVsOptimeHref(recommendation.canonical_facility_id)} className="inline-flex rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#f6fbff]">
+                Compare with OPTIME recommendation
+              </Link>
+            ) : null}
 
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${recommendation.facility_name} ${recommendation.city || "Florida"}`)}`}
@@ -602,28 +568,37 @@ export function ResultsPageClient() {
             </div>
           ) : null}
 
-          {compareTrayItems.length > 0 ? (
+          {favoriteTrayItems.length > 0 ? (
             <div className="mt-5 rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#24425e]">Compare tray</p>
-                  <p className="mt-1 text-sm text-[#4a6076]">Compare selected ({compareTrayItems.length})</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#24425e]">Favorites</p>
+                  <p className="mt-1 text-sm text-[#4a6076]">Your saved shortlist ({favoriteTrayItems.length})</p>
                 </div>
-                <button
-                  type="button"
-                  disabled={compareTrayItems.length < 2}
-                  onClick={() => router.push(buildCompareHref())}
-                  className="rounded-full bg-[#24425e] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#9bb0c1]"
-                >
-                  Compare now
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={favoriteTrayItems.length < 2}
+                    onClick={() => router.push(compareFavoritesHref)}
+                    className="rounded-full bg-[#24425e] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#9bb0c1]"
+                  >
+                    Compare My Favorites
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFavoriteCanonicalIds([])}
+                    className="rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]"
+                  >
+                    Clear favorites
+                  </button>
+                </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {compareTrayItems.map((facility) => (
+                {favoriteTrayItems.map((facility) => (
                   <button
                     key={`tray-${facility.facilityId}`}
                     type="button"
-                    onClick={() => setCompareSelectedIds((current) => current.filter((id) => id !== facility.facilityId))}
+                    onClick={() => setFavoriteCanonicalIds((current) => current.filter((id) => id !== facility.facilityId))}
                     className="inline-flex items-center gap-2 rounded-full border border-[#cddce5] bg-white px-3 py-1.5 text-sm text-[#24425e] hover:bg-[#edf6fb]"
                   >
                     <span>{facility.facilityName}</span>
@@ -631,7 +606,7 @@ export function ResultsPageClient() {
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-[#4a6076]">Select 2 to 5 facilities. Compare stays separate from Save.</p>
+              <p className="mt-2 text-xs text-[#4a6076]">Favorites stay with you during normal navigation. Compare uses the same governed comparison engine as every other decision surface.</p>
             </div>
           ) : null}
         </header>
@@ -649,7 +624,7 @@ export function ResultsPageClient() {
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Results Summary</p>
               <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Personalized Recommendations</h2>
               <p className="mt-2 text-sm text-[#5c5347]">
-                {decisionResponse?.result_count || 0} communities shown from {decisionResponse?.total_candidates_scored || 0} scored facilities.
+                Recommendations reflect the needs and preferences currently provided. Availability and unresolved unknowns should still be confirmed directly with each facility.
               </p>
               <p className="mt-2 text-sm text-[#5c5347]">{decisionResponse?.availability_policy}</p>
               {decisionResponse?.tie_break_policy ? (
@@ -661,46 +636,62 @@ export function ResultsPageClient() {
 
             <VerificationOffer />
 
-            <section className="space-y-6">
-              {topRecommendations.map((recommendation, index) => (
-                <section key={`top-${recommendation.canonical_facility_id}`} className="space-y-4 rounded-3xl border border-[#e8ddcc] bg-[#fffdf9] p-5 shadow-[0_12px_40px_-28px_rgba(69,58,43,0.35)]">
-                  <div className="rounded-2xl border border-[#d9cfbf] bg-[linear-gradient(120deg,#f7efe0_0%,#fbf6ec_55%,#ffffff_100%)] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5f7f6b]">Advisor Recommendation</p>
-                    <h3 className="mt-1 text-2xl font-semibold text-[#2f2a24]">{recommendationTitle(index)}</h3>
-                    <p className="mt-2 text-sm text-[#5f5548]">{highlightLabel(index)} for {relationship}, with governed explainability.</p>
-                  </div>
-                  {renderRecommendationCard(recommendation, index)}
-                </section>
-              ))}
-            </section>
-
-            {remainingRecommendations.length > 0 ? (
-              <div className="space-y-4">
-                <div className="h-px w-full bg-[linear-gradient(90deg,transparent,#d9cfbf,transparent)]" />
-                <button type="button" onClick={() => setShowMoreCommunities((current) => !current)} className="rounded-full border border-[#d9cfbf] bg-white px-5 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">
-                  {showMoreCommunities ? "Hide additional communities" : "Show more communities"}
-                </button>
-                {showMoreCommunities ? (
-                  <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {remainingRecommendations.map((recommendation, index) => renderRecommendationCard(recommendation, index + TOP_RECOMMENDATION_COUNT))}
-                  </section>
-                ) : null}
-              </div>
-            ) : null}
-
             {topRecommendations.length > 0 ? (
               <section className="rounded-3xl border border-[#d9e3ec] bg-[#f6fbff] p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Top 5 recommendations for {relationship}</p>
-                    <p className="mt-2 text-sm text-[#4a6076]">A fast, patient-first view of meaningful differences across the current Top 5.</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Primary Top 5 recommendations</p>
+                    <p className="mt-2 text-sm text-[#4a6076]">This patient-specific decision table answers which five facilities OPTIME currently recommends, why, and what meaningful differences matter most for this person.</p>
                   </div>
-                  <Link href={topFiveCompareHref} className="rounded-full bg-[#24425e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d3650]">
-                    Compare these facilities
-                  </Link>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllTopFiveParameters((current) => !current)}
+                      className="rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]"
+                    >
+                      {showAllTopFiveParameters ? "Show patient-relevant parameters" : `View all ${allComparisonParameterIds.length || 59} parameters`}
+                    </button>
+                    <Link href={topFiveCompareHref} className="rounded-full bg-[#24425e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d3650]">
+                      Compare all Top 5
+                    </Link>
+                  </div>
                 </div>
 
-                <div className="mt-4 overflow-x-auto">
+                <div className="mt-4 md:hidden space-y-4">
+                  {topRecommendations.map((recommendation, index) => (
+                    <article key={`top5-mobile-${recommendation.canonical_facility_id}`} className="rounded-2xl border border-[#d9e3ec] bg-white p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
+                          <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
+                          <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
+                        </div>
+                        <span className="rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{recommendationFitLabel(recommendation.match_band)}</span>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {topFiveComparisonRows.map((row) => {
+                          const cellIndex = topRecommendations.findIndex((item) => item.canonical_facility_id === recommendation.canonical_facility_id);
+                          if (cellIndex === -1) return null;
+                          return (
+                            <div key={`mobile-row-${recommendation.canonical_facility_id}-${row.rowId}`} className="flex items-start justify-between gap-3 rounded-xl border border-[#eef3f7] bg-[#fbfdff] px-3 py-2 text-sm">
+                              <div>
+                                <p className="font-medium text-[#2f2a24]">{row.label}</p>
+                                <p className="text-[10px] uppercase tracking-[0.08em] text-[#6d655b]">{row.requirementLevel === "OPTIME_RECOMMENDED" ? "OPTIME recommended" : row.requirementLevel}</p>
+                              </div>
+                              <span className="text-right font-semibold text-[#355270]">{row.cells[cellIndex]}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="mt-3 rounded-xl border border-[#eef3f7] bg-[#fbfdff] px-3 py-2 text-sm text-[#4f473d]">
+                        <p className="font-semibold text-[#2f2a24]">Why this rank</p>
+                        <p className="mt-1">{summarizeRankReason(recommendation, index)}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="mt-4 hidden overflow-x-auto md:block">
                   <table className="min-w-[980px] border-collapse text-xs sm:text-sm">
                     <thead>
                       <tr>
@@ -723,7 +714,7 @@ export function ResultsPageClient() {
                               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
                               <p className="mt-1 text-sm font-semibold text-[#2f2a24]">{recommendation.facility_name}</p>
                               <p className="mt-1 text-xs text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
-                              <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Photo: ${imageInfo.sourceLabel}` : "Photo: neutral placeholder"}</p>
+                              <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Photo: ${imageInfo.sourceLabel}` : "Photo: neutral fallback"}</p>
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {recommendation.facility_profile_id ? (
                                   <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="rounded-full bg-[#6f9a86] px-3 py-1 text-xs font-semibold text-white hover:bg-[#618a77]">
@@ -732,10 +723,10 @@ export function ResultsPageClient() {
                                 ) : null}
                                 <button
                                   type="button"
-                                  onClick={() => toggleCompareSelection(recommendation)}
+                                  onClick={() => toggleFavoriteFacility(recommendation.canonical_facility_id)}
                                   className="rounded-full border border-[#cddce5] bg-white px-3 py-1 text-xs font-semibold text-[#24425e] hover:bg-[#edf6fb]"
                                 >
-                                  {compareSelectedIds.includes(recommendation.canonical_facility_id) ? "Selected" : "Add to compare"}
+                                  {favoriteCanonicalIds.includes(recommendation.canonical_facility_id) ? "Favorited" : "Favorite"}
                                 </button>
                               </div>
                             </th>
@@ -746,8 +737,8 @@ export function ResultsPageClient() {
                     <tbody>
                       <tr>
                         <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Overall recommendation</td>
-                        {topRecommendations.map((recommendation, index) => (
-                          <td key={`overall-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{highlightLabel(index)}</td>
+                        {topRecommendations.map((recommendation) => (
+                          <td key={`overall-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{recommendationFitLabel(recommendation.match_band)}</td>
                         ))}
                       </tr>
                       <tr>
@@ -794,8 +785,41 @@ export function ResultsPageClient() {
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-3 text-xs text-[#4a6076]">Needs verification is neutral. Unknown never means no.</p>
+                <p className="mt-3 text-xs text-[#4a6076]">Needs verification is neutral. UNKNOWN never means no. Expanded comparison preserves the full canonical {allComparisonParameterIds.length || 59}-parameter view.</p>
               </section>
+            ) : null}
+
+            <section className="space-y-6">
+              {topRecommendations.map((recommendation, index) => (
+                <section key={`top-${recommendation.canonical_facility_id}`} className="space-y-4 rounded-3xl border border-[#e8ddcc] bg-[#fffdf9] p-5 shadow-[0_12px_40px_-28px_rgba(69,58,43,0.35)]">
+                  <div className="rounded-2xl border border-[#d9cfbf] bg-[linear-gradient(120deg,#f7efe0_0%,#fbf6ec_55%,#ffffff_100%)] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5f7f6b]">Advisor recommendation</p>
+                    <h3 className="mt-1 text-2xl font-semibold text-[#2f2a24]">{recommendationTitle(index)}</h3>
+                    <p className="mt-2 text-sm text-[#5f5548]">{highlightLabel(index)} for {relationship}, explained with patient-specific differences and clear verification next steps.</p>
+                  </div>
+                  {renderRecommendationCard(recommendation, index)}
+                </section>
+              ))}
+            </section>
+
+            {remainingRecommendations.length > 0 ? (
+              <div className="space-y-4">
+                <div className="h-px w-full bg-[linear-gradient(90deg,transparent,#d9cfbf,transparent)]" />
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">More Results</p>
+                    <p className="mt-1 text-sm text-[#5c5347]">Additional ranked facilities continue from #{TOP_RECOMMENDATION_COUNT + 1} onward.</p>
+                  </div>
+                  <button type="button" onClick={() => setShowMoreCommunities((current) => !current)} className="rounded-full border border-[#d9cfbf] bg-white px-5 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">
+                    {showMoreCommunities ? "Hide more results" : "Show more results"}
+                  </button>
+                </div>
+                {showMoreCommunities ? (
+                  <section className="grid gap-4 md:grid-cols-2">
+                    {remainingRecommendations.map((recommendation, index) => renderRecommendationCard(recommendation, index + TOP_RECOMMENDATION_COUNT))}
+                  </section>
+                ) : null}
+              </div>
             ) : null}
           </section>
         ) : null}
