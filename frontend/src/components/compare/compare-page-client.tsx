@@ -9,11 +9,13 @@ import {
   DecisionEngineRecommendation,
   DecisionEngineResponse,
   FacilityParameterComparison,
+  ParameterTableRow,
   PatientComparisonContextResponse,
   fetchPatientComparisonContext,
   fetchPatientDecisionRecommendations,
   compareFacilityParameters,
 } from "@/lib/api";
+import { EvidenceDetailsModal, type EvidenceDetailsPayload, type EvidenceDetailRecord } from "@/components/compare/evidence-details-modal";
 import {
   deriveRelevantParameterIds,
   displayParameterLabel,
@@ -22,8 +24,10 @@ import {
 } from "@/lib/comparison-flow";
 import {
   clearCompareSelection,
+  loadDecisionResponseCache,
   loadCompareSelection,
   loadFavoriteFacilities,
+  saveDecisionResponseCache,
   saveCompareSelection,
   saveFavoriteFacilities,
 } from "@/lib/search-session";
@@ -35,6 +39,9 @@ type ComparisonCell = {
   lastVerified: string;
   scopeLabel: string;
   statusLabel: string;
+  evidenceCount: number;
+  payload: EvidenceDetailsPayload | null;
+  clickableLabel?: string;
 };
 
 function relationshipCopy(relationship: string): string {
@@ -79,6 +86,37 @@ function formatVerifiedDate(value?: string | null): string {
   return value;
 }
 
+function formatRawValue(value: unknown): string {
+  if (value === null || value === undefined || value === "UNKNOWN" || value === "Not verified") return "Not verified";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number") return Number.isInteger(value) ? String(value) : value.toFixed(2);
+  const text = String(value).trim();
+  if (!text) return "Not verified";
+  if (text === "YES") return "Yes";
+  if (text === "NO") return "No";
+  return text;
+}
+
+function isCountParameter(parameterId: string): boolean {
+  return /(count|find|complaint|deficien|penalt|fine|inspection|denial)/i.test(parameterId);
+}
+
+function toEvidenceRecord(entry: NonNullable<ParameterTableRow["evidence_records"]>[number]): EvidenceDetailRecord {
+  const provenance = (entry.provenance || {}) as Record<string, unknown>;
+  return {
+    title: typeof entry.evidence_text === "string" ? entry.evidence_text : undefined,
+    eventType: typeof entry.evidence_strength === "string" ? entry.evidence_strength : undefined,
+    date: typeof entry.evidence_date === "string" ? entry.evidence_date : undefined,
+    description: entry.evidence_value !== undefined && entry.evidence_value !== null ? `Reported value: ${String(entry.evidence_value)}` : undefined,
+    status: typeof entry.conflict_status === "string" ? entry.conflict_status : undefined,
+    identifier: entry.source_record_id ? String(entry.source_record_id) : undefined,
+    severityScope: [entry.scope, entry.scope_name].filter(Boolean).join(" / ") || undefined,
+    sourceOrganization: typeof provenance.source_family === "string" ? provenance.source_family : (typeof entry.source === "string" ? entry.source : undefined),
+    sourceDate: typeof entry.last_verified === "string" ? entry.last_verified : undefined,
+    sourceUrl: typeof provenance.source_url === "string" ? provenance.source_url : undefined,
+  };
+}
+
 function normalizeSelectedIds(values: string[]): string[] {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).slice(0, 5);
 }
@@ -111,6 +149,8 @@ export function ComparePageClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllParameters, setShowAllParameters] = useState(false);
+  const [activeEvidencePayload, setActiveEvidencePayload] = useState<EvidenceDetailsPayload | null>(null);
+  const [mobileFocusedFacilityId, setMobileFocusedFacilityId] = useState<string>("");
 
   const searchParamsString = searchParams.toString();
   const returnTo = searchParams.get("returnTo") || "/results";
@@ -165,9 +205,14 @@ export function ComparePageClient() {
       setIsLoading(true);
       setError(null);
       try {
-        const recommendations = await fetchPatientDecisionRecommendations(decisionRequestPayload);
+        const requestKey = JSON.stringify(decisionRequestPayload);
+        const cached = loadDecisionResponseCache<DecisionEngineResponse>(requestKey);
+        const recommendations = cached || await fetchPatientDecisionRecommendations(decisionRequestPayload);
         if (!mounted) return;
         setDecisionResponse(recommendations);
+        if (!cached) {
+          saveDecisionResponseCache(requestKey, recommendations);
+        }
 
         const [comparisonContextResponse, comparisonTableResponse] = await Promise.all([
           fetchPatientComparisonContext({
@@ -212,22 +257,48 @@ export function ComparePageClient() {
 
   const comparisonRows = useMemo(() => {
     if (!comparisonTable) return [];
-    const facilityTableById = new Map(
-      comparisonTable.facilities.map((facility) => [facility.canonical_facility_id, facility] as const),
-    );
-    return comparisonTable.parameter_ids.map((parameterId, index) => {
-      const parameterName = comparisonTable.facilities[0]?.rows[index]?.parameter || needLabel(parameterId);
+    const facilityTableById = new Map(comparisonTable.facilities.map((facility) => [facility.canonical_facility_id, facility] as const));
+    return comparisonTable.parameter_ids.map((parameterId) => {
+      const sampleRow = comparisonTable.facilities
+        .flatMap((facility) => facility.rows || [])
+        .find((row) => row.parameter_id === parameterId);
+      const parameterName = sampleRow?.parameter || needLabel(parameterId);
       const cells = selectedFacilityIds.map((facilityId) => {
         const facility = facilityTableById.get(facilityId);
-        const row = facility?.rows[index];
+        const row = (facility?.rows || []).find((item) => item.parameter_id === parameterId);
         const rawValue = String(row?.raw_value ?? row?.status_value ?? "UNKNOWN");
+        const formattedValue = formatRawValue(row?.status_value ?? row?.raw_value ?? "UNKNOWN");
+        const evidenceRecords = (row?.evidence_records || []).map(toEvidenceRecord);
+
+        let summary = `${parameterName}: ${formattedValue}.`;
+        let clickableLabel: string | undefined;
+        let unavailableDetailsMessage: string | undefined;
+        if (isCountParameter(parameterId) && typeof row?.raw_value === "number" && Number.isInteger(row.raw_value) && row.raw_value >= 0) {
+          summary = row.raw_value === 0 ? "No records found in the verified reporting period." : `${row.raw_value} records reported in the verified reporting period.`;
+          clickableLabel = row.raw_value === 0 ? "No records found in the verified reporting period >" : `${row.raw_value} found >`;
+          if ((row.evidence_count || 0) <= 1 && row.raw_value > 0) {
+            unavailableDetailsMessage = `${row.raw_value} records reported. Detailed records are not currently available in OPTIME.`;
+          }
+        } else if (row?.source && row.source !== "Not verified") {
+          clickableLabel = "View details >";
+        }
+
         return {
           rawValue,
-          displayValue: String(row?.status_value ?? rawValue),
+          displayValue: formattedValue,
           source: String(row?.source || "Not verified"),
           lastVerified: formatVerifiedDate(row?.last_verified),
           scopeLabel: scopeLabel(row?.detail_scope || "", row?.scope_name),
           statusLabel: fullCellStatusLabel(rawValue),
+          evidenceCount: row?.evidence_count || 0,
+          clickableLabel,
+          payload: clickableLabel ? {
+            facilityName: facility?.facility_name || facilityId,
+            parameterLabel: parameterName,
+            summary,
+            records: evidenceRecords,
+            unavailableDetailsMessage,
+          } : null,
         } satisfies ComparisonCell;
       });
       return {
@@ -267,6 +338,16 @@ export function ComparePageClient() {
     });
   }, [comparisonRows, decisionResponse?.patient_needs_profile, relevantParameterIds]);
 
+  const priorityRelevantRows = useMemo(
+    () => relevantComparisonRows.filter((row) => isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId)),
+    [decisionResponse?.patient_needs_profile, relevantComparisonRows],
+  );
+
+  const recommendedRelevantRows = useMemo(
+    () => relevantComparisonRows.filter((row) => !isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId)),
+    [decisionResponse?.patient_needs_profile, relevantComparisonRows],
+  );
+
   const whatToVerify = useMemo(() => {
     if (!comparisonContext) return [];
     const rows = patientNeedsRows.flatMap((need) => {
@@ -290,6 +371,19 @@ export function ComparePageClient() {
       comparisonFacility,
     };
   });
+
+  const effectiveMobileFocusedFacilityId =
+    mobileFocusedFacilityId && selectedFacilities.some((facility) => facility.facilityId === mobileFocusedFacilityId)
+      ? mobileFocusedFacilityId
+      : (selectedFacilities[0]?.facilityId || "");
+
+  const mobileFocusedRows = useMemo(() => {
+    const focusedIndex = selectedFacilities.findIndex((facility) => facility.facilityId === effectiveMobileFocusedFacilityId);
+    if (focusedIndex < 0) return [] as typeof relevantComparisonRows;
+    return relevantComparisonRows
+      .filter((row) => row.cells[focusedIndex].displayValue !== "Not verified" || isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId))
+      .slice(0, 12);
+  }, [decisionResponse?.patient_needs_profile, effectiveMobileFocusedFacilityId, relevantComparisonRows, selectedFacilities]);
 
   const removeFacility = (facilityId: string) => {
     setSelectedFacilityIds((current) => {
@@ -445,9 +539,9 @@ export function ComparePageClient() {
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              {selectedFacilityIds.map((facilityId) => (
+              {selectedFacilityIds.map((facilityId, index) => (
                 <span key={facilityId} className="inline-flex items-center gap-2 rounded-full border border-[#cddce5] bg-white px-3 py-1.5 text-sm text-[#24425e]">
-                  <span>{facilityId}</span>
+                  <span>Selected facility #{index + 1}</span>
                 </span>
               ))}
             </div>
@@ -543,7 +637,12 @@ export function ComparePageClient() {
 
         {isFocusedComparison && focusedNarrative.length > 0 ? (
           <section className="rounded-3xl border border-[#d9e3ec] bg-[#f8fcff] p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Difference summary</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">What you should know</p>
+            <h2 className="mt-2 text-lg font-semibold text-[#2f2a24]">
+              Your choice: {selectedFacilities.find((facility) => facility.facilityId === favoriteFacilityId)?.facilityName || "Selected facility"}
+              {" "}vs{" "}
+              OPTIME recommendation {decisionResponse?.results.find((item) => item.canonical_facility_id === optimeReferenceId)?.rank_display || "#1"}: {selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId)?.facilityName || "Current best applicable recommendation"}
+            </h2>
             <p className="mt-2 text-sm text-[#4a6076]">
               Current OPTIME reference: {selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId)?.facilityName || "current highest applicable recommendation"}.
             </p>
@@ -564,7 +663,40 @@ export function ComparePageClient() {
             <p className="text-xs text-[#4a6076]">Required and high-priority needs stay visible even when facilities are tied.</p>
           </div>
 
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4 space-y-3 md:hidden">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">Focused mobile comparison</p>
+            <div className="flex flex-wrap gap-2">
+              {selectedFacilities.map((facility) => (
+                <button
+                  key={`mobile-focus-${facility.facilityId}`}
+                  type="button"
+                  onClick={() => setMobileFocusedFacilityId(facility.facilityId)}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${effectiveMobileFocusedFacilityId === facility.facilityId ? "border-[#24425e] bg-[#24425e] text-white" : "border-[#cddce5] bg-white text-[#24425e]"}`}
+                >
+                  {facility.facilityName}
+                </button>
+              ))}
+            </div>
+            {mobileFocusedRows.map((row) => {
+              const focusedIndex = selectedFacilities.findIndex((facility) => facility.facilityId === effectiveMobileFocusedFacilityId);
+              const cell = row.cells[focusedIndex];
+              if (!cell) return null;
+              return (
+                <article key={`mobile-focused-row-${row.parameterId}`} className="rounded-xl border border-[#e6edf3] bg-[#fbfdff] px-3 py-2 text-sm">
+                  <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
+                  <p className="mt-1 text-[#4f473d]">{cell.displayValue}</p>
+                  <p className="text-[11px] text-[#6b6257]">{cell.scopeLabel}</p>
+                  {cell.clickableLabel && cell.payload ? (
+                    <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                      {cell.clickableLabel}
+                    </button>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 hidden overflow-x-auto md:block">
             <table className="min-w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr>
@@ -575,11 +707,17 @@ export function ComparePageClient() {
                 </tr>
               </thead>
               <tbody>
-                {relevantComparisonRows.map((row) => (
+                <tr className="bg-[#eef6fd]">
+                  <td className="sticky left-0 z-10 border border-[#d9e3ec] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">A. Your priorities</td>
+                  {selectedFacilities.map((facility) => (
+                    <td key={`section-priority-${facility.facilityId}`} className="border border-[#d9e3ec] bg-[#eef6fd]" />
+                  ))}
+                </tr>
+                {priorityRelevantRows.map((row) => (
                   <tr key={`relevant-row-${row.parameterId}`}>
                     <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 align-top">
                       <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
-                      <p className="mt-1 text-[10px] text-[#6b6257]">{isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId) ? "Selected or implied need" : "OPTIME-recommended relevant parameter"}</p>
+                      <p className="mt-1 text-[10px] text-[#6b6257]">Selected or implied need</p>
                     </td>
                     {row.cells.map((cell, cellIndex) => {
                       const facility = selectedFacilities[cellIndex];
@@ -589,6 +727,41 @@ export function ComparePageClient() {
                           <p className="mt-1 text-[#4f473d]">{cell.displayValue}</p>
                           <p className="mt-1 text-[10px] text-[#6b6257]">{cell.scopeLabel}</p>
                           <p className="text-[10px] text-[#6b6257]">Source: {cell.source}</p>
+                          {cell.clickableLabel && cell.payload ? (
+                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                              {cell.clickableLabel}
+                            </button>
+                          ) : null}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                <tr className="bg-[#eef6fd]">
+                  <td className="sticky left-0 z-10 border border-[#d9e3ec] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">B. OPTIME recommends considering</td>
+                  {selectedFacilities.map((facility) => (
+                    <td key={`section-recommended-${facility.facilityId}`} className="border border-[#d9e3ec] bg-[#eef6fd]" />
+                  ))}
+                </tr>
+                {recommendedRelevantRows.map((row) => (
+                  <tr key={`recommended-row-${row.parameterId}`}>
+                    <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 align-top">
+                      <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
+                      <p className="mt-1 text-[10px] text-[#6b6257]">OPTIME-recommended relevant parameter</p>
+                    </td>
+                    {row.cells.map((cell, cellIndex) => {
+                      const facility = selectedFacilities[cellIndex];
+                      return (
+                        <td key={`recommended-cell-${facility.facilityId}-${row.parameterId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 align-top">
+                          <p className="font-semibold text-[#2f2a24]">{cell.statusLabel}</p>
+                          <p className="mt-1 text-[#4f473d]">{cell.displayValue}</p>
+                          <p className="mt-1 text-[10px] text-[#6b6257]">{cell.scopeLabel}</p>
+                          <p className="text-[10px] text-[#6b6257]">Source: {cell.source}</p>
+                          {cell.clickableLabel && cell.payload ? (
+                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                              {cell.clickableLabel}
+                            </button>
+                          ) : null}
                         </td>
                       );
                     })}
@@ -605,6 +778,9 @@ export function ComparePageClient() {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">All 59 parameters</p>
               <p className="mt-2 text-sm text-[#4a6076]">This is the full canonical comparison. Missing evidence stays visible as needs verification or not verified.</p>
+              {fullParameterIds.length !== 59 ? (
+                <p className="mt-1 text-xs text-[#8b4f3f]">Current payload includes {fullParameterIds.length} parameters. Canonical target is 59.</p>
+              ) : null}
             </div>
             <button type="button" onClick={() => setShowAllParameters(false)} className="rounded-full border border-[#cddce5] bg-[#f6fbff] px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]">
               Return to patient-relevant view
@@ -626,7 +802,6 @@ export function ComparePageClient() {
                   <tr key={row.parameterId}>
                     <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 align-top">
                       <p className="font-semibold text-[#2f2a24]">{row.parameterName}</p>
-                      <p className="mt-1 text-[10px] text-[#6b6257]">{row.parameterId}</p>
                     </td>
                     {row.cells.map((cell, cellIndex) => {
                       const facility = selectedFacilities[cellIndex];
@@ -637,6 +812,11 @@ export function ComparePageClient() {
                           <p className="mt-1 text-[10px] text-[#6b6257]">{cell.scopeLabel}</p>
                           <p className="text-[10px] text-[#6b6257]">Source: {cell.source}</p>
                           <p className="text-[10px] text-[#6b6257]">Last verified: {cell.lastVerified}</p>
+                          {cell.clickableLabel && cell.payload ? (
+                            <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                              {cell.clickableLabel}
+                            </button>
+                          ) : null}
                         </td>
                       );
                     })}
@@ -648,6 +828,12 @@ export function ComparePageClient() {
           </section>
         ) : null}
       </section>
+
+      <EvidenceDetailsModal
+        isOpen={Boolean(activeEvidencePayload)}
+        payload={activeEvidencePayload}
+        onClose={() => setActiveEvidencePayload(null)}
+      />
     </main>
   );
 }

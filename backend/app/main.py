@@ -91,6 +91,7 @@ from app.services.facility_parameter_service import (
     get_parameter_registry_payload,
     get_personalized_parameter_order,
 )
+from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 from app.services.patient_decision_engine import (
     build_patient_comparison_context,
     build_patient_needs_profile,
@@ -237,6 +238,7 @@ class ParameterTableRowOut(BaseModel):
     source: str
     last_verified: Optional[str] = None
     evidence_count: int
+    evidence_records: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class FacilityParameterTableOut(BaseModel):
@@ -1284,9 +1286,24 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
         ).all()
     }
 
+    canonical_index = get_canonical_facility_index()
+    cms_to_canonical_id: Dict[str, str] = {}
+    for candidate_id, candidate in canonical_index.items():
+        source_identity_ids = candidate.get("source_identity_ids") or {}
+        cms_ccn = str(source_identity_ids.get("cms_ccn") or "").strip()
+        if cms_ccn:
+            cms_to_canonical_id[cms_ccn] = candidate_id
+
     payload: List[FacilityListOut] = []
     for facility in facilities:
         profile = intelligence_profiles.get(facility.id)
+        canonical_facility_id = cms_to_canonical_id.get(str(facility.cms_id or "").strip())
+        media_payload = build_visual_media_payload(get_facility_media_record(canonical_facility_id))
+        profile_hero = _parse_json_object(profile.visual_hero_image) if profile else {}
+        profile_gallery = _parse_json_objects(profile.visual_gallery_images) if profile else []
+        visual_hero_image = media_payload["hero"] if media_payload else profile_hero
+        visual_gallery_images = media_payload["gallery"] if media_payload else profile_gallery
+
         payload.append(
             FacilityListOut(
                 id=facility.id,
@@ -1320,8 +1337,8 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
                 community_engagement_index=profile.community_engagement_index if profile else None,
                 reputation_index=profile.reputation_index if profile else None,
                 cultural_match_signals=profile.cultural_match_signals if profile else None,
-                visual_hero_image=_parse_json_object(profile.visual_hero_image) if profile else {},
-                visual_gallery_images=_parse_json_objects(profile.visual_gallery_images) if profile else [],
+                visual_hero_image=visual_hero_image,
+                visual_gallery_images=visual_gallery_images,
                 visual_lifestyle_tags=_parse_json_objects(profile.visual_lifestyle_tags) if profile else [],
                 visual_confidence_score=profile.visual_confidence_score if profile else None,
                 visual_coverage_score=profile.visual_coverage_score if profile else None,
@@ -1379,6 +1396,12 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
                 canonical_facility_id = candidate_id
                 break
 
+    media_payload = build_visual_media_payload(get_facility_media_record(canonical_facility_id))
+    profile_hero = _parse_json_object(profile.visual_hero_image) if profile else {}
+    profile_gallery = _parse_json_objects(profile.visual_gallery_images) if profile else []
+    visual_hero_image = media_payload["hero"] if media_payload else profile_hero
+    visual_gallery_images = media_payload["gallery"] if media_payload else profile_gallery
+
     return FacilityDetailsOut(
         id=facility.id,
         cms_id=facility.cms_id,
@@ -1395,8 +1418,8 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
         inspection_rating=facility.inspection_rating,
         beds=facility.beds,
         confidence_level=facility.confidence_level,
-        visual_hero_image=_parse_json_object(profile.visual_hero_image) if profile else {},
-        visual_gallery_images=_parse_json_objects(profile.visual_gallery_images) if profile else [],
+        visual_hero_image=visual_hero_image,
+        visual_gallery_images=visual_gallery_images,
         visual_lifestyle_tags=_parse_json_objects(profile.visual_lifestyle_tags) if profile else [],
         visual_confidence_score=profile.visual_confidence_score if profile else None,
         visual_coverage_score=profile.visual_coverage_score if profile else None,

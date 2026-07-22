@@ -7,25 +7,30 @@ import { useEffect, useMemo, useState } from "react";
 import { VerificationOffer } from "@/app/results/verification-offer";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import {
+  compareFacilityParameters,
   DecisionEngineRecommendation,
   DecisionEngineResponse,
   FacilityDetailsData,
+  FacilityParameterComparison,
+  ParameterTableRow,
   fetchFacilityDetails,
   fetchPatientDecisionRecommendations,
 } from "@/lib/api";
 import {
-  buildNeedStatusMap,
   deriveRelevantParameterIds,
   displayParameterLabel,
   isPatientNeed,
   sortRelevantParameterIds,
 } from "@/lib/comparison-flow";
 import { resolveFacilityImage } from "@/lib/facility-experience";
+import { EvidenceDetailsModal, type EvidenceDetailsPayload, type EvidenceDetailRecord } from "@/components/compare/evidence-details-modal";
 import {
   clearCompareSelection,
   clearFavoriteFacilities,
   clearSearchSession,
+  loadDecisionResponseCache,
   loadFavoriteFacilities,
+  saveDecisionResponseCache,
   saveFavoriteFacilities,
 } from "@/lib/search-session";
 
@@ -38,6 +43,78 @@ type RecommendationImageInfo = {
   isVerifiedFacilityImage: boolean;
   isFallback: boolean;
 };
+
+type MatrixCell = {
+  valueLabel: string;
+  clickableLabel?: string;
+  payload: EvidenceDetailsPayload | null;
+};
+
+type MatrixRow = {
+  parameterId: string;
+  label: string;
+  requirementLevel: string;
+  section: "PRIORITIES" | "RECOMMENDED";
+  cells: MatrixCell[];
+};
+
+function formatRawValue(value: unknown): string {
+  if (value === null || value === undefined || value === "UNKNOWN" || value === "Not verified") return "Not verified";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number") return Number.isInteger(value) ? String(value) : value.toFixed(2);
+  const text = String(value).trim();
+  if (!text) return "Not verified";
+  if (text === "YES") return "Yes";
+  if (text === "NO") return "No";
+  return text;
+}
+
+function formatParameterValue(parameterId: string, value: unknown): string {
+  const formatted = formatRawValue(value);
+  if (formatted === "Not verified" || formatted === "Confirm directly with facility") return formatted;
+  if (/(_rating$|rating$)/i.test(parameterId) && /^\d+(\.\d+)?$/.test(formatted)) {
+    return `${formatted} stars`;
+  }
+  return formatted;
+}
+
+function toMoney(value: unknown): string | null {
+  if (typeof value !== "number") return null;
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+}
+
+function toEvidenceRecord(entry: NonNullable<ParameterTableRow["evidence_records"]>[number]): EvidenceDetailRecord {
+  const provenance = (entry.provenance || {}) as Record<string, unknown>;
+  const sourceOrg = typeof provenance.source_family === "string" ? provenance.source_family : undefined;
+  const sourceUrl = typeof provenance.source_url === "string" ? provenance.source_url : undefined;
+  const evidenceValue = entry.evidence_value;
+  const amount = typeof evidenceValue === "number" && evidenceValue > 0 && /fine|penalt|dollar|amount/i.test(String(entry.evidence_text || ""))
+    ? toMoney(evidenceValue)
+    : null;
+
+  return {
+    title: typeof entry.evidence_text === "string" && entry.evidence_text.trim() ? entry.evidence_text : undefined,
+    eventType: typeof entry.evidence_strength === "string" ? entry.evidence_strength : undefined,
+    date: typeof entry.evidence_date === "string" ? entry.evidence_date : undefined,
+    amount: amount || undefined,
+    severityScope: [entry.scope, entry.scope_name].filter(Boolean).join(" / ") || undefined,
+    description: typeof entry.evidence_value === "string" || typeof entry.evidence_value === "number" ? `Reported value: ${String(entry.evidence_value)}` : undefined,
+    status: typeof entry.conflict_status === "string" ? entry.conflict_status : undefined,
+    identifier: entry.source_record_id ? String(entry.source_record_id) : undefined,
+    sourceOrganization: sourceOrg || (typeof entry.source === "string" ? entry.source : undefined),
+    sourceDate: typeof entry.last_verified === "string" ? entry.last_verified : undefined,
+    sourceUrl,
+  };
+}
+
+function isCountStyleParameter(parameterId: string): boolean {
+  return /(count|find|complaint|deficien|penalt|fine|inspection|denial)/i.test(parameterId);
+}
+
+function isSameValueAcrossCells(cells: MatrixCell[]): boolean {
+  const unique = new Set(cells.map((cell) => cell.valueLabel));
+  return unique.size <= 1;
+}
 
 function relationshipCopy(relationship: string): string {
   if (relationship === "Myself") return "You";
@@ -88,32 +165,10 @@ function eligibilitySummary(status: DecisionEngineRecommendation["eligibility_st
   return "Verified critical gaps present";
 }
 
-function comparisonStatusLabel(status: "MATCH" | "VERIFIED_GAP" | "NOT_VERIFIED"): string {
-  if (status === "MATCH") return "Supported";
-  if (status === "VERIFIED_GAP") return "Not currently supported";
-  return "Needs verification";
-}
-
-function matchBandLabel(band: DecisionEngineRecommendation["match_band"]): string {
-  if (band === "STRONG_MATCH") return "Best fit";
-  if (band === "GOOD_MATCH") return "Strong fit";
-  if (band === "PARTIAL_MATCH") return "Good fit";
-  return "Limited fit";
-}
-
 function summarizeVerificationNeeds(recommendation: DecisionEngineRecommendation): string {
   const items = recommendation.explanation.needs_verification || [];
   if (items.length === 0) return "No critical verification items flagged right now.";
   return items.slice(0, 2).join("; ");
-}
-
-function summarizeRankReason(recommendation: DecisionEngineRecommendation, index: number): string {
-  const primary = recommendation.explanation.why_matches?.[0] || "Strong governed match for this patient profile.";
-  const tie = recommendation.tie_break_explanation_vs_next?.why_ranked_above || "";
-  if (index === 0) {
-    return primary;
-  }
-  return tie || primary;
 }
 
 function recommendationFitLabel(band: DecisionEngineRecommendation["match_band"]): string {
@@ -151,13 +206,16 @@ export function ResultsPageClient() {
   const [decisionResponse, setDecisionResponse] = useState<DecisionEngineResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiLoadError, setApiLoadError] = useState<string | null>(null);
-  const [showMoreCommunities, setShowMoreCommunities] = useState(false);
+  const [showMoreCommunities, setShowMoreCommunities] = useState<boolean>(() => searchParams.get("show_more") === "1");
   const [favoriteCanonicalIds, setFavoriteCanonicalIds] = useState<string[]>(() => loadFavoriteFacilities());
   const [hiddenNeedIds, setHiddenNeedIds] = useState<string[]>([]);
   const [showAllTopFiveParameters, setShowAllTopFiveParameters] = useState(false);
+  const [topFiveComparisonTable, setTopFiveComparisonTable] = useState<FacilityParameterComparison | null>(null);
   const [facilityImagesByCanonicalId, setFacilityImagesByCanonicalId] = useState<Record<string, RecommendationImageInfo>>({});
   const [brokenImageByCanonicalId, setBrokenImageByCanonicalId] = useState<Record<string, boolean>>({});
   const [imageFetchAttemptedByCanonicalId, setImageFetchAttemptedByCanonicalId] = useState<Record<string, boolean>>({});
+  const [activeEvidencePayload, setActiveEvidencePayload] = useState<EvidenceDetailsPayload | null>(null);
+  const [mobileCompareFacilityId, setMobileCompareFacilityId] = useState<string>("");
 
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
   const textQuery = searchParams.get("q") || searchParams.get("search") || "";
@@ -174,13 +232,17 @@ export function ResultsPageClient() {
       setIsLoading(true);
       setApiLoadError(null);
       try {
-        const recommendations = await fetchPatientDecisionRecommendations(JSON.parse(decisionRequestKey) as {
+        const cached = loadDecisionResponseCache<DecisionEngineResponse>(decisionRequestKey);
+        const recommendations = cached || await fetchPatientDecisionRecommendations(JSON.parse(decisionRequestKey) as {
           questionnaire_state: Record<string, unknown>;
           natural_language_query: string;
           limit: number;
         });
         if (!isMounted) return;
         setDecisionResponse(recommendations);
+        if (!cached) {
+          saveDecisionResponseCache(decisionRequestKey, recommendations);
+        }
       } catch (error) {
         if (!isMounted) return;
         setDecisionResponse(null);
@@ -194,6 +256,20 @@ export function ResultsPageClient() {
       isMounted = false;
     };
   }, [decisionRequestKey]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (showMoreCommunities) {
+      params.set("show_more", "1");
+    } else {
+      params.delete("show_more");
+    }
+    const next = `/results${params.toString() ? `?${params.toString()}` : ""}`;
+    const current = `/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+    if (next !== current) {
+      router.replace(next, { scroll: false });
+    }
+  }, [router, searchParams, showMoreCommunities]);
 
   useEffect(() => {
     if (favoriteCanonicalIds.length > 0) {
@@ -309,32 +385,205 @@ export function ResultsPageClient() {
     };
   }, [visibleRecommendations, facilityImagesByCanonicalId, imageFetchAttemptedByCanonicalId]);
 
-  const topFiveComparisonRows = useMemo(() => {
-    const needsById = new Map((decisionResponse?.patient_needs_profile.needs || []).map((need) => [need.parameter_id, need] as const));
+  useEffect(() => {
+    let cancelled = false;
 
-    return visibleTopFiveParameterIds
+    async function loadTopFiveComparisonTable() {
+      if (!decisionResponse || topRecommendations.length === 0) {
+        setTopFiveComparisonTable(null);
+        return;
+      }
+
+      try {
+        const payload = await compareFacilityParameters({
+          canonical_facility_ids: topRecommendations.map((item) => item.canonical_facility_id),
+          need_tags: decisionResponse.patient_needs_profile.need_tags,
+          priority_parameter_ids: decisionResponse.patient_needs_profile.priority_parameter_ids,
+          profile_key: decisionResponse.patient_needs_profile.profile_key || undefined,
+        });
+        if (cancelled) return;
+        setTopFiveComparisonTable(payload);
+      } catch {
+        if (cancelled) return;
+        setTopFiveComparisonTable(null);
+      }
+    }
+
+    void loadTopFiveComparisonTable();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [decisionResponse, topRecommendations]);
+
+  const matrixRows = useMemo(() => {
+    const rowsByFacilityId = new Map<string, Map<string, ParameterTableRow>>();
+    for (const facility of topFiveComparisonTable?.facilities || []) {
+      rowsByFacilityId.set(
+        facility.canonical_facility_id,
+        new Map((facility.rows || []).map((row) => [row.parameter_id, row] as const)),
+      );
+    }
+
+    const needsById = new Map((decisionResponse?.patient_needs_profile.needs || []).map((need) => [need.parameter_id, need] as const));
+    const matrixParameterIds = showAllTopFiveParameters
+      ? (topFiveComparisonTable?.parameter_ids || allComparisonParameterIds)
+      : visibleTopFiveParameterIds;
+
+    return matrixParameterIds
       .map((parameterId) => {
         const need = needsById.get(parameterId);
-        const cells = topRecommendations.map((recommendation) => {
-          const status = buildNeedStatusMap(recommendation).get(parameterId) || "NOT_VERIFIED";
-          return comparisonStatusLabel(status);
+        const cells: MatrixCell[] = topRecommendations.map((recommendation) => {
+          const row = rowsByFacilityId.get(recommendation.canonical_facility_id)?.get(parameterId);
+          const fallbackValue = row?.status_value ?? row?.raw_value ?? "Not verified";
+          const valueLabel = formatParameterValue(parameterId, fallbackValue);
+          const evidenceRecords = (row?.evidence_records || []).map(toEvidenceRecord);
+          const numericValue = typeof fallbackValue === "number" ? fallbackValue : Number.NaN;
+          const hasVerifiedSource = Boolean(row && row.source && row.source !== "Not verified");
+
+          let summary = hasVerifiedSource
+            ? `${valueLabel} is shown from governed evidence sources checked by OPTIME.`
+            : "Not verified in OPTIME's governed evidence sources.";
+          let unavailableDetailsMessage: string | undefined;
+          let clickableLabel: string | undefined;
+
+          if (isCountStyleParameter(parameterId) && Number.isFinite(numericValue) && Number.isInteger(numericValue) && numericValue >= 0) {
+            if (numericValue === 0) {
+              summary = "No records found in the verified reporting period.";
+              clickableLabel = hasVerifiedSource ? "No records found in the verified reporting period >" : undefined;
+            } else {
+              summary = `${numericValue} records reported in the verified reporting period.`;
+              clickableLabel = `${numericValue} found >`;
+              if ((row?.evidence_records || []).length <= 1 && (row?.evidence_count || 0) <= 1) {
+                unavailableDetailsMessage = `${numericValue} records reported. Detailed records are not currently available in OPTIME.`;
+              }
+            }
+          } else if (hasVerifiedSource) {
+            clickableLabel = "View details >";
+          }
+
+          const payload: EvidenceDetailsPayload | null = clickableLabel
+            ? {
+                facilityName: recommendation.facility_name,
+                parameterLabel: displayParameterLabel(parameterId),
+                summary,
+                records: evidenceRecords,
+                unavailableDetailsMessage,
+              }
+            : null;
+
+          return {
+            valueLabel,
+            clickableLabel,
+            payload,
+          };
         });
 
-        const allEqual = new Set(cells).size === 1;
-        const keepVisible = showAllTopFiveParameters || isPatientNeed(decisionResponse?.patient_needs_profile, parameterId) || !allEqual;
-        if (!keepVisible) {
-          return null;
-        }
+        const keepVisible = showAllTopFiveParameters || isPatientNeed(decisionResponse?.patient_needs_profile, parameterId) || !isSameValueAcrossCells(cells);
+        if (!keepVisible) return null;
 
         return {
-          rowId: parameterId,
+          parameterId,
           label: displayParameterLabel(parameterId),
           requirementLevel: need?.requirement_level || "OPTIME_RECOMMENDED",
+          section: need ? "PRIORITIES" : "RECOMMENDED",
           cells,
-        };
+        } satisfies MatrixRow;
       })
-      .filter(Boolean) as Array<{ rowId: string; label: string; requirementLevel: string; cells: string[] }>;
-  }, [decisionResponse?.patient_needs_profile, showAllTopFiveParameters, topRecommendations, visibleTopFiveParameterIds]);
+      .filter(Boolean) as MatrixRow[];
+  }, [
+    allComparisonParameterIds,
+    decisionResponse?.patient_needs_profile,
+    showAllTopFiveParameters,
+    topFiveComparisonTable,
+    topRecommendations,
+    visibleTopFiveParameterIds,
+  ]);
+
+  const priorityMatrixRows = useMemo(() => matrixRows.filter((row) => row.section === "PRIORITIES"), [matrixRows]);
+  const recommendedMatrixRows = useMemo(() => matrixRows.filter((row) => row.section === "RECOMMENDED"), [matrixRows]);
+
+  const rankingDifferenceByPair = useMemo(() => {
+    type TieBreakDecision = NonNullable<DecisionEngineResponse["tie_break_decisions"]>[number];
+    const map = new Map<string, TieBreakDecision>();
+    for (const item of decisionResponse?.tie_break_decisions || []) {
+      map.set(`${item.higher_canonical_facility_id}::${item.lower_canonical_facility_id}`, item);
+    }
+    return map;
+  }, [decisionResponse?.tie_break_decisions]);
+
+  const rankingRows = useMemo(() => {
+    return topRecommendations.map((recommendation, index) => {
+      if (index === 0) {
+        const leadReason = recommendation.tie_break_explanation_vs_next?.why_ranked_above || recommendation.explanation.why_matches?.[0] || "Top ranked from governed patient-specific evidence.";
+        return {
+          facilityId: recommendation.canonical_facility_id,
+          label: "Why this rank",
+          text: leadReason,
+          payload: {
+            facilityName: recommendation.facility_name,
+            parameterLabel: "Ranking difference",
+            summary: leadReason,
+            records: [
+              {
+                title: "Why #1 leads",
+                description: leadReason,
+                sourceOrganization: "OPTIME decision engine explainability",
+              },
+            ],
+          } satisfies EvidenceDetailsPayload,
+        };
+      }
+
+      const above = topRecommendations[index - 1];
+      const decision = rankingDifferenceByPair.get(`${above.canonical_facility_id}::${recommendation.canonical_facility_id}`);
+      if (!decision) {
+        return {
+          facilityId: recommendation.canonical_facility_id,
+          label: "True tie",
+          text: "No governed ranking difference was verified at this comparison step.",
+          payload: null,
+        };
+      }
+
+      const summary = decision.reason || `${recommendation.facility_name} is below ${above.facility_name} because of a governed difference in ${decision.decision_dimension}.`;
+      return {
+        facilityId: recommendation.canonical_facility_id,
+        label: "Ranking difference",
+        text: summary,
+        payload: {
+          facilityName: recommendation.facility_name,
+          parameterLabel: "Ranking difference",
+          summary,
+          records: [
+            {
+              title: `Why below ${above.facility_name}`,
+              description: summary,
+              eventType: decision.decision_dimension,
+              sourceOrganization: "OPTIME decision engine explainability",
+            },
+          ],
+        } satisfies EvidenceDetailsPayload,
+      };
+    });
+  }, [rankingDifferenceByPair, topRecommendations]);
+
+  const mobileCompareReference = topRecommendations[0] || null;
+  const effectiveMobileCompareFacilityId =
+    mobileCompareFacilityId && topRecommendations.some((item) => item.canonical_facility_id === mobileCompareFacilityId)
+      ? mobileCompareFacilityId
+      : (topRecommendations[1]?.canonical_facility_id || "");
+  const mobileCompareTarget = topRecommendations.find((item) => item.canonical_facility_id === effectiveMobileCompareFacilityId) || topRecommendations[1] || null;
+  const mobileCompareRows = useMemo(() => {
+    if (!mobileCompareReference || !mobileCompareTarget) return [] as MatrixRow[];
+    const referenceIndex = topRecommendations.findIndex((item) => item.canonical_facility_id === mobileCompareReference.canonical_facility_id);
+    const targetIndex = topRecommendations.findIndex((item) => item.canonical_facility_id === mobileCompareTarget.canonical_facility_id);
+    if (referenceIndex < 0 || targetIndex < 0) return [] as MatrixRow[];
+
+    return priorityMatrixRows
+      .filter((row) => row.cells[referenceIndex].valueLabel !== row.cells[targetIndex].valueLabel || row.requirementLevel === "REQUIRED" || row.requirementLevel === "HIGH")
+      .slice(0, 6);
+  }, [mobileCompareReference, mobileCompareTarget, priorityMatrixRows, topRecommendations]);
 
   const topFiveCompareHref = useMemo(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -391,11 +640,41 @@ export function ResultsPageClient() {
     return imageInfo;
   };
 
-  const renderRecommendationCard = (recommendation: DecisionEngineRecommendation, index: number) => {
+  const renderMatrixCell = (cell: MatrixCell, key: string, wrapperClassName: string) => (
+    <div key={key} className={wrapperClassName}>
+      <p className="font-semibold text-[#2f2a24]">{cell.valueLabel}</p>
+      {cell.clickableLabel && cell.payload ? (
+        <button
+          type="button"
+          onClick={() => setActiveEvidencePayload(cell.payload)}
+          className="mt-1 text-left text-xs font-medium text-[#1f5f94] hover:underline"
+        >
+          {cell.clickableLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+
+  const renderRecommendationCard = (
+    recommendation: DecisionEngineRecommendation,
+    index: number,
+    options?: { isMoreResults?: boolean }
+  ) => {
+    const isMoreResults = options?.isMoreResults || false;
     const isFavorite = favoriteCanonicalIds.includes(recommendation.canonical_facility_id);
     const imageInfo = getRecommendationImage(recommendation);
-    const importantStrengths = recommendation.explanation.why_matches.slice(0, 2);
+    const importantStrengths = recommendation.explanation.why_matches.slice(0, isMoreResults ? 4 : 2);
     const importantVerificationItems = recommendation.explanation.needs_verification.slice(0, 2);
+    const topBoundary = topRecommendations[TOP_RECOMMENDATION_COUNT - 1] || null;
+    const belowTopFiveDecision = topBoundary
+      ? rankingDifferenceByPair.get(`${topBoundary.canonical_facility_id}::${recommendation.canonical_facility_id}`)
+      : null;
+    const whyBelowTopFive = isMoreResults
+      ? (belowTopFiveDecision?.reason
+          || (recommendation.rank_tie_status === "JOINT_RANK"
+            ? "Effectively tied with the primary recommendation set based on currently verified evidence."
+            : "Ranked below the primary Top 5 based on governed verified differences currently available."))
+      : "";
 
     return (
       <article
@@ -417,7 +696,7 @@ export function ResultsPageClient() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#dfd4c3] bg-white px-3 py-2 text-xs text-[#6d655b]">
               <span>{imageInfo.isVerifiedFacilityImage ? `Photo source: ${imageInfo.sourceLabel}` : "No verified facility photo yet"}</span>
-              <span>{imageInfo.isVerifiedFacilityImage ? "Facility-specific image" : "Neutral placeholder"}</span>
+              <span>{imageInfo.isVerifiedFacilityImage ? "Facility-specific image" : "General image shown"}</span>
             </div>
           </div>
 
@@ -453,13 +732,15 @@ export function ResultsPageClient() {
             </div>
           </div>
 
-          <div className={`rounded-2xl border px-3 py-2 text-xs font-semibold ${eligibilityTone(recommendation.eligibility_status)}`}>
-            Eligibility: {recommendation.eligibility_status}
-          </div>
+          {!isMoreResults ? (
+            <div className={`rounded-2xl border px-3 py-2 text-xs font-semibold ${eligibilityTone(recommendation.eligibility_status)}`}>
+              Eligibility: {recommendation.eligibility_status}
+            </div>
+          ) : null}
 
           <div className="grid gap-3 lg:grid-cols-2">
             <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fcff] p-3 text-sm text-[#355270]">
-              <p className="font-semibold text-[#24425e]">Important strengths</p>
+              <p className="font-semibold text-[#24425e]">Most relevant facts</p>
               <ul className="mt-2 space-y-1">
                 {(importantStrengths.length > 0 ? importantStrengths : ["Strong governed match for this patient profile."]).map((item) => (
                   <li key={`${recommendation.canonical_facility_id}-strength-${item}`}>{item}</li>
@@ -475,6 +756,13 @@ export function ResultsPageClient() {
               </ul>
             </div>
           </div>
+
+          {isMoreResults ? (
+            <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fcff] p-3 text-sm text-[#355270]">
+              <p className="font-semibold text-[#24425e]">Why below Top 5</p>
+              <p className="mt-1">{whyBelowTopFive}</p>
+            </div>
+          ) : null}
 
           <p className="text-xs text-[#5b5245]">{recommendation.explanation.availability_note}</p>
 
@@ -657,45 +945,100 @@ export function ResultsPageClient() {
                   </div>
                 </div>
 
-                <div className="mt-4 md:hidden space-y-4">
-                  {topRecommendations.map((recommendation, index) => (
-                    <article key={`top5-mobile-${recommendation.canonical_facility_id}`} className="rounded-2xl border border-[#d9e3ec] bg-white p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
-                          <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
-                          <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
+                <div className="mt-4 space-y-4 md:hidden">
+                  {topRecommendations.map((recommendation, index) => {
+                    const facilityIndex = topRecommendations.findIndex((item) => item.canonical_facility_id === recommendation.canonical_facility_id);
+                    const rankRow = rankingRows.find((item) => item.facilityId === recommendation.canonical_facility_id);
+                    return (
+                      <article key={`top5-mobile-${recommendation.canonical_facility_id}`} className="rounded-2xl border border-[#d9e3ec] bg-white p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
+                            <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
+                            <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleFavoriteFacility(recommendation.canonical_facility_id)}
+                            className="rounded-full border border-[#cddce5] bg-white px-3 py-1 text-xs font-semibold text-[#24425e]"
+                          >
+                            {favoriteCanonicalIds.includes(recommendation.canonical_facility_id) ? "Saved" : "Save"}
+                          </button>
                         </div>
-                        <span className="rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{recommendationFitLabel(recommendation.match_band)}</span>
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        {topFiveComparisonRows.map((row) => {
-                          const cellIndex = topRecommendations.findIndex((item) => item.canonical_facility_id === recommendation.canonical_facility_id);
-                          if (cellIndex === -1) return null;
-                          return (
-                            <div key={`mobile-row-${recommendation.canonical_facility_id}-${row.rowId}`} className="flex items-start justify-between gap-3 rounded-xl border border-[#eef3f7] bg-[#fbfdff] px-3 py-2 text-sm">
-                              <div>
+
+                        <div className="mt-3 space-y-2">
+                          {priorityMatrixRows.slice(0, 5).map((row) => {
+                            const cell = row.cells[facilityIndex];
+                            return (
+                              <div key={`mobile-priority-${recommendation.canonical_facility_id}-${row.parameterId}`} className="rounded-xl border border-[#eef3f7] bg-[#fbfdff] px-3 py-2 text-sm">
                                 <p className="font-medium text-[#2f2a24]">{row.label}</p>
-                                <p className="text-[10px] uppercase tracking-[0.08em] text-[#6d655b]">{row.requirementLevel === "OPTIME_RECOMMENDED" ? "OPTIME recommended" : row.requirementLevel}</p>
+                                <p className="mt-1 text-[#355270]">{cell.valueLabel}</p>
+                                {cell.clickableLabel && cell.payload ? (
+                                  <button type="button" onClick={() => setActiveEvidencePayload(cell.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                                    {cell.clickableLabel}
+                                  </button>
+                                ) : null}
                               </div>
-                              <span className="text-right font-semibold text-[#355270]">{row.cells[cellIndex]}</span>
+                            );
+                          })}
+                        </div>
+
+                        {rankRow ? (
+                          <div className="mt-3 rounded-xl border border-[#eef3f7] bg-[#fbfdff] px-3 py-2 text-sm text-[#4f473d]">
+                            <p className="font-semibold text-[#2f2a24]">{rankRow.label}</p>
+                            <p className="mt-1">{rankRow.text}</p>
+                            {rankRow.payload ? (
+                              <button type="button" onClick={() => setActiveEvidencePayload(rankRow.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                                View details {">"}
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+
+                  {mobileCompareReference && mobileCompareTarget ? (
+                    <article className="rounded-2xl border border-[#d9e3ec] bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">Compare recommendations</p>
+                      <p className="mt-1 text-sm text-[#4a6076]">Focused comparison defaults to #{mobileCompareReference.rank_position || 1} versus your selected alternative.</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {topRecommendations.slice(1).map((item, idx) => (
+                          <button
+                            key={`mobile-compare-switch-${item.canonical_facility_id}`}
+                            type="button"
+                            onClick={() => setMobileCompareFacilityId(item.canonical_facility_id)}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold ${mobileCompareTarget.canonical_facility_id === item.canonical_facility_id ? "border-[#24425e] bg-[#24425e] text-white" : "border-[#cddce5] bg-white text-[#24425e]"}`}
+                          >
+                            Compare with #{idx + 2}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 space-y-2">
+                        {mobileCompareRows.map((row) => {
+                          const refIndex = topRecommendations.findIndex((item) => item.canonical_facility_id === mobileCompareReference.canonical_facility_id);
+                          const targetIndex = topRecommendations.findIndex((item) => item.canonical_facility_id === mobileCompareTarget.canonical_facility_id);
+                          const leftCell = row.cells[refIndex];
+                          const rightCell = row.cells[targetIndex];
+                          return (
+                            <div key={`mobile-compare-row-${row.parameterId}`} className="rounded-xl border border-[#eef3f7] bg-[#fbfdff] px-3 py-2 text-sm">
+                              <p className="font-medium text-[#2f2a24]">{row.label}</p>
+                              <p className="mt-1 text-[#355270]">#1: {leftCell.valueLabel}</p>
+                              <p className="text-[#355270]">Selected: {rightCell.valueLabel}</p>
                             </div>
                           );
                         })}
                       </div>
-                      <div className="mt-3 rounded-xl border border-[#eef3f7] bg-[#fbfdff] px-3 py-2 text-sm text-[#4f473d]">
-                        <p className="font-semibold text-[#2f2a24]">Why this rank</p>
-                        <p className="mt-1">{summarizeRankReason(recommendation, index)}</p>
-                      </div>
                     </article>
-                  ))}
+                  ) : null}
                 </div>
 
                 <div className="mt-4 hidden overflow-x-auto md:block">
                   <table className="min-w-[980px] border-collapse text-xs sm:text-sm">
                     <thead>
                       <tr>
-                        <th className="sticky left-0 z-20 w-52 border border-[#d9e3ec] bg-[#f6fbff] px-3 py-3 text-left text-[#24425e]">Patient priorities</th>
+                        <th className="sticky left-0 z-20 w-52 border border-[#d9e3ec] bg-[#f6fbff] px-3 py-3 text-left text-[#24425e]">Decision factor</th>
                         {topRecommendations.map((recommendation, index) => {
                           const imageInfo = getRecommendationImage(recommendation);
                           return (
@@ -714,7 +1057,7 @@ export function ResultsPageClient() {
                               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
                               <p className="mt-1 text-sm font-semibold text-[#2f2a24]">{recommendation.facility_name}</p>
                               <p className="mt-1 text-xs text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
-                              <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Photo: ${imageInfo.sourceLabel}` : "Photo: neutral fallback"}</p>
+                              <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Image source: ${imageInfo.sourceLabel}` : "No verified facility image available"}</p>
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {recommendation.facility_profile_id ? (
                                   <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="rounded-full bg-[#6f9a86] px-3 py-1 text-xs font-semibold text-white hover:bg-[#618a77]">
@@ -735,45 +1078,64 @@ export function ResultsPageClient() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Overall recommendation</td>
+                      <tr className="bg-[#eef6fd]">
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">A. Your priorities</td>
                         {topRecommendations.map((recommendation) => (
-                          <td key={`overall-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{recommendationFitLabel(recommendation.match_band)}</td>
+                          <td key={`section-a-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-[#eef6fd]" />
                         ))}
                       </tr>
-                      <tr>
-                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Patient match</td>
-                        {topRecommendations.map((recommendation) => (
-                          <td key={`match-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{matchBandLabel(recommendation.match_band)}</td>
-                        ))}
-                      </tr>
-                      <tr>
-                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Quality &amp; Safety</td>
-                        {topRecommendations.map((recommendation) => (
-                          <td key={`quality-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{qualitativeScoreLabel(recommendation.quality_safety_score)}</td>
-                        ))}
-                      </tr>
-                      <tr>
-                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Staffing</td>
-                        {topRecommendations.map((recommendation) => (
-                          <td key={`staff-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{qualitativeScoreLabel(recommendation.staffing_score)}</td>
-                        ))}
-                      </tr>
-                      {topFiveComparisonRows.map((row) => (
-                        <tr key={`table-${row.rowId}`}>
+                      {priorityMatrixRows.map((row) => (
+                        <tr key={`table-priority-${row.parameterId}`}>
                           <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">
                             {row.label}
                             <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[#6d655b]">{row.requirementLevel}</p>
                           </td>
                           {row.cells.map((cell, index) => (
-                            <td key={`cell-${row.rowId}-${topRecommendations[index].canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{cell}</td>
+                            <td key={`cell-priority-${row.parameterId}-${topRecommendations[index].canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 align-top text-[#4f473d]">
+                              {renderMatrixCell(cell, `priority-cell-${row.parameterId}-${index}`, "")}
+                            </td>
                           ))}
                         </tr>
                       ))}
+
+                      <tr className="bg-[#eef6fd]">
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">B. OPTIME recommends considering</td>
+                        {topRecommendations.map((recommendation) => (
+                          <td key={`section-b-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-[#eef6fd]" />
+                        ))}
+                      </tr>
+                      {recommendedMatrixRows.map((row) => (
+                        <tr key={`table-recommended-${row.parameterId}`}>
+                          <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">
+                            {row.label}
+                            <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[#6d655b]">OPTIME recommended</p>
+                          </td>
+                          {row.cells.map((cell, index) => (
+                            <td key={`cell-recommended-${row.parameterId}-${topRecommendations[index].canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 align-top text-[#4f473d]">
+                              {renderMatrixCell(cell, `recommended-cell-${row.parameterId}-${index}`, "")}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+
+                      <tr className="bg-[#eef6fd]">
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">C. Why this rank</td>
+                        {topRecommendations.map((recommendation) => (
+                          <td key={`section-c-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-[#eef6fd]" />
+                        ))}
+                      </tr>
                       <tr>
-                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Why this rank</td>
-                        {topRecommendations.map((recommendation, index) => (
-                          <td key={`why-${recommendation.canonical_facility_id}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d]">{summarizeRankReason(recommendation, index)}</td>
+                        <td className="sticky left-0 z-10 border border-[#d9e3ec] bg-white px-3 py-2 font-semibold text-[#2f2a24]">Ranking difference</td>
+                        {rankingRows.map((rankRow) => (
+                          <td key={`why-${rankRow.facilityId}`} className="border border-[#d9e3ec] bg-white px-3 py-2 text-[#4f473d] align-top">
+                            <p className="font-semibold text-[#2f2a24]">{rankRow.label}</p>
+                            <p className="mt-1">{rankRow.text}</p>
+                            {rankRow.payload ? (
+                              <button type="button" onClick={() => setActiveEvidencePayload(rankRow.payload)} className="mt-1 text-xs font-medium text-[#1f5f94] hover:underline">
+                                View details {">"}
+                              </button>
+                            ) : null}
+                          </td>
                         ))}
                       </tr>
                       <tr>
@@ -785,7 +1147,12 @@ export function ResultsPageClient() {
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-3 text-xs text-[#4a6076]">Needs verification is neutral. UNKNOWN never means no. Expanded comparison preserves the full canonical {allComparisonParameterIds.length || 59}-parameter view.</p>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#4a6076]">
+                  <p>Needs verification is neutral. UNKNOWN never means no.</p>
+                  <button type="button" onClick={() => setShowAllTopFiveParameters((current) => !current)} className="font-semibold text-[#1f5f94] hover:underline">
+                    {showAllTopFiveParameters ? "Return to decision matrix" : `View all ${allComparisonParameterIds.length || 59} parameters`}
+                  </button>
+                </div>
               </section>
             ) : null}
 
@@ -808,15 +1175,17 @@ export function ResultsPageClient() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">More Results</p>
-                    <p className="mt-1 text-sm text-[#5c5347]">Additional ranked facilities continue from #{TOP_RECOMMENDATION_COUNT + 1} onward.</p>
+                    <p className="mt-1 text-sm text-[#5c5347]">Additional ranked facilities continue from #{TOP_RECOMMENDATION_COUNT + 1} onward across all relevant ranked results.</p>
                   </div>
                   <button type="button" onClick={() => setShowMoreCommunities((current) => !current)} className="rounded-full border border-[#d9cfbf] bg-white px-5 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">
-                    {showMoreCommunities ? "Hide more results" : "Show more results"}
+                    {showMoreCommunities ? "HIDE MORE RESULTS" : "SHOW MORE RESULTS"}
                   </button>
                 </div>
                 {showMoreCommunities ? (
                   <section className="grid gap-4 md:grid-cols-2">
-                    {remainingRecommendations.map((recommendation, index) => renderRecommendationCard(recommendation, index + TOP_RECOMMENDATION_COUNT))}
+                    {remainingRecommendations.map((recommendation, index) =>
+                      renderRecommendationCard(recommendation, index + TOP_RECOMMENDATION_COUNT, { isMoreResults: true })
+                    )}
                   </section>
                 ) : null}
               </div>
@@ -828,6 +1197,38 @@ export function ResultsPageClient() {
           {isLoading ? "Loading communities..." : apiLoadError ? "Decision API unavailable" : recommendations.length > 0 ? "End of recommendations" : "No communities available"}
         </div>
       </section>
+
+      {favoriteCanonicalIds.length > 0 ? (
+        <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 md:px-6 md:pb-4">
+          <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 rounded-2xl border border-[#d9e3ec] bg-white/95 px-4 py-3 shadow-[0_14px_40px_-26px_rgba(22,37,53,0.55)] backdrop-blur">
+            <div>
+              <p className="text-sm font-semibold text-[#22394f]">Favorites selected: {favoriteCanonicalIds.length}</p>
+              {favoriteCanonicalIds.length < 2 ? (
+                <p className="text-xs text-[#4a6076]">Select one more facility to compare.</p>
+              ) : (
+                <p className="text-xs text-[#4a6076]">Favorites are ready for governed comparison.</p>
+              )}
+            </div>
+            {favoriteCanonicalIds.length >= 2 ? (
+              <button
+                type="button"
+                onClick={() => router.push(compareFavoritesHref)}
+                className="rounded-full bg-[#24425e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d3650]"
+              >
+                COMPARE MY FAVORITES ({favoriteCanonicalIds.length})
+              </button>
+            ) : (
+              <span className="rounded-full border border-[#d1deea] bg-[#f6fbff] px-4 py-2 text-sm font-semibold text-[#4a6076]">Select one more facility</span>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      <EvidenceDetailsModal
+        isOpen={Boolean(activeEvidencePayload)}
+        payload={activeEvidencePayload}
+        onClose={() => setActiveEvidencePayload(null)}
+      />
     </main>
   );
 }

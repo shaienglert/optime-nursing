@@ -185,6 +185,23 @@ def _resolve_rows_for_facility(
             detail_scope = str(best.get("scope") or parameter["applicable_scope"])
             scope_name = best.get("scope_name")
             evidence_count = len(rows)
+            evidence_records = [
+                {
+                    "source_record_id": entry.get("source_record_id"),
+                    "evidence_text": entry.get("evidence_text"),
+                    "evidence_value": entry.get("evidence_value"),
+                    "evidence_date": entry.get("evidence_date"),
+                    "last_verified": entry.get("last_verified"),
+                    "scope": entry.get("scope"),
+                    "scope_name": entry.get("scope_name"),
+                    "source": entry.get("source"),
+                    "confidence": entry.get("confidence"),
+                    "evidence_strength": entry.get("evidence_strength"),
+                    "conflict_status": entry.get("conflict_status"),
+                    "provenance": entry.get("provenance") or {},
+                }
+                for entry in rows
+            ]
         else:
             raw_value = "UNKNOWN"
             display_value = "Not verified"
@@ -193,6 +210,7 @@ def _resolve_rows_for_facility(
             detail_scope = parameter["applicable_scope"]
             scope_name = None
             evidence_count = 0
+            evidence_records = []
 
         if parameter["parameter_id"] == "current_availability":
             raw_value = "UNKNOWN"
@@ -211,6 +229,7 @@ def _resolve_rows_for_facility(
                 "source": source,
                 "last_verified": last_verified,
                 "evidence_count": evidence_count,
+                "evidence_records": evidence_records,
             }
         )
     return resolved

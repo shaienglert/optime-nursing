@@ -2,6 +2,7 @@ export const QUESTIONNAIRE_SESSION_KEY = "optime.questionnaire.session";
 export const SEARCH_DRAFT_SESSION_KEY = "optime.search.draft";
 export const COMPARE_SELECTION_SESSION_KEY = "optime.compare.selection";
 export const FAVORITE_FACILITIES_SESSION_KEY = "optime.favorite.facilities";
+export const DECISION_RESPONSE_CACHE_SESSION_KEY = "optime.decision.response.cache";
 
 function hasWindow(): boolean {
   return typeof window !== "undefined";
@@ -68,4 +69,20 @@ export function saveFavoriteFacilities(selectedIds: string[]): void {
 
 export function clearFavoriteFacilities(): void {
   removeSessionKey(FAVORITE_FACILITIES_SESSION_KEY);
+}
+
+type DecisionResponseCachePayload<T> = {
+  requestKey: string;
+  response: T;
+};
+
+export function loadDecisionResponseCache<T>(requestKey: string): T | null {
+  const cached = loadSessionJson<DecisionResponseCachePayload<T>>(DECISION_RESPONSE_CACHE_SESSION_KEY);
+  if (!cached) return null;
+  if (cached.requestKey !== requestKey) return null;
+  return cached.response;
+}
+
+export function saveDecisionResponseCache<T>(requestKey: string, response: T): void {
+  saveSessionJson(DECISION_RESPONSE_CACHE_SESSION_KEY, { requestKey, response } satisfies DecisionResponseCachePayload<T>);
 }

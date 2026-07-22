@@ -188,6 +188,20 @@ export type ParameterTableRow = {
   source: string;
   last_verified?: string | null;
   evidence_count: number;
+  evidence_records?: Array<{
+    source_record_id?: string | number | null;
+    evidence_text?: string | null;
+    evidence_value?: string | number | boolean | null;
+    evidence_date?: string | null;
+    last_verified?: string | null;
+    scope?: string | null;
+    scope_name?: string | null;
+    source?: string | null;
+    confidence?: string | null;
+    evidence_strength?: string | null;
+    conflict_status?: string | null;
+    provenance?: Record<string, unknown>;
+  }>;
 };
 
 export type FacilityParameterTable = {
