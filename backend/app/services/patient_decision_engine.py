@@ -1115,6 +1115,121 @@ def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) 
     return strong, verify, concerns
 
 
+def _build_ranked_candidate_detail(
+    *,
+    canonical_id: str,
+    canonical_meta: Dict[str, Any],
+    profile: Dict[str, Any],
+    needs: List[Dict[str, Any]],
+    recommendation_registry: List[Dict[str, Any]],
+    ordered_parameter_ids: List[str],
+) -> Dict[str, Any]:
+    table = get_facility_parameter_table(
+        canonical_id,
+        need_tags=profile["need_tags"],
+        priority_parameter_ids=profile["priority_parameter_ids"],
+        profile_key=profile["profile_key"],
+        ordered_registry=recommendation_registry,
+        include_evidence_records=False,
+    )
+    row_by_param = {row["parameter_id"]: row for row in table["rows"]}
+    eligibility = _eligibility_from_needs(needs, row_by_param)
+    scoring = _score_result(needs, eligibility)
+    requested_city = profile.get("location_city")
+    geo_note, geo_bonus = _facility_geo_match({"city": table.get("city")}, requested_city)
+    strong, verify, concerns = _top_reasons(eligibility, table["rows"])
+
+    dimensions = _compute_dimensions(
+        needs=needs,
+        eligibility=eligibility,
+        table_rows=table["rows"],
+        row_by_param=row_by_param,
+        requested_city=requested_city,
+        facility_city=table.get("city"),
+        match_evidence_certainty=scoring["evidence_certainty"],
+    )
+
+    quality_safety_score = dimensions["quality_safety"]["score"]
+    staffing_score = dimensions["staffing"]["score"]
+    capability_depth_score = dimensions["capability_depth"]["score"]
+    outcomes_score = dimensions["patient_relevant_outcomes"]["score"]
+    practical_fit_score = dimensions["practical_fit"]["score"]
+    evidence_confidence = dimensions["evidence_confidence"]
+
+    unknown_dimensions = [
+        name
+        for name, payload in [
+            ("quality_safety", dimensions["quality_safety"]),
+            ("staffing", dimensions["staffing"]),
+            ("capability_depth", dimensions["capability_depth"]),
+            ("patient_relevant_outcomes", dimensions["patient_relevant_outcomes"]),
+            ("practical_fit", dimensions["practical_fit"]),
+        ]
+        if payload["score"] is None
+    ]
+
+    match_score = min(100.0, round(scoring["match_score"] + geo_bonus, 2))
+    return {
+        "canonical_facility_id": canonical_id,
+        "facility_name": table["facility_name"],
+        "city": table.get("city"),
+        "state": table.get("state"),
+        "county": table.get("county"),
+        "zip": table.get("zip"),
+        "canonical_type": table.get("canonical_type"),
+        "role_classification": table.get("role_classification"),
+        "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
+        "eligibility_status": eligibility["eligibility_status"],
+        "match_score": match_score,
+        "patient_match_score": match_score,
+        "match_band": scoring["match_band"],
+        "matched_needs": eligibility["matched_needs"],
+        "unmet_verified_needs": eligibility["unmet_verified_needs"],
+        "unknown_critical_needs": eligibility["unknown_critical_needs"],
+        "preference_matches": eligibility["preference_matches"],
+        "evidence_certainty": scoring["evidence_certainty"],
+        "evidence_confidence": evidence_confidence,
+        "quality_safety_score": quality_safety_score,
+        "staffing_score": staffing_score,
+        "capability_depth_score": capability_depth_score,
+        "patient_relevant_outcomes_score": outcomes_score,
+        "practical_fit_score": practical_fit_score,
+        "domain_breakdown": scoring["domain_breakdown"],
+        "match_evidence_profile": scoring["match_evidence_profile"],
+        "explanation": {
+            "why_matches": strong,
+            "needs_verification": verify,
+            "concerns": concerns,
+            "eligibility_reasons": eligibility["reasons"],
+            "availability_note": "Current availability must be confirmed directly with the facility.",
+            "location_note": geo_note,
+            "quality_safety": {
+                "known": dimensions["quality_safety"]["known_signals"],
+                "unknown": dimensions["quality_safety"]["unknown_signals"],
+            },
+            "staffing": {
+                "known": dimensions["staffing"]["known_signals"],
+                "unknown": dimensions["staffing"]["unknown_signals"],
+            },
+            "capability_depth": {
+                "known": dimensions["capability_depth"]["known_signals"],
+                "unknown": dimensions["capability_depth"]["unknown_signals"],
+            },
+            "patient_relevant_outcomes": {
+                "known": dimensions["patient_relevant_outcomes"]["known_signals"],
+                "unknown": dimensions["patient_relevant_outcomes"]["unknown_signals"],
+            },
+            "practical_fit": {
+                "known": dimensions["practical_fit"]["known_signals"],
+                "unknown": dimensions["practical_fit"]["unknown_signals"],
+            },
+            "unknown_tie_break_dimensions": unknown_dimensions,
+        },
+        "parameter_badges": [item["parameter_id"] for item in eligibility["matched_needs"][:6]],
+        "comparison_parameter_ids": ordered_parameter_ids,
+    }
+
+
 def run_patient_decision_engine(
     questionnaire_state: Dict[str, Any],
     natural_language_query: str = "",
@@ -1185,37 +1300,6 @@ def run_patient_decision_engine(
         eligibility = _eligibility_from_needs(needs, row_by_param)
         scoring = _score_result(needs, eligibility)
         geo_note, geo_bonus = _facility_geo_match({"city": table.get("city")}, requested_city)
-        strong, verify, concerns = _top_reasons(eligibility, table["rows"])
-
-        dimensions = _compute_dimensions(
-            needs=needs,
-            eligibility=eligibility,
-            table_rows=table["rows"],
-            row_by_param=row_by_param,
-            requested_city=requested_city,
-            facility_city=table.get("city"),
-            match_evidence_certainty=scoring["evidence_certainty"],
-        )
-
-        quality_safety_score = dimensions["quality_safety"]["score"]
-        staffing_score = dimensions["staffing"]["score"]
-        capability_depth_score = dimensions["capability_depth"]["score"]
-        outcomes_score = dimensions["patient_relevant_outcomes"]["score"]
-        practical_fit_score = dimensions["practical_fit"]["score"]
-        evidence_confidence = dimensions["evidence_confidence"]
-
-        unknown_dimensions = [
-            name
-            for name, payload in [
-                ("quality_safety", dimensions["quality_safety"]),
-                ("staffing", dimensions["staffing"]),
-                ("capability_depth", dimensions["capability_depth"]),
-                ("patient_relevant_outcomes", dimensions["patient_relevant_outcomes"]),
-                ("practical_fit", dimensions["practical_fit"]),
-            ]
-            if payload["score"] is None
-        ]
-
         results.append(
             {
                 "canonical_facility_id": canonical_id,
@@ -1230,51 +1314,16 @@ def run_patient_decision_engine(
                 "eligibility_status": eligibility["eligibility_status"],
                 "match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "patient_match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
-                "match_band": scoring["match_band"],
-                "matched_needs": eligibility["matched_needs"],
-                "unmet_verified_needs": eligibility["unmet_verified_needs"],
-                "unknown_critical_needs": eligibility["unknown_critical_needs"],
-                "preference_matches": eligibility["preference_matches"],
-                "evidence_certainty": scoring["evidence_certainty"],
-                "evidence_confidence": evidence_confidence,
-                "quality_safety_score": quality_safety_score,
-                "staffing_score": staffing_score,
-                "capability_depth_score": capability_depth_score,
-                "patient_relevant_outcomes_score": outcomes_score,
-                "practical_fit_score": practical_fit_score,
-                "domain_breakdown": scoring["domain_breakdown"],
-                "match_evidence_profile": scoring["match_evidence_profile"],
-                "explanation": {
-                    "why_matches": strong,
-                    "needs_verification": verify,
-                    "concerns": concerns,
-                    "eligibility_reasons": eligibility["reasons"],
-                    "availability_note": "Current availability must be confirmed directly with the facility.",
-                    "location_note": geo_note,
-                    "quality_safety": {
-                        "known": dimensions["quality_safety"]["known_signals"],
-                        "unknown": dimensions["quality_safety"]["unknown_signals"],
-                    },
-                    "staffing": {
-                        "known": dimensions["staffing"]["known_signals"],
-                        "unknown": dimensions["staffing"]["unknown_signals"],
-                    },
-                    "capability_depth": {
-                        "known": dimensions["capability_depth"]["known_signals"],
-                        "unknown": dimensions["capability_depth"]["unknown_signals"],
-                    },
-                    "patient_relevant_outcomes": {
-                        "known": dimensions["patient_relevant_outcomes"]["known_signals"],
-                        "unknown": dimensions["patient_relevant_outcomes"]["unknown_signals"],
-                    },
-                    "practical_fit": {
-                        "known": dimensions["practical_fit"]["known_signals"],
-                        "unknown": dimensions["practical_fit"]["unknown_signals"],
-                    },
-                    "unknown_tie_break_dimensions": unknown_dimensions,
-                },
-                "parameter_badges": [item["parameter_id"] for item in eligibility["matched_needs"][:6]],
-                "comparison_parameter_ids": ordered_parameter_ids,
+                "quality_safety_score": _dimension_quality_safety(table["rows"])["score"],
+                "staffing_score": _dimension_staffing(table["rows"])["score"],
+                "capability_depth_score": _dimension_capability_depth(needs, eligibility, row_by_param)["score"],
+                "patient_relevant_outcomes_score": _dimension_outcomes(table["rows"], needs)["score"],
+                "practical_fit_score": _dimension_practical_fit(
+                    needs,
+                    _build_need_status_map(eligibility),
+                    requested_city,
+                    table.get("city"),
+                )["score"],
             }
         )
 
@@ -1311,10 +1360,28 @@ def run_patient_decision_engine(
             item["tie_break_explanation_vs_next"] = None
 
     top = results[: max(10, limit)]
+
+    detailed_top = []
+    for item in top:
+        detail = _build_ranked_candidate_detail(
+            canonical_id=item["canonical_facility_id"],
+            canonical_meta=canonical_index.get(item["canonical_facility_id"], {}),
+            profile=profile,
+            needs=needs,
+            recommendation_registry=recommendation_registry,
+            ordered_parameter_ids=ordered_parameter_ids,
+        )
+        detail["rank_position"] = item.get("rank_position")
+        detail["rank_tie_status"] = item.get("rank_tie_status")
+        detail["rank_display"] = item.get("rank_display")
+        detail["tied_with"] = item.get("tied_with", [])
+        detail["tie_break_explanation_vs_next"] = item.get("tie_break_explanation_vs_next")
+        detailed_top.append(detail)
+
     return {
         "patient_needs_profile": profile,
-        "results": top[:limit],
-        "result_count": len(top[:limit]),
+        "results": detailed_top[:limit],
+        "result_count": len(detailed_top[:limit]),
         "total_candidates_scored": len(results),
         "availability_policy": "Current availability must be confirmed directly with the facility.",
         "tie_break_policy": {
