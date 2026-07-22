@@ -1,0 +1,1590 @@
+{
+  "generated_at_utc": "2026-07-22T09:38:39Z",
+  "pilot": "top20_miami",
+  "method": "identity-first official resolver, then official-page image discovery; decision-engine Miami-first, backfilled by /facilities?q=miami",
+  "summary": {
+    "facilities_checked": 20,
+    "official_identities_verified": 6,
+    "official_domains_found": 6,
+    "verified_facility_specific_images_found": 1,
+    "ambiguous_images": 5,
+    "no_verified_image": 14,
+    "wrong_domain_matches": 0
+  },
+  "records": [
+    {
+      "canonical_facility_id": "CMS-105005",
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:20:05Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.coralgablesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://coralgablesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgablesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralgablesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgableshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://coralgableshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgableshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralgableshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105511",
+      "facility_name": "HIALEAH SHORES NURSING AND REHAB CENTER",
+      "official_website_url": "https://www.hialeahshoresrehab.com/",
+      "official_website": "https://www.hialeahshoresrehab.com/",
+      "official_facility_page_url": "https://www.hialeahshoresrehab.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "HIALEAH SHORES NURSING AND REHAB CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.4
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.hialeahshoresrehab.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 1.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:21:02Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "STOCK_LIKE_ASSET",
+        "alt_text": "",
+        "score": 0.4
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.hialeahshoresrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://hialeahshoresrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.hialeahshoresrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahshoresrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshoreshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hialeahshoreshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshoreshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahshoreshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 2,
+      "evaluated_image_count": 19,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-686123",
+      "facility_name": "KENDALL LAKES HEALTHCARE AND REHAB CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:21:58Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.kendalllakeshealthcarerehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendalllakeshealthcarerehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcarerehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendalllakeshealthcarerehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcarehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendalllakeshealthcarehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcarehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendalllakeshealthcarehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105432",
+      "facility_name": "RIVERSIDE CARE CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:22:57Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.riversiderehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://riversiderehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riversiderehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.riversiderehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riversidehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://riversidehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riversidehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.riversidehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105623",
+      "facility_name": "WEST GABLES HEALTH CARE CENTER",
+      "official_website_url": "https://www.westgableshealthcare.com/",
+      "official_website": "https://www.westgableshealthcare.com/",
+      "official_facility_page_url": "https://www.westgableshealthcare.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "WEST GABLES HEALTH CARE CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.8
+      },
+      "primary_image_url": "https://cdn.sanity.io/images/xu1qs6w1/production/7f0c817940dbfd1738608a194638e7d05a714bed-1600x1065.jpg?rect=0,0,1600,1065&fm=webp",
+      "image_url": "https://cdn.sanity.io/images/xu1qs6w1/production/7f0c817940dbfd1738608a194638e7d05a714bed-1600x1065.jpg?rect=0,0,1600,1065&fm=webp",
+      "source_url": "https://www.westgableshealthcare.com/",
+      "image_source_url": "https://www.westgableshealthcare.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 1.0,
+      "verified_facility_specific": true,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:23:53Z",
+      "status": "VERIFIED",
+      "image_status": "VERIFIED",
+      "image_match_evidence": {
+        "reason": "FACILITY_SPECIFIC_IMAGE",
+        "alt_text": "home_hero - West Gables Health Care Center",
+        "score": 0.9
+      },
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.westgablesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://westgablesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.westgablesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westgablesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westgableshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://westgableshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.westgableshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westgableshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 4,
+      "evaluated_image_count": 63,
+      "image_probe_status": "OK",
+      "image_probe_http_status": 206
+    },
+    {
+      "canonical_facility_id": "CMS-686124",
+      "facility_name": "HARMONY HEALTH CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "PARTIAL",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {
+        "matched_name_variant": "HARMONY HEALTH CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 0.25,
+        "phone_match": false,
+        "city_match": false,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.667
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.25,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:24:46Z",
+      "status": "PARTIAL",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.harmonyrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://harmonyrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.harmonyrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.harmonyrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.harmonyhealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://harmonyhealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.harmonyhealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "http://www.harmonyhealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        }
+      ],
+      "identity_candidates_checked": 6,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-106007",
+      "facility_name": "FLORIDEAN HEALTH & REHABILITATION CENTER",
+      "official_website_url": "https://www.florideanrehab.com/",
+      "official_website": "https://www.florideanrehab.com/",
+      "official_facility_page_url": "https://www.florideanrehab.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "FLORIDEAN HEALTH & REHABILITATION CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 0.85,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.25
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.florideanrehab.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 0.85,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:26:19Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "INSUFFICIENT_FACILITY_SPECIFIC_EVIDENCE",
+        "alt_text": "",
+        "score": 0.1
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.florideanrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://florideanrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.florideanrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.florideanrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.florideanhealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://florideanhealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.florideanhealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.florideanhealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 2,
+      "evaluated_image_count": 9,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105939",
+      "facility_name": "PALMETTO SUBACUTE CARE CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:27:09Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.palmettosubacuterehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://palmettosubacuterehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.palmettosubacuterehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.palmettosubacuterehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.palmettosubacutehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://palmettosubacutehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.palmettosubacutehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.palmettosubacutehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105719",
+      "facility_name": "PALACE AT KENDALL NURSING AND REHABILITATION CENTE",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:28:00Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.palacekendallcenterehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://palacekendallcenterehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.palacekendallcenterehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.palacekendallcenterehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.palacekendallcentehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://palacekendallcentehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.palacekendallcentehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.palacekendallcentehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105711",
+      "facility_name": "SHORESIDE HEALTH AND REHABILITATION CENTER",
+      "official_website_url": "https://www.shoresiderehab.com/",
+      "official_website": "https://www.shoresiderehab.com/",
+      "official_facility_page_url": "https://www.shoresiderehab.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "SHORESIDE HEALTH AND REHABILITATION CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.25
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.shoresiderehab.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 1.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:29:22Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "INSUFFICIENT_FACILITY_SPECIFIC_EVIDENCE",
+        "alt_text": "",
+        "score": 0.1
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.shoresiderehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://shoresiderehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.shoresiderehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.shoresiderehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.shoresidehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://shoresidehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.shoresidehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.shoresidehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 2,
+      "evaluated_image_count": 16,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-106031",
+      "facility_name": "VICTORIA NURSING & REHABILITATION CENTER, INC.",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "PARTIAL",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {
+        "matched_name_variant": "VICTORIA NURSING & REHABILITATION CENTER, INC.",
+        "name_similarity_score": 0.75,
+        "address_match_score": 0.5,
+        "phone_match": false,
+        "city_match": false,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.25
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.5,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:30:17Z",
+      "status": "PARTIAL",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.victoriarehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://victoriarehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.victoriarehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.victoriarehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.victoriahealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://victoriahealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.victoriahealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.victoriahealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 4,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-106021",
+      "facility_name": "Ponce Health and Rehabilitation Center",
+      "official_website_url": "https://www.poncerehab.com/",
+      "official_website": "https://www.poncerehab.com/",
+      "official_facility_page_url": "https://www.poncerehab.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "Ponce Health and Rehabilitation Center",
+        "name_similarity_score": 1.0,
+        "address_match_score": 0.85,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.25
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.poncerehab.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 0.85,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:31:26Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "INSUFFICIENT_FACILITY_SPECIFIC_EVIDENCE",
+        "alt_text": "ponce",
+        "score": 0.65
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.poncerehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://poncerehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.poncerehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.poncerehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.poncehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://poncehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.poncehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.poncehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 2,
+      "evaluated_image_count": 16,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-106034",
+      "facility_name": "JACKSON GARDENS HEALTH AND REHABILITATION CENTER",
+      "official_website_url": "https://www.jacksongardensrehab.com/",
+      "official_website": "https://www.jacksongardensrehab.com/",
+      "official_facility_page_url": "https://www.jacksongardensrehab.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "JACKSON GARDENS HEALTH AND REHABILITATION CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.4
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.jacksongardensrehab.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 1.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:32:33Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "INSUFFICIENT_FACILITY_SPECIFIC_EVIDENCE",
+        "alt_text": "jackson-1",
+        "score": 0.65
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.jacksongardensrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://jacksongardensrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.jacksongardensrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.jacksongardensrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.jacksongardenshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://jacksongardenshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.jacksongardenshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.jacksongardenshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 2,
+      "evaluated_image_count": 16,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105392",
+      "facility_name": "JACKSON MEMORIAL LONG TERM CARE CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:33:24Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.jacksonmemoriallongtermrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://jacksonmemoriallongtermrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.jacksonmemoriallongtermrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.jacksonmemoriallongtermrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.jacksonmemoriallongtermhealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://jacksonmemoriallongtermhealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.jacksonmemoriallongtermhealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.jacksonmemoriallongtermhealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105030",
+      "facility_name": "MIAMI JEWISH HEALTH SYSTEMS, INC",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:34:14Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.miamijewishsystemsrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://miamijewishsystemsrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.miamijewishsystemsrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.miamijewishsystemsrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.miamijewishsystemshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://miamijewishsystemshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.miamijewishsystemshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.miamijewishsystemshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-106131",
+      "facility_name": "SIERRA LAKES NURSING & REHABILITATION CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "PARTIAL",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {
+        "matched_name_variant": "SIERRA LAKES NURSING & REHABILITATION CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": false,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.4
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 1.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:35:08Z",
+      "status": "PARTIAL",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.sierralakesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://sierralakesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.sierralakesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.sierralakesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.sierralakeshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://sierralakeshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.sierralakeshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.sierralakeshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 2,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105510",
+      "facility_name": "UNITY HEALTHCARE AND REHABILITATION CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:35:58Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.unityhealthcarerehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://unityhealthcarerehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.unityhealthcarerehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.unityhealthcarerehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.unityhealthcarehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://unityhealthcarehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.unityhealthcarehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.unityhealthcarehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-105903",
+      "facility_name": "AZURE SHORES REHAB",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:36:50Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.azureshoresrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://azureshoresrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.azureshoresrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.azureshoresrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.azureshoreshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://azureshoreshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.azureshoreshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.azureshoreshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-106100",
+      "facility_name": "UNIVERSITY HEALTH AND REHABILITATION CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "PARTIAL",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {
+        "matched_name_variant": "UNIVERSITY HEALTH AND REHABILITATION CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 0.25,
+        "phone_match": false,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.25
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.25,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:37:48Z",
+      "status": "PARTIAL",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.universityrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://universityrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.universityrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.universityrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.universityhealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://universityhealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.universityhealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.universityhealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 3,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    },
+    {
+      "canonical_facility_id": "CMS-106132",
+      "facility_name": "SOUTH DADE NURSING AND REHABILITATION CENTER",
+      "official_website_url": "",
+      "official_website": "",
+      "official_facility_page_url": "",
+      "identity_status": "NOT_VERIFIED",
+      "identity_verified": false,
+      "official_domain_verified": false,
+      "identity_match_evidence": {},
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "",
+      "source_type": "",
+      "image_source_type": "",
+      "match_confidence": 0.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:38:39Z",
+      "status": "NOT_VERIFIED",
+      "image_status": "UNKNOWN",
+      "image_match_evidence": {},
+      "ambiguous_match": false,
+      "candidate_source_count": 8,
+      "checked_source_count": 8,
+      "checked_sources": [
+        {
+          "url": "https://www.southdaderehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://southdaderehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.southdaderehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.southdaderehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.southdadehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://southdadehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.southdadehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.southdadehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 0,
+      "evaluated_image_count": 0,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "generated_at_utc": "2026-07-22T00:00:00Z",
+  "fixtures": [
+    {
+      "canonical_facility_id": "CMS-105005",
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "address": "7060 SW 8TH STREET",
+      "city": "MIAMI",
+      "state": "FL",
+      "phone": "3052611363",
+      "cms_ccn": "105005",
+      "expected_official_url": "http://www.cgrehab.net/",
+      "expected_clear_official_image": true
+    },
+    {
+      "canonical_facility_id": "CMS-105511",
+      "facility_name": "HIALEAH SHORES NURSING AND REHAB CENTER",
+      "address": "8785 NW 32ND AVENUE",
+      "city": "MIAMI",
+      "state": "FL",
+      "phone": "3056915711",
+      "cms_ccn": "105511",
+      "expected_official_url": "https://hialeahshoresrehab.com/",
+      "expected_clear_official_image": false
+    },
+    {
+      "canonical_facility_id": "CMS-686123",
+      "facility_name": "KENDALL LAKES HEALTHCARE AND REHAB CENTER",
+      "address": "5280 SW 157 AVENUE",
+      "city": "MIAMI",
+      "state": "FL",
+      "phone": "7864337400",
+      "cms_ccn": "686123",
+      "expected_official_url": "https://www.kendallhrc.com/",
+      "expected_clear_official_image": true
+    },
+    {
+      "canonical_facility_id": "CMS-105432",
+      "facility_name": "RIVERSIDE CARE CENTER",
+      "address": "899 NW 4TH STREET",
+      "city": "MIAMI",
+      "state": "FL",
+      "phone": "3053261236",
+      "cms_ccn": "105432",
+      "expected_official_url": "https://riversidecarecenter.com/",
+      "expected_clear_official_image": true
+    },
+    {
+      "canonical_facility_id": "CMS-105623",
+      "facility_name": "WEST GABLES HEALTH CARE CENTER",
+      "address": "2525 SW 75TH AVENUE",
+      "city": "MIAMI",
+      "state": "FL",
+      "phone": "3052659391",
+      "cms_ccn": "105623",
+      "expected_official_url": "https://westgableshealthcare.com/",
+      "expected_clear_official_image": true
+    }
+  ]
+}

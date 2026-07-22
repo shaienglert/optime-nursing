@@ -1,0 +1,1260 @@
+{
+  "generated_at_utc": "2026-07-22T09:19:12Z",
+  "pilot": "ground_truth_regression_5",
+  "summary": {
+    "facilities_checked": 5,
+    "official_identities_verified": 5,
+    "official_domains_found": 5,
+    "verified_facility_specific_images_found": 1,
+    "ambiguous_images": 4,
+    "no_verified_image": 0,
+    "wrong_domain_matches": 0
+  },
+  "records": [
+    {
+      "canonical_facility_id": "CMS-105005",
+      "facility_name": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+      "official_website_url": "https://www.cgrehab.net/",
+      "official_website": "https://www.cgrehab.net/",
+      "official_facility_page_url": "https://www.cgrehab.net/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "CORAL GABLES NURSING AND REHABILITATION CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.0
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.cgrehab.net/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 1.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:14:41Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "INSUFFICIENT_FACILITY_SPECIFIC_EVIDENCE",
+        "alt_text": "",
+        "score": 0.55
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 40,
+      "checked_source_count": 40,
+      "checked_sources": [
+        {
+          "url": "https://www.coralgablesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://coralgablesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgablesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralgablesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgableshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://coralgableshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgableshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralgableshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgablescarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://coralgablescarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgablescarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralgablescarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgables.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://coralgables.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.coralgables.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "http://www.coralgables.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.coralhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://coralhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://coralrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.coralrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralcarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://coralcarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralcarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralcarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.cgrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://cgrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.cgrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "http://www.cgrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.cghrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://cghrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.cghrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.cghrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgableshrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://coralgableshrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.coralgableshrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.coralgableshrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 10,
+      "evaluated_image_count": 25,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0,
+      "identity_regression_expected_url": "http://www.cgrehab.net/",
+      "identity_regression_pass": true,
+      "expected_clear_official_image": true
+    },
+    {
+      "canonical_facility_id": "CMS-105511",
+      "facility_name": "HIALEAH SHORES NURSING AND REHAB CENTER",
+      "official_website_url": "https://www.hialeahshoresrehab.com/",
+      "official_website": "https://www.hialeahshoresrehab.com/",
+      "official_facility_page_url": "https://www.hialeahshoresrehab.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "HIALEAH SHORES NURSING AND REHAB CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.4
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.hialeahshoresrehab.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 1.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:15:47Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "STOCK_LIKE_ASSET",
+        "alt_text": "",
+        "score": 0.4
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 40,
+      "checked_source_count": 40,
+      "checked_sources": [
+        {
+          "url": "https://www.hialeahshoresrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://hialeahshoresrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.hialeahshoresrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahshoresrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshoreshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hialeahshoreshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshoreshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahshoreshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshorescarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hialeahshorescarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshorescarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahshorescarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshores.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hialeahshores.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshores.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahshores.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hialeahhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hialeahrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahcarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hialeahcarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahcarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahcarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hsrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://hsrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.hsrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hsrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hshrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hshrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hshrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hshrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshoreshrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://hialeahshoreshrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.hialeahshoreshrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.hialeahshoreshrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 4,
+      "evaluated_image_count": 19,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0,
+      "identity_regression_expected_url": "https://hialeahshoresrehab.com/",
+      "identity_regression_pass": true,
+      "expected_clear_official_image": false
+    },
+    {
+      "canonical_facility_id": "CMS-686123",
+      "facility_name": "KENDALL LAKES HEALTHCARE AND REHAB CENTER",
+      "official_website_url": "https://www.kendallhrc.com/",
+      "official_website": "https://www.kendallhrc.com/",
+      "official_facility_page_url": "https://www.kendallhrc.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "KENDALL LAKES HEALTHCARE AND REHAB CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 0.85,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.2
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.kendallhrc.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 0.85,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:16:45Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "INSUFFICIENT_FACILITY_SPECIFIC_EVIDENCE",
+        "alt_text": "",
+        "score": 0.0
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 40,
+      "checked_source_count": 40,
+      "checked_sources": [
+        {
+          "url": "https://www.kendalllakeshealthcarerehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendalllakeshealthcarerehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcarerehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendalllakeshealthcarerehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcarehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendalllakeshealthcarehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcarehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendalllakeshealthcarehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcarecarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendalllakeshealthcarecarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcarecarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendalllakeshealthcarecarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendalllakeshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakeshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendalllakeshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendallhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://kendallhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.kendallhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendallhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendallrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendallrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendallrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendallrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendallcarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendallcarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendallcarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendallcarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.klrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://klrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.klrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.klrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.klhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://klhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.klhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.klhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://kendalllakesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.kendalllakesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.kendalllakesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 2,
+      "evaluated_image_count": 78,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0,
+      "identity_regression_expected_url": "https://www.kendallhrc.com/",
+      "identity_regression_pass": true,
+      "expected_clear_official_image": true
+    },
+    {
+      "canonical_facility_id": "CMS-105432",
+      "facility_name": "RIVERSIDE CARE CENTER",
+      "official_website_url": "https://www.riversidecarecenter.com/",
+      "official_website": "https://www.riversidecarecenter.com/",
+      "official_facility_page_url": "https://www.riversidecarecenter.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "RIVERSIDE CARE CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 1.0
+      },
+      "primary_image_url": "",
+      "image_url": "",
+      "source_url": "",
+      "image_source_url": "https://www.riversidecarecenter.com/",
+      "source_type": "OFFICIAL_OG_IMAGE",
+      "image_source_type": "OFFICIAL_OG_IMAGE",
+      "match_confidence": 1.0,
+      "verified_facility_specific": false,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:18:10Z",
+      "status": "AMBIGUOUS",
+      "image_status": "AMBIGUOUS",
+      "image_match_evidence": {
+        "reason": "INSUFFICIENT_FACILITY_SPECIFIC_EVIDENCE",
+        "alt_text": "",
+        "score": 0.65
+      },
+      "ambiguous_match": true,
+      "candidate_source_count": 40,
+      "checked_source_count": 40,
+      "checked_sources": [
+        {
+          "url": "https://www.riversiderehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://riversiderehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riversiderehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.riversiderehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riversidehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://riversidehealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riversidehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.riversidehealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riversidecarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://riversidecarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.riversidecarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.riversidecarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riverside.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://riverside.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.riverside.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "http://www.riverside.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.riversidehrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://riversidehrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.riversidehrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.riversidehrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://riverside.com/transcription",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://www.wellton.com/en/hotels/wellton-riverside-spa-hotel",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://www.meniu.lt/vieta/riverside",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Riverside_(band)",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Riverside,_California",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://www.riversideband.pl/en/",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "http://go.microsoft.com/fwlink/?LinkId=521839",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "http://go.microsoft.com/fwlink/?LinkID=246338",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://support.microsoft.com/topic/how-bing-delivers-search-results-d18fc815-ac37-4723-bc67-9229ce3eb6a3?",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://riverside.com.pk/",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://play.google.com/store/apps/details?id=riverside.fm&hl=en-US",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Riverside_(software)",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://apps.apple.com/us/app/riverside-podcast-video-studio/id1554443872",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://www.fahimai.com/how-to-use-riverside",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://www.youtubekids.com/",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://play.google.com/store/apps/details?id=com.google.android.apps.youtube.kids&hl=de",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://support.google.com/youtubekids/answer/9406390?hl=de",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://www.mimikama.org/youtube-kids-2/",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "https://www.youtubekids.com/?hl=de",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        },
+        {
+          "url": "http://go.microsoft.com/fwlink/?LinkID=617350",
+          "source_type": "SEARCH_DISCOVERY",
+          "status": 200
+        }
+      ],
+      "identity_candidates_checked": 26,
+      "evaluated_image_count": 10,
+      "image_probe_status": "NOT_CHECKED",
+      "image_probe_http_status": 0,
+      "identity_regression_expected_url": "https://riversidecarecenter.com/",
+      "identity_regression_pass": true,
+      "expected_clear_official_image": true
+    },
+    {
+      "canonical_facility_id": "CMS-105623",
+      "facility_name": "WEST GABLES HEALTH CARE CENTER",
+      "official_website_url": "https://www.westgableshealthcare.com/",
+      "official_website": "https://www.westgableshealthcare.com/",
+      "official_facility_page_url": "https://www.westgableshealthcare.com/",
+      "identity_status": "VERIFIED",
+      "identity_verified": true,
+      "official_domain_verified": true,
+      "identity_match_evidence": {
+        "matched_name_variant": "WEST GABLES HEALTH CARE CENTER",
+        "name_similarity_score": 1.0,
+        "address_match_score": 1.0,
+        "phone_match": true,
+        "city_match": true,
+        "operator_match": false,
+        "ccn_match": false,
+        "domain_affinity_score": 0.8
+      },
+      "primary_image_url": "https://cdn.sanity.io/images/xu1qs6w1/production/7f0c817940dbfd1738608a194638e7d05a714bed-1600x1065.jpg?rect=0,0,1600,1065&fm=webp",
+      "image_url": "https://cdn.sanity.io/images/xu1qs6w1/production/7f0c817940dbfd1738608a194638e7d05a714bed-1600x1065.jpg?rect=0,0,1600,1065&fm=webp",
+      "source_url": "https://www.westgableshealthcare.com/",
+      "image_source_url": "https://www.westgableshealthcare.com/",
+      "source_type": "OFFICIAL_PAGE_IMAGE",
+      "image_source_type": "OFFICIAL_PAGE_IMAGE",
+      "match_confidence": 1.0,
+      "verified_facility_specific": true,
+      "verification_method": "official identity resolution before official-page image discovery",
+      "last_verified": "2026-07-22T09:19:12Z",
+      "status": "VERIFIED",
+      "image_status": "VERIFIED",
+      "image_match_evidence": {
+        "reason": "FACILITY_SPECIFIC_IMAGE",
+        "alt_text": "home_hero - West Gables Health Care Center",
+        "score": 0.9
+      },
+      "ambiguous_match": false,
+      "candidate_source_count": 40,
+      "checked_source_count": 40,
+      "checked_sources": [
+        {
+          "url": "https://www.westgablesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://westgablesrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.westgablesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westgablesrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westgableshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://westgableshealthcare.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.westgableshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westgableshealthcare.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westgablescarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://westgablescarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westgablescarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westgablescarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westgables.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://westgables.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.westgables.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "http://www.westgables.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": 200
+        },
+        {
+          "url": "https://www.westhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://westhrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westhrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://westrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westcarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://westcarecenter.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westcarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westcarecenter.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.wgrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://wgrehab.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.wgrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.wgrehab.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.wghrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://wghrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.wghrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.wghrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westgableshrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://westgableshrc.com/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "https://www.westgableshrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        },
+        {
+          "url": "http://www.westgableshrc.net/",
+          "source_type": "DIRECT_DOMAIN_GUESS",
+          "status": "FETCH_FAILED"
+        }
+      ],
+      "identity_candidates_checked": 8,
+      "evaluated_image_count": 63,
+      "image_probe_status": "OK",
+      "image_probe_http_status": 206,
+      "identity_regression_expected_url": "https://westgableshealthcare.com/",
+      "identity_regression_pass": true,
+      "expected_clear_official_image": true
+    }
+  ]
+}
