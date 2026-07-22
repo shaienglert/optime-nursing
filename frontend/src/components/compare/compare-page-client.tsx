@@ -134,18 +134,15 @@ export function ComparePageClient() {
   const optimeReferenceId = searchParams.get("optime_reference") || "";
   const isFavoritesComparison = comparisonMode === "favorites";
   const isFocusedComparison = comparisonMode === "favorite-vs-optime";
+  const facilitiesFromQuery = useMemo(
+    () => parseSelectedIds(searchParams.get("facilities")),
+    [searchParams],
+  );
 
   const [decisionResponse, setDecisionResponse] = useState<DecisionEngineResponse | null>(null);
   const [comparisonContext, setComparisonContext] = useState<PatientComparisonContextResponse | null>(null);
   const [comparisonTable, setComparisonTable] = useState<FacilityParameterComparison | null>(null);
-  const [selectedFacilityIds, setSelectedFacilityIds] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-    const params = new URLSearchParams(window.location.search);
-    const fromQuery = parseSelectedIds(params.get("facilities"));
-    if (fromQuery.length > 0) return fromQuery;
-    if (params.get("comparison_mode") === "favorites") return normalizeSelectedIds(loadFavoriteFacilities());
-    return normalizeSelectedIds(loadCompareSelection());
-  });
+  const [selectedFacilityIds, setSelectedFacilityIds] = useState<string[]>(facilitiesFromQuery);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllParameters, setShowAllParameters] = useState(false);
@@ -161,6 +158,25 @@ export function ComparePageClient() {
     [state, naturalLanguageQuery],
   );
   const selectedIdsKey = useMemo(() => JSON.stringify(decisionRequestPayload), [decisionRequestPayload]);
+
+  useEffect(() => {
+    setSelectedFacilityIds((current) => {
+      if (facilitiesFromQuery.length > 0) {
+        const same =
+          current.length === facilitiesFromQuery.length &&
+          current.every((value, index) => value === facilitiesFromQuery[index]);
+        return same ? current : facilitiesFromQuery;
+      }
+      if (current.length > 0) {
+        return current;
+      }
+
+      const fallback = isFavoritesComparison
+        ? normalizeSelectedIds(loadFavoriteFacilities())
+        : normalizeSelectedIds(loadCompareSelection());
+      return fallback;
+    });
+  }, [facilitiesFromQuery, isFavoritesComparison]);
 
   useEffect(() => {
     if (isFavoritesComparison) {

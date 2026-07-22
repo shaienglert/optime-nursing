@@ -34,7 +34,7 @@ describe("getApiBaseUrl", () => {
     expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
   });
 
-  it("guards against localhost self-reference to frontend origin", () => {
+  it("uses same-origin proxy in browser even if NEXT_PUBLIC_API_URL points at localhost:3000", () => {
     process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
     (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
@@ -44,10 +44,10 @@ describe("getApiBaseUrl", () => {
       },
     };
 
-    expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
+    expect(getApiBaseUrl()).toBe("/api/backend");
   });
 
-  it("guards against loopback alias mismatch when frontend is 127.0.0.1 and API is localhost:3000", () => {
+  it("uses same-origin proxy in browser with loopback alias mismatch", () => {
     process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
     (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
@@ -57,7 +57,7 @@ describe("getApiBaseUrl", () => {
       },
     };
 
-    expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
+    expect(getApiBaseUrl()).toBe("/api/backend");
   });
 
   it("guards against local frontend :3000 base even when window is unavailable", () => {
@@ -76,7 +76,7 @@ describe("getApiBaseUrl", () => {
     expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
   });
 
-  it("routes Results recommendations request to backend URL instead of frontend origin", async () => {
+  it("routes Results recommendations request through same-origin backend proxy", async () => {
     process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
     (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
@@ -130,7 +130,7 @@ describe("getApiBaseUrl", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [requestUrl, requestInit] = (fetchMock as unknown as { mock: { calls: unknown[][] } }).mock.calls[0] || [];
-    expect(requestUrl).toBe("http://127.0.0.1:8000/decision-engine/recommendations");
+    expect(requestUrl).toBe("/api/backend/decision-engine/recommendations");
     expect((requestInit as { method?: string })?.method).toBe("POST");
   });
 });

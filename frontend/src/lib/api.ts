@@ -1544,7 +1544,7 @@ function getFallbackSearchFacilities(searchText?: string): SearchFacility[] {
   return filtered.length > 0 ? filtered : mapped;
 }
 
-const EXPECTED_RENDER_BACKEND_URL = "https://optime-nursing-backend.onrender.com";
+const BROWSER_BACKEND_PROXY_BASE = "/api/backend";
 
 function shouldUseDevelopmentFallbackData(): boolean {
   return process.env.NODE_ENV !== "production";
@@ -1597,6 +1597,10 @@ function joinApiUrl(baseUrl: string, routePath: string): string {
 }
 
 export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return BROWSER_BACKEND_PROXY_BASE;
+  }
+
   const configuredBase = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || "");
 
   if (configuredBase) {
@@ -1604,13 +1608,6 @@ export function getApiBaseUrl(): string {
       return "http://127.0.0.1:8000";
     }
 
-    if (typeof window !== "undefined") {
-      const currentOrigin = normalizeApiBaseUrl(window.location.origin);
-      // Guard against self-referential production config that points API requests back to the Vercel frontend.
-      if (configuredBase === currentOrigin && window.location.hostname.endsWith("vercel.app")) {
-        return EXPECTED_RENDER_BACKEND_URL;
-      }
-    }
     return configuredBase;
   }
 
@@ -1618,7 +1615,7 @@ export function getApiBaseUrl(): string {
     return "http://127.0.0.1:8000";
   }
 
-  throw new Error("NEXT_PUBLIC_API_URL is required in production and must point to the backend API.");
+  throw new Error("API base URL is required on the server when NEXT_PUBLIC_API_URL is not set.");
 }
 
 async function fetchJson<T>(path: string): Promise<T> {
