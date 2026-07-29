@@ -158,7 +158,6 @@ export default function HomePage() {
 
       const [needs, recommendations] = await Promise.all([
         fetchPatientNeedsProfile({
-          patient_case_id: currentPatientCaseId,
           questionnaire_state: canonicalQuestionnaire,
           natural_language_query: canonicalNaturalLanguage,
         }),
