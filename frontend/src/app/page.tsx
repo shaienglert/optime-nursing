@@ -5,18 +5,106 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { fetchPatientDecisionRecommendations, fetchPatientNeedsProfile, upsertPatientCaseFromFreeText } from "@/lib/api";
-import {
-  loadPatientCaseId,
-  PatientProfileRecord,
-  SavedSearch,
-  loadPatientProfiles,
-  loadRecentSearches,
-  loadSavedSearches,
-  savePatientCaseId,
-  saveRecentSearch,
-  saveSavedSearch,
-} from "@/lib/search-session";
+import { fetchPatientDecisionRecommendations, fetchPatientNeedsProfile } from "@/lib/api";
+
+type SavedSearch = {
+  id: string;
+  title: string;
+  naturalLanguageQuery: string;
+  questionnaireState: Record<string, unknown>;
+  createdAt: string;
+};
+
+type PatientProfileRecord = {
+  id: string;
+  label: string;
+  version: number;
+  updatedAt: string;
+  state: Record<string, unknown>;
+};
+
+const PATIENT_CASE_ID_SESSION_KEY = "optime.patient.case.id";
+const RECENT_SEARCHES_STORAGE_KEY = "optime.recent.searches";
+const SAVED_SEARCHES_STORAGE_KEY = "optime.saved.searches";
+const PATIENT_PROFILES_STORAGE_KEY = "optime.patient.profiles";
+
+function hasWindow(): boolean {
+  return typeof window !== "undefined";
+}
+
+function loadSessionNumber(key: string): number | null {
+  if (!hasWindow()) return null;
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = Number(JSON.parse(raw));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSessionNumber(key: string, value: number): void {
+  if (!hasWindow()) return;
+  if (!Number.isFinite(value) || value <= 0) return;
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Best effort only.
+  }
+}
+
+function loadLocalRows<T extends { id: string }>(key: string): T[] {
+  if (!hasWindow()) return [];
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    const rows = JSON.parse(raw) as T[];
+    if (!Array.isArray(rows)) return [];
+    const seen = new Set<string>();
+    const deduped: T[] = [];
+    for (const row of rows) {
+      const id = String(row?.id || "").trim();
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      deduped.push(row);
+    }
+    return deduped;
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalRows<T>(key: string, rows: T[]): void {
+  if (!hasWindow()) return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(rows));
+  } catch {
+    // Best effort only.
+  }
+}
+
+function loadRecentSearches(): SavedSearch[] {
+  return loadLocalRows<SavedSearch>(RECENT_SEARCHES_STORAGE_KEY);
+}
+
+function saveRecentSearch(search: SavedSearch): void {
+  const next = [search, ...loadRecentSearches().filter((item) => item.id !== search.id)].slice(0, 20);
+  saveLocalRows(RECENT_SEARCHES_STORAGE_KEY, next);
+}
+
+function loadSavedSearches(): SavedSearch[] {
+  return loadLocalRows<SavedSearch>(SAVED_SEARCHES_STORAGE_KEY);
+}
+
+function saveSavedSearch(search: SavedSearch): void {
+  const next = [search, ...loadSavedSearches().filter((item) => item.id !== search.id)].slice(0, 50);
+  saveLocalRows(SAVED_SEARCHES_STORAGE_KEY, next);
+}
+
+function loadPatientProfiles(): PatientProfileRecord[] {
+  return loadLocalRows<PatientProfileRecord>(PATIENT_PROFILES_STORAGE_KEY);
+}
 
 function uid(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
@@ -63,32 +151,28 @@ export default function HomePage() {
       };
       setState(nextQuestionnaire);
 
-      const currentPatientCaseId = loadPatientCaseId() || undefined;
-      const patientCase = await upsertPatientCaseFromFreeText({
-        patient_case_id: currentPatientCaseId,
-        case_text: normalized,
-        source_name: "homepage_natural_language",
-        reason: "homepage_search",
-      });
-      savePatientCaseId(patientCase.id);
-      setLiveSummary(patientCase.summary || "");
-
-      const canonicalQuestionnaire = (patientCase.decision_handoff?.questionnaire_state || nextQuestionnaire) as Record<string, unknown>;
-      const canonicalNaturalLanguage = String(patientCase.decision_handoff?.natural_language_query || normalized);
+      const currentPatientCaseId = loadSessionNumber(PATIENT_CASE_ID_SESSION_KEY) || undefined;
+      const canonicalQuestionnaire = nextQuestionnaire as Record<string, unknown>;
+      const canonicalNaturalLanguage = normalized;
+      setLiveSummary(normalized);
 
       const [needs, recommendations] = await Promise.all([
         fetchPatientNeedsProfile({
-          patient_case_id: patientCase.id,
+          patient_case_id: currentPatientCaseId,
           questionnaire_state: canonicalQuestionnaire,
           natural_language_query: canonicalNaturalLanguage,
         }),
         fetchPatientDecisionRecommendations({
-          patient_case_id: patientCase.id,
+          patient_case_id: currentPatientCaseId,
           questionnaire_state: canonicalQuestionnaire,
           natural_language_query: canonicalNaturalLanguage,
           limit: 50,
         }),
       ]);
+
+      if (typeof recommendations.patient_case_id === "number" && recommendations.patient_case_id > 0) {
+        saveSessionNumber(PATIENT_CASE_ID_SESSION_KEY, recommendations.patient_case_id);
+      }
 
       const searchRecord: SavedSearch = {
         id: uid("search"),
