@@ -123,6 +123,67 @@ describe("getApiBaseUrl", () => {
       questionnaire_state: {
         relationship: "Dad",
         ageGroup: "80-84",
+        assistanceLevel: "",
+        futureCarePreference: "",
+        memoryStatus: "",
+        happinessPreferences: [],
+        budget: 7000,
+        distanceFromFamily: "",
+        referenceLocationType: "",
+        referenceLocationValue: "",
+        locationImportant: "",
+        referenceAddress: "",
+        maximumDistanceMiles: "",
+        customDistanceMiles: "",
+        otherInterests: "",
+        notes: "",
+        humanIntelligenceV2: {
+          socialProfile: { livingAloneDuration: "", socialInteractionFrequency: "", newFriendsImportance: "", hobbyParticipation: [], preferredSocialIntensity: "" },
+          familyProfile: { involvedFamilyMembers: "", visitFrequencyExpectation: "", grandchildrenPresence: "", grandchildrenImportance: "", familyDecisionDynamics: "", emergencySupportNetwork: "", coupleStayTogetherPreference: "", widowStatus: "", lossTiming: "", socialActivityChangeSinceLoss: "", socialInteractionNeed: "", temporarySeparationAcceptance: "", griefSupportInterest: "" },
+          culturalProfile: { religionImportance: "", faithTraditions: [], religiousSupportNeeds: [], kosherRequirements: "", synagogueChurchAccess: "", holidayCelebrations: "", culturalIdentity: "", israeliJewishCommunityPreference: "", whatFeelsLikeHome: [], worshipAccessRequirement: "", jewishProgrammingImportance: "", churchAccessRequirement: "", christianServiceRequirement: "", halalMealsRequirement: "", prayerFacilityRequirement: "" },
+          languageProfile: { preferredSpokenLanguage: "", nativeLanguage: "", medicalDiscussionLanguage: "", socialInteractionLanguage: "", languageNeedScope: "", languagesUnderstood: [], familyLanguages: [], bilingualStaffRequired: "" },
+          foodProfile: { dietaryPreferences: [] },
+          familyCultureProfile: { involvementExpectation: "", decisionRole: "" },
+          communityPreferenceProfile: { preferredEnvironment: [] },
+          personalityProfile: { introvertExtrovert: "", communitySizePreference: "", privacyImportance: "", structureFlexibilityPreference: "" },
+          interestsProfile: [],
+          independenceProfile: { drivingImportance: "", cookingImportance: "", abilityToLeaveIndependently: "", petOwnershipImportance: "", hostingFamilyImportance: "" },
+          transitionRiskProfile: { biggestFear: "", attitudeTowardMove: "", previousMoves: "", bereavementStatus: "", lonelinessRisk: "", socialIsolationConcern: "", recentHospitalization: "", hospitalizationRecency: "", postHospitalRehabNeed: "", wanderingConcerns: "" },
+          futureCareProfile: { agingInPlaceImportance: "", avoidFutureMovesPreference: "", continuumOfCarePreference: "", secureMemoryNeighborhoodNeed: "", familiarLanguageRequirement: "" },
+          distanceProfile: {
+            referenceLocations: { parentCurrentHome: "", primaryCaregiverHome: "", secondaryFamilyHomes: "", preferredHospital: "", placeOfWorship: "" },
+            driveTimes: { normal: "", rushHour: "", emergency: "" },
+            familyVisitExpectation: "",
+            familyGeographyModel: { involvedFamilyMembers: "", familyCenterOfGravity: "", multiLocationOptimization: "" },
+            emotionalDistanceFactors: { emergencyAccessImportance: "", spontaneousVisitsImportance: "", grandchildrenVisitsImportance: "" },
+            careLevelWeight: 0,
+            optimizationStrategy: "",
+            scores: { family_distance_score: null, visit_probability_score: null, emergency_access_score: null, grandchildren_access_score: null, travel_burden_score: null, family_engagement_score: null },
+            inferredConfidence: {},
+          },
+          confidence: {},
+          scoringEngine: {
+            overallConfidence: 0,
+            confidenceThreshold: 0,
+            adaptiveSignals: [],
+            scoringWeights: {},
+            outputScores: {
+              social_fit_score: 0,
+              family_fit_score: 0,
+              language_fit_score: 0,
+              cultural_fit_score: 0,
+              religious_fit_score: 0,
+              food_fit_score: 0,
+              family_engagement_score: 0,
+              community_style_score: 0,
+              independence_fit_score: 0,
+              transition_success_probability: 0,
+              loneliness_risk_score: 0,
+            },
+            recommendationImpacts: [],
+            additionalQuestionAsked: "",
+          },
+        },
       },
       natural_language_query: "stroke rehab",
       limit: 50,
@@ -132,5 +193,180 @@ describe("getApiBaseUrl", () => {
     const [requestUrl, requestInit] = (fetchMock as unknown as { mock: { calls: unknown[][] } }).mock.calls[0] || [];
     expect(requestUrl).toBe("/api/backend/decision-engine/recommendations");
     expect((requestInit as { method?: string })?.method).toBe("POST");
+  });
+  
+  it("falls back to facilities-powered recommendations when decision-engine endpoint returns 404", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.NEXT_PUBLIC_API_URL = "https://example.test";
+    (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
+      location: {
+        origin: "https://optime-nursing.vercel.app",
+        hostname: "optime-nursing.vercel.app",
+      },
+    };
+
+    const calls: string[] = [];
+    const fetchMock = vi.fn(async (input: string) => {
+      calls.push(String(input));
+
+      if (String(input).endsWith("/decision-engine/recommendations")) {
+        return {
+          ok: false,
+          status: 404,
+          json: async () => ({ detail: "Not Found" }),
+        };
+      }
+
+      if (String(input).endsWith("/facilities")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ([
+            {
+              id: 1,
+              cms_id: "105000",
+              name: "Facility One",
+              city: "Miami",
+              state: "FL",
+              address: "Addr 1",
+              zip_code: "33101",
+              phone: null,
+              overall_rating: 4,
+              staffing_rating: 4,
+              quality_rating: 4,
+              inspection_rating: 4,
+              beds: 120,
+              medical_quality_score: 80,
+              staffing_score: 80,
+              safety_score: 80,
+              overall_optime_score: 80,
+              confidence_level: "MEDIUM",
+              intelligence_confidence: 0.7,
+              intelligence_sources_used: [],
+              intelligence_positive_signals: [],
+              intelligence_negative_signals: [],
+              intelligence_signal_details: [],
+              family_satisfaction_index: 0,
+              staff_stability_index: 0,
+              regulatory_risk_index: 0,
+              litigation_risk_index: 0,
+              social_energy_index: 0,
+              community_engagement_index: 0,
+              reputation_index: 0,
+              cultural_match_signals: 0,
+            },
+          ]),
+        };
+      }
+
+      if (String(input).endsWith("/governance/runtime-context")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            generated_at_utc: new Date().toISOString(),
+            professional_rule_registry: {
+              version: "test",
+              rule_count: 0,
+              hash: "test",
+              rules: [],
+              validator_policy: {},
+            },
+            canonical_coverage: {
+              canonical_total: 1,
+              runtime_total: 1,
+              confirmed_canonical_identity: 1,
+              unresolved_identity: 0,
+            },
+          }),
+        };
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        json: async () => ({ detail: "Not Found" }),
+      };
+    }) as unknown as typeof fetch;
+
+    globalThis.fetch = fetchMock;
+
+    const response = await fetchPatientDecisionRecommendations({
+      questionnaire_state: {
+        relationship: "Dad",
+        ageGroup: "80-84",
+        assistanceLevel: "24/7 support required",
+        futureCarePreference: "No preference",
+        memoryStatus: "No",
+        happinessPreferences: [],
+        budget: 7000,
+        distanceFromFamily: "Balanced location",
+        referenceLocationType: "",
+        referenceLocationValue: "Miami",
+        locationImportant: "",
+        referenceAddress: "",
+        maximumDistanceMiles: "",
+        customDistanceMiles: "",
+        otherInterests: "",
+        notes: "Stroke rehab",
+        humanIntelligenceV2: {
+          socialProfile: { livingAloneDuration: "", socialInteractionFrequency: "", newFriendsImportance: "", hobbyParticipation: [], preferredSocialIntensity: "" },
+          familyProfile: { involvedFamilyMembers: "", visitFrequencyExpectation: "", grandchildrenPresence: "", grandchildrenImportance: "", familyDecisionDynamics: "", emergencySupportNetwork: "", coupleStayTogetherPreference: "", widowStatus: "", lossTiming: "", socialActivityChangeSinceLoss: "", socialInteractionNeed: "", temporarySeparationAcceptance: "", griefSupportInterest: "" },
+          culturalProfile: { religionImportance: "", faithTraditions: [], religiousSupportNeeds: [], kosherRequirements: "", synagogueChurchAccess: "", holidayCelebrations: "", culturalIdentity: "", israeliJewishCommunityPreference: "", whatFeelsLikeHome: [], worshipAccessRequirement: "", jewishProgrammingImportance: "", churchAccessRequirement: "", christianServiceRequirement: "", halalMealsRequirement: "", prayerFacilityRequirement: "" },
+          languageProfile: { preferredSpokenLanguage: "", nativeLanguage: "", medicalDiscussionLanguage: "", socialInteractionLanguage: "", languageNeedScope: "", languagesUnderstood: [], familyLanguages: [], bilingualStaffRequired: "" },
+          foodProfile: { dietaryPreferences: [] },
+          familyCultureProfile: { involvementExpectation: "", decisionRole: "" },
+          communityPreferenceProfile: { preferredEnvironment: [] },
+          personalityProfile: { introvertExtrovert: "", communitySizePreference: "", privacyImportance: "", structureFlexibilityPreference: "" },
+          interestsProfile: [],
+          independenceProfile: { drivingImportance: "", cookingImportance: "", abilityToLeaveIndependently: "", petOwnershipImportance: "", hostingFamilyImportance: "" },
+          transitionRiskProfile: { biggestFear: "", attitudeTowardMove: "", previousMoves: "", bereavementStatus: "", lonelinessRisk: "", socialIsolationConcern: "", recentHospitalization: "", hospitalizationRecency: "", postHospitalRehabNeed: "", wanderingConcerns: "" },
+          futureCareProfile: { agingInPlaceImportance: "", avoidFutureMovesPreference: "", continuumOfCarePreference: "", secureMemoryNeighborhoodNeed: "", familiarLanguageRequirement: "" },
+          distanceProfile: {
+            referenceLocations: { parentCurrentHome: "", primaryCaregiverHome: "", secondaryFamilyHomes: "", preferredHospital: "", placeOfWorship: "" },
+            driveTimes: { normal: "", rushHour: "", emergency: "" },
+            familyVisitExpectation: "",
+            familyGeographyModel: { involvedFamilyMembers: "", familyCenterOfGravity: "", multiLocationOptimization: "" },
+            emotionalDistanceFactors: { emergencyAccessImportance: "", spontaneousVisitsImportance: "", grandchildrenVisitsImportance: "" },
+            careLevelWeight: 0,
+            optimizationStrategy: "",
+            scores: { family_distance_score: null, visit_probability_score: null, emergency_access_score: null, grandchildren_access_score: null, travel_burden_score: null, family_engagement_score: null },
+            inferredConfidence: {},
+          },
+          confidence: {},
+          scoringEngine: {
+            overallConfidence: 0,
+            confidenceThreshold: 0,
+            adaptiveSignals: [],
+            scoringWeights: {},
+            outputScores: {
+              social_fit_score: 0,
+              family_fit_score: 0,
+              language_fit_score: 0,
+              cultural_fit_score: 0,
+              religious_fit_score: 0,
+              food_fit_score: 0,
+              family_engagement_score: 0,
+              community_style_score: 0,
+              independence_fit_score: 0,
+              transition_success_probability: 0,
+              loneliness_risk_score: 0,
+            },
+            recommendationImpacts: [],
+            additionalQuestionAsked: "",
+          },
+        },
+      },
+      natural_language_query: "stroke rehab",
+      limit: 10,
+    });
+
+    expect(response.result_count).toBeGreaterThan(0);
+    expect(response.results[0].canonical_facility_id).toBe("CMS-105000");
+    expect(calls).toEqual([
+      "/api/backend/decision-engine/recommendations",
+      "/api/backend/facilities",
+      "/api/backend/governance/runtime-context",
+    ]);
   });
 });
