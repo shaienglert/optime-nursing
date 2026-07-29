@@ -340,6 +340,9 @@ export type DecisionEngineRecommendation = {
 };
 
 export type DecisionEngineResponse = {
+  patient_case_id?: number | null;
+  runtime_version?: string | null;
+  runtime_timestamp?: string | null;
   patient_needs_profile: PatientNeedsProfile;
   results: DecisionEngineRecommendation[];
   result_count: number;
