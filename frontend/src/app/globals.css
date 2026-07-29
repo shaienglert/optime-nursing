@@ -3,6 +3,14 @@
 :root {
   --background: #fffaf2;
   --foreground: #2f2a24;
+  --surface: #ffffff;
+  --surface-alt: #f6fbff;
+  --muted: #5a625d;
+  --primary: #1f7a67;
+  --primary-contrast: #ffffff;
+  --accent: #274f7a;
+  --danger: #9a3f35;
+  --ring: #74b9a7;
 }
 
 @theme inline {
@@ -16,9 +24,84 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans);
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
   background: #d9e5d8;
   color: #2f2a24;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@keyframes optime-path-pulse {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes optime-compass-drift {
+  0% {
+    transform: translateY(-50%) translateX(0px);
+  }
+  50% {
+    transform: translateY(-50%) translateX(2px);
+  }
+  100% {
+    transform: translateY(-50%) translateX(0px);
+  }
+}
+
+@keyframes optime-arrow-flash {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+.optime-path-pulse {
+  animation: optime-path-pulse 1.8s ease-in-out infinite;
+}
+
+.optime-compass-drift {
+  animation: optime-compass-drift 2.2s ease-in-out infinite;
+}
+
+.optime-arrow-flash {
+  animation: optime-arrow-flash 1.3s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f1617;
+    --foreground: #edf5f2;
+    --surface: #162024;
+    --surface-alt: #1c2930;
+    --muted: #b7c7c2;
+    --primary: #3ca58f;
+    --primary-contrast: #0f1617;
+    --accent: #9cc5ea;
+    --danger: #f0a59b;
+    --ring: #8cd8c4;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --ring: #0b5fff;
+  }
 }

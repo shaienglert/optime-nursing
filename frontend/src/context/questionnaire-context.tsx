@@ -17,6 +17,11 @@ export type QuestionnaireState = {
   distanceFromFamily: string;
   referenceLocationType: string;
   referenceLocationValue: string;
+  locationImportant: string;
+  referenceAddress: string;
+  maximumDistanceMiles: string;
+  customDistanceMiles: string;
+  otherInterests: string;
   notes: string;
   humanIntelligenceV2: HumanIntelligenceV2;
 };
@@ -194,6 +199,11 @@ const DEFAULT_STATE: QuestionnaireState = {
   distanceFromFamily: "",
   referenceLocationType: "",
   referenceLocationValue: "",
+  locationImportant: "",
+  referenceAddress: "",
+  maximumDistanceMiles: "",
+  customDistanceMiles: "",
+  otherInterests: "",
   notes: "",
   humanIntelligenceV2: {
     socialProfile: {
