@@ -361,6 +361,7 @@ export type DecisionEngineResponse = {
 };
 
 export type DecisionEngineRequest = {
+  patient_case_id?: number;
   questionnaire_state: Record<string, unknown>;
   natural_language_query?: string;
   limit?: number;
