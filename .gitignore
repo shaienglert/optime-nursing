@@ -9,5 +9,25 @@ venv/
 .idea/
 backend/app/data/
 *.csv
+!reports/OPTIME_GOLDEN_FACILITY_EVIDENCE_LEDGER.csv
+!reports/OPTIME_GOLDEN_FACILITY_ACTION_MATRIX.csv
 *.parquet
 reports/email/startup_test_state.json
+
+# Local runtime synchronization backups and database journals
+backend/runtime-sync-*/
+*.db-journal
+
+# Temporary UI captures and local test output
+frontend/.tmp-ai-workspace-*.png
+reports/ux_review/**/tmp-*.png
+reports/ux_review/**/local-*.png
+frontend/playwright-report/
+frontend/test-results/
+frontend/coverage/
+
+# Local profiling and test-run output
+scripts/memory_profile_*.log
+reports/*_pipeline_*.log
+backend/.pytest_cache/
+backend/.coverage
