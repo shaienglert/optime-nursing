@@ -370,6 +370,50 @@ export type DecisionEngineRequest = {
   limit?: number;
 };
 
+export type PatientCasePayload = {
+  id: number;
+  case_key: string;
+  display_label: string;
+  current_version: number;
+  profile_confidence: number;
+  canonical_profile: Record<string, unknown>;
+  questionnaire_state: Record<string, unknown>;
+  summary: string;
+  readiness: Record<string, unknown>;
+  missing: Array<Record<string, unknown>>;
+  follow_up_questions: Array<Record<string, unknown>>;
+  conflicts: Record<string, unknown>;
+  source_matrix: Record<string, unknown>;
+  decision_handoff: {
+    patient_case_id?: number;
+    questionnaire_state?: Record<string, unknown>;
+    natural_language_query?: string;
+  };
+  created_at?: string | null;
+  updated_at?: string | null;
+  history: Array<Record<string, unknown>>;
+};
+
+export type PatientCaseHistoryPayload = {
+  id: number;
+  case_key: string;
+  current_version: number;
+  history: Array<Record<string, unknown>>;
+};
+
+export type PatientCaseMissingPayload = {
+  id: number;
+  missing: Array<Record<string, unknown>>;
+  follow_up_questions: Array<Record<string, unknown>>;
+};
+
+export type PatientCaseSummaryPayload = {
+  id: number;
+  summary: string;
+  readiness: Record<string, unknown>;
+  profile_confidence: number;
+};
+
 export type PatientComparisonContextRequest = {
   canonical_facility_ids: string[];
   patient_needs_profile: PatientNeedsProfile;
@@ -1875,7 +1919,7 @@ export async function fetchPersonalizedParameterOrder(
 }
 
 export async function fetchPatientNeedsProfile(
-  payload: { questionnaire_state: Record<string, unknown>; natural_language_query?: string }
+  payload: { patient_case_id?: number; questionnaire_state: Record<string, unknown>; natural_language_query?: string }
 ): Promise<PatientNeedsProfile> {
   return postJson<typeof payload, PatientNeedsProfile>("/decision-engine/patient-needs-profile", payload);
 }
@@ -1890,4 +1934,57 @@ export async function fetchPatientComparisonContext(
   payload: PatientComparisonContextRequest
 ): Promise<PatientComparisonContextResponse> {
   return postJson<PatientComparisonContextRequest, PatientComparisonContextResponse>("/decision-engine/comparison-context", payload);
+}
+
+export async function upsertPatientCaseFromFreeText(payload: {
+  patient_case_id?: number;
+  case_text: string;
+  source_name?: string;
+  reason?: string;
+}): Promise<PatientCasePayload> {
+  return postJson<typeof payload, PatientCasePayload>("/patient-case/free-text", payload);
+}
+
+export async function upsertPatientCaseFromQuestionnaire(payload: {
+  patient_case_id?: number;
+  questionnaire_state: Record<string, unknown>;
+  source_name?: string;
+  reason?: string;
+}): Promise<PatientCasePayload> {
+  return postJson<typeof payload, PatientCasePayload>("/patient-case/questionnaire", payload);
+}
+
+export async function upsertPatientCaseFromChat(payload: {
+  patient_case_id?: number;
+  message: string;
+  source_name?: string;
+  reason?: string;
+}): Promise<PatientCasePayload> {
+  return postJson<typeof payload, PatientCasePayload>("/patient-case/chat", payload);
+}
+
+export async function updatePatientCase(payload: {
+  patient_case_id: number;
+  updates: Record<string, unknown>;
+  source_type?: string;
+  source_name?: string;
+  reason?: string;
+}): Promise<PatientCasePayload> {
+  return postJson<typeof payload, PatientCasePayload>("/patient-case/update", payload);
+}
+
+export async function fetchPatientCase(patientCaseId: number): Promise<PatientCasePayload> {
+  return fetchJson<PatientCasePayload>(`/patient-case/${patientCaseId}`);
+}
+
+export async function fetchPatientCaseHistory(patientCaseId: number): Promise<PatientCaseHistoryPayload> {
+  return fetchJson<PatientCaseHistoryPayload>(`/patient-case/${patientCaseId}/history`);
+}
+
+export async function fetchPatientCaseMissing(patientCaseId: number): Promise<PatientCaseMissingPayload> {
+  return fetchJson<PatientCaseMissingPayload>(`/patient-case/${patientCaseId}/missing`);
+}
+
+export async function fetchPatientCaseSummary(patientCaseId: number): Promise<PatientCaseSummaryPayload> {
+  return fetchJson<PatientCaseSummaryPayload>(`/patient-case/${patientCaseId}/summary`);
 }

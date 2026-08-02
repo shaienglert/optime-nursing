@@ -99,6 +99,20 @@ from app.services.patient_decision_engine import (
     build_patient_needs_profile,
     run_patient_decision_engine,
 )
+from app.services.unified_patient_case_service import (
+    build_legacy_patient_profile_adapter,
+    get_patient_case,
+    get_patient_case_history,
+    get_patient_case_missing,
+    get_patient_case_summary,
+    migrate_legacy_patient_profiles,
+    resolve_case_for_decision,
+    run_unified_patient_case_validation,
+    upsert_from_chat,
+    upsert_from_free_text,
+    upsert_from_generic_update,
+    upsert_from_questionnaire,
+)
 
 app = FastAPI(
     title="OPTIME Nursing API",
@@ -306,12 +320,14 @@ class ParameterRegistryOut(BaseModel):
 
 
 class PatientDecisionEngineRequestIn(BaseModel):
+    patient_case_id: Optional[int] = None
     questionnaire_state: Dict[str, Any]
     natural_language_query: Optional[str] = ""
     limit: int = 50
 
 
 class PatientNeedsProfileRequestIn(BaseModel):
+    patient_case_id: Optional[int] = None
     questionnaire_state: Dict[str, Any]
     natural_language_query: Optional[str] = ""
 
@@ -345,6 +361,126 @@ class PatientComparisonContextOut(BaseModel):
     preferences: List[Dict[str, Any]]
     comparison_parameter_ids: List[str]
     facilities: List[Dict[str, Any]]
+
+
+class CaseUnderstandingRequestIn(BaseModel):
+    patient_case_id: Optional[int] = None
+    case_text: str
+
+
+class CaseRefinementRequestIn(BaseModel):
+    profile_id: Optional[int] = None
+    patient_case_id: Optional[int] = None
+    refinement_text: str
+
+
+class PatientCaseQuestionnaireIn(BaseModel):
+    patient_case_id: Optional[int] = None
+    questionnaire_state: Dict[str, Any]
+    source_name: Optional[str] = "homepage_questionnaire"
+    reason: Optional[str] = "questionnaire_update"
+
+
+class PatientCaseFreeTextIn(BaseModel):
+    patient_case_id: Optional[int] = None
+    case_text: str
+    source_name: Optional[str] = "natural_language"
+    reason: Optional[str] = "free_text_update"
+
+
+class PatientCaseChatIn(BaseModel):
+    patient_case_id: Optional[int] = None
+    message: str
+    source_name: Optional[str] = "ai_chat"
+    reason: Optional[str] = "chat_update"
+
+
+class PatientCaseGenericUpdateIn(BaseModel):
+    patient_case_id: int
+    updates: Dict[str, Any]
+    source_type: str = "FAMILY_UPDATE"
+    source_name: str = "manual_update"
+    reason: str = "manual_update"
+
+
+class PatientCaseOut(BaseModel):
+    id: int
+    case_key: str
+    display_label: str
+    current_version: int
+    profile_confidence: float
+    canonical_profile: Dict[str, Any]
+    questionnaire_state: Dict[str, Any]
+    summary: str
+    readiness: Dict[str, Any]
+    missing: List[Dict[str, Any]] = Field(default_factory=list)
+    follow_up_questions: List[Dict[str, Any]] = Field(default_factory=list)
+    conflicts: Dict[str, Any] = Field(default_factory=dict)
+    source_matrix: Dict[str, Any] = Field(default_factory=dict)
+    decision_handoff: Dict[str, Any] = Field(default_factory=dict)
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    history: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class PatientCaseHistoryOut(BaseModel):
+    id: int
+    case_key: str
+    current_version: int
+    history: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class PatientCaseMissingOut(BaseModel):
+    id: int
+    missing: List[Dict[str, Any]] = Field(default_factory=list)
+    follow_up_questions: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class PatientCaseSummaryOut(BaseModel):
+    id: int
+    summary: str
+    readiness: Dict[str, Any]
+    profile_confidence: float
+
+
+class PatientProfileVersionOut(BaseModel):
+    version_number: int
+    operation: str
+    input_case_text: str
+    profile_confidence: float
+    structured_profile: Dict[str, Any]
+    missing_critical_fields: List[str] = Field(default_factory=list)
+    follow_up_questions: List[str] = Field(default_factory=list)
+    ambiguity_notes: List[Dict[str, Any]] = Field(default_factory=list)
+    case_summary: str
+    questionnaire_state: Dict[str, Any]
+    decision_handoff: Dict[str, Any]
+    created_at: Optional[str] = None
+
+
+class PatientProfileOut(BaseModel):
+    id: int
+    case_key: str
+    current_version: int
+    profile_confidence: float
+    original_case_text: str
+    latest_case_text: str
+    structured_profile: Dict[str, Any]
+    missing_critical_fields: List[str] = Field(default_factory=list)
+    follow_up_questions: List[str] = Field(default_factory=list)
+    ambiguity_notes: List[Dict[str, Any]] = Field(default_factory=list)
+    case_summary: str
+    questionnaire_state: Dict[str, Any]
+    decision_handoff: Dict[str, Any]
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    versions: List[PatientProfileVersionOut] = Field(default_factory=list)
+
+
+class CaseUnderstandingValidationOut(BaseModel):
+    generated_at: str
+    workload: Dict[str, int]
+    results: Dict[str, Any]
 
 
 class ImportSummaryOut(BaseModel):
@@ -1518,19 +1654,35 @@ async def post_personalized_parameter_order(payload: PersonalizedParameterOrderI
 
 
 @app.post("/decision-engine/patient-needs-profile", response_model=PatientNeedsProfileOut)
-async def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn):
-    return build_patient_needs_profile(payload.questionnaire_state, payload.natural_language_query or "")
+async def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn, db: Session = Depends(get_db)):
+    resolved = resolve_case_for_decision(
+        db,
+        patient_case_id=payload.patient_case_id,
+        questionnaire_state=payload.questionnaire_state,
+        natural_language_query=payload.natural_language_query or "",
+    )
+    return build_patient_needs_profile(
+        resolved.get("questionnaire_state") or {},
+        resolved.get("natural_language_query") or "",
+    )
 
 
 @app.post("/decision-engine/recommendations", response_model=PatientDecisionEngineOut)
 async def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestIn, db: Session = Depends(get_db)):
     started = time.perf_counter()
     logger.info("decision_request_received limit=%s", payload.limit)
-    response = run_patient_decision_engine(
+    resolved = resolve_case_for_decision(
+        db,
+        patient_case_id=payload.patient_case_id,
         questionnaire_state=payload.questionnaire_state,
         natural_language_query=payload.natural_language_query or "",
+    )
+    response = run_patient_decision_engine(
+        questionnaire_state=resolved.get("questionnaire_state") or {},
+        natural_language_query=resolved.get("natural_language_query") or "",
         limit=payload.limit,
     )
+    response["patient_case_id"] = resolved.get("patient_case_id")
 
     ccn_to_facility_id = {
         str(facility.cms_id): int(facility.id)
@@ -1555,6 +1707,143 @@ async def post_patient_decision_recommendations(payload: PatientDecisionEngineRe
 @app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
 async def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
     return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
+
+
+@app.post("/patient-case/free-text", response_model=PatientCaseOut)
+async def post_patient_case_free_text(payload: PatientCaseFreeTextIn, db: Session = Depends(get_db)):
+    try:
+        return upsert_from_free_text(
+            db,
+            case_text=payload.case_text,
+            patient_case_id=payload.patient_case_id,
+            source_name=payload.source_name or "natural_language",
+            reason=payload.reason or "free_text_update",
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/patient-case/questionnaire", response_model=PatientCaseOut)
+async def post_patient_case_questionnaire(payload: PatientCaseQuestionnaireIn, db: Session = Depends(get_db)):
+    return upsert_from_questionnaire(
+        db,
+        questionnaire_state=payload.questionnaire_state,
+        patient_case_id=payload.patient_case_id,
+        source_name=payload.source_name or "homepage_questionnaire",
+        reason=payload.reason or "questionnaire_update",
+    )
+
+
+@app.post("/patient-case/chat", response_model=PatientCaseOut)
+async def post_patient_case_chat(payload: PatientCaseChatIn, db: Session = Depends(get_db)):
+    try:
+        return upsert_from_chat(
+            db,
+            message=payload.message,
+            patient_case_id=payload.patient_case_id,
+            source_name=payload.source_name or "ai_chat",
+            reason=payload.reason or "chat_update",
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/patient-case/update", response_model=PatientCaseOut)
+async def post_patient_case_update(payload: PatientCaseGenericUpdateIn, db: Session = Depends(get_db)):
+    try:
+        return upsert_from_generic_update(
+            db,
+            updates=payload.updates,
+            patient_case_id=payload.patient_case_id,
+            source_type=payload.source_type,
+            source_name=payload.source_name,
+            reason=payload.reason,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/patient-case/{id}", response_model=PatientCaseOut)
+async def get_patient_case_by_id(id: int, db: Session = Depends(get_db)):
+    try:
+        return get_patient_case(db, id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/patient-case/{id}/history", response_model=PatientCaseHistoryOut)
+async def get_patient_case_history_by_id(id: int, db: Session = Depends(get_db)):
+    try:
+        return get_patient_case_history(db, id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/patient-case/{id}/missing", response_model=PatientCaseMissingOut)
+async def get_patient_case_missing_by_id(id: int, db: Session = Depends(get_db)):
+    try:
+        return get_patient_case_missing(db, id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/patient-case/{id}/summary", response_model=PatientCaseSummaryOut)
+async def get_patient_case_summary_by_id(id: int, db: Session = Depends(get_db)):
+    try:
+        return get_patient_case_summary(db, id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/ai/understand-case", response_model=PatientProfileOut)
+async def post_ai_understand_case(payload: CaseUnderstandingRequestIn, db: Session = Depends(get_db)):
+    try:
+        case_payload = upsert_from_free_text(
+            db,
+            case_text=payload.case_text,
+            patient_case_id=payload.patient_case_id,
+            source_name="natural_language",
+            reason="legacy_understand_case",
+        )
+        return build_legacy_patient_profile_adapter(case_payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/ai/refine-case", response_model=PatientProfileOut)
+async def post_ai_refine_case(payload: CaseRefinementRequestIn, db: Session = Depends(get_db)):
+    try:
+        patient_case_id = payload.patient_case_id or payload.profile_id
+        if patient_case_id is None:
+            raise ValueError("profile_id or patient_case_id is required")
+        case_payload = upsert_from_free_text(
+            db,
+            case_text=payload.refinement_text,
+            patient_case_id=patient_case_id,
+            source_name="natural_language",
+            reason="legacy_refine_case",
+        )
+        return build_legacy_patient_profile_adapter(case_payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/patient-profile/{id}", response_model=PatientProfileOut)
+async def get_patient_profile_by_id(id: int, db: Session = Depends(get_db)):
+    try:
+        case_payload = get_patient_case(db, id)
+        return build_legacy_patient_profile_adapter(case_payload)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/ai/understand-case/validation", response_model=CaseUnderstandingValidationOut)
+async def get_ai_case_understanding_validation(
+    db: Session = Depends(get_db),
+):
+    return run_unified_patient_case_validation(db)
 
 
 @app.post("/intelligence/run", response_model=IntelligenceRunSummaryOut)

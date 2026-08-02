@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
-import { OptimeDynamicLogo } from "@/components/brand/optime-dynamic-logo";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientDecisionRecommendations, fetchPatientNeedsProfile } from "@/lib/api";
 
@@ -22,20 +21,6 @@ type PatientProfileRecord = {
   version: number;
   updatedAt: string;
   state: Record<string, unknown>;
-};
-
-type QuestionnaireSectionKey =
-  | "careNeeds"
-  | "memoryCognitive"
-  | "lifestyle"
-  | "location"
-  | "budget"
-  | "languages"
-  | "otherInterests";
-
-type QuestionnaireSection = {
-  key: QuestionnaireSectionKey;
-  title: string;
 };
 
 const PATIENT_CASE_ID_SESSION_KEY = "optime.patient.case.id";
@@ -127,62 +112,6 @@ function uid(prefix: string): string {
 
 const EXAMPLE_QUERY = "My mother is 82, has early dementia, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
 
-const WORKFLOW_MESSAGES = [
-  "Understanding care needs...",
-  "Learning lifestyle preferences...",
-  "Analyzing cognitive profile...",
-  "Reviewing budget...",
-  "Matching communities...",
-  "Checking evidence...",
-  "Preparing recommendations...",
-  "Recommendation Ready.",
-];
-
-const QUESTIONNAIRE_SECTIONS: QuestionnaireSection[] = [
-  { key: "careNeeds", title: "Care Needs" },
-  { key: "memoryCognitive", title: "Memory & Cognitive Status" },
-  { key: "lifestyle", title: "Lifestyle" },
-  { key: "location", title: "Location" },
-  { key: "budget", title: "Budget" },
-  { key: "languages", title: "Languages" },
-  { key: "otherInterests", title: "Other Interests" },
-];
-
-const CARE_NEEDS_OPTIONS = [
-  "Fully independent",
-  "Light assistance",
-  "Help with bathing",
-  "Help with dressing",
-  "Help with medications",
-  "24/7 support required",
-  "Skilled nursing care",
-];
-
-const MEMORY_STATUS_OPTIONS = [
-  "No",
-  "Occasionally forgetful",
-  "Mild memory issues",
-  "Significant memory issues",
-  "Not sure",
-];
-
-const LIFESTYLE_OPTIONS = [
-  "Social activities",
-  "Fitness & wellness",
-  "Quiet environment",
-  "Outdoor spaces",
-  "Cultural programs",
-  "Faith-based community",
-];
-
-const DISTANCE_STRATEGY_OPTIONS = [
-  "Closest to resident",
-  "Closest to family",
-  "Balanced location",
-  "Emergency priority",
-  "Family visit maximization",
-];
-
 export default function HomePage() {
   const router = useRouter();
   const { state, setState } = useQuestionnaire();
@@ -190,148 +119,20 @@ export default function HomePage() {
   const [query, setQuery] = useState(state.notes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [estimatedMatches, setEstimatedMatches] = useState<number | null>(null);
+  const [profilePreviewCount, setProfilePreviewCount] = useState<number | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [liveSummary, setLiveSummary] = useState<string>("");
-  const [workflowMessageIndex, setWorkflowMessageIndex] = useState(0);
   const [recentSearches, setRecentSearches] = useState<SavedSearch[]>(() => loadRecentSearches());
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => loadSavedSearches());
   const [patientProfiles] = useState<PatientProfileRecord[]>(() => loadPatientProfiles());
-  const [isQuestionnaireOpen, setIsQuestionnaireOpen] = useState(false);
-  const [questionnaireStep, setQuestionnaireStep] = useState(0);
 
-  const assistanceLevelValue = String(state.assistanceLevel || "").trim();
-  const memoryStatusValue = String(state.memoryStatus || "").trim();
-  const locationValue = String(state.referenceAddress || state.distanceFromFamily || state.locationImportant || "").trim();
-  const languagesValue = [
-    state.humanIntelligenceV2.languageProfile.preferredSpokenLanguage,
-    ...state.humanIntelligenceV2.languageProfile.languagesUnderstood,
-  ]
-    .map((item) => String(item || "").trim())
-    .filter(Boolean)
-    .filter((value, index, values) => values.indexOf(value) === index)
-    .join(", ");
-  const lifestyleValue = state.happinessPreferences.length > 0 ? state.happinessPreferences.join(", ") : "";
-  const interestsValue = String(state.otherInterests || "").trim() || state.humanIntelligenceV2.interestsProfile.join(", ");
-
-  const missingRequirements = useMemo(() => {
-    const missing: string[] = [];
-    if (!assistanceLevelValue) missing.push("Care needs");
-    if (!memoryStatusValue) missing.push("Cognitive status");
-    if (!state.budget || state.budget <= 0) missing.push("Budget");
-    if (!locationValue) missing.push("Preferred location");
-    if (!lifestyleValue) missing.push("Lifestyle");
-    if (!interestsValue) missing.push("Other interests");
-    return missing;
-  }, [assistanceLevelValue, interestsValue, lifestyleValue, locationValue, memoryStatusValue, state.budget]);
-
-  const recommendationReady = query.trim().length > 0 && missingRequirements.length === 0;
-  const currentQuestionnaireSection = QUESTIONNAIRE_SECTIONS[Math.min(questionnaireStep, QUESTIONNAIRE_SECTIONS.length - 1)];
-
-  function updateQuestionnaireField<K extends keyof typeof state>(field: K, value: (typeof state)[K]): void {
-    setState({ ...state, [field]: value });
-  }
-
-  function updateLanguageValues(value: string): void {
-    const languages = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-    setState({
-      ...state,
-      humanIntelligenceV2: {
-        ...state.humanIntelligenceV2,
-        languageProfile: {
-          ...state.humanIntelligenceV2.languageProfile,
-          preferredSpokenLanguage: languages[0] || "",
-          languagesUnderstood: languages,
-        },
-      },
-    });
-  }
-
-  function updateOtherInterests(value: string): void {
-    const items = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-    setState({
-      ...state,
-      otherInterests: value,
-      humanIntelligenceV2: {
-        ...state.humanIntelligenceV2,
-        interestsProfile: items,
-      },
-    });
-  }
-
-  function toggleLifestyleOption(option: string): void {
-    const next = state.happinessPreferences.includes(option)
-      ? state.happinessPreferences.filter((item) => item !== option)
-      : [...state.happinessPreferences, option];
-    updateQuestionnaireField("happinessPreferences", next);
-  }
-
-  function isQuestionnaireSectionComplete(section: QuestionnaireSection): boolean {
-    switch (section.key) {
-      case "careNeeds":
-        return assistanceLevelValue.length > 0;
-      case "memoryCognitive":
-        return memoryStatusValue.length > 0;
-      case "lifestyle":
-        return state.happinessPreferences.length > 0;
-      case "location":
-        return locationValue.length > 0;
-      case "budget":
-        return state.budget > 0;
-      case "languages":
-        return languagesValue.length > 0;
-      case "otherInterests":
-        return interestsValue.length > 0;
-      default:
-        return false;
-    }
-  }
-
-  function goToNextQuestionnaireSection(): void {
-    setQuestionnaireStep((current) => Math.min(current + 1, QUESTIONNAIRE_SECTIONS.length - 1));
-  }
-
-  function goToPreviousQuestionnaireSection(): void {
-    setQuestionnaireStep((current) => Math.max(current - 1, 0));
-  }
-
-  const activeMessages = useMemo(() => {
-    if (recommendationReady) {
-      return WORKFLOW_MESSAGES;
-    }
-
-    const answeredSignals = [
-      state.assistanceLevel,
-      state.memoryStatus,
-      String(state.budget > 0),
-      locationValue,
-      state.happinessPreferences.length > 0 ? "lifestyle" : "",
-    ].filter((value) => String(value).trim().length > 0).length;
-
-    const count = Math.min(WORKFLOW_MESSAGES.length - 1, Math.max(1, answeredSignals + 1));
-    return WORKFLOW_MESSAGES.slice(0, count);
-  }, [locationValue, recommendationReady, state.assistanceLevel, state.budget, state.happinessPreferences.length, state.memoryStatus]);
-
-  const currentWorkflowMessage = activeMessages[Math.min(workflowMessageIndex, activeMessages.length - 1)] || WORKFLOW_MESSAGES[0];
-  const aiProgress = recommendationReady
-    ? 100
-    : Math.round((Math.max(0, activeMessages.length - 1) / (WORKFLOW_MESSAGES.length - 1)) * 100);
-
-  useEffect(() => {
-    setWorkflowMessageIndex((current) => (current >= activeMessages.length ? 0 : current));
-    const timer = window.setInterval(() => {
-      setWorkflowMessageIndex((current) => {
-        const next = current + 1;
-        return next >= activeMessages.length ? 0 : next;
-      });
-    }, 1700);
-    return () => window.clearInterval(timer);
-  }, [activeMessages]);
+  const confidencePreview = useMemo(() => {
+    if (profilePreviewCount === null) return "Pending";
+    if (profilePreviewCount >= 12) return "High";
+    if (profilePreviewCount >= 6) return "Medium";
+    return "Low";
+  }, [profilePreviewCount]);
 
   async function runSearch(inputQuery: string, saveAsFavorite = false): Promise<void> {
     const normalized = inputQuery.trim();
@@ -355,7 +156,7 @@ export default function HomePage() {
       const canonicalNaturalLanguage = normalized;
       setLiveSummary(normalized);
 
-      const [, recommendations] = await Promise.all([
+      const [needs, recommendations] = await Promise.all([
         fetchPatientNeedsProfile({
           questionnaire_state: canonicalQuestionnaire,
           natural_language_query: canonicalNaturalLanguage,
@@ -385,6 +186,9 @@ export default function HomePage() {
         saveSavedSearch(searchRecord);
         setSavedSearches(loadSavedSearches());
       }
+
+      setProfilePreviewCount(needs.needs.length);
+      setEstimatedMatches(recommendations.total_candidates_scored || recommendations.result_count);
 
       const params = new URLSearchParams();
       if (normalized) params.set("notes", normalized);
@@ -488,233 +292,32 @@ export default function HomePage() {
               <button type="button" onClick={() => void runSearch(query, true)} disabled={isSubmitting || !query.trim()} className="rounded-full border border-[#d8cba9] bg-[#fff6e7] px-5 py-3 text-sm font-semibold text-[#6a4f1f] hover:bg-[#ffeed2] disabled:cursor-not-allowed disabled:opacity-60">
                 Save Search
               </button>
-              <button
-                type="button"
-                onClick={() => setIsQuestionnaireOpen((current) => !current)}
-                className="rounded-full border border-[#d6ddf0] bg-[#eff4ff] px-5 py-3 text-sm font-semibold text-[#22436a] hover:bg-[#dfe9fb]"
-                aria-expanded={isQuestionnaireOpen}
-                aria-controls="homepage-questionnaire"
-              >
-                {isQuestionnaireOpen ? "Hide Conversational Questionnaire" : "Conversational Questionnaire"}
-              </button>
+              <Link href="/assessment" className="rounded-full border border-[#d6ddf0] bg-[#eff4ff] px-5 py-3 text-sm font-semibold text-[#22436a] hover:bg-[#dfe9fb]">Find the Right Care</Link>
             </div>
           </form>
 
           {error ? <p className="mt-4 rounded-2xl border border-[#f3c8bc] bg-[#fff1ed] px-4 py-3 text-sm text-[#8b3d2e]">{error}</p> : null}
 
-          <div
-            id="homepage-questionnaire"
-            className="overflow-hidden transition-all duration-500 ease-in-out"
-            style={{
-              maxHeight: isQuestionnaireOpen ? "1200px" : "0px",
-              opacity: isQuestionnaireOpen ? 1 : 0,
-              marginTop: isQuestionnaireOpen ? "1.5rem" : "0rem",
-            }}
-          >
-            <div className="rounded-2xl border border-[#dce8e2] bg-[#f8fcfa] p-5">
-              <div className="flex flex-wrap items-center gap-3 text-sm text-[#35544b]" aria-label="Questionnaire sections progress">
-                {QUESTIONNAIRE_SECTIONS.map((section, index) => {
-                  const isCurrent = currentQuestionnaireSection?.key === section.key;
-                  const isComplete = isQuestionnaireSectionComplete(section);
-                  return (
-                    <div key={section.key} className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setQuestionnaireStep(index)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${isCurrent ? "border-[#2f7e69] bg-[#eaf7f2] text-[#205245]" : isComplete ? "border-[#bed8ce] bg-white text-[#2c5a4d]" : "border-[#d6e4de] bg-white text-[#5b776d]"}`}
-                      >
-                        {section.title}
-                      </button>
-                      {index < QUESTIONNAIRE_SECTIONS.length - 1 ? <span aria-hidden>↓</span> : null}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-[#d9e7e1] bg-white/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5c7b71]">{currentQuestionnaireSection?.title}</p>
-
-                {currentQuestionnaireSection?.key === "careNeeds" ? (
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {CARE_NEEDS_OPTIONS.map((option) => {
-                      const selected = state.assistanceLevel === option;
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => updateQuestionnaireField("assistanceLevel", option)}
-                          className={`rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${selected ? "border-[#2f7e69] bg-[#eaf7f2] text-[#215445]" : "border-[#d6e5df] bg-white text-[#34534a] hover:bg-[#f3faf7]"}`}
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {currentQuestionnaireSection?.key === "memoryCognitive" ? (
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {MEMORY_STATUS_OPTIONS.map((option) => {
-                      const selected = state.memoryStatus === option;
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => updateQuestionnaireField("memoryStatus", option)}
-                          className={`rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${selected ? "border-[#2f7e69] bg-[#eaf7f2] text-[#215445]" : "border-[#d6e5df] bg-white text-[#34534a] hover:bg-[#f3faf7]"}`}
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {currentQuestionnaireSection?.key === "lifestyle" ? (
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {LIFESTYLE_OPTIONS.map((option) => {
-                      const selected = state.happinessPreferences.includes(option);
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => toggleLifestyleOption(option)}
-                          className={`rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${selected ? "border-[#2f7e69] bg-[#eaf7f2] text-[#215445]" : "border-[#d6e5df] bg-white text-[#34534a] hover:bg-[#f3faf7]"}`}
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {currentQuestionnaireSection?.key === "location" ? (
-                  <div className="mt-3 space-y-3">
-                    <input
-                      type="text"
-                      value={state.locationImportant}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        setState({
-                          ...state,
-                          locationImportant: value,
-                          referenceAddress: value,
-                        });
-                      }}
-                      placeholder="Preferred location or city"
-                      className="w-full rounded-2xl border border-[#c9ddd5] bg-white px-4 py-3 text-sm text-[#28433b] outline-none ring-[#8fcbb8] focus:ring-2"
-                    />
-                    <select
-                      value={state.distanceFromFamily}
-                      onChange={(event) => updateQuestionnaireField("distanceFromFamily", event.target.value)}
-                      className="w-full rounded-2xl border border-[#c9ddd5] bg-white px-4 py-3 text-sm text-[#28433b] outline-none ring-[#8fcbb8] focus:ring-2"
-                    >
-                      <option value="">Select distance strategy</option>
-                      {DISTANCE_STRATEGY_OPTIONS.map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  </div>
-                ) : null}
-
-                {currentQuestionnaireSection?.key === "budget" ? (
-                  <div className="mt-3 space-y-2">
-                    <input
-                      type="number"
-                      min={1000}
-                      step={100}
-                      value={state.budget || 0}
-                      onChange={(event) => updateQuestionnaireField("budget", Number(event.target.value) || 0)}
-                      className="w-full rounded-2xl border border-[#c9ddd5] bg-white px-4 py-3 text-sm text-[#28433b] outline-none ring-[#8fcbb8] focus:ring-2"
-                    />
-                    <p className="text-sm text-[#4d675f]">
-                      We&apos;ll also search approximately 20% above and below your preferred budget to avoid missing an excellent match.
-                    </p>
-                  </div>
-                ) : null}
-
-                {currentQuestionnaireSection?.key === "languages" ? (
-                  <input
-                    type="text"
-                    value={languagesValue}
-                    onChange={(event) => updateLanguageValues(event.target.value)}
-                    placeholder="English, Hebrew"
-                    className="mt-3 w-full rounded-2xl border border-[#c9ddd5] bg-white px-4 py-3 text-sm text-[#28433b] outline-none ring-[#8fcbb8] focus:ring-2"
-                  />
-                ) : null}
-
-                {currentQuestionnaireSection?.key === "otherInterests" ? (
-                  <div className="mt-3 space-y-2">
-                    <textarea
-                      rows={3}
-                      value={state.otherInterests}
-                      onChange={(event) => updateOtherInterests(event.target.value)}
-                      placeholder="Gardening, Music, Reading"
-                      className="w-full rounded-2xl border border-[#c9ddd5] bg-white px-4 py-3 text-sm text-[#28433b] outline-none ring-[#8fcbb8] focus:ring-2"
-                    />
-                    <p className="text-sm text-[#4d675f]">Examples: Gardening, Music, Reading, Movies, Art, Cooking, Walking, Pets</p>
-                  </div>
-                ) : null}
-
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={goToPreviousQuestionnaireSection}
-                    disabled={questionnaireStep === 0}
-                    className="rounded-full border border-[#c9ddd5] bg-white px-5 py-2.5 text-sm font-semibold text-[#35574d] hover:bg-[#f3faf7] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goToNextQuestionnaireSection}
-                    disabled={!currentQuestionnaireSection || !isQuestionnaireSectionComplete(currentQuestionnaireSection)}
-                    className="rounded-full bg-[#1f7a67] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#186251] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {questionnaireStep >= QUESTIONNAIRE_SECTIONS.length - 1 ? "Questionnaire Complete" : "Next"}
-                  </button>
-                </div>
-              </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-[#dce8e2] bg-[#f8fcfa] p-4">
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5c7b71]">Patient Needs Profile</p>
+              <p className="mt-2 text-2xl font-semibold text-[#234139]">{profilePreviewCount ?? "--"}</p>
+              <p className="mt-1 text-xs text-[#577168]">scored need signals</p>
             </div>
-          </div>
-
-          <div id="ai-workspace" className="mt-6 rounded-2xl border border-[#dce8e2] bg-[#f8fcfa] p-5">
-            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="space-y-4 rounded-2xl border border-[#d9e7e1] bg-white/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#5c7b71]">AI Workflow Status</p>
-                <OptimeDynamicLogo progress={aiProgress} ready={recommendationReady} />
-                <p className="min-h-[1.25rem] text-sm font-medium text-[#315148]">{currentWorkflowMessage}</p>
-              </div>
-
-              <div className="rounded-2xl border border-[#d9e7e1] bg-white/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5c7b71]">Patient Profile Summary</p>
-                <ul className="mt-3 space-y-2 text-sm text-[#2b3b35]">
-                  <li>{assistanceLevelValue ? `✓ Care Needs: ${assistanceLevelValue}` : "Care Needs: Needed"}</li>
-                  <li>{memoryStatusValue ? `✓ Cognitive Status: ${memoryStatusValue}` : "Cognitive Status: Needed"}</li>
-                  <li>{state.budget > 0 ? `✓ Budget: $${Number(state.budget).toLocaleString()}` : "Budget: Needed"}</li>
-                  <li>{locationValue ? `✓ Preferred Location: ${locationValue}` : "Preferred Location: Needed"}</li>
-                  <li>{languagesValue ? `✓ Languages: ${languagesValue}` : "Languages: Needed"}</li>
-                  <li>{lifestyleValue ? `✓ Lifestyle: ${lifestyleValue}` : "Lifestyle: Needed"}</li>
-                  <li>{interestsValue ? `✓ Other Interests: ${interestsValue}` : "Other Interests: Needed"}</li>
-                </ul>
-
-                <div className="mt-4 rounded-xl border border-[#dce8e2] bg-[#f8fcfa] p-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5c7b71]">Recommendation Status</p>
-                  {recommendationReady ? (
-                    <p className="mt-2 text-sm font-semibold text-[#2b6c5d]">Recommendation Ready</p>
-                  ) : (
-                    <div className="mt-2 space-y-2 text-sm text-[#3b534a]">
-                      <p className="font-semibold">Almost Ready</p>
-                      <p>Still needed:</p>
-                      <ul className="list-disc pl-5">
-                        {missingRequirements.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
+            <div className="rounded-2xl border border-[#dce8e2] bg-[#f8fcfa] p-4">
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5c7b71]">Estimated Match Count</p>
+              <p className="mt-2 text-2xl font-semibold text-[#234139]">{estimatedMatches ?? "--"}</p>
+              <p className="mt-1 text-xs text-[#577168]">candidate communities</p>
+            </div>
+            <div className="rounded-2xl border border-[#dce8e2] bg-[#f8fcfa] p-4">
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5c7b71]">Confidence Preview</p>
+              <p className="mt-2 text-2xl font-semibold text-[#234139]">{confidencePreview}</p>
+              <p className="mt-1 text-xs text-[#577168]">evidence confidence band</p>
+            </div>
+            <div className="rounded-2xl border border-[#dce8e2] bg-[#f8fcfa] p-4">
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5c7b71]">Voice Architecture</p>
+              <p className="mt-2 text-2xl font-semibold text-[#234139]">Ready</p>
+              <p className="mt-1 text-xs text-[#577168]">Web Speech adapter enabled</p>
             </div>
           </div>
 
