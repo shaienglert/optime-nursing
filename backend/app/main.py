@@ -94,6 +94,7 @@ from app.services.facility_parameter_service import (
     get_personalized_parameter_order,
 )
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
+from app.services.live_facility_profile_service import get_live_facility_profile
 from app.services.patient_decision_engine import (
     build_patient_comparison_context,
     build_patient_needs_profile,
@@ -1609,6 +1610,14 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
 @app.get("/optime-parameter-registry", response_model=ParameterRegistryOut)
 async def get_optime_parameter_registry():
     return get_parameter_registry_payload()
+
+
+@app.get("/live-facility-profiles/{cms_ccn}")
+async def get_live_profile_by_ccn(cms_ccn: str):
+    try:
+        return get_live_facility_profile(cms_ccn)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Audited facility profile not found") from exc
 
 
 @app.get("/canonical-facilities/{canonical_id}/parameter-table", response_model=FacilityParameterTableOut)

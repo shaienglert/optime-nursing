@@ -235,6 +235,112 @@ export type FacilityParameterComparison = {
   facilities: FacilityParameterTable[];
 };
 
+export type LiveFacilityFact = {
+  parameter_id: string;
+  parameter: string;
+  value: string;
+  evidence_status: string;
+  confidence: string;
+  source_category: string;
+  source_name: string;
+  source_url_or_local_file: string;
+  dataset_name: string;
+  dataset_field: string;
+  record_identifier: string;
+  retrieval_date: string;
+  publication_date: string;
+  evidence_quote: string;
+  normalized_value: string;
+  scope: string;
+  recency: string;
+  contradictory_sources: string;
+  used_by_decision_engine: string;
+  used_in_eligibility: string;
+  used_in_ranking: string;
+  displayed_in_ui: string;
+  ACTION: string;
+  Priority: string;
+  "Recipient department": string;
+  "Suggested recipient role": string;
+  "Required evidence": string;
+  "Suggested question": string;
+  "Request status": string;
+  "Last request date": string;
+  "Follow-up date": string;
+  "Ranking impact": string;
+};
+
+export type LiveFacilityAction = {
+  action_id: string;
+  parameter_id: string;
+  parameter: string;
+  current_value: string;
+  evidence_status: string;
+  action: string;
+  priority: string;
+  recipient_department: string;
+  suggested_recipient_role: string;
+  required_evidence: string;
+  suggested_question: string;
+  request_status: string;
+  last_request_date: string;
+  follow_up_date: string;
+  ranking_impact: string;
+};
+
+export type LiveFacilityProfile = {
+  facility: Record<string, unknown> & {
+    canonical_facility_id: string;
+    display_name: string;
+    requested_name: string;
+    canonical_name: string;
+    aliases: string[];
+    cms_ccn: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    county: string;
+    phone: string;
+    facility_type: string;
+    beds: number;
+    ownership_type: string;
+    medicare_medicaid: string;
+    license_status: string;
+    license_number: string;
+    official_website: string;
+    coordinates: string;
+    canonical_npi: string;
+    must_not_merge: { npi: string; reason: string };
+  };
+  summary: {
+    fact_count: number;
+    verified_fact_count: number;
+    unknown_fact_count: number;
+    actionable_fact_count: number;
+    critical_unknown_count: number;
+    source_count: number;
+    profile_completeness_percent: number;
+    last_updated: string;
+    evidence_record_count: number;
+    evidence_confidence: string;
+  };
+  facts: LiveFacilityFact[];
+  identity_evidence: Array<Record<string, unknown>>;
+  actions: LiveFacilityAction[];
+  sources: string[];
+  quality_safety: Record<string, { value: string | number; status: string }>;
+  staffing: Record<string, { value: string | number; status: string }>;
+  unknown_sections: string[];
+  email_request: Record<string, unknown> & { status: string; subject: string };
+  request_tracker: Record<string, unknown>;
+  safety_controls: {
+    email_send_enabled: boolean;
+    production_write_enabled: boolean;
+    ranking_write_enabled: boolean;
+  };
+};
+
 export type PersonalizedParameterOrderRequest = {
   need_tags?: string[];
   priority_parameter_ids?: string[];
@@ -1594,6 +1700,18 @@ function getFallbackSearchFacilities(searchText?: string): SearchFacility[] {
 
 const BROWSER_BACKEND_PROXY_BASE = "/api/backend";
 
+export class ApiRequestError extends Error {
+  status: number;
+  path: string;
+
+  constructor(message: string, status: number, path: string) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.path = path;
+  }
+}
+
 function shouldUseDevelopmentFallbackData(): boolean {
   return process.env.NODE_ENV !== "production";
 }
@@ -1673,7 +1791,7 @@ async function fetchJson<T>(path: string): Promise<T> {
     cache: "no-store",
   });
   if (!response.ok) {
-    throw new Error(`API request failed (${response.status})`);
+    throw new ApiRequestError(`API request failed (${response.status})`, response.status, path);
   }
   return response.json() as Promise<T>;
 }
@@ -1904,6 +2022,10 @@ export async function fetchFacilityParameterTable(
   if (options?.profileKey) params.set("profile_key", options.profileKey);
   const suffix = params.toString() ? `?${params.toString()}` : "";
   return fetchJson<FacilityParameterTable>(`/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/parameter-table${suffix}`);
+}
+
+export async function fetchLiveFacilityProfile(cmsCcn: string): Promise<LiveFacilityProfile> {
+  return fetchJson<LiveFacilityProfile>(`/live-facility-profiles/${encodeURIComponent(cmsCcn)}`);
 }
 
 export async function compareFacilityParameters(
