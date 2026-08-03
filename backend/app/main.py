@@ -4,6 +4,7 @@ import hashlib
 import logging
 import time
 from datetime import datetime
+from decimal import Decimal
 from statistics import mean
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -16,11 +17,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
-from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
+from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, FacilityReview, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
 import app.models.clinical_evidence
 import app.models.agent_execution
 import app.models.external_discovery
 import app.models.knowledge_fabric
+import app.models.evidence_engine
+import app.models.patient_profile
+import app.models.patient_case
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
@@ -46,6 +50,7 @@ from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
 from app.services.cms_staffing_import import import_staffing_data
 from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_public_activity_categories, import_activity_categories
+from app.services.admin_access import require_admin_for_refresh, require_admin_secret
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
 from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.provider_identity import (
@@ -64,6 +69,14 @@ from app.services.evidence_source_integrity import (
     audit_traceability,
     facility_material_claim_trace,
     recommendation_score_trace,
+)
+from app.services.evidence_engine_service import (
+    get_evidence_coverage,
+    get_evidence_for_facility,
+    get_evidence_history,
+    get_evidence_status,
+    refresh_evidence_registry,
+    search_evidence_registry,
 )
 from app.services.executive_report_service import (
     compare_latest_vs_previous,
@@ -92,9 +105,11 @@ from app.services.facility_parameter_service import (
     get_facility_parameter_table,
     get_parameter_registry_payload,
     get_personalized_parameter_order,
+    get_runtime_metadata,
 )
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 from app.services.live_facility_profile_service import get_live_facility_profile
+from app.services.runtime_sync_service import get_runtime_sync_status, run_runtime_sync, start_runtime_sync_monitor, stop_runtime_sync_monitor
 from app.services.patient_decision_engine import (
     build_patient_comparison_context,
     build_patient_needs_profile,
@@ -246,6 +261,93 @@ class FacilityDetailsOut(BaseModel):
     score_breakdown: ScoreBreakdownOut
 
 
+class FacilityProfileStaffingOut(BaseModel):
+    period_label: str
+    staffing_rating: Optional[int] = None
+    rn_hours_per_resident_day: Optional[float] = None
+    total_nurse_hours_per_resident_day: Optional[float] = None
+    weekend_total_nurse_hours_per_resident_day: Optional[float] = None
+    source_name: Optional[str] = None
+    source_date: Optional[str] = None
+    confidence_level: Optional[str] = None
+
+
+class FacilityProfileInspectionOut(BaseModel):
+    inspection_date: str
+    inspection_rating: Optional[int] = None
+    deficiency_count: int = 0
+    severe_deficiency_count: int = 0
+    fine_amount: Optional[float] = None
+    payment_denials_count: int = 0
+    source_name: Optional[str] = None
+    source_date: Optional[str] = None
+    confidence_level: Optional[str] = None
+    severity: str
+
+
+class FacilityProfileQualityMeasureOut(BaseModel):
+    measure_code: str
+    measure_name: str
+    measure_value: Optional[float] = None
+    quality_rating: Optional[int] = None
+    period_label: str
+    source_name: Optional[str] = None
+    source_date: Optional[str] = None
+    confidence_level: Optional[str] = None
+
+
+class FacilityProfileReviewOut(BaseModel):
+    source: str
+    rating: int
+    review_text: Optional[str] = None
+    sentiment_score: Optional[float] = None
+    created_at: Optional[str] = None
+
+
+class FacilityProfileTimelineEventOut(BaseModel):
+    event_type: str
+    timestamp: str
+    title: str
+    summary: str
+    source: str
+    severity: Optional[str] = None
+
+
+class FacilityProfileNearbyPlaceOut(BaseModel):
+    name: str
+    category: str
+    source: str
+    verification_status: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    distance_miles: Optional[float] = None
+    address: Optional[str] = None
+    last_updated: Optional[str] = None
+
+
+class FacilityProfileV3Out(BaseModel):
+    facility: FacilityDetailsOut
+    runtime_version: Optional[str] = None
+    runtime_timestamp: Optional[str] = None
+    knowledge_updated: Optional[str] = None
+    availability_note: str
+    staffing_history: List[FacilityProfileStaffingOut] = Field(default_factory=list)
+    inspections: List[FacilityProfileInspectionOut] = Field(default_factory=list)
+    quality_measures: List[FacilityProfileQualityMeasureOut] = Field(default_factory=list)
+    family_reviews: List[FacilityProfileReviewOut] = Field(default_factory=list)
+    government_findings: List[str] = Field(default_factory=list)
+    inspection_summary: Dict[str, Any] = Field(default_factory=dict)
+    evidence_summary: Dict[str, Any] = Field(default_factory=dict)
+    neighborhood: Dict[str, Any] = Field(default_factory=dict)
+    nearby_hospitals: List[FacilityProfileNearbyPlaceOut] = Field(default_factory=list)
+    nearby_physicians: List[FacilityProfileNearbyPlaceOut] = Field(default_factory=list)
+    nearby_pharmacies: List[FacilityProfileNearbyPlaceOut] = Field(default_factory=list)
+    transportation: List[FacilityProfileNearbyPlaceOut] = Field(default_factory=list)
+    videos: List[Dict[str, str]] = Field(default_factory=list)
+    timeline: List[FacilityProfileTimelineEventOut] = Field(default_factory=list)
+    parameter_table: Optional[FacilityParameterTableOut] = None
+
+
 class ParameterTableRowOut(BaseModel):
     parameter_id: str
     category: str
@@ -339,11 +441,41 @@ class PatientComparisonContextRequestIn(BaseModel):
 
 
 class PatientDecisionEngineOut(BaseModel):
+    patient_case_id: Optional[int] = None
+    runtime_version: Optional[str] = None
+    runtime_timestamp: Optional[str] = None
     patient_needs_profile: Dict[str, Any]
     results: List[Dict[str, Any]]
     result_count: int
     total_candidates_scored: int
     availability_policy: str
+
+
+class RuntimeSyncStatusOut(BaseModel):
+    monitor_enabled: bool
+    monitor_running: bool
+    monitor_interval_seconds: int
+    last_check_at: Optional[str] = None
+    last_dirty: Optional[bool] = None
+    dirty_reasons: List[str] = Field(default_factory=list)
+    last_rebuild_attempt_at: Optional[str] = None
+    last_rebuild_success_at: Optional[str] = None
+    last_rebuild_duration_ms: Optional[float] = None
+    last_error: Optional[str] = None
+    retry_count: int
+    next_retry_at: Optional[str] = None
+    dirty: bool
+    dirty_reasons_current: List[str] = Field(default_factory=list)
+    artifact_signature: Dict[str, Any]
+    runtime_version: Optional[str] = None
+    runtime_timestamp: Optional[str] = None
+    runtime_version_history: List[Dict[str, Any]] = Field(default_factory=list)
+    runtime_cache: Dict[str, Any] = Field(default_factory=dict)
+    recent_events: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class RuntimeSyncRequestIn(BaseModel):
+    force: bool = False
 
 
 class PatientNeedsProfileOut(BaseModel):
@@ -1089,6 +1221,60 @@ def _parse_json_object(raw: Optional[str]) -> Dict[str, object]:
     return {}
 
 
+def _iso_or_none(value: Optional[datetime]) -> Optional[str]:
+    if value is None:
+        return None
+    return value.isoformat()
+
+
+def _coerce_float(value: Optional[Any]) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _inspection_severity(deficiencies: int, severe_deficiencies: int, fine_amount: Optional[float]) -> str:
+    if severe_deficiencies >= 5 or (fine_amount or 0.0) >= 50000:
+        return "HIGH"
+    if severe_deficiencies >= 2 or deficiencies >= 15 or (fine_amount or 0.0) >= 10000:
+        return "MEDIUM"
+    if deficiencies > 0:
+        return "LOW"
+    return "NONE_REPORTED"
+
+
+def _best_timestamp_for_sort(value: str) -> float:
+    if not value:
+        return 0.0
+    candidates = [
+        "%Y-%m-%dT%H:%M:%S.%f%z",
+        "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d",
+        "%m/%d/%Y",
+    ]
+    for pattern in candidates:
+        try:
+            return datetime.strptime(value, pattern).timestamp()
+        except ValueError:
+            continue
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return 0.0
+
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -1257,6 +1443,17 @@ def startup() -> None:
         eager_reports = os.getenv("OPTIME_EAGER_REPORTS_ON_STARTUP", "0") == "1"
         if eager_reports:
             ensure_reports_available(db)
+
+        # Keep the structured evidence registry synchronized for evidence APIs.
+        refresh_evidence_registry(db)
+
+        # Automatic migration to the unified patient case model.
+        migration_summary = migrate_legacy_patient_profiles(db)
+        logger.info(
+            "patient_case_migration_completed migrated=%s skipped=%s",
+            migration_summary.get("migrated"),
+            migration_summary.get("skipped"),
+        )
     finally:
         db.close()
 
@@ -1276,10 +1473,13 @@ def startup() -> None:
     start_background_refresh_loop()
     # Trigger daily executive intelligence report at 08:00 local server time.
     start_executive_report_scheduler()
+    # Runtime sync monitor keeps recommendation artifacts current without request-time blocking.
+    runtime_sync_status = start_runtime_sync_monitor()
     logger.info(
-        "startup_completed facilities_imported=%s origins=%s",
+        "startup_completed facilities_imported=%s origins=%s runtime_sync_enabled=%s",
         app.state.import_summary.get("facilities_imported"),
         len(allowed_origins),
+        runtime_sync_status.get("monitor_enabled"),
     )
 
 
@@ -1307,6 +1507,11 @@ async def request_observability_middleware(request, call_next):
     return response
 
 
+@app.on_event("shutdown")
+def shutdown() -> None:
+    stop_runtime_sync_monitor()
+
+
 @app.get("/")
 async def root():
     return {
@@ -1319,6 +1524,19 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+
+@app.get("/runtime/status", response_model=RuntimeSyncStatusOut)
+async def runtime_status():
+    return RuntimeSyncStatusOut(**get_runtime_sync_status())
+
+
+@app.post("/runtime/sync")
+async def runtime_sync(payload: RuntimeSyncRequestIn, _: None = Depends(require_admin_secret)):
+    result = run_runtime_sync(force=bool(payload.force), trigger="api")
+    if not result.get("ok"):
+        raise HTTPException(status_code=500, detail=result)
+    return result
 
 
 @app.get("/import-summary", response_model=ImportSummaryOut)
@@ -1604,6 +1822,296 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
             staffing_components=staffing_components,
             safety_components=safety_components,
         ),
+    )
+
+
+@app.get("/facilities/{id}/profile-v3", response_model=FacilityProfileV3Out)
+async def get_facility_profile_v3(id: int, db: Session = Depends(get_db)):
+    facility = db.query(Facility).filter(Facility.id == id, Facility.state == "FL").first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="Facility not found")
+
+    quality_rows = db.query(QualityMeasure).filter(QualityMeasure.facility_id == facility.id).all()
+    staffing_rows = (
+        db.query(Staffing)
+        .filter(Staffing.facility_id == facility.id)
+        .order_by(Staffing.id.desc())
+        .all()
+    )
+    inspection_rows = (
+        db.query(Inspection)
+        .filter(Inspection.facility_id == facility.id)
+        .order_by(Inspection.id.desc())
+        .all()
+    )
+    review_rows = (
+        db.query(FacilityReview)
+        .filter(FacilityReview.facility_id == facility.id)
+        .order_by(FacilityReview.created_at.desc())
+        .limit(40)
+        .all()
+    )
+    profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == facility.id).first()
+
+    medical_components = {
+        "cms_rating": round(stars_to_score(facility.quality_rating or facility.overall_rating), 2),
+        "hospitalizations": round(invert_percent(_get_measure_score(quality_rows, ["hospital", "rehospital"])), 2),
+        "er_visits": round(invert_percent(_get_measure_score(quality_rows, ["emergency", "er visit"])), 2),
+        "falls": round(invert_percent(_get_measure_score(quality_rows, ["fall"])), 2),
+        "pressure_ulcers": round(invert_percent(_get_measure_score(quality_rows, ["pressure ulcer", "pressure"])), 2),
+        "weight_loss": round(invert_percent(_get_measure_score(quality_rows, ["weight loss"])), 2),
+    }
+
+    latest_staffing_row = staffing_rows[0] if staffing_rows else None
+    staffing_components = {
+        "rn_hours": round(normalize_hours(latest_staffing_row.rn_hours_per_resident_day if latest_staffing_row else None, 0.75), 2),
+        "total_staffing": round(normalize_hours(latest_staffing_row.total_nurse_hours_per_resident_day if latest_staffing_row else None, 3.5), 2),
+        "agency_staff": 50.0,
+        "turnover": 50.0,
+    }
+
+    safety_components = {
+        "serious_deficiencies": round(inverse_count(sum(item.severe_deficiency_count or 0 for item in inspection_rows), 10), 2),
+        "complaints": round(inverse_count(sum(item.payment_denials_count or 0 for item in inspection_rows), 25), 2),
+        "fines": 50.0,
+        "infection_control": 50.0,
+    }
+
+    canonical_facility_id = None
+    canonical_row: Dict[str, Any] = {}
+    if facility.cms_id:
+        canonical_index = get_canonical_facility_index()
+        for candidate_id, candidate in canonical_index.items():
+            source_identity_ids = candidate.get("source_identity_ids") or {}
+            if str(source_identity_ids.get("cms_ccn") or "") == str(facility.cms_id):
+                canonical_facility_id = candidate_id
+                canonical_row = candidate
+                break
+
+    media_payload = build_visual_media_payload(get_facility_media_record(canonical_facility_id))
+    profile_hero = _parse_json_object(profile.visual_hero_image) if profile else {}
+    profile_gallery = _parse_json_objects(profile.visual_gallery_images) if profile else []
+    visual_hero_image = media_payload["hero"] if media_payload else profile_hero
+    visual_gallery_images = media_payload["gallery"] if media_payload else profile_gallery
+
+    parameter_table_payload: Optional[Dict[str, Any]] = None
+    if canonical_facility_id:
+        try:
+            parameter_table_payload = get_facility_parameter_table(canonical_facility_id, include_evidence_records=True)
+        except KeyError:
+            parameter_table_payload = None
+
+    inspection_payload: List[FacilityProfileInspectionOut] = []
+    for row in inspection_rows:
+        deficiencies = int(row.deficiency_count or 0)
+        severe = int(row.severe_deficiency_count or 0)
+        fine_amount = _coerce_float(row.fine_amount)
+        inspection_payload.append(
+            FacilityProfileInspectionOut(
+                inspection_date=str(row.inspection_date or ""),
+                inspection_rating=row.inspection_rating,
+                deficiency_count=deficiencies,
+                severe_deficiency_count=severe,
+                fine_amount=fine_amount,
+                payment_denials_count=int(row.payment_denials_count or 0),
+                source_name=row.source_name,
+                source_date=row.source_date,
+                confidence_level=row.confidence_level,
+                severity=_inspection_severity(deficiencies, severe, fine_amount),
+            )
+        )
+
+    staffing_payload = [
+        FacilityProfileStaffingOut(
+            period_label=str(row.period_label or ""),
+            staffing_rating=row.staffing_rating,
+            rn_hours_per_resident_day=_coerce_float(row.rn_hours_per_resident_day),
+            total_nurse_hours_per_resident_day=_coerce_float(row.total_nurse_hours_per_resident_day),
+            weekend_total_nurse_hours_per_resident_day=_coerce_float(row.weekend_total_nurse_hours_per_resident_day),
+            source_name=row.source_name,
+            source_date=row.source_date,
+            confidence_level=row.confidence_level,
+        )
+        for row in staffing_rows
+    ]
+
+    quality_payload = [
+        FacilityProfileQualityMeasureOut(
+            measure_code=str(row.measure_code or ""),
+            measure_name=str(row.measure_name or ""),
+            measure_value=_coerce_float(row.measure_value),
+            quality_rating=row.quality_rating,
+            period_label=str(row.period_label or ""),
+            source_name=row.source_name,
+            source_date=row.source_date,
+            confidence_level=row.confidence_level,
+        )
+        for row in quality_rows
+    ]
+
+    reviews_payload = [
+        FacilityProfileReviewOut(
+            source=str(row.source or "Unknown"),
+            rating=int(row.rating or 0),
+            review_text=row.review_text,
+            sentiment_score=_coerce_float(row.sentiment_score),
+            created_at=_iso_or_none(row.created_at),
+        )
+        for row in review_rows
+    ]
+
+    government_findings: List[str] = []
+    if parameter_table_payload:
+        for parameter_row in parameter_table_payload.get("rows") or []:
+            parameter_id = str(parameter_row.get("parameter_id") or "")
+            raw_value = parameter_row.get("raw_value")
+            if parameter_id in {
+                "deficiency_count",
+                "deficiency_severity",
+                "complaint_related_findings",
+                "fire_safety_deficiencies",
+                "infection_control_findings",
+                "penalties_fines",
+                "payment_denials",
+                "sanctions_final_orders",
+            } and raw_value not in (None, "", "UNKNOWN", "Not verified", 0):
+                government_findings.append(f"{parameter_row.get('parameter')}: {raw_value}")
+
+    total_inspections = len(inspection_rows)
+    total_deficiencies = sum(int(item.deficiency_count or 0) for item in inspection_rows)
+    total_severe = sum(int(item.severe_deficiency_count or 0) for item in inspection_rows)
+    open_issue_count = sum(1 for item in inspection_rows if int(item.severe_deficiency_count or 0) > 0)
+
+    inspection_summary = {
+        "total_inspections": total_inspections,
+        "total_deficiencies": total_deficiencies,
+        "total_severe_deficiencies": total_severe,
+        "open_issue_count": open_issue_count,
+        "resolved_issue_count": max(0, total_inspections - open_issue_count),
+        "trend_note": "Trend uses historical CMS inspection snapshots. Resolution must be confirmed directly with facility and regulators.",
+    }
+
+    evidence_rows = (parameter_table_payload or {}).get("rows") or []
+    verified_count = sum(1 for row in evidence_rows if str(row.get("source") or "").strip() not in {"", "Not verified"})
+    unknown_count = sum(1 for row in evidence_rows if str(row.get("status_value") or "").strip() in {"UNKNOWN", "Not verified"})
+    evidence_summary = {
+        "parameter_count": len(evidence_rows),
+        "verified_parameter_count": verified_count,
+        "unknown_parameter_count": unknown_count,
+    }
+
+    timeline: List[FacilityProfileTimelineEventOut] = []
+    for row in inspection_payload:
+        timeline.append(
+            FacilityProfileTimelineEventOut(
+                event_type="inspection",
+                timestamp=row.inspection_date,
+                title="CMS inspection update",
+                summary=f"Deficiencies: {row.deficiency_count}, severe: {row.severe_deficiency_count}, payment denials: {row.payment_denials_count}",
+                source=row.source_name or "CMS inspection data",
+                severity=row.severity,
+            )
+        )
+
+    if parameter_table_payload:
+        for row in parameter_table_payload.get("rows") or []:
+            last_verified = str(row.get("last_verified") or "")
+            if not last_verified:
+                continue
+            timeline.append(
+                FacilityProfileTimelineEventOut(
+                    event_type="evidence",
+                    timestamp=last_verified,
+                    title=f"Evidence refreshed: {row.get('parameter')}",
+                    summary=f"{row.get('status_value')} ({row.get('source')})",
+                    source=str(row.get("source") or "Evidence runtime"),
+                    severity=None,
+                )
+            )
+
+    if profile:
+        for detail in _parse_json_objects(profile.signal_details):
+            timestamp = str(detail.get("collection_timestamp") or "")
+            if not timestamp:
+                continue
+            timeline.append(
+                FacilityProfileTimelineEventOut(
+                    event_type="intelligence",
+                    timestamp=timestamp,
+                    title=f"Signal captured: {detail.get('source')}",
+                    summary=str(detail.get("summary") or detail.get("signal_type") or "Intelligence signal captured"),
+                    source=str(detail.get("source") or "Intelligence"),
+                    severity=None,
+                )
+            )
+
+    timeline.sort(key=lambda item: _best_timestamp_for_sort(item.timestamp), reverse=True)
+
+    runtime_meta = get_runtime_metadata()
+    facility_payload = FacilityDetailsOut(
+        id=facility.id,
+        cms_id=facility.cms_id,
+        canonical_facility_id=canonical_facility_id,
+        name=facility.name,
+        address=facility.address,
+        city=facility.city,
+        state=facility.state,
+        zip_code=facility.zip_code,
+        phone=facility.phone,
+        overall_rating=facility.overall_rating,
+        staffing_rating=facility.staffing_rating,
+        quality_rating=facility.quality_rating,
+        inspection_rating=facility.inspection_rating,
+        beds=facility.beds,
+        confidence_level=facility.confidence_level,
+        visual_hero_image=visual_hero_image,
+        visual_gallery_images=visual_gallery_images,
+        visual_lifestyle_tags=_parse_json_objects(profile.visual_lifestyle_tags) if profile else [],
+        visual_confidence_score=profile.visual_confidence_score if profile else None,
+        visual_coverage_score=profile.visual_coverage_score if profile else None,
+        score_breakdown=ScoreBreakdownOut(
+            medical_quality_score=facility.medical_quality_score or 0.0,
+            staffing_score=facility.staffing_score or 0.0,
+            safety_score=facility.safety_score or 0.0,
+            overall_optime_score=facility.overall_optime_score or 0.0,
+            medical_components=medical_components,
+            staffing_components=staffing_components,
+            safety_components=safety_components,
+        ),
+    )
+
+    neighborhood = {
+        "city": facility.city,
+        "state": facility.state,
+        "zip_code": facility.zip_code,
+        "county": canonical_row.get("county") if canonical_row else None,
+        "latitude": _coerce_float(facility.latitude),
+        "longitude": _coerce_float(facility.longitude),
+    }
+
+    availability_note = "Current availability is not published in governed CMS datasets and must be verified directly with the facility."
+
+    return FacilityProfileV3Out(
+        facility=facility_payload,
+        runtime_version=runtime_meta.get("runtime_version"),
+        runtime_timestamp=runtime_meta.get("runtime_timestamp"),
+        knowledge_updated=_iso_or_none(profile.last_updated) if profile else runtime_meta.get("runtime_timestamp"),
+        availability_note=availability_note,
+        staffing_history=staffing_payload,
+        inspections=inspection_payload,
+        quality_measures=quality_payload,
+        family_reviews=reviews_payload,
+        government_findings=government_findings,
+        inspection_summary=inspection_summary,
+        evidence_summary=evidence_summary,
+        neighborhood=neighborhood,
+        nearby_hospitals=[],
+        nearby_physicians=[],
+        nearby_pharmacies=[],
+        transportation=[],
+        videos=[],
+        timeline=timeline[:200],
+        parameter_table=parameter_table_payload,
     )
 
 
@@ -2425,6 +2933,110 @@ async def executive_report_compare():
 @app.get("/evidence/traceability/audit")
 async def evidence_traceability_audit(db: Session = Depends(get_db)):
     return audit_traceability(db)
+
+
+@app.get("/evidence/facility/{id}")
+async def evidence_for_facility(
+    id: int,
+    parameter_id: Optional[str] = Query(default=None),
+    verification_status: Optional[str] = Query(default=None),
+    conflicts_only: bool = Query(default=False),
+    include_non_preferred: bool = Query(default=False),
+    refresh: bool = Query(default=False),
+    _: None = Depends(require_admin_for_refresh),
+    db: Session = Depends(get_db),
+):
+    facility = db.query(Facility).filter(Facility.id == id).first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="Facility not found")
+    if refresh:
+        refresh_evidence_registry(db)
+    return get_evidence_for_facility(
+        db,
+        id,
+        parameter_id=parameter_id,
+        verification_status=verification_status,
+        conflicts_only=conflicts_only,
+        include_non_preferred=include_non_preferred,
+    )
+
+
+@app.get("/evidence/status")
+async def evidence_status(
+    refresh: bool = Query(default=False),
+    _: None = Depends(require_admin_for_refresh),
+    db: Session = Depends(get_db),
+):
+    refresh_result = refresh_evidence_registry(db) if refresh else None
+    payload = get_evidence_status(db)
+    if refresh_result is not None:
+        payload["refresh"] = refresh_result
+    return payload
+
+
+@app.get("/evidence/coverage")
+async def evidence_coverage(
+    facility_id: Optional[int] = Query(default=None),
+    refresh: bool = Query(default=False),
+    _: None = Depends(require_admin_for_refresh),
+    db: Session = Depends(get_db),
+):
+    if facility_id is not None:
+        facility = db.query(Facility).filter(Facility.id == facility_id).first()
+        if not facility:
+            raise HTTPException(status_code=404, detail="Facility not found")
+    if refresh:
+        refresh_evidence_registry(db)
+    return get_evidence_coverage(db, facility_id=facility_id)
+
+
+@app.get("/evidence/history/{facility}")
+async def evidence_history(
+    facility: int,
+    limit: int = Query(default=500, ge=1, le=5000),
+    refresh: bool = Query(default=False),
+    _: None = Depends(require_admin_for_refresh),
+    db: Session = Depends(get_db),
+):
+    facility_row = db.query(Facility).filter(Facility.id == facility).first()
+    if not facility_row:
+        raise HTTPException(status_code=404, detail="Facility not found")
+    if refresh:
+        refresh_evidence_registry(db)
+    return get_evidence_history(db, facility, limit=limit)
+
+
+@app.get("/admin/evidence/explorer")
+async def admin_evidence_explorer(
+    q: str = Query(default=""),
+    source_type: Optional[str] = Query(default=None),
+    verification_status: Optional[str] = Query(default=None),
+    conflicts_only: bool = Query(default=False),
+    missing_only: bool = Query(default=False),
+    facility_id: Optional[int] = Query(default=None),
+    limit: int = Query(default=200, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+    refresh: bool = Query(default=False),
+    _: None = Depends(require_admin_for_refresh),
+    db: Session = Depends(get_db),
+):
+    if facility_id is not None:
+        facility = db.query(Facility).filter(Facility.id == facility_id).first()
+        if not facility:
+            raise HTTPException(status_code=404, detail="Facility not found")
+    if refresh:
+        refresh_evidence_registry(db)
+    return search_evidence_registry(
+        db,
+        q=q,
+        source_type=source_type,
+        verification_status=verification_status,
+        conflicts_only=conflicts_only,
+        missing_only=missing_only,
+        facility_id=facility_id,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @app.get("/evidence/facilities/{facility_id}/material-claims")
