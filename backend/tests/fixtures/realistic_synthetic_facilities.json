@@ -1,0 +1,240 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "REALISTIC_SYNTHETIC_FACILITY_INTELLIGENCE_V1",
+  "synthetic_only": true,
+  "decision_critical_parameter_ids": [
+    "adl_support", "medication_support", "transfer_assistance", "nursing_24_7",
+    "pt", "ot", "speech_therapy", "post_stroke_neuro_evidence", "therapy_frequency",
+    "languages", "gluten_free", "dietitian", "published_rates", "medicare_attributes",
+    "current_availability", "distance_miles", "therapy_staffing", "inspection_rating",
+    "activities", "memory_care"
+  ],
+  "facilities": [
+    {
+      "facility_id": "SYN-A", "facility_name": "Alder Grove Recovery Center", "city": "MIAMI", "canonical_type": "SNF",
+      "target_coverage_range_pct": [80, 90], "test_archetype": "strong facility with strong evidence",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS provider record","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Facility medication policy","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS assessment record","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS certification record","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS provider record","detail_scope":"SERVICE"},
+        {"parameter_id":"ot","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official rehabilitation brochure","detail_scope":"SERVICE"},
+        {"parameter_id":"speech_therapy","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official rehabilitation page","detail_scope":"SERVICE"},
+        {"parameter_id":"post_stroke_neuro_evidence","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS claims outcomes","detail_scope":"PROGRAM"},
+        {"parameter_id":"therapy_frequency","raw_value":"WEEKDAYS","evidence_state":"FACILITY_DOCUMENTED","source":"Current therapy schedule","detail_scope":"PROGRAM"},
+        {"parameter_id":"languages","raw_value":"hebrew","evidence_state":"FACILITY_DOCUMENTED","source":"Current interpreter roster","detail_scope":"FACILITY"},
+        {"parameter_id":"gluten_free","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Clinical nutrition protocol","detail_scope":"SERVICE"},
+        {"parameter_id":"published_rates","raw_value":7200,"evidence_state":"CONTRADICTED","source":"Published rate sheet and current admissions quote","state_reason":"Published monthly rate is $7,200, while the current admissions quote is $8,050.","detail_scope":"FACILITY"},
+        {"parameter_id":"medicare_attributes","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"Medicare Care Compare","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Admissions office","unknown_reason":"Bed availability changes daily and no same-day confirmation was obtained.","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":4.2,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"therapy_staffing","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS staffing submission","detail_scope":"SERVICE"},
+        {"parameter_id":"inspection_rating","raw_value":5,"evidence_state":"GOVERNMENT_VERIFIED","source":"CMS inspection record","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"YES","evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Accredited program review","detail_scope":"FACILITY"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["dietitian","memory_care"],"reason":"No current source was collected because these fields were not central to this rehabilitation profile."}]
+    },
+    {
+      "facility_id": "SYN-B", "facility_name": "Bayshore Multilingual Care", "city": "MIAMI", "canonical_type": "SNF",
+      "target_coverage_range_pct": [70, 80], "test_archetype": "strong language and daily support with weak staffing coverage",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS provider record","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Facility care manual","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Facility transfer policy","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS certification record","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official service directory","detail_scope":"SERVICE"},
+        {"parameter_id":"ot","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official service directory","detail_scope":"SERVICE"},
+        {"parameter_id":"languages","raw_value":"hebrew","evidence_state":"GOVERNMENT_VERIFIED","source":"State language-access survey","detail_scope":"FACILITY"},
+        {"parameter_id":"gluten_free","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Dietary accommodation policy","detail_scope":"SERVICE"},
+        {"parameter_id":"dietitian","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"State professional roster","detail_scope":"SERVICE"},
+        {"parameter_id":"published_rates","raw_value":6900,"evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Current placement-agency rate sheet","detail_scope":"FACILITY"},
+        {"parameter_id":"medicare_attributes","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"Medicare Care Compare","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Same-day admissions confirmation","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":18.5,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"inspection_rating","raw_value":4,"evidence_state":"GOVERNMENT_VERIFIED","source":"CMS inspection record","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Current activity calendar","detail_scope":"FACILITY"},
+        {"parameter_id":"memory_care","raw_value":"NO","evidence_state":"GOVERNMENT_VERIFIED","source":"State license record","detail_scope":"PROGRAM"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["speech_therapy","post_stroke_neuro_evidence","therapy_frequency","therapy_staffing"],"reason":"Clinical staffing and rehabilitation-frequency sources were not available in the current collection window."}]
+    },
+    {
+      "facility_id": "SYN-C", "facility_name": "Cedar Peak Neuro Rehabilitation", "city": "CORAL GABLES", "canonical_type": "REHAB",
+      "target_coverage_range_pct": [65, 75], "test_archetype": "excellent rehabilitation evidence with lifestyle and dietary gaps",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS provider record","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS provider record","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Mobility assistance protocol","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS certification record","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS provider record","detail_scope":"SERVICE"},
+        {"parameter_id":"ot","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official rehabilitation brochure","detail_scope":"SERVICE"},
+        {"parameter_id":"speech_therapy","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official rehabilitation page","detail_scope":"SERVICE"},
+        {"parameter_id":"post_stroke_neuro_evidence","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS claims outcomes","detail_scope":"PROGRAM"},
+        {"parameter_id":"therapy_frequency","raw_value":"DAILY","evidence_state":"GOVERNMENT_VERIFIED","source":"Provider staffing submission","detail_scope":"PROGRAM"},
+        {"parameter_id":"gluten_free","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Menu review","unknown_reason":"The menu lists gluten-free dishes but does not address medical cross-contamination controls.","detail_scope":"SERVICE"},
+        {"parameter_id":"dietitian","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Provider directory","unknown_reason":"No current dietitian assignment could be linked to this rehabilitation program.","detail_scope":"SERVICE"},
+        {"parameter_id":"published_rates","raw_value":7600,"evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Placement-agency estimate","detail_scope":"FACILITY"},
+        {"parameter_id":"medicare_attributes","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"Medicare Care Compare","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Admissions office","unknown_reason":"Program availability depends on daily discharge and authorization status.","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":12.0,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"therapy_staffing","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS staffing submission","detail_scope":"SERVICE"},
+        {"parameter_id":"inspection_rating","raw_value":5,"evidence_state":"GOVERNMENT_VERIFIED","source":"CMS inspection record","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Facility website","unknown_reason":"No dated activity calendar or current resident-program source was published.","detail_scope":"FACILITY"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["languages"],"reason":"Language staffing was not published for the current shift roster."}],
+      "not_applicable": [{"parameter_id":"memory_care","reason":"This is a pure rehabilitation program without a memory-care service line."}]
+    },
+    {
+      "facility_id": "SYN-D", "facility_name": "Downtown Daily Support Residence", "city": "MIAMI", "canonical_type": "ALF",
+      "target_coverage_range_pct": [55, 65], "test_archetype": "strong location and daily support with contradictory rehabilitation evidence",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"State assisted-living license","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Medication assistance policy","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Resident care handbook","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"NO","evidence_state":"GOVERNMENT_VERIFIED","source":"State license scope","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility rehabilitation page","detail_scope":"SERVICE"},
+        {"parameter_id":"therapy_frequency","raw_value":"SEVEN_DAYS","evidence_state":"CONTRADICTED","source":"Facility website and therapist staffing roster","state_reason":"The website claims seven-day therapy, but the current staffing roster supports weekdays only.","detail_scope":"PROGRAM"},
+        {"parameter_id":"languages","raw_value":"spanish","evidence_state":"FACILITY_DOCUMENTED","source":"Current staff language roster","detail_scope":"FACILITY"},
+        {"parameter_id":"gluten_free","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Dining director statement","detail_scope":"SERVICE"},
+        {"parameter_id":"medicare_attributes","raw_value":"NOT_APPLICABLE","evidence_state":"NOT_APPLICABLE","source":"State license scope","state_reason":"Skilled-nursing Medicare reimbursement does not apply to this assisted-living-only community.","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Admissions office","unknown_reason":"Apartment availability changes daily and was not confirmed.","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":2.1,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"inspection_rating","raw_value":4,"evidence_state":"GOVERNMENT_VERIFIED","source":"State inspection record","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Current activity calendar","detail_scope":"FACILITY"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["ot","speech_therapy","post_stroke_neuro_evidence","dietitian","published_rates","therapy_staffing","memory_care"],"reason":"No scoped source supports these clinical, price, staffing, or specialist-program fields."}]
+    },
+    {
+      "facility_id": "SYN-E", "facility_name": "Evergreen Full-Service Nursing", "city": "MIAMI", "canonical_type": "SNF",
+      "target_coverage_range_pct": [75, 85], "test_archetype": "broad services with recent regulatory negatives",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Facility care manual","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Facility medication policy","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Facility transfer policy","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS certification record","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official service directory","detail_scope":"SERVICE"},
+        {"parameter_id":"ot","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official service directory","detail_scope":"SERVICE"},
+        {"parameter_id":"speech_therapy","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Official service directory","detail_scope":"SERVICE"},
+        {"parameter_id":"post_stroke_neuro_evidence","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility rehabilitation page","detail_scope":"PROGRAM"},
+        {"parameter_id":"therapy_frequency","raw_value":"WEEKDAYS","evidence_state":"FACILITY_DOCUMENTED","source":"Current therapy schedule","detail_scope":"PROGRAM"},
+        {"parameter_id":"languages","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Staff directory","unknown_reason":"Language availability varies by shift and no current shift roster was supplied.","detail_scope":"FACILITY"},
+        {"parameter_id":"gluten_free","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility dining page","detail_scope":"SERVICE"},
+        {"parameter_id":"dietitian","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"State professional roster","detail_scope":"SERVICE"},
+        {"parameter_id":"medicare_attributes","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"Medicare Care Compare","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Admissions office","unknown_reason":"No current bed census was provided.","detail_scope":"UNIT"},
+        {"parameter_id":"therapy_staffing","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"CMS staffing submission","detail_scope":"SERVICE"},
+        {"parameter_id":"inspection_rating","raw_value":2,"evidence_state":"GOVERNMENT_VERIFIED","source":"Current CMS inspection record","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Current activity calendar","detail_scope":"FACILITY"},
+        {"parameter_id":"memory_care","raw_value":"YES","evidence_state":"CONTRADICTED","source":"Facility website and state license","state_reason":"The website claims memory care, but the current synthetic license scope does not authorize a memory-care unit.","detail_scope":"PROGRAM"},
+        {"parameter_id":"sanctions_final_orders","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"Current government enforcement record","detail_scope":"FACILITY"},
+        {"parameter_id":"deficiency_count","raw_value":11,"evidence_state":"GOVERNMENT_VERIFIED","source":"Current CMS inspection record","detail_scope":"FACILITY"},
+        {"parameter_id":"deficiency_severity","raw_value":5,"evidence_state":"GOVERNMENT_VERIFIED","source":"Current CMS inspection record","detail_scope":"FACILITY"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["published_rates","distance_miles"],"reason":"Rates are not published and a family-origin distance was not supplied."}]
+    },
+    {
+      "facility_id": "SYN-F", "facility_name": "Festival Gardens Assisted Living", "city": "MIAMI", "canonical_type": "ALF",
+      "target_coverage_range_pct": [50, 60], "test_archetype": "weaker facility with complete marketing claims",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility marketing page","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Facility website","unknown_reason":"The website mentions wellness support but does not define medication-management scope.","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility marketing page","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility marketing page","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility rehabilitation page","detail_scope":"SERVICE"},
+        {"parameter_id":"languages","raw_value":"hebrew","evidence_state":"FACILITY_CLAIMED","source":"Directory listing","detail_scope":"FACILITY"},
+        {"parameter_id":"gluten_free","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility dining page","detail_scope":"SERVICE"},
+        {"parameter_id":"dietitian","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility dining page","detail_scope":"SERVICE"},
+        {"parameter_id":"published_rates","raw_value":5400,"evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Directory estimate","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Admissions office","unknown_reason":"Marketing says accepting residents, but no unit-level availability was confirmed.","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":6.8,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Current activity calendar and facility media","detail_scope":"FACILITY"},
+        {"parameter_id":"memory_care","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Facility marketing page","detail_scope":"PROGRAM"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["ot","speech_therapy","post_stroke_neuro_evidence","therapy_frequency","medicare_attributes","therapy_staffing","inspection_rating"],"reason":"Marketing materials provide no clinical proof, reimbursement record, staffing submission, or regulatory result for these fields."}]
+    },
+    {
+      "facility_id": "SYN-G", "facility_name": "Gulf View Care Unknown Profile", "city": "MIAMI", "canonical_type": "SNF",
+      "target_coverage_range_pct": [20, 35], "test_archetype": "facility with many unknowns and no negative evidence",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"PROXY_SUPPORTED","source":"NPPES taxonomy proxy","detail_scope":"SERVICE"},
+        {"parameter_id":"published_rates","raw_value":6100,"evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Directory estimate","detail_scope":"FACILITY"},
+        {"parameter_id":"medicare_attributes","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"Medicare enrollment record","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"No admissions response","unknown_reason":"The facility did not respond to the current availability request.","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":3.7,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Undated facility page","detail_scope":"FACILITY"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["medication_support","transfer_assistance","nursing_24_7","pt","ot","speech_therapy","post_stroke_neuro_evidence","therapy_frequency","languages","gluten_free","dietitian","therapy_staffing","inspection_rating","memory_care"],"reason":"No parameter-specific clinical, staffing, language, diet, inspection, or specialist-program source was found; absence is not negative evidence."}]
+    },
+    {
+      "facility_id": "SYN-H", "facility_name": "Harbor Value Senior Community", "city": "MIAMI", "canonical_type": "ALF",
+      "target_coverage_range_pct": [60, 70], "test_archetype": "affordable but clinically incomplete facility",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"State assisted-living license","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Medication assistance policy","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Resident care handbook","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"NO","evidence_state":"GOVERNMENT_VERIFIED","source":"State license scope","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Contract therapy directory","detail_scope":"SERVICE"},
+        {"parameter_id":"ot","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Contract therapy directory","unknown_reason":"The contract directory confirms PT but does not list occupational therapy.","detail_scope":"SERVICE"},
+        {"parameter_id":"languages","raw_value":"spanish","evidence_state":"FACILITY_DOCUMENTED","source":"Current staff roster","detail_scope":"FACILITY"},
+        {"parameter_id":"gluten_free","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Dining accommodation policy","detail_scope":"SERVICE"},
+        {"parameter_id":"published_rates","raw_value":4300,"evidence_state":"FACILITY_DOCUMENTED","source":"Current signed rate sheet","detail_scope":"FACILITY"},
+        {"parameter_id":"medicare_attributes","raw_value":"NOT_APPLICABLE","evidence_state":"NOT_APPLICABLE","source":"State license scope","state_reason":"Skilled-nursing Medicare reimbursement does not apply to this assisted-living-only community.","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Admissions office","unknown_reason":"Availability changes daily and the quoted room was not held.","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":5.5,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"inspection_rating","raw_value":4,"evidence_state":"GOVERNMENT_VERIFIED","source":"State inspection record","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Current activity calendar","detail_scope":"FACILITY"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["speech_therapy","post_stroke_neuro_evidence","therapy_frequency","dietitian","therapy_staffing","memory_care"],"reason":"The assisted-living sources do not establish these clinical program capabilities or specialist staffing fields."}]
+    },
+    {
+      "facility_id": "SYN-I", "facility_name": "Ivy Historic Nursing Pavilion", "city": "MIAMI", "canonical_type": "SNF",
+      "target_coverage_range_pct": [70, 80], "test_archetype": "historically known facility with a large stale share",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"STALE_OFFICIAL","source":"2019 government provider record","state_reason":"No current service-scope record replaced the 2019 filing.","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"YES","evidence_state":"STALE_OFFICIAL","source":"2019 government provider record","state_reason":"Medication-service evidence has not been refreshed since 2019.","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"STALE_OFFICIAL","source":"2020 government assessment","state_reason":"Transfer capability has not been reverified after ownership changes.","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"YES","evidence_state":"STALE_OFFICIAL","source":"2020 government certification","state_reason":"The certification record is historical and current staffing is missing.","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"STALE_OFFICIAL","source":"2020 official service record","state_reason":"PT evidence predates the current therapy contract.","detail_scope":"SERVICE"},
+        {"parameter_id":"ot","raw_value":"YES","evidence_state":"STALE_OFFICIAL","source":"2020 official service record","state_reason":"OT evidence predates the current therapy contract.","detail_scope":"SERVICE"},
+        {"parameter_id":"speech_therapy","raw_value":"YES","evidence_state":"STALE_OFFICIAL","source":"2020 official service record","state_reason":"Speech-therapy evidence predates the current therapy contract.","detail_scope":"SERVICE"},
+        {"parameter_id":"post_stroke_neuro_evidence","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Current facility rehabilitation page","detail_scope":"PROGRAM"},
+        {"parameter_id":"therapy_frequency","raw_value":"DAILY","evidence_state":"STALE_OFFICIAL","source":"2020 official therapy schedule","state_reason":"No current schedule confirms that daily frequency continues.","detail_scope":"PROGRAM"},
+        {"parameter_id":"languages","raw_value":"hebrew","evidence_state":"FACILITY_CLAIMED","source":"Current facility directory","detail_scope":"FACILITY"},
+        {"parameter_id":"gluten_free","raw_value":"YES","evidence_state":"FACILITY_CLAIMED","source":"Current facility dining page","detail_scope":"SERVICE"},
+        {"parameter_id":"published_rates","raw_value":5900,"evidence_state":"STALE_OFFICIAL","source":"2021 filed rate sheet","state_reason":"The filed rate predates multiple annual price cycles.","detail_scope":"FACILITY"},
+        {"parameter_id":"medicare_attributes","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"Current Medicare enrollment record","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Admissions office","unknown_reason":"Current availability was not supplied.","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":7.4,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"therapy_staffing","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Current staffing submission","unknown_reason":"The latest staffing file contains no therapy-staffing value.","detail_scope":"SERVICE"},
+        {"parameter_id":"inspection_rating","raw_value":4,"evidence_state":"STALE_OFFICIAL","source":"2021 government inspection","state_reason":"No current synthetic regulatory inspection is available.","detail_scope":"FACILITY"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["dietitian","activities","memory_care"],"reason":"No current source covers nutrition staffing, lifestyle programming, or specialist memory care."}]
+    },
+    {
+      "facility_id": "SYN-J", "facility_name": "Juniper Memory and Wellness", "city": "MIAMI", "canonical_type": "MEMORY_CARE",
+      "target_coverage_range_pct": [70, 85], "test_archetype": "specialized dementia facility with only moderate stroke relevance",
+      "evidence": [
+        {"parameter_id":"adl_support","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"State memory-care license","detail_scope":"SERVICE"},
+        {"parameter_id":"medication_support","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Medication management policy","detail_scope":"SERVICE"},
+        {"parameter_id":"transfer_assistance","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Resident care handbook","detail_scope":"SERVICE"},
+        {"parameter_id":"nursing_24_7","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Current staffing policy","detail_scope":"FACILITY"},
+        {"parameter_id":"pt","raw_value":"YES","evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Contract therapy directory","detail_scope":"SERVICE"},
+        {"parameter_id":"ot","raw_value":"YES","evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Contract therapy directory","detail_scope":"SERVICE"},
+        {"parameter_id":"speech_therapy","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Contract therapy directory","unknown_reason":"Speech therapy is not listed in the current contract directory.","detail_scope":"SERVICE"},
+        {"parameter_id":"post_stroke_neuro_evidence","raw_value":"NO","evidence_state":"GOVERNMENT_VERIFIED","source":"State program scope","detail_scope":"PROGRAM"},
+        {"parameter_id":"therapy_frequency","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"General rehabilitation page","unknown_reason":"The page describes therapy broadly but provides no frequency or staffing schedule.","detail_scope":"PROGRAM"},
+        {"parameter_id":"languages","raw_value":"hebrew","evidence_state":"CONTRADICTED","source":"Directory listing and current facility confirmation","state_reason":"A directory lists Hebrew-speaking staff, but the latest facility confirmation says availability is not guaranteed by shift.","detail_scope":"FACILITY"},
+        {"parameter_id":"gluten_free","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Clinical nutrition protocol","detail_scope":"SERVICE"},
+        {"parameter_id":"dietitian","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"State professional roster","detail_scope":"SERVICE"},
+        {"parameter_id":"medicare_attributes","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"Medicare enrollment record","detail_scope":"FACILITY"},
+        {"parameter_id":"current_availability","raw_value":"UNKNOWN","evidence_state":"UNKNOWN","source":"Admissions office","unknown_reason":"Secured-unit availability changes daily and was not confirmed.","detail_scope":"UNIT"},
+        {"parameter_id":"distance_miles","raw_value":9.1,"evidence_state":"GOVERNMENT_VERIFIED","source":"Geocoded government address","detail_scope":"FACILITY"},
+        {"parameter_id":"therapy_staffing","raw_value":"YES","evidence_state":"THIRD_PARTY_DOCUMENTED","source":"Contract therapy roster","detail_scope":"SERVICE"},
+        {"parameter_id":"inspection_rating","raw_value":5,"evidence_state":"GOVERNMENT_VERIFIED","source":"Current state inspection","detail_scope":"FACILITY"},
+        {"parameter_id":"activities","raw_value":"YES","evidence_state":"FACILITY_DOCUMENTED","source":"Current dementia-program calendar","detail_scope":"PROGRAM"},
+        {"parameter_id":"memory_care","raw_value":"YES","evidence_state":"GOVERNMENT_VERIFIED","source":"State memory-care license","detail_scope":"PROGRAM"}
+      ],
+      "missing_source_coverage": [{"parameter_ids":["published_rates"],"reason":"The community does not publish rates and no current admissions quote was obtained."}]
+    }
+  ]
+}
