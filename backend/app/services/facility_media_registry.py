@@ -53,6 +53,12 @@ def build_visual_media_payload(record: Optional[Dict[str, Any]]) -> Optional[Dic
         return None
     if str(record.get("image_status") or "").upper() != "VERIFIED":
         return None
+    if str(record.get("display_rights_status") or "").upper() not in {
+        "OFFICIAL_DISPLAY_ALLOWED",
+        "OWNER_AUTHORIZED",
+        "LICENSED_EXTERNAL",
+    }:
+        return None
 
     image_url = str(record.get("primary_image_url") or "").strip()
     if not image_url:
@@ -61,7 +67,7 @@ def build_visual_media_payload(record: Optional[Dict[str, Any]]) -> Optional[Dic
     source_url = str(record.get("image_source_url") or record.get("official_facility_page_url") or record.get("source_url") or "").strip()
     source_type = str(record.get("image_source_type") or record.get("source_type") or "OFFICIAL_SITE")
     verification_method = str(record.get("verification_method") or "official identity + official page image verification")
-    last_verified = str(record.get("last_verified") or "")
+    last_verified = str(record.get("verified_at") or record.get("last_verified") or "")
 
     source_note = "Official Site"
     if source_type:
@@ -69,7 +75,7 @@ def build_visual_media_payload(record: Optional[Dict[str, Any]]) -> Optional[Dic
 
     return {
         "hero": {
-            "category": "exterior",
+            "category": str(record.get("primary_image_category") or "exterior"),
             "url": image_url,
             "source": "Official Site",
             "collected_at": last_verified,

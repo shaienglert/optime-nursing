@@ -44,7 +44,7 @@ from app.services.agent_knowledge_reports import (
     refresh_all_agent_reports,
     start_background_refresh_loop,
 )
-from app.services.chief_ai_supervisor import recent_incidents, run_supervisor_cycle, stale_usage_summary
+from app.services.chief_ai_supervisor import recent_incidents, run_supervisor_cycle, stale_usage_summary, start_supervisor_scheduler
 from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
@@ -1473,6 +1473,8 @@ def startup() -> None:
     start_background_refresh_loop()
     # Trigger daily executive intelligence report at 08:00 local server time.
     start_executive_report_scheduler()
+    # Single active operations supervisor scheduler for heartbeat, dependencies, remediation, and daily owner brief.
+    start_supervisor_scheduler()
     # Runtime sync monitor keeps recommendation artifacts current without request-time blocking.
     runtime_sync_status = start_runtime_sync_monitor()
     logger.info(
@@ -1689,10 +1691,8 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
         profile = intelligence_profiles.get(facility.id)
         canonical_facility_id = cms_to_canonical_id.get(str(facility.cms_id or "").strip())
         media_payload = build_visual_media_payload(get_facility_media_record(canonical_facility_id))
-        profile_hero = _parse_json_object(profile.visual_hero_image) if profile else {}
-        profile_gallery = _parse_json_objects(profile.visual_gallery_images) if profile else []
-        visual_hero_image = media_payload["hero"] if media_payload else profile_hero
-        visual_gallery_images = media_payload["gallery"] if media_payload else profile_gallery
+        visual_hero_image = media_payload["hero"] if media_payload else {}
+        visual_gallery_images = media_payload["gallery"] if media_payload else []
 
         payload.append(
             FacilityListOut(
@@ -1787,10 +1787,8 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
                 break
 
     media_payload = build_visual_media_payload(get_facility_media_record(canonical_facility_id))
-    profile_hero = _parse_json_object(profile.visual_hero_image) if profile else {}
-    profile_gallery = _parse_json_objects(profile.visual_gallery_images) if profile else []
-    visual_hero_image = media_payload["hero"] if media_payload else profile_hero
-    visual_gallery_images = media_payload["gallery"] if media_payload else profile_gallery
+    visual_hero_image = media_payload["hero"] if media_payload else {}
+    visual_gallery_images = media_payload["gallery"] if media_payload else []
 
     return FacilityDetailsOut(
         id=facility.id,
@@ -1889,10 +1887,8 @@ async def get_facility_profile_v3(id: int, db: Session = Depends(get_db)):
                 break
 
     media_payload = build_visual_media_payload(get_facility_media_record(canonical_facility_id))
-    profile_hero = _parse_json_object(profile.visual_hero_image) if profile else {}
-    profile_gallery = _parse_json_objects(profile.visual_gallery_images) if profile else []
-    visual_hero_image = media_payload["hero"] if media_payload else profile_hero
-    visual_gallery_images = media_payload["gallery"] if media_payload else profile_gallery
+    visual_hero_image = media_payload["hero"] if media_payload else {}
+    visual_gallery_images = media_payload["gallery"] if media_payload else []
 
     parameter_table_payload: Optional[Dict[str, Any]] = None
     if canonical_facility_id:

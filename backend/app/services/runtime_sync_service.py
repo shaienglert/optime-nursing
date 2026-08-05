@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.services.canonical_universe import configured_canonical_market, resolve_canonical_universe_path
 from app.services.facility_parameter_service import get_runtime_cache_status, get_runtime_metadata, refresh_runtime_cache
 
 
@@ -23,7 +24,10 @@ SCRIPTS_DIR = REPO_ROOT / "scripts"
 
 ARTIFACT_REGISTRY = DATABASE_DIR / "optime_parameter_registry.json"
 ARTIFACT_EVIDENCE = DATABASE_DIR / "florida_facility_parameter_evidence.json"
-ARTIFACT_CANONICAL = DATABASE_DIR / "florida_facility_universe_canonical.json"
+
+
+def _artifact_canonical() -> Path:
+    return resolve_canonical_universe_path(require_exists=False)
 
 SOURCE_CMS_INVENTORY = DATABASE_DIR / "florida_senior_living_inventory.json"
 SOURCE_LEGACY_EVIDENCE = DATABASE_DIR / "florida_parameter_evidence.json"
@@ -119,7 +123,7 @@ def _artifact_signature() -> Dict[str, Any]:
     return {
         "registry": _file_signature(ARTIFACT_REGISTRY),
         "evidence": _file_signature(ARTIFACT_EVIDENCE),
-        "canonical": _file_signature(ARTIFACT_CANONICAL),
+        "canonical": _file_signature(_artifact_canonical()),
     }
 
 
@@ -131,7 +135,7 @@ def _latest_mtime(paths: List[Path]) -> Optional[float]:
 def detect_runtime_dirty() -> Dict[str, Any]:
     reasons: List[str] = []
 
-    artifacts = [ARTIFACT_REGISTRY, ARTIFACT_EVIDENCE, ARTIFACT_CANONICAL]
+    artifacts = [ARTIFACT_REGISTRY, ARTIFACT_EVIDENCE, _artifact_canonical()]
     missing = [str(path) for path in artifacts if not path.exists()]
     if missing:
         reasons.append(f"missing_artifacts:{','.join(missing)}")
@@ -197,7 +201,8 @@ def _run_script(script: Path, timeout_seconds: int) -> Tuple[bool, str]:
 
 def _validate_runtime_artifacts() -> Tuple[bool, List[str]]:
     messages: List[str] = []
-    required = [ARTIFACT_REGISTRY, ARTIFACT_EVIDENCE, ARTIFACT_CANONICAL]
+    canonical_artifact = _artifact_canonical()
+    required = [ARTIFACT_REGISTRY, ARTIFACT_EVIDENCE, canonical_artifact]
     for path in required:
         if not path.exists():
             messages.append(f"missing:{path}")
@@ -207,7 +212,7 @@ def _validate_runtime_artifacts() -> Tuple[bool, List[str]]:
     checks = [
         (ARTIFACT_REGISTRY, ["generated_at_utc", "record_count", "records"]),
         (ARTIFACT_EVIDENCE, ["generated_at_utc", "record_count", "records"]),
-        (ARTIFACT_CANONICAL, ["generated_at_utc", "record_count", "records"]),
+        (canonical_artifact, ["generated_at_utc", "record_count", "records"]),
     ]
     for path, keys in checks:
         try:
@@ -236,7 +241,7 @@ def _snapshot_runtime_artifacts() -> Tuple[Dict[str, Optional[Path]], Path]:
     for key, source in {
         "registry": ARTIFACT_REGISTRY,
         "evidence": ARTIFACT_EVIDENCE,
-        "canonical": ARTIFACT_CANONICAL,
+        "canonical": _artifact_canonical(),
     }.items():
         if not source.exists():
             continue
@@ -250,7 +255,7 @@ def _restore_runtime_artifacts(snapshot: Dict[str, Optional[Path]]) -> None:
     mapping = {
         "registry": ARTIFACT_REGISTRY,
         "evidence": ARTIFACT_EVIDENCE,
-        "canonical": ARTIFACT_CANONICAL,
+        "canonical": _artifact_canonical(),
     }
     for key, destination in mapping.items():
         source = snapshot.get(key)
@@ -262,9 +267,16 @@ def _restore_runtime_artifacts(snapshot: Dict[str, Optional[Path]]) -> None:
 def _rebuild_runtime_artifacts(trigger: str) -> Dict[str, Any]:
     start = time.perf_counter()
     messages: List[str] = []
+    if configured_canonical_market() != "florida":
+        return {
+            "ok": False,
+            "error": "automatic_rebuild_unsupported_for_configured_market",
+            "messages": ["Florida-only runtime rebuild scripts cannot rebuild a non-Florida canonical universe."],
+            "duration_ms": round((time.perf_counter() - start) * 1000, 2),
+        }
     snapshot, backup_dir = _snapshot_runtime_artifacts()
 
-    if not ARTIFACT_CANONICAL.exists() and INGEST_SCRIPT.exists():
+    if not _artifact_canonical().exists() and INGEST_SCRIPT.exists():
         ok, message = _run_script(INGEST_SCRIPT, timeout_seconds=900)
         messages.append(message)
         if not ok:

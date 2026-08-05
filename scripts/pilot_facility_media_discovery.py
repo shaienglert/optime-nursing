@@ -9,6 +9,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html import unescape
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 from urllib.parse import parse_qs, quote_plus, urljoin, urlparse
@@ -83,6 +84,11 @@ NAME_STOPWORDS = {
     "llc",
     "community",
     "communities",
+    "home",
+    "homes",
+    "senior",
+    "living",
+    "skilled",
 }
 
 
@@ -383,8 +389,16 @@ def extract_urls_from_bing(query: str) -> List[str]:
         return link
 
     links: List[str] = []
-    for href in re.findall(r"href=['\"]([^'\"]+)['\"]", body, flags=re.I):
-        target = decode_bing_target(href)
+    result_blocks = re.findall(
+        r"<li[^>]+class=['\"][^'\"]*\bb_algo\b[^'\"]*['\"][^>]*>(.*?)</li>",
+        body,
+        flags=re.I | re.S,
+    )
+    for block in result_blocks:
+        match = re.search(r"<h2[^>]*>.*?<a[^>]+href=['\"]([^'\"]+)['\"]", block, flags=re.I | re.S)
+        if not match:
+            continue
+        target = decode_bing_target(match.group(1))
         if target.startswith("http"):
             links.append(target)
     deduped: List[str] = []
@@ -397,6 +411,57 @@ def extract_urls_from_bing(query: str) -> List[str]:
             continue
         seen.add(link)
         deduped.append(unescape(link))
+        if len(deduped) >= 20:
+            break
+    return deduped
+
+
+class _YahooOrganicLinkParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.in_results = False
+        self.results_ol_depth = 0
+        self.links: List[str] = []
+
+    def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
+        attributes = {key: value or "" for key, value in attrs}
+        if tag == "ol" and "searchCenterMiddle" in attributes.get("class", ""):
+            self.in_results = True
+            self.results_ol_depth = 1
+            return
+        if self.in_results and tag == "ol":
+            self.results_ol_depth += 1
+        if self.in_results and tag == "a":
+            href = unescape(attributes.get("href", "")).strip()
+            if href.startswith("http"):
+                self.links.append(href)
+
+    def handle_endtag(self, tag: str) -> None:
+        if self.in_results and tag == "ol":
+            self.results_ol_depth -= 1
+            if self.results_ol_depth <= 0:
+                self.in_results = False
+
+
+def extract_urls_from_yahoo(query: str) -> List[str]:
+    url = f"https://search.yahoo.com/search?p={quote_plus(query)}"
+    try:
+        status, _, body = fetch_url(url)
+    except Exception:
+        return []
+    if status >= 400:
+        return []
+
+    parser = _YahooOrganicLinkParser()
+    parser.feed(body)
+    deduped: List[str] = []
+    seen: set[str] = set()
+    for link in parser.links:
+        domain = domain_of(link)
+        if not domain or domain.endswith("search.yahoo.com") or link in seen:
+            continue
+        seen.add(link)
+        deduped.append(link)
         if len(deduped) >= 20:
             break
     return deduped
@@ -541,6 +606,25 @@ def build_name_variants(seed: FacilitySeed) -> List[str]:
     return [item for item in variants if item and item != base]
 
 
+def search_domain_has_identity_affinity(seed: FacilitySeed, inventory_row: Optional[Dict[str, Any]], candidate_url: str) -> bool:
+    domain_labels = [label for label in domain_of(candidate_url).split(".") if label]
+    host_root = domain_labels[-2] if len(domain_labels) >= 2 else (domain_labels[0] if domain_labels else "")
+    if not host_root:
+        return False
+    compact_host = re.sub(r"[^a-z0-9]", "", host_root.lower())
+    facility_tokens = core_name_tokens(seed.facility_name)
+    operator_name = str((inventory_row or {}).get("parent_company") or (inventory_row or {}).get("operator_name") or "")
+    operator_tokens = core_name_tokens(operator_name)
+    identity_tokens = [token for token in [*facility_tokens, *operator_tokens] if len(token) >= 4]
+    if any(token in compact_host for token in identity_tokens):
+        return True
+    if len(facility_tokens) >= 2:
+        acronym = "".join(token[0] for token in facility_tokens[:2])
+        if len(acronym) >= 2 and compact_host.startswith(acronym):
+            return True
+    return False
+
+
 def extract_same_domain_pages(page_url: str, html: str) -> List[str]:
     parsed = urlparse(page_url)
     base_domain = domain_of(page_url)
@@ -575,40 +659,57 @@ def collect_candidates(
     *,
     max_candidates: int,
 ) -> List[Tuple[str, str, bool]]:
-    candidates: List[Tuple[str, str, bool]] = []
-
-    candidates.extend(build_domain_guess_candidates(seed))
+    structured_candidates: List[Tuple[str, str, bool]] = []
+    search_candidates: List[Tuple[str, str, bool]] = []
 
     if inventory_row:
         website = normalize_candidate_url(str(inventory_row.get("website") or ""))
         if website and not is_blocked_domain(website):
-            candidates.append((website, "STRUCTURED_WEBSITE", True))
+            structured_candidates.append((website, "STRUCTURED_WEBSITE", True))
 
         for source_url in inventory_row.get("source_urls") or []:
             candidate = normalize_candidate_url(str(source_url or ""))
             if not candidate or is_blocked_domain(candidate):
                 continue
-            candidates.append((candidate, "STRUCTURED_SOURCE_URL", False))
+            structured_candidates.append((candidate, "STRUCTURED_SOURCE_URL", False))
 
+    operator_name = str((inventory_row or {}).get("parent_company") or (inventory_row or {}).get("operator_name") or "").strip()
     search_queries = [
-        f'"{seed.facility_name}" "{seed.city}"',
+        f'"{seed.phone}"' if seed.phone else "",
         f'"{seed.facility_name}" "{seed.address}"',
+        f'"{seed.facility_name}" "{seed.city}"',
         f'"{seed.facility_name}" official',
-        f'"{seed.phone}"',
+        f'"{operator_name}" "{seed.city}"' if operator_name else "",
     ]
 
-    for search_query in search_queries:
-        for result_url in extract_urls_from_duckduckgo(search_query):
+    search_budget = max(1, max_candidates // 2)
+    seen_search_domains: set[str] = set()
+    for search_query in (query for query in search_queries if query):
+        query_results = [
+            *extract_urls_from_yahoo(search_query),
+            *extract_urls_from_duckduckgo(search_query),
+            *extract_urls_from_bing(search_query),
+        ]
+        for result_url in query_results:
             candidate = normalize_candidate_url(result_url)
             if not candidate or is_blocked_domain(candidate):
                 continue
-            candidates.append((candidate, "SEARCH_DISCOVERY", False))
+            if not search_domain_has_identity_affinity(seed, inventory_row, candidate):
+                continue
+            candidate_domain = domain_of(candidate)
+            if not candidate_domain or candidate_domain in seen_search_domains:
+                continue
+            seen_search_domains.add(candidate_domain)
+            search_candidates.append((candidate, "SEARCH_DISCOVERY", False))
+            break
+        if len(search_candidates) >= search_budget:
+            break
 
-        for result_url in extract_urls_from_bing(search_query):
-            candidate = normalize_candidate_url(result_url)
-            if not candidate or is_blocked_domain(candidate):
-                continue
-            candidates.append((candidate, "SEARCH_DISCOVERY", False))
+    candidates = [
+        *structured_candidates,
+        *search_candidates,
+        *build_domain_guess_candidates(seed),
+    ]
 
     deduped: List[Tuple[str, str, bool]] = []
     seen: set[str] = set()

@@ -8,13 +8,14 @@ import threading
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+from app.services.canonical_universe import resolve_canonical_universe_path
+
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATABASE_DIR = REPO_ROOT / "database"
 
 REGISTRY_PATH = DATABASE_DIR / "optime_parameter_registry.json"
 EVIDENCE_PATH = DATABASE_DIR / "florida_facility_parameter_evidence.json"
-CANONICAL_PATH = DATABASE_DIR / "florida_facility_universe_canonical.json"
 
 PROFILE_TAGS = {
     "stroke": ["stroke", "neurological", "rehab", "transfer", "medication", "nursing", "mobility"],
@@ -38,11 +39,13 @@ def _read_json(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _signature() -> tuple[float, float, float]:
+def _signature() -> tuple[float, float, float, str]:
+    canonical_path = resolve_canonical_universe_path()
     return (
         REGISTRY_PATH.stat().st_mtime,
         EVIDENCE_PATH.stat().st_mtime,
-        CANONICAL_PATH.stat().st_mtime,
+        canonical_path.stat().st_mtime,
+        str(canonical_path),
     )
 
 
@@ -88,10 +91,10 @@ def _base_priority(parameter: Dict[str, Any]) -> float:
     return score
 
 
-def _build_runtime_payload(active_signature: tuple[float, float, float]) -> Dict[str, Any]:
+def _build_runtime_payload(active_signature: tuple[float, float, float, str]) -> Dict[str, Any]:
     registry_payload = _read_json(REGISTRY_PATH)
     evidence_payload = _read_json(EVIDENCE_PATH)
-    canonical_payload = _read_json(CANONICAL_PATH)
+    canonical_payload = _read_json(resolve_canonical_universe_path())
 
     registry = registry_payload.get("records") or []
     canonical = canonical_payload.get("records") or []
@@ -146,7 +149,7 @@ def _build_runtime_payload(active_signature: tuple[float, float, float]) -> Dict
     return payload
 
 
-def _atomic_swap_runtime_payload(payload: Dict[str, Any], active_signature: tuple[float, float, float], reason: str) -> None:
+def _atomic_swap_runtime_payload(payload: Dict[str, Any], active_signature: tuple[float, float, float, str], reason: str) -> None:
     with _CACHE_LOCK:
         _CACHE["payload"] = payload
         _CACHE["signature"] = active_signature
