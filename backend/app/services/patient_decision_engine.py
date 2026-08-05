@@ -159,23 +159,7 @@ def _to_number(value: Any) -> Optional[float]:
         return None
 
 
-def _evidence_state(row: Dict[str, Any]) -> str:
-    state = str(row.get("evidence_state") or "").strip().upper()
-    conflict = str(row.get("conflict_status") or "").strip().upper()
-    if state == "CONTRADICTED" or conflict not in {"", "NONE", "NO_CONFLICT"}:
-        return "CONTRADICTED"
-    if state in {"STALE", "STALE_OFFICIAL"}:
-        return "STALE_OFFICIAL"
-    if state == "NOT_APPLICABLE" or str(row.get("raw_value") or "").strip().upper() == "NOT_APPLICABLE":
-        return "NOT_APPLICABLE"
-    if state == "UNKNOWN" or row.get("raw_value") in {None, "UNKNOWN"}:
-        return "UNKNOWN"
-    return state or "LEGACY_VERIFIED"
-
-
 def _is_verified_row(row: Dict[str, Any]) -> bool:
-    if _evidence_state(row) in {"CONTRADICTED", "STALE_OFFICIAL", "NOT_APPLICABLE", "UNKNOWN"}:
-        return False
     raw = row.get("raw_value")
     source = _normalize(row.get("source"))
     if raw in {None, "UNKNOWN"}:
@@ -385,16 +369,6 @@ def _evaluate_need(need: Dict[str, Any], row_by_param: Dict[str, Dict[str, Any]]
     if not row:
         return "UNKNOWN", "No evidence row available for this parameter."
 
-    evidence_state = _evidence_state(row)
-    if evidence_state == "NOT_APPLICABLE":
-        return "NOT_APPLICABLE", str(row.get("state_reason") or "This parameter does not apply to this facility or service.")
-    if evidence_state == "CONTRADICTED":
-        return "CONTRADICTED", str(row.get("state_reason") or "Available sources materially contradict one another.")
-    if evidence_state == "STALE_OFFICIAL":
-        return "STALE", str(row.get("state_reason") or "The latest available official evidence is stale and requires re-verification.")
-    if evidence_state == "UNKNOWN":
-        return "UNKNOWN", str(row.get("unknown_reason") or "Not verified.")
-
     raw = row.get("raw_value")
     if need.get("desired_value") == "NO":
         if raw == "NO":
@@ -417,14 +391,13 @@ def _classify_match_evidence(row: Dict[str, Any]) -> Tuple[str, float]:
         return "UNKNOWN", MATCH_EVIDENCE_MULTIPLIER["UNKNOWN"]
 
     source = _normalize(row.get("source"))
-    evidence_state = _evidence_state(row)
-    if evidence_state == "PROXY_SUPPORTED" or "nppes" in source or "taxonomy" in source or "proxy" in source:
+    if "nppes" in source or "taxonomy" in source:
         return "TAXONOMY_INFERRED", MATCH_EVIDENCE_MULTIPLIER["TAXONOMY_INFERRED"]
 
-    if evidence_state in {"FACILITY_DOCUMENTED", "FACILITY_CLAIMED"} or any(token in source for token in ["facility", "self-report", "self report", "provider"]):
+    if any(token in source for token in ["facility", "self-report", "self report", "provider"]):
         return "FACILITY_REPORTED", MATCH_EVIDENCE_MULTIPLIER["FACILITY_REPORTED"]
 
-    if evidence_state == "GOVERNMENT_VERIFIED" or any(token in source for token in ["cms", "ahca", "medicare", "medicaid", "inspection", "survey", "claims", "government"]):
+    if any(token in source for token in ["cms", "ahca", "medicare", "medicaid", "inspection", "survey", "claims"]):
         return "REGULATORY_VERIFIED", MATCH_EVIDENCE_MULTIPLIER["REGULATORY_VERIFIED"]
 
     return "VERIFIED", MATCH_EVIDENCE_MULTIPLIER["VERIFIED"]
@@ -444,9 +417,6 @@ def _eligibility_from_needs(
     matched_needs = []
     unmet_verified_needs = []
     unknown_critical_needs = []
-    not_applicable_needs = []
-    contradicted_needs = []
-    stale_needs = []
     preference_matches = []
 
     for need in needs:
@@ -467,12 +437,6 @@ def _eligibility_from_needs(
                 preference_matches.append(entry)
         elif status == "GAP":
             unmet_verified_needs.append(entry)
-        elif status == "NOT_APPLICABLE":
-            not_applicable_needs.append(entry)
-        elif status == "CONTRADICTED":
-            contradicted_needs.append(entry)
-        elif status == "STALE":
-            stale_needs.append(entry)
         else:
             if need["requirement_level"] in {"REQUIRED", "HIGH"}:
                 unknown_critical_needs.append(entry)
@@ -484,11 +448,6 @@ def _eligibility_from_needs(
     required_unknown = [entry for entry in unknown_critical_needs if entry["requirement_level"] == "REQUIRED"]
     required_matches = [entry for entry in matched_needs if entry["requirement_level"] == "REQUIRED"]
     required_or_high_matches = [entry for entry in matched_needs if entry["requirement_level"] in {"REQUIRED", "HIGH"}]
-    required_high_unresolved_states = [
-        entry
-        for entry in [*not_applicable_needs, *contradicted_needs, *stale_needs]
-        if entry["requirement_level"] in {"REQUIRED", "HIGH"}
-    ]
 
     if required_high_failures:
         eligibility = "INELIGIBLE"
@@ -499,10 +458,6 @@ def _eligibility_from_needs(
     elif required_high_unknown and required_high_matches:
         eligibility = "POTENTIALLY_ELIGIBLE"
     elif required_high_unknown and not required_high_matches:
-        eligibility = "INSUFFICIENT_EVIDENCE"
-    elif required_high_unresolved_states and required_high_matches:
-        eligibility = "POTENTIALLY_ELIGIBLE"
-    elif required_high_unresolved_states:
         eligibility = "INSUFFICIENT_EVIDENCE"
     elif _has_taxonomy_only_critical_support(required_or_high_matches):
         eligibility = "POTENTIALLY_ELIGIBLE"
@@ -516,8 +471,6 @@ def _eligibility_from_needs(
         reasons.append("Some required/high needs are not yet verified and need direct confirmation.")
     if _has_taxonomy_only_critical_support(required_or_high_matches):
         reasons.append("One or more required/high needs are supported by taxonomy-level evidence and still need direct capability verification.")
-    if required_high_unresolved_states:
-        reasons.append("One or more required/high needs have stale, contradicted, or not-applicable evidence that remains separately unresolved.")
     if not reasons:
         reasons.append("Required and high-priority needs are currently supported by verified evidence.")
 
@@ -526,9 +479,6 @@ def _eligibility_from_needs(
         "matched_needs": matched_needs,
         "unmet_verified_needs": unmet_verified_needs,
         "unknown_critical_needs": unknown_critical_needs,
-        "not_applicable_needs": not_applicable_needs,
-        "contradicted_needs": contradicted_needs,
-        "stale_needs": stale_needs,
         "preference_matches": preference_matches,
         "reasons": reasons,
     }
@@ -1160,12 +1110,6 @@ def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) 
     for item in eligibility["unmet_verified_needs"][:5]:
         concerns.append(f"{_display_parameter_label(item['parameter_id'])} has a verified gap")
 
-    for item in eligibility["contradicted_needs"][:5]:
-        concerns.append(f"{_display_parameter_label(item['parameter_id'])} has contradictory evidence: {item['reason']}")
-
-    for item in eligibility["stale_needs"][:5]:
-        verify.append(f"{_display_parameter_label(item['parameter_id'])} relies on stale evidence: {item['reason']}")
-
     if any(row["parameter_id"] == "current_availability" for row in table_rows):
         verify.append("Current availability must be confirmed directly with the facility")
 
@@ -1226,16 +1170,6 @@ def _build_ranked_candidate_detail(
     ]
 
     match_score = min(100.0, round(scoring["match_score"] + geo_bonus, 2))
-    evidence_state_notes = [
-        {
-            "parameter_id": row["parameter_id"],
-            "evidence_state": _evidence_state(row),
-            "reason": row.get("state_reason") or row.get("unknown_reason"),
-            "source": row.get("source"),
-        }
-        for row in table["rows"]
-        if _evidence_state(row) in {"CONTRADICTED", "STALE_OFFICIAL", "NOT_APPLICABLE", "UNKNOWN"}
-    ]
     return {
         "canonical_facility_id": canonical_id,
         "facility_name": table["facility_name"],
@@ -1253,10 +1187,6 @@ def _build_ranked_candidate_detail(
         "matched_needs": eligibility["matched_needs"],
         "unmet_verified_needs": eligibility["unmet_verified_needs"],
         "unknown_critical_needs": eligibility["unknown_critical_needs"],
-        "not_applicable_needs": eligibility["not_applicable_needs"],
-        "contradicted_needs": eligibility["contradicted_needs"],
-        "stale_needs": eligibility["stale_needs"],
-        "evidence_state_notes": evidence_state_notes,
         "preference_matches": eligibility["preference_matches"],
         "evidence_certainty": scoring["evidence_certainty"],
         "evidence_confidence": evidence_confidence,
@@ -1495,10 +1425,7 @@ def build_patient_comparison_context(canonical_facility_ids: List[str], patient_
             if not need:
                 continue
             raw = row.get("raw_value")
-            evidence_state = _evidence_state(row)
-            if evidence_state in {"CONTRADICTED", "STALE_OFFICIAL", "NOT_APPLICABLE"}:
-                status = evidence_state
-            elif raw == "YES":
+            if raw == "YES":
                 status = "MATCH"
             elif raw == "NO":
                 status = "VERIFIED_GAP"
@@ -1512,8 +1439,6 @@ def build_patient_comparison_context(canonical_facility_ids: List[str], patient_
                     "source": row.get("source"),
                     "scope": row.get("detail_scope"),
                     "scope_name": row.get("scope_name"),
-                    "evidence_state": evidence_state,
-                    "state_reason": row.get("state_reason") or row.get("unknown_reason"),
                 }
             )
         facilities.append(

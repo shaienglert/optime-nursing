@@ -25,7 +25,6 @@ import {
 import {
   clearCompareSelection,
   loadDecisionResponseCache,
-  loadPatientCaseId,
   loadCompareSelection,
   loadFavoriteFacilities,
   saveDecisionResponseCache,
@@ -83,16 +82,16 @@ function scopeLabel(scope: string, scopeName?: string | null): string {
 }
 
 function formatVerifiedDate(value?: string | null): string {
-  if (!value) return "Awaiting confirmation";
+  if (!value) return "Not verified";
   return value;
 }
 
 function formatRawValue(value: unknown): string {
-  if (value === null || value === undefined || value === "UNKNOWN" || value === "Not verified") return "We're verifying this now.";
+  if (value === null || value === undefined || value === "UNKNOWN" || value === "Not verified") return "Not verified";
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "number") return Number.isInteger(value) ? String(value) : value.toFixed(2);
   const text = String(value).trim();
-  if (!text) return "We're verifying this now.";
+  if (!text) return "Not verified";
   if (text === "YES") return "Yes";
   if (text === "NO") return "No";
   return text;
@@ -119,7 +118,7 @@ function toEvidenceRecord(entry: NonNullable<ParameterTableRow["evidence_records
 }
 
 function normalizeSelectedIds(values: string[]): string[] {
-  return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).slice(0, 4);
+  return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).slice(0, 5);
 }
 
 function parseSelectedIds(raw?: string | null): string[] {
@@ -140,34 +139,44 @@ export function ComparePageClient() {
     [searchParams],
   );
 
-  const initialSelectedIds = useMemo(() => {
-    if (facilitiesFromQuery.length > 0) return facilitiesFromQuery;
-    const fallback = isFavoritesComparison
-      ? normalizeSelectedIds(loadFavoriteFacilities())
-      : normalizeSelectedIds(loadCompareSelection());
-    return fallback;
-  }, [facilitiesFromQuery, isFavoritesComparison]);
-
   const [decisionResponse, setDecisionResponse] = useState<DecisionEngineResponse | null>(null);
   const [comparisonContext, setComparisonContext] = useState<PatientComparisonContextResponse | null>(null);
   const [comparisonTable, setComparisonTable] = useState<FacilityParameterComparison | null>(null);
-  const [selectedFacilityIds, setSelectedFacilityIds] = useState<string[]>(initialSelectedIds);
+  const [selectedFacilityIds, setSelectedFacilityIds] = useState<string[]>(facilitiesFromQuery);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllParameters, setShowAllParameters] = useState(false);
   const [activeEvidencePayload, setActiveEvidencePayload] = useState<EvidenceDetailsPayload | null>(null);
   const [mobileFocusedFacilityId, setMobileFocusedFacilityId] = useState<string>("");
-  const [patientCaseId] = useState<number | null>(() => loadPatientCaseId());
 
   const searchParamsString = searchParams.toString();
   const returnTo = searchParams.get("returnTo") || "/results";
   const relationship = relationshipCopy(String(searchParams.get("relationship") || state.relationship || "your loved one"));
   const naturalLanguageQuery = String(searchParams.get("notes") || state.notes || "").trim();
   const decisionRequestPayload = useMemo(
-    () => ({ patient_case_id: patientCaseId || undefined, questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
-    [patientCaseId, state, naturalLanguageQuery],
+    () => ({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
+    [state, naturalLanguageQuery],
   );
   const selectedIdsKey = useMemo(() => JSON.stringify(decisionRequestPayload), [decisionRequestPayload]);
+
+  useEffect(() => {
+    setSelectedFacilityIds((current) => {
+      if (facilitiesFromQuery.length > 0) {
+        const same =
+          current.length === facilitiesFromQuery.length &&
+          current.every((value, index) => value === facilitiesFromQuery[index]);
+        return same ? current : facilitiesFromQuery;
+      }
+      if (current.length > 0) {
+        return current;
+      }
+
+      const fallback = isFavoritesComparison
+        ? normalizeSelectedIds(loadFavoriteFacilities())
+        : normalizeSelectedIds(loadCompareSelection());
+      return fallback;
+    });
+  }, [facilitiesFromQuery, isFavoritesComparison]);
 
   useEffect(() => {
     if (isFavoritesComparison) {
@@ -345,16 +354,14 @@ export function ComparePageClient() {
     });
   }, [comparisonRows, decisionResponse?.patient_needs_profile, relevantParameterIds]);
 
-  const defaultComparisonRows = useMemo(() => relevantComparisonRows.slice(0, 10), [relevantComparisonRows]);
-
   const priorityRelevantRows = useMemo(
-    () => defaultComparisonRows.filter((row) => isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId)),
-    [decisionResponse?.patient_needs_profile, defaultComparisonRows],
+    () => relevantComparisonRows.filter((row) => isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId)),
+    [decisionResponse?.patient_needs_profile, relevantComparisonRows],
   );
 
   const recommendedRelevantRows = useMemo(
-    () => defaultComparisonRows.filter((row) => !isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId)),
-    [decisionResponse?.patient_needs_profile, defaultComparisonRows],
+    () => relevantComparisonRows.filter((row) => !isPatientNeed(decisionResponse?.patient_needs_profile, row.parameterId)),
+    [decisionResponse?.patient_needs_profile, relevantComparisonRows],
   );
 
   const whatToVerify = useMemo(() => {
@@ -584,7 +591,7 @@ export function ComparePageClient() {
               onClick={() => setShowAllParameters((current) => !current)}
               className="rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]"
             >
-              {showAllParameters ? "Show 10 key factors" : `Show all ${fullParameterIds.length || 59} parameters`}
+              {showAllParameters ? "Show patient-relevant parameters" : `View all ${fullParameterIds.length || 59} parameters`}
             </button>
           </div>
 
@@ -667,7 +674,7 @@ export function ComparePageClient() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#24425e]">Patient-relevant comparison</p>
-              <p className="mt-2 text-sm text-[#4a6076]">The 10 factors most likely to shape this family decision. UNKNOWN remains neutral and never becomes NO.</p>
+              <p className="mt-2 text-sm text-[#4a6076]">Selected patient needs and OPTIME-recommended relevant parameters appear first. UNKNOWN remains neutral and never becomes NO.</p>
             </div>
             <p className="text-xs text-[#4a6076]">Required and high-priority needs stay visible even when facilities are tied.</p>
           </div>

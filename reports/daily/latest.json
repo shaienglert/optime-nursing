@@ -1,0 +1,1981 @@
+{
+  "executive_questions": {
+    "better_today": [
+      "Florida coverage now 64/67 counties (95.5%).",
+      "Recommendation release gate: UNKNOWN; advisor agreement 52.0%."
+    ],
+    "new_knowledge_today": [
+      "Knowledge objects: 2634",
+      "Evidence objects: 3056"
+    ],
+    "problems_today": [
+      "Statewide county coverage incomplete (64/67).",
+      "Missing information rows remain high: 585."
+    ],
+    "remaining_work": [
+      "Complete 67/67 county coverage.",
+      "Reduce pending verification backlog.",
+      "Close highest-priority knowledge gaps."
+    ],
+    "tomorrow_priorities": [
+      "Finish remaining Florida county discovery coverage.",
+      "Process pending verification queue for newly discovered communities.",
+      "Resolve open high-severity supervisor incidents.",
+      "Increase provider intelligence enrichment depth.",
+      "Link outcome miss-analysis to recommendation calibration updates."
+    ]
+  },
+  "discovery": {
+    "total_communities": 784,
+    "verified_communities": 494,
+    "pending_verification": 290,
+    "newly_discovered": 778,
+    "updated": 4,
+    "closed": 137,
+    "duplicates_merged": 2,
+    "counties_covered": 64,
+    "counties_total": 67,
+    "coverage_pct": 95.5
+  },
+  "provider_intelligence": {
+    "profiles_enriched": 54,
+    "ownership_changes": 0,
+    "inspection_updates": 67,
+    "licensing_updates": 0,
+    "cms_updates": 54,
+    "staffing_updates": 56,
+    "pricing_updates": 0,
+    "website_changes": 0,
+    "new_penalties_detected": 0,
+    "new_awards_detected": 0
+  },
+  "knowledge_growth": {
+    "knowledge_created": 220,
+    "knowledge_updated": 132,
+    "evidence_reviewed": 275,
+    "evidence_verified": 198,
+    "decision_rules": 8,
+    "relationships": 100,
+    "gaps_closed": 33,
+    "clinical_guidelines_added": 54,
+    "research_papers_reviewed": 54,
+    "best_practices_added": 8
+  },
+  "research_activity": {
+    "knowledge_centers": [
+      {
+        "center": "Clinical Geriatrics",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Nursing Care",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Dementia & Memory Care",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Parkinson's Disease",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Stroke & Neurological Rehabilitation",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Falls & Mobility",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Medication Management",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Nutrition & Hydration",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Psychology of Aging",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Social Work & Family Support",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Sociology of Aging",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Decision Psychology",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Activities & Engagement",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Quality of Life",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Palliative & End-of-Life Care",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Provider Intelligence",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Regulatory & Compliance",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Senior Living Operations",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Transition & Adaptation",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      },
+      {
+        "center": "Institutional Research",
+        "current_status": "ACTIVE",
+        "research_completed": 0,
+        "research_in_progress": 0,
+        "knowledge_gaps_discovered": 0,
+        "knowledge_gaps_closed": 0,
+        "current_priority": "No measurable center-specific progress data available in current repository telemetry."
+      }
+    ]
+  },
+  "authority_status": {
+    "overall_status": "PARTIAL",
+    "answer": "OPTIME is improving its evidence base, but publish/index/discover/cite measurement is still only partially instrumented.",
+    "last_verified_utc": "2026-07-20T15:26:03.734742+00:00",
+    "stages": {
+      "DATA": {
+        "status": "PARTIAL",
+        "metrics": {
+          "TOTAL_CANONICAL_FACILITIES": 784,
+          "IDENTITY_VERIFIED": 494,
+          "IDENTITY_UNRESOLVED": 290,
+          "CMS_DATA_COVERAGE": 95.5,
+          "STAFFING_COVERAGE": "UNKNOWN",
+          "INSPECTION_COVERAGE": "UNKNOWN",
+          "PENALTY_COVERAGE": "UNKNOWN",
+          "OWNERSHIP_COVERAGE": "UNKNOWN",
+          "REHAB_EVIDENCE_COVERAGE": "UNKNOWN",
+          "PRICING_EVIDENCE_COVERAGE": "UNKNOWN",
+          "ACTIVITY_EVIDENCE_COVERAGE": "UNKNOWN",
+          "LANGUAGE_EVIDENCE_COVERAGE": "UNKNOWN",
+          "DIET_FOOD_EVIDENCE_COVERAGE": "UNKNOWN",
+          "IMPORTANT_MISSING_DATA": 585
+        },
+        "evidence": [
+          "Discovery coverage is incomplete across the statewide universe.",
+          "Several evidence domains are not directly measured in current telemetry."
+        ],
+        "last_verified_utc": "2026-07-20T15:26:03.734757+00:00",
+        "blockers": [],
+        "next_action": "Expand canonical coverage and preserve UNKNOWN for unmeasured evidence domains."
+      },
+      "KNOWLEDGE": {
+        "status": "PARTIAL",
+        "metrics": {
+          "TOTAL_CLAIMS": 2634,
+          "VERIFIED_CLAIMS": 198,
+          "UNKNOWN_CLAIMS": 585,
+          "STALE_CLAIMS": 3,
+          "CONTRADICTED_CLAIMS": 2,
+          "UNRESOLVED_IDENTITY_CLAIMS": 290,
+          "CLAIMS_WITH_SOURCE_PROVENANCE": 198,
+          "CLAIMS_WITH_SOURCE_DATE": "UNKNOWN",
+          "CLAIMS_WITH_LAST_VERIFIED_TIMESTAMP": "UNKNOWN",
+          "HIGH_IMPACT_KNOWLEDGE_GAPS": 5,
+          "EVIDENCE_QUALITY": 198
+        },
+        "evidence": [
+          "Knowledge coverage is measured, but claim-level provenance is not fully instrumented in this report path.",
+          "Unknown and stale knowledge cannot be conflated with verified knowledge."
+        ],
+        "last_verified_utc": "2026-07-20T15:26:03.734764+00:00",
+        "blockers": [],
+        "next_action": "Close provenance gaps and add claim-level freshness timestamps."
+      },
+      "VALIDATE": {
+        "status": "PASS",
+        "metrics": {
+          "GOLDEN_CASES_TOTAL": 1,
+          "GOLDEN_CASES_PASSING": 1,
+          "FULLY_TRACEABLE_DECISIONS": 5,
+          "REGRESSION_FAILURES": 1,
+          "UNKNOWN_GOVERNANCE_FAILURES": 1,
+          "IDENTITY_COLLISION_FAILURES": 0,
+          "SCORE_RECONCILIATION_FAILURES": 0,
+          "CANDIDATE_FUNNEL_RECONCILIATION_FAILURES": 0,
+          "POST_STROKE_MIAMI_001": "PASS",
+          "PROFESSIONAL_VALIDATION": "UNKNOWN",
+          "EXTERNAL_VALIDATION_STATUS": "PARTIAL"
+        },
+        "evidence": [
+          "Professional release gate is not yet PASS.",
+          "External validation is still partial and not independently connected here."
+        ],
+        "last_verified_utc": "2026-07-20T15:26:03.734768+00:00",
+        "blockers": [],
+        "next_action": "Resolve validation gaps and keep the golden case permanently visible."
+      },
+      "PUBLISH": {
+        "status": "PARTIAL",
+        "metrics": {
+          "EXPECTED_PUBLIC_FACILITY_PROFILES": "UNKNOWN",
+          "ACTUAL_PUBLIC_FACILITY_PROFILES": "UNKNOWN",
+          "WORKING_PROFILE_ROUTES": "UNKNOWN",
+          "BROKEN_PROFILE_ROUTES": "UNKNOWN",
+          "PROFILES_WITH_CANONICAL_URL": "UNKNOWN",
+          "PROFILES_WITH_SOURCE_PROVENANCE": "UNKNOWN",
+          "PROFILES_WITH_LAST_UPDATED": "UNKNOWN",
+          "PROFILES_WITH_STRUCTURED_DATA": "UNKNOWN",
+          "THIN_OR_INCOMPLETE_PROFILES": "UNKNOWN"
+        },
+        "evidence": [
+          "Route existence is not the same as a useful, published profile surface.",
+          "No repo-level facility publication audit is yet wired into this daily report."
+        ],
+        "last_verified_utc": "2026-07-20T15:26:03.734772+00:00",
+        "blockers": [],
+        "next_action": "Measure actual published profile surfaces before claiming public authority coverage."
+      },
+      "INDEX": {
+        "status": "PARTIAL",
+        "metrics": {
+          "ROBOTS_TXT": "NOT_FOUND",
+          "SITEMAP_STATUS": "NOT_FOUND",
+          "SITEMAP_URL_COUNT": 0,
+          "EXPECTED_INDEXABLE_URLS": "UNKNOWN",
+          "TECHNICALLY_INDEXABLE_URLS": "UNKNOWN",
+          "BLOCKED_URLS": "UNKNOWN",
+          "STRUCTURED_DATA_VALID": "UNKNOWN",
+          "STRUCTURED_DATA_INVALID": "UNKNOWN",
+          "CANONICAL_ERRORS": "UNKNOWN",
+          "GOOGLE_INDEX_STATUS": "UNVERIFIED_EXTERNAL"
+        },
+        "evidence": [
+          "No robots.txt or sitemap.xml evidence is present in the repository root.",
+          "Google Search Console is not connected here, so indexed counts cannot be asserted."
+        ],
+        "last_verified_utc": "2026-07-20T15:26:03.734775+00:00",
+        "blockers": [],
+        "next_action": "Add a verifiable sitemap/robots/index audit and connect external search telemetry if available."
+      },
+      "DISCOVER": {
+        "status": "NOT_YET_MEASURED",
+        "metrics": {
+          "TRACKED_QUERIES": [
+            "best nursing homes in Miami",
+            "best nursing homes Miami-Dade",
+            "best nursing home for stroke rehabilitation in Miami",
+            "best skilled nursing facilities Miami",
+            "nursing homes with strong staffing in Miami"
+          ],
+          "SERP_MONITORING": "NOT_CONFIGURED",
+          "OPTIME_VISIBILITY": "UNKNOWN",
+          "RANKING_CHANGES": "UNKNOWN",
+          "NEW_RANKING_PAGES": "UNKNOWN",
+          "LOST_RANKING_PAGES": "UNKNOWN",
+          "COMPETITORS_OUTRANKING_OPTIME": "UNKNOWN"
+        },
+        "evidence": [
+          "No verified organic/SERP monitoring data is connected in the current repo state."
+        ],
+        "last_verified_utc": "2026-07-20T15:26:03.734778+00:00",
+        "blockers": [],
+        "next_action": "Configure search monitoring before asserting discoverability performance."
+      },
+      "CITE": {
+        "status": "NOT_CONFIGURED",
+        "metrics": {
+          "CHATGPT_MENTIONS": "UNKNOWN",
+          "CHATGPT_CITATIONS": "UNKNOWN",
+          "GEMINI_MENTIONS": "UNKNOWN",
+          "GEMINI_CITATIONS": "UNKNOWN",
+          "PERPLEXITY_MENTIONS": "UNKNOWN",
+          "PERPLEXITY_CITATIONS": "UNKNOWN",
+          "CLAUDE_MENTIONS": "UNKNOWN",
+          "CLAUDE_CITATIONS": "UNKNOWN",
+          "CITED_OPTIME_URLS": "UNKNOWN",
+          "COMPETITOR_SOURCES_CITED_INSTEAD": "UNKNOWN",
+          "QUERY_LEVEL_CITATION_RATE": "UNKNOWN",
+          "AI_CITATION_MONITORING": "NOT_CONFIGURED"
+        },
+        "evidence": [
+          "No automated external AI citation monitoring is connected in this daily report pipeline."
+        ],
+        "last_verified_utc": "2026-07-20T15:26:03.734781+00:00",
+        "blockers": [],
+        "next_action": "Reuse the existing multi-AI benchmark surfaces if access is configured; otherwise keep this as UNKNOWN."
+      },
+      "LEARN": {
+        "status": "PARTIAL",
+        "metrics": {
+          "KNOWLEDGE_GAPS_FROM_USER_QUERIES": 5,
+          "FACILITIES_WITH_HIGH_DEMAND_BUT_LOW_EVIDENCE": 290,
+          "SEARCH_QUERIES_WITH_NO_STRONG_OPTIME_PAGE": "UNKNOWN",
+          "AI_QUERIES_WHERE_COMPETITORS_ARE_CITED_INSTEAD": "UNKNOWN",
+          "STALE_HIGH_IMPACT_CLAIMS": 3,
+          "DECISION_REGRESSION_PATTERNS": null,
+          "TOP_AUTHORITY_PRIORITIES": [
+            "Close remaining statewide coverage gaps.",
+            "Instrument publication/index audits for real profile surfaces.",
+            "Connect discoverability and citation monitoring if available."
+          ]
+        },
+        "evidence": [
+          "Learning signals are available, but not all external discovery/citation feeds are connected."
+        ],
+        "last_verified_utc": "2026-07-20T15:26:03.734785+00:00",
+        "blockers": [],
+        "next_action": "Prioritize evidence gaps, publication coverage, and traceability before model changes."
+      }
+    },
+    "top_authority_gaps_today": [
+      "External discoverability is not yet measured.",
+      "AI citation monitoring is not configured.",
+      "Publish/index audits for facility profiles are not yet instrumented.",
+      "Several evidence domains remain UNKNOWN in the current telemetry.",
+      "Professional validation is still partial."
+    ]
+  },
+  "agent_control_tower": {
+    "summary": {
+      "total_known_agents": 15,
+      "automatic_agents": 11,
+      "actually_worked_last_24h": 6,
+      "ran_no_new_value_last_24h": 5,
+      "did_not_run_last_24h": 0,
+      "failed_last_24h": 0,
+      "unknown_status": 4
+    },
+    "rows": [
+      {
+        "agent_id": "clinical_knowledge",
+        "name": "Clinical Knowledge Agent",
+        "purpose": "Maintain trusted clinical capability knowledge for post-acute and geriatric needs.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "CMS",
+          "Clinical guidelines",
+          "Care compare"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "CMS",
+          "Clinical guidelines",
+          "Care compare"
+        ],
+        "last_known_run": "2026-07-20 13:54:16.500205",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "WORKED - CREATED NEW VALUE",
+        "run_status": "READY",
+        "worked": "YES",
+        "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines.",
+        "items_examined": 29,
+        "items_changed": 54,
+        "new_outputs": [
+          "54 knowledge record(s)"
+        ],
+        "new_findings": 54,
+        "new_value_created": "Created 54 knowledge record(s).",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "backend/optime_nursing.db:agent_knowledge_records",
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "senior_living_research",
+        "name": "Senior Living Research Agent",
+        "purpose": "Track market, regulatory, and provider trend knowledge.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "State inspections",
+          "Official websites",
+          "Public records"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "State inspections",
+          "Official websites",
+          "Public records"
+        ],
+        "last_known_run": "2026-07-20 14:56:02.442574",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "WORKED - CREATED NEW VALUE",
+        "run_status": "READY",
+        "worked": "YES",
+        "what_it_did": "Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously.",
+        "items_examined": 30,
+        "items_changed": 1,
+        "new_outputs": [
+          "1 knowledge record(s)"
+        ],
+        "new_findings": 1,
+        "new_value_created": "Created 1 knowledge record(s).",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "backend/optime_nursing.db:agent_knowledge_records",
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "resident_needs",
+        "name": "Resident Needs Intelligence Agent",
+        "purpose": "Maintain structured resident-needs knowledge for deterministic matching.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Questionnaire",
+          "Adaptive responses",
+          "Outcome patterns"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Questionnaire",
+          "Adaptive responses",
+          "Outcome patterns"
+        ],
+        "last_known_run": "2026-07-20 13:54:16.692488",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "RAN - NO NEW FINDINGS",
+        "run_status": "READY",
+        "worked": "NO",
+        "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously.",
+        "items_examined": 29,
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No new verifiable output in the last 24h.",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "provider_intelligence",
+        "name": "Provider Intelligence Agent",
+        "purpose": "Maintain verified provider capability and status knowledge.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Provider portal",
+          "CMS",
+          "State inspections"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Provider portal",
+          "CMS",
+          "State inspections"
+        ],
+        "last_known_run": "2026-07-20 13:54:16.978122",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "WORKED - CREATED NEW VALUE",
+        "run_status": "READY",
+        "worked": "YES",
+        "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+        "items_examined": 29,
+        "items_changed": 54,
+        "new_outputs": [
+          "54 knowledge record(s)"
+        ],
+        "new_findings": 54,
+        "new_value_created": "Created 54 knowledge record(s).",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "backend/optime_nursing.db:agent_knowledge_records",
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "activities_intelligence",
+        "name": "Activities Intelligence Agent",
+        "purpose": "Maintain knowledge of activity programs and engagement support.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Facility metadata",
+          "Public calendars",
+          "Provider updates"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Facility metadata",
+          "Public calendars",
+          "Provider updates"
+        ],
+        "last_known_run": "2026-07-20 13:54:16.987749",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "RAN - NO NEW FINDINGS",
+        "run_status": "READY",
+        "worked": "NO",
+        "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines.",
+        "items_examined": 29,
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No new verifiable output in the last 24h.",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "nutrition_intelligence",
+        "name": "Nutrition Intelligence Agent",
+        "purpose": "Maintain dietary capability knowledge for medical and preference fit.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Facility capabilities",
+          "Clinical guidance",
+          "Provider verification"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Facility capabilities",
+          "Clinical guidance",
+          "Provider verification"
+        ],
+        "last_known_run": "2026-07-20 13:54:16.997591",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "RAN - NO NEW FINDINGS",
+        "run_status": "READY",
+        "worked": "NO",
+        "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines.",
+        "items_examined": 29,
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No new verifiable output in the last 24h.",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "family_experience",
+        "name": "Family Experience Intelligence Agent",
+        "purpose": "Maintain family-facing experience signals grounded in verified sources.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Public reviews",
+          "Family surveys",
+          "Outcome feedback"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Public reviews",
+          "Family surveys",
+          "Outcome feedback"
+        ],
+        "last_known_run": "2026-07-20 14:56:02.453636",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "RAN - NO NEW FINDINGS",
+        "run_status": "READY",
+        "worked": "NO",
+        "what_it_did": "Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.",
+        "items_examined": 30,
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No new verifiable output in the last 24h.",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "outcome_learning",
+        "name": "Outcome Learning Agent",
+        "purpose": "Maintain anonymized outcome knowledge to improve future fit quality.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Resident outcomes",
+          "Validation runs",
+          "Cohort analytics"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Resident outcomes",
+          "Validation runs",
+          "Cohort analytics"
+        ],
+        "last_known_run": "2026-07-20 13:54:17.013042",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "RAN - NO NEW FINDINGS",
+        "run_status": "READY",
+        "worked": "NO",
+        "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts.",
+        "items_examined": 29,
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No new verifiable output in the last 24h.",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "matching_improvement",
+        "name": "Matching Improvement Agent",
+        "purpose": "Maintain policy-safe improvements for deterministic recommendation behavior.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Simulation audits",
+          "Validation reports",
+          "Outcome deltas"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Simulation audits",
+          "Validation reports",
+          "Outcome deltas"
+        ],
+        "last_known_run": "2026-07-20 15:26:02.544690",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "WORKED - CREATED NEW VALUE",
+        "run_status": "READY",
+        "worked": "YES",
+        "what_it_did": "Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts.",
+        "items_examined": 35,
+        "items_changed": 15,
+        "new_outputs": [
+          "15 knowledge record(s)"
+        ],
+        "new_findings": 15,
+        "new_value_created": "Created 15 knowledge record(s).",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "backend/optime_nursing.db:agent_knowledge_records",
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "knowledge_graph",
+        "name": "Knowledge Graph Agent",
+        "purpose": "Maintain structured relationship knowledge across care, evidence, and outcomes.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Knowledge graph",
+          "Evidence links",
+          "Agent outputs"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Knowledge graph",
+          "Evidence links",
+          "Agent outputs"
+        ],
+        "last_known_run": "2026-07-20 13:54:17.476770",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "WORKED - CREATED NEW VALUE",
+        "run_status": "READY",
+        "worked": "YES",
+        "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Link new knowledge objects into the knowledge graph.",
+        "items_examined": 29,
+        "items_changed": 54,
+        "new_outputs": [
+          "54 knowledge record(s)"
+        ],
+        "new_findings": 54,
+        "new_value_created": "Created 54 knowledge record(s).",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "backend/optime_nursing.db:agent_knowledge_records",
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "data_quality",
+        "name": "Data Quality & Trust Agent",
+        "purpose": "Maintain data trust, freshness, and contradiction tracking knowledge.",
+        "entry_point": "backend/app/services/agent_knowledge_reports.py",
+        "trigger": "FastAPI startup background refresh loop",
+        "schedule": "Every 15 minutes while the FastAPI process is alive",
+        "inputs": [
+          "Data quality dashboard",
+          "Conflict report",
+          "Source reliability"
+        ],
+        "expected_outputs": [
+          "Agent knowledge snapshot",
+          "Refresh event",
+          "Prepared knowledge report JSON"
+        ],
+        "dependencies": [
+          "Data quality dashboard",
+          "Conflict report",
+          "Source reliability"
+        ],
+        "last_known_run": "2026-07-20 15:26:02.549143",
+        "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "current_status": "WORKED - CREATED NEW VALUE",
+        "run_status": "READY",
+        "worked": "YES",
+        "what_it_did": "Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+        "items_examined": 35,
+        "items_changed": 1,
+        "new_outputs": [
+          "1 knowledge record(s)"
+        ],
+        "new_findings": 1,
+        "new_value_created": "Created 1 knowledge record(s).",
+        "failures": [],
+        "evidence": [
+          "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+          "backend/optime_nursing.db:agent_knowledge_refresh_events",
+          "backend/optime_nursing.db:agent_knowledge_records",
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": true
+      },
+      {
+        "agent_id": "chief_ai_supervisor",
+        "name": "Chief AI Supervisor",
+        "purpose": "Monitor agent health, readiness, incidents, and remediation priorities.",
+        "entry_point": "backend/app/services/chief_ai_supervisor.py",
+        "trigger": "Manual API/supervisor invocation",
+        "schedule": "MANUAL_ONLY",
+        "inputs": [
+          "All expert agents"
+        ],
+        "expected_outputs": [
+          "Supervisor incidents",
+          "Readiness metrics",
+          "Refresh decisions"
+        ],
+        "dependencies": [
+          "All expert agents"
+        ],
+        "last_known_run": "2026-07-18T16:46:28.476Z",
+        "activity_evidence_source": "reports/report_registry.json",
+        "output_evidence_source": "reports/agent_task_queue.md",
+        "failure_evidence_source": "UNKNOWN",
+        "current_status": "MANUAL_ONLY",
+        "run_status": "MANUAL_ONLY",
+        "worked": "UNKNOWN",
+        "what_it_did": "Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+        "items_examined": "UNKNOWN",
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No runtime evidence table is connected for this agent.",
+        "failures": [],
+        "evidence": [
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": false
+      },
+      {
+        "agent_id": "clinical_evidence",
+        "name": "Clinical Evidence Agent",
+        "purpose": "Discover and validate trusted evidence for clinical and recommendation claims.",
+        "entry_point": "docs/agent_specs/evidence_agent_spec.md",
+        "trigger": "Specified only",
+        "schedule": "CONFIGURED_NOT_RUNNING",
+        "inputs": [
+          "Clinical Knowledge Agent",
+          "Outcome Learning Agent",
+          "Knowledge Graph Agent",
+          "Narrative Intelligence Agent"
+        ],
+        "expected_outputs": [
+          "Evidence objects",
+          "Citation verification",
+          "Evidence gap prioritization"
+        ],
+        "dependencies": [
+          "Clinical Knowledge Agent",
+          "Outcome Learning Agent",
+          "Knowledge Graph Agent",
+          "Narrative Intelligence Agent"
+        ],
+        "last_known_run": "UNKNOWN",
+        "activity_evidence_source": "reports/agent_task_queue.md",
+        "output_evidence_source": "reports/agent_task_queue.md",
+        "failure_evidence_source": "UNKNOWN",
+        "current_status": "UNKNOWN",
+        "run_status": "CONFIGURED_NOT_RUNNING",
+        "worked": "UNKNOWN",
+        "what_it_did": "Current queued task: Verify newly discovered entities and changed facts.",
+        "items_examined": "UNKNOWN",
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No runtime evidence table is connected for this agent.",
+        "failures": [],
+        "evidence": [
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": false
+      },
+      {
+        "agent_id": "competitive_intelligence",
+        "name": "Competitive Intelligence Agent",
+        "purpose": "Identify market gaps, provider patterns, and demand opportunities.",
+        "entry_point": "docs/agent_specs/competitive_intelligence_agent_spec.md",
+        "trigger": "Specified only",
+        "schedule": "CONFIGURED_NOT_RUNNING",
+        "inputs": [
+          "Provider Intelligence Agent",
+          "Chief AI Supervisor",
+          "Data Quality & Trust Agent"
+        ],
+        "expected_outputs": [
+          "Market reports",
+          "Demand signals",
+          "Coverage opportunities"
+        ],
+        "dependencies": [
+          "Provider Intelligence Agent",
+          "Chief AI Supervisor",
+          "Data Quality & Trust Agent"
+        ],
+        "last_known_run": "2026-07-17T03:04:38.265Z",
+        "activity_evidence_source": "reports/report_registry.json",
+        "output_evidence_source": "reports/agent_task_queue.md",
+        "failure_evidence_source": "UNKNOWN",
+        "current_status": "UNKNOWN",
+        "run_status": "CONFIGURED_NOT_RUNNING",
+        "worked": "UNKNOWN",
+        "what_it_did": "Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+        "items_examined": "UNKNOWN",
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No runtime evidence table is connected for this agent.",
+        "failures": [],
+        "evidence": [
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": false
+      },
+      {
+        "agent_id": "narrative_intelligence",
+        "name": "Narrative Intelligence Agent",
+        "purpose": "Produce explanation quality improvements and advisor-ready summaries from prepared knowledge.",
+        "entry_point": "docs/agent_specs/narrative_intelligence_agent_spec.md",
+        "trigger": "Specified only",
+        "schedule": "CONFIGURED_NOT_RUNNING",
+        "inputs": [
+          "Clinical Knowledge Agent",
+          "Provider Intelligence Agent",
+          "Clinical Evidence Agent",
+          "Knowledge Graph Agent",
+          "Matching Improvement Agent"
+        ],
+        "expected_outputs": [
+          "Executive summaries",
+          "Narrative improvements",
+          "Explanation quality checks"
+        ],
+        "dependencies": [
+          "Clinical Knowledge Agent",
+          "Provider Intelligence Agent",
+          "Clinical Evidence Agent",
+          "Knowledge Graph Agent",
+          "Matching Improvement Agent"
+        ],
+        "last_known_run": "2026-07-18T16:46:28.456Z",
+        "activity_evidence_source": "reports/report_registry.json",
+        "output_evidence_source": "reports/agent_task_queue.md",
+        "failure_evidence_source": "UNKNOWN",
+        "current_status": "UNKNOWN",
+        "run_status": "CONFIGURED_NOT_RUNNING",
+        "worked": "UNKNOWN",
+        "what_it_did": "Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.",
+        "items_examined": "UNKNOWN",
+        "items_changed": 0,
+        "new_outputs": [
+          "No new knowledge records"
+        ],
+        "new_findings": 0,
+        "new_value_created": "No runtime evidence table is connected for this agent.",
+        "failures": [],
+        "evidence": [
+          "reports/report_registry.json",
+          "reports/agent_task_queue.md"
+        ],
+        "automatic": false
+      }
+    ],
+    "attention": [
+      {
+        "agent": "Chief AI Supervisor",
+        "why": "MANUAL_ONLY",
+        "impact": "No runtime evidence table is connected for this agent.",
+        "next_action": "Current queued task: Discover new Florida communities and provider changes from trusted sources."
+      },
+      {
+        "agent": "Clinical Evidence Agent",
+        "why": "UNKNOWN",
+        "impact": "No runtime evidence table is connected for this agent.",
+        "next_action": "Current queued task: Verify newly discovered entities and changed facts."
+      },
+      {
+        "agent": "Competitive Intelligence Agent",
+        "why": "UNKNOWN",
+        "impact": "No runtime evidence table is connected for this agent.",
+        "next_action": "Current queued task: Discover new Florida communities and provider changes from trusted sources."
+      },
+      {
+        "agent": "Narrative Intelligence Agent",
+        "why": "UNKNOWN",
+        "impact": "No runtime evidence table is connected for this agent.",
+        "next_action": "Current queued task: Convert prepared institutional knowledge into advisor-ready guidance."
+      }
+    ],
+    "achievements": {
+      "NEW_EVIDENCE_FOUND": 179,
+      "FACTS_VERIFIED": 179,
+      "UNKNOWN_FIELDS_RESOLVED": "NOT_MEASURED",
+      "CONTRADICTIONS_FOUND": "NOT_MEASURED",
+      "FACILITIES_ENRICHED": "NOT_MEASURED",
+      "STALE_DATA_REFRESHED": 5,
+      "GOLDEN_CASES_PASSED": "NOT_MEASURED",
+      "REGRESSIONS_FOUND": "NOT_MEASURED",
+      "NEW_AI_CITATIONS": "NOT_CONFIGURED"
+    }
+  },
+  "organic_ai_authority": {
+    "agent_key": "organic_ai_authority",
+    "agent_name": "Organic / SEO / GEO / AI Authority System",
+    "domain": "Organic search and AI discoverability",
+    "mission": "Improve OPTIME discoverability and authority across search and AI answer engines.",
+    "entry_point": "docs/GEO_STRATEGY.md",
+    "trigger": "Strategy and benchmark scaffolding only",
+    "schedule": "NOT_CONFIGURED",
+    "dependencies": [
+      "Published facility/profile surfaces",
+      "Structured data",
+      "External search/citation telemetry"
+    ],
+    "expected_outputs": [
+      "Indexability audits",
+      "SERP monitoring",
+      "AI citation monitoring"
+    ],
+    "current_status": "PARTIAL",
+    "last_verified_run": "UNVERIFIED_EXTERNAL",
+    "worked_last_24h": "UNKNOWN",
+    "what_it_actually_did": "Strategy docs and multi-AI benchmark scaffolding exist, but automated organic/citation monitoring is not configured.",
+    "new_result_created": "No verified external search or citation result was collected automatically.",
+    "evidence": [
+      "docs/GEO_STRATEGY.md",
+      "reports/MULTI_AI_BENCHMARK_SYSTEM_REPORT.md"
+    ],
+    "google_visibility": "UNVERIFIED_EXTERNAL",
+    "ai_citation_monitoring": "NOT_CONFIGURED"
+  },
+  "recommendation_engine": {
+    "recommendation_improvements": 0,
+    "reasoning_improvements": 8,
+    "confidence_improvements": 54,
+    "validation_results": {
+      "release_gate": "UNKNOWN",
+      "advisor_agreement_pct": 52.0,
+      "top3_visit_pct": 100.0,
+      "top3_movein_pct": 100.0
+    },
+    "regression_tests": "UNKNOWN"
+  },
+  "agent_activity": [
+    {
+      "agent_id": "clinical_knowledge",
+      "name": "Clinical Knowledge Agent",
+      "purpose": "Maintain trusted clinical capability knowledge for post-acute and geriatric needs.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "CMS",
+        "Clinical guidelines",
+        "Care compare"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "CMS",
+        "Clinical guidelines",
+        "Care compare"
+      ],
+      "last_known_run": "2026-07-20 13:54:16.500205",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "WORKED - CREATED NEW VALUE",
+      "run_status": "READY",
+      "worked": "YES",
+      "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines.",
+      "items_examined": 29,
+      "items_changed": 54,
+      "new_outputs": [
+        "54 knowledge record(s)"
+      ],
+      "new_findings": 54,
+      "new_value_created": "Created 54 knowledge record(s).",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "backend/optime_nursing.db:agent_knowledge_records",
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "senior_living_research",
+      "name": "Senior Living Research Agent",
+      "purpose": "Track market, regulatory, and provider trend knowledge.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "State inspections",
+        "Official websites",
+        "Public records"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "State inspections",
+        "Official websites",
+        "Public records"
+      ],
+      "last_known_run": "2026-07-20 14:56:02.442574",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "WORKED - CREATED NEW VALUE",
+      "run_status": "READY",
+      "worked": "YES",
+      "what_it_did": "Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously.",
+      "items_examined": 30,
+      "items_changed": 1,
+      "new_outputs": [
+        "1 knowledge record(s)"
+      ],
+      "new_findings": 1,
+      "new_value_created": "Created 1 knowledge record(s).",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "backend/optime_nursing.db:agent_knowledge_records",
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "resident_needs",
+      "name": "Resident Needs Intelligence Agent",
+      "purpose": "Maintain structured resident-needs knowledge for deterministic matching.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Questionnaire",
+        "Adaptive responses",
+        "Outcome patterns"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Questionnaire",
+        "Adaptive responses",
+        "Outcome patterns"
+      ],
+      "last_known_run": "2026-07-20 13:54:16.692488",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "RAN - NO NEW FINDINGS",
+      "run_status": "READY",
+      "worked": "NO",
+      "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Execute domain discovery and verification tasks continuously.",
+      "items_examined": 29,
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No new verifiable output in the last 24h.",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "provider_intelligence",
+      "name": "Provider Intelligence Agent",
+      "purpose": "Maintain verified provider capability and status knowledge.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Provider portal",
+        "CMS",
+        "State inspections"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Provider portal",
+        "CMS",
+        "State inspections"
+      ],
+      "last_known_run": "2026-07-20 13:54:16.978122",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "WORKED - CREATED NEW VALUE",
+      "run_status": "READY",
+      "worked": "YES",
+      "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+      "items_examined": 29,
+      "items_changed": 54,
+      "new_outputs": [
+        "54 knowledge record(s)"
+      ],
+      "new_findings": 54,
+      "new_value_created": "Created 54 knowledge record(s).",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "backend/optime_nursing.db:agent_knowledge_records",
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "activities_intelligence",
+      "name": "Activities Intelligence Agent",
+      "purpose": "Maintain knowledge of activity programs and engagement support.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Facility metadata",
+        "Public calendars",
+        "Provider updates"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Facility metadata",
+        "Public calendars",
+        "Provider updates"
+      ],
+      "last_known_run": "2026-07-20 13:54:16.987749",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "RAN - NO NEW FINDINGS",
+      "run_status": "READY",
+      "worked": "NO",
+      "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines.",
+      "items_examined": 29,
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No new verifiable output in the last 24h.",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "nutrition_intelligence",
+      "name": "Nutrition Intelligence Agent",
+      "purpose": "Maintain dietary capability knowledge for medical and preference fit.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Facility capabilities",
+        "Clinical guidance",
+        "Provider verification"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Facility capabilities",
+        "Clinical guidance",
+        "Provider verification"
+      ],
+      "last_known_run": "2026-07-20 13:54:16.997591",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "RAN - NO NEW FINDINGS",
+      "run_status": "READY",
+      "worked": "NO",
+      "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Review new domain research and trusted guidelines.",
+      "items_examined": 29,
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No new verifiable output in the last 24h.",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "family_experience",
+      "name": "Family Experience Intelligence Agent",
+      "purpose": "Maintain family-facing experience signals grounded in verified sources.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Public reviews",
+        "Family surveys",
+        "Outcome feedback"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Public reviews",
+        "Family surveys",
+        "Outcome feedback"
+      ],
+      "last_known_run": "2026-07-20 14:56:02.453636",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "RAN - NO NEW FINDINGS",
+      "run_status": "READY",
+      "worked": "NO",
+      "what_it_did": "Completed 6 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.",
+      "items_examined": 30,
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No new verifiable output in the last 24h.",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "outcome_learning",
+      "name": "Outcome Learning Agent",
+      "purpose": "Maintain anonymized outcome knowledge to improve future fit quality.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Resident outcomes",
+        "Validation runs",
+        "Cohort analytics"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Resident outcomes",
+        "Validation runs",
+        "Cohort analytics"
+      ],
+      "last_known_run": "2026-07-20 13:54:17.013042",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "RAN - NO NEW FINDINGS",
+      "run_status": "READY",
+      "worked": "NO",
+      "what_it_did": "Completed 5 refresh run(s) in the last 24h. Encountered 24 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts.",
+      "items_examined": 29,
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No new verifiable output in the last 24h.",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "matching_improvement",
+      "name": "Matching Improvement Agent",
+      "purpose": "Maintain policy-safe improvements for deterministic recommendation behavior.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Simulation audits",
+        "Validation reports",
+        "Outcome deltas"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Simulation audits",
+        "Validation reports",
+        "Outcome deltas"
+      ],
+      "last_known_run": "2026-07-20 15:26:02.544690",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "WORKED - CREATED NEW VALUE",
+      "run_status": "READY",
+      "worked": "YES",
+      "what_it_did": "Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Verify newly discovered entities and changed facts.",
+      "items_examined": 35,
+      "items_changed": 15,
+      "new_outputs": [
+        "15 knowledge record(s)"
+      ],
+      "new_findings": 15,
+      "new_value_created": "Created 15 knowledge record(s).",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "backend/optime_nursing.db:agent_knowledge_records",
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "knowledge_graph",
+      "name": "Knowledge Graph Agent",
+      "purpose": "Maintain structured relationship knowledge across care, evidence, and outcomes.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Knowledge graph",
+        "Evidence links",
+        "Agent outputs"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Knowledge graph",
+        "Evidence links",
+        "Agent outputs"
+      ],
+      "last_known_run": "2026-07-20 13:54:17.476770",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "WORKED - CREATED NEW VALUE",
+      "run_status": "READY",
+      "worked": "YES",
+      "what_it_did": "Completed 4 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Link new knowledge objects into the knowledge graph.",
+      "items_examined": 29,
+      "items_changed": 54,
+      "new_outputs": [
+        "54 knowledge record(s)"
+      ],
+      "new_findings": 54,
+      "new_value_created": "Created 54 knowledge record(s).",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "backend/optime_nursing.db:agent_knowledge_records",
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "data_quality",
+      "name": "Data Quality & Trust Agent",
+      "purpose": "Maintain data trust, freshness, and contradiction tracking knowledge.",
+      "entry_point": "backend/app/services/agent_knowledge_reports.py",
+      "trigger": "FastAPI startup background refresh loop",
+      "schedule": "Every 15 minutes while the FastAPI process is alive",
+      "inputs": [
+        "Data quality dashboard",
+        "Conflict report",
+        "Source reliability"
+      ],
+      "expected_outputs": [
+        "Agent knowledge snapshot",
+        "Refresh event",
+        "Prepared knowledge report JSON"
+      ],
+      "dependencies": [
+        "Data quality dashboard",
+        "Conflict report",
+        "Source reliability"
+      ],
+      "last_known_run": "2026-07-20 15:26:02.549143",
+      "activity_evidence_source": "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+      "output_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "failure_evidence_source": "backend/optime_nursing.db:agent_knowledge_refresh_events",
+      "current_status": "WORKED - CREATED NEW VALUE",
+      "run_status": "READY",
+      "worked": "YES",
+      "what_it_did": "Completed 10 refresh run(s) in the last 24h. Encountered 25 failed refresh attempt(s) in the last 24h. Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+      "items_examined": 35,
+      "items_changed": 1,
+      "new_outputs": [
+        "1 knowledge record(s)"
+      ],
+      "new_findings": 1,
+      "new_value_created": "Created 1 knowledge record(s).",
+      "failures": [],
+      "evidence": [
+        "backend/optime_nursing.db:agent_knowledge_report_snapshots",
+        "backend/optime_nursing.db:agent_knowledge_refresh_events",
+        "backend/optime_nursing.db:agent_knowledge_records",
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": true
+    },
+    {
+      "agent_id": "chief_ai_supervisor",
+      "name": "Chief AI Supervisor",
+      "purpose": "Monitor agent health, readiness, incidents, and remediation priorities.",
+      "entry_point": "backend/app/services/chief_ai_supervisor.py",
+      "trigger": "Manual API/supervisor invocation",
+      "schedule": "MANUAL_ONLY",
+      "inputs": [
+        "All expert agents"
+      ],
+      "expected_outputs": [
+        "Supervisor incidents",
+        "Readiness metrics",
+        "Refresh decisions"
+      ],
+      "dependencies": [
+        "All expert agents"
+      ],
+      "last_known_run": "2026-07-18T16:46:28.476Z",
+      "activity_evidence_source": "reports/report_registry.json",
+      "output_evidence_source": "reports/agent_task_queue.md",
+      "failure_evidence_source": "UNKNOWN",
+      "current_status": "MANUAL_ONLY",
+      "run_status": "MANUAL_ONLY",
+      "worked": "UNKNOWN",
+      "what_it_did": "Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+      "items_examined": "UNKNOWN",
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No runtime evidence table is connected for this agent.",
+      "failures": [],
+      "evidence": [
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": false
+    },
+    {
+      "agent_id": "clinical_evidence",
+      "name": "Clinical Evidence Agent",
+      "purpose": "Discover and validate trusted evidence for clinical and recommendation claims.",
+      "entry_point": "docs/agent_specs/evidence_agent_spec.md",
+      "trigger": "Specified only",
+      "schedule": "CONFIGURED_NOT_RUNNING",
+      "inputs": [
+        "Clinical Knowledge Agent",
+        "Outcome Learning Agent",
+        "Knowledge Graph Agent",
+        "Narrative Intelligence Agent"
+      ],
+      "expected_outputs": [
+        "Evidence objects",
+        "Citation verification",
+        "Evidence gap prioritization"
+      ],
+      "dependencies": [
+        "Clinical Knowledge Agent",
+        "Outcome Learning Agent",
+        "Knowledge Graph Agent",
+        "Narrative Intelligence Agent"
+      ],
+      "last_known_run": "UNKNOWN",
+      "activity_evidence_source": "reports/agent_task_queue.md",
+      "output_evidence_source": "reports/agent_task_queue.md",
+      "failure_evidence_source": "UNKNOWN",
+      "current_status": "UNKNOWN",
+      "run_status": "CONFIGURED_NOT_RUNNING",
+      "worked": "UNKNOWN",
+      "what_it_did": "Current queued task: Verify newly discovered entities and changed facts.",
+      "items_examined": "UNKNOWN",
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No runtime evidence table is connected for this agent.",
+      "failures": [],
+      "evidence": [
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": false
+    },
+    {
+      "agent_id": "competitive_intelligence",
+      "name": "Competitive Intelligence Agent",
+      "purpose": "Identify market gaps, provider patterns, and demand opportunities.",
+      "entry_point": "docs/agent_specs/competitive_intelligence_agent_spec.md",
+      "trigger": "Specified only",
+      "schedule": "CONFIGURED_NOT_RUNNING",
+      "inputs": [
+        "Provider Intelligence Agent",
+        "Chief AI Supervisor",
+        "Data Quality & Trust Agent"
+      ],
+      "expected_outputs": [
+        "Market reports",
+        "Demand signals",
+        "Coverage opportunities"
+      ],
+      "dependencies": [
+        "Provider Intelligence Agent",
+        "Chief AI Supervisor",
+        "Data Quality & Trust Agent"
+      ],
+      "last_known_run": "2026-07-17T03:04:38.265Z",
+      "activity_evidence_source": "reports/report_registry.json",
+      "output_evidence_source": "reports/agent_task_queue.md",
+      "failure_evidence_source": "UNKNOWN",
+      "current_status": "UNKNOWN",
+      "run_status": "CONFIGURED_NOT_RUNNING",
+      "worked": "UNKNOWN",
+      "what_it_did": "Current queued task: Discover new Florida communities and provider changes from trusted sources.",
+      "items_examined": "UNKNOWN",
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No runtime evidence table is connected for this agent.",
+      "failures": [],
+      "evidence": [
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": false
+    },
+    {
+      "agent_id": "narrative_intelligence",
+      "name": "Narrative Intelligence Agent",
+      "purpose": "Produce explanation quality improvements and advisor-ready summaries from prepared knowledge.",
+      "entry_point": "docs/agent_specs/narrative_intelligence_agent_spec.md",
+      "trigger": "Specified only",
+      "schedule": "CONFIGURED_NOT_RUNNING",
+      "inputs": [
+        "Clinical Knowledge Agent",
+        "Provider Intelligence Agent",
+        "Clinical Evidence Agent",
+        "Knowledge Graph Agent",
+        "Matching Improvement Agent"
+      ],
+      "expected_outputs": [
+        "Executive summaries",
+        "Narrative improvements",
+        "Explanation quality checks"
+      ],
+      "dependencies": [
+        "Clinical Knowledge Agent",
+        "Provider Intelligence Agent",
+        "Clinical Evidence Agent",
+        "Knowledge Graph Agent",
+        "Matching Improvement Agent"
+      ],
+      "last_known_run": "2026-07-18T16:46:28.456Z",
+      "activity_evidence_source": "reports/report_registry.json",
+      "output_evidence_source": "reports/agent_task_queue.md",
+      "failure_evidence_source": "UNKNOWN",
+      "current_status": "UNKNOWN",
+      "run_status": "CONFIGURED_NOT_RUNNING",
+      "worked": "UNKNOWN",
+      "what_it_did": "Current queued task: Convert prepared institutional knowledge into advisor-ready guidance.",
+      "items_examined": "UNKNOWN",
+      "items_changed": 0,
+      "new_outputs": [
+        "No new knowledge records"
+      ],
+      "new_findings": 0,
+      "new_value_created": "No runtime evidence table is connected for this agent.",
+      "failures": [],
+      "evidence": [
+        "reports/report_registry.json",
+        "reports/agent_task_queue.md"
+      ],
+      "automatic": false
+    }
+  ],
+  "data_quality": {
+    "database_coverage": "64/67 counties",
+    "verification_coverage_pct": 63.0,
+    "duplicate_rate_pct": 0.26,
+    "missing_information_rows": 585,
+    "conflicting_information": 2,
+    "freshness_days": 3
+  },
+  "knowledge_gaps": [
+    "Activities Intelligence Agent: Updated activity calendars, event programs, and engagement opportunities. -> Capture new activity schedules and add verified engagement evidence.",
+    "Clinical Knowledge Agent: Fresh clinical guideline and care-pathway evidence for complex care transitions. -> Collect recent guideline updates and map them to care-pathway knowledge objects.",
+    "Data Quality & Trust Agent: Fresh source-trust, contradiction, and coverage-monitoring signals. -> Create knowledge-gap tasks for stale or conflicting source clusters.",
+    "Family Experience Intelligence Agent: Fresh family-experience signals and responsiveness evidence. -> Ingest new family feedback and record validated experience improvements.",
+    "Knowledge Graph Agent: Missing cross-domain links between evidence, outcomes, and care concepts. -> Add relationship edges for the newest evidence-backed concepts."
+  ],
+  "executive_kpis": {
+    "total_communities": 784,
+    "verified_communities": 494,
+    "florida_coverage_pct": 95.5,
+    "knowledge_centers": 20,
+    "certified_knowledge_centers": null,
+    "knowledge_objects": 2634,
+    "evidence_objects": 3056,
+    "research_papers": 54,
+    "best_practices": 8,
+    "open_knowledge_gaps": 5,
+    "closed_knowledge_gaps_today": 0,
+    "trust_score": 0.0,
+    "institutional_intelligence_score": 0.0,
+    "recommendation_quality_score": 52.0,
+    "agents_running": 11
+  },
+  "critical_alerts": [
+    "Chief AI Supervisor status=MANUAL_ONLY",
+    "Clinical Evidence Agent status=UNKNOWN",
+    "Competitive Intelligence Agent status=UNKNOWN",
+    "Narrative Intelligence Agent status=UNKNOWN"
+  ],
+  "tomorrow": {
+    "top_five_priorities": [
+      "Finish remaining Florida county discovery coverage.",
+      "Process pending verification queue for newly discovered communities.",
+      "Resolve open high-severity supervisor incidents.",
+      "Increase provider intelligence enrichment depth.",
+      "Link outcome miss-analysis to recommendation calibration updates."
+    ],
+    "expected_deliverables": [
+      "Updated discovery and verification reports.",
+      "Refreshed executive dashboard trend section.",
+      "Knowledge gap closure delta summary."
+    ],
+    "potential_risks": [
+      "Statewide county coverage incomplete (64/67).",
+      "Missing information rows remain high: 585."
+    ]
+  },
+  "delta_since_previous": {
+    "communities_discovered_today": 0.0,
+    "communities_verified_today": 0.0,
+    "knowledge_objects_created_today": 0.0,
+    "evidence_objects_added_today": 0.0
+  },
+  "report_id": "2026-07-20",
+  "report_date": "2026-07-20",
+  "generated_at_utc": "2026-07-20T15:26:03.740895+00:00",
+  "subject": "OPTIME Executive Intelligence Report | 2026-07-20",
+  "artifacts": {
+    "markdown": "reports/daily/archive/executive_intelligence_report_2026-07-20.md",
+    "html": "reports/daily/archive/executive_intelligence_report_2026-07-20.html",
+    "json": "reports/daily/archive/executive_intelligence_report_2026-07-20.json"
+  }
+}

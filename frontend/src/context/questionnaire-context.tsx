@@ -23,12 +23,6 @@ export type QuestionnaireState = {
   customDistanceMiles: string;
   otherInterests: string;
   notes: string;
-  assessmentV2?: {
-    version: string;
-    recordedAt: string;
-    provenance: "FAMILY_QUESTIONNAIRE";
-    answers: Record<string, string | string[] | number>;
-  };
   humanIntelligenceV2: HumanIntelligenceV2;
 };
 
@@ -365,10 +359,6 @@ const DEFAULT_STATE: QuestionnaireState = {
   },
 };
 
-export function createDefaultQuestionnaireState(): QuestionnaireState {
-  return JSON.parse(JSON.stringify(DEFAULT_STATE)) as QuestionnaireState;
-}
-
 type QuestionnaireContextValue = {
   state: QuestionnaireState;
   setState: (next: QuestionnaireState) => void;
@@ -378,7 +368,7 @@ type QuestionnaireContextValue = {
 const QuestionnaireContext = createContext<QuestionnaireContextValue | undefined>(undefined);
 
 export function QuestionnaireProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<QuestionnaireState>(() => loadSessionJson<QuestionnaireState>(QUESTIONNAIRE_SESSION_KEY) || createDefaultQuestionnaireState());
+  const [state, setState] = useState<QuestionnaireState>(() => loadSessionJson<QuestionnaireState>(QUESTIONNAIRE_SESSION_KEY) || DEFAULT_STATE);
 
   useEffect(() => {
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, state);
@@ -386,7 +376,7 @@ export function QuestionnaireProvider({ children }: { children: React.ReactNode 
 
   const resetState = () => {
     removeSessionKey(QUESTIONNAIRE_SESSION_KEY);
-    setState(createDefaultQuestionnaireState());
+    setState(DEFAULT_STATE);
   };
 
   const value = useMemo(() => ({ state, setState, resetState }), [state]);
