@@ -689,9 +689,33 @@ class AgentKnowledgeSearchOut(BaseModel):
     matched_agents: List[AgentKnowledgeReportSummaryOut]
 
 
+class AgentKnowledgeRefreshAgentOut(BaseModel):
+    agent_id: str
+    agent_name: str
+    refresh_started_at: Optional[str] = None
+    refresh_completed_at: Optional[str] = None
+    success: bool
+    status: str
+    failing_stage: Optional[str] = None
+    exception_type: Optional[str] = None
+    exact_error_message: Optional[str] = None
+    stack_trace_location: Optional[str] = None
+    input_source: Optional[str] = None
+    output_target: Optional[str] = None
+    retryable: bool = False
+    automatic_fix_allowed: bool = False
+    recommended_action: Optional[str] = None
+    incident_id: Optional[int] = None
+
+
 class AgentKnowledgeRefreshOut(BaseModel):
+    attempted: int
     refreshed: int
     failures: int
+    skipped: int = 0
+    retried: int = 0
+    incidents: int = 0
+    agents: List[AgentKnowledgeRefreshAgentOut] = Field(default_factory=list)
 
 
 class RecommendationGuardCheckIn(BaseModel):
@@ -1639,7 +1663,15 @@ async def search_agent_knowledge_reports(query: str = Query(..., min_length=2), 
 @app.post("/expert-agents/knowledge-reports/refresh", response_model=AgentKnowledgeRefreshOut)
 async def refresh_agent_knowledge_reports(db: Session = Depends(get_db)):
     result = refresh_all_agent_reports(db, refresh_mode="manual", force=True)
-    return AgentKnowledgeRefreshOut(refreshed=int(result.get("refreshed", 0)), failures=int(result.get("failures", 0)))
+    return AgentKnowledgeRefreshOut(
+        attempted=int(result.get("attempted", 0)),
+        refreshed=int(result.get("refreshed", 0)),
+        failures=int(result.get("failures", 0)),
+        skipped=int(result.get("skipped", 0)),
+        retried=int(result.get("retried", 0)),
+        incidents=int(result.get("incidents", 0)),
+        agents=[AgentKnowledgeRefreshAgentOut(**row) for row in result.get("agents", [])],
+    )
 
 
 @app.get("/expert-agents/freshness/states")
@@ -1652,22 +1684,7 @@ async def knowledge_freshness_states():
 
 @app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut)
 async def supervisor_overview(db: Session = Depends(get_db)):
-    try:
-        summary = compute_supervisor_metrics(db)
-    except Exception as exc:
-        logger.exception("supervisor_overview_metrics_failed error=%s", exc)
-        summary = {
-            "fresh_agents": 0,
-            "stale_agents": 0,
-            "expired_knowledge": 0,
-            "failed_refreshes": 0,
-            "knowledge_age": 0,
-            "pending_reviews": 0,
-            "refresh_queue": 0,
-            "refresh_success_rate": 0.0,
-            "average_knowledge_freshness": 0.0,
-            "alerts": [f"Supervisor overview unavailable: {type(exc).__name__}"],
-        }
+    summary = compute_supervisor_metrics(db)
     return KnowledgeSupervisorOut(**summary)
 
 

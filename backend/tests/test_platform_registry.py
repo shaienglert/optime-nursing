@@ -4,6 +4,10 @@ import json
 import sys
 from pathlib import Path
 from copy import deepcopy
+from datetime import datetime, timezone
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -11,6 +15,7 @@ BACKEND_ROOT = REPO_ROOT / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
+from app.database import Base
 from app.services.chief_ai_supervisor import evaluate_platform_registry_work_request
 from app.services.agent_knowledge_reports import refresh_all_agent_reports
 from app.services.platform_registry_service import (
@@ -37,6 +42,13 @@ class _BlockedDb:
 
     def query(self, *args, **kwargs):
         raise AssertionError("blocked work should not reach database queries")
+
+
+def _refresh_session():
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    return Session(), engine
 
 
 def _payload_with_current_work(payload: dict, capability_id: str) -> dict:
@@ -96,26 +108,123 @@ def test_platform_registry_assignment_rejects_and_records_incident() -> None:
     assert getattr(fake_db.added[0], "incident_type", "") == "REGISTRY_ASSIGNMENT_REJECTED"
 
 
-def test_refresh_all_agent_reports_blocks_before_workflow(monkeypatch) -> None:
-    fake_db = _BlockedDb()
+def test_refresh_all_agent_reports_bypasses_current_objective_gate(monkeypatch) -> None:
+    db, engine = _refresh_session()
     monkeypatch.setattr("app.services.agent_knowledge_reports.AGENT_REPORT_DEFS", [
         {
             "agent_key": "provider_intelligence",
             "agent_name": "Provider Intelligence Agent",
             "domain": "Provider verified capabilities",
+            "sources": ["Provider portal"],
         }
     ])
     called = {"workflow": False}
 
-    def _fail_workflow(*args, **kwargs):
+    def _workflow(db, agent_key):
         called["workflow"] = True
-        raise AssertionError("blocked work should not start a workflow")
+        return {"items_processed": 1, "items_added": 1, "items_updated": 0, "new_verified_facts": 0}
 
-    monkeypatch.setattr("app.services.agent_knowledge_reports._run_agent_workflow", _fail_workflow)
-    result = refresh_all_agent_reports(fake_db, refresh_mode="manual", agent_keys=["provider_intelligence"])
-    assert result["failures"] == 1
-    assert called["workflow"] is False
-    assert any(getattr(obj, "incident_type", "") == "REGISTRY_ASSIGNMENT_REJECTED" for obj in fake_db.added)
+    monkeypatch.setattr("app.services.agent_knowledge_reports.evaluate_capability_assignment", lambda *args, **kwargs: {"allowed": False, "reason": "NOT_CURRENT_OBJECTIVE", "suggested_prerequisite": "source_intelligence", "current_active_objective": "launch_nevada", "current_executable_capability": "source_intelligence", "current_blocker": "source_intelligence"})
+    monkeypatch.setattr("app.services.agent_knowledge_reports._run_agent_workflow", _workflow)
+    monkeypatch.setattr(
+        "app.services.agent_knowledge_reports.build_agent_report",
+        lambda db, agent_def: {
+            "agent_name": agent_def["agent_name"],
+            "domain": agent_def["domain"],
+            "report_json": {"topics_covered": agent_def.get("topics", [])},
+            "knowledge_count": 1,
+            "evidence_count": 1,
+            "coverage": 100.0,
+            "average_confidence": 0.9,
+            "health_status": "HEALTHY",
+            "last_refreshed_at": datetime.now(timezone.utc),
+            "ttl_seconds": 3600,
+            "pending_changes": 0,
+            "pending_reviews": 0,
+            "verified_until": datetime.now(timezone.utc),
+            "freshness_status": "FRESH",
+            "refresh_status": "READY",
+        },
+    )
+
+    try:
+        result = refresh_all_agent_reports(db, refresh_mode="manual", agent_keys=["provider_intelligence"], force=True)
+        assert result["attempted"] == 1
+        assert result["refreshed"] == 1
+        assert result["failures"] == 0
+        assert called["workflow"] is True
+        assert result["agents"][0]["success"] is True
+        assert result["agents"][0]["status"] == "SUCCESS"
+        assert db.query(Base.metadata.tables["supervisor_incident_logs"]).count() == 0
+    finally:
+        db.close()
+        engine.dispose()
+
+
+def test_refresh_all_agent_reports_surfaces_one_agent_failure_without_hiding_others(monkeypatch) -> None:
+    db, engine = _refresh_session()
+    monkeypatch.setattr("app.services.agent_knowledge_reports.AGENT_REPORT_DEFS", [
+        {
+            "agent_key": "provider_intelligence",
+            "agent_name": "Provider Intelligence Agent",
+            "domain": "Provider verified capabilities",
+            "sources": ["Provider portal"],
+        },
+        {
+            "agent_key": "clinical_knowledge",
+            "agent_name": "Clinical Knowledge Agent",
+            "domain": "Clinical care requirements",
+            "sources": ["CMS"],
+        },
+    ])
+    monkeypatch.setattr("app.services.agent_knowledge_reports.evaluate_capability_assignment", lambda *args, **kwargs: {"allowed": True, "reason": "ALLOWED", "current_active_objective": "launch_nevada", "current_executable_capability": "source_intelligence", "current_blocker": "source_intelligence"})
+
+    def _workflow(db, agent_key):
+        if agent_key == "provider_intelligence":
+            raise RuntimeError("provider workflow failed")
+        return {"items_processed": 1, "items_added": 1, "items_updated": 0, "new_verified_facts": 0}
+
+    monkeypatch.setattr("app.services.agent_knowledge_reports._run_agent_workflow", _workflow)
+    monkeypatch.setattr(
+        "app.services.agent_knowledge_reports.build_agent_report",
+        lambda db, agent_def: {
+            "agent_name": agent_def["agent_name"],
+            "domain": agent_def["domain"],
+            "report_json": {"topics_covered": agent_def.get("topics", [])},
+            "knowledge_count": 1,
+            "evidence_count": 1,
+            "coverage": 100.0,
+            "average_confidence": 0.9,
+            "health_status": "HEALTHY",
+            "last_refreshed_at": datetime.now(timezone.utc),
+            "ttl_seconds": 3600,
+            "pending_changes": 0,
+            "pending_reviews": 0,
+            "verified_until": datetime.now(timezone.utc),
+            "freshness_status": "FRESH",
+            "refresh_status": "READY",
+        },
+    )
+
+    try:
+        result = refresh_all_agent_reports(db, refresh_mode="manual", force=True)
+        assert result["attempted"] == 2
+        assert result["refreshed"] == 1
+        assert result["failures"] == 1
+        assert len(result["agents"]) == 2
+        failing = next(row for row in result["agents"] if row["agent_id"] == "provider_intelligence")
+        succeeding = next(row for row in result["agents"] if row["agent_id"] == "clinical_knowledge")
+        assert failing["success"] is False
+        assert failing["status"] == "FAILED"
+        assert failing["failing_stage"] == "workflow"
+        assert failing["exception_type"] == "RuntimeError"
+        assert succeeding["success"] is True
+        assert succeeding["status"] == "SUCCESS"
+        assert result["incidents"] == 1
+        assert db.query(Base.metadata.tables["supervisor_incident_logs"]).count() == 1
+    finally:
+        db.close()
+        engine.dispose()
 
 
 def test_platform_registry_write_artifacts(tmp_path, monkeypatch) -> None:

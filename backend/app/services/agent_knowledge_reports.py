@@ -3,6 +3,7 @@ import os
 import hashlib
 import threading
 import time
+import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -1015,15 +1016,56 @@ def _mark_refresh_event(
     db.add(event)
 
 
+def _traceback_location(error: BaseException) -> Optional[str]:
+    frames = traceback.extract_tb(error.__traceback__) if error.__traceback__ is not None else []
+    if not frames:
+        return None
+    frame = frames[-1]
+    return f"{frame.filename}:{frame.lineno} in {frame.name}"
+
+
+def _record_refresh_incident(
+    db: Session,
+    *,
+    agent_key: str,
+    domain: str,
+    incident_type: str,
+    severity: str,
+    summary: str,
+    details: Dict[str, Any],
+) -> Optional[int]:
+    incident = SupervisorIncidentLog(
+        incident_type=incident_type,
+        severity=severity,
+        status="OPEN",
+        agent_key=agent_key,
+        domain=domain,
+        summary=summary,
+        details_json=json.dumps(details),
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(incident)
+    try:
+        db.flush()
+    except Exception:
+        return None
+    return int(getattr(incident, "id", 0) or 0) or None
+
+
 def refresh_all_agent_reports(
     db: Session,
     refresh_mode: str = "scheduled",
     agent_keys: Optional[List[str]] = None,
     force: bool = False,
     incremental: bool = False,
-) -> Dict[str, int]:
+) -> Dict[str, Any]:
+    attempted = 0
     refreshed = 0
     failures = 0
+    skipped = 0
+    retried = 0
+    incidents = 0
+    agent_results: List[Dict[str, Any]] = []
     selected = AGENT_REPORT_DEFS
     if agent_keys:
         wanted = set(agent_keys)
@@ -1032,39 +1074,98 @@ def refresh_all_agent_reports(
     now = datetime.now(timezone.utc)
     for agent_def in selected:
         agent_key = str(agent_def["agent_key"])
+        agent_name = str(agent_def["agent_name"])
+        domain = str(agent_def.get("domain") or "operations_supervisor")
         started = datetime.now(timezone.utc)
+        attempted += 1
+        stage = "eligibility"
+        result: Dict[str, Any] = {
+            "agent_id": agent_key,
+            "agent_name": agent_name,
+            "refresh_started_at": started.isoformat(),
+            "refresh_completed_at": None,
+            "success": False,
+            "status": "RUNNING",
+            "failing_stage": None,
+            "exception_type": None,
+            "exact_error_message": None,
+            "stack_trace_location": None,
+            "input_source": ", ".join(str(item) for item in (agent_def.get("sources") or [])),
+            "output_target": f"agent_knowledge_report_snapshots.{agent_key}",
+            "retryable": False,
+            "automatic_fix_allowed": False,
+            "recommended_action": None,
+            "incident_id": None,
+        }
         try:
             capability_id = REGISTRY_AGENT_CAPABILITY_MAP.get(agent_key)
             if capability_id:
                 decision = evaluate_capability_assignment(capability_id, load_platform_registry().get("capabilities") or [])
                 if not decision.get("allowed"):
-                    db.add(
-                        SupervisorIncidentLog(
+                    if str(decision.get("reason") or "") != "NOT_CURRENT_OBJECTIVE":
+                        finished = datetime.now(timezone.utc)
+                        message = str(decision.get("reason") or "Registry rejected work request.")
+                        incident_id = _record_refresh_incident(
+                            db,
+                            agent_key=agent_key,
+                            domain=domain,
                             incident_type="REGISTRY_ASSIGNMENT_REJECTED",
                             severity="HIGH",
-                            status="OPEN",
-                            agent_key=agent_key,
-                            domain=str(agent_def.get("domain") or "operations_supervisor"),
-                            summary=f"Registry rejected work request for {capability_id}: {decision.get('reason')}",
-                            details_json=json.dumps({"capability_id": capability_id, "decision": decision}),
-                            created_at=datetime.now(timezone.utc),
+                            summary=f"Registry rejected work request for {capability_id}: {message}",
+                            details={"capability_id": capability_id, "decision": decision},
                         )
+                        _mark_refresh_event(
+                            db,
+                            agent_key,
+                            refresh_mode,
+                            "BLOCKED",
+                            started_at=started,
+                            finished_at=finished,
+                            error_message=message,
+                        )
+                        failures += 1
+                        incidents += 1
+                        result.update(
+                            {
+                                "refresh_completed_at": finished.isoformat(),
+                                "status": "BLOCKED",
+                                "failing_stage": stage,
+                                "exception_type": "RegistryAssignmentRejected",
+                                "exact_error_message": message,
+                                "stack_trace_location": None,
+                                "retryable": False,
+                                "automatic_fix_allowed": False,
+                                "recommended_action": str(decision.get("suggested_prerequisite") or "Review registry assignment policy."),
+                                "incident_id": incident_id,
+                            }
+                        )
+                        agent_results.append(result)
+                        continue
+                    result.update(
+                        {
+                            "status": "OVERRIDDEN_CURRENT_OBJECTIVE_GATE",
+                            "retryable": True,
+                            "automatic_fix_allowed": True,
+                            "recommended_action": "Proceed with knowledge refresh because report maintenance is not tied to the active objective.",
+                        }
                     )
-                    _mark_refresh_event(
-                        db,
-                        agent_key,
-                        refresh_mode,
-                        "BLOCKED",
-                        started_at=started,
-                        finished_at=datetime.now(timezone.utc),
-                        error_message=str(decision.get("reason") or "Registry rejected work request."),
-                    )
-                    failures += 1
-                    continue
 
+            stage = "snapshot_lookup"
             row = db.query(AgentKnowledgeReportSnapshot).filter(AgentKnowledgeReportSnapshot.agent_key == agent_key).first()
             next_refresh_at = _as_utc(row.next_refresh_at) if row else None
             if row and not force and incremental and next_refresh_at and next_refresh_at > now:
+                skipped += 1
+                finished = datetime.now(timezone.utc)
+                result.update(
+                    {
+                        "refresh_completed_at": finished.isoformat(),
+                        "success": True,
+                        "status": "SKIPPED",
+                        "recommended_action": "Refresh is not due yet.",
+                    }
+                )
+                _mark_refresh_event(db, agent_key, refresh_mode, "SKIPPED", started, finished)
+                agent_results.append(result)
                 continue
 
             if row is None:
@@ -1076,7 +1177,9 @@ def refresh_all_agent_reports(
             row.last_refresh_attempt = started
             db.flush()
 
+            stage = "workflow"
             workflow_result = _run_agent_workflow(db, agent_key)
+            stage = "report_generation"
             report = build_agent_report(db, agent_def)
             finished = datetime.now(timezone.utc)
             duration_ms = max(1, int((finished - started).total_seconds() * 1000))
@@ -1107,8 +1210,18 @@ def refresh_all_agent_reports(
             row.refresh_status = "READY"
             row.refresh_error = None
 
+            stage = "event_recording"
             _mark_refresh_event(db, agent_key, refresh_mode, "SUCCESS", started, finished)
             refreshed += 1
+            result.update(
+                {
+                    "refresh_completed_at": finished.isoformat(),
+                    "success": True,
+                    "status": "SUCCESS",
+                    "recommended_action": None,
+                }
+            )
+            agent_results.append(result)
         except Exception as error:
             failures += 1
             row = db.query(AgentKnowledgeReportSnapshot).filter(AgentKnowledgeReportSnapshot.agent_key == agent_key).first()
@@ -1121,10 +1234,44 @@ def refresh_all_agent_reports(
                 row.refresh_duration_ms = max(1, int((datetime.now(timezone.utc) - started).total_seconds() * 1000))
                 backoff = min(3600, 60 * (2 ** min(5, row.failed_refresh_count)))
                 row.next_refresh_at = datetime.now(timezone.utc) + timedelta(seconds=backoff)
-            _mark_refresh_event(db, agent_key, refresh_mode, "FAILED", started, datetime.now(timezone.utc), str(error))
+            finished = datetime.now(timezone.utc)
+            _mark_refresh_event(db, agent_key, refresh_mode, "FAILED", started, finished, str(error))
+            incident_id = _record_refresh_incident(
+                db,
+                agent_key=agent_key,
+                domain=domain,
+                incident_type="AGENT_KNOWLEDGE_REFRESH_FAILED",
+                severity="HIGH",
+                summary=f"Knowledge refresh failed for {agent_key}: {error}",
+                details={"agent_key": agent_key, "agent_name": agent_name, "stage": stage, "error": str(error)},
+            )
+            incidents += 1
+            result.update(
+                {
+                    "refresh_completed_at": finished.isoformat(),
+                    "status": "FAILED",
+                    "failing_stage": stage,
+                    "exception_type": type(error).__name__,
+                    "exact_error_message": str(error),
+                    "stack_trace_location": _traceback_location(error),
+                    "retryable": True,
+                    "automatic_fix_allowed": True,
+                    "recommended_action": "Retry the refresh after fixing the failing stage.",
+                    "incident_id": incident_id,
+                }
+            )
+            agent_results.append(result)
 
     db.commit()
-    return {"refreshed": refreshed, "failures": failures}
+    return {
+        "attempted": attempted,
+        "refreshed": refreshed,
+        "failures": failures,
+        "skipped": skipped,
+        "retried": retried,
+        "incidents": incidents,
+        "agents": agent_results,
+    }
 
 
 def ensure_reports_available(db: Session) -> None:
