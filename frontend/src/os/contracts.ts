@@ -12,5 +12,4 @@ export type TradeOff = { subject: string; benefit: string; cost: string };
 export type AuditTrace = { rulesApplied: readonly string[]; evidenceSources: readonly string[]; warnings: readonly string[] };
 export type PairEvaluation = { party: DecisionParty; option: DecisionOption; eligibility: EligibilityStatus; requirementEvaluations: readonly RequirementEvaluation[]; explanation: DecisionExplanation; tradeOffs: readonly TradeOff[]; audit: AuditTrace };
 
-// Version-pinned copy of OPTIME OS domain-neutral contracts.
-// Nursing may depend on this boundary; OPTIME OS must never import Nursing.
+// Version-pinned, import-free copy of the domain-neutral OPTIME OS contract boundary.
