@@ -22,7 +22,7 @@ from app.services.agent_knowledge_reports import compute_supervisor_metrics, ref
 from app.services.email_service import configured_recipients, send_email_detailed
 from app.services.remediation_policy_engine import MODE_ACTIVE_SAFE, MODE_DRY_RUN, evaluate_remediation_policy
 from app.services.report_archive_service import create_report_artifacts, mark_report_sent
-from app.services.source_lifecycle_service import generate_status_snapshot, load_registry
+from app.services.source_lifecycle_service import load_registry, validate as validate_source_registry
 from app.services.canonical_universe import configured_canonical_market
 from app.services.agent_knowledge_reports import refresh_all_agent_reports
 from app.services.platform_registry_service import evaluate_capability_assignment, load_platform_registry, run_platform_registry_self_audit
@@ -707,7 +707,8 @@ def _build_daily_owner_payload(db: Session, mode: str, active_market: str) -> Di
         {"task_id": row.get("task_id"), **review_task_output_quality(row, resolved_market)}
         for row in traces
     ]
-    source_snapshot = generate_status_snapshot(load_registry())
+    source_contract = validate_source_registry(load_registry())
+    source_snapshot = source_contract["snapshot"]
     incidents = recent_incidents(db, limit=300)
     open_incidents = [row for row in incidents if str(row.get("status") or "").upper() == "OPEN"]
     p0 = [row for row in open_incidents if str(row.get("severity") or "").upper() == "CRITICAL"]
