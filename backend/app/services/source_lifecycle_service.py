@@ -19,6 +19,10 @@ from app.services.source_policy_engine import (
     LIFECYCLE_VALIDATED,
     POLICY_VERSION,
     evaluate_source_policy,
+    migrate as migrate_source_record,
+    validate as validate_source_record,
+    SCHEMA_VERSION as SOURCE_SCHEMA_VERSION,
+    SUPPORTED_VERSIONS as SOURCE_SUPPORTED_VERSIONS,
     utc_now_iso,
 )
 
@@ -28,6 +32,8 @@ REGISTRY_PATH = REPO_ROOT / "database" / "source_lifecycle_registry.json"
 STATUS_REPORT_PATH = REPO_ROOT / "reports" / "SOURCE_LIFECYCLE_STATUS.md"
 
 REGISTRY_VERSION = "source-lifecycle-v2.0.0"
+SCHEMA_VERSION = SOURCE_SCHEMA_VERSION
+SUPPORTED_VERSIONS = list(SOURCE_SUPPORTED_VERSIONS)
 
 LIFECYCLE_STATES = [
     LIFECYCLE_DISCOVERED,
@@ -93,6 +99,8 @@ def default_record(record: Mapping[str, Any]) -> Dict[str, Any]:
         "state": str(record.get("state") or "").strip(),
         "authority_level": str(record.get("authority_level") or "UNKNOWN").strip(),
         "source_type": str(record.get("source_type") or "UNKNOWN").strip(),
+        "schema_version": str(record.get("schema_version") or SCHEMA_VERSION).strip(),
+        "supported_versions": list(record.get("supported_versions") or SUPPORTED_VERSIONS),
         "official_url": record.get("official_url"),
         "api_url": record.get("api_url") or record.get("api"),
         "download_url": record.get("download_url") or record.get("csv") or record.get("xml"),
@@ -136,10 +144,22 @@ def default_record(record: Mapping[str, Any]) -> Dict[str, Any]:
     return shaped
 
 
-def ensure_registry_shape(payload: Mapping[str, Any]) -> Dict[str, Any]:
-    records = [default_record(record) for record in (payload.get("records") or [])]
+def _normalize_supported_versions(values: Any) -> List[str]:
+    versions: List[str] = []
+    for value in values or []:
+        version = str(value or "").strip()
+        if not version or version in versions:
+            continue
+        versions.append(version)
+    return versions
+
+
+def migrate(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    records = [migrate_source_record(default_record(record)) for record in (payload.get("records") or [])]
     return {
         "generated_at_utc": str(payload.get("generated_at_utc") or utc_now_iso()),
+        "schema_version": SCHEMA_VERSION,
+        "supported_versions": list(SUPPORTED_VERSIONS),
         "registry_version": REGISTRY_VERSION,
         "lifecycle_states": list(LIFECYCLE_STATES),
         "governance_rule": "Every discovered source must be represented with exactly one lifecycle_status.",
@@ -148,12 +168,45 @@ def ensure_registry_shape(payload: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
+def validate(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    shaped = migrate(payload)
+    errors: List[str] = []
+
+    schema_version = str(shaped.get("schema_version") or "").strip()
+    supported_versions = _normalize_supported_versions(shaped.get("supported_versions"))
+    if schema_version != SCHEMA_VERSION:
+        errors.append(f"schema_version must be {SCHEMA_VERSION}")
+    if not supported_versions:
+        errors.append("supported_versions is required")
+    elif schema_version not in supported_versions:
+        errors.append("schema_version must be included in supported_versions")
+
+    for record in shaped["records"]:
+        record_errors = validate_source_record(record)
+        errors.extend(f"{record.get('source_id')}: {message}" for message in record_errors)
+
+    snapshot = generate_status_snapshot(shaped)
+    if snapshot["record_count"] != shaped["record_count"]:
+        errors.append("record_count does not match generated status snapshot")
+
+    return {
+        "valid": not errors,
+        "errors": errors,
+        "snapshot": snapshot,
+        "payload": shaped,
+    }
+
+
+def ensure_registry_shape(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    return migrate(payload)
+
+
 def load_registry(path: Path = REGISTRY_PATH) -> Dict[str, Any]:
-    return ensure_registry_shape(_read_json(path))
+    return migrate(_read_json(path))
 
 
 def save_registry(payload: Mapping[str, Any], path: Path = REGISTRY_PATH) -> Dict[str, Any]:
-    shaped = ensure_registry_shape(payload)
+    shaped = migrate(payload)
     shaped["generated_at_utc"] = utc_now_iso()
     shaped["record_count"] = len(shaped["records"])
     _write_json(path, shaped)
