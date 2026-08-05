@@ -290,3 +290,16 @@ def test_supervisor_overview_reads_current_metrics_without_bootstrap(monkeypatch
     result = asyncio.run(backend_main.supervisor_overview(db=object()))
     assert result.fresh_agents == 1
     assert called["ensure"] is False
+
+
+def test_supervisor_overview_falls_back_when_metrics_fail(monkeypatch) -> None:
+    monkeypatch.setattr(
+        backend_main,
+        "compute_supervisor_metrics",
+        lambda db: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+
+    result = asyncio.run(backend_main.supervisor_overview(db=object()))
+    assert result.fresh_agents == 0
+    assert result.refresh_success_rate == 0.0
+    assert result.alerts == ["Supervisor overview unavailable: RuntimeError"]

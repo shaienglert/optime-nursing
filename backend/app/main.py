@@ -1652,7 +1652,22 @@ async def knowledge_freshness_states():
 
 @app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut)
 async def supervisor_overview(db: Session = Depends(get_db)):
-    summary = compute_supervisor_metrics(db)
+    try:
+        summary = compute_supervisor_metrics(db)
+    except Exception as exc:
+        logger.exception("supervisor_overview_metrics_failed error=%s", exc)
+        summary = {
+            "fresh_agents": 0,
+            "stale_agents": 0,
+            "expired_knowledge": 0,
+            "failed_refreshes": 0,
+            "knowledge_age": 0,
+            "pending_reviews": 0,
+            "refresh_queue": 0,
+            "refresh_success_rate": 0.0,
+            "average_knowledge_freshness": 0.0,
+            "alerts": [f"Supervisor overview unavailable: {type(exc).__name__}"],
+        }
     return KnowledgeSupervisorOut(**summary)
 
 
