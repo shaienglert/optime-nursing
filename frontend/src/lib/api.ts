@@ -461,6 +461,110 @@ export type GovernanceRuntimeContext = {
   };
 };
 
+export type RuntimeStatus = {
+  monitor_enabled: boolean;
+  monitor_running: boolean;
+  monitor_interval_seconds: number;
+  dirty: boolean;
+  dirty_reasons_current: string[];
+  last_check_at?: string | null;
+  last_error?: string | null;
+  retry_count?: number;
+};
+
+export type SupervisorOverview = {
+  fresh_agents: number;
+  stale_agents: number;
+  expired_knowledge: number;
+  failed_refreshes: number;
+  knowledge_age: number;
+  pending_reviews: number;
+  refresh_queue: number;
+  refresh_success_rate: number;
+  average_knowledge_freshness: number;
+  alerts: string[];
+};
+
+export type SupervisorIncident = {
+  id: number;
+  incident_type: string;
+  severity: string;
+  status: string;
+  agent_key?: string | null;
+  domain?: string | null;
+  summary: string;
+  details: Record<string, unknown>;
+  created_at?: string | null;
+};
+
+export type AgentKnowledgeReportSummary = {
+  agent_key: string;
+  agent_name: string;
+  domain: string;
+  confidence: number;
+  evidence_count: number;
+  coverage: number;
+  health_status: string;
+  freshness_status: string;
+  knowledge_age_seconds: number;
+  ttl_seconds: number;
+  pending_reviews: number;
+  last_update?: string | null;
+  next_refresh_at?: string | null;
+};
+
+export type AgentKnowledgeReport = {
+  agent_key: string;
+  agent_name: string;
+  domain: string;
+  mission?: string | null;
+  topics_covered: string[];
+  knowledge_base: Record<string, unknown>;
+  last_update?: string | null;
+  confidence: number;
+  evidence_count: number;
+  coverage: number;
+  api: Record<string, string>;
+  health_status: string;
+  freshness_status: string;
+  knowledge_age_seconds: number;
+  last_successful_refresh?: string | null;
+  last_refresh_attempt?: string | null;
+  refresh_duration_ms: number;
+  verified_until?: string | null;
+  ttl_seconds: number;
+  pending_changes: number;
+  pending_reviews: number;
+  failed_refresh_count: number;
+  refresh_status: string;
+  next_refresh_at?: string | null;
+};
+
+export type AgentKnowledgeRefreshAgentResult = {
+  agent_id: string;
+  agent_name: string;
+  refresh_started_at?: string | null;
+  refresh_completed_at?: string | null;
+  success: boolean;
+  status: string;
+  failing_stage?: string | null;
+  exception_type?: string | null;
+  exact_error_message?: string | null;
+  stack_trace_location?: string | null;
+  retryable: boolean;
+  incident_id?: number | null;
+};
+
+export type AgentKnowledgeRefreshResult = {
+  attempted: number;
+  refreshed: number;
+  failures: number;
+  skipped: number;
+  retried: number;
+  incidents: number;
+  agents: AgentKnowledgeRefreshAgentResult[];
+};
+
 type BackendFacility = {
   id: number;
   cms_id?: string;
@@ -1751,6 +1855,30 @@ export async function fetchGovernanceRuntimeContext(): Promise<GovernanceRuntime
     }
     return null;
   }
+}
+
+export async function fetchRuntimeStatus(): Promise<RuntimeStatus> {
+  return fetchJson<RuntimeStatus>("/runtime/status");
+}
+
+export async function fetchSupervisorOverview(): Promise<SupervisorOverview> {
+  return fetchJson<SupervisorOverview>("/supervisor/overview");
+}
+
+export async function fetchSupervisorIncidents(limit = 50): Promise<{ incidents: SupervisorIncident[] }> {
+  return fetchJson<{ incidents: SupervisorIncident[] }>(`/supervisor/incidents?limit=${Math.max(1, Math.min(limit, 1000))}`);
+}
+
+export async function fetchKnowledgeReports(): Promise<AgentKnowledgeReportSummary[]> {
+  return fetchJson<AgentKnowledgeReportSummary[]>("/expert-agents/knowledge-reports");
+}
+
+export async function fetchKnowledgeReport(agentKey: string): Promise<AgentKnowledgeReport> {
+  return fetchJson<AgentKnowledgeReport>(`/expert-agents/${encodeURIComponent(agentKey)}/knowledge-report`);
+}
+
+export async function refreshKnowledgeReports(): Promise<AgentKnowledgeRefreshResult> {
+  return postJson<Record<string, never>, AgentKnowledgeRefreshResult>("/expert-agents/knowledge-reports/refresh", {});
 }
 
 export type HumanIntelligenceScorePayload = {
