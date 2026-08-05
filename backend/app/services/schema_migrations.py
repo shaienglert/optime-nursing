@@ -66,3 +66,39 @@ def ensure_facility_intelligence_profile_schema(engine: Engine) -> None:
     with engine.begin() as connection:
         for statement in alter_statements:
             connection.execute(text(statement))
+
+
+def ensure_agent_knowledge_report_snapshot_schema(engine: Engine) -> None:
+    columns = _column_names(engine, "agent_knowledge_report_snapshots")
+    if not columns:
+        return
+
+    alter_statements: list[str] = []
+
+    if "freshness_status" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN freshness_status VARCHAR(24) NOT NULL DEFAULT 'FRESH'")
+    if "knowledge_age_seconds" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN knowledge_age_seconds INTEGER NOT NULL DEFAULT 0")
+    if "last_successful_refresh" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN last_successful_refresh DATETIME NULL")
+    if "last_refresh_attempt" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN last_refresh_attempt DATETIME NULL")
+    if "refresh_duration_ms" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN refresh_duration_ms INTEGER NOT NULL DEFAULT 0")
+    if "verified_until" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN verified_until DATETIME NULL")
+    if "ttl_seconds" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN ttl_seconds INTEGER NOT NULL DEFAULT 3600")
+    if "pending_changes" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN pending_changes INTEGER NOT NULL DEFAULT 0")
+    if "pending_reviews" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN pending_reviews INTEGER NOT NULL DEFAULT 0")
+    if "failed_refresh_count" not in columns:
+        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN failed_refresh_count INTEGER NOT NULL DEFAULT 0")
+
+    if not alter_statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in alter_statements:
+            connection.execute(text(statement))
