@@ -99,6 +99,7 @@ from app.services.patient_decision_engine import (
     build_patient_needs_profile,
     run_patient_decision_engine,
 )
+from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
     title="OPTIME Nursing API",
@@ -1182,6 +1183,11 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+
+@app.get("/runtime/status")
+async def runtime_status():
+    return get_runtime_sync_status()
 
 
 @app.get("/import-summary", response_model=ImportSummaryOut)

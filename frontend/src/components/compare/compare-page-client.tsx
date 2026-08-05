@@ -142,7 +142,7 @@ export function ComparePageClient() {
   const [decisionResponse, setDecisionResponse] = useState<DecisionEngineResponse | null>(null);
   const [comparisonContext, setComparisonContext] = useState<PatientComparisonContextResponse | null>(null);
   const [comparisonTable, setComparisonTable] = useState<FacilityParameterComparison | null>(null);
-  const [selectedFacilityIds, setSelectedFacilityIds] = useState<string[]>(facilitiesFromQuery);
+  const [localSelectedFacilityIds, setLocalSelectedFacilityIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllParameters, setShowAllParameters] = useState(false);
@@ -159,24 +159,17 @@ export function ComparePageClient() {
   );
   const selectedIdsKey = useMemo(() => JSON.stringify(decisionRequestPayload), [decisionRequestPayload]);
 
-  useEffect(() => {
-    setSelectedFacilityIds((current) => {
-      if (facilitiesFromQuery.length > 0) {
-        const same =
-          current.length === facilitiesFromQuery.length &&
-          current.every((value, index) => value === facilitiesFromQuery[index]);
-        return same ? current : facilitiesFromQuery;
-      }
-      if (current.length > 0) {
-        return current;
-      }
-
-      const fallback = isFavoritesComparison
-        ? normalizeSelectedIds(loadFavoriteFacilities())
-        : normalizeSelectedIds(loadCompareSelection());
-      return fallback;
-    });
-  }, [facilitiesFromQuery, isFavoritesComparison]);
+  const selectedFacilityIds = useMemo(() => {
+    if (facilitiesFromQuery.length > 0) {
+      return facilitiesFromQuery;
+    }
+    if (localSelectedFacilityIds.length > 0) {
+      return localSelectedFacilityIds;
+    }
+    return isFavoritesComparison
+      ? normalizeSelectedIds(loadFavoriteFacilities())
+      : normalizeSelectedIds(loadCompareSelection());
+  }, [facilitiesFromQuery, isFavoritesComparison, localSelectedFacilityIds]);
 
   useEffect(() => {
     if (isFavoritesComparison) {
@@ -402,13 +395,7 @@ export function ComparePageClient() {
   }, [decisionResponse?.patient_needs_profile, effectiveMobileFocusedFacilityId, relevantComparisonRows, selectedFacilities]);
 
   const removeFacility = (facilityId: string) => {
-    setSelectedFacilityIds((current) => {
-      const next = current.filter((item) => item !== facilityId);
-      if (isFavoritesComparison) {
-        saveFavoriteFacilities(next);
-      }
-      return next;
-    });
+    setLocalSelectedFacilityIds((current) => current.filter((item) => item !== facilityId));
   };
 
   const addAnotherFacility = () => {

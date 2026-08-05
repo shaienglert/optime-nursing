@@ -17,10 +17,12 @@ from app.models.agent_execution import (
     AgentKnowledgeRefreshEvent,
     AgentKnowledgeReportSnapshot,
     RecommendationKnowledgeUsageLog,
+    SupervisorIncidentLog,
 )
 from app.models.facility import AnswerState, AdaptiveQuestionResponse, Facility, FacilityActivityCategory, FacilityCapability, FacilityIntelligenceProfile, Inspection, QualityMeasure, ResidentOutcome, Staffing
 from app.models.knowledge_fabric import KnowledgeObject
 from app.services.external_discovery import build_external_discovery_summary, run_external_discovery
+from app.services.platform_registry_service import evaluate_capability_assignment, load_platform_registry
 
 AGENT_REPORT_DEFS: List[Dict[str, object]] = [
     {
@@ -112,6 +114,20 @@ AGENT_REPORT_DEFS: List[Dict[str, object]] = [
         "sources": ["Data quality dashboard", "Conflict report", "Source reliability"],
     },
 ]
+
+REGISTRY_AGENT_CAPABILITY_MAP: Dict[str, str] = {
+    "provider_intelligence": "provider_intelligence",
+    "clinical_knowledge": "clinical_knowledge",
+    "data_quality": "data_quality_trust",
+    "senior_living_research": "senior_living_research",
+    "resident_needs": "resident_needs_intelligence",
+    "outcome_learning": "outcome_learning",
+    "activities_intelligence": "activities_intelligence",
+    "nutrition_intelligence": "nutrition_intelligence",
+    "family_experience": "family_experience_intelligence",
+    "knowledge_graph": "knowledge_graph",
+    "matching_improvement": "matching_improvement",
+}
 
 FRESHNESS_STATES = {"FRESH", "REFRESHING", "STALE", "EXPIRED", "NEEDS_REVIEW", "ERROR"}
 
@@ -1018,6 +1034,34 @@ def refresh_all_agent_reports(
         agent_key = str(agent_def["agent_key"])
         started = datetime.now(timezone.utc)
         try:
+            capability_id = REGISTRY_AGENT_CAPABILITY_MAP.get(agent_key)
+            if capability_id:
+                decision = evaluate_capability_assignment(capability_id, load_platform_registry().get("capabilities") or [])
+                if not decision.get("allowed"):
+                    db.add(
+                        SupervisorIncidentLog(
+                            incident_type="REGISTRY_ASSIGNMENT_REJECTED",
+                            severity="HIGH",
+                            status="OPEN",
+                            agent_key=agent_key,
+                            domain=str(agent_def.get("domain") or "operations_supervisor"),
+                            summary=f"Registry rejected work request for {capability_id}: {decision.get('reason')}",
+                            details_json=json.dumps({"capability_id": capability_id, "decision": decision}),
+                            created_at=datetime.now(timezone.utc),
+                        )
+                    )
+                    _mark_refresh_event(
+                        db,
+                        agent_key,
+                        refresh_mode,
+                        "BLOCKED",
+                        started_at=started,
+                        finished_at=datetime.now(timezone.utc),
+                        error_message=str(decision.get("reason") or "Registry rejected work request."),
+                    )
+                    failures += 1
+                    continue
+
             row = db.query(AgentKnowledgeReportSnapshot).filter(AgentKnowledgeReportSnapshot.agent_key == agent_key).first()
             next_refresh_at = _as_utc(row.next_refresh_at) if row else None
             if row and not force and incremental and next_refresh_at and next_refresh_at > now:
@@ -1182,6 +1226,7 @@ def recommendation_guard_decision(
                 recommendation_key=recommendation_key,
                 resident_key=resident_key,
                 agent_key=agent_key,
+                logged_at=datetime.now(timezone.utc),
                 freshness_status="ERROR",
                 health_status="UNKNOWN",
                 verification_status="UNVERIFIED",
@@ -1219,6 +1264,7 @@ def recommendation_guard_decision(
             recommendation_key=recommendation_key,
             resident_key=resident_key,
             agent_key=agent_key,
+            logged_at=datetime.now(timezone.utc),
             freshness_status=freshness,
             health_status=health,
             verification_status="VERIFIED" if verified else "UNVERIFIED",
