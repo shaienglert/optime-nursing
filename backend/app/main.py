@@ -1652,7 +1652,6 @@ async def knowledge_freshness_states():
 
 @app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut)
 async def supervisor_overview(db: Session = Depends(get_db)):
-    ensure_reports_available(db)
     summary = compute_supervisor_metrics(db)
     return KnowledgeSupervisorOut(**summary)
 

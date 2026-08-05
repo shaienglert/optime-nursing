@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from datetime import datetime, timedelta, timezone
@@ -12,6 +13,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from app.services import chief_ai_supervisor
+from app import main as backend_main
 
 
 def test_operational_agent_differs_from_specification_only(monkeypatch) -> None:
@@ -258,3 +260,33 @@ def test_supervisor_cycle_includes_registry_audit_and_blocked_assignment(monkeyp
     assert any(incident["incident_type"] == "REGISTRY_CURRENT_ASSIGNMENT_BLOCKED" for incident in incidents)
     assert saved_states
     assert any("latest_registry_runtime_proof" in state for state in saved_states)
+
+
+def test_supervisor_overview_reads_current_metrics_without_bootstrap(monkeypatch) -> None:
+    called = {"ensure": False}
+
+    def _fail_if_bootstrap(db):
+        called["ensure"] = True
+        raise AssertionError("supervisor_overview should not bootstrap report state")
+
+    monkeypatch.setattr(backend_main, "ensure_reports_available", _fail_if_bootstrap)
+    monkeypatch.setattr(
+        backend_main,
+        "compute_supervisor_metrics",
+        lambda db: {
+            "fresh_agents": 1,
+            "stale_agents": 0,
+            "expired_knowledge": 0,
+            "failed_refreshes": 0,
+            "knowledge_age": 0,
+            "pending_reviews": 0,
+            "refresh_queue": 0,
+            "refresh_success_rate": 1.0,
+            "average_knowledge_freshness": 1.0,
+            "alerts": [],
+        },
+    )
+
+    result = asyncio.run(backend_main.supervisor_overview(db=object()))
+    assert result.fresh_agents == 1
+    assert called["ensure"] is False
