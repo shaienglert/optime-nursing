@@ -2,17 +2,116 @@
   "command_id": "OPTIME-005",
   "tracking_issue": 4,
   "status": "IN_PROGRESS",
-  "active_work": "OPTIME-005-AUDIT",
+  "active_objective": "launch_nevada",
+  "ready_for_universal_domain_engine": false,
+  "immediate_next_sprint": "OPTIME-006",
+  "estimated_remaining_sprints": 7,
   "rules": {
     "single_active_objective": true,
     "dependencies_before_downstream_work": true,
     "extension_before_replacement": true,
     "duplicate_capability_ownership_forbidden": true,
     "production_evidence_required": true,
-    "owner_approval_required_for_activation": true
+    "owner_approval_required_for_activation": true,
+    "roadmap_registration_required_before_implementation": true
   },
-  "sprints": [],
-  "immediate_next_sprint": null,
-  "estimated_remaining_sprints": null,
-  "ready_for_universal_domain_engine": null
+  "sprints": [
+    {
+      "sprint_id": "OPTIME-006",
+      "objective": "Nevada Source Intelligence Closure",
+      "capabilities": ["source_intelligence"],
+      "dependencies": ["constitution_governance", "platform_registry"],
+      "exit_criteria": [
+        "all Nevada sources have governed lifecycle states",
+        "mandatory and optional source sets are explicit",
+        "HCQC and NPPES dispositions are deterministic",
+        "freshness and downstream-use policies exist",
+        "non-mocked runtime proof exists",
+        "Platform Registry recalculates launch_nevada"
+      ]
+    },
+    {
+      "sprint_id": "OPTIME-007",
+      "objective": "Generic Market Builder",
+      "capabilities": ["market_builder", "canonical_universe"],
+      "dependencies": ["OPTIME-006"],
+      "exit_criteria": [
+        "one generic builder entry point",
+        "market config controls geography sources identity validation outputs and reports",
+        "Florida and Nevada use the same orchestration contract",
+        "Texas onboarding requires no new architecture",
+        "canonical artifacts are deterministic"
+      ]
+    },
+    {
+      "sprint_id": "OPTIME-008",
+      "objective": "Canonical Domain Intake Contract",
+      "capabilities": ["universal_domain_intake"],
+      "dependencies": ["OPTIME-007", "platform_registry"],
+      "exit_criteria": [
+        "canonical domain brief schema",
+        "decision user provider source evidence outcome legal market and runtime requirements represented",
+        "owner approval boundary explicit",
+        "no Nursing-specific universal-core requirement",
+        "invalid briefs rejected"
+      ]
+    },
+    {
+      "sprint_id": "OPTIME-009",
+      "objective": "Objective and Capability Compiler",
+      "capabilities": ["objective_compiler", "domain_capability_planner", "dependency_planner"],
+      "dependencies": ["OPTIME-008"],
+      "exit_criteria": [
+        "deterministic objective portfolio proposal",
+        "reuse extend new classification",
+        "dependency graph and current executable capability",
+        "no duplicate ownership",
+        "owner approval before activation"
+      ]
+    },
+    {
+      "sprint_id": "OPTIME-010",
+      "objective": "Domain Source Agent Validation and Learning Planners",
+      "capabilities": ["domain_source_planner", "domain_agent_planner", "domain_validation_planner", "domain_learning_plan_compiler"],
+      "dependencies": ["OPTIME-009", "source_intelligence"],
+      "exit_criteria": [
+        "authoritative source plan",
+        "agent reuse and creation proposal",
+        "evidence and validation plan",
+        "learning and outcome plan",
+        "explicit owner decisions"
+      ]
+    },
+    {
+      "sprint_id": "OPTIME-011",
+      "objective": "Universal Execution Plan Compiler",
+      "capabilities": ["domain_execution_plan_compiler", "domain_runtime_provisioning_plan"],
+      "dependencies": ["OPTIME-010", "chief_ai_supervisor", "runtime_sync"],
+      "exit_criteria": [
+        "bounded execution plan",
+        "retries incidents checkpoints release gates and rollback defined",
+        "only active owner-approved objective executes",
+        "architecture and constitution remain owner-gated"
+      ]
+    },
+    {
+      "sprint_id": "OPTIME-012",
+      "objective": "Cross-Domain Pilot",
+      "capabilities": ["universal_platform_stack", "jobs_domain_configuration"],
+      "dependencies": ["OPTIME-011"],
+      "exit_criteria": [
+        "domain brief compiles without hand-authored platform architecture",
+        "source market agent and acceptance plans generated",
+        "provider and candidate canonical universes built",
+        "decision flow has no Nursing-specific runtime assumptions",
+        "production pilot passes smoke tests"
+      ]
+    }
+  ],
+  "deferred": [
+    "broad media expansion",
+    "cosmetic provider portal work",
+    "new Nursing-specific knowledge agents",
+    "Universal Domain Engine before OPTIME-006 and OPTIME-007"
+  ]
 }
