@@ -1,0 +1,18 @@
+{
+  "command_id": "OPTIME-005",
+  "tracking_issue": 4,
+  "status": "IN_PROGRESS",
+  "active_work": "OPTIME-005-AUDIT",
+  "rules": {
+    "single_active_objective": true,
+    "dependencies_before_downstream_work": true,
+    "extension_before_replacement": true,
+    "duplicate_capability_ownership_forbidden": true,
+    "production_evidence_required": true,
+    "owner_approval_required_for_activation": true
+  },
+  "sprints": [],
+  "immediate_next_sprint": null,
+  "estimated_remaining_sprints": null,
+  "ready_for_universal_domain_engine": null
+}
