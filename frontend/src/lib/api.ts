@@ -1,6 +1,3 @@
-import type { QuestionnaireState } from "../context/questionnaire-context";
-import { runOptimeV2Engine } from "./optime-v2-engine";
-
 export interface Facility {
   id: number;
   cms_id?: string;
@@ -180,93 +177,6 @@ export type FacilityDetailsData = SearchFacility & {
   };
 };
 
-export type FacilityProfileStaffing = {
-  period_label: string;
-  staffing_rating?: number | null;
-  rn_hours_per_resident_day?: number | null;
-  total_nurse_hours_per_resident_day?: number | null;
-  weekend_total_nurse_hours_per_resident_day?: number | null;
-  source_name?: string | null;
-  source_date?: string | null;
-  confidence_level?: string | null;
-};
-
-export type FacilityProfileInspection = {
-  inspection_date: string;
-  inspection_rating?: number | null;
-  deficiency_count: number;
-  severe_deficiency_count: number;
-  fine_amount?: number | null;
-  payment_denials_count: number;
-  source_name?: string | null;
-  source_date?: string | null;
-  confidence_level?: string | null;
-  severity: string;
-};
-
-export type FacilityProfileQualityMeasure = {
-  measure_code: string;
-  measure_name: string;
-  measure_value?: number | null;
-  quality_rating?: number | null;
-  period_label: string;
-  source_name?: string | null;
-  source_date?: string | null;
-  confidence_level?: string | null;
-};
-
-export type FacilityProfileReview = {
-  source: string;
-  rating: number;
-  review_text?: string | null;
-  sentiment_score?: number | null;
-  created_at?: string | null;
-};
-
-export type FacilityProfileTimelineEvent = {
-  event_type: string;
-  timestamp: string;
-  title: string;
-  summary: string;
-  source: string;
-  severity?: string | null;
-};
-
-export type FacilityNearbyPlace = {
-  name: string;
-  category: string;
-  source: string;
-  verification_status: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  distance_miles?: number | null;
-  address?: string | null;
-  last_updated?: string | null;
-};
-
-export type FacilityProfileV3Data = {
-  facility: BackendFacilityDetails;
-  runtime_version?: string | null;
-  runtime_timestamp?: string | null;
-  knowledge_updated?: string | null;
-  availability_note: string;
-  staffing_history: FacilityProfileStaffing[];
-  inspections: FacilityProfileInspection[];
-  quality_measures: FacilityProfileQualityMeasure[];
-  family_reviews: FacilityProfileReview[];
-  government_findings: string[];
-  inspection_summary: Record<string, unknown>;
-  evidence_summary: Record<string, unknown>;
-  neighborhood: Record<string, unknown>;
-  nearby_hospitals: FacilityNearbyPlace[];
-  nearby_physicians: FacilityNearbyPlace[];
-  nearby_pharmacies: FacilityNearbyPlace[];
-  transportation: FacilityNearbyPlace[];
-  videos: Array<Record<string, string>>;
-  timeline: FacilityProfileTimelineEvent[];
-  parameter_table?: FacilityParameterTable | null;
-};
-
 export type ParameterTableRow = {
   parameter_id: string;
   category: string;
@@ -325,112 +235,6 @@ export type FacilityParameterComparison = {
   facilities: FacilityParameterTable[];
 };
 
-export type LiveFacilityFact = {
-  parameter_id: string;
-  parameter: string;
-  value: string;
-  evidence_status: string;
-  confidence: string;
-  source_category: string;
-  source_name: string;
-  source_url_or_local_file: string;
-  dataset_name: string;
-  dataset_field: string;
-  record_identifier: string;
-  retrieval_date: string;
-  publication_date: string;
-  evidence_quote: string;
-  normalized_value: string;
-  scope: string;
-  recency: string;
-  contradictory_sources: string;
-  used_by_decision_engine: string;
-  used_in_eligibility: string;
-  used_in_ranking: string;
-  displayed_in_ui: string;
-  ACTION: string;
-  Priority: string;
-  "Recipient department": string;
-  "Suggested recipient role": string;
-  "Required evidence": string;
-  "Suggested question": string;
-  "Request status": string;
-  "Last request date": string;
-  "Follow-up date": string;
-  "Ranking impact": string;
-};
-
-export type LiveFacilityAction = {
-  action_id: string;
-  parameter_id: string;
-  parameter: string;
-  current_value: string;
-  evidence_status: string;
-  action: string;
-  priority: string;
-  recipient_department: string;
-  suggested_recipient_role: string;
-  required_evidence: string;
-  suggested_question: string;
-  request_status: string;
-  last_request_date: string;
-  follow_up_date: string;
-  ranking_impact: string;
-};
-
-export type LiveFacilityProfile = {
-  facility: Record<string, unknown> & {
-    canonical_facility_id: string;
-    display_name: string;
-    requested_name: string;
-    canonical_name: string;
-    aliases: string[];
-    cms_ccn: string;
-    address: string;
-    city: string;
-    state: string;
-    zip: string;
-    county: string;
-    phone: string;
-    facility_type: string;
-    beds: number;
-    ownership_type: string;
-    medicare_medicaid: string;
-    license_status: string;
-    license_number: string;
-    official_website: string;
-    coordinates: string;
-    canonical_npi: string;
-    must_not_merge: { npi: string; reason: string };
-  };
-  summary: {
-    fact_count: number;
-    verified_fact_count: number;
-    unknown_fact_count: number;
-    actionable_fact_count: number;
-    critical_unknown_count: number;
-    source_count: number;
-    profile_completeness_percent: number;
-    last_updated: string;
-    evidence_record_count: number;
-    evidence_confidence: string;
-  };
-  facts: LiveFacilityFact[];
-  identity_evidence: Array<Record<string, unknown>>;
-  actions: LiveFacilityAction[];
-  sources: string[];
-  quality_safety: Record<string, { value: string | number; status: string }>;
-  staffing: Record<string, { value: string | number; status: string }>;
-  unknown_sections: string[];
-  email_request: Record<string, unknown> & { status: string; subject: string };
-  request_tracker: Record<string, unknown>;
-  safety_controls: {
-    email_send_enabled: boolean;
-    production_write_enabled: boolean;
-    ranking_write_enabled: boolean;
-  };
-};
-
 export type PersonalizedParameterOrderRequest = {
   need_tags?: string[];
   priority_parameter_ids?: string[];
@@ -476,9 +280,6 @@ export type PatientNeedsProfile = {
 
 export type DecisionEngineRecommendation = {
   canonical_facility_id: string;
-  facility_id?: string;
-  runtime_version?: string | null;
-  runtime_timestamp?: string | null;
   facility_name: string;
   city?: string | null;
   state?: string | null;
@@ -527,32 +328,6 @@ export type DecisionEngineRecommendation = {
     patient_relevant_outcomes?: { known: string[]; unknown: string[] };
     practical_fit?: { known: string[]; unknown: string[] };
     unknown_tie_break_dimensions?: string[];
-    structured?: {
-      facility_id?: string;
-      runtime_version?: string | null;
-      runtime_timestamp?: string | null;
-      overall_score?: number;
-      confidence_score?: number;
-      ranking_position?: number | null;
-      match_percentage?: number;
-      match_breakdown?: Array<Record<string, unknown>>;
-      positive_factors?: Array<Record<string, unknown>>;
-      negative_factors?: Array<Record<string, unknown>>;
-      evidence?: Array<Record<string, unknown>>;
-      confidence?: Record<string, unknown>;
-      freshness?: {
-        knowledge_timestamp?: string | null;
-        knowledge_age_seconds?: number | null;
-        knowledge_age?: string;
-        runtime_version?: string | null;
-        runtime_build_time?: string | null;
-      };
-      alternative_analysis?: {
-        why_ranked_above_next?: string | null;
-        top_differentiators?: Array<Record<string, unknown>>;
-      };
-      patient_summary?: Record<string, unknown>;
-    };
   };
   tie_break_explanation_vs_next?: {
     why_ranked_above: string;
@@ -593,50 +368,6 @@ export type DecisionEngineRequest = {
   questionnaire_state: Record<string, unknown>;
   natural_language_query?: string;
   limit?: number;
-};
-
-export type PatientCasePayload = {
-  id: number;
-  case_key: string;
-  display_label: string;
-  current_version: number;
-  profile_confidence: number;
-  canonical_profile: Record<string, unknown>;
-  questionnaire_state: Record<string, unknown>;
-  summary: string;
-  readiness: Record<string, unknown>;
-  missing: Array<Record<string, unknown>>;
-  follow_up_questions: Array<Record<string, unknown>>;
-  conflicts: Record<string, unknown>;
-  source_matrix: Record<string, unknown>;
-  decision_handoff: {
-    patient_case_id?: number;
-    questionnaire_state?: Record<string, unknown>;
-    natural_language_query?: string;
-  };
-  created_at?: string | null;
-  updated_at?: string | null;
-  history: Array<Record<string, unknown>>;
-};
-
-export type PatientCaseHistoryPayload = {
-  id: number;
-  case_key: string;
-  current_version: number;
-  history: Array<Record<string, unknown>>;
-};
-
-export type PatientCaseMissingPayload = {
-  id: number;
-  missing: Array<Record<string, unknown>>;
-  follow_up_questions: Array<Record<string, unknown>>;
-};
-
-export type PatientCaseSummaryPayload = {
-  id: number;
-  summary: string;
-  readiness: Record<string, unknown>;
-  profile_confidence: number;
 };
 
 export type PatientComparisonContextRequest = {
@@ -770,7 +501,6 @@ type BackendFacility = {
 };
 
 type BackendFacilityDetails = BackendFacility & {
-  canonical_facility_id?: string | null;
   score_breakdown: {
     medical_quality_score: number;
     staffing_score: number;
@@ -1820,18 +1550,6 @@ function getFallbackSearchFacilities(searchText?: string): SearchFacility[] {
 
 const BROWSER_BACKEND_PROXY_BASE = "/api/backend";
 
-export class ApiRequestError extends Error {
-  status: number;
-  path: string;
-
-  constructor(message: string, status: number, path: string) {
-    super(message);
-    this.name = "ApiRequestError";
-    this.status = status;
-    this.path = path;
-  }
-}
-
 function shouldUseDevelopmentFallbackData(): boolean {
   return process.env.NODE_ENV !== "production";
 }
@@ -1911,7 +1629,7 @@ async function fetchJson<T>(path: string): Promise<T> {
     cache: "no-store",
   });
   if (!response.ok) {
-    throw new ApiRequestError(`API request failed (${response.status})`, response.status, path);
+    throw new Error(`API request failed (${response.status})`);
   }
   return response.json() as Promise<T>;
 }
@@ -1924,219 +1642,9 @@ async function postJson<TReq, TRes>(path: string, payload: TReq): Promise<TRes> 
     body: JSON.stringify(payload),
   });
   if (!response.ok) {
-    throw new ApiRequestError(`API request failed (${response.status})`, response.status, path);
+    throw new Error(`API request failed (${response.status})`);
   }
   return response.json() as Promise<TRes>;
-}
-
-function toCanonicalFacilityId(facility: SearchFacility): string {
-  const raw = String(facility.cms_id || "").trim();
-  if (!raw) {
-    return `FAC-${facility.id}`;
-  }
-  return raw.startsWith("CMS-") ? raw : `CMS-${raw}`;
-}
-
-function toCcn(canonicalFacilityId: string): string {
-  return canonicalFacilityId.replace(/^CMS-/, "");
-}
-
-function toRequirementLevel(classification: string): "REQUIRED" | "HIGH" | "MEDIUM" | "PREFERENCE" {
-  if (classification === "MUST") return "REQUIRED";
-  if (classification === "NICE_TO_HAVE") return "PREFERENCE";
-  if (classification === "UNKNOWN") return "MEDIUM";
-  return "HIGH";
-}
-
-function extractParameterId(requirementId: string): string {
-  const normalized = String(requirementId || "").trim();
-  if (!normalized) return "unknown_requirement";
-
-  if (normalized.startsWith("REQ-EXPLICIT-")) {
-    return normalized
-      .replace("REQ-EXPLICIT-", "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "");
-  }
-
-  const parts = normalized.split("-");
-  if (parts.length >= 3) {
-    return parts.slice(2).join("-").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-  }
-
-  return normalized.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-}
-
-function matchBandFromScore(score: number): "STRONG_MATCH" | "GOOD_MATCH" | "PARTIAL_MATCH" | "LIMITED_MATCH" {
-  if (score >= 80) return "STRONG_MATCH";
-  if (score >= 65) return "GOOD_MATCH";
-  if (score >= 45) return "PARTIAL_MATCH";
-  return "LIMITED_MATCH";
-}
-
-function toFallbackDecisionResponse(payload: DecisionEngineRequest, facilities: SearchFacility[], governanceContext: GovernanceRuntimeContext | null): DecisionEngineResponse {
-  const questionnaireState = (payload.questionnaire_state || {}) as QuestionnaireState;
-  const engineOutput = runOptimeV2Engine(facilities, questionnaireState, {
-    mode: "production",
-    governanceContext,
-  });
-
-  const displayed = engineOutput.displayedRecommendations || [];
-  const first = displayed[0];
-  const governedRequirements = first?.report?.audit?.governedRequirements || [];
-
-  const patientNeeds: PatientNeed[] = governedRequirements.map((requirement: Record<string, unknown>) => {
-    const requirementId = String(requirement.requirement_id || "");
-    const label = String(requirement.label || requirementId || "Requirement");
-    const parameterId = extractParameterId(requirementId) || label.toLowerCase().replace(/[^a-z0-9]+/g, "_");
-    const classification = String(requirement.classification || "OUR_RECOMMENDATION");
-    return {
-      parameter_id: parameterId,
-      requirement_level: toRequirementLevel(classification),
-      desired_value: "YES",
-      acceptable_values: ["YES", "UNKNOWN"],
-      applicable_scope: "FACILITY",
-      user_evidence_source: String(requirement.source_evidence || "governed-runtime"),
-      confidence: typeof requirement.confidence === "number" ? requirement.confidence : 0.7,
-      need_text: label,
-    };
-  });
-
-  const priorityParameterIds = patientNeeds
-    .filter((need) => need.requirement_level === "REQUIRED" || need.requirement_level === "HIGH")
-    .map((need) => need.parameter_id);
-  const allNeedParameterIds = patientNeeds.map((need) => need.parameter_id);
-  const profileKey = patientNeeds.some((need) => need.parameter_id.includes("stroke") || need.parameter_id.includes("therapy"))
-    ? "stroke"
-    : null;
-
-  const mappedResults: DecisionEngineRecommendation[] = displayed.map((recommendation, index) => {
-    const facility = recommendation.facility;
-    const canonicalFacilityId = toCanonicalFacilityId(facility);
-    const governedDecision = recommendation.report?.audit?.governedFacilityDecision;
-    const evidenceRecords = governedDecision?.evidence_records || [];
-    const evidenceByParameter = new Map<string, { state: string; source: string }>();
-
-    for (const record of evidenceRecords) {
-      const requirementId = String(record.requirement_id || "");
-      const parameterId = extractParameterId(requirementId);
-      if (!parameterId) continue;
-      evidenceByParameter.set(parameterId, {
-        state: String(record.state || "UNKNOWN"),
-        source: String(record.source || "Not verified"),
-      });
-    }
-
-    const matchedNeeds: Array<Record<string, unknown>> = [];
-    const unmetNeeds: Array<Record<string, unknown>> = [];
-    const unknownNeeds: Array<Record<string, unknown>> = [];
-
-    for (const need of patientNeeds) {
-      const evidence = evidenceByParameter.get(need.parameter_id);
-      const state = evidence?.state || "UNKNOWN";
-      if (state === "YES") {
-        matchedNeeds.push({ parameter_id: need.parameter_id, source: evidence?.source || "Not verified" });
-      } else if (state === "NO") {
-        unmetNeeds.push({ parameter_id: need.parameter_id, source: evidence?.source || "Not verified" });
-      } else {
-        unknownNeeds.push({ parameter_id: need.parameter_id, source: evidence?.source || "Not verified" });
-      }
-    }
-
-    const mustFailed = (governedDecision?.must_failed || []).length;
-    const unknownCritical = recommendation.report?.matchEvidenceStatus?.criticalUnknowns?.length || unknownNeeds.length;
-    const eligibilityStatus: DecisionEngineRecommendation["eligibility_status"] = mustFailed > 0 || recommendation.hardRejectionReasons.length > 0
-      ? "INELIGIBLE"
-      : unknownCritical > 0
-        ? "POTENTIALLY_ELIGIBLE"
-        : "ELIGIBLE";
-
-    return {
-      canonical_facility_id: canonicalFacilityId,
-      facility_name: facility.name,
-      city: facility.city || null,
-      state: facility.state || null,
-      county: null,
-      zip: facility.zip_code || null,
-      canonical_type: null,
-      role_classification: null,
-      source_identity_ids: { cms_ccn: toCcn(canonicalFacilityId) },
-      facility_profile_id: facility.id,
-      eligibility_status: eligibilityStatus,
-      match_score: recommendation.report.matchEvidenceStatus.provenMatchScore,
-      patient_match_score: recommendation.report.matchEvidenceStatus.provenMatchScore,
-      match_band: matchBandFromScore(recommendation.report.matchEvidenceStatus.provenMatchScore),
-      matched_needs: matchedNeeds,
-      unmet_verified_needs: unmetNeeds,
-      unknown_critical_needs: unknownNeeds,
-      preference_matches: [],
-      evidence_certainty: recommendation.report.matchEvidenceStatus.provenMatchScore,
-      evidence_confidence: recommendation.report.matchEvidenceStatus.caseRelevantEvidenceCoveragePct,
-      quality_safety_score: facility.quality_rating ?? null,
-      staffing_score: facility.staffing_rating ?? null,
-      capability_depth_score: recommendation.priorityScores.careFit,
-      patient_relevant_outcomes_score: recommendation.priorityScores.clinicalQuality,
-      practical_fit_score: recommendation.priorityScores.familyFit,
-      domain_breakdown: {
-        care_fit: recommendation.priorityScores.careFit,
-        lifestyle_fit: recommendation.priorityScores.lifestyleFit,
-        social_fit: recommendation.priorityScores.socialFit,
-        cultural_fit: recommendation.priorityScores.culturalFit,
-        family_fit: recommendation.priorityScores.familyFit,
-        financial_fit: recommendation.priorityScores.financialFit,
-        clinical_quality: recommendation.priorityScores.clinicalQuality,
-      },
-      explanation: {
-        why_matches: recommendation.positives.slice(0, 5),
-        needs_verification: recommendation.missingInformation.slice(0, 8),
-        concerns: recommendation.negatives.slice(0, 5),
-        eligibility_reasons: recommendation.hardRejectionReasons,
-        availability_note: "Current availability must be confirmed directly with the facility.",
-        location_note: "Location fit is reflected in ranked results based on submitted context.",
-      },
-      parameter_badges: matchedNeeds.slice(0, 6).map((item) => String(item.parameter_id || "")).filter(Boolean),
-      comparison_parameter_ids: allNeedParameterIds,
-      match_evidence_profile: {
-        proven_critical_matches: matchedNeeds.length,
-        taxonomy_supported_critical_matches: 0,
-        unknown_critical_needs: unknownNeeds.length,
-        verified_gap_critical_needs: unmetNeeds.length,
-      },
-      rank_position: index + 1,
-      rank_tie_status: "UNIQUE",
-      rank_display: `#${index + 1}`,
-      tied_with: [],
-      tie_break_explanation_vs_next: null,
-    };
-  });
-
-  return {
-    patient_needs_profile: {
-      generated_from: {
-        questionnaire: true,
-        natural_language: Boolean((payload.natural_language_query || "").trim()),
-      },
-      needs: patientNeeds,
-      need_tags: allNeedParameterIds,
-      priority_parameter_ids: priorityParameterIds,
-      profile_key: profileKey,
-      location_city: null,
-      natural_language_mapping: {
-        fallback_mode: "facilities_plus_governed_engine",
-      },
-    },
-    results: mappedResults,
-    result_count: mappedResults.length,
-    total_candidates_scored: facilities.length,
-    availability_policy: "Current availability must be confirmed directly with the facility.",
-    tie_break_policy: {
-      thresholds: {},
-      true_tie_label: "UNIQUE",
-      notes: ["Fallback response generated from live facilities endpoint and governed frontend engine."],
-    },
-    tie_break_decisions: [],
-  };
 }
 
 export async function fetchFacilities(searchText?: string): Promise<Facility[]> {
@@ -2226,72 +1734,6 @@ export async function fetchFacilityDetails(id: string): Promise<FacilityDetailsD
       hospital: "Nearest hospital",
       synagogue: "Nearby synagogue",
       transit: "Public transportation",
-    },
-  };
-}
-
-export async function fetchFacilityProfileV3(id: string): Promise<{
-  facility: FacilityDetailsData;
-  facility_score_breakdown_raw: BackendFacilityDetails["score_breakdown"];
-  runtime_version?: string | null;
-  runtime_timestamp?: string | null;
-  knowledge_updated?: string | null;
-  availability_note: string;
-  staffing_history: FacilityProfileStaffing[];
-  inspections: FacilityProfileInspection[];
-  quality_measures: FacilityProfileQualityMeasure[];
-  family_reviews: FacilityProfileReview[];
-  government_findings: string[];
-  inspection_summary: Record<string, unknown>;
-  evidence_summary: Record<string, unknown>;
-  neighborhood: Record<string, unknown>;
-  nearby_hospitals: FacilityNearbyPlace[];
-  nearby_physicians: FacilityNearbyPlace[];
-  nearby_pharmacies: FacilityNearbyPlace[];
-  transportation: FacilityNearbyPlace[];
-  videos: Array<Record<string, string>>;
-  timeline: FacilityProfileTimelineEvent[];
-  parameter_table?: FacilityParameterTable | null;
-}> {
-  const payload = await fetchJson<FacilityProfileV3Data>(`/facilities/${id}/profile-v3`);
-  const mappedFacility = toSearchFacility(payload.facility);
-  const gallery = mappedFacility.visualIntelligence.galleryImages.map((image) => image.url);
-
-  return {
-    ...payload,
-    facility_score_breakdown_raw: payload.facility.score_breakdown,
-    facility: {
-      ...mappedFacility,
-      canonical_facility_id: payload.facility.canonical_facility_id,
-      website: "",
-      gallery,
-      scoreBreakdown: [
-        {
-          category: "Medical Quality",
-          score: Math.round(payload.facility.score_breakdown.medical_quality_score),
-          explanation: "CMS quality-aligned output from production ingestion.",
-          dataSource: ["CMS Quality", "Inspections"],
-        },
-        {
-          category: "Staffing",
-          score: Math.round(payload.facility.score_breakdown.staffing_score),
-          explanation: "Staffing score from production staffing ingestion.",
-          dataSource: ["CMS Staffing"],
-        },
-        {
-          category: "Safety",
-          score: Math.round(payload.facility.score_breakdown.safety_score),
-          explanation: "Safety score from deficiencies and complaint patterns.",
-          dataSource: ["CMS Inspections"],
-        },
-      ],
-      mapPoints: {
-        facility: `${payload.facility.name}, ${payload.facility.city}`,
-        family: "",
-        hospital: "",
-        synagogue: "",
-        transit: "",
-      },
     },
   };
 }
@@ -2420,10 +1862,6 @@ export async function fetchFacilityParameterTable(
   return fetchJson<FacilityParameterTable>(`/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/parameter-table${suffix}`);
 }
 
-export async function fetchLiveFacilityProfile(cmsCcn: string): Promise<LiveFacilityProfile> {
-  return fetchJson<LiveFacilityProfile>(`/live-facility-profiles/${encodeURIComponent(cmsCcn)}`);
-}
-
 export async function compareFacilityParameters(
   payload: FacilityParameterComparisonRequest
 ): Promise<FacilityParameterComparison> {
@@ -2437,7 +1875,7 @@ export async function fetchPersonalizedParameterOrder(
 }
 
 export async function fetchPatientNeedsProfile(
-  payload: { patient_case_id?: number; questionnaire_state: Record<string, unknown>; natural_language_query?: string }
+  payload: { questionnaire_state: Record<string, unknown>; natural_language_query?: string }
 ): Promise<PatientNeedsProfile> {
   return postJson<typeof payload, PatientNeedsProfile>("/decision-engine/patient-needs-profile", payload);
 }
@@ -2445,246 +1883,11 @@ export async function fetchPatientNeedsProfile(
 export async function fetchPatientDecisionRecommendations(
   payload: DecisionEngineRequest
 ): Promise<DecisionEngineResponse> {
-  try {
-    return await postJson<DecisionEngineRequest, DecisionEngineResponse>("/decision-engine/recommendations", payload);
-  } catch (error) {
-    if (!(error instanceof ApiRequestError) || error.status !== 404) {
-      throw error;
-    }
-
-    const facilities = await fetchSearchFacilities("");
-    const governanceContext = await fetchGovernanceRuntimeContext();
-    return toFallbackDecisionResponse(payload, facilities, governanceContext);
-  }
+  return postJson<DecisionEngineRequest, DecisionEngineResponse>("/decision-engine/recommendations", payload);
 }
 
 export async function fetchPatientComparisonContext(
   payload: PatientComparisonContextRequest
 ): Promise<PatientComparisonContextResponse> {
   return postJson<PatientComparisonContextRequest, PatientComparisonContextResponse>("/decision-engine/comparison-context", payload);
-}
-
-export async function upsertPatientCaseFromFreeText(payload: {
-  patient_case_id?: number;
-  case_text: string;
-  source_name?: string;
-  reason?: string;
-}): Promise<PatientCasePayload> {
-  return postJson<typeof payload, PatientCasePayload>("/patient-case/free-text", payload);
-}
-
-export async function upsertPatientCaseFromQuestionnaire(payload: {
-  patient_case_id?: number;
-  questionnaire_state: Record<string, unknown>;
-  source_name?: string;
-  reason?: string;
-}): Promise<PatientCasePayload> {
-  return postJson<typeof payload, PatientCasePayload>("/patient-case/questionnaire", payload);
-}
-
-export async function upsertPatientCaseFromChat(payload: {
-  patient_case_id?: number;
-  message: string;
-  source_name?: string;
-  reason?: string;
-}): Promise<PatientCasePayload> {
-  return postJson<typeof payload, PatientCasePayload>("/patient-case/chat", payload);
-}
-
-export async function updatePatientCase(payload: {
-  patient_case_id: number;
-  updates: Record<string, unknown>;
-  source_type?: string;
-  source_name?: string;
-  reason?: string;
-}): Promise<PatientCasePayload> {
-  return postJson<typeof payload, PatientCasePayload>("/patient-case/update", payload);
-}
-
-export async function fetchPatientCase(patientCaseId: number): Promise<PatientCasePayload> {
-  return fetchJson<PatientCasePayload>(`/patient-case/${patientCaseId}`);
-}
-
-export async function fetchPatientCaseHistory(patientCaseId: number): Promise<PatientCaseHistoryPayload> {
-  return fetchJson<PatientCaseHistoryPayload>(`/patient-case/${patientCaseId}/history`);
-}
-
-export async function fetchPatientCaseMissing(patientCaseId: number): Promise<PatientCaseMissingPayload> {
-  return fetchJson<PatientCaseMissingPayload>(`/patient-case/${patientCaseId}/missing`);
-}
-
-export async function fetchPatientCaseSummary(patientCaseId: number): Promise<PatientCaseSummaryPayload> {
-  return fetchJson<PatientCaseSummaryPayload>(`/patient-case/${patientCaseId}/summary`);
-}
-
-export type FacilityEvidenceItem = {
-  evidence_id: string;
-  facility_id: number | null;
-  parameter_id: string;
-  parameter_name: string;
-  parameter_value: string | null;
-  source: string;
-  source_type: string;
-  source_url: string;
-  collection_method: string;
-  collected_at: string | null;
-  verified_at: string | null;
-  verification_status: string;
-  confidence_score: number;
-  importance_score: number;
-  expires_at: string | null;
-  runtime_version: string | null;
-  connector: string;
-  conflict_status: string;
-  preferred: boolean;
-  affects_recommendation: boolean;
-  source_history: Array<Record<string, string>>;
-  merged_from: string[];
-};
-
-export type FacilityEvidenceResponse = {
-  facility_id: number;
-  evidence_count: number;
-  items: FacilityEvidenceItem[];
-};
-
-export type EvidenceStatusResponse = {
-  total_evidence_items: number;
-  preferred_evidence_items: number;
-  conflict_items: number;
-  connector_counts: Record<string, number>;
-  source_type_counts: Record<string, number>;
-  validation: {
-    no_duplicate_evidence: boolean;
-    no_orphan_evidence: boolean;
-    every_recommendation_parameter_references_evidence: boolean;
-    unknown_is_preserved: boolean;
-    duplicate_group_count: number;
-    orphan_evidence_ids: string[];
-    missing_recommendation_parameter_evidence: string[];
-  };
-  refresh?: Record<string, unknown>;
-};
-
-export type EvidenceCoverageRow = {
-  facility_id: number;
-  facility_name: string;
-  city: string;
-  state: string;
-  known_parameters: number;
-  unknown_parameters: number;
-  coverage_pct: number;
-  critical_missing_parameters: string[];
-  evidence_freshness_pct: number;
-  evidence_quality_score: number;
-};
-
-export type EvidenceCoverageResponse = {
-  overall: {
-    facility_count: number;
-    average_coverage_pct: number;
-    average_freshness_pct: number;
-    average_quality_score: number;
-  };
-  facilities: EvidenceCoverageRow[];
-};
-
-export type EvidenceHistoryResponse = {
-  facility_id: number;
-  history_count: number;
-  history: Array<{
-    evidence_id: string;
-    version_number: number;
-    action: string;
-    snapshot: Record<string, unknown>;
-    created_at: string | null;
-  }>;
-};
-
-export type EvidenceExplorerResponse = {
-  total: number;
-  limit: number;
-  offset: number;
-  items: Array<{
-    evidence_id: string;
-    facility_id: number | null;
-    parameter_id: string;
-    parameter_name: string;
-    parameter_value: string | null;
-    source: string;
-    source_type: string;
-    verification_status: string;
-    confidence_score: number;
-    importance_score: number;
-    conflict_status: string;
-    preferred: boolean;
-    verified_at: string | null;
-    expires_at: string | null;
-  }>;
-};
-
-export async function fetchFacilityEvidence(
-  facilityId: number,
-  options?: {
-    parameterId?: string;
-    verificationStatus?: string;
-    conflictsOnly?: boolean;
-    includeNonPreferred?: boolean;
-    refresh?: boolean;
-  },
-): Promise<FacilityEvidenceResponse> {
-  const params = new URLSearchParams();
-  if (options?.parameterId) params.set("parameter_id", options.parameterId);
-  if (options?.verificationStatus) params.set("verification_status", options.verificationStatus);
-  if (options?.conflictsOnly) params.set("conflicts_only", "1");
-  if (options?.includeNonPreferred) params.set("include_non_preferred", "1");
-  if (options?.refresh) params.set("refresh", "1");
-  const suffix = params.toString() ? `?${params.toString()}` : "";
-  return fetchJson<FacilityEvidenceResponse>(`/evidence/facility/${facilityId}${suffix}`);
-}
-
-export async function fetchEvidenceStatus(refresh = false): Promise<EvidenceStatusResponse> {
-  const suffix = refresh ? "?refresh=1" : "";
-  return fetchJson<EvidenceStatusResponse>(`/evidence/status${suffix}`);
-}
-
-export async function fetchEvidenceCoverage(options?: { facilityId?: number; refresh?: boolean }): Promise<EvidenceCoverageResponse> {
-  const params = new URLSearchParams();
-  if (options?.facilityId !== undefined) params.set("facility_id", String(options.facilityId));
-  if (options?.refresh) params.set("refresh", "1");
-  const suffix = params.toString() ? `?${params.toString()}` : "";
-  return fetchJson<EvidenceCoverageResponse>(`/evidence/coverage${suffix}`);
-}
-
-export async function fetchEvidenceHistory(facilityId: number, options?: { limit?: number; refresh?: boolean }): Promise<EvidenceHistoryResponse> {
-  const params = new URLSearchParams();
-  if (options?.limit) params.set("limit", String(options.limit));
-  if (options?.refresh) params.set("refresh", "1");
-  const suffix = params.toString() ? `?${params.toString()}` : "";
-  return fetchJson<EvidenceHistoryResponse>(`/evidence/history/${facilityId}${suffix}`);
-}
-
-export async function fetchEvidenceExplorer(options?: {
-  q?: string;
-  sourceType?: string;
-  verificationStatus?: string;
-  conflictsOnly?: boolean;
-  missingOnly?: boolean;
-  facilityId?: number;
-  limit?: number;
-  offset?: number;
-  refresh?: boolean;
-}): Promise<EvidenceExplorerResponse> {
-  const params = new URLSearchParams();
-  if (options?.q) params.set("q", options.q);
-  if (options?.sourceType) params.set("source_type", options.sourceType);
-  if (options?.verificationStatus) params.set("verification_status", options.verificationStatus);
-  if (options?.conflictsOnly) params.set("conflicts_only", "1");
-  if (options?.missingOnly) params.set("missing_only", "1");
-  if (options?.facilityId !== undefined) params.set("facility_id", String(options.facilityId));
-  if (options?.limit !== undefined) params.set("limit", String(options.limit));
-  if (options?.offset !== undefined) params.set("offset", String(options.offset));
-  if (options?.refresh) params.set("refresh", "1");
-  const suffix = params.toString() ? `?${params.toString()}` : "";
-  return fetchJson<EvidenceExplorerResponse>(`/admin/evidence/explorer${suffix}`);
 }

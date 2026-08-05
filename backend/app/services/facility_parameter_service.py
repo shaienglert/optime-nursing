@@ -1,14 +1,8 @@
 from __future__ import annotations
 
-import hashlib
 import json
-import logging
 from pathlib import Path
-import threading
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-
-from app.services.canonical_universe import resolve_canonical_universe_path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -16,6 +10,7 @@ DATABASE_DIR = REPO_ROOT / "database"
 
 REGISTRY_PATH = DATABASE_DIR / "optime_parameter_registry.json"
 EVIDENCE_PATH = DATABASE_DIR / "florida_facility_parameter_evidence.json"
+CANONICAL_PATH = DATABASE_DIR / "florida_facility_universe_canonical.json"
 
 PROFILE_TAGS = {
     "stroke": ["stroke", "neurological", "rehab", "transfer", "medication", "nursing", "mobility"],
@@ -23,34 +18,19 @@ PROFILE_TAGS = {
     "high_acuity": ["high_acuity", "medical", "nursing"],
 }
 
-logger = logging.getLogger("optime.runtime_cache")
-
-_CACHE_LOCK = threading.RLock()
-_CACHE: Dict[str, Any] = {
-    "signature": None,
-    "payload": None,
-    "loaded_at": None,
-    "swap_count": 0,
-    "last_swap_reason": None,
-}
+_CACHE: Dict[str, Any] = {"signature": None, "payload": None}
 
 
 def _read_json(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _signature() -> tuple[float, float, float, str]:
-    canonical_path = resolve_canonical_universe_path()
+def _signature() -> tuple[float, float, float]:
     return (
         REGISTRY_PATH.stat().st_mtime,
         EVIDENCE_PATH.stat().st_mtime,
-        canonical_path.stat().st_mtime,
-        str(canonical_path),
+        CANONICAL_PATH.stat().st_mtime,
     )
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def _normalize_text(value: Any) -> str:
@@ -59,18 +39,6 @@ def _normalize_text(value: Any) -> str:
 
 def _scope_rank(scope: str) -> int:
     return {"FACILITY": 4, "PROGRAM": 3, "UNIT": 2, "SERVICE": 1}.get(scope, 0)
-
-
-def _best_evidence_row(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
-    return sorted(
-        rows,
-        key=lambda item: (
-            _scope_rank(str(item.get("scope") or "")),
-            1 if str(item.get("confidence") or "") == "HIGH" else 0,
-            str(item.get("last_verified") or ""),
-        ),
-        reverse=True,
-    )[0]
 
 
 def _base_priority(parameter: Dict[str, Any]) -> float:
@@ -91,10 +59,13 @@ def _base_priority(parameter: Dict[str, Any]) -> float:
     return score
 
 
-def _build_runtime_payload(active_signature: tuple[float, float, float, str]) -> Dict[str, Any]:
+def _load_runtime() -> Dict[str, Any]:
+    if _CACHE["payload"] is not None:
+        return _CACHE["payload"]
+
     registry_payload = _read_json(REGISTRY_PATH)
     evidence_payload = _read_json(EVIDENCE_PATH)
-    canonical_payload = _read_json(resolve_canonical_universe_path())
+    canonical_payload = _read_json(CANONICAL_PATH)
 
     registry = registry_payload.get("records") or []
     canonical = canonical_payload.get("records") or []
@@ -110,7 +81,15 @@ def _build_runtime_payload(active_signature: tuple[float, float, float, str]) ->
     for canonical_facility_id, facility_rows in evidence_lookup.items():
         best_for_facility: Dict[str, Dict[str, Any]] = {}
         for parameter_id, rows in facility_rows.items():
-            best_for_facility[parameter_id] = _best_evidence_row(rows)
+            best_for_facility[parameter_id] = sorted(
+                rows,
+                key=lambda item: (
+                    _scope_rank(str(item.get("scope") or "")),
+                    1 if str(item.get("confidence") or "") == "HIGH" else 0,
+                    str(item.get("last_verified") or ""),
+                ),
+                reverse=True,
+            )[0]
         evidence_best_lookup[canonical_facility_id] = best_for_facility
 
     # Full evidence rows are large and only needed for detailed comparison/profile views.
@@ -124,63 +103,14 @@ def _build_runtime_payload(active_signature: tuple[float, float, float, str]) ->
         "evidence_lookup": evidence_lookup,
         "evidence_best_lookup": evidence_best_lookup,
         "evidence_lookup_loaded": False,
-        "runtime_meta": {
-            "runtime_version": hashlib.sha256(
-                json.dumps(
-                    {
-                        "registry_generated_at": registry_payload.get("generated_at_utc"),
-                        "evidence_generated_at": evidence_payload.get("generated_at_utc"),
-                        "canonical_generated_at": canonical_payload.get("generated_at_utc"),
-                        "registry_count": int(registry_payload.get("record_count") or 0),
-                        "evidence_count": int(evidence_payload.get("record_count") or 0),
-                        "canonical_count": int(canonical_payload.get("record_count") or 0),
-                        "mtime_signature": active_signature,
-                    },
-                    sort_keys=True,
-                    default=str,
-                ).encode("utf-8")
-            ).hexdigest()[:16],
-            "runtime_timestamp": registry_payload.get("generated_at_utc")
-            or evidence_payload.get("generated_at_utc")
-            or canonical_payload.get("generated_at_utc"),
-            "artifact_signature": active_signature,
-        },
     }
+    _CACHE["payload"] = payload
     return payload
 
 
-def _atomic_swap_runtime_payload(payload: Dict[str, Any], active_signature: tuple[float, float, float, str], reason: str) -> None:
-    with _CACHE_LOCK:
-        _CACHE["payload"] = payload
-        _CACHE["signature"] = active_signature
-        _CACHE["loaded_at"] = _utc_now_iso()
-        _CACHE["swap_count"] = int(_CACHE.get("swap_count") or 0) + 1
-        _CACHE["last_swap_reason"] = reason
-
-
-def _load_runtime() -> Dict[str, Any]:
-    active_signature = _signature()
-    with _CACHE_LOCK:
-        cached_payload = _CACHE.get("payload")
-        cached_signature = _CACHE.get("signature")
-        if cached_payload is not None and cached_signature == active_signature:
-            return cached_payload
-
-        # Serialize rebuild to avoid N parallel JSON loads/swaps during high concurrency.
-        payload = _build_runtime_payload(active_signature)
-        _CACHE["payload"] = payload
-        _CACHE["signature"] = active_signature
-        _CACHE["loaded_at"] = _utc_now_iso()
-        _CACHE["swap_count"] = int(_CACHE.get("swap_count") or 0) + 1
-        _CACHE["last_swap_reason"] = "load_or_refresh"
-        logger.info("runtime_cache_swapped reason=load_or_refresh runtime_version=%s", payload.get("runtime_meta", {}).get("runtime_version"))
-        return payload
-
-
 def _ensure_full_evidence_lookup(runtime: Dict[str, Any]) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
-    with _CACHE_LOCK:
-        if runtime.get("evidence_lookup_loaded") and isinstance(runtime.get("evidence_lookup"), dict):
-            return runtime["evidence_lookup"]
+    if runtime.get("evidence_lookup_loaded") and isinstance(runtime.get("evidence_lookup"), dict):
+        return runtime["evidence_lookup"]
 
     evidence_payload = _read_json(EVIDENCE_PATH)
     evidence_rows = evidence_payload.get("records") or []
@@ -189,52 +119,13 @@ def _ensure_full_evidence_lookup(runtime: Dict[str, Any]) -> Dict[str, Dict[str,
         facility_rows = lookup.setdefault(row["canonical_facility_id"], {})
         facility_rows.setdefault(row["parameter_id"], []).append(row)
 
-    with _CACHE_LOCK:
-        runtime["evidence_lookup"] = lookup
-        runtime["evidence_lookup_loaded"] = True
+    runtime["evidence_lookup"] = lookup
+    runtime["evidence_lookup_loaded"] = True
     return lookup
 
 
 def get_parameter_registry_payload() -> Dict[str, Any]:
     return _load_runtime()["registry_payload"]
-
-
-def get_runtime_metadata() -> Dict[str, Optional[str]]:
-    runtime = _load_runtime()
-    meta = runtime.get("runtime_meta") or {}
-    return {
-        "runtime_version": str(meta.get("runtime_version") or ""),
-        "runtime_timestamp": meta.get("runtime_timestamp"),
-    }
-
-
-def refresh_runtime_cache(reason: str = "manual") -> Dict[str, Optional[str]]:
-    # Controlled invalidation + reload guarantees an atomic runtime snapshot swap.
-    with _CACHE_LOCK:
-        _CACHE["payload"] = None
-        _CACHE["signature"] = None
-    runtime = _load_runtime()
-    meta = runtime.get("runtime_meta") or {}
-    return {
-        "reason": reason,
-        "runtime_version": str(meta.get("runtime_version") or ""),
-        "runtime_timestamp": meta.get("runtime_timestamp"),
-    }
-
-
-def get_runtime_cache_status() -> Dict[str, Any]:
-    with _CACHE_LOCK:
-        payload = _CACHE.get("payload")
-        runtime_meta = (payload or {}).get("runtime_meta") if isinstance(payload, dict) else {}
-        return {
-            "cache_loaded": payload is not None,
-            "loaded_at": _CACHE.get("loaded_at"),
-            "swap_count": int(_CACHE.get("swap_count") or 0),
-            "last_swap_reason": _CACHE.get("last_swap_reason"),
-            "signature": _CACHE.get("signature"),
-            "runtime_version": (runtime_meta or {}).get("runtime_version"),
-            "runtime_timestamp": (runtime_meta or {}).get("runtime_timestamp"),
-        }
 
 
 def get_all_canonical_facility_ids() -> List[str]:
@@ -315,10 +206,6 @@ def _resolve_rows_for_facility(
             last_verified = best.get("last_verified")
             detail_scope = str(best.get("scope") or parameter["applicable_scope"])
             scope_name = best.get("scope_name")
-            source_record_id = best.get("source_record_id")
-            evidence_confidence = best.get("confidence")
-            evidence_strength = best.get("evidence_strength")
-            provenance = best.get("provenance") or {}
             evidence_count = len(rows) if include_evidence_records else 0
             if include_evidence_records:
                 evidence_records = [
@@ -347,10 +234,6 @@ def _resolve_rows_for_facility(
             last_verified = None
             detail_scope = parameter["applicable_scope"]
             scope_name = None
-            source_record_id = None
-            evidence_confidence = None
-            evidence_strength = None
-            provenance = {}
             evidence_count = 0
             evidence_records = []
 
@@ -370,10 +253,6 @@ def _resolve_rows_for_facility(
                 "scope_name": scope_name,
                 "source": source,
                 "last_verified": last_verified,
-                "source_record_id": source_record_id,
-                "evidence_confidence": evidence_confidence,
-                "evidence_strength": evidence_strength,
-                "provenance": provenance,
                 "evidence_count": evidence_count,
                 "evidence_records": evidence_records,
             }

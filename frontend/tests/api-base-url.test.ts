@@ -3,14 +3,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchPatientDecisionRecommendations, getApiBaseUrl } from "../src/lib/api";
 
 describe("getApiBaseUrl", () => {
-  const env = process.env as Record<string, string | undefined>;
   const originalNodeEnv = process.env.NODE_ENV;
   const originalPublicApiUrl = process.env.NEXT_PUBLIC_API_URL;
   const originalWindow = (globalThis as { window?: unknown }).window;
   const originalFetch = globalThis.fetch;
 
   afterEach(() => {
-    env.NODE_ENV = originalNodeEnv;
+    process.env.NODE_ENV = originalNodeEnv;
     if (originalPublicApiUrl === undefined) {
       delete process.env.NEXT_PUBLIC_API_URL;
     } else {
@@ -28,7 +27,7 @@ describe("getApiBaseUrl", () => {
   });
 
   it("falls back to local backend in development when no NEXT_PUBLIC_API_URL is set", () => {
-    env.NODE_ENV = "development";
+    process.env.NODE_ENV = "development";
     delete process.env.NEXT_PUBLIC_API_URL;
     delete (globalThis as { window?: unknown }).window;
 
@@ -36,7 +35,7 @@ describe("getApiBaseUrl", () => {
   });
 
   it("uses same-origin proxy in browser even if NEXT_PUBLIC_API_URL points at localhost:3000", () => {
-    env.NODE_ENV = "development";
+    process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
     (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
       location: {
@@ -49,7 +48,7 @@ describe("getApiBaseUrl", () => {
   });
 
   it("uses same-origin proxy in browser with loopback alias mismatch", () => {
-    env.NODE_ENV = "development";
+    process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
     (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
       location: {
@@ -62,7 +61,7 @@ describe("getApiBaseUrl", () => {
   });
 
   it("guards against local frontend :3000 base even when window is unavailable", () => {
-    env.NODE_ENV = "development";
+    process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://127.0.0.1:3000";
     delete (globalThis as { window?: unknown }).window;
 
@@ -70,7 +69,7 @@ describe("getApiBaseUrl", () => {
   });
 
   it("uses configured backend base when provided", () => {
-    env.NODE_ENV = "development";
+    process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://127.0.0.1:8000";
     delete (globalThis as { window?: unknown }).window;
 
@@ -78,7 +77,7 @@ describe("getApiBaseUrl", () => {
   });
 
   it("routes Results recommendations request through same-origin backend proxy", async () => {
-    env.NODE_ENV = "development";
+    process.env.NODE_ENV = "development";
     process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
     (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
       location: {
@@ -197,7 +196,7 @@ describe("getApiBaseUrl", () => {
   });
   
   it("falls back to facilities-powered recommendations when decision-engine endpoint returns 404", async () => {
-    env.NODE_ENV = "production";
+    process.env.NODE_ENV = "production";
     process.env.NEXT_PUBLIC_API_URL = "https://example.test";
     (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
       location: {
