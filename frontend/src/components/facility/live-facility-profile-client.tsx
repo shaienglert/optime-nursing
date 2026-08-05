@@ -121,12 +121,13 @@ function statusClass(status: string): string {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  return <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-1 text-[10px] font-bold tracking-[0.06em] ${statusClass(status)}`}>{status}</span>;
+  const label = status.toUpperCase() === "UNKNOWN" ? "Awaiting confirmation" : status.replaceAll("_", " ");
+  return <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-1 text-[10px] font-bold tracking-[0.06em] ${statusClass(status)}`}>{label}</span>;
 }
 
 function normalizeValue(value: unknown): string {
   const text = String(value ?? "").trim();
-  return text && !text.toUpperCase().startsWith("UNKNOWN") ? text : "UNKNOWN";
+  return text && !text.toUpperCase().startsWith("UNKNOWN") ? text : "We're verifying this now.";
 }
 
 function fallbackFact(field: RequestedField): LiveFacilityFact {
@@ -174,7 +175,7 @@ function FactTable({ fields, facts, onEvidence, onAction }: { fields: RequestedF
             <td className="px-4 py-3"><StatusBadge status={fact.evidence_status} /></td><td className="px-4 py-3 text-zinc-600">{fact.confidence}</td>
             <td className="max-w-44 px-4 py-3 text-zinc-600">{fact.source_name}</td><td className="px-4 py-3 text-zinc-600">{fact.publication_date || fact.retrieval_date || "UNKNOWN"}</td>
             <td className="max-w-64 px-4 py-3 text-xs leading-5 text-zinc-600">{fact["Ranking impact"] || (fact.used_in_ranking === "YES" ? "Used in ranking" : "No direct ranking use proven")}</td>
-            <td className="px-4 py-3">{fact.evidence_status !== "VERIFIED" ? <button onClick={() => onAction(fact)} className="rounded-md border border-[#9bc8bf] bg-[#eef8f5] px-3 py-2 text-xs font-semibold text-[#145f52] hover:bg-[#dff2ed]">ACTION</button> : <span className="text-xs text-zinc-400">Current</span>}</td>
+            <td className="px-4 py-3">{fact.evidence_status !== "VERIFIED" ? <button onClick={() => onAction(fact)} className="rounded-md border border-[#9bc8bf] bg-[#eef8f5] px-3 py-2 text-xs font-semibold text-[#145f52] hover:bg-[#dff2ed]">Verify detail</button> : <span className="text-xs text-zinc-400">Current</span>}</td>
           </tr>)}
         </tbody>
       </table>
@@ -243,35 +244,40 @@ export function LiveFacilityProfileClient({ cmsCcn }: { cmsCcn: string }) {
   };
 
   return <main className="min-h-screen bg-white text-zinc-950">
-    <header className="border-b border-zinc-200 bg-[#fbfdfc]">
-      <div className="mx-auto max-w-[1500px] px-5 py-9 lg:px-9 lg:py-12">
-        <div className="flex flex-col justify-between gap-7 xl:flex-row xl:items-end">
-          <div className="max-w-4xl"><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#e7f4f1] px-3 py-1 text-xs font-bold text-[#145f52]">LIVE FACILITY INTELLIGENCE</span><StatusBadge status="PARTIALLY_VERIFIED" /></div>
-            <h1 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-zinc-950 sm:text-5xl">{displayName}</h1>
-            <p className="mt-3 text-base text-zinc-600">{profile.facility.city}, {profile.facility.state} <span className="mx-2 text-zinc-300">|</span> {profile.facility.facility_type} <span className="mx-2 text-zinc-300">|</span> CMS CCN {profile.facility.cms_ccn}</p>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">Identity anchored to the CMS record at {profile.facility.address}. NPI {profile.facility.must_not_merge.npi} is explicitly excluded because it belongs to a different Palace facility.</p>
-          </div>
-          <div className="flex flex-wrap gap-2"><button onClick={() => setActiveTab("actions")} className="rounded-md border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-zinc-50">View Recommendation Impact</button><button onClick={() => setPanelOpen(true)} className="rounded-md bg-[#176b5d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#10584d]">Complete Missing Information</button><button onClick={() => setActiveTab("evidence")} className="rounded-md border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-zinc-50">View All Evidence</button></div>
-        </div>
-        <div className="mt-9 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-zinc-200 pt-6 sm:grid-cols-4 xl:grid-cols-8">
-          <Metric label="CMS rating" value={overallRating ? `${overallRating.value}/5` : "UNKNOWN"} /><Metric label="Confidence" value={profile.summary.evidence_confidence} />
-          <Metric label="Completeness" value={`${profile.summary.profile_completeness_percent}%`} /><Metric label="Last updated" value={profile.summary.last_updated} />
-          <Metric label="Evidence records" value={profile.summary.evidence_record_count} /><Metric label="Verified facts" value={profile.summary.verified_fact_count} />
-          <Metric label="Critical unknowns" value={profile.summary.critical_unknown_count} /><Metric label="Sources" value={profile.summary.source_count} />
+    <header className="relative isolate min-h-[620px] overflow-hidden bg-[#263c36]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/images/assessment/modern-community-31656168.jpg" alt="Regional architectural atmosphere; not official facility photography" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(15,27,23,0.72)_0%,rgba(15,27,23,0.28)_62%,rgba(15,27,23,0.2)_100%)]" />
+      <div className="mx-auto flex min-h-[620px] max-w-[1400px] items-end px-5 py-10 lg:px-9 lg:py-14">
+        <div className="w-full max-w-3xl rounded-[28px] bg-[#fffdf8]/92 p-7 shadow-[0_30px_90px_rgba(9,20,16,0.32)] backdrop-blur-[12px] motion-reduce:bg-[#fffdf8] motion-reduce:backdrop-blur-none lg:p-12">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#176b5d]">Community profile</p>
+          <h1 className="mt-4 text-3xl font-semibold text-zinc-950 sm:text-5xl">{displayName}</h1>
+          <p className="mt-3 text-base text-zinc-600">{profile.facility.city}, {profile.facility.state} · {profile.facility.facility_type}</p>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-600">A skilled nursing and rehabilitation community with verified identity, staffing, inspection, and selected rehabilitation information. Important care and availability details still need confirmation.</p>
+          <p className="mt-4 border-l-2 border-[#a8b8ae] pl-3 text-xs font-semibold text-[#56655e]">Official community photography is currently being verified. Regional architectural atmosphere is shown.</p>
+          <div className="mt-6 flex flex-wrap items-center gap-3"><StatusBadge status="PARTIALLY_VERIFIED" /><span className="text-sm font-semibold text-zinc-700">CMS rating: {overallRating ? `${overallRating.value}/5` : "Awaiting confirmation"}</span></div>
+          <div className="mt-7 flex flex-wrap gap-2"><button onClick={() => setPanelOpen(true)} className="rounded-md bg-[#176b5d] px-5 py-3 text-sm font-semibold text-white hover:bg-[#10584d]">Verify This Community</button><button onClick={() => setActiveTab("evidence")} className="rounded-md border border-zinc-300 bg-white px-5 py-3 text-sm font-semibold hover:bg-zinc-50">View Evidence</button></div>
+          <details className="mt-6 border-t border-zinc-200 pt-4 text-sm text-zinc-600"><summary className="cursor-pointer font-semibold text-zinc-800">Technical Details</summary><div className="mt-4 grid grid-cols-2 gap-4"><Metric label="Confidence" value={profile.summary.evidence_confidence} /><Metric label="Completeness" value={`${profile.summary.profile_completeness_percent}%`} /><Metric label="Evidence records" value={profile.summary.evidence_record_count} /><Metric label="CMS CCN" value={profile.facility.cms_ccn} /></div></details>
         </div>
       </div>
     </header>
 
+    <section className="mx-auto grid max-w-[1400px] gap-4 px-5 py-8 md:grid-cols-3 lg:px-9">
+      <article className="rounded-lg bg-[#eef7f2] p-6"><p className="text-xs font-bold uppercase tracking-[0.1em] text-[#176b5d]">What we know</p><p className="mt-3 text-sm leading-6 text-zinc-700">{profile.summary.verified_fact_count} facts are verified, including identity, CMS information, and selected clinical signals.</p></article>
+      <article className="rounded-lg bg-[#fff7e9] p-6"><p className="text-xs font-bold uppercase tracking-[0.1em] text-[#80612d]">What we still need to confirm</p><p className="mt-3 text-sm leading-6 text-zinc-700">{profile.summary.critical_unknown_count} important details are awaiting confirmation from the community.</p></article>
+      <article className="rounded-lg bg-[#f1f5f8] p-6"><p className="text-xs font-bold uppercase tracking-[0.1em] text-[#46647a]">What OPTIME is doing next</p><p className="mt-3 text-sm leading-6 text-zinc-700">We can contact the community and verify only the missing information for your decision.</p></article>
+    </section>
+
     <nav className="sticky top-0 z-30 overflow-x-auto border-b border-zinc-200 bg-white/95 backdrop-blur" aria-label="Facility profile sections"><div className="mx-auto flex max-w-[1500px] px-5 lg:px-9">{TABS.map((tab) => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`whitespace-nowrap border-b-2 px-3 py-4 text-sm font-medium ${activeTab === tab.id ? "border-[#176b5d] text-[#145f52]" : "border-transparent text-zinc-500 hover:text-zinc-900"}`}>{tab.label}</button>)}</div></nav>
 
     <div className="mx-auto max-w-[1500px] px-5 py-8 lg:px-9 lg:py-10">
-      {activeTab === "overview" && <section><div className="grid gap-8 xl:grid-cols-[1.35fr_0.65fr]"><div><h2 className="text-2xl font-semibold tracking-[-0.02em]">Canonical identity</h2><div className="mt-5 grid border-t border-zinc-200 sm:grid-cols-2">{[
+      {activeTab === "overview" && <section><div className="grid gap-8 xl:grid-cols-[1.35fr_0.65fr]"><div><h2 className="text-2xl font-semibold">Known facts</h2><div className="mt-5 grid border-t border-zinc-200 sm:grid-cols-2">{[
         ["Official name", displayName, "official_name"], ["Legal name", profile.facility.canonical_name, "legal_name"], ["Address", `${profile.facility.address}, ${profile.facility.city}, ${profile.facility.state} ${profile.facility.zip}`, "address"], ["Phone", profile.facility.phone, "phone"],
         ["Website", profile.facility.official_website, "website"], ["CMS CCN", profile.facility.cms_ccn, "cms_ccn"], ["NPI", profile.facility.canonical_npi, "npi"], ["State license", profile.facility.license_number, "state_license"],
         ["Facility type", profile.facility.facility_type, "facility_type"], ["Ownership type", profile.facility.ownership_type, "ownership_type"], ["Ownership organization", "UNKNOWN", "ownership_organization"], ["Chain affiliation", "UNKNOWN", "chain_affiliation"],
         ["Certified beds", profile.facility.beds, "certified_beds"], ["Occupancy", "UNKNOWN", "occupancy"], ["Medicare / Medicaid", profile.facility.medicare_medicaid, "medicare_medicaid"], ["Coordinates", profile.facility.coordinates, "coordinates"],
         ["County", profile.facility.county, "county"], ["Nearby hospital distance", "UNKNOWN", "nearby_hospitals"], ["Aliases", profile.facility.aliases.join("; "), "aliases"],
-      ].map(([label, value, id]) => { const fact = profile.identity_evidence.find((item) => item.parameter_id === id) as unknown as LiveFacilityFact | undefined; const safeFact = fact || fallbackFact({ label: String(label), ids: [String(id)] }); return <div key={String(id)} className="border-b border-zinc-200 py-4 sm:pr-6"><p className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">{label}</p><button onClick={() => setEvidence(safeFact)} className="mt-1 text-left text-sm font-semibold text-[#116a5b] underline decoration-[#b5d8d1] underline-offset-4">{normalizeValue(value)}</button>{normalizeValue(value) === "UNKNOWN" && <button onClick={() => openAction(safeFact)} className="ml-3 text-xs font-bold text-[#176b5d]">ACTION</button>}</div>; })}</div></div>
+      ].map(([label, value, id]) => { const fact = profile.identity_evidence.find((item) => item.parameter_id === id) as unknown as LiveFacilityFact | undefined; const safeFact = fact || fallbackFact({ label: String(label), ids: [String(id)] }); const missing = normalizeValue(value) === "We're verifying this now."; return <div key={String(id)} className="border-b border-zinc-200 py-4 sm:pr-6"><p className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">{label}</p><button onClick={() => setEvidence(safeFact)} className="mt-1 text-left text-sm font-semibold text-[#116a5b] underline decoration-[#b5d8d1] underline-offset-4">{normalizeValue(value)}</button>{missing && <button onClick={() => openAction(safeFact)} className="ml-3 text-xs font-bold text-[#176b5d]">Verify</button>}</div>; })}</div></div>
         <aside className="border-l-2 border-[#a8d4ca] bg-[#f5faf8] p-6"><p className="text-xs font-bold uppercase tracking-[0.1em] text-[#176b5d]">What OPTIME knows</p><p className="mt-3 text-sm leading-6 text-zinc-700">CMS identity, provider type, ownership class, bed capacity, staffing signals, inspection results, quality evidence, and selected rehabilitation capabilities.</p><p className="mt-6 text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">What remains unknown</p><p className="mt-3 text-sm leading-6 text-zinc-700">{profile.unknown_sections.join("; ")}.</p><p className="mt-6 text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">Patient fit</p><p className="mt-3 text-sm leading-6 text-zinc-700">Skilled nursing and short-term rehabilitation have evidence. Stroke-specific care, direct nursing modality, ADL support, transfers, dietary needs, language support, current price, and availability require verification before a confident patient-specific decision.</p></aside></div></section>}
 
       {(["clinical", "rehabilitation", "staffing", "quality", "lifestyle", "pricing"] as TabId[]).includes(activeTab) && <section><div className="mb-6"><h2 className="text-2xl font-semibold tracking-[-0.02em]">{TABS.find((tab) => tab.id === activeTab)?.label}</h2><p className="mt-2 text-sm text-zinc-500">Every value opens its evidence record. Missing evidence remains UNKNOWN.</p></div><FactTable fields={FIELDS[activeTab as keyof typeof FIELDS]} facts={profile.facts} onEvidence={setEvidence} onAction={openAction} /></section>}

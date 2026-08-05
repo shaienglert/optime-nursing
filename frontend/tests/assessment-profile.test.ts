@@ -16,7 +16,7 @@ function questionnaireStateFixture(): QuestionnaireState {
       interestsProfile: [],
       distanceProfile: { referenceLocations: { parentCurrentHome: "", primaryCaregiverHome: "", secondaryFamilyHomes: "", preferredHospital: "", placeOfWorship: "" }, driveTimes: { normal: "", rushHour: "", emergency: "" }, familyVisitExpectation: "", familyGeographyModel: { involvedFamilyMembers: "", familyCenterOfGravity: "", multiLocationOptimization: "" }, emotionalDistanceFactors: { emergencyAccessImportance: "", spontaneousVisitsImportance: "", grandchildrenVisitsImportance: "" }, careLevelWeight: 0, optimizationStrategy: "", scores: { family_distance_score: null, visit_probability_score: null, emergency_access_score: null, grandchildren_access_score: null, travel_burden_score: null, family_engagement_score: null }, inferredConfidence: {} },
       transitionRiskProfile: { biggestFear: "", attitudeTowardMove: "", previousMoves: "", bereavementStatus: "", lonelinessRisk: "", socialIsolationConcern: "", recentHospitalization: "", hospitalizationRecency: "", postHospitalRehabNeed: "", wanderingConcerns: "" },
-    } as QuestionnaireState["humanIntelligenceV2"],
+    } as unknown as QuestionnaireState["humanIntelligenceV2"],
   };
 }
 
@@ -34,5 +34,26 @@ describe("assessment profile conversion", () => {
     expect(result.naturalLanguageQuery).not.toContain("Occupational therapy is needed.");
     expect(result.naturalLanguageQuery).not.toContain("Speech therapy is needed.");
     expect(result.questionnaireState.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed).toBe("");
+  });
+
+  it("serializes Las Vegas selections and consolidated therapy into existing fields", () => {
+    const result = convertAssessmentToQuestionnaireState({
+      preferred_search_area: ["SUMMERLIN", "HENDERSON"],
+      avoid_search_areas: ["PARADISE"],
+      mobility: ["DEVICE", "SOME_HELP"],
+      rehabilitation_services: ["PHYSICAL_THERAPY", "SPEECH_THERAPY"],
+    }, questionnaireStateFixture());
+    expect(result.questionnaireState.referenceLocationValue).toBe("Summerlin, Henderson, Las Vegas, Nevada");
+    expect(result.questionnaireState.assistanceLevel).toBe("Light assistance");
+    expect(result.naturalLanguageQuery).toContain("Physical therapy is needed.");
+    expect(result.naturalLanguageQuery).toContain("Speech therapy is needed.");
+    expect(result.naturalLanguageQuery).not.toContain("Paradise");
+    expect(result.questionnaireState.assessmentV2?.answers.avoid_search_areas).toEqual(["PARADISE"]);
+  });
+
+  it("preserves legacy scalar location and mobility drafts", () => {
+    const result = convertAssessmentToQuestionnaireState({ preferred_search_area: "Legacy area", mobility: "DEVICE" }, questionnaireStateFixture());
+    expect(result.questionnaireState.referenceLocationValue).toBe("Legacy area");
+    expect(result.questionnaireState.assistanceLevel).toBe("Light assistance");
   });
 });

@@ -25,13 +25,14 @@ import {
 import { resolveFacilityImage } from "@/lib/facility-experience";
 import { EvidenceDetailsModal, type EvidenceDetailsPayload, type EvidenceDetailRecord } from "@/components/compare/evidence-details-modal";
 import {
-  clearCompareSelection,
+  clearAssessmentData,
   clearFavoriteFacilities,
-  clearSearchSession,
   loadDecisionResponseCache,
+  loadPatientCaseId,
   loadFavoriteFacilities,
   saveDecisionResponseCache,
   saveFavoriteFacilities,
+  saveRecommendationSession,
 } from "@/lib/search-session";
 
 const TOP_RECOMMENDATION_COUNT = 5;
@@ -59,11 +60,11 @@ type MatrixRow = {
 };
 
 function formatRawValue(value: unknown): string {
-  if (value === null || value === undefined || value === "UNKNOWN" || value === "Not verified") return "Not verified";
+  if (value === null || value === undefined || value === "UNKNOWN" || value === "Not verified") return "We're verifying this now.";
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "number") return Number.isInteger(value) ? String(value) : value.toFixed(2);
   const text = String(value).trim();
-  if (!text) return "Not verified";
+  if (!text) return "We're verifying this now.";
   if (text === "YES") return "Yes";
   if (text === "NO") return "No";
   return text;
@@ -71,7 +72,7 @@ function formatRawValue(value: unknown): string {
 
 function formatParameterValue(parameterId: string, value: unknown): string {
   const formatted = formatRawValue(value);
-  if (formatted === "Not verified" || formatted === "Confirm directly with facility") return formatted;
+  if (formatted === "We're verifying this now." || formatted === "Confirm directly with facility") return formatted;
   if (/(_rating$|rating$)/i.test(parameterId) && /^\d+(\.\d+)?$/.test(formatted)) {
     return `${formatted} stars`;
   }
@@ -151,13 +152,6 @@ function qualitativeScoreLabel(value: number | null | undefined): string {
   return "Needs caution";
 }
 
-function confidenceBand(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "Insufficient evidence";
-  if (value >= 80) return "High confidence";
-  if (value >= 60) return "Medium confidence";
-  return "Low confidence";
-}
-
 function eligibilitySummary(status: DecisionEngineRecommendation["eligibility_status"]): string {
   if (status === "ELIGIBLE") return "Verified fit for current critical needs";
   if (status === "POTENTIALLY_ELIGIBLE") return "Potential fit pending direct verification";
@@ -182,7 +176,7 @@ function toRecommendationImageInfo(details: FacilityDetailsData | null): Recomme
   if (!details) {
     return {
       url: NEUTRAL_PLACEHOLDER_IMAGE,
-      sourceLabel: "Neutral placeholder",
+      sourceLabel: "Official community photography is currently being verified.",
       isVerifiedFacilityImage: false,
       isFallback: true,
     };
@@ -192,7 +186,7 @@ function toRecommendationImageInfo(details: FacilityDetailsData | null): Recomme
   const hasVerifiedImage = !imageTruth.isPlaceholder && Boolean(imageTruth.url);
   return {
     url: hasVerifiedImage ? imageTruth.url : NEUTRAL_PLACEHOLDER_IMAGE,
-    sourceLabel: hasVerifiedImage ? imageTruth.sourceLabel : "Neutral placeholder",
+    sourceLabel: hasVerifiedImage ? imageTruth.sourceLabel : "Official community photography is currently being verified.",
     isVerifiedFacilityImage: hasVerifiedImage,
     isFallback: !hasVerifiedImage,
   };
@@ -207,23 +201,26 @@ export function ResultsPageClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiLoadError, setApiLoadError] = useState<string | null>(null);
   const [showMoreCommunities, setShowMoreCommunities] = useState<boolean>(() => searchParams.get("show_more") === "1");
+  const [visibleMoreCount, setVisibleMoreCount] = useState<number>(12);
   const [favoriteCanonicalIds, setFavoriteCanonicalIds] = useState<string[]>(() => loadFavoriteFacilities());
   const [hiddenNeedIds, setHiddenNeedIds] = useState<string[]>([]);
   const [showAllTopFiveParameters, setShowAllTopFiveParameters] = useState(false);
   const [topFiveComparisonTable, setTopFiveComparisonTable] = useState<FacilityParameterComparison | null>(null);
   const [facilityImagesByCanonicalId, setFacilityImagesByCanonicalId] = useState<Record<string, RecommendationImageInfo>>({});
+  const [facilityDetailsByCanonicalId, setFacilityDetailsByCanonicalId] = useState<Record<string, FacilityDetailsData>>({});
   const [brokenImageByCanonicalId, setBrokenImageByCanonicalId] = useState<Record<string, boolean>>({});
   const [imageFetchAttemptedByCanonicalId, setImageFetchAttemptedByCanonicalId] = useState<Record<string, boolean>>({});
   const [activeEvidencePayload, setActiveEvidencePayload] = useState<EvidenceDetailsPayload | null>(null);
   const [mobileCompareFacilityId, setMobileCompareFacilityId] = useState<string>("");
+  const [patientCaseId] = useState<number | null>(() => loadPatientCaseId());
 
   const relationship = relationshipCopy(searchParams.get("relationship") || state.relationship || "your loved one");
   const textQuery = searchParams.get("q") || searchParams.get("search") || "";
   const notesQuery = searchParams.get("notes") || "";
   const naturalLanguageQuery = (textQuery || notesQuery || state.notes || "").trim();
   const decisionRequestKey = useMemo(
-    () => JSON.stringify({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
-    [state, naturalLanguageQuery],
+    () => JSON.stringify({ patient_case_id: patientCaseId, questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
+    [patientCaseId, state, naturalLanguageQuery],
   );
 
   useEffect(() => {
@@ -234,6 +231,7 @@ export function ResultsPageClient() {
       try {
         const cached = loadDecisionResponseCache<DecisionEngineResponse>(decisionRequestKey);
         const recommendations = cached || await fetchPatientDecisionRecommendations(JSON.parse(decisionRequestKey) as {
+          patient_case_id?: number;
           questionnaire_state: Record<string, unknown>;
           natural_language_query: string;
           limit: number;
@@ -355,9 +353,9 @@ export function ResultsPageClient() {
         pending.map(async (recommendation) => {
           try {
             const details = await fetchFacilityDetails(String(recommendation.facility_profile_id));
-            return [recommendation.canonical_facility_id, toRecommendationImageInfo(details)] as const;
+            return [recommendation.canonical_facility_id, toRecommendationImageInfo(details), details] as const;
           } catch {
-            return [recommendation.canonical_facility_id, toRecommendationImageInfo(null)] as const;
+            return [recommendation.canonical_facility_id, toRecommendationImageInfo(null), null] as const;
           }
         }),
       );
@@ -374,6 +372,13 @@ export function ResultsPageClient() {
         const merged = { ...current };
         for (const [canonicalId, imageInfo] of updates) {
           merged[canonicalId] = imageInfo;
+        }
+        return merged;
+      });
+      setFacilityDetailsByCanonicalId((current) => {
+        const merged = { ...current };
+        for (const [canonicalId, , details] of updates) {
+          if (details) merged[canonicalId] = details;
         }
         return merged;
       });
@@ -601,9 +606,7 @@ export function ResultsPageClient() {
   }, [currentResultsPath, favoriteCanonicalIds, searchParams]);
 
   const startNewSearch = () => {
-    clearSearchSession();
-    clearCompareSelection();
-    clearFavoriteFacilities();
+    clearAssessmentData();
     resetState();
     router.replace("/");
   };
@@ -665,6 +668,19 @@ export function ResultsPageClient() {
     const imageInfo = getRecommendationImage(recommendation);
     const importantStrengths = recommendation.explanation.why_matches.slice(0, isMoreResults ? 4 : 2);
     const importantVerificationItems = recommendation.explanation.needs_verification.slice(0, 2);
+    const topReasons = recommendation.explanation.why_matches.slice(0, 5);
+    const concerns = recommendation.explanation.concerns.slice(0, 5);
+    const structured = recommendation.explanation.structured;
+    const runtimeVersion = recommendation.runtime_version || structured?.runtime_version || decisionResponse?.runtime_version || "unknown";
+    const runtimeTimestamp = recommendation.runtime_timestamp || structured?.runtime_timestamp || decisionResponse?.runtime_timestamp || "unknown";
+    const knowledgeUpdated = structured?.freshness?.knowledge_timestamp || runtimeTimestamp;
+    const details = facilityDetailsByCanonicalId[recommendation.canonical_facility_id];
+    const activities = details?.lifestyleCapabilities || [];
+    const languages = [
+      details?.hebrew_support === "YES" ? "Hebrew support" : "",
+      ...(details?.matchBadges || []).filter((badge) => /language|hebrew|spanish|english/i.test(String(badge))),
+    ].filter(Boolean);
+    const careLevels = details?.careTypes || [];
     const topBoundary = topRecommendations[TOP_RECOMMENDATION_COUNT - 1] || null;
     const belowTopFiveDecision = topBoundary
       ? rankingDifferenceByPair.get(`${topBoundary.canonical_facility_id}::${recommendation.canonical_facility_id}`)
@@ -695,14 +711,14 @@ export function ResultsPageClient() {
               />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#dfd4c3] bg-white px-3 py-2 text-xs text-[#6d655b]">
-              <span>{imageInfo.isVerifiedFacilityImage ? `Photo source: ${imageInfo.sourceLabel}` : "No verified facility photo yet"}</span>
-              <span>{imageInfo.isVerifiedFacilityImage ? "Facility-specific image" : "General image shown"}</span>
+              <span>{imageInfo.isVerifiedFacilityImage ? `Photo source: ${imageInfo.sourceLabel}` : "Official community photography is currently being verified."}</span>
+              <span>{imageInfo.isVerifiedFacilityImage ? "Facility-specific image" : "Photo verification in progress"}</span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(index)}</p>
+              <p className="inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{index === 0 ? "#1 Recommended Community" : highlightLabel(index)}</p>
               <h3 className="mt-2 text-xl font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
               <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
               <p className="mt-1 text-xs font-semibold text-[#2f6d3e]">
@@ -717,26 +733,25 @@ export function ResultsPageClient() {
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Quality & Safety</p>
-              <p className="text-sm font-semibold text-[#24425e]">{qualitativeScoreLabel(recommendation.quality_safety_score)}</p>
-            </div>
-            <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Staffing</p>
-              <p className="text-sm font-semibold text-[#24425e]">{qualitativeScoreLabel(recommendation.staffing_score)}</p>
-            </div>
-            <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#24425e]">Evidence certainty</p>
-              <p className="text-sm font-semibold text-[#24425e]">{confidenceBand(recommendation.evidence_confidence ?? recommendation.evidence_certainty)}</p>
-            </div>
+          <div className="rounded-2xl bg-[#f4f8f5] p-5">
+            <h4 className="text-base font-semibold text-[#254c3a]">Why OPTIME recommends this community</h4>
+            <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#3f5549] sm:grid-cols-2">
+              {(topReasons.length ? topReasons : ["A strong fit for the needs your family shared."]).slice(0, 6).map((item) => (
+                <li key={`${recommendation.canonical_facility_id}-concierge-${item}`} className="flex gap-2"><span aria-hidden="true" className="text-[#4f8068]">•</span><span>{item}</span></li>
+              ))}
+            </ul>
           </div>
 
-          {!isMoreResults ? (
-            <div className={`rounded-2xl border px-3 py-2 text-xs font-semibold ${eligibilityTone(recommendation.eligibility_status)}`}>
-              Eligibility: {recommendation.eligibility_status}
+          <details className="rounded-2xl border border-[#dde5e1] bg-white p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-[#365446]">Technical Evidence</summary>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl bg-[#f7f9f8] px-3 py-2 text-xs"><p className="font-semibold">Overall match</p><p className="mt-1">{recommendation.patient_match_score}%</p></div>
+              <div className="rounded-xl bg-[#f7f9f8] px-3 py-2 text-xs"><p className="font-semibold">Evidence confidence</p><p className="mt-1">{Math.round(structured?.confidence_score || recommendation.evidence_confidence || 0)}%</p></div>
+              <div className="rounded-xl bg-[#f7f9f8] px-3 py-2 text-xs"><p className="font-semibold">Runtime version</p><p className="mt-1">{runtimeVersion}</p></div>
+              <div className="rounded-xl bg-[#f7f9f8] px-3 py-2 text-xs"><p className="font-semibold">Knowledge updated</p><p className="mt-1">{knowledgeUpdated || "Unknown"}</p></div>
             </div>
-          ) : null}
+            {!isMoreResults ? <p className={`mt-3 rounded-xl border px-3 py-2 text-xs font-semibold ${eligibilityTone(recommendation.eligibility_status)}`}>Eligibility: {recommendation.eligibility_status}</p> : null}
+          </details>
 
           <div className="grid gap-3 lg:grid-cols-2">
             <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fcff] p-3 text-sm text-[#355270]">
@@ -757,6 +772,39 @@ export function ResultsPageClient() {
             </div>
           </div>
 
+          <div className="grid gap-3 lg:grid-cols-2">
+            <div className="rounded-2xl border border-[#dce8e2] bg-[#f8fcfa] p-3 text-sm text-[#2d4c43]">
+              <p className="font-semibold">Top 5 reasons</p>
+              <ul className="mt-2 space-y-1">
+                {(topReasons.length ? topReasons : ["No top reasons available"]).map((item) => (
+                  <li key={`${recommendation.canonical_facility_id}-top-reason-${item}`}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-[#f0d7cf] bg-[#fff6f3] p-3 text-sm text-[#6b4137]">
+              <p className="font-semibold">Potential concerns</p>
+              <ul className="mt-2 space-y-1">
+                {(concerns.length ? concerns : ["No major concerns currently surfaced"]).map((item) => (
+                  <li key={`${recommendation.canonical_facility_id}-concern-${item}`}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-[#e4ebf3] bg-[#f8fbff] px-3 py-2 text-xs text-[#3a536e]"><p className="font-semibold uppercase tracking-[0.08em]">Price</p><p className="mt-1">{details?.priceRange || "Awaiting confirmation."}</p></div>
+            <div className="rounded-xl border border-[#e4ebf3] bg-[#f8fbff] px-3 py-2 text-xs text-[#3a536e]"><p className="font-semibold uppercase tracking-[0.08em]">Distance</p><p className="mt-1">{recommendation.city ? `Near ${recommendation.city}` : "Distance not calculated"}</p></div>
+            <div className="rounded-xl border border-[#e4ebf3] bg-[#f8fbff] px-3 py-2 text-xs text-[#3a536e]"><p className="font-semibold uppercase tracking-[0.08em]">Availability</p><p className="mt-1">Confirm directly with facility</p></div>
+            <div className="rounded-xl border border-[#e4ebf3] bg-[#f8fbff] px-3 py-2 text-xs text-[#3a536e]"><p className="font-semibold uppercase tracking-[0.08em]">Inspection Summary</p><p className="mt-1">{qualitativeScoreLabel(recommendation.quality_safety_score)}</p></div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-xl border border-[#e4ebf3] bg-white px-3 py-2 text-xs text-[#3a536e]"><p className="font-semibold uppercase tracking-[0.08em]">Staffing Summary</p><p className="mt-1">{qualitativeScoreLabel(recommendation.staffing_score)}</p></div>
+            <div className="rounded-xl border border-[#e4ebf3] bg-white px-3 py-2 text-xs text-[#3a536e]"><p className="font-semibold uppercase tracking-[0.08em]">Activities</p><p className="mt-1">{activities.slice(0, 3).join(", ") || "Community has not yet confirmed."}</p></div>
+            <div className="rounded-xl border border-[#e4ebf3] bg-white px-3 py-2 text-xs text-[#3a536e]"><p className="font-semibold uppercase tracking-[0.08em]">Care Levels</p><p className="mt-1">{careLevels.slice(0, 3).join(", ") || "Community has not yet confirmed."}</p></div>
+          </div>
+          {languages.length > 0 ? <p className="text-xs text-[#56708a]"><span className="font-semibold">Languages:</span> {languages.join(", ")}</p> : null}
+
           {isMoreResults ? (
             <div className="rounded-2xl border border-[#d9e3ec] bg-[#f8fcff] p-3 text-sm text-[#355270]">
               <p className="font-semibold text-[#24425e]">Why below Top 5</p>
@@ -767,8 +815,8 @@ export function ResultsPageClient() {
           <p className="text-xs text-[#5b5245]">{recommendation.explanation.availability_note}</p>
 
           {recommendation.tie_break_explanation_vs_next ? (
-            <div className="rounded-xl border border-[#d9e3ec] bg-[#f8fcff] px-3 py-2 text-xs text-[#355270]">
-              <p className="font-semibold">Tie-break explanation</p>
+            <details className="rounded-xl border border-[#d9e3ec] bg-[#f8fcff] px-3 py-2 text-xs text-[#355270]">
+              <summary className="cursor-pointer font-semibold">Technical ranking detail</summary>
               <p className="mt-1">{recommendation.tie_break_explanation_vs_next.why_ranked_above}</p>
               {recommendation.tie_break_explanation_vs_next.remained_equal.length > 0 ? (
                 <p className="mt-1">Remained equal: {recommendation.tie_break_explanation_vs_next.remained_equal.join(", ")}</p>
@@ -776,7 +824,7 @@ export function ResultsPageClient() {
               {recommendation.tie_break_explanation_vs_next.remaining_unknown.length > 0 ? (
                 <p className="mt-1">Unknown: {recommendation.tie_break_explanation_vs_next.remaining_unknown.join(", ")}</p>
               ) : null}
-            </div>
+            </details>
           ) : null}
 
           <div className="flex flex-wrap gap-2">
@@ -808,9 +856,26 @@ export function ResultsPageClient() {
 
             {primaryRecommendation && primaryRecommendation.canonical_facility_id !== recommendation.canonical_facility_id ? (
               <Link href={buildFavoriteVsOptimeHref(recommendation.canonical_facility_id)} className="inline-flex rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#f6fbff]">
-                Compare with OPTIME recommendation
+                Compare
               </Link>
             ) : null}
+
+            <button
+              type="button"
+              onClick={() => {
+                const shareText = `${recommendation.facility_name} | Match ${recommendation.patient_match_score}% | Runtime ${runtimeVersion}`;
+                if (typeof navigator !== "undefined" && navigator.share) {
+                  void navigator.share({ title: "OPTIME Recommendation", text: shareText, url: window.location.href });
+                  return;
+                }
+                if (typeof navigator !== "undefined" && navigator.clipboard) {
+                  void navigator.clipboard.writeText(shareText);
+                }
+              }}
+              className="inline-flex rounded-full border border-[#dccfb9] px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]"
+            >
+              Share
+            </button>
 
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${recommendation.facility_name} ${recommendation.city || "Florida"}`)}`}
@@ -821,6 +886,18 @@ export function ResultsPageClient() {
               MAP
             </a>
           </div>
+
+          {structured ? (
+            <details className="rounded-xl border border-[#d4e2ed] bg-[#f7fbff] p-3 text-sm text-[#2f4f6e]">
+              <summary className="cursor-pointer font-semibold">Why this match</summary>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <p><span className="font-semibold">Needs:</span> {(recommendation.matched_needs || []).length} matched, {(recommendation.unknown_critical_needs || []).length} unknown</p>
+                <p><span className="font-semibold">Evidence Sources:</span> {(structured.evidence || []).length}</p>
+                <p><span className="font-semibold">Weighted Parameters:</span> {(structured.match_breakdown || []).length}</p>
+                <p><span className="font-semibold">Confidence:</span> {Math.round(structured.confidence_score || 0)}%</p>
+              </div>
+            </details>
+          ) : null}
         </div>
       </article>
     );
@@ -831,16 +908,16 @@ export function ResultsPageClient() {
       <section className="mx-auto max-w-7xl">
         <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">OPTIME Results</p>
-          <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">Recommended communities for {relationship}</h1>
-          <p className="mt-2 text-[#6b645a]">Results are personalized to your current needs profile and governed parameter evidence.</p>
+          <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-5xl">We found your best matches.</h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-[#6b645a]">These communities stand out for the needs, location, and priorities your family shared.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button type="button" onClick={backToSearch} className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] transition hover:bg-[#efe8db]">Back to search</button>
             <button type="button" onClick={startNewSearch} className="rounded-full bg-[#5f7f6b] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4d6756]">New search</button>
           </div>
 
           {visibleNeeds.length > 0 ? (
-            <div className="mt-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5f7f6b]">Active patient needs</p>
+            <details className="mt-5">
+              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.12em] text-[#5f7f6b]">Review family priorities</summary>
               <div className="mt-2 flex flex-wrap gap-2">
                 {visibleNeedLabels.map((need) => (
                   <button
@@ -853,7 +930,7 @@ export function ResultsPageClient() {
                   </button>
                 ))}
               </div>
-            </div>
+            </details>
           ) : null}
 
           {favoriteTrayItems.length > 0 ? (
@@ -879,6 +956,22 @@ export function ResultsPageClient() {
                   >
                     Clear favorites
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!decisionResponse) return;
+                      saveRecommendationSession({
+                        id: `session-${Date.now()}`,
+                        label: `Session ${new Date().toLocaleString()}`,
+                        createdAt: new Date().toISOString(),
+                        recommendationIds: recommendations.map((item) => item.canonical_facility_id),
+                        requestKey: decisionRequestKey,
+                      });
+                    }}
+                    className="rounded-full border border-[#cddce5] bg-white px-4 py-2 text-sm font-semibold text-[#24425e] hover:bg-[#edf6fb]"
+                  >
+                    Save session
+                  </button>
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -899,6 +992,23 @@ export function ResultsPageClient() {
           ) : null}
         </header>
 
+        {isLoading ? (
+          <section className="mt-6 space-y-4" aria-label="Loading recommendations" aria-busy="true">
+            {[0, 1, 2].map((index) => (
+              <article key={`skeleton-${index}`} className="animate-pulse rounded-3xl border border-[#e8ddcc] bg-white p-5">
+                <div className="h-5 w-44 rounded bg-[#eef2ea]" />
+                <div className="mt-3 h-4 w-72 rounded bg-[#f2f5ef]" />
+                <div className="mt-5 h-44 rounded-2xl bg-[#f2f5ef]" />
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  <div className="h-12 rounded-xl bg-[#f3f7fc]" />
+                  <div className="h-12 rounded-xl bg-[#f3f7fc]" />
+                  <div className="h-12 rounded-xl bg-[#f3f7fc]" />
+                </div>
+              </article>
+            ))}
+          </section>
+        ) : null}
+
         {!isLoading && apiLoadError ? (
           <section className="mt-6 rounded-3xl border border-[#e5b7b7] bg-[#fff4f4] p-6 text-sm text-[#7a2f2f]">
             <p className="font-semibold">Decision API unavailable</p>
@@ -908,9 +1018,15 @@ export function ResultsPageClient() {
 
         {!isLoading && recommendations.length > 0 ? (
           <section className="mt-6 space-y-6">
+            {primaryRecommendation ? (
+              <section className="space-y-4 rounded-3xl bg-[#fffdf9] p-5 shadow-[0_24px_70px_-42px_rgba(45,58,48,0.4)] sm:p-7">
+                {renderRecommendationCard(primaryRecommendation, 0)}
+              </section>
+            ) : null}
+
             <article className="rounded-3xl border border-[#e8ddcc] bg-white p-6 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Results Summary</p>
-              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">Personalized Recommendations</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">What still needs verification</p>
+              <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">A clear view of what we know and what comes next</h2>
               <p className="mt-2 text-sm text-[#5c5347]">
                 Recommendations reflect the needs and preferences currently provided. Availability and unresolved unknowns should still be confirmed directly with each facility.
               </p>
@@ -1057,7 +1173,7 @@ export function ResultsPageClient() {
                               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
                               <p className="mt-1 text-sm font-semibold text-[#2f2a24]">{recommendation.facility_name}</p>
                               <p className="mt-1 text-xs text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
-                              <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Image source: ${imageInfo.sourceLabel}` : "No verified facility image available"}</p>
+                              <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Image source: ${imageInfo.sourceLabel}` : "Official community photography is currently being verified."}</p>
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {recommendation.facility_profile_id ? (
                                   <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="rounded-full bg-[#6f9a86] px-3 py-1 text-xs font-semibold text-white hover:bg-[#618a77]">
@@ -1157,7 +1273,9 @@ export function ResultsPageClient() {
             ) : null}
 
             <section className="space-y-6">
-              {topRecommendations.map((recommendation, index) => (
+              {topRecommendations.slice(1).map((recommendation, offset) => {
+                const index = offset + 1;
+                return (
                 <section key={`top-${recommendation.canonical_facility_id}`} className="space-y-4 rounded-3xl border border-[#e8ddcc] bg-[#fffdf9] p-5 shadow-[0_12px_40px_-28px_rgba(69,58,43,0.35)]">
                   <div className="rounded-2xl border border-[#d9cfbf] bg-[linear-gradient(120deg,#f7efe0_0%,#fbf6ec_55%,#ffffff_100%)] p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5f7f6b]">Advisor recommendation</p>
@@ -1166,7 +1284,8 @@ export function ResultsPageClient() {
                   </div>
                   {renderRecommendationCard(recommendation, index)}
                 </section>
-              ))}
+                );
+              })}
             </section>
 
             {remainingRecommendations.length > 0 ? (
@@ -1177,15 +1296,36 @@ export function ResultsPageClient() {
                     <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">More Results</p>
                     <p className="mt-1 text-sm text-[#5c5347]">Additional ranked facilities continue from #{TOP_RECOMMENDATION_COUNT + 1} onward across all relevant ranked results.</p>
                   </div>
-                  <button type="button" onClick={() => setShowMoreCommunities((current) => !current)} className="rounded-full border border-[#d9cfbf] bg-white px-5 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMoreCommunities((current) => {
+                        const next = !current;
+                        if (!next) setVisibleMoreCount(12);
+                        return next;
+                      });
+                    }}
+                    className="rounded-full border border-[#d9cfbf] bg-white px-5 py-2 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]"
+                  >
                     {showMoreCommunities ? "HIDE MORE RESULTS" : "SHOW MORE RESULTS"}
                   </button>
                 </div>
                 {showMoreCommunities ? (
                   <section className="grid gap-4 md:grid-cols-2">
-                    {remainingRecommendations.map((recommendation, index) =>
+                    {remainingRecommendations.slice(0, visibleMoreCount).map((recommendation, index) =>
                       renderRecommendationCard(recommendation, index + TOP_RECOMMENDATION_COUNT, { isMoreResults: true })
                     )}
+                    {visibleMoreCount < remainingRecommendations.length ? (
+                      <div className="md:col-span-2">
+                        <button
+                          type="button"
+                          onClick={() => setVisibleMoreCount((count) => Math.min(count + 12, remainingRecommendations.length))}
+                          className="w-full rounded-2xl border border-[#d9cfbf] bg-white px-4 py-3 text-sm font-semibold text-[#534a3d] hover:bg-[#efe8db]"
+                        >
+                          Load more recommendations
+                        </button>
+                      </div>
+                    ) : null}
                   </section>
                 ) : null}
               </div>

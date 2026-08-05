@@ -21,6 +21,27 @@ describe("facility experience helpers", () => {
 
     expect(result.url).toBe("/cms-placeholder.svg");
     expect(result.isPlaceholder).toBe(true);
+    expect(result.sourceLabel).toBe("Neutral placeholder");
+  });
+
+  it("preserves a verified facility image without inventing a fallback", () => {
+    const result = resolveFacilityImage({
+      visualIntelligence: {
+        heroImage: {
+          category: "exterior",
+          url: "https://riversidecarecenter.com/wp-content/uploads/2022/08/Riverside-edited-1.jpeg",
+          source: "Official Site",
+          collected_at: "2026-07-22T00:00:00Z",
+        },
+        galleryImages: [],
+        lifestyleTags: [],
+        visualConfidenceScore: 100,
+        visualCoverageScore: 100,
+      },
+    } as never);
+
+    expect(result.url).toContain("riversidecarecenter.com");
+    expect(result.isPlaceholder).toBe(false);
   });
 
   it("labels derived price as an estimate and missing price as unknown", () => {

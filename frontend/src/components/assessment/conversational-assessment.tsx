@@ -1,114 +1,119 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { AssessmentProgress } from "@/components/assessment/assessment-progress";
-import { ConversationQuestion } from "@/components/assessment/conversation-question";
-import { EditableAnswerSummary } from "@/components/assessment/editable-answer-summary";
-import { ProgressiveSection } from "@/components/assessment/progressive-section";
-import { UnknownClarificationList } from "@/components/assessment/unknown-clarification-list";
+import { LivingAssessmentDocument } from "@/components/assessment/living-assessment-document";
+import { MatchReadinessAction } from "@/components/assessment/match-readiness-action";
+import { AdvisorWritingBlock } from "@/components/assessment/advisor-writing-block";
 import { ValidationMessage } from "@/components/assessment/validation-message";
+import { buildAdvisorCompletionSummary, isAdvisorReadyForMatch, selectAdvisorTurn, type AdvisorTurn } from "@/lib/assessment-advisor";
 import {
-  ASSESSMENT_SECTIONS,
-  advisorResponseFor,
-  buildAssessmentSummary,
-  getAssessmentSection,
   getConversationQuestions,
-  getProgressiveQuestions,
-  getUnknownClarifications,
   hasAssessmentAnswer,
   pruneHiddenAssessmentAnswers,
 } from "@/lib/assessment-conversation";
-import type { AssessmentAnswer, AssessmentAnswers } from "@/lib/assessment-schema";
+import type { AssessmentAnswer, AssessmentAnswers, AssessmentQuestion } from "@/lib/assessment-schema";
 
-export function ConversationalAssessment({ answers, validation, submitting, onAnswersChange, onCurrentQuestionChange, onSubmit }: {
+export function ConversationalAssessment({ answers, validation, submitting, recommendationsReady, onAnswersChange, onCurrentQuestionChange, onSubmit }: {
   answers: AssessmentAnswers;
   validation: string;
   submitting: boolean;
+  recommendationsReady: boolean;
   onAnswersChange: (answers: AssessmentAnswers) => void;
   onCurrentQuestionChange: (questionId: string) => void;
   onSubmit: () => Promise<void>;
 }) {
   const [clearedNotice, setClearedNotice] = useState("");
-  const [announcement, setAnnouncement] = useState("");
-  const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
-  const questionElements = useRef(new Map<string, HTMLElement>());
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [settlingTurn, setSettlingTurn] = useState<AdvisorTurn | null>(null);
+  const activeTurn = useRef<HTMLElement | null>(null);
   const visibleQuestions = useMemo(() => getConversationQuestions(answers), [answers]);
-  const revealedQuestions = useMemo(() => getProgressiveQuestions(answers), [answers]);
-  const currentQuestion = visibleQuestions.find((question) => !hasAssessmentAnswer(answers[question.id])) || visibleQuestions.at(-1);
-  const completedRequired = visibleQuestions.filter((question) => question.required && hasAssessmentAnswer(answers[question.id])).length;
-  const requiredCount = visibleQuestions.filter((question) => question.required).length;
-  const percentage = requiredCount ? Math.round((completedRequired / requiredCount) * 100) : 0;
-  const complete = visibleQuestions.length > 0 && visibleQuestions.every((question) => hasAssessmentAnswer(answers[question.id]));
+  const selectedAdvisorTurn = useMemo(() => selectAdvisorTurn(answers), [answers]);
+  const advisorTurn = settlingTurn || selectedAdvisorTurn;
+  const visibleQuestionById = useMemo(() => new Map(visibleQuestions.map((question) => [question.id, question])), [visibleQuestions]);
+  const answeredQuestions = Object.keys(answers)
+    .map((questionId) => visibleQuestionById.get(questionId))
+    .filter((question): question is AssessmentQuestion => Boolean(question && question.id !== settlingTurn?.question.id && hasAssessmentAnswer(answers[question.id])));
+  const nextQuestion = advisorTurn?.question;
+  const nextQuestionId = nextQuestion?.id;
+  const complete = isAdvisorReadyForMatch(answers);
+  const completionSummary = useMemo(() => buildAdvisorCompletionSummary(answers), [answers]);
 
   useEffect(() => {
-    if (!pendingScrollId) return;
-    const element = questionElements.current.get(pendingScrollId);
-    if (!element) return;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    element.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
-  }, [pendingScrollId, revealedQuestions.length]);
+    if (!nextQuestionId || !activeTurn.current) return;
+    activeTurn.current.scrollIntoView({ behavior: "auto", block: "center" });
+  }, [nextQuestionId]);
 
   const commitAnswer = (questionId: string, answer: AssessmentAnswer) => {
-    const previouslyRevealed = new Set(revealedQuestions.map((question) => question.id));
     const pruned = pruneHiddenAssessmentAnswers({ ...answers, [questionId]: answer });
-    const nextQuestions = getProgressiveQuestions(pruned.answers);
-    const newlyRevealed = nextQuestions.find((question) => !previouslyRevealed.has(question.id));
-    const nextCurrent = getConversationQuestions(pruned.answers).find((question) => !hasAssessmentAnswer(pruned.answers[question.id]));
+    const nextCurrent = selectAdvisorTurn(pruned.answers)?.question;
     onAnswersChange(pruned.answers);
+    setSettlingTurn(null);
+    setEditingQuestionId(null);
     if (nextCurrent) onCurrentQuestionChange(nextCurrent.id);
-    setClearedNotice(pruned.clearedQuestionIds.length ? `${pruned.clearedQuestionIds.length} answer${pruned.clearedQuestionIds.length === 1 ? " was" : "s were"} cleared because ${pruned.clearedQuestionIds.length === 1 ? "it no longer applies" : "they no longer apply"}.` : "");
-    if (newlyRevealed) {
-      setAnnouncement(`Next question: ${newlyRevealed.englishLabel}`);
-      setPendingScrollId(newlyRevealed.id);
-    }
+    setClearedNotice(pruned.clearedQuestionIds.length ? "I removed a detail that no longer applies after this update." : "");
+  };
+
+  const saveDraftAnswer = (questionId: string, answer: AssessmentAnswer) => {
+    const pruned = pruneHiddenAssessmentAnswers({ ...answers, [questionId]: answer });
+    if (advisorTurn?.question.id === questionId) setSettlingTurn(advisorTurn);
+    onAnswersChange(pruned.answers);
+    setClearedNotice(pruned.clearedQuestionIds.length ? "I removed a detail that no longer applies after this update." : "");
   };
 
   const editQuestion = (questionId: string) => {
-    onCurrentQuestionChange(questionId);
-    setPendingScrollId(questionId);
-    questionElements.current.get(questionId)?.focus({ preventScroll: true });
+    setEditingQuestionId(questionId);
   };
 
-  const currentSection = currentQuestion ? getAssessmentSection(currentQuestion).label : ASSESSMENT_SECTIONS.at(-1)?.label || "Assessment";
+  const activateMatch = () => {
+    if (recommendationsReady) {
+      document.getElementById("recommendations-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    void onSubmit();
+  };
 
   return (
-    <>
-      <AssessmentProgress percentage={percentage} section={currentSection} completed={completedRequired} required={requiredCount} />
-      <p className="sr-only" aria-live="polite">{announcement}</p>
-      {clearedNotice ? <p role="status" className="mt-5 border-l-2 border-[#bd8b45] bg-[#fff8ec] px-4 py-3 text-sm text-[#74562e]">{clearedNotice}</p> : null}
+    <div className="space-y-12 sm:space-y-16">
+      <section className="border-t-2 border-[#2f4d43] pt-9">
+        <h2 className="font-serif text-2xl text-[#292722] sm:text-3xl">Understanding</h2>
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-[#625d55]">
+          We&apos;ll begin with the person at the center of this decision. Each answer will become part of this document, and anything uncertain will remain open rather than being guessed.
+        </p>
+      </section>
 
-      {ASSESSMENT_SECTIONS.filter((section) => section.id !== "summary").map((section) => {
-        const questions = revealedQuestions.filter((question) => getAssessmentSection(question).id === section.id);
-        if (!questions.length) return null;
-        return (
-          <ProgressiveSection key={section.id} label={section.label}>
-            {questions.map((question) => (
-              <div key={`${question.id}:${JSON.stringify(answers[question.id])}`} ref={(node) => { if (node) questionElements.current.set(question.id, node); else questionElements.current.delete(question.id); }}>
-                <ConversationQuestion question={question} answer={answers[question.id]} advisorResponse={advisorResponseFor(question, answers)} current={currentQuestion?.id === question.id} onCommit={(answer) => commitAnswer(question.id, answer)} />
-              </div>
-            ))}
-          </ProgressiveSection>
-        );
-      })}
+      <LivingAssessmentDocument
+        answeredQuestions={answeredQuestions}
+        answers={answers}
+        advisorTurn={advisorTurn}
+        editingQuestionId={editingQuestionId}
+        activeTurn={activeTurn}
+        onEdit={editQuestion}
+        onDraftChange={saveDraftAnswer}
+        onCommit={commitAnswer}
+      />
+
+      {clearedNotice ? <p role="status" className="border-l-2 border-[#c99c55] pl-5 text-lg leading-8 text-[#725c39]">{clearedNotice}</p> : null}
 
       {complete ? (
-        <section className="mt-12 scroll-mt-32 border-t-2 border-[#8db6a7] pt-9" aria-labelledby="understood-heading">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#397261]">What OPTIME understood</p>
-          <h2 id="understood-heading" className="mt-3 text-3xl font-semibold text-[#18342a]">What I understand so far</h2>
-          <p className="mt-4 text-lg leading-8 text-[#405d53]">{buildAssessmentSummary(answers)}</p>
-          <div className="mt-8"><EditableAnswerSummary questions={visibleQuestions} answers={answers} onEdit={editQuestion} /></div>
-          <UnknownClarificationList questions={getUnknownClarifications(answers)} onEdit={editQuestion} />
+        <section className="border-t-2 border-[#2f4d43] pt-10" aria-labelledby="document-summary-heading">
+          <AdvisorWritingBlock
+            label="readiness"
+            lines={[{
+              text: "I now understand enough about your family's needs to begin finding the communities most likely to fit.",
+              id: "document-summary-heading",
+              as: "h2",
+              className: "max-w-3xl font-serif text-3xl leading-tight text-[#292722] sm:text-5xl",
+            }]}
+          />
+          {completionSummary.stillNeedsConfirmation.length ? <p className="mt-5 max-w-3xl text-lg leading-8 text-[#625d55]">A few answers remain uncertain, and I will preserve them as unknown while I compare the options.</p> : null}
+
           <ValidationMessage message={validation} />
-          <div className="mt-8 flex flex-col gap-3 border-t border-[#d9e5e0] pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-[#62766e]">Your answers stay private on this device until you submit.</p>
-            <button type="button" disabled={submitting} onClick={() => void onSubmit()} className="bg-[#236f5d] px-6 py-3 text-sm font-semibold text-white outline-offset-4 hover:bg-[#195a4b] focus-visible:outline-2 focus-visible:outline-[#236f5d] disabled:cursor-wait disabled:opacity-60">{submitting ? "Creating your matches..." : "Find matching facilities"}</button>
-          </div>
+          <MatchReadinessAction ready={complete} submitting={submitting} recommendationsReady={recommendationsReady} onActivate={activateMatch} />
         </section>
       ) : <ValidationMessage message={validation} />}
 
-      <div className="mt-8 flex items-center justify-between gap-4 border-t border-[#dfe8e4] pt-5 text-xs text-[#6b7d76]"><span>Saved automatically on this device.</span><Link href="/" className="font-semibold text-[#2a6858] underline underline-offset-4">Return home</Link></div>
-    </>
+      <p className="border-t border-[#dedbd4] pt-6 text-lg leading-7 text-[#625d55]">This document is saved automatically on this device while you work.</p>
+    </div>
   );
 }

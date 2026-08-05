@@ -1,16 +1,20 @@
 import type { ReactNode } from "react";
 
-export function QuestionnaireShell({ children, eyebrow, title, description, aside }: { children: ReactNode; eyebrow: string; title: string; description: string; aside?: ReactNode }) {
+export function QuestionnaireShell({ children, eyebrow, title, description, aside, environment, actions }: { children: ReactNode; eyebrow: string; title: string; description: string; aside?: ReactNode; environment?: ReactNode; actions?: ReactNode }) {
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[#f7faf8] text-[#1f302b]">
-      <div className={`mx-auto grid w-full gap-8 px-4 py-8 sm:px-8 sm:py-12 ${aside ? "max-w-6xl lg:grid-cols-[minmax(0,1fr)_280px]" : "max-w-3xl"}`}>
-        <section className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#2f7867]">{eyebrow}</p>
-          <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-[-0.03em] text-[#172b25] sm:text-4xl">{title}</h1>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-[#526a62]">{description}</p>
-          <div className="mt-8">{children}</div>
+    <main className="relative isolate min-h-[calc(100vh-4rem)] overflow-hidden bg-[#263c36] text-lg text-[#2d2a26]">
+      {environment}
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-10 sm:py-16">
+        <section className="min-w-0 rounded-[28px] bg-[#fffdf8]/90 px-6 py-9 shadow-[0_30px_90px_rgba(15,29,24,0.3)] backdrop-blur-[12px] motion-reduce:bg-[#fffdf8] motion-reduce:backdrop-blur-none sm:px-12 sm:py-14 lg:max-w-4xl">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#3d6f5e]">{eyebrow}</p>
+            {actions}
+          </div>
+          <h1 className="mt-5 max-w-3xl font-serif text-4xl leading-[1.08] tracking-normal text-[#25231f] sm:text-6xl">{title}</h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-[#625d55]">{description}</p>
+          {aside ? <div className="mt-8 border-y border-[#d8d5cd] py-5">{aside}</div> : null}
+          <div className="mt-14 sm:mt-20">{children}</div>
         </section>
-        {aside ? <aside className="hidden border-l border-[#d9e5e0] pl-7 lg:block">{aside}</aside> : null}
       </div>
     </main>
   );
