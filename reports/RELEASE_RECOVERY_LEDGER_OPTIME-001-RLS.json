@@ -1,0 +1,80 @@
+{
+  "command_id": "OPTIME-001-RLS",
+  "generated_at_utc": "2026-08-05T09:08:00Z",
+  "repository": "https://github.com/shaienglert/optime-nursing.git",
+  "starting_branch": "review/homepage-questionnaire-inline",
+  "starting_head": "9e7105a0459c922108d049e7a8f82193c57a6bf6",
+  "starting_upstream": "origin/review/homepage-questionnaire-inline",
+  "starting_ahead_behind": {
+    "ahead": 9,
+    "behind": 0
+  },
+  "production_branch": "main",
+  "production_url": {
+    "frontend": "https://optime-nursing.vercel.app",
+    "backend": "UNKNOWN_FROM_REPO"
+  },
+  "production_commit": "UNVERIFIED_FROM_REPO",
+  "classification_counts": {
+    "APPROVED_AND_COMPLETE": 0,
+    "APPROVED_BUT_INCOMPLETE": 0,
+    "NOT_APPROVED": 0,
+    "GENERATED_CANONICAL_ARTIFACT": 6,
+    "GENERATED_REPORT_ONLY": 41,
+    "TEST_FIXTURE": 17,
+    "LOCAL_RUNTIME_STATE": 10,
+    "SECRET_OR_CONFIGURATION": 0,
+    "OBSOLETE_OR_DUPLICATE": 0,
+    "UNKNOWN_REQUIRES_OWNER": 84
+  },
+  "release_batches": [
+    {
+      "batch_id": "A",
+      "name": "GOVERNANCE_AND_SUPERVISION",
+      "status": "NOT_RELEASED",
+      "reason": "Approval ambiguity and mixed unknown scope"
+    },
+    {
+      "batch_id": "B",
+      "name": "PLATFORM_CONTROL",
+      "status": "NOT_RELEASED",
+      "reason": "Approval ambiguity and mixed unknown scope"
+    },
+    {
+      "batch_id": "C",
+      "name": "DATA_AND_MARKET_ARTIFACTS",
+      "status": "NOT_RELEASED",
+      "reason": "Approval ambiguity and mixed unknown scope"
+    },
+    {
+      "batch_id": "D",
+      "name": "FRONTEND_EXPERIENCE",
+      "status": "NOT_RELEASED",
+      "reason": "Approval ambiguity and no production verification path in repo"
+    },
+    {
+      "batch_id": "E",
+      "name": "REPORTS_AND_ARTIFACTS",
+      "status": "NOT_RELEASED",
+      "reason": "Cannot release generated reports without approved parent implementations"
+    }
+  ],
+  "ci": {
+    "status": "NOT_RUN",
+    "details": "No push/PR performed"
+  },
+  "deployment": {
+    "status": "NOT_ATTEMPTED",
+    "provider": [
+      "Render (backend)",
+      "Vercel (frontend)"
+    ],
+    "trigger": "Git push/PR merge workflow",
+    "smoke_test": "NOT_RUN"
+  },
+  "artifacts": {
+    "snapshot": "reports/RELEASE_RECOVERY_SNAPSHOT_2026-08-05.txt",
+    "classification": "reports/RELEASE_CLASSIFICATION_DRAFT_2026-08-05.json"
+  },
+  "final_verdict": "RELEASE_RECOVERY_BLOCKED"
+}

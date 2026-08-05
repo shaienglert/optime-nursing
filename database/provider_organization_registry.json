@@ -1,0 +1,5633 @@
+{
+  "generated_at_utc": "2026-08-04T18:34:26Z",
+  "pipeline_version": "provider-organization-registry-v1",
+  "status": "ACTIVE",
+  "record_count": 68,
+  "records": [
+    {
+      "organization_id": "ORG-760B9F14B6038A2A",
+      "legal_name": "ADVANCED HEALTH CARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295090:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "ADVANCED HEALTH CARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295090": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295092:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "ADVANCED HEALTH CARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295092": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295107:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "ADVANCED HEALTH CARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295107": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-FE06CAB21DAD6B09",
+      "legal_name": "ADVANCED HEALTH CARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "ahcfacilities.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://ahcfacilities.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295102:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "ADVANCED HEALTH CARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295102": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.ahcfacilities.com/facility-location/henderson/",
+          "official_facility_page_url": "https://www.ahcfacilities.com/facility-location/henderson/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-02A607F5F7C5520C",
+      "legal_name": "AHC OF HENDERSON, LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "ahcfacilities.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://ahcfacilities.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295102:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "AHC OF HENDERSON, LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295102": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.ahcfacilities.com/facility-location/henderson/",
+          "official_facility_page_url": "https://www.ahcfacilities.com/facility-location/henderson/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-501BCA7EACAAE2A2",
+      "legal_name": "AHC OF LAS VEGAS II LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295092:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "AHC OF LAS VEGAS II LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295092": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-57915A4DCA845E76",
+      "legal_name": "AHC OF LAS VEGAS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295090:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "AHC OF LAS VEGAS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295090": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-82F7471FB5551628",
+      "legal_name": "AHC OF PARADISE VALLEY LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295107:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "AHC OF PARADISE VALLEY LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295107": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-695EF92FC51C1C85",
+      "legal_name": "BOULDER CITY NV OPCO LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "mountainviewcarecenter.net",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://mountainviewcarecenter.net",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295080:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "BOULDER CITY NV OPCO LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295080": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://mountainviewcarecenter.net/about/",
+          "official_facility_page_url": "https://mountainviewcarecenter.net/about/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-A3D4CB37BFF9330A",
+      "legal_name": "CAREMERIDIAN LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295084:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "CAREMERIDIAN LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295084": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295091:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "CAREMERIDIAN LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295091": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-7895B646763C0253",
+      "legal_name": "CHARLESTON PEDIATRIC SNF LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295108:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "CHARLESTON PEDIATRIC SNF LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295108": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-23784BAEBEF93712",
+      "legal_name": "COVENANT CARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295066:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "COVENANT CARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295066": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295072:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "COVENANT CARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295072": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-7BBC03FBECCAB5B5",
+      "legal_name": "COVENANT CARE VEGAS, INC.",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295066:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "COVENANT CARE VEGAS, INC.",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295066": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295072:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "COVENANT CARE VEGAS, INC.",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295072": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-5731A9E863E6D765",
+      "legal_name": "DAVID JOHNSON",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "torreypinescare.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://torreypinescare.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295045:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "DAVID JOHNSON",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295045": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.torreypinescare.com/",
+          "official_facility_page_url": "https://www.torreypinescare.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-C7CBA638D00E93FB",
+      "legal_name": "DAVID JOHNSON",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "lasvegaspostacute.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://lasvegaspostacute.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295006:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "DAVID JOHNSON",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295006": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.lasvegaspostacute.com/",
+          "official_facility_page_url": "https://www.lasvegaspostacute.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-30386F2FDC071B4E",
+      "legal_name": "EL JEN SNF OPERATIONS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295008:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "EL JEN SNF OPERATIONS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295008": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-D6899E848D273AF5",
+      "legal_name": "EVERGREEN HEALTHCARE GROUP",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295008:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "EVERGREEN HEALTHCARE GROUP",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295008": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-4E508271F9EDB3B7",
+      "legal_name": "FUNDAMENTAL HEALTHCARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295036:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "FUNDAMENTAL HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295036": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295055:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "FUNDAMENTAL HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295055": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295094:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "FUNDAMENTAL HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295094": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295110:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "FUNDAMENTAL HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295110": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-6CFECC6BFF149717",
+      "legal_name": "FUNDAMENTAL HEALTHCARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "harmonmedicalrehab.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://harmonmedicalrehab.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295048:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "FUNDAMENTAL HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295048": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://harmonmedicalrehab.com/",
+          "official_facility_page_url": "https://harmonmedicalrehab.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-BA74E845F8F54F92",
+      "legal_name": "FUNDAMENTAL HEALTHCARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "horizonhealthandrehab.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://horizonhealthandrehab.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295017:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "FUNDAMENTAL HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295017": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://horizonhealthandrehab.com/services/",
+          "official_facility_page_url": "https://horizonhealthandrehab.com/services/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-DA266C706567E76A",
+      "legal_name": "GENERATIONS HEALTHCARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295099:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "GENERATIONS HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295099": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "NOT_VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-99DDF45425812AE6",
+      "legal_name": "GENESIS HEALTHCARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "stjosephtrc.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://stjosephtrc.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295040:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "GENESIS HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295040": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://stjosephtrc.com/contact-us/",
+          "official_facility_page_url": "https://stjosephtrc.com/contact-us/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-EDEA60925AA9932F",
+      "legal_name": "GENESIS HEALTHCARE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "theheightsofsummerlin.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://theheightsofsummerlin.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295083:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "GENESIS HEALTHCARE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295083": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://theheightsofsummerlin.com/",
+          "official_facility_page_url": "https://theheightsofsummerlin.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-AA1E53F4E1CAC813",
+      "legal_name": "GHC OF HENDERSON LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295099:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "GHC OF HENDERSON LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295099": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "NOT_VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-B408D65765A9A0B1",
+      "legal_name": "GRAPE HOLDINGS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "PARENT_HOLDING",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "sagecreekpostacute.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://sagecreekpostacute.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295098:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "GRAPE HOLDINGS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295098": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://sagecreekpostacute.com/",
+          "official_facility_page_url": "https://sagecreekpostacute.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-021FFB392AE64EC4",
+      "legal_name": "HENDERSON DELMAR NV OPCO LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295041:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "HENDERSON DELMAR NV OPCO LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295041": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-2095EDE498894F5D",
+      "legal_name": "HENDERSON LONG TERM CARE LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295110:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "HENDERSON LONG TERM CARE LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295110": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-2878BF09935854FB",
+      "legal_name": "HIGHLAND MANOR OF MESQUITE REHABILITATION LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295068:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "HIGHLAND MANOR OF MESQUITE REHABILITATION LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295068": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "NOT_VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-030DF42771A096A0",
+      "legal_name": "HUMANGOOD",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295086:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "HUMANGOOD",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295086": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "NOT_VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-F7C96A49DC817C2E",
+      "legal_name": "HUMANGOOD NEVADA",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295086:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "HUMANGOOD NEVADA",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295086": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "NOT_VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-D89179DD012688F0",
+      "legal_name": "IL & JOAN LEE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "royalspringshcc.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://royalspringshcc.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295073:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "IL & JOAN LEE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295073": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.royalspringshcc.com/",
+          "official_facility_page_url": "https://www.royalspringshcc.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-F2F57C854459F6DA",
+      "legal_name": "LAS VEGAS OPERATIONS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295052:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "LAS VEGAS OPERATIONS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295052": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-624968F704EFFCF1",
+      "legal_name": "LAS VEGAS POST ACUTE & REHABILITATION LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "lasvegaspostacute.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://lasvegaspostacute.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295006:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "LAS VEGAS POST ACUTE & REHABILITATION LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295006": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.lasvegaspostacute.com/",
+          "official_facility_page_url": "https://www.lasvegaspostacute.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "LEGAL_OR_BRAND_NAME_ON_SITE",
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-78DBF3559EE2A7E8",
+      "legal_name": "LIFE CARE CENTERS OF AMERICA",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295052:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "LIFE CARE CENTERS OF AMERICA",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295052": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295076:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "LIFE CARE CENTERS OF AMERICA",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295076": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-887AF6769A586D2A",
+      "legal_name": "LYCHEE HOLDINGS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "PARENT_HOLDING",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "trelliscentennial.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://trelliscentennial.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295106:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "LYCHEE HOLDINGS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295106": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://trelliscentennial.com/",
+          "official_facility_page_url": "https://trelliscentennial.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-7778792F9B868062",
+      "legal_name": "Legal Business Name Not Available",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "bchcares.org",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://bchcares.org",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295046:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "Legal Business Name Not Available",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295046": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://bchcares.org/skilled-nursing-facility/",
+          "official_facility_page_url": "https://bchcares.org/skilled-nursing-facility/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-DF4A88788B62846D",
+      "legal_name": "Legal Business Name Not Available",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "missionpines.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://missionpines.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-29E037:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "Legal Business Name Not Available",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-29E037": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://missionpines.com/",
+          "official_facility_page_url": "https://missionpines.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-96477599A901A84F",
+      "legal_name": "MARQUIS COMPANIES",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "marquiscompanies.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://marquiscompanies.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295070:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "MARQUIS COMPANIES",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295070": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.marquiscompanies.com/facility/marquis-plaza-regency/",
+          "official_facility_page_url": "https://www.marquiscompanies.com/facility/marquis-plaza-regency/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "LEGAL_OR_BRAND_NAME_ON_SITE",
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-A9CE553FC420857A",
+      "legal_name": "MARQUIS COMPANIES",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295089:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "MARQUIS COMPANIES",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295089": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "AMBIGUOUS"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-71BC61A6BF956EF9",
+      "legal_name": "MARQUIS COMPANIES I, INC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295089:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "MARQUIS COMPANIES I, INC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295089": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "AMBIGUOUS"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-A5927D3B15227E78",
+      "legal_name": "MARQUIS COMPANIES II INC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "marquiscompanies.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://marquiscompanies.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295070:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "MARQUIS COMPANIES II INC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295070": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.marquiscompanies.com/facility/marquis-plaza-regency/",
+          "official_facility_page_url": "https://www.marquiscompanies.com/facility/marquis-plaza-regency/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "LEGAL_OR_BRAND_NAME_ON_SITE",
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-FA18DBBF9CE485B4",
+      "legal_name": "MISSION POINT HEALTHCARE SERVICES",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "skyecanyonpa.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://skyecanyonpa.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295097:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "MISSION POINT HEALTHCARE SERVICES",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295097": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://skyecanyonpa.com/",
+          "official_facility_page_url": "https://skyecanyonpa.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-3C2F5E901A67A100",
+      "legal_name": "MISSION POINT OF LAS VEGAS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "skyecanyonpa.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://skyecanyonpa.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295097:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "MISSION POINT OF LAS VEGAS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295097": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://skyecanyonpa.com/",
+          "official_facility_page_url": "https://skyecanyonpa.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-7D6F40EA3C9D179F",
+      "legal_name": "MOON COVE HEALTHCARE, INC.",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "hendersonhealth.net",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://hendersonhealth.net",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295037:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "MOON COVE HEALTHCARE, INC.",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295037": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://hendersonhealth.net/",
+          "official_facility_page_url": "https://hendersonhealth.net/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-63720C89DAFC0E9E",
+      "legal_name": "NEURORESTORATIVE",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295084:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "NEURORESTORATIVE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295084": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        },
+        "canonical:CMS-295091:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "NEURORESTORATIVE",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295091": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-626AF156119DE1F3",
+      "legal_name": "PACS GROUP",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "canyonvistapostacute.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://canyonvistapostacute.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295093:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "PACS GROUP",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295093": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://canyonvistapostacute.com/",
+          "official_facility_page_url": "https://canyonvistapostacute.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-6A007D9E80B6A0CF",
+      "legal_name": "PACS GROUP",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "trelliscentennial.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://trelliscentennial.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295106:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "PACS GROUP",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295106": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://trelliscentennial.com/",
+          "official_facility_page_url": "https://trelliscentennial.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-93F16032D4F5E1CE",
+      "legal_name": "PACS GROUP",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "sagecreekpostacute.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://sagecreekpostacute.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295098:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "PACS GROUP",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295098": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://sagecreekpostacute.com/",
+          "official_facility_page_url": "https://sagecreekpostacute.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-942ADB57AF725584",
+      "legal_name": "PACS GROUP",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295109:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "PACS GROUP",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295109": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-BCEA6FFF988D3131",
+      "legal_name": "PREMIER HEALTH AND REHABILITATION CENTER OF LAS VEGAS, LP",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "premierrehaboflasvegas.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://premierrehaboflasvegas.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295021:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "PREMIER HEALTH AND REHABILITATION CENTER OF LAS VEGAS, LP",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295021": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://premierrehaboflasvegas.com/",
+          "official_facility_page_url": "https://premierrehaboflasvegas.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "LEGAL_OR_BRAND_NAME_ON_SITE",
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-94F82F0175772863",
+      "legal_name": "PURSUE HEALTH",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "premierrehaboflasvegas.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://premierrehaboflasvegas.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295021:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "PURSUE HEALTH",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295021": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://premierrehaboflasvegas.com/",
+          "official_facility_page_url": "https://premierrehaboflasvegas.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-AA3288879273D660",
+      "legal_name": "ROYAL SPRINGS HEALTHCARE AND REHAB, INC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "royalspringshcc.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://royalspringshcc.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295073:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "ROYAL SPRINGS HEALTHCARE AND REHAB, INC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295073": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.royalspringshcc.com/",
+          "official_facility_page_url": "https://www.royalspringshcc.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "LEGAL_OR_BRAND_NAME_ON_SITE",
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-BD8DEDD9B82C3890",
+      "legal_name": "SANDSTONE HEALTHCARE GROUP",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295095:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "SANDSTONE HEALTHCARE GROUP",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295095": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-E6EBA303A2D5F076",
+      "legal_name": "SANDSTONE SPRING VALLEY LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295095:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "SANDSTONE SPRING VALLEY LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295095": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-5E298C2204E7E22E",
+      "legal_name": "SOUTH LAS VEGAS MEDICAL INVESTORS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295076:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "SOUTH LAS VEGAS MEDICAL INVESTORS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295076": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-E015F1E2BF1448A7",
+      "legal_name": "SPRING VALLEY HEALTH CARE, LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295094:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "SPRING VALLEY HEALTH CARE, LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295094": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-DE2A5F4310DA146A",
+      "legal_name": "ST. JOSEPH TRANSITIONAL REHABILITATION CENTER, LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "stjosephtrc.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://stjosephtrc.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295040:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "ST. JOSEPH TRANSITIONAL REHABILITATION CENTER, LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295040": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://stjosephtrc.com/contact-us/",
+          "official_facility_page_url": "https://stjosephtrc.com/contact-us/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "LEGAL_OR_BRAND_NAME_ON_SITE",
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-1A90E49234F6D212",
+      "legal_name": "STARFRUIT HOLDINGS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "PARENT_HOLDING",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295109:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "STARFRUIT HOLDINGS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295109": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-3A2E946C8BE19731",
+      "legal_name": "STATE OF NEVADA",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295081:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "STATE OF NEVADA",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295081": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-5BE622209F4AE122",
+      "legal_name": "THE CHARLY BELLO FAMILY, THE MAZE FAMILY, THE SWAIN FAMILY, & WALTER MYERS",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295068:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "THE CHARLY BELLO FAMILY, THE MAZE FAMILY, THE SWAIN FAMILY, & WALTER MYERS",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295068": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "NOT_VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-14642B287142CE69",
+      "legal_name": "THE ENSIGN GROUP",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "hendersonhealth.net",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://hendersonhealth.net",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295037:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "THE ENSIGN GROUP",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295037": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://hendersonhealth.net/",
+          "official_facility_page_url": "https://hendersonhealth.net/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-31BE75DF4659F099",
+      "legal_name": "THE HEIGHTS OF SUMMERLIN, LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "theheightsofsummerlin.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://theheightsofsummerlin.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295083:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "THE HEIGHTS OF SUMMERLIN, LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295083": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://theheightsofsummerlin.com/",
+          "official_facility_page_url": "https://theheightsofsummerlin.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "LEGAL_OR_BRAND_NAME_ON_SITE",
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-894641BC5FD443B7",
+      "legal_name": "THI OF NEVADA AT CHEYENNE, LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295055:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "THI OF NEVADA AT CHEYENNE, LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295055": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-DD25BB5B3F100F8B",
+      "legal_name": "THI OF NEVADA AT LAS VEGAS I, LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "harmonmedicalrehab.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://harmonmedicalrehab.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295048:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "THI OF NEVADA AT LAS VEGAS I, LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295048": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://harmonmedicalrehab.com/",
+          "official_facility_page_url": "https://harmonmedicalrehab.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-082639786AC2C872",
+      "legal_name": "THI OF NEVADA II AT DESERT LANE, LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "horizonhealthandrehab.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://horizonhealthandrehab.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295017:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "THI OF NEVADA II AT DESERT LANE, LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295017": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://horizonhealthandrehab.com/services/",
+          "official_facility_page_url": "https://horizonhealthandrehab.com/services/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-28C57B3DCF07C8A2",
+      "legal_name": "THI OF NEVADA II AT NORTH LAS VEGAS, LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295036:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "THI OF NEVADA II AT NORTH LAS VEGAS, LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295036": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-F6A54A29FDFBA6E4",
+      "legal_name": "TLC SNF OPERATIONS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "ORGANIZATION",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295071:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "TLC SNF OPERATIONS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295071": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-27332FDB8DDA94C9",
+      "legal_name": "TORREY PINES REHABILITATION HOSPITAL LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "torreypinescare.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://torreypinescare.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295045:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "TORREY PINES REHABILITATION HOSPITAL LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295045": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://www.torreypinescare.com/",
+          "official_facility_page_url": "https://www.torreypinescare.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "LEGAL_OR_BRAND_NAME_ON_SITE",
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    },
+    {
+      "organization_id": "ORG-4C400259A4BF2E2C",
+      "legal_name": "VALLEY WEST HEALTH",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "HEALTHCARE_OPERATOR",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "",
+      "alternate_official_domains": [],
+      "official_corporate_website": "",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295041:operator": {
+          "source": "canonical_universe",
+          "field": "operator_name",
+          "value": "VALLEY WEST HEALTH",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295041": {
+          "source": "media_live_pilot",
+          "official_website_url": "",
+          "official_facility_page_url": "",
+          "identity_status": "PARTIAL"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "MEDIUM",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": false,
+        "signals": [
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": "INSUFFICIENT_STRONG_SIGNALS"
+      }
+    },
+    {
+      "organization_id": "ORG-4B72B0816FDCEEE9",
+      "legal_name": "YATE HOLDINGS LLC",
+      "dba_brand_names": [],
+      "former_names": [],
+      "organization_type": "PARENT_HOLDING",
+      "parent_organization_id": null,
+      "ownership_hierarchy": [],
+      "operator_identifiers": {},
+      "npi_identifiers": [],
+      "cms_ownership_identifier": null,
+      "state_registration_identifier": null,
+      "official_domain": "canyonvistapostacute.com",
+      "alternate_official_domains": [],
+      "official_corporate_website": "https://canyonvistapostacute.com",
+      "official_locations_directory_url": "",
+      "logo_source_url": "",
+      "logo_rights_status": "UNKNOWN",
+      "status": "ACTIVE",
+      "aliases": [],
+      "source_evidence": {
+        "canonical:CMS-295093:owner": {
+          "source": "canonical_universe",
+          "field": "owner_name",
+          "value": "YATE HOLDINGS LLC",
+          "source_retrieved_at": "2026-08-04T00:00:00+00:00",
+          "authoritative": true
+        },
+        "pilot:CMS-295093": {
+          "source": "media_live_pilot",
+          "official_website_url": "https://canyonvistapostacute.com/",
+          "official_facility_page_url": "https://canyonvistapostacute.com/",
+          "identity_status": "VERIFIED"
+        }
+      },
+      "retrieval_dates": {
+        "first_seen": "2026-08-04T18:34:26Z",
+        "last_seen": "2026-08-04T18:34:26Z"
+      },
+      "identity_confidence": "HIGH",
+      "conflict_status": "NONE",
+      "pipeline_version": "provider-organization-registry-v1",
+      "state": "NV",
+      "domain_verification": {
+        "verified": true,
+        "signals": [
+          "FACILITY_LOCATION_DIRECTORY_MATCH",
+          "AUTHORITATIVE_OWNERSHIP_RECORD_LINK"
+        ],
+        "verification_date": "2026-08-04T18:34:26Z",
+        "next_review_date": "2026-09-03",
+        "rejection_reason": ""
+      }
+    }
+  ],
+  "facility_relationship_count": 114,
+  "facility_relationships": [
+    {
+      "canonical_facility_id": "CMS-295006",
+      "organization_id": "ORG-C7CBA638D00E93FB",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "DAVID JOHNSON",
+        "owner_name": "LAS VEGAS POST ACUTE & REHABILITATION LLC",
+        "official_domain": "lasvegaspostacute.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295006",
+      "organization_id": "ORG-624968F704EFFCF1",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "DAVID JOHNSON",
+        "owner_name": "LAS VEGAS POST ACUTE & REHABILITATION LLC",
+        "official_domain": "lasvegaspostacute.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295006",
+      "organization_id": "ORG-624968F704EFFCF1",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-C7CBA638D00E93FB"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295008",
+      "organization_id": "ORG-D6899E848D273AF5",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "EVERGREEN HEALTHCARE GROUP",
+        "owner_name": "EL JEN SNF OPERATIONS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295008",
+      "organization_id": "ORG-30386F2FDC071B4E",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "EVERGREEN HEALTHCARE GROUP",
+        "owner_name": "EL JEN SNF OPERATIONS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295008",
+      "organization_id": "ORG-30386F2FDC071B4E",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-D6899E848D273AF5"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295017",
+      "organization_id": "ORG-BA74E845F8F54F92",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "THI OF NEVADA II AT DESERT LANE, LLC",
+        "official_domain": "horizonhealthandrehab.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295017",
+      "organization_id": "ORG-082639786AC2C872",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "THI OF NEVADA II AT DESERT LANE, LLC",
+        "official_domain": "horizonhealthandrehab.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295017",
+      "organization_id": "ORG-082639786AC2C872",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-BA74E845F8F54F92"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295021",
+      "organization_id": "ORG-94F82F0175772863",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PURSUE HEALTH",
+        "owner_name": "PREMIER HEALTH AND REHABILITATION CENTER OF LAS VEGAS, LP",
+        "official_domain": "premierrehaboflasvegas.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295021",
+      "organization_id": "ORG-BCEA6FFF988D3131",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PURSUE HEALTH",
+        "owner_name": "PREMIER HEALTH AND REHABILITATION CENTER OF LAS VEGAS, LP",
+        "official_domain": "premierrehaboflasvegas.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295021",
+      "organization_id": "ORG-BCEA6FFF988D3131",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-94F82F0175772863"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295036",
+      "organization_id": "ORG-4E508271F9EDB3B7",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "THI OF NEVADA II AT NORTH LAS VEGAS, LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295036",
+      "organization_id": "ORG-28C57B3DCF07C8A2",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "THI OF NEVADA II AT NORTH LAS VEGAS, LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295036",
+      "organization_id": "ORG-28C57B3DCF07C8A2",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-4E508271F9EDB3B7"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295037",
+      "organization_id": "ORG-14642B287142CE69",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "THE ENSIGN GROUP",
+        "owner_name": "MOON COVE HEALTHCARE, INC.",
+        "official_domain": "hendersonhealth.net"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295037",
+      "organization_id": "ORG-7D6F40EA3C9D179F",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "THE ENSIGN GROUP",
+        "owner_name": "MOON COVE HEALTHCARE, INC.",
+        "official_domain": "hendersonhealth.net"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295037",
+      "organization_id": "ORG-7D6F40EA3C9D179F",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-14642B287142CE69"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295040",
+      "organization_id": "ORG-99DDF45425812AE6",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "GENESIS HEALTHCARE",
+        "owner_name": "ST. JOSEPH TRANSITIONAL REHABILITATION CENTER, LLC",
+        "official_domain": "stjosephtrc.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295040",
+      "organization_id": "ORG-DE2A5F4310DA146A",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "GENESIS HEALTHCARE",
+        "owner_name": "ST. JOSEPH TRANSITIONAL REHABILITATION CENTER, LLC",
+        "official_domain": "stjosephtrc.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295040",
+      "organization_id": "ORG-DE2A5F4310DA146A",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-99DDF45425812AE6"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295041",
+      "organization_id": "ORG-4C400259A4BF2E2C",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "VALLEY WEST HEALTH",
+        "owner_name": "HENDERSON DELMAR NV OPCO LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295041",
+      "organization_id": "ORG-021FFB392AE64EC4",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "VALLEY WEST HEALTH",
+        "owner_name": "HENDERSON DELMAR NV OPCO LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295041",
+      "organization_id": "ORG-021FFB392AE64EC4",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-4C400259A4BF2E2C"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295045",
+      "organization_id": "ORG-5731A9E863E6D765",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "DAVID JOHNSON",
+        "owner_name": "TORREY PINES REHABILITATION HOSPITAL LLC",
+        "official_domain": "torreypinescare.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295045",
+      "organization_id": "ORG-27332FDB8DDA94C9",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "DAVID JOHNSON",
+        "owner_name": "TORREY PINES REHABILITATION HOSPITAL LLC",
+        "official_domain": "torreypinescare.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295045",
+      "organization_id": "ORG-27332FDB8DDA94C9",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-5731A9E863E6D765"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295046",
+      "organization_id": "ORG-7778792F9B868062",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "",
+        "owner_name": "Legal Business Name Not Available",
+        "official_domain": "bchcares.org"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295048",
+      "organization_id": "ORG-6CFECC6BFF149717",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "THI OF NEVADA AT LAS VEGAS I, LLC",
+        "official_domain": "harmonmedicalrehab.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295048",
+      "organization_id": "ORG-DD25BB5B3F100F8B",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "THI OF NEVADA AT LAS VEGAS I, LLC",
+        "official_domain": "harmonmedicalrehab.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295048",
+      "organization_id": "ORG-DD25BB5B3F100F8B",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-6CFECC6BFF149717"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295052",
+      "organization_id": "ORG-78DBF3559EE2A7E8",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "LIFE CARE CENTERS OF AMERICA",
+        "owner_name": "LAS VEGAS OPERATIONS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295052",
+      "organization_id": "ORG-F2F57C854459F6DA",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "LIFE CARE CENTERS OF AMERICA",
+        "owner_name": "LAS VEGAS OPERATIONS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295052",
+      "organization_id": "ORG-F2F57C854459F6DA",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-78DBF3559EE2A7E8"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295055",
+      "organization_id": "ORG-4E508271F9EDB3B7",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "THI OF NEVADA AT CHEYENNE, LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295055",
+      "organization_id": "ORG-894641BC5FD443B7",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "THI OF NEVADA AT CHEYENNE, LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295055",
+      "organization_id": "ORG-894641BC5FD443B7",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-4E508271F9EDB3B7"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295066",
+      "organization_id": "ORG-23784BAEBEF93712",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "COVENANT CARE",
+        "owner_name": "COVENANT CARE VEGAS, INC.",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295066",
+      "organization_id": "ORG-7BBC03FBECCAB5B5",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "COVENANT CARE",
+        "owner_name": "COVENANT CARE VEGAS, INC.",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295066",
+      "organization_id": "ORG-7BBC03FBECCAB5B5",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-23784BAEBEF93712"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295068",
+      "organization_id": "ORG-5BE622209F4AE122",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "THE CHARLY BELLO FAMILY, THE MAZE FAMILY, THE SWAIN FAMILY, & WALTER MYERS",
+        "owner_name": "HIGHLAND MANOR OF MESQUITE REHABILITATION LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295068",
+      "organization_id": "ORG-2878BF09935854FB",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "THE CHARLY BELLO FAMILY, THE MAZE FAMILY, THE SWAIN FAMILY, & WALTER MYERS",
+        "owner_name": "HIGHLAND MANOR OF MESQUITE REHABILITATION LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295068",
+      "organization_id": "ORG-2878BF09935854FB",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-5BE622209F4AE122"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295070",
+      "organization_id": "ORG-96477599A901A84F",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "MARQUIS COMPANIES",
+        "owner_name": "MARQUIS COMPANIES II INC",
+        "official_domain": "marquiscompanies.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295070",
+      "organization_id": "ORG-A5927D3B15227E78",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "MARQUIS COMPANIES",
+        "owner_name": "MARQUIS COMPANIES II INC",
+        "official_domain": "marquiscompanies.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295070",
+      "organization_id": "ORG-A5927D3B15227E78",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-96477599A901A84F"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295071",
+      "organization_id": "ORG-F6A54A29FDFBA6E4",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "",
+        "owner_name": "TLC SNF OPERATIONS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295072",
+      "organization_id": "ORG-23784BAEBEF93712",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "COVENANT CARE",
+        "owner_name": "COVENANT CARE VEGAS, INC.",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295072",
+      "organization_id": "ORG-7BBC03FBECCAB5B5",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "COVENANT CARE",
+        "owner_name": "COVENANT CARE VEGAS, INC.",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295072",
+      "organization_id": "ORG-7BBC03FBECCAB5B5",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-23784BAEBEF93712"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295073",
+      "organization_id": "ORG-D89179DD012688F0",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "IL & JOAN LEE",
+        "owner_name": "ROYAL SPRINGS HEALTHCARE AND REHAB, INC",
+        "official_domain": "royalspringshcc.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295073",
+      "organization_id": "ORG-AA3288879273D660",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "IL & JOAN LEE",
+        "owner_name": "ROYAL SPRINGS HEALTHCARE AND REHAB, INC",
+        "official_domain": "royalspringshcc.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295073",
+      "organization_id": "ORG-AA3288879273D660",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-D89179DD012688F0"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295076",
+      "organization_id": "ORG-78DBF3559EE2A7E8",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "LIFE CARE CENTERS OF AMERICA",
+        "owner_name": "SOUTH LAS VEGAS MEDICAL INVESTORS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295076",
+      "organization_id": "ORG-5E298C2204E7E22E",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "LIFE CARE CENTERS OF AMERICA",
+        "owner_name": "SOUTH LAS VEGAS MEDICAL INVESTORS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295076",
+      "organization_id": "ORG-5E298C2204E7E22E",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-78DBF3559EE2A7E8"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295080",
+      "organization_id": "ORG-695EF92FC51C1C85",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "",
+        "owner_name": "BOULDER CITY NV OPCO LLC",
+        "official_domain": "mountainviewcarecenter.net"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295081",
+      "organization_id": "ORG-3A2E946C8BE19731",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "",
+        "owner_name": "STATE OF NEVADA",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295083",
+      "organization_id": "ORG-EDEA60925AA9932F",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "GENESIS HEALTHCARE",
+        "owner_name": "THE HEIGHTS OF SUMMERLIN, LLC",
+        "official_domain": "theheightsofsummerlin.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295083",
+      "organization_id": "ORG-31BE75DF4659F099",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "GENESIS HEALTHCARE",
+        "owner_name": "THE HEIGHTS OF SUMMERLIN, LLC",
+        "official_domain": "theheightsofsummerlin.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295083",
+      "organization_id": "ORG-31BE75DF4659F099",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-EDEA60925AA9932F"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295084",
+      "organization_id": "ORG-63720C89DAFC0E9E",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "NEURORESTORATIVE",
+        "owner_name": "CAREMERIDIAN LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295084",
+      "organization_id": "ORG-A3D4CB37BFF9330A",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "NEURORESTORATIVE",
+        "owner_name": "CAREMERIDIAN LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295084",
+      "organization_id": "ORG-A3D4CB37BFF9330A",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-63720C89DAFC0E9E"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295086",
+      "organization_id": "ORG-030DF42771A096A0",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "HUMANGOOD",
+        "owner_name": "HUMANGOOD NEVADA",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295086",
+      "organization_id": "ORG-F7C96A49DC817C2E",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "HUMANGOOD",
+        "owner_name": "HUMANGOOD NEVADA",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295086",
+      "organization_id": "ORG-F7C96A49DC817C2E",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-030DF42771A096A0"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295089",
+      "organization_id": "ORG-A9CE553FC420857A",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "MARQUIS COMPANIES",
+        "owner_name": "MARQUIS COMPANIES I, INC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295089",
+      "organization_id": "ORG-71BC61A6BF956EF9",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "MARQUIS COMPANIES",
+        "owner_name": "MARQUIS COMPANIES I, INC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295089",
+      "organization_id": "ORG-71BC61A6BF956EF9",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-A9CE553FC420857A"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295090",
+      "organization_id": "ORG-760B9F14B6038A2A",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "ADVANCED HEALTH CARE",
+        "owner_name": "AHC OF LAS VEGAS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295090",
+      "organization_id": "ORG-57915A4DCA845E76",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "ADVANCED HEALTH CARE",
+        "owner_name": "AHC OF LAS VEGAS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295090",
+      "organization_id": "ORG-57915A4DCA845E76",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-760B9F14B6038A2A"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295091",
+      "organization_id": "ORG-63720C89DAFC0E9E",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "NEURORESTORATIVE",
+        "owner_name": "CAREMERIDIAN LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295091",
+      "organization_id": "ORG-A3D4CB37BFF9330A",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "NEURORESTORATIVE",
+        "owner_name": "CAREMERIDIAN LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295091",
+      "organization_id": "ORG-A3D4CB37BFF9330A",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-63720C89DAFC0E9E"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295092",
+      "organization_id": "ORG-760B9F14B6038A2A",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "ADVANCED HEALTH CARE",
+        "owner_name": "AHC OF LAS VEGAS II LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295092",
+      "organization_id": "ORG-501BCA7EACAAE2A2",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "ADVANCED HEALTH CARE",
+        "owner_name": "AHC OF LAS VEGAS II LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295092",
+      "organization_id": "ORG-501BCA7EACAAE2A2",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-760B9F14B6038A2A"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295093",
+      "organization_id": "ORG-626AF156119DE1F3",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PACS GROUP",
+        "owner_name": "YATE HOLDINGS LLC",
+        "official_domain": "canyonvistapostacute.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295093",
+      "organization_id": "ORG-4B72B0816FDCEEE9",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PACS GROUP",
+        "owner_name": "YATE HOLDINGS LLC",
+        "official_domain": "canyonvistapostacute.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295093",
+      "organization_id": "ORG-4B72B0816FDCEEE9",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-626AF156119DE1F3"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295094",
+      "organization_id": "ORG-4E508271F9EDB3B7",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "SPRING VALLEY HEALTH CARE, LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295094",
+      "organization_id": "ORG-E015F1E2BF1448A7",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "SPRING VALLEY HEALTH CARE, LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295094",
+      "organization_id": "ORG-E015F1E2BF1448A7",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-4E508271F9EDB3B7"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295095",
+      "organization_id": "ORG-BD8DEDD9B82C3890",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "SANDSTONE HEALTHCARE GROUP",
+        "owner_name": "SANDSTONE SPRING VALLEY LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295095",
+      "organization_id": "ORG-E6EBA303A2D5F076",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "SANDSTONE HEALTHCARE GROUP",
+        "owner_name": "SANDSTONE SPRING VALLEY LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295095",
+      "organization_id": "ORG-E6EBA303A2D5F076",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-BD8DEDD9B82C3890"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295097",
+      "organization_id": "ORG-FA18DBBF9CE485B4",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "MISSION POINT HEALTHCARE SERVICES",
+        "owner_name": "MISSION POINT OF LAS VEGAS LLC",
+        "official_domain": "skyecanyonpa.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295097",
+      "organization_id": "ORG-3C2F5E901A67A100",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "MISSION POINT HEALTHCARE SERVICES",
+        "owner_name": "MISSION POINT OF LAS VEGAS LLC",
+        "official_domain": "skyecanyonpa.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295097",
+      "organization_id": "ORG-3C2F5E901A67A100",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-FA18DBBF9CE485B4"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295098",
+      "organization_id": "ORG-93F16032D4F5E1CE",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PACS GROUP",
+        "owner_name": "GRAPE HOLDINGS LLC",
+        "official_domain": "sagecreekpostacute.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295098",
+      "organization_id": "ORG-B408D65765A9A0B1",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PACS GROUP",
+        "owner_name": "GRAPE HOLDINGS LLC",
+        "official_domain": "sagecreekpostacute.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295098",
+      "organization_id": "ORG-B408D65765A9A0B1",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-93F16032D4F5E1CE"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295099",
+      "organization_id": "ORG-DA266C706567E76A",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "GENERATIONS HEALTHCARE",
+        "owner_name": "GHC OF HENDERSON LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295099",
+      "organization_id": "ORG-AA1E53F4E1CAC813",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "GENERATIONS HEALTHCARE",
+        "owner_name": "GHC OF HENDERSON LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295099",
+      "organization_id": "ORG-AA1E53F4E1CAC813",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-DA266C706567E76A"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295102",
+      "organization_id": "ORG-FE06CAB21DAD6B09",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "ADVANCED HEALTH CARE",
+        "owner_name": "AHC OF HENDERSON, LLC",
+        "official_domain": "ahcfacilities.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295102",
+      "organization_id": "ORG-02A607F5F7C5520C",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "ADVANCED HEALTH CARE",
+        "owner_name": "AHC OF HENDERSON, LLC",
+        "official_domain": "ahcfacilities.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295102",
+      "organization_id": "ORG-02A607F5F7C5520C",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-FE06CAB21DAD6B09"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295106",
+      "organization_id": "ORG-6A007D9E80B6A0CF",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PACS GROUP",
+        "owner_name": "LYCHEE HOLDINGS LLC",
+        "official_domain": "trelliscentennial.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295106",
+      "organization_id": "ORG-887AF6769A586D2A",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PACS GROUP",
+        "owner_name": "LYCHEE HOLDINGS LLC",
+        "official_domain": "trelliscentennial.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295106",
+      "organization_id": "ORG-887AF6769A586D2A",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-6A007D9E80B6A0CF"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295107",
+      "organization_id": "ORG-760B9F14B6038A2A",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "ADVANCED HEALTH CARE",
+        "owner_name": "AHC OF PARADISE VALLEY LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295107",
+      "organization_id": "ORG-82F7471FB5551628",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "ADVANCED HEALTH CARE",
+        "owner_name": "AHC OF PARADISE VALLEY LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295107",
+      "organization_id": "ORG-82F7471FB5551628",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-760B9F14B6038A2A"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295108",
+      "organization_id": "ORG-7895B646763C0253",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "",
+        "owner_name": "CHARLESTON PEDIATRIC SNF LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295109",
+      "organization_id": "ORG-942ADB57AF725584",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PACS GROUP",
+        "owner_name": "STARFRUIT HOLDINGS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295109",
+      "organization_id": "ORG-1A90E49234F6D212",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "PACS GROUP",
+        "owner_name": "STARFRUIT HOLDINGS LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295109",
+      "organization_id": "ORG-1A90E49234F6D212",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-942ADB57AF725584"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295110",
+      "organization_id": "ORG-4E508271F9EDB3B7",
+      "relationship_type": "operator",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "HENDERSON LONG TERM CARE LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "MEDIUM",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295110",
+      "organization_id": "ORG-2095EDE498894F5D",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "FUNDAMENTAL HEALTHCARE",
+        "owner_name": "HENDERSON LONG TERM CARE LLC",
+        "official_domain": ""
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-295110",
+      "organization_id": "ORG-2095EDE498894F5D",
+      "relationship_type": "parent_company",
+      "source_evidence": {
+        "source": "derived",
+        "note": "owner differs from operator; parent relation retained as unresolved unless explicit acquisition evidence exists",
+        "linked_operator_organization_id": "ORG-4E508271F9EDB3B7"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "LOW",
+      "conflict_status": "NONE"
+    },
+    {
+      "canonical_facility_id": "CMS-29E037",
+      "organization_id": "ORG-DF4A88788B62846D",
+      "relationship_type": "owner",
+      "source_evidence": {
+        "source": "canonical_universe",
+        "operator_name": "",
+        "owner_name": "Legal Business Name Not Available",
+        "official_domain": "missionpines.com"
+      },
+      "effective_date": "",
+      "end_date": "",
+      "confidence": "HIGH",
+      "conflict_status": "NONE"
+    }
+  ],
+  "unresolved_duplicate_candidates": [
+    {
+      "organization_ids": [
+        "ORG-C7CBA638D00E93FB",
+        "ORG-5731A9E863E6D765"
+      ],
+      "reason": "SAME_NORMALIZED_NAME_MULTIPLE_ORGS",
+      "normalized_name": "david johnson"
+    },
+    {
+      "organization_ids": [
+        "ORG-BA74E845F8F54F92",
+        "ORG-4E508271F9EDB3B7",
+        "ORG-6CFECC6BFF149717"
+      ],
+      "reason": "SAME_NORMALIZED_NAME_MULTIPLE_ORGS",
+      "normalized_name": "fundamental healthcare"
+    },
+    {
+      "organization_ids": [
+        "ORG-99DDF45425812AE6",
+        "ORG-EDEA60925AA9932F"
+      ],
+      "reason": "SAME_NORMALIZED_NAME_MULTIPLE_ORGS",
+      "normalized_name": "genesis healthcare"
+    },
+    {
+      "organization_ids": [
+        "ORG-7778792F9B868062",
+        "ORG-DF4A88788B62846D"
+      ],
+      "reason": "SAME_NORMALIZED_NAME_MULTIPLE_ORGS",
+      "normalized_name": "legal business name not available"
+    },
+    {
+      "organization_ids": [
+        "ORG-96477599A901A84F",
+        "ORG-A9CE553FC420857A"
+      ],
+      "reason": "SAME_NORMALIZED_NAME_MULTIPLE_ORGS",
+      "normalized_name": "marquis companies"
+    },
+    {
+      "organization_ids": [
+        "ORG-760B9F14B6038A2A",
+        "ORG-FE06CAB21DAD6B09"
+      ],
+      "reason": "SAME_NORMALIZED_NAME_MULTIPLE_ORGS",
+      "normalized_name": "advanced health care"
+    },
+    {
+      "organization_ids": [
+        "ORG-626AF156119DE1F3",
+        "ORG-93F16032D4F5E1CE",
+        "ORG-6A007D9E80B6A0CF",
+        "ORG-942ADB57AF725584"
+      ],
+      "reason": "SAME_NORMALIZED_NAME_MULTIPLE_ORGS",
+      "normalized_name": "pacs group"
+    }
+  ],
+  "independent_facility_count": 0,
+  "independent_facilities": [],
+  "metrics": {
+    "organizations_identified": 68,
+    "facility_to_operator_links": 36,
+    "facility_to_owner_links": 42,
+    "parent_company_links": 36,
+    "verified_official_domains": 33,
+    "facilities_covered_by_verified_domains": 18,
+    "top_organizations_by_facility_count": [
+      {
+        "organization_id": "ORG-4E508271F9EDB3B7",
+        "facility_count": 4,
+        "legal_name": "FUNDAMENTAL HEALTHCARE"
+      },
+      {
+        "organization_id": "ORG-760B9F14B6038A2A",
+        "facility_count": 3,
+        "legal_name": "ADVANCED HEALTH CARE"
+      },
+      {
+        "organization_id": "ORG-78DBF3559EE2A7E8",
+        "facility_count": 2,
+        "legal_name": "LIFE CARE CENTERS OF AMERICA"
+      },
+      {
+        "organization_id": "ORG-23784BAEBEF93712",
+        "facility_count": 2,
+        "legal_name": "COVENANT CARE"
+      },
+      {
+        "organization_id": "ORG-7BBC03FBECCAB5B5",
+        "facility_count": 2,
+        "legal_name": "COVENANT CARE VEGAS, INC."
+      },
+      {
+        "organization_id": "ORG-63720C89DAFC0E9E",
+        "facility_count": 2,
+        "legal_name": "NEURORESTORATIVE"
+      },
+      {
+        "organization_id": "ORG-A3D4CB37BFF9330A",
+        "facility_count": 2,
+        "legal_name": "CAREMERIDIAN LLC"
+      },
+      {
+        "organization_id": "ORG-C7CBA638D00E93FB",
+        "facility_count": 1,
+        "legal_name": "DAVID JOHNSON"
+      },
+      {
+        "organization_id": "ORG-624968F704EFFCF1",
+        "facility_count": 1,
+        "legal_name": "LAS VEGAS POST ACUTE & REHABILITATION LLC"
+      },
+      {
+        "organization_id": "ORG-D6899E848D273AF5",
+        "facility_count": 1,
+        "legal_name": "EVERGREEN HEALTHCARE GROUP"
+      },
+      {
+        "organization_id": "ORG-30386F2FDC071B4E",
+        "facility_count": 1,
+        "legal_name": "EL JEN SNF OPERATIONS LLC"
+      },
+      {
+        "organization_id": "ORG-BA74E845F8F54F92",
+        "facility_count": 1,
+        "legal_name": "FUNDAMENTAL HEALTHCARE"
+      },
+      {
+        "organization_id": "ORG-082639786AC2C872",
+        "facility_count": 1,
+        "legal_name": "THI OF NEVADA II AT DESERT LANE, LLC"
+      },
+      {
+        "organization_id": "ORG-94F82F0175772863",
+        "facility_count": 1,
+        "legal_name": "PURSUE HEALTH"
+      },
+      {
+        "organization_id": "ORG-BCEA6FFF988D3131",
+        "facility_count": 1,
+        "legal_name": "PREMIER HEALTH AND REHABILITATION CENTER OF LAS VEGAS, LP"
+      },
+      {
+        "organization_id": "ORG-28C57B3DCF07C8A2",
+        "facility_count": 1,
+        "legal_name": "THI OF NEVADA II AT NORTH LAS VEGAS, LLC"
+      },
+      {
+        "organization_id": "ORG-14642B287142CE69",
+        "facility_count": 1,
+        "legal_name": "THE ENSIGN GROUP"
+      },
+      {
+        "organization_id": "ORG-7D6F40EA3C9D179F",
+        "facility_count": 1,
+        "legal_name": "MOON COVE HEALTHCARE, INC."
+      },
+      {
+        "organization_id": "ORG-99DDF45425812AE6",
+        "facility_count": 1,
+        "legal_name": "GENESIS HEALTHCARE"
+      },
+      {
+        "organization_id": "ORG-DE2A5F4310DA146A",
+        "facility_count": 1,
+        "legal_name": "ST. JOSEPH TRANSITIONAL REHABILITATION CENTER, LLC"
+      }
+    ]
+  }
+}

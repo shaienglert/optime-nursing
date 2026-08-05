@@ -13,6 +13,19 @@ NAME_STOPWORDS = {
     "inc",
     "llc",
 }
+DOMAIN_IDENTITY_STOPWORDS = NAME_STOPWORDS.union({
+    "care",
+    "center",
+    "community",
+    "facility",
+    "health",
+    "home",
+    "living",
+    "nursing",
+    "rehabilitation",
+    "senior",
+    "skilled",
+})
 
 NAME_SYNONYMS = {
     "rehab": "rehabilitation",
@@ -45,6 +58,7 @@ ADDRESS_SYNONYMS = {
 
 RASTER_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 LOGO_KEYWORDS = {"logo", "icon", "favicon", "sprite", "pixel"}
+BADGE_KEYWORDS = {"award", "awards", "badge", "certified", "workplace", "accreditation"}
 HEADSHOT_KEYWORDS = {"staff", "team", "doctor", "nurse", "portrait", "headshot", "provider"}
 STOCK_KEYWORDS = {"pexels", "unsplash", "shutterstock", "getty", "istock", "pixabay", "freepik", "stock"}
 GENERIC_SERVICE_IMAGE_KEYWORDS = {
@@ -74,12 +88,38 @@ FACILITY_PHOTO_KEYWORDS = {
     "entrance",
     "garden",
     "courtyard",
-    "facility",
-    "community",
-    "activities",
-    "activity",
-    "home",
 }
+FACILITY_IDENTITY_STOPWORDS = GENERIC_SERVICE_IMAGE_KEYWORDS.union({"center", "centre", "facility", "community", "inc", "llc"})
+
+DIRECTORY_DOMAINS = {
+    "aplaceformom.com",
+    "assistedliving.org",
+    "caring.com",
+    "nursinghomedatabase.com",
+    "nursinghomes.com",
+    "seniorhousingnet.com",
+    "seniorlivingflorida.org",
+    "seniorly.com",
+}
+REVIEW_DOMAINS = {"bbb.org", "glassdoor.com", "indeed.com", "yelp.com"}
+SOCIAL_DOMAINS = {"facebook.com", "instagram.com", "linkedin.com", "tiktok.com", "x.com", "youtube.com"}
+GOVERNMENT_SUFFIXES = (".gov", ".gov.us")
+
+
+def classify_search_result(candidate_url: str, page_text: str = "") -> str:
+    domain = domain_of(candidate_url)
+    normalized_page = normalize_text(page_text)
+    if domain.endswith(GOVERNMENT_SUFFIXES):
+        return "GOVERNMENT_PAGE"
+    if any(domain == item or domain.endswith(f".{item}") for item in DIRECTORY_DOMAINS):
+        return "DIRECTORY"
+    if any(domain == item or domain.endswith(f".{item}") for item in REVIEW_DOMAINS):
+        return "REVIEW_WEBSITE"
+    if any(domain == item or domain.endswith(f".{item}") for item in SOCIAL_DOMAINS):
+        return "SOCIAL_MEDIA_PAGE"
+    if any(token in normalized_page for token in ("news release", "press release", "reported by")):
+        return "NEWS_ARTICLE"
+    return "POSSIBLE_OFFICIAL_PAGE"
 
 
 def normalize_spaces(value: str) -> str:
@@ -103,18 +143,29 @@ def domain_of(url: str) -> str:
     return host
 
 
+def _identity_domain_label(candidate_url: str) -> str:
+    labels = [label for label in domain_of(candidate_url).split(".") if label]
+    if len(labels) >= 2:
+        return labels[-2]
+    return labels[0] if labels else ""
+
+
 def _domain_affinity_score(facility_name: str, candidate_url: str) -> float:
-    host = domain_of(candidate_url)
-    host_root = host.split(".")[0]
+    host_root = _identity_domain_label(candidate_url)
     if not host_root:
         return 0.0
 
-    facility_tokens = [token for token in _tokenize_name(facility_name) if len(token) >= 4]
+    facility_tokens = [token for token in _tokenize_name(facility_name) if len(token) >= 4 and token not in DOMAIN_IDENTITY_STOPWORDS]
     if not facility_tokens:
         return 0.0
 
     hits = sum(1 for token in facility_tokens if token in host_root)
-    return hits / len(facility_tokens)
+    score = hits / len(facility_tokens)
+    if len(facility_tokens) >= 2:
+        acronym = "".join(token[0] for token in facility_tokens[:2])
+        if len(acronym) >= 2 and host_root.startswith(acronym):
+            score = max(score, 0.2)
+    return score
 
 
 def _tokenize_name(value: str) -> List[str]:
@@ -181,6 +232,7 @@ def evaluate_identity_candidate(
     page_text: str,
     source_type: str,
 ) -> Dict[str, Any]:
+    result_classification = classify_search_result(candidate_url, page_text)
     page_text_normalized = normalize_text(page_text)
     page_digits = re.sub(r"\D", "", page_text)
     name_scores = []
@@ -217,13 +269,18 @@ def evaluate_identity_candidate(
         score += 0.04
     score = min(score, 1.0)
     domain_affinity_score = _domain_affinity_score(facility_name, candidate_url)
-    ranking_score = score + (domain_affinity_score * 0.08)
+    operator_domain_affinity_score = _domain_affinity_score(operator_name, candidate_url) if operator_name else 0.0
+    ranking_score = score + (max(domain_affinity_score, operator_domain_affinity_score) * 0.08)
 
     verified = (
         (address_score >= 0.8 and (phone_match or best_name_score >= 0.6))
         or (phone_match and best_name_score >= 0.7)
         or ccn_match
     )
+    if source_type == "SEARCH_DISCOVERY":
+        verified = verified and max(domain_affinity_score, operator_domain_affinity_score) >= 0.15
+    if result_classification != "POSSIBLE_OFFICIAL_PAGE":
+        verified = False
     partial = not verified and (
         (address_score >= 0.6 and best_name_score >= 0.45)
         or (phone_match and best_name_score >= 0.45)
@@ -235,6 +292,7 @@ def evaluate_identity_candidate(
     return {
         "candidate_url": candidate_url,
         "source_type": source_type,
+        "result_classification": result_classification,
         "status": status,
         "score": round(score, 3),
         "ranking_score": round(ranking_score, 3),
@@ -247,6 +305,7 @@ def evaluate_identity_candidate(
             "operator_match": operator_match,
             "ccn_match": ccn_match,
             "domain_affinity_score": round(domain_affinity_score, 3),
+            "operator_domain_affinity_score": round(operator_domain_affinity_score, 3),
         },
     }
 
@@ -359,6 +418,7 @@ def classify_image_candidate(image: Dict[str, str], facility_name: str, official
 
     parsed = urlparse(image_url)
     extension = Path(parsed.path).suffix.lower()
+    image_basename = Path(parsed.path.rstrip("/")).name
     url_text = normalize_text(parsed.path.replace("/", " ").replace("-", " ").replace("_", " "))
     alt_norm = normalize_text(alt_text)
     combined = f"{url_text} {alt_norm}".strip()
@@ -367,8 +427,12 @@ def classify_image_candidate(image: Dict[str, str], facility_name: str, official
 
     if extension == ".svg":
         return {"status": "REJECTED", "reason": "SVG_NOT_FACILITY_PHOTO", "score": 0.0}
+    if not extension and len(image_basename) <= 2:
+        return {"status": "REJECTED", "reason": "MALFORMED_IMAGE_PATH", "score": 0.0}
     if any(keyword in combined_tokens for keyword in LOGO_KEYWORDS):
         return {"status": "REJECTED", "reason": "LOGO_OR_ICON", "score": 0.0}
+    if any(keyword in combined_tokens for keyword in BADGE_KEYWORDS) or {"top", "work", "place"}.issubset(combined_tokens):
+        return {"status": "REJECTED", "reason": "AWARD_OR_BADGE", "score": 0.0}
     if any(keyword in combined_tokens for keyword in HEADSHOT_KEYWORDS):
         return {"status": "REJECTED", "reason": "HEADSHOT_OR_STAFF", "score": 0.0}
     if any(keyword in image_url.lower() or keyword in combined_tokens for keyword in STOCK_KEYWORDS):
@@ -377,13 +441,19 @@ def classify_image_candidate(image: Dict[str, str], facility_name: str, official
     if extension and extension not in RASTER_EXTENSIONS:
         return {"status": "REJECTED", "reason": "UNSUPPORTED_IMAGE_TYPE", "score": 0.0}
 
-    facility_name_match = bool(facility_tokens.intersection(combined_tokens))
+    meaningful_facility_tokens = facility_tokens - FACILITY_IDENTITY_STOPWORDS
+    matched_facility_tokens = meaningful_facility_tokens.intersection(combined_tokens)
+    facility_name_match = bool(matched_facility_tokens)
+    strong_alt_identity = len(meaningful_facility_tokens.intersection(set(alt_norm.split()))) >= min(2, len(meaningful_facility_tokens))
     place_cue_match = bool(FACILITY_PHOTO_KEYWORDS.intersection(combined_tokens))
+    generic_activity_asset = bool({"activity", "activities"}.intersection(set(url_text.split()))) and not place_cue_match
     generic_service_only = bool(combined_tokens) and combined_tokens.issubset(GENERIC_SERVICE_IMAGE_KEYWORDS.union({"jpg", "jpeg", "png", "webp", "uploads", "content", "images", "wp", "2022", "2023", "2024", "2025", "2026"}))
 
     score = 0.0
     if facility_name_match:
         score += 0.55
+    if strong_alt_identity:
+        score += 0.35
     if place_cue_match:
         score += 0.35
     if domain_of(image_url) == domain_of(official_page_url):
@@ -392,8 +462,11 @@ def classify_image_candidate(image: Dict[str, str], facility_name: str, official
 
     if generic_service_only and not facility_name_match and not place_cue_match:
         return {"status": "AMBIGUOUS", "reason": "GENERIC_SERVICE_IMAGE", "score": 0.45}
+    if generic_activity_asset:
+        return {"status": "AMBIGUOUS", "reason": "GENERIC_ACTIVITY_IMAGE", "score": round(score, 3)}
 
-    if score >= 0.75:
+    has_facility_specific_visual_evidence = place_cue_match and (facility_name_match or strong_alt_identity)
+    if score >= 0.75 and has_facility_specific_visual_evidence:
         return {"status": "VERIFIED", "reason": "FACILITY_SPECIFIC_IMAGE", "score": round(score, 3)}
 
     return {"status": "AMBIGUOUS", "reason": "INSUFFICIENT_FACILITY_SPECIFIC_EVIDENCE", "score": round(score, 3)}
