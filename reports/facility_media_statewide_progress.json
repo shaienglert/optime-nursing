@@ -1,0 +1,19 @@
+{
+  "updated_at_utc": "2026-08-03T17:21:32Z",
+  "status": "RUNNING",
+  "total_canonical_facilities": 11090,
+  "pending_at_run_start": 8,
+  "processed_this_run": 6,
+  "last_canonical_facility_id": "CMS-106106",
+  "registry_facility_count": 86,
+  "remaining_unscanned_facilities": 11004,
+  "registry_summary": {
+    "facilities_checked": 86,
+    "official_identities_verified": 38,
+    "official_domains_found": 38,
+    "verified_facility_specific_images_found": 5,
+    "ambiguous_images": 31,
+    "no_verified_image": 50,
+    "wrong_domain_matches": 2
+  }
+}

@@ -1,0 +1,708 @@
+{
+  "generated_at": "2026-08-05",
+  "readiness_scale": [
+    "NOT STARTED",
+    "IN PROGRESS",
+    "PARTIALLY COMPLETE",
+    "READY FOR REVIEW",
+    "PASS",
+    "BLOCKED",
+    "FAILED"
+  ],
+  "dependency_graph": {
+    "Layer 0": [],
+    "Layer 1": ["Layer 0"],
+    "Layer 2": ["Layer 1", "Layer 0"],
+    "Layer 3": ["Layer 2"],
+    "Layer 4": ["Layer 3"],
+    "Layer 5": ["Layer 3", "Layer 4"],
+    "Layer 6": ["Layer 3", "Layer 5"],
+    "Layer 7": ["Layer 0", "Layer 3"],
+    "Layer 8": ["Layer 4", "Layer 7"],
+    "Layer 9": ["Layer 6", "Layer 7", "Layer 8"]
+  },
+  "executive_summary": {
+    "weakest_layer": "Layer 6 - Media Intelligence",
+    "blocks_all_later_work": "Layer 2 - Market Builder",
+    "completed_before_prerequisites": [
+      "Layer 6 - Media Intelligence",
+      "Layer 9 - Experience Layer"
+    ],
+    "work_to_freeze": [
+      "Layer 6 - Media Intelligence feature expansion",
+      "Layer 9 - UX and provider-portal expansion",
+      "Non-essential provider expansion"
+    ],
+    "work_to_resume_immediately": [
+      "Layer 2 - Market Builder",
+      "Layer 3 - Canonical Universe"
+    ],
+    "next_single_engineering_objective": "Complete the governed Market Builder path to a PASS-grade canonical universe package for active markets"
+  },
+  "layers": [
+    {
+      "id": "Layer 0",
+      "name": "Constitution",
+      "status": "READY FOR REVIEW",
+      "estimated_completeness_percent": 85,
+      "purpose": "Constitution, principles, objectivity, governance, and owner gates.",
+      "inputs": [
+        "AGENTS.md",
+        "docs/OPTIME_PRINCIPLES.md",
+        "docs/OPTIME_PRINCIPLES_REGISTRY.md",
+        "docs/COMMAND_*.md"
+      ],
+      "outputs": [
+        "Principle impact checks",
+        "Owner approval gates",
+        "Governance doctrine"
+      ],
+      "dependencies": [],
+      "current_implementation": [
+        "Governance doctrine exists and is explicit.",
+        "Classification and owner approval protocol are defined."
+      ],
+      "missing_implementation": [
+        "Automated constitution compliance checks across all runtime/report surfaces."
+      ],
+      "current_reports": [
+        "docs/master-book/04_CONSTITUTION.md",
+        "reports/verified_information_standard.md"
+      ],
+      "current_tests": [
+        "UNKNOWN"
+      ],
+      "current_owner_gates": [
+        "Principle Impact Check",
+        "Classification Gate",
+        "Owner Approval Protocol"
+      ],
+      "blocking_issues": [
+        "Some governance enforcement remains convention-based."
+      ],
+      "pass_criteria": [
+        "Doctrine exists",
+        "Owner gates active",
+        "Automated compliance coverage present"
+      ],
+      "fail_criteria": [
+        "Silent principle drift",
+        "Missing owner approval for governed changes"
+      ],
+      "evidence_required": [
+        "Principle documents",
+        "Root governance file"
+      ],
+      "reports_required": [
+        "Principles registry",
+        "Governance audit artifacts"
+      ],
+      "tests_required": [
+        "UNKNOWN"
+      ],
+      "approval_required": "Yes for C/D/E changes"
+    },
+    {
+      "id": "Layer 1",
+      "name": "Source Intelligence",
+      "status": "PARTIALLY COMPLETE",
+      "estimated_completeness_percent": 70,
+      "purpose": "Discovery agents, source registry, lifecycle, policy engine, and coverage governance.",
+      "inputs": [
+        "Source audits",
+        "Agent discovery specs",
+        "Authoritative source evidence"
+      ],
+      "outputs": [
+        "database/source_lifecycle_registry.json",
+        "reports/SOURCE_LIFECYCLE_STATUS.md",
+        "reports/SOURCE_POLICY_MIGRATION_REPORT.json"
+      ],
+      "dependencies": [
+        "Layer 0"
+      ],
+      "current_implementation": [
+        "Authoritative source lifecycle registry exists.",
+        "Deterministic source policy engine exists.",
+        "Registry-driven reporting exists."
+      ],
+      "missing_implementation": [
+        "Evidence of active production agent writes into the registry is partial.",
+        "Many sources remain non-integrated."
+      ],
+      "current_reports": [
+        "reports/SOURCE_LIFECYCLE_STATUS.md",
+        "reports/SOURCE_POLICY_MIGRATION_REPORT.md",
+        "reports/FLORIDA_SOURCE_CONNECTIVITY_AUDIT.md",
+        "reports/NEVADA_SOURCE_INTEGRATION_REPORT.md"
+      ],
+      "current_tests": [
+        "backend/tests/test_source_policy_engine.py"
+      ],
+      "current_owner_gates": [
+        "Source lifecycle owner-review path",
+        "Launch blocker listing"
+      ],
+      "blocking_issues": [
+        "Approved sources are not fully integrated.",
+        "Florida state sources remain blocked."
+      ],
+      "pass_criteria": [
+        "Every discovered source appears in registry",
+        "Policy status deterministic",
+        "Reports generated only from registry"
+      ],
+      "fail_criteria": [
+        "Sources only in reports",
+        "Duplicate lifecycle state",
+        "Report-derived overwrite of registry"
+      ],
+      "evidence_required": [
+        "Registry",
+        "Policy output",
+        "Source audits"
+      ],
+      "reports_required": [
+        "Source lifecycle status",
+        "Source policy migration report"
+      ],
+      "tests_required": [
+        "Policy engine tests",
+        "Lifecycle transition tests"
+      ],
+      "approval_required": "Owner only for exceptional legal/commercial cases"
+    },
+    {
+      "id": "Layer 2",
+      "name": "Market Builder",
+      "status": "BLOCKED",
+      "estimated_completeness_percent": 35,
+      "purpose": "Generic builder, source packages, state configurations, and reusable validation.",
+      "inputs": [
+        "Layer 1 approved sources",
+        "State/market configuration"
+      ],
+      "outputs": [
+        "Market-specific canonical build runs",
+        "Validation bundles"
+      ],
+      "dependencies": [
+        "Layer 1",
+        "Layer 0"
+      ],
+      "current_implementation": [
+        "Runtime market resolver exists.",
+        "Florida and Nevada builders exist separately."
+      ],
+      "missing_implementation": [
+        "No generic builder entry point.",
+        "No configuration-only onboarding path for new states."
+      ],
+      "current_reports": [
+        "reports/CANONICAL_FACILITY_UNIVERSE_REPORT.md",
+        "reports/NEVADA_SOURCE_INTEGRATION_REPORT.md"
+      ],
+      "current_tests": [
+        "backend/tests/test_nevada_canonical_universe.py"
+      ],
+      "current_owner_gates": [
+        "Canonical/market readiness gates via downstream reports"
+      ],
+      "blocking_issues": [
+        "No generic builder service",
+        "Validation remains state-specific",
+        "New market onboarding still needs code changes"
+      ],
+      "pass_criteria": [
+        "Generic builder exists",
+        "Source packages configuration-driven",
+        "Reusable validation by market"
+      ],
+      "fail_criteria": [
+        "Bespoke per-state builder remains required"
+      ],
+      "evidence_required": [
+        "Runtime market resolver",
+        "Builder scripts"
+      ],
+      "reports_required": [
+        "Integration reports",
+        "Canonical reports"
+      ],
+      "tests_required": [
+        "Market-config builder tests"
+      ],
+      "approval_required": "Yes for architectural deviation"
+    },
+    {
+      "id": "Layer 3",
+      "name": "Canonical Universe",
+      "status": "PARTIALLY COMPLETE",
+      "estimated_completeness_percent": 65,
+      "purpose": "Normalization, identity resolution, deduplication, coverage, validation, and canonical IDs.",
+      "inputs": [
+        "Market builder outputs",
+        "Authoritative source packages"
+      ],
+      "outputs": [
+        "Canonical universe JSON",
+        "Crosswalks",
+        "Validation reports"
+      ],
+      "dependencies": [
+        "Layer 2"
+      ],
+      "current_implementation": [
+        "Florida canonical universe exists with validation.",
+        "Nevada canonical universe exists and now includes NPPES integration."
+      ],
+      "missing_implementation": [
+        "Nevada HCQC remains unintegrated.",
+        "Las Vegas completeness gate still fails."
+      ],
+      "current_reports": [
+        "reports/CANONICAL_FACILITY_UNIVERSE_REPORT.md",
+        "reports/FLORIDA_CANONICAL_UNIVERSE_AUDIT.md",
+        "reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.md"
+      ],
+      "current_tests": [
+        "scripts/validate_canonical_facility_universe.py",
+        "backend/tests/test_nevada_canonical_universe.py"
+      ],
+      "current_owner_gates": [
+        "Canonical validation gate",
+        "Media pilot prerequisite gate"
+      ],
+      "blocking_issues": [
+        "Nevada license IDs absent",
+        "Las Vegas complete identities below 100"
+      ],
+      "pass_criteria": [
+        "Schema validated",
+        "Market completeness threshold passes",
+        "Duplicate/conflict levels acceptable"
+      ],
+      "fail_criteria": [
+        "Invalid canonical IDs",
+        "Critical identity gaps",
+        "Market gate failure"
+      ],
+      "evidence_required": [
+        "Canonical JSON",
+        "Canonical reports"
+      ],
+      "reports_required": [
+        "Canonical universe reports",
+        "Validation reports"
+      ],
+      "tests_required": [
+        "Normalization/dedup tests",
+        "Validation script"
+      ],
+      "approval_required": "Owner only for schema or identity-rule changes"
+    },
+    {
+      "id": "Layer 4",
+      "name": "Knowledge Layer",
+      "status": "PARTIALLY COMPLETE",
+      "estimated_completeness_percent": 60,
+      "purpose": "Articles, FAQs, regulations, research, and provider knowledge.",
+      "inputs": [
+        "Canonical universe",
+        "Research package",
+        "Agent knowledge snapshots"
+      ],
+      "outputs": [
+        "Knowledge objects",
+        "Evidence objects",
+        "Knowledge gap reports"
+      ],
+      "dependencies": [
+        "Layer 3"
+      ],
+      "current_implementation": [
+        "Knowledge centers documented and governance package implemented.",
+        "Knowledge fabric model exists."
+      ],
+      "missing_implementation": [
+        "Runtime depth varies by center.",
+        "Operationalization beyond reports is partial."
+      ],
+      "current_reports": [
+        "reports/scientific_method.md",
+        "reports/evidence_grading_framework.md",
+        "reports/knowledge_validation_framework.md",
+        "reports/knowledge_gap_report.md"
+      ],
+      "current_tests": [
+        "UNKNOWN"
+      ],
+      "current_owner_gates": [
+        "Evidence doctrine and verified information rules"
+      ],
+      "blocking_issues": [
+        "Runtime telemetry is only partial across centers"
+      ],
+      "pass_criteria": [
+        "Prepared knowledge exists by center",
+        "Validation framework connected to runtime"
+      ],
+      "fail_criteria": [
+        "Knowledge remains report-only"
+      ],
+      "evidence_required": [
+        "Knowledge center docs",
+        "Knowledge validation reports"
+      ],
+      "reports_required": [
+        "Scientific method",
+        "Knowledge validation",
+        "Knowledge gaps"
+      ],
+      "tests_required": [
+        "UNKNOWN"
+      ],
+      "approval_required": "Owner for doctrine changes only"
+    },
+    {
+      "id": "Layer 5",
+      "name": "Provider Intelligence",
+      "status": "PARTIALLY COMPLETE",
+      "estimated_completeness_percent": 55,
+      "purpose": "Operators, organizations, parent companies, official domains, ownership, and directories.",
+      "inputs": [
+        "Canonical facilities",
+        "Provider agent flows",
+        "Source audits"
+      ],
+      "outputs": [
+        "Provider profiles",
+        "Organization relationships",
+        "Provider portal data"
+      ],
+      "dependencies": [
+        "Layer 3",
+        "Layer 4"
+      ],
+      "current_implementation": [
+        "Provider Intelligence Agent spec exists.",
+        "Provider organization registry service exists with tests.",
+        "Provider portal backend foundations exist."
+      ],
+      "missing_implementation": [
+        "Verified statewide provider coverage remains incomplete.",
+        "Provider-facing UI workflow maturity is limited."
+      ],
+      "current_reports": [
+        "reports/provider_portal_review.md",
+        "reports/provider_portal_schema.md",
+        "reports/provider_portal_design.md"
+      ],
+      "current_tests": [
+        "backend/tests/test_provider_organization_registry.py"
+      ],
+      "current_owner_gates": [
+        "Provider identity and verification controls"
+      ],
+      "blocking_issues": [
+        "Verification backlog",
+        "Missing provider dashboard UX"
+      ],
+      "pass_criteria": [
+        "Verified provider identity/organization graph",
+        "Per-field completeness visible",
+        "Provider workflow complete"
+      ],
+      "fail_criteria": [
+        "Ownership/domain ambiguity unresolved"
+      ],
+      "evidence_required": [
+        "Provider agent spec",
+        "Organization registry service",
+        "Provider portal review"
+      ],
+      "reports_required": [
+        "Provider portal review/schema"
+      ],
+      "tests_required": [
+        "Provider organization registry tests"
+      ],
+      "approval_required": "Owner for provider-identity semantic rule changes"
+    },
+    {
+      "id": "Layer 6",
+      "name": "Media Intelligence",
+      "status": "FAILED",
+      "estimated_completeness_percent": 20,
+      "purpose": "Official websites, facility pages, image discovery, rights, and verification.",
+      "inputs": [
+        "Canonical facilities",
+        "Provider intelligence",
+        "Official domains/pages"
+      ],
+      "outputs": [
+        "Verified media candidates",
+        "Media registry state",
+        "Pilot/failure reports"
+      ],
+      "dependencies": [
+        "Layer 3",
+        "Layer 5"
+      ],
+      "current_implementation": [
+        "Government identity media and media resolution services exist.",
+        "Live pilot and failure analysis exist."
+      ],
+      "missing_implementation": [
+        "Official-site discovery is insufficient.",
+        "Displayable verified-image coverage is zero in the validated pilot baseline."
+      ],
+      "current_reports": [
+        "reports/MEDIA_LIVE_PILOT_100.md",
+        "reports/MEDIA_LIVE_PILOT_FAILURE_ANALYSIS.md",
+        "reports/GOVERNMENT_IDENTITY_MEDIA_COVERAGE.md"
+      ],
+      "current_tests": [
+        "backend/tests/test_government_identity_media.py",
+        "backend/tests/test_facility_media_resolution.py"
+      ],
+      "current_owner_gates": [
+        "Media pilot owner gate",
+        "Rights and facility-specific verification gate"
+      ],
+      "blocking_issues": [
+        "Official-site discovery failures dominate",
+        "Facility identity uncertainty",
+        "Rights uncertainty"
+      ],
+      "pass_criteria": [
+        "Official facility pages verified at sufficient rate",
+        "Displayable verified images exceed gate minimum",
+        "Rights-clear coverage sufficient"
+      ],
+      "fail_criteria": [
+        "Zero valid displayable images",
+        "Owner gate FAIL"
+      ],
+      "evidence_required": [
+        "Pilot reports",
+        "Failure analysis",
+        "Media tests"
+      ],
+      "reports_required": [
+        "Media pilot report",
+        "Failure analysis",
+        "Media coverage report"
+      ],
+      "tests_required": [
+        "Media identity and resolution tests"
+      ],
+      "approval_required": "Owner for rights/evidence threshold changes"
+    },
+    {
+      "id": "Layer 7",
+      "name": "Assessment Engine",
+      "status": "READY FOR REVIEW",
+      "estimated_completeness_percent": 80,
+      "purpose": "Questionnaire, dynamic logic, clarifications, progress, and patient profile.",
+      "inputs": [
+        "Governance constraints",
+        "Questionnaire schema",
+        "Patient profile rules"
+      ],
+      "outputs": [
+        "Assessment state",
+        "Understanding/profile signals",
+        "Decision-engine input profile"
+      ],
+      "dependencies": [
+        "Layer 0",
+        "Layer 3"
+      ],
+      "current_implementation": [
+        "Assessment tests exist.",
+        "Journey/profile validation reports pass."
+      ],
+      "missing_implementation": [
+        "Platform dependency gates upstream remain incomplete."
+      ],
+      "current_reports": [
+        "reports/understanding_journey_v3_validation_report.md",
+        "reports/understanding_profile_validation_report.md"
+      ],
+      "current_tests": [
+        "frontend/tests/assessment-schema.test.ts",
+        "frontend/tests/assessment-profile.test.ts",
+        "frontend/tests/assessment-home-progress.test.ts",
+        "frontend/tests/assessment-conversation.test.ts"
+      ],
+      "current_owner_gates": [
+        "No ranking regression in validation reports"
+      ],
+      "blocking_issues": [
+        "Assessment quality outpaces upstream readiness in other layers"
+      ],
+      "pass_criteria": [
+        "Build PASS",
+        "State persistence PASS",
+        "No ranking regression PASS"
+      ],
+      "fail_criteria": [
+        "State loss",
+        "Profile regression",
+        "Ranking side-effects"
+      ],
+      "evidence_required": [
+        "Assessment validation reports",
+        "Frontend tests"
+      ],
+      "reports_required": [
+        "Understanding journey/profile validation"
+      ],
+      "tests_required": [
+        "Assessment schema/profile/conversation/progress"
+      ],
+      "approval_required": "Owner for assessment semantic changes"
+    },
+    {
+      "id": "Layer 8",
+      "name": "Decision Engine",
+      "status": "READY FOR REVIEW",
+      "estimated_completeness_percent": 82,
+      "purpose": "Matching, recommendation, explainability, confidence, and tradeoffs.",
+      "inputs": [
+        "Knowledge layer",
+        "Assessment engine",
+        "Governed runtime context"
+      ],
+      "outputs": [
+        "Ranked candidates",
+        "Explanations",
+        "Confidence and tradeoff surfaces"
+      ],
+      "dependencies": [
+        "Layer 4",
+        "Layer 7"
+      ],
+      "current_implementation": [
+        "Recommendation engine and decision framework are implemented.",
+        "Governed runtime integration validation exists."
+      ],
+      "missing_implementation": [
+        "Decision-psychology variable lineage is partial.",
+        "Some calibration suggestions remain open."
+      ],
+      "current_reports": [
+        "reports/recommendation_engine_validation.md",
+        "reports/GOVERNED_RUNTIME_INTEGRATION_REPORT.md",
+        "reports/GOVERNED_RUNTIME_INTEGRATION_VALIDATION.json",
+        "reports/decision_framework.md"
+      ],
+      "current_tests": [
+        "backend/tests/test_patient_decision_engine.py",
+        "backend/tests/test_decision_engine_routes.py"
+      ],
+      "current_owner_gates": [
+        "Ranking/scoring principle impact check",
+        "Governed runtime validation"
+      ],
+      "blocking_issues": [
+        "Upstream builder/canonical/provider/media incompleteness limits platform readiness"
+      ],
+      "pass_criteria": [
+        "Governed runtime validation PASS",
+        "Recommendation validation PASS",
+        "No semantic drift"
+      ],
+      "fail_criteria": [
+        "MUST gate bypass",
+        "Unknown/confidence semantics drift",
+        "Ungoverned ranking changes"
+      ],
+      "evidence_required": [
+        "Runtime integration and recommendation reports",
+        "Backend decision tests"
+      ],
+      "reports_required": [
+        "Runtime integration report",
+        "Recommendation engine validation",
+        "Decision framework"
+      ],
+      "tests_required": [
+        "Decision engine route and patient engine tests"
+      ],
+      "approval_required": "Owner for ranking/recommendation semantic changes"
+    },
+    {
+      "id": "Layer 9",
+      "name": "Experience Layer",
+      "status": "PARTIALLY COMPLETE",
+      "estimated_completeness_percent": 50,
+      "purpose": "Frontend, UX, provider portal, admin, and accessibility.",
+      "inputs": [
+        "Media outputs",
+        "Assessment state",
+        "Decision outputs",
+        "Provider/admin workflows"
+      ],
+      "outputs": [
+        "User-facing product experience",
+        "Provider portal UX",
+        "Admin surfaces"
+      ],
+      "dependencies": [
+        "Layer 6",
+        "Layer 7",
+        "Layer 8"
+      ],
+      "current_implementation": [
+        "Next.js frontend exists and is active.",
+        "Provider portal backend foundations are present."
+      ],
+      "missing_implementation": [
+        "Provider dashboard UI is incomplete.",
+        "Verification inbox and lead-management UX are incomplete.",
+        "Accessibility evidence is UNKNOWN."
+      ],
+      "current_reports": [
+        "reports/provider_portal_review.md",
+        "reports/phase9_architecture_validation.md",
+        "reports/ui_language_review.md"
+      ],
+      "current_tests": [
+        "Frontend assessment tests",
+        "UNKNOWN for provider-portal/accessibility-specific tests"
+      ],
+      "current_owner_gates": [
+        "Governance applies via upstream layers; no dedicated experience-only owner gate found"
+      ],
+      "blocking_issues": [
+        "UX maturity exceeds upstream readiness",
+        "Provider workflow completeness is medium only"
+      ],
+      "pass_criteria": [
+        "Upstream layers pass",
+        "Provider portal workflows complete",
+        "Accessibility validation present"
+      ],
+      "fail_criteria": [
+        "UX depends on incomplete upstream layers",
+        "No accessibility evidence",
+        "Missing provider operational flows"
+      ],
+      "evidence_required": [
+        "Frontend architecture doc",
+        "Provider portal review",
+        "Phase 9 validation"
+      ],
+      "reports_required": [
+        "Provider portal review",
+        "Phase 9 architecture validation"
+      ],
+      "tests_required": [
+        "UNKNOWN for accessibility/provider portal"
+      ],
+      "approval_required": "Owner for product-semantics changes"
+    }
+  ]
+}

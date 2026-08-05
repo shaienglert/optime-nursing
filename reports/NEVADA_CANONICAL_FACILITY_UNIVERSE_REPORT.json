@@ -1,0 +1,229 @@
+{
+  "generated_at_utc": "2026-08-04T20:30:15Z",
+  "canonical_schema_version": "nevada-canonical-facility-v1.0.0",
+  "source_datasets_used": [
+    {
+      "source_name": "CMS Provider Information",
+      "source_url": "https://data.cms.gov/provider-data/dataset/4pq5-n9py",
+      "dataset_identifier": "4pq5-n9py",
+      "source_authority": "Federal government",
+      "retrieval_date": "2026-08-04T20:30:15Z",
+      "source_update_date": "2026-07-01",
+      "applicable_facility_types": [
+        "Skilled Nursing Facility",
+        "Nursing Facility"
+      ],
+      "used": true
+    },
+    {
+      "source_name": "NPPES NPI Registry",
+      "source_url": "https://download.cms.gov/nppes/NPI_Files.html",
+      "dataset_identifier": "tmpwkqvgvq1.zip",
+      "source_authority": "Federal government",
+      "retrieval_date": "2026-08-04T20:30:15Z",
+      "source_update_date": "12/30/2015",
+      "applicable_facility_types": [
+        "Facility-specific organizational providers",
+        "Assisted Living",
+        "Memory Care",
+        "Skilled Nursing Facility",
+        "Nursing Facility",
+        "Continuing Care / Life Plan"
+      ],
+      "used": true,
+      "limitation": null
+    }
+  ],
+  "source_datasets_reviewed": [
+    {
+      "source_name": "CMS Provider Information",
+      "source_url": "https://data.cms.gov/provider-data/dataset/4pq5-n9py",
+      "dataset_identifier": "4pq5-n9py",
+      "source_authority": "Federal government",
+      "retrieval_date": "2026-08-04T20:30:15Z",
+      "source_update_date": "2026-07-01",
+      "applicable_facility_types": [
+        "Skilled Nursing Facility",
+        "Nursing Facility"
+      ],
+      "used": true
+    },
+    {
+      "source_name": "Nevada HCQC Health Facility Licensing",
+      "source_url": "https://nvdpbh.aithent.com/login.aspx",
+      "dataset_identifier": null,
+      "source_authority": "Nevada state licensing authority",
+      "retrieval_date": null,
+      "source_update_date": null,
+      "applicable_facility_types": [
+        "Assisted Living",
+        "Residential Facility for Groups",
+        "Skilled Nursing Facility",
+        "Nursing Facility",
+        "Continuing Care / Life Plan"
+      ],
+      "used": false,
+      "limitation": "No machine-readable Nevada HCQC export was available locally. The official licensing vendor endpoint was reachable but redirected in a loop and exposed no verified public export during this run."
+    },
+    {
+      "source_name": "NPPES NPI Registry",
+      "source_url": "https://download.cms.gov/nppes/NPI_Files.html",
+      "dataset_identifier": "tmpwkqvgvq1.zip",
+      "source_authority": "Federal government",
+      "retrieval_date": "2026-08-04T20:30:15Z",
+      "source_update_date": "12/30/2015",
+      "applicable_facility_types": [
+        "Facility-specific organizational providers",
+        "Assisted Living",
+        "Memory Care",
+        "Skilled Nursing Facility",
+        "Nursing Facility",
+        "Continuing Care / Life Plan"
+      ],
+      "used": true,
+      "limitation": null
+    }
+  ],
+  "source_retrieval_dates": {
+    "CMS Provider Information": "2026-08-04T20:30:15Z",
+    "NPPES NPI Registry": "2026-08-04T20:30:15Z"
+  },
+  "raw_records_by_source": {
+    "CMS Provider Information": 66,
+    "NPPES NPI Registry": 887
+  },
+  "canonical_nevada_records": 876,
+  "las_vegas_valley_records": 589,
+  "complete_authoritative_identities": 108,
+  "complete_las_vegas_valley_identities": 68,
+  "records_with_phone": 876,
+  "records_with_full_address": 108,
+  "records_with_nevada_license_id": 0,
+  "records_with_cms_ccn": 66,
+  "records_with_npi": 815,
+  "records_by_facility_type": {
+    "Assisted Living": 209,
+    "Memory Care": 40,
+    "Nursing Facility": 23,
+    "Other Governed Senior-Care Residential": 415,
+    "Skilled Nursing Facility": 189
+  },
+  "active_facilities": 876,
+  "inactive_closed_facilities": 0,
+  "duplicates_merged": 77,
+  "unresolved_duplicate_candidates": 260,
+  "field_conflicts": [
+    {
+      "source_record_ids": [
+        "295043",
+        "1639676943:314000000X:1"
+      ],
+      "fields": {
+        "facility_name": [
+          "ALPINE SKILLED NURSING AND REHABILITATION CENTER",
+          "<UNAVAIL>"
+        ],
+        "legal_name": [
+          "REVIVE RENO LLC",
+          "PLUMAS HEALTH CARE LLC"
+        ],
+        "owner_name": [
+          "REVIVE RENO LLC",
+          "PLUMAS HEALTH CARE LLC"
+        ],
+        "county": [
+          "Washoe",
+          "UNKNOWN"
+        ]
+      }
+    },
+    {
+      "source_record_ids": [
+        "295083",
+        "1033295241:314000000X:1"
+      ],
+      "fields": {
+        "facility_name": [
+          "THE HEIGHTS OF SUMMERLIN, LLC",
+          "<UNAVAIL>"
+        ],
+        "operator_name": [
+          "GENESIS HEALTHCARE",
+          "THE HEIGHTS OF SUMMERLIN, LLC"
+        ]
+      }
+    },
+    {
+      "source_record_ids": [
+        "295084",
+        "1083707764:314000000X:1"
+      ],
+      "fields": {
+        "facility_name": [
+          "NEURORESTORATIVE",
+          "<UNAVAIL>"
+        ],
+        "operator_name": [
+          "NEURORESTORATIVE",
+          "CAREMERIDIAN, LLC"
+        ]
+      }
+    },
+    {
+      "source_record_ids": [
+        "295088",
+        "1043717366:314000000X:1"
+      ],
+      "fields": {
+        "facility_name": [
+          "WINGFIELD SKILLED NURSING AND REHABILITATION CENTE",
+          "<UNAVAIL>"
+        ],
+        "legal_name": [
+          "REVIVE SPARKS LLC",
+          "WINGFIELD HEALTH CARE LLC"
+        ],
+        "owner_name": [
+          "REVIVE SPARKS LLC",
+          "WINGFIELD HEALTH CARE LLC"
+        ],
+        "county": [
+          "Washoe",
+          "UNKNOWN"
+        ]
+      }
+    },
+    {
+      "source_record_ids": [
+        "295106",
+        "1932664158:314000000X:1"
+      ],
+      "fields": {
+        "facility_name": [
+          "TRELLIS CENTENNIAL",
+          "<UNAVAIL>"
+        ],
+        "operator_name": [
+          "PACS GROUP",
+          "LYCHEE HOLDINGS, LLC"
+        ]
+      }
+    }
+  ],
+  "field_conflict_count": 5,
+  "records_missing_critical_identity_fields": 768,
+  "missing_field_distribution": {
+    "nevada_license_id": 876,
+    "npi": 61,
+    "zip": 768,
+    "cms_certification_number": 810
+  },
+  "schema_validation_errors": [],
+  "invalid_zip_codes": 0,
+  "invalid_or_malformed_phone_numbers": 0,
+  "media_pilot_gate": {
+    "required_complete_las_vegas_valley_identities": 100,
+    "actual_complete_las_vegas_valley_identities": 68,
+    "status": "FAIL"
+  }
+}
