@@ -1,0 +1,59 @@
+{
+  "command_id": "OPTIME-005",
+  "tracking_issue": 4,
+  "status": "IN_PROGRESS",
+  "branch": "audit/optime-005-master-platform",
+  "purpose": "Canonical repository-grounded audit of the OPTIME platform and universal readiness",
+  "evidence_policy": {
+    "accepted": [
+      "canonical_implementation",
+      "deterministic_test",
+      "canonical_registry_or_generated_report",
+      "production_runtime_proof",
+      "explicit_owner_governance"
+    ],
+    "not_sufficient_alone": [
+      "specification",
+      "narrative_report",
+      "unverified_status_label"
+    ]
+  },
+  "universality_classes": [
+    "FULLY_GENERIC",
+    "DOMAIN_CONFIGURABLE",
+    "PARTIALLY_DOMAIN_SPECIFIC",
+    "DOMAIN_SPECIFIC"
+  ],
+  "platform_layers": [
+    "constitution_governance",
+    "objective_execution_control",
+    "platform_registry_dependencies",
+    "agent_workforce_knowledge_refresh",
+    "source_intelligence_lifecycle",
+    "market_builder_canonical_universe",
+    "provider_identity_intelligence",
+    "assessment_user_understanding",
+    "decision_matching_recommendation_explanation",
+    "media_enrichment",
+    "runtime_health_remediation_release_observability",
+    "universal_domain_intake_objective_compilation",
+    "learning_outcomes_continuous_improvement",
+    "frontend_production_experience"
+  ],
+  "required_outputs": [
+    "reports/MASTER_PLATFORM_AUDIT.md",
+    "reports/MASTER_PLATFORM_AUDIT.json",
+    "reports/MASTER_ROADMAP.md",
+    "reports/MASTER_ROADMAP.json"
+  ],
+  "ready_for_universal_domain_engine": null,
+  "capabilities": [],
+  "blockers": [],
+  "missing_capabilities": [],
+  "metrics": {
+    "platform_completion_percent": null,
+    "platform_production_percent": null,
+    "platform_universality_percent": null,
+    "platform_autonomy_percent": null
+  }
+}
