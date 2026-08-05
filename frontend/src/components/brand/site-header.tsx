@@ -8,7 +8,7 @@ const NAV_LINKS = [
   { href: "/facilities", label: "Facilities" },
   { href: "/compare", label: "Compare" },
   { href: "/workspace", label: "Saved Cases" },
-  { href: "/admin/executive-intelligence", label: "Admin" },
+  { href: "/admin", label: "Admin" },
 ];
 
 export function SiteHeader() {
