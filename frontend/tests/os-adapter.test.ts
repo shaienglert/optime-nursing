@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adaptSeniorEvaluation, adaptSeniorRequirement } from '@/domain/senior-living/os-adapter';
+import { adaptSeniorEvaluation, adaptSeniorRequirement } from '../src/domain/senior-living/os-adapter';
 
 describe('Senior Living OPTIME OS adapter', () => {
   it('maps senior requirements to domain-neutral requirement levels', () => {
