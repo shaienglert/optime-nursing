@@ -1,0 +1,120 @@
+{
+  "generated_at_utc": "2026-08-04T18:34:26Z",
+  "source": "provider_organization_registry",
+  "total_canonical_facilities_evaluated": 42,
+  "organizations_identified": 68,
+  "independent_facilities": 0,
+  "facility_to_operator_links": 36,
+  "facility_to_owner_links": 42,
+  "parent_company_links": 36,
+  "verified_official_domains": 33,
+  "exact_location_directories_found": 0,
+  "exact_facility_location_pages_resolved": 18,
+  "unresolved_organization_identities": 7,
+  "duplicate_candidates": 7,
+  "ownership_conflicts": 36,
+  "organization_changes_acquisitions": 0,
+  "top_organizations_by_facility_count": [
+    {
+      "organization_id": "ORG-4E508271F9EDB3B7",
+      "facility_count": 4,
+      "legal_name": "FUNDAMENTAL HEALTHCARE"
+    },
+    {
+      "organization_id": "ORG-760B9F14B6038A2A",
+      "facility_count": 3,
+      "legal_name": "ADVANCED HEALTH CARE"
+    },
+    {
+      "organization_id": "ORG-78DBF3559EE2A7E8",
+      "facility_count": 2,
+      "legal_name": "LIFE CARE CENTERS OF AMERICA"
+    },
+    {
+      "organization_id": "ORG-23784BAEBEF93712",
+      "facility_count": 2,
+      "legal_name": "COVENANT CARE"
+    },
+    {
+      "organization_id": "ORG-7BBC03FBECCAB5B5",
+      "facility_count": 2,
+      "legal_name": "COVENANT CARE VEGAS, INC."
+    },
+    {
+      "organization_id": "ORG-63720C89DAFC0E9E",
+      "facility_count": 2,
+      "legal_name": "NEURORESTORATIVE"
+    },
+    {
+      "organization_id": "ORG-A3D4CB37BFF9330A",
+      "facility_count": 2,
+      "legal_name": "CAREMERIDIAN LLC"
+    },
+    {
+      "organization_id": "ORG-C7CBA638D00E93FB",
+      "facility_count": 1,
+      "legal_name": "DAVID JOHNSON"
+    },
+    {
+      "organization_id": "ORG-624968F704EFFCF1",
+      "facility_count": 1,
+      "legal_name": "LAS VEGAS POST ACUTE & REHABILITATION LLC"
+    },
+    {
+      "organization_id": "ORG-D6899E848D273AF5",
+      "facility_count": 1,
+      "legal_name": "EVERGREEN HEALTHCARE GROUP"
+    },
+    {
+      "organization_id": "ORG-30386F2FDC071B4E",
+      "facility_count": 1,
+      "legal_name": "EL JEN SNF OPERATIONS LLC"
+    },
+    {
+      "organization_id": "ORG-BA74E845F8F54F92",
+      "facility_count": 1,
+      "legal_name": "FUNDAMENTAL HEALTHCARE"
+    },
+    {
+      "organization_id": "ORG-082639786AC2C872",
+      "facility_count": 1,
+      "legal_name": "THI OF NEVADA II AT DESERT LANE, LLC"
+    },
+    {
+      "organization_id": "ORG-94F82F0175772863",
+      "facility_count": 1,
+      "legal_name": "PURSUE HEALTH"
+    },
+    {
+      "organization_id": "ORG-BCEA6FFF988D3131",
+      "facility_count": 1,
+      "legal_name": "PREMIER HEALTH AND REHABILITATION CENTER OF LAS VEGAS, LP"
+    },
+    {
+      "organization_id": "ORG-28C57B3DCF07C8A2",
+      "facility_count": 1,
+      "legal_name": "THI OF NEVADA II AT NORTH LAS VEGAS, LLC"
+    },
+    {
+      "organization_id": "ORG-14642B287142CE69",
+      "facility_count": 1,
+      "legal_name": "THE ENSIGN GROUP"
+    },
+    {
+      "organization_id": "ORG-7D6F40EA3C9D179F",
+      "facility_count": 1,
+      "legal_name": "MOON COVE HEALTHCARE, INC."
+    },
+    {
+      "organization_id": "ORG-99DDF45425812AE6",
+      "facility_count": 1,
+      "legal_name": "GENESIS HEALTHCARE"
+    },
+    {
+      "organization_id": "ORG-DE2A5F4310DA146A",
+      "facility_count": 1,
+      "legal_name": "ST. JOSEPH TRANSITIONAL REHABILITATION CENTER, LLC"
+    }
+  ],
+  "percent_facilities_covered_by_verified_org_domains": 42.857
+}

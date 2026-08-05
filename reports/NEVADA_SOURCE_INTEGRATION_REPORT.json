@@ -1,0 +1,105 @@
+{
+  "generated_at_utc": "2026-08-04T20:30:15Z",
+  "sources_evaluated": [
+    {
+      "source_id": "SRC-NV-CMS-4PQ5-N9PY",
+      "source_name": "CMS Provider Information",
+      "current_lifecycle_status": "INTEGRATED",
+      "exact_blocking_reason": "None; already integrated",
+      "can_it_be_solved": "YES",
+      "exactly_how": "No change required; continue using existing CMS CSV connector.",
+      "estimated_facilities_gained": 0,
+      "facility_categories_added": [
+        "Skilled Nursing Facility",
+        "Nursing Facility"
+      ],
+      "expected_overlap_with_cms": "Source is CMS baseline",
+      "expected_new_canonical_facilities": 0,
+      "required_connector": "Existing CMS CSV reader",
+      "required_parser": "Existing cms_rows() parser",
+      "required_normalization": "Existing CMS address/phone/zip normalization",
+      "required_validation": "Existing Nevada canonical validation",
+      "connector_gap_analysis": "CSV only",
+      "integrated": true
+    },
+    {
+      "source_id": "SRC-NV-HCQC-LICENSING",
+      "source_name": "Nevada HCQC Health Facility Licensing",
+      "current_lifecycle_status": "BLOCKED_TEMPORARILY",
+      "exact_blocking_reason": "No machine-readable Nevada HCQC export was available locally. The official licensing vendor endpoint was reachable but redirected in a loop and exposed no verified public export during this run.",
+      "can_it_be_solved": "NO",
+      "exactly_how": "Cannot be solved safely in this sprint because the official endpoint loops on redirect and no machine-readable export is exposed.",
+      "estimated_facilities_gained": null,
+      "facility_categories_added": [
+        "Assisted Living",
+        "Residential Facility for Groups",
+        "Skilled Nursing Facility",
+        "Nursing Facility",
+        "Continuing Care / Life Plan"
+      ],
+      "expected_overlap_with_cms": "High overlap for skilled nursing; unknown overlap for assisted living and other state categories",
+      "expected_new_canonical_facilities": null,
+      "required_connector": "Official licensing export connector",
+      "required_parser": "Nevada HCQC machine-readable export parser",
+      "required_normalization": "Facility-name, address, phone, and license-ID normalization",
+      "required_validation": "License ID, status, facility-type, and duplicate-merge validation",
+      "connector_gap_analysis": "Redirect; No API; Manual export",
+      "integrated": false
+    },
+    {
+      "source_id": "SRC-NV-NPPES-REGISTRY",
+      "source_name": "NPPES NPI Registry",
+      "current_lifecycle_status": "INTEGRATED",
+      "exact_blocking_reason": "No Nevada-filtered NPPES source extract was available locally; the existing repository extract is Florida-only and was not reused.",
+      "can_it_be_solved": "YES",
+      "exactly_how": "Download the governed monthly NPPES dissemination ZIP, stream the organization file, filter Nevada practice-location rows, map residential taxonomy codes, and merge by NPI and exact normalized address/phone.",
+      "estimated_facilities_gained": 0,
+      "facility_categories_added": [
+        "Assisted Living",
+        "Memory Care",
+        "Skilled Nursing Facility",
+        "Nursing Facility",
+        "Continuing Care / Life Plan"
+      ],
+      "expected_overlap_with_cms": 5,
+      "expected_new_canonical_facilities": 810,
+      "required_connector": "Streaming NPPES ZIP downloader",
+      "required_parser": "npidata_pfile CSV parser with taxonomy-slot expansion",
+      "required_normalization": "NPI, facility name, DBA, address, zip, phone, taxonomy normalization",
+      "required_validation": "NPI-only identity checks, residential-taxonomy filter, duplicate merge and conflict audit",
+      "connector_gap_analysis": "CSV only",
+      "integrated": true
+    }
+  ],
+  "sources_integrated": [
+    "SRC-NV-CMS-4PQ5-N9PY",
+    "SRC-NV-NPPES-REGISTRY"
+  ],
+  "sources_still_blocked": [
+    "SRC-NV-HCQC-LICENSING"
+  ],
+  "facilities_before": 66,
+  "facilities_after": 876,
+  "facility_types_before": [
+    "Skilled Nursing Facility"
+  ],
+  "facility_types_after": [
+    "Assisted Living",
+    "Memory Care",
+    "Nursing Facility",
+    "Other Governed Senior-Care Residential",
+    "Skilled Nursing Facility"
+  ],
+  "duplicates_removed": 77,
+  "canonical_merges": 77,
+  "coverage_increase": 810,
+  "remaining_gaps": {
+    "records_with_nevada_license_id": 0,
+    "records_with_npi": 815,
+    "media_pilot_gate": {
+      "required_complete_las_vegas_valley_identities": 100,
+      "actual_complete_las_vegas_valley_identities": 68,
+      "status": "FAIL"
+    }
+  }
+}

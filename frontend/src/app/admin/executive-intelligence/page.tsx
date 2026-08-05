@@ -114,6 +114,9 @@ export default function ExecutiveIntelligenceAdminPage() {
             </p>
           </div>
           <div className="flex gap-3">
+            <Link href="/admin/parameter-acquisition" className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500">
+              Parameter acquisition
+            </Link>
             <Link href="/" className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-slate-500">
               Home
             </Link>

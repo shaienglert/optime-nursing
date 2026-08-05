@@ -50,6 +50,24 @@ class EligibilitySemanticsTests(unittest.TestCase):
         self.assertEqual(len(eligibility["unmet_verified_needs"]), 0)
         self.assertEqual(len(eligibility["unknown_critical_needs"]), 1)
 
+    def test_unknown_reason_is_preserved(self) -> None:
+        needs = [{
+            "parameter_id": "pt",
+            "requirement_level": "REQUIRED",
+            "desired_value": "YES",
+            "acceptable_values": ["YES"],
+        }]
+        eligibility = _eligibility_from_needs(
+            needs,
+            {"pt": {
+                "raw_value": "UNKNOWN",
+                "evidence_state": "UNKNOWN",
+                "source": "No source coverage",
+                "unknown_reason": "Only a general rehabilitation page exists; therapy type is not specified.",
+            }},
+        )
+        self.assertIn("general rehabilitation page", eligibility["unknown_critical_needs"][0]["reason"])
+
     def test_verified_required_gap_is_ineligible(self) -> None:
         needs = [
             {
@@ -76,6 +94,33 @@ class EligibilitySemanticsTests(unittest.TestCase):
 
         self.assertEqual(yes_result[0], "GAP")
         self.assertEqual(no_result[0], "MATCH")
+
+    def test_non_proven_evidence_states_remain_distinct(self) -> None:
+        need = {
+            "parameter_id": "pt",
+            "requirement_level": "REQUIRED",
+            "desired_value": "YES",
+            "acceptable_values": ["YES"],
+        }
+
+        for evidence_state, expected_status in [
+            ("CONTRADICTED", "CONTRADICTED"),
+            ("STALE_OFFICIAL", "STALE"),
+            ("NOT_APPLICABLE", "NOT_APPLICABLE"),
+        ]:
+            with self.subTest(evidence_state=evidence_state):
+                eligibility = _eligibility_from_needs(
+                    [need],
+                    {"pt": {"raw_value": "YES", "source": evidence_state, "evidence_state": evidence_state}},
+                )
+                combined = (
+                    eligibility["not_applicable_needs"]
+                    + eligibility["contradicted_needs"]
+                    + eligibility["stale_needs"]
+                )
+                self.assertEqual(combined[0]["status"], expected_status)
+                self.assertEqual(eligibility["matched_needs"], [])
+                self.assertEqual(eligibility["unmet_verified_needs"], [])
 
 
 class EngineRuntimeTests(unittest.TestCase):
@@ -243,6 +288,40 @@ class ComparisonContextTests(unittest.TestCase):
         self.assertEqual(facility_b_rows["pt"]["status"], "VERIFIED_GAP")
         self.assertEqual(facility_a_rows["nursing_24_7"]["status"], "NOT_VERIFIED")
         self.assertEqual(facility_a_rows["pt"]["scope"], "SERVICE")
+
+    @patch("app.services.patient_decision_engine.compare_facility_parameter_tables")
+    def test_comparison_context_preserves_contradiction_state(self, mock_compare) -> None:
+        mock_compare.return_value = {
+            "parameter_ids": ["pt"],
+            "facilities": [{
+                "canonical_facility_id": "A",
+                "facility_name": "Facility A",
+                "rows": [{
+                    "parameter_id": "pt",
+                    "raw_value": "YES",
+                    "source": "Facility website and government license",
+                    "evidence_state": "CONTRADICTED",
+                    "state_reason": "Website claim is not supported by the current license.",
+                    "detail_scope": "SERVICE",
+                    "scope_name": "Therapy",
+                }],
+            }],
+        }
+        profile = {
+            "need_tags": ["pt"],
+            "priority_parameter_ids": ["pt"],
+            "profile_key": "stroke",
+            "needs": [{
+                "parameter_id": "pt",
+                "requirement_level": "REQUIRED",
+                "desired_value": "YES",
+                "acceptable_values": ["YES"],
+            }],
+        }
+
+        row = build_patient_comparison_context(["A"], profile)["facilities"][0]["need_rows"][0]
+        self.assertEqual(row["status"], "CONTRADICTED")
+        self.assertIn("not supported", row["state_reason"])
 
 
 class GovernedTieBreakerTests(unittest.TestCase):

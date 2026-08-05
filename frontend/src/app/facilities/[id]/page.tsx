@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { LiveFacilityProfileClient } from "@/components/facility/live-facility-profile-client";
 
 type LegacyFacilityPageProps = {
   params: Promise<{ id: string }>;
@@ -6,5 +6,5 @@ type LegacyFacilityPageProps = {
 
 export default async function LegacyFacilityPage({ params }: LegacyFacilityPageProps) {
   const resolved = await params;
-  redirect(`/facility/${resolved.id}`);
+  return <LiveFacilityProfileClient cmsCcn={resolved.id} />;
 }

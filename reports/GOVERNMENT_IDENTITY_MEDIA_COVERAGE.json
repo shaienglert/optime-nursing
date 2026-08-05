@@ -1,0 +1,2843 @@
+{
+  "report_status": "BASELINE_COMPLETE_PILOT_WRITE_NOT_AUTHORIZED",
+  "baseline": {
+    "generated_at_utc": "2026-08-03T17:38:49Z",
+    "pipeline_version": "government-identity-media-v1",
+    "total_facilities": 11090,
+    "facilities_with_authoritative_identity": 11090,
+    "facilities_searched": 85,
+    "official_domains_found": 38,
+    "exact_facility_pages_verified": 38,
+    "operator_only_pages_found": 0,
+    "verified_images": 0,
+    "provisional_images": 5,
+    "ambiguous_images": 31,
+    "rejected_images": 0,
+    "missing_images": 11054,
+    "display_rights_uncertain_images": 5,
+    "broken_images": 0,
+    "percentage_verified": 0.0,
+    "coverage_by_market": {
+      "ALACHUA": {
+        "UNKNOWN": 3,
+        "PROVISIONAL": 2,
+        "AMBIGUOUS": 4,
+        "MISSING": 4
+      },
+      "ALTAMONTE SPRING": {
+        "MISSING": 1
+      },
+      "ALTAMONTE SPRINGS": {
+        "MISSING": 31
+      },
+      "ALTOONA": {
+        "MISSING": 3
+      },
+      "ALVA": {
+        "MISSING": 1
+      },
+      "AMELIA ISLAND": {
+        "MISSING": 2
+      },
+      "ANTHONY": {
+        "MISSING": 1
+      },
+      "APOLLO BEACH": {
+        "MISSING": 10
+      },
+      "APOPKA": {
+        "MISSING": 57
+      },
+      "ARCADIA": {
+        "MISSING": 7
+      },
+      "ATLANTIC BEACH": {
+        "MISSING": 2
+      },
+      "AUBURNDALE": {
+        "MISSING": 6
+      },
+      "AVENTURA": {
+        "MISSING": 18
+      },
+      "AVON PARK": {
+        "MISSING": 2
+      },
+      "BAKER": {
+        "AMBIGUOUS": 1,
+        "UNKNOWN": 1
+      },
+      "BARTOW": {
+        "MISSING": 17
+      },
+      "BAY": {
+        "UNKNOWN": 5
+      },
+      "BAY PINES": {
+        "MISSING": 1
+      },
+      "BELLE GLADE": {
+        "MISSING": 3
+      },
+      "BELLE ISLE": {
+        "MISSING": 2
+      },
+      "BELLEAIR": {
+        "MISSING": 1
+      },
+      "BELLEVIEW": {
+        "MISSING": 15
+      },
+      "BEVERLY HILLS": {
+        "MISSING": 1
+      },
+      "BISCAYNE PARK": {
+        "MISSING": 4
+      },
+      "BLOUNTSTOWN": {
+        "MISSING": 9
+      },
+      "BOA RATON": {
+        "MISSING": 1
+      },
+      "BOCA RATON": {
+        "MISSING": 96
+      },
+      "BONIFAY": {
+        "MISSING": 8
+      },
+      "BONITA SPRINGS": {
+        "MISSING": 12
+      },
+      "BOYNTON BEACH": {
+        "MISSING": 75
+      },
+      "BRADENTON": {
+        "MISSING": 94
+      },
+      "BRADFORD": {
+        "AMBIGUOUS": 1,
+        "PROVISIONAL": 1
+      },
+      "BRANDON": {
+        "MISSING": 109
+      },
+      "BREVARD": {
+        "UNKNOWN": 9,
+        "AMBIGUOUS": 12
+      },
+      "BRISTOL": {
+        "MISSING": 3
+      },
+      "BROOKSVILLE": {
+        "MISSING": 33
+      },
+      "BROWARD": {
+        "AMBIGUOUS": 9,
+        "UNKNOWN": 18,
+        "MISSING": 6
+      },
+      "BUNNELL": {
+        "MISSING": 2
+      },
+      "BUSHNELL": {
+        "MISSING": 5
+      },
+      "CALHOUN": {
+        "MISSING": 2
+      },
+      "CALLAHAN": {
+        "MISSING": 3
+      },
+      "CALLAWAY": {
+        "MISSING": 2
+      },
+      "CANTONMENT": {
+        "MISSING": 2
+      },
+      "CAPE CORAL": {
+        "MISSING": 79
+      },
+      "CARRABELLE": {
+        "MISSING": 5
+      },
+      "CARYVILLE": {
+        "MISSING": 3
+      },
+      "CASSELBERRY": {
+        "MISSING": 7
+      },
+      "CELEBRATION": {
+        "MISSING": 1
+      },
+      "CENTURY": {
+        "MISSING": 2
+      },
+      "CHARLOTTE": {
+        "MISSING": 8
+      },
+      "CHATTAHOOCHEE": {
+        "MISSING": 3
+      },
+      "CHIEFLAND": {
+        "MISSING": 3
+      },
+      "CHIPLEY": {
+        "MISSING": 7
+      },
+      "CHRISTMAS": {
+        "MISSING": 1
+      },
+      "CHULUOTA": {
+        "MISSING": 3
+      },
+      "CITRA": {
+        "MISSING": 3
+      },
+      "CITRUS": {
+        "MISSING": 9
+      },
+      "CITRUS SPRINGS": {
+        "MISSING": 3
+      },
+      "CLAY": {
+        "MISSING": 12
+      },
+      "CLEARWATER": {
+        "MISSING": 142
+      },
+      "CLERMONT": {
+        "MISSING": 30
+      },
+      "CLEWISTON": {
+        "MISSING": 5
+      },
+      "COCOA": {
+        "MISSING": 14
+      },
+      "COCOA BEACH": {
+        "MISSING": 7
+      },
+      "COCONUT CREEK": {
+        "MISSING": 22
+      },
+      "COLLIER": {
+        "MISSING": 11
+      },
+      "COLUMBIA": {
+        "MISSING": 4
+      },
+      "COOPER CITY": {
+        "MISSING": 6
+      },
+      "CORAL GABLES": {
+        "MISSING": 30
+      },
+      "CORAL SPRINGS": {
+        "MISSING": 78
+      },
+      "CRAWFORDVILLE": {
+        "MISSING": 1
+      },
+      "CRESCENT CITY": {
+        "MISSING": 5
+      },
+      "CRESTVIEW": {
+        "MISSING": 22
+      },
+      "CROSS CITY": {
+        "MISSING": 4
+      },
+      "CRYSTAL RIVER": {
+        "MISSING": 11
+      },
+      "CUTLER BAY": {
+        "MISSING": 55
+      },
+      "DADE CITY": {
+        "MISSING": 12
+      },
+      "DANIA": {
+        "MISSING": 2
+      },
+      "DANIA BEACH": {
+        "MISSING": 8
+      },
+      "DAVENPORT": {
+        "MISSING": 20
+      },
+      "DAVIE": {
+        "MISSING": 17
+      },
+      "DAYTONA BEACH": {
+        "MISSING": 61
+      },
+      "DAYTONA BEACH SHORES": {
+        "MISSING": 1
+      },
+      "DE LEON SPRINGS": {
+        "MISSING": 1
+      },
+      "DE SOTO": {
+        "MISSING": 1
+      },
+      "DEBARY": {
+        "MISSING": 6
+      },
+      "DEERFIELD": {
+        "MISSING": 1
+      },
+      "DEERFIELD BCH": {
+        "MISSING": 1
+      },
+      "DEERFIELD BEACH": {
+        "MISSING": 19
+      },
+      "DEFUNIAK SPRINGS": {
+        "MISSING": 9
+      },
+      "DELAND": {
+        "MISSING": 48
+      },
+      "DELRAY BEACH": {
+        "MISSING": 50
+      },
+      "DELTONA": {
+        "MISSING": 26
+      },
+      "DESTIN": {
+        "MISSING": 7
+      },
+      "DIXIE": {
+        "MISSING": 1
+      },
+      "DORAL": {
+        "MISSING": 17
+      },
+      "DOVER": {
+        "MISSING": 3
+      },
+      "DUNDEE": {
+        "MISSING": 1
+      },
+      "DUNEDIN": {
+        "MISSING": 45
+      },
+      "DUNNELLON": {
+        "MISSING": 11
+      },
+      "DUVAL": {
+        "MISSING": 34
+      },
+      "EAST PALATKA": {
+        "MISSING": 1
+      },
+      "EATONVILLE": {
+        "MISSING": 1
+      },
+      "EDGEWATER": {
+        "MISSING": 6
+      },
+      "ELLENTON": {
+        "MISSING": 1
+      },
+      "ENGLEWOOD": {
+        "MISSING": 9
+      },
+      "ESCAMBIA": {
+        "MISSING": 16
+      },
+      "ESTERO": {
+        "MISSING": 3
+      },
+      "EUSTIS": {
+        "MISSING": 25
+      },
+      "EUTIS": {
+        "MISSING": 1
+      },
+      "FERN PARK": {
+        "MISSING": 1
+      },
+      "FERNANDINA BEACH": {
+        "MISSING": 6
+      },
+      "FLAGLER": {
+        "MISSING": 2
+      },
+      "FLAGLER BEACH": {
+        "MISSING": 1
+      },
+      "FLEMING ISLAND": {
+        "MISSING": 4
+      },
+      "FLORIDA CITY": {
+        "MISSING": 4
+      },
+      "FORT LAUDERDALE": {
+        "MISSING": 73
+      },
+      "FORT MEYERS": {
+        "MISSING": 1
+      },
+      "FORT MYERS": {
+        "MISSING": 89
+      },
+      "FORT PIERCE": {
+        "MISSING": 53
+      },
+      "FORT WALTON BEACH": {
+        "MISSING": 17
+      },
+      "FORT WHITE": {
+        "MISSING": 3
+      },
+      "FRANKLIN": {
+        "MISSING": 1
+      },
+      "FRUIT COVE": {
+        "MISSING": 1
+      },
+      "FRUITLAND PARK": {
+        "MISSING": 7
+      },
+      "FT LAUDERDALE": {
+        "MISSING": 29
+      },
+      "FT MYERS": {
+        "MISSING": 3
+      },
+      "FT WALTON BEACH": {
+        "MISSING": 1
+      },
+      "FT. PIERCE": {
+        "MISSING": 1
+      },
+      "GADSDEN": {
+        "MISSING": 1
+      },
+      "GAINESVILLE": {
+        "MISSING": 63
+      },
+      "GIBSONTON": {
+        "MISSING": 2
+      },
+      "GILCHRIST": {
+        "MISSING": 2
+      },
+      "GOTHA": {
+        "MISSING": 1
+      },
+      "GOULDS": {
+        "MISSING": 1
+      },
+      "GRACEVILLE": {
+        "MISSING": 5
+      },
+      "GRAND ISLAND": {
+        "MISSING": 1
+      },
+      "GREEN COVE SPRINGS": {
+        "MISSING": 8
+      },
+      "GREENACERS": {
+        "MISSING": 1
+      },
+      "GREENACRES": {
+        "MISSING": 15
+      },
+      "GREENVILLE": {
+        "MISSING": 12
+      },
+      "GRETNA": {
+        "MISSING": 1
+      },
+      "GROVELAND": {
+        "MISSING": 5
+      },
+      "GULF": {
+        "MISSING": 1
+      },
+      "GULF BREEZE": {
+        "MISSING": 15
+      },
+      "HAINES CITY": {
+        "MISSING": 21
+      },
+      "HALEAH": {
+        "MISSING": 1
+      },
+      "HALLANDALE": {
+        "MISSING": 2
+      },
+      "HALLANDALE BEACH": {
+        "MISSING": 14
+      },
+      "HAMILTON": {
+        "MISSING": 1
+      },
+      "HAMPTON": {
+        "MISSING": 1
+      },
+      "HARDEE": {
+        "MISSING": 1
+      },
+      "HARMONY": {
+        "MISSING": 1
+      },
+      "HASTINGS": {
+        "MISSING": 1
+      },
+      "HAVANA": {
+        "MISSING": 10
+      },
+      "HAVERHILL": {
+        "MISSING": 4
+      },
+      "HEATHROW": {
+        "MISSING": 1
+      },
+      "HENDRY": {
+        "MISSING": 2
+      },
+      "HERNANDO": {
+        "MISSING": 8
+      },
+      "HIALEAH": {
+        "MISSING": 304
+      },
+      "HIALEAH GARDENS": {
+        "MISSING": 20
+      },
+      "HIGH SPRINGS": {
+        "MISSING": 5
+      },
+      "HIGHLANDS": {
+        "MISSING": 5
+      },
+      "HILLIARD": {
+        "MISSING": 6
+      },
+      "HILLSBOROUGH": {
+        "MISSING": 30
+      },
+      "HOBE SOUND": {
+        "MISSING": 7
+      },
+      "HOLIDAY": {
+        "MISSING": 4
+      },
+      "HOLLISTER": {
+        "MISSING": 2
+      },
+      "HOLLY HILL": {
+        "MISSING": 11
+      },
+      "HOLLYWOOD": {
+        "MISSING": 134
+      },
+      "HOLMES": {
+        "MISSING": 1
+      },
+      "HOMESTEAD": {
+        "MISSING": 120
+      },
+      "HOMOSASSA": {
+        "MISSING": 1
+      },
+      "HUDSON": {
+        "MISSING": 23
+      },
+      "INDIALANTIC": {
+        "MISSING": 2
+      },
+      "INDIAN RIVER": {
+        "MISSING": 6
+      },
+      "INVERNESS": {
+        "MISSING": 16
+      },
+      "JACKSON": {
+        "MISSING": 4
+      },
+      "JACKSONVILLE": {
+        "MISSING": 410
+      },
+      "JACKSONVILLE BEACH": {
+        "MISSING": 4
+      },
+      "JASPER": {
+        "MISSING": 8
+      },
+      "JAX": {
+        "MISSING": 1
+      },
+      "JAY": {
+        "MISSING": 2
+      },
+      "JEFFERSON": {
+        "MISSING": 1
+      },
+      "JENNINGS": {
+        "MISSING": 5
+      },
+      "JENSEN BEACH": {
+        "MISSING": 5
+      },
+      "JUNO BEACH": {
+        "MISSING": 3
+      },
+      "JUPITER": {
+        "MISSING": 20
+      },
+      "KENDALL": {
+        "MISSING": 1
+      },
+      "KENNETH CITY": {
+        "MISSING": 10
+      },
+      "KEY LARGO": {
+        "MISSING": 4
+      },
+      "KEY WEST": {
+        "MISSING": 8
+      },
+      "KEYSTONE HEIGHTS": {
+        "MISSING": 1
+      },
+      "KISSIMMEE": {
+        "MISSING": 106
+      },
+      "LABELLE": {
+        "MISSING": 6
+      },
+      "LADY LAKE": {
+        "MISSING": 17
+      },
+      "LAFAYETTE": {
+        "MISSING": 1
+      },
+      "LAKE": {
+        "MISSING": 17
+      },
+      "LAKE ALFRED": {
+        "MISSING": 6
+      },
+      "LAKE CITY": {
+        "MISSING": 32
+      },
+      "LAKE CLARKE SHORES": {
+        "MISSING": 1
+      },
+      "LAKE MARY": {
+        "MISSING": 19
+      },
+      "LAKE PARK": {
+        "MISSING": 13
+      },
+      "LAKE PLACID": {
+        "MISSING": 12
+      },
+      "LAKE WALES": {
+        "MISSING": 14
+      },
+      "LAKE WORTH": {
+        "MISSING": 61
+      },
+      "LAKE WORTH BEACH": {
+        "MISSING": 5
+      },
+      "LAKELAND": {
+        "MISSING": 107
+      },
+      "LAKEWOOD RANCH": {
+        "MISSING": 1
+      },
+      "LAND O LAKES": {
+        "MISSING": 17
+      },
+      "LAND O'LAKES": {
+        "MISSING": 1
+      },
+      "LANTANA": {
+        "MISSING": 19
+      },
+      "LARGO": {
+        "MISSING": 60
+      },
+      "LAUDERDALE LAKES": {
+        "MISSING": 24
+      },
+      "LAUDERHILL": {
+        "MISSING": 61
+      },
+      "LAWTEY": {
+        "MISSING": 2
+      },
+      "LECANTO": {
+        "MISSING": 18
+      },
+      "LEE": {
+        "MISSING": 21
+      },
+      "LEESBURG": {
+        "MISSING": 42
+      },
+      "LEHIGH ACRES": {
+        "MISSING": 47
+      },
+      "LEON": {
+        "MISSING": 8
+      },
+      "LEVY": {
+        "MISSING": 1
+      },
+      "LIGHTHOUSE POINT": {
+        "MISSING": 1
+      },
+      "LITHIA": {
+        "MISSING": 6
+      },
+      "LIVE OAK": {
+        "MISSING": 13
+      },
+      "LONGWOOD": {
+        "MISSING": 23
+      },
+      "LOXAHATCHEE": {
+        "MISSING": 12
+      },
+      "LUTZ": {
+        "MISSING": 24
+      },
+      "LYNN HAVEN": {
+        "MISSING": 5
+      },
+      "MACCLENNY": {
+        "MISSING": 5
+      },
+      "MADEIRA BEACH": {
+        "MISSING": 1
+      },
+      "MADISON": {
+        "MISSING": 24
+      },
+      "MAITLAND": {
+        "MISSING": 21
+      },
+      "MANATEE": {
+        "MISSING": 12
+      },
+      "MANGONIA PARK": {
+        "MISSING": 1
+      },
+      "MARATHON": {
+        "MISSING": 2
+      },
+      "MARGATE": {
+        "MISSING": 46
+      },
+      "MARIANNA": {
+        "MISSING": 13
+      },
+      "MARION": {
+        "MISSING": 11
+      },
+      "MARTIN": {
+        "MISSING": 6
+      },
+      "MARY ESTHER": {
+        "MISSING": 1
+      },
+      "MASCOTTE": {
+        "MISSING": 2
+      },
+      "MAYO": {
+        "MISSING": 5
+      },
+      "MEDLEY": {
+        "MISSING": 2
+      },
+      "MELBOURNE": {
+        "MISSING": 58
+      },
+      "MERRITT ISLAND": {
+        "MISSING": 42
+      },
+      "MIAMI": {
+        "MISSING": 1512
+      },
+      "MIAMI BEACH": {
+        "MISSING": 17
+      },
+      "MIAMI GARDENS": {
+        "MISSING": 77
+      },
+      "MIAMI LAKES": {
+        "MISSING": 45
+      },
+      "MIAMI SHORES": {
+        "MISSING": 1
+      },
+      "MIAMI SPRINGS": {
+        "MISSING": 12
+      },
+      "MIAMI-DADE": {
+        "MISSING": 34,
+        "UNKNOWN": 14,
+        "AMBIGUOUS": 4,
+        "PROVISIONAL": 2
+      },
+      "MIAMIDADE": {
+        "MISSING": 1
+      },
+      "MIDDLEBURG": {
+        "MISSING": 10
+      },
+      "MIDWAY": {
+        "MISSING": 4
+      },
+      "MILTON": {
+        "MISSING": 8
+      },
+      "MINNEOLA": {
+        "MISSING": 6
+      },
+      "MIRAMAR": {
+        "MISSING": 72
+      },
+      "MIRAMAR BEACH": {
+        "MISSING": 3
+      },
+      "MONROE": {
+        "MISSING": 2
+      },
+      "MONTICELLO": {
+        "MISSING": 15
+      },
+      "MONTVERDE": {
+        "MISSING": 2
+      },
+      "MOUNT DORA": {
+        "MISSING": 19
+      },
+      "MULBERRY": {
+        "MISSING": 3
+      },
+      "N FT MYERS": {
+        "MISSING": 1
+      },
+      "N LAUDERDALE": {
+        "MISSING": 3
+      },
+      "N MIAMI BEACH": {
+        "MISSING": 1
+      },
+      "NAPLES": {
+        "MISSING": 78
+      },
+      "NASSAU": {
+        "MISSING": 2
+      },
+      "NAVARRE": {
+        "MISSING": 5
+      },
+      "NE PALM BAY": {
+        "MISSING": 1
+      },
+      "NEW PORT RICHEY": {
+        "MISSING": 67
+      },
+      "NEW SMYRNA": {
+        "MISSING": 1
+      },
+      "NEW SMYRNA BEACH": {
+        "MISSING": 17
+      },
+      "NEWBERRY": {
+        "MISSING": 4
+      },
+      "NICEVILLE": {
+        "MISSING": 5
+      },
+      "NOKOMIS": {
+        "MISSING": 6
+      },
+      "NORTH BAY VILLAGE": {
+        "MISSING": 2
+      },
+      "NORTH FORT MYERS": {
+        "MISSING": 7
+      },
+      "NORTH LAUDERDALE": {
+        "MISSING": 16
+      },
+      "NORTH MIAMI": {
+        "MISSING": 55
+      },
+      "NORTH MIAMI BEACH": {
+        "MISSING": 42
+      },
+      "NORTH PALM BEACH": {
+        "MISSING": 7
+      },
+      "NORTH PORT": {
+        "MISSING": 14
+      },
+      "OAKLAND": {
+        "MISSING": 1
+      },
+      "OAKLAND PARK": {
+        "MISSING": 24
+      },
+      "OCALA": {
+        "MISSING": 112
+      },
+      "OCEAN BREEZE": {
+        "MISSING": 1
+      },
+      "OCEAN RIDGE": {
+        "MISSING": 1
+      },
+      "OCKLAWAHA": {
+        "MISSING": 4
+      },
+      "OCOEE": {
+        "MISSING": 27
+      },
+      "ODESSA": {
+        "MISSING": 1
+      },
+      "OKALOOSA": {
+        "MISSING": 8
+      },
+      "OKEECHOBEE": {
+        "MISSING": 7
+      },
+      "OLDSMAR": {
+        "MISSING": 5
+      },
+      "OPA LOCKA": {
+        "MISSING": 16
+      },
+      "ORANGE": {
+        "MISSING": 37
+      },
+      "ORANGE CITY": {
+        "MISSING": 14
+      },
+      "ORANGE PARK": {
+        "MISSING": 40
+      },
+      "ORLANDO": {
+        "MISSING": 319
+      },
+      "ORMOND BEACH": {
+        "MISSING": 37
+      },
+      "OSCEOLA": {
+        "MISSING": 10
+      },
+      "OVIEDO": {
+        "MISSING": 19
+      },
+      "OXFORD": {
+        "MISSING": 4
+      },
+      "PACE": {
+        "MISSING": 2
+      },
+      "PAHOKEE": {
+        "MISSING": 3
+      },
+      "PALATKA": {
+        "MISSING": 13
+      },
+      "PALM BAY": {
+        "MISSING": 146
+      },
+      "PALM BEACH": {
+        "MISSING": 56
+      },
+      "PALM BEACH GARDENS": {
+        "MISSING": 25
+      },
+      "PALM CITY": {
+        "MISSING": 5
+      },
+      "PALM COAST": {
+        "MISSING": 56
+      },
+      "PALM HARBOR": {
+        "MISSING": 41
+      },
+      "PALM SPRINGS": {
+        "MISSING": 9
+      },
+      "PALMETTO": {
+        "MISSING": 8
+      },
+      "PALMETTO BAY": {
+        "MISSING": 15
+      },
+      "PANAMA CITY": {
+        "MISSING": 35
+      },
+      "PANAMA CITY BEACH": {
+        "MISSING": 7
+      },
+      "PARKLAND": {
+        "MISSING": 4
+      },
+      "PARRISH": {
+        "MISSING": 4
+      },
+      "PASCO": {
+        "MISSING": 18
+      },
+      "PEMBROKE PARK": {
+        "MISSING": 4
+      },
+      "PEMBROKE PINES": {
+        "MISSING": 57
+      },
+      "PENNEY FARMS": {
+        "MISSING": 2
+      },
+      "PENSACOLA": {
+        "MISSING": 103
+      },
+      "PERRY": {
+        "MISSING": 7
+      },
+      "PINECREST": {
+        "MISSING": 1
+      },
+      "PINELLAS": {
+        "MISSING": 65
+      },
+      "PINELLAS PARK": {
+        "MISSING": 39
+      },
+      "PINETTA": {
+        "MISSING": 1
+      },
+      "PLANT CITY": {
+        "MISSING": 34
+      },
+      "PLANTATION": {
+        "MISSING": 54
+      },
+      "POINCIANA": {
+        "MISSING": 3
+      },
+      "POLK": {
+        "MISSING": 25
+      },
+      "POLK CITY": {
+        "MISSING": 1
+      },
+      "POMONA PARK": {
+        "MISSING": 3
+      },
+      "POMPANO BEACH": {
+        "MISSING": 60
+      },
+      "PONTE VEDRA": {
+        "MISSING": 1
+      },
+      "PONTE VEDRA BEACH": {
+        "MISSING": 2
+      },
+      "PORT CHARLOTTE": {
+        "MISSING": 50
+      },
+      "PORT ORANGE": {
+        "MISSING": 22
+      },
+      "PORT RICHEY": {
+        "MISSING": 15
+      },
+      "PORT SAINT JOE": {
+        "MISSING": 1
+      },
+      "PORT SAINT LUCIE": {
+        "MISSING": 87
+      },
+      "PORT ST JOE": {
+        "MISSING": 10
+      },
+      "PORT ST LUCIE": {
+        "MISSING": 160
+      },
+      "PORT ST. JOE": {
+        "MISSING": 1
+      },
+      "PORT ST. LUCIE": {
+        "MISSING": 4
+      },
+      "PORT ST. LUCIE WEST": {
+        "MISSING": 1
+      },
+      "PUNTA GORDA": {
+        "MISSING": 20
+      },
+      "PUTNAM": {
+        "MISSING": 3
+      },
+      "QUINCY": {
+        "MISSING": 14
+      },
+      "REDDICK": {
+        "MISSING": 1
+      },
+      "RIVERVIEW": {
+        "MISSING": 46
+      },
+      "RIVIERA BEACH": {
+        "MISSING": 23
+      },
+      "ROCKLEDGE": {
+        "MISSING": 30
+      },
+      "ROTONDA WEST": {
+        "MISSING": 2
+      },
+      "ROYAL PALM BEACH": {
+        "MISSING": 34
+      },
+      "RUSKIN": {
+        "MISSING": 27
+      },
+      "SAFETY HARBOR": {
+        "MISSING": 12
+      },
+      "SAINT AUGUSTINE": {
+        "MISSING": 5
+      },
+      "SAINT CLOUD": {
+        "MISSING": 26
+      },
+      "SAINT JOHNS": {
+        "MISSING": 1
+      },
+      "SAINT PETERSBURG": {
+        "MISSING": 38
+      },
+      "SANDERSON": {
+        "MISSING": 2
+      },
+      "SANFORD": {
+        "MISSING": 31
+      },
+      "SANTA ROSA": {
+        "MISSING": 4
+      },
+      "SARASOTA": {
+        "MISSING": 164
+      },
+      "SATELLITE BEACH": {
+        "MISSING": 4
+      },
+      "SEBASTIAN": {
+        "MISSING": 9
+      },
+      "SEBRING": {
+        "MISSING": 29
+      },
+      "SEFFNER": {
+        "MISSING": 14
+      },
+      "SEMINOLE": {
+        "MISSING": 32
+      },
+      "SINGER ISLAND": {
+        "MISSING": 1
+      },
+      "SORRENTO": {
+        "MISSING": 4
+      },
+      "SOUTH DAYTONA": {
+        "MISSING": 7
+      },
+      "SOUTH MIAMI": {
+        "MISSING": 4
+      },
+      "SOUTH PASADENA": {
+        "MISSING": 9
+      },
+      "SOUTHPORT": {
+        "MISSING": 1
+      },
+      "SOUTHWEST RANCHES": {
+        "MISSING": 7
+      },
+      "SPRING HILL": {
+        "MISSING": 63
+      },
+      "ST AUGUSTINE": {
+        "MISSING": 24
+      },
+      "ST CLOUD": {
+        "MISSING": 2
+      },
+      "ST PETERSBURG": {
+        "MISSING": 163
+      },
+      "ST. AUGUSTINE": {
+        "MISSING": 1
+      },
+      "ST. CLOUD": {
+        "MISSING": 1
+      },
+      "ST. JOHNS": {
+        "MISSING": 8
+      },
+      "ST. LUCIE": {
+        "MISSING": 9
+      },
+      "ST. PETERSBURG": {
+        "MISSING": 2
+      },
+      "STARKE": {
+        "MISSING": 10
+      },
+      "STUART": {
+        "MISSING": 42
+      },
+      "SUMMERFIELD": {
+        "MISSING": 4
+      },
+      "SUMTER": {
+        "MISSING": 4
+      },
+      "SUN CITY CENTER": {
+        "MISSING": 10
+      },
+      "SUNRISE": {
+        "MISSING": 59
+      },
+      "SUWANNEE": {
+        "MISSING": 3
+      },
+      "SW RANCHES": {
+        "MISSING": 1
+      },
+      "TALLAHASSEE": {
+        "MISSING": 72
+      },
+      "TAMARAC": {
+        "MISSING": 45
+      },
+      "TAMPA": {
+        "MISSING": 490
+      },
+      "TARPON SPRINGS": {
+        "MISSING": 22
+      },
+      "TAVARES": {
+        "MISSING": 16
+      },
+      "TAVERNIER": {
+        "MISSING": 6
+      },
+      "TAYLOR": {
+        "MISSING": 1
+      },
+      "TEMPLE TERRACE": {
+        "MISSING": 15
+      },
+      "TEQUESTA": {
+        "MISSING": 5
+      },
+      "THE VILLAGES": {
+        "MISSING": 10
+      },
+      "THONOTOSASSA": {
+        "MISSING": 10
+      },
+      "TITUSVILLE": {
+        "MISSING": 26
+      },
+      "TRENTON": {
+        "MISSING": 2
+      },
+      "TRINITY": {
+        "MISSING": 5
+      },
+      "UMATILLA": {
+        "MISSING": 1
+      },
+      "VALRICO": {
+        "MISSING": 22
+      },
+      "VENICE": {
+        "MISSING": 46
+      },
+      "VERNON": {
+        "MISSING": 3
+      },
+      "VERO BEACH": {
+        "MISSING": 60
+      },
+      "VIERA": {
+        "MISSING": 4
+      },
+      "VILLAGE OF PALMETTO BAY": {
+        "MISSING": 2
+      },
+      "VIRGINIA GARDENS": {
+        "MISSING": 1
+      },
+      "VOLUSIA": {
+        "MISSING": 29
+      },
+      "W MELBOURNE": {
+        "MISSING": 1
+      },
+      "W. MELBOURNE": {
+        "MISSING": 1
+      },
+      "W. PALM BEACH": {
+        "MISSING": 1
+      },
+      "WAKULLA": {
+        "MISSING": 1
+      },
+      "WALNUT HILL": {
+        "MISSING": 2
+      },
+      "WALTON": {
+        "MISSING": 2
+      },
+      "WASHINGTON": {
+        "MISSING": 2
+      },
+      "WAUCHULA": {
+        "MISSING": 9
+      },
+      "WEBSTER": {
+        "MISSING": 2
+      },
+      "WEEKI WACHEE": {
+        "MISSING": 5
+      },
+      "WELAKA": {
+        "MISSING": 1
+      },
+      "WELLINGTON": {
+        "MISSING": 40
+      },
+      "WESLEY CHAPEL": {
+        "MISSING": 31
+      },
+      "WEST MELBOURNE": {
+        "MISSING": 8
+      },
+      "WEST MIAMI": {
+        "MISSING": 3
+      },
+      "WEST PALM BCH": {
+        "MISSING": 5
+      },
+      "WEST PALM BEACH": {
+        "MISSING": 166
+      },
+      "WEST PARK": {
+        "MISSING": 10
+      },
+      "WESTON": {
+        "MISSING": 10
+      },
+      "WESTPALM": {
+        "MISSING": 1
+      },
+      "WILDWOOD": {
+        "MISSING": 6
+      },
+      "WILLISTON": {
+        "MISSING": 7
+      },
+      "WILTON MANORS": {
+        "MISSING": 12
+      },
+      "WIMAUMA": {
+        "MISSING": 4
+      },
+      "WINDERMERE": {
+        "MISSING": 6
+      },
+      "WINTER GARDEN": {
+        "MISSING": 17
+      },
+      "WINTER HAVEN": {
+        "MISSING": 62
+      },
+      "WINTER PARK": {
+        "MISSING": 48
+      },
+      "WINTER SPGS": {
+        "MISSING": 1
+      },
+      "WINTER SPRINGS": {
+        "MISSING": 11
+      },
+      "YALAHA": {
+        "MISSING": 2
+      },
+      "YBOR CITY": {
+        "MISSING": 1
+      },
+      "YULEE": {
+        "MISSING": 2
+      },
+      "ZELLWOOD": {
+        "MISSING": 1
+      },
+      "ZEPHYRHILLS": {
+        "MISSING": 25
+      },
+      "ZOLFO SPRINGS": {
+        "MISSING": 1
+      }
+    },
+    "coverage_by_operator": {
+      "UNKNOWN": {
+        "UNKNOWN": 50,
+        "PROVISIONAL": 5,
+        "AMBIGUOUS": 31,
+        "MISSING": 11004
+      }
+    },
+    "top_search_failure_reasons": [],
+    "top_identity_conflict_reasons": [],
+    "top_image_rejection_reasons": [],
+    "average_processing_time_seconds": 0.0,
+    "records_due_for_recheck": 0
+  },
+  "post_pilot": {
+    "generated_at_utc": "2026-08-03T17:38:49Z",
+    "pipeline_version": "government-identity-media-v1",
+    "total_facilities": 11090,
+    "facilities_with_authoritative_identity": 11090,
+    "facilities_searched": 85,
+    "official_domains_found": 38,
+    "exact_facility_pages_verified": 38,
+    "operator_only_pages_found": 0,
+    "verified_images": 0,
+    "provisional_images": 5,
+    "ambiguous_images": 31,
+    "rejected_images": 0,
+    "missing_images": 11054,
+    "display_rights_uncertain_images": 5,
+    "broken_images": 0,
+    "percentage_verified": 0.0,
+    "coverage_by_market": {
+      "ALACHUA": {
+        "UNKNOWN": 3,
+        "PROVISIONAL": 2,
+        "AMBIGUOUS": 4,
+        "MISSING": 4
+      },
+      "ALTAMONTE SPRING": {
+        "MISSING": 1
+      },
+      "ALTAMONTE SPRINGS": {
+        "MISSING": 31
+      },
+      "ALTOONA": {
+        "MISSING": 3
+      },
+      "ALVA": {
+        "MISSING": 1
+      },
+      "AMELIA ISLAND": {
+        "MISSING": 2
+      },
+      "ANTHONY": {
+        "MISSING": 1
+      },
+      "APOLLO BEACH": {
+        "MISSING": 10
+      },
+      "APOPKA": {
+        "MISSING": 57
+      },
+      "ARCADIA": {
+        "MISSING": 7
+      },
+      "ATLANTIC BEACH": {
+        "MISSING": 2
+      },
+      "AUBURNDALE": {
+        "MISSING": 6
+      },
+      "AVENTURA": {
+        "MISSING": 18
+      },
+      "AVON PARK": {
+        "MISSING": 2
+      },
+      "BAKER": {
+        "AMBIGUOUS": 1,
+        "UNKNOWN": 1
+      },
+      "BARTOW": {
+        "MISSING": 17
+      },
+      "BAY": {
+        "UNKNOWN": 5
+      },
+      "BAY PINES": {
+        "MISSING": 1
+      },
+      "BELLE GLADE": {
+        "MISSING": 3
+      },
+      "BELLE ISLE": {
+        "MISSING": 2
+      },
+      "BELLEAIR": {
+        "MISSING": 1
+      },
+      "BELLEVIEW": {
+        "MISSING": 15
+      },
+      "BEVERLY HILLS": {
+        "MISSING": 1
+      },
+      "BISCAYNE PARK": {
+        "MISSING": 4
+      },
+      "BLOUNTSTOWN": {
+        "MISSING": 9
+      },
+      "BOA RATON": {
+        "MISSING": 1
+      },
+      "BOCA RATON": {
+        "MISSING": 96
+      },
+      "BONIFAY": {
+        "MISSING": 8
+      },
+      "BONITA SPRINGS": {
+        "MISSING": 12
+      },
+      "BOYNTON BEACH": {
+        "MISSING": 75
+      },
+      "BRADENTON": {
+        "MISSING": 94
+      },
+      "BRADFORD": {
+        "AMBIGUOUS": 1,
+        "PROVISIONAL": 1
+      },
+      "BRANDON": {
+        "MISSING": 109
+      },
+      "BREVARD": {
+        "UNKNOWN": 9,
+        "AMBIGUOUS": 12
+      },
+      "BRISTOL": {
+        "MISSING": 3
+      },
+      "BROOKSVILLE": {
+        "MISSING": 33
+      },
+      "BROWARD": {
+        "AMBIGUOUS": 9,
+        "UNKNOWN": 18,
+        "MISSING": 6
+      },
+      "BUNNELL": {
+        "MISSING": 2
+      },
+      "BUSHNELL": {
+        "MISSING": 5
+      },
+      "CALHOUN": {
+        "MISSING": 2
+      },
+      "CALLAHAN": {
+        "MISSING": 3
+      },
+      "CALLAWAY": {
+        "MISSING": 2
+      },
+      "CANTONMENT": {
+        "MISSING": 2
+      },
+      "CAPE CORAL": {
+        "MISSING": 79
+      },
+      "CARRABELLE": {
+        "MISSING": 5
+      },
+      "CARYVILLE": {
+        "MISSING": 3
+      },
+      "CASSELBERRY": {
+        "MISSING": 7
+      },
+      "CELEBRATION": {
+        "MISSING": 1
+      },
+      "CENTURY": {
+        "MISSING": 2
+      },
+      "CHARLOTTE": {
+        "MISSING": 8
+      },
+      "CHATTAHOOCHEE": {
+        "MISSING": 3
+      },
+      "CHIEFLAND": {
+        "MISSING": 3
+      },
+      "CHIPLEY": {
+        "MISSING": 7
+      },
+      "CHRISTMAS": {
+        "MISSING": 1
+      },
+      "CHULUOTA": {
+        "MISSING": 3
+      },
+      "CITRA": {
+        "MISSING": 3
+      },
+      "CITRUS": {
+        "MISSING": 9
+      },
+      "CITRUS SPRINGS": {
+        "MISSING": 3
+      },
+      "CLAY": {
+        "MISSING": 12
+      },
+      "CLEARWATER": {
+        "MISSING": 142
+      },
+      "CLERMONT": {
+        "MISSING": 30
+      },
+      "CLEWISTON": {
+        "MISSING": 5
+      },
+      "COCOA": {
+        "MISSING": 14
+      },
+      "COCOA BEACH": {
+        "MISSING": 7
+      },
+      "COCONUT CREEK": {
+        "MISSING": 22
+      },
+      "COLLIER": {
+        "MISSING": 11
+      },
+      "COLUMBIA": {
+        "MISSING": 4
+      },
+      "COOPER CITY": {
+        "MISSING": 6
+      },
+      "CORAL GABLES": {
+        "MISSING": 30
+      },
+      "CORAL SPRINGS": {
+        "MISSING": 78
+      },
+      "CRAWFORDVILLE": {
+        "MISSING": 1
+      },
+      "CRESCENT CITY": {
+        "MISSING": 5
+      },
+      "CRESTVIEW": {
+        "MISSING": 22
+      },
+      "CROSS CITY": {
+        "MISSING": 4
+      },
+      "CRYSTAL RIVER": {
+        "MISSING": 11
+      },
+      "CUTLER BAY": {
+        "MISSING": 55
+      },
+      "DADE CITY": {
+        "MISSING": 12
+      },
+      "DANIA": {
+        "MISSING": 2
+      },
+      "DANIA BEACH": {
+        "MISSING": 8
+      },
+      "DAVENPORT": {
+        "MISSING": 20
+      },
+      "DAVIE": {
+        "MISSING": 17
+      },
+      "DAYTONA BEACH": {
+        "MISSING": 61
+      },
+      "DAYTONA BEACH SHORES": {
+        "MISSING": 1
+      },
+      "DE LEON SPRINGS": {
+        "MISSING": 1
+      },
+      "DE SOTO": {
+        "MISSING": 1
+      },
+      "DEBARY": {
+        "MISSING": 6
+      },
+      "DEERFIELD": {
+        "MISSING": 1
+      },
+      "DEERFIELD BCH": {
+        "MISSING": 1
+      },
+      "DEERFIELD BEACH": {
+        "MISSING": 19
+      },
+      "DEFUNIAK SPRINGS": {
+        "MISSING": 9
+      },
+      "DELAND": {
+        "MISSING": 48
+      },
+      "DELRAY BEACH": {
+        "MISSING": 50
+      },
+      "DELTONA": {
+        "MISSING": 26
+      },
+      "DESTIN": {
+        "MISSING": 7
+      },
+      "DIXIE": {
+        "MISSING": 1
+      },
+      "DORAL": {
+        "MISSING": 17
+      },
+      "DOVER": {
+        "MISSING": 3
+      },
+      "DUNDEE": {
+        "MISSING": 1
+      },
+      "DUNEDIN": {
+        "MISSING": 45
+      },
+      "DUNNELLON": {
+        "MISSING": 11
+      },
+      "DUVAL": {
+        "MISSING": 34
+      },
+      "EAST PALATKA": {
+        "MISSING": 1
+      },
+      "EATONVILLE": {
+        "MISSING": 1
+      },
+      "EDGEWATER": {
+        "MISSING": 6
+      },
+      "ELLENTON": {
+        "MISSING": 1
+      },
+      "ENGLEWOOD": {
+        "MISSING": 9
+      },
+      "ESCAMBIA": {
+        "MISSING": 16
+      },
+      "ESTERO": {
+        "MISSING": 3
+      },
+      "EUSTIS": {
+        "MISSING": 25
+      },
+      "EUTIS": {
+        "MISSING": 1
+      },
+      "FERN PARK": {
+        "MISSING": 1
+      },
+      "FERNANDINA BEACH": {
+        "MISSING": 6
+      },
+      "FLAGLER": {
+        "MISSING": 2
+      },
+      "FLAGLER BEACH": {
+        "MISSING": 1
+      },
+      "FLEMING ISLAND": {
+        "MISSING": 4
+      },
+      "FLORIDA CITY": {
+        "MISSING": 4
+      },
+      "FORT LAUDERDALE": {
+        "MISSING": 73
+      },
+      "FORT MEYERS": {
+        "MISSING": 1
+      },
+      "FORT MYERS": {
+        "MISSING": 89
+      },
+      "FORT PIERCE": {
+        "MISSING": 53
+      },
+      "FORT WALTON BEACH": {
+        "MISSING": 17
+      },
+      "FORT WHITE": {
+        "MISSING": 3
+      },
+      "FRANKLIN": {
+        "MISSING": 1
+      },
+      "FRUIT COVE": {
+        "MISSING": 1
+      },
+      "FRUITLAND PARK": {
+        "MISSING": 7
+      },
+      "FT LAUDERDALE": {
+        "MISSING": 29
+      },
+      "FT MYERS": {
+        "MISSING": 3
+      },
+      "FT WALTON BEACH": {
+        "MISSING": 1
+      },
+      "FT. PIERCE": {
+        "MISSING": 1
+      },
+      "GADSDEN": {
+        "MISSING": 1
+      },
+      "GAINESVILLE": {
+        "MISSING": 63
+      },
+      "GIBSONTON": {
+        "MISSING": 2
+      },
+      "GILCHRIST": {
+        "MISSING": 2
+      },
+      "GOTHA": {
+        "MISSING": 1
+      },
+      "GOULDS": {
+        "MISSING": 1
+      },
+      "GRACEVILLE": {
+        "MISSING": 5
+      },
+      "GRAND ISLAND": {
+        "MISSING": 1
+      },
+      "GREEN COVE SPRINGS": {
+        "MISSING": 8
+      },
+      "GREENACERS": {
+        "MISSING": 1
+      },
+      "GREENACRES": {
+        "MISSING": 15
+      },
+      "GREENVILLE": {
+        "MISSING": 12
+      },
+      "GRETNA": {
+        "MISSING": 1
+      },
+      "GROVELAND": {
+        "MISSING": 5
+      },
+      "GULF": {
+        "MISSING": 1
+      },
+      "GULF BREEZE": {
+        "MISSING": 15
+      },
+      "HAINES CITY": {
+        "MISSING": 21
+      },
+      "HALEAH": {
+        "MISSING": 1
+      },
+      "HALLANDALE": {
+        "MISSING": 2
+      },
+      "HALLANDALE BEACH": {
+        "MISSING": 14
+      },
+      "HAMILTON": {
+        "MISSING": 1
+      },
+      "HAMPTON": {
+        "MISSING": 1
+      },
+      "HARDEE": {
+        "MISSING": 1
+      },
+      "HARMONY": {
+        "MISSING": 1
+      },
+      "HASTINGS": {
+        "MISSING": 1
+      },
+      "HAVANA": {
+        "MISSING": 10
+      },
+      "HAVERHILL": {
+        "MISSING": 4
+      },
+      "HEATHROW": {
+        "MISSING": 1
+      },
+      "HENDRY": {
+        "MISSING": 2
+      },
+      "HERNANDO": {
+        "MISSING": 8
+      },
+      "HIALEAH": {
+        "MISSING": 304
+      },
+      "HIALEAH GARDENS": {
+        "MISSING": 20
+      },
+      "HIGH SPRINGS": {
+        "MISSING": 5
+      },
+      "HIGHLANDS": {
+        "MISSING": 5
+      },
+      "HILLIARD": {
+        "MISSING": 6
+      },
+      "HILLSBOROUGH": {
+        "MISSING": 30
+      },
+      "HOBE SOUND": {
+        "MISSING": 7
+      },
+      "HOLIDAY": {
+        "MISSING": 4
+      },
+      "HOLLISTER": {
+        "MISSING": 2
+      },
+      "HOLLY HILL": {
+        "MISSING": 11
+      },
+      "HOLLYWOOD": {
+        "MISSING": 134
+      },
+      "HOLMES": {
+        "MISSING": 1
+      },
+      "HOMESTEAD": {
+        "MISSING": 120
+      },
+      "HOMOSASSA": {
+        "MISSING": 1
+      },
+      "HUDSON": {
+        "MISSING": 23
+      },
+      "INDIALANTIC": {
+        "MISSING": 2
+      },
+      "INDIAN RIVER": {
+        "MISSING": 6
+      },
+      "INVERNESS": {
+        "MISSING": 16
+      },
+      "JACKSON": {
+        "MISSING": 4
+      },
+      "JACKSONVILLE": {
+        "MISSING": 410
+      },
+      "JACKSONVILLE BEACH": {
+        "MISSING": 4
+      },
+      "JASPER": {
+        "MISSING": 8
+      },
+      "JAX": {
+        "MISSING": 1
+      },
+      "JAY": {
+        "MISSING": 2
+      },
+      "JEFFERSON": {
+        "MISSING": 1
+      },
+      "JENNINGS": {
+        "MISSING": 5
+      },
+      "JENSEN BEACH": {
+        "MISSING": 5
+      },
+      "JUNO BEACH": {
+        "MISSING": 3
+      },
+      "JUPITER": {
+        "MISSING": 20
+      },
+      "KENDALL": {
+        "MISSING": 1
+      },
+      "KENNETH CITY": {
+        "MISSING": 10
+      },
+      "KEY LARGO": {
+        "MISSING": 4
+      },
+      "KEY WEST": {
+        "MISSING": 8
+      },
+      "KEYSTONE HEIGHTS": {
+        "MISSING": 1
+      },
+      "KISSIMMEE": {
+        "MISSING": 106
+      },
+      "LABELLE": {
+        "MISSING": 6
+      },
+      "LADY LAKE": {
+        "MISSING": 17
+      },
+      "LAFAYETTE": {
+        "MISSING": 1
+      },
+      "LAKE": {
+        "MISSING": 17
+      },
+      "LAKE ALFRED": {
+        "MISSING": 6
+      },
+      "LAKE CITY": {
+        "MISSING": 32
+      },
+      "LAKE CLARKE SHORES": {
+        "MISSING": 1
+      },
+      "LAKE MARY": {
+        "MISSING": 19
+      },
+      "LAKE PARK": {
+        "MISSING": 13
+      },
+      "LAKE PLACID": {
+        "MISSING": 12
+      },
+      "LAKE WALES": {
+        "MISSING": 14
+      },
+      "LAKE WORTH": {
+        "MISSING": 61
+      },
+      "LAKE WORTH BEACH": {
+        "MISSING": 5
+      },
+      "LAKELAND": {
+        "MISSING": 107
+      },
+      "LAKEWOOD RANCH": {
+        "MISSING": 1
+      },
+      "LAND O LAKES": {
+        "MISSING": 17
+      },
+      "LAND O'LAKES": {
+        "MISSING": 1
+      },
+      "LANTANA": {
+        "MISSING": 19
+      },
+      "LARGO": {
+        "MISSING": 60
+      },
+      "LAUDERDALE LAKES": {
+        "MISSING": 24
+      },
+      "LAUDERHILL": {
+        "MISSING": 61
+      },
+      "LAWTEY": {
+        "MISSING": 2
+      },
+      "LECANTO": {
+        "MISSING": 18
+      },
+      "LEE": {
+        "MISSING": 21
+      },
+      "LEESBURG": {
+        "MISSING": 42
+      },
+      "LEHIGH ACRES": {
+        "MISSING": 47
+      },
+      "LEON": {
+        "MISSING": 8
+      },
+      "LEVY": {
+        "MISSING": 1
+      },
+      "LIGHTHOUSE POINT": {
+        "MISSING": 1
+      },
+      "LITHIA": {
+        "MISSING": 6
+      },
+      "LIVE OAK": {
+        "MISSING": 13
+      },
+      "LONGWOOD": {
+        "MISSING": 23
+      },
+      "LOXAHATCHEE": {
+        "MISSING": 12
+      },
+      "LUTZ": {
+        "MISSING": 24
+      },
+      "LYNN HAVEN": {
+        "MISSING": 5
+      },
+      "MACCLENNY": {
+        "MISSING": 5
+      },
+      "MADEIRA BEACH": {
+        "MISSING": 1
+      },
+      "MADISON": {
+        "MISSING": 24
+      },
+      "MAITLAND": {
+        "MISSING": 21
+      },
+      "MANATEE": {
+        "MISSING": 12
+      },
+      "MANGONIA PARK": {
+        "MISSING": 1
+      },
+      "MARATHON": {
+        "MISSING": 2
+      },
+      "MARGATE": {
+        "MISSING": 46
+      },
+      "MARIANNA": {
+        "MISSING": 13
+      },
+      "MARION": {
+        "MISSING": 11
+      },
+      "MARTIN": {
+        "MISSING": 6
+      },
+      "MARY ESTHER": {
+        "MISSING": 1
+      },
+      "MASCOTTE": {
+        "MISSING": 2
+      },
+      "MAYO": {
+        "MISSING": 5
+      },
+      "MEDLEY": {
+        "MISSING": 2
+      },
+      "MELBOURNE": {
+        "MISSING": 58
+      },
+      "MERRITT ISLAND": {
+        "MISSING": 42
+      },
+      "MIAMI": {
+        "MISSING": 1512
+      },
+      "MIAMI BEACH": {
+        "MISSING": 17
+      },
+      "MIAMI GARDENS": {
+        "MISSING": 77
+      },
+      "MIAMI LAKES": {
+        "MISSING": 45
+      },
+      "MIAMI SHORES": {
+        "MISSING": 1
+      },
+      "MIAMI SPRINGS": {
+        "MISSING": 12
+      },
+      "MIAMI-DADE": {
+        "MISSING": 34,
+        "UNKNOWN": 14,
+        "AMBIGUOUS": 4,
+        "PROVISIONAL": 2
+      },
+      "MIAMIDADE": {
+        "MISSING": 1
+      },
+      "MIDDLEBURG": {
+        "MISSING": 10
+      },
+      "MIDWAY": {
+        "MISSING": 4
+      },
+      "MILTON": {
+        "MISSING": 8
+      },
+      "MINNEOLA": {
+        "MISSING": 6
+      },
+      "MIRAMAR": {
+        "MISSING": 72
+      },
+      "MIRAMAR BEACH": {
+        "MISSING": 3
+      },
+      "MONROE": {
+        "MISSING": 2
+      },
+      "MONTICELLO": {
+        "MISSING": 15
+      },
+      "MONTVERDE": {
+        "MISSING": 2
+      },
+      "MOUNT DORA": {
+        "MISSING": 19
+      },
+      "MULBERRY": {
+        "MISSING": 3
+      },
+      "N FT MYERS": {
+        "MISSING": 1
+      },
+      "N LAUDERDALE": {
+        "MISSING": 3
+      },
+      "N MIAMI BEACH": {
+        "MISSING": 1
+      },
+      "NAPLES": {
+        "MISSING": 78
+      },
+      "NASSAU": {
+        "MISSING": 2
+      },
+      "NAVARRE": {
+        "MISSING": 5
+      },
+      "NE PALM BAY": {
+        "MISSING": 1
+      },
+      "NEW PORT RICHEY": {
+        "MISSING": 67
+      },
+      "NEW SMYRNA": {
+        "MISSING": 1
+      },
+      "NEW SMYRNA BEACH": {
+        "MISSING": 17
+      },
+      "NEWBERRY": {
+        "MISSING": 4
+      },
+      "NICEVILLE": {
+        "MISSING": 5
+      },
+      "NOKOMIS": {
+        "MISSING": 6
+      },
+      "NORTH BAY VILLAGE": {
+        "MISSING": 2
+      },
+      "NORTH FORT MYERS": {
+        "MISSING": 7
+      },
+      "NORTH LAUDERDALE": {
+        "MISSING": 16
+      },
+      "NORTH MIAMI": {
+        "MISSING": 55
+      },
+      "NORTH MIAMI BEACH": {
+        "MISSING": 42
+      },
+      "NORTH PALM BEACH": {
+        "MISSING": 7
+      },
+      "NORTH PORT": {
+        "MISSING": 14
+      },
+      "OAKLAND": {
+        "MISSING": 1
+      },
+      "OAKLAND PARK": {
+        "MISSING": 24
+      },
+      "OCALA": {
+        "MISSING": 112
+      },
+      "OCEAN BREEZE": {
+        "MISSING": 1
+      },
+      "OCEAN RIDGE": {
+        "MISSING": 1
+      },
+      "OCKLAWAHA": {
+        "MISSING": 4
+      },
+      "OCOEE": {
+        "MISSING": 27
+      },
+      "ODESSA": {
+        "MISSING": 1
+      },
+      "OKALOOSA": {
+        "MISSING": 8
+      },
+      "OKEECHOBEE": {
+        "MISSING": 7
+      },
+      "OLDSMAR": {
+        "MISSING": 5
+      },
+      "OPA LOCKA": {
+        "MISSING": 16
+      },
+      "ORANGE": {
+        "MISSING": 37
+      },
+      "ORANGE CITY": {
+        "MISSING": 14
+      },
+      "ORANGE PARK": {
+        "MISSING": 40
+      },
+      "ORLANDO": {
+        "MISSING": 319
+      },
+      "ORMOND BEACH": {
+        "MISSING": 37
+      },
+      "OSCEOLA": {
+        "MISSING": 10
+      },
+      "OVIEDO": {
+        "MISSING": 19
+      },
+      "OXFORD": {
+        "MISSING": 4
+      },
+      "PACE": {
+        "MISSING": 2
+      },
+      "PAHOKEE": {
+        "MISSING": 3
+      },
+      "PALATKA": {
+        "MISSING": 13
+      },
+      "PALM BAY": {
+        "MISSING": 146
+      },
+      "PALM BEACH": {
+        "MISSING": 56
+      },
+      "PALM BEACH GARDENS": {
+        "MISSING": 25
+      },
+      "PALM CITY": {
+        "MISSING": 5
+      },
+      "PALM COAST": {
+        "MISSING": 56
+      },
+      "PALM HARBOR": {
+        "MISSING": 41
+      },
+      "PALM SPRINGS": {
+        "MISSING": 9
+      },
+      "PALMETTO": {
+        "MISSING": 8
+      },
+      "PALMETTO BAY": {
+        "MISSING": 15
+      },
+      "PANAMA CITY": {
+        "MISSING": 35
+      },
+      "PANAMA CITY BEACH": {
+        "MISSING": 7
+      },
+      "PARKLAND": {
+        "MISSING": 4
+      },
+      "PARRISH": {
+        "MISSING": 4
+      },
+      "PASCO": {
+        "MISSING": 18
+      },
+      "PEMBROKE PARK": {
+        "MISSING": 4
+      },
+      "PEMBROKE PINES": {
+        "MISSING": 57
+      },
+      "PENNEY FARMS": {
+        "MISSING": 2
+      },
+      "PENSACOLA": {
+        "MISSING": 103
+      },
+      "PERRY": {
+        "MISSING": 7
+      },
+      "PINECREST": {
+        "MISSING": 1
+      },
+      "PINELLAS": {
+        "MISSING": 65
+      },
+      "PINELLAS PARK": {
+        "MISSING": 39
+      },
+      "PINETTA": {
+        "MISSING": 1
+      },
+      "PLANT CITY": {
+        "MISSING": 34
+      },
+      "PLANTATION": {
+        "MISSING": 54
+      },
+      "POINCIANA": {
+        "MISSING": 3
+      },
+      "POLK": {
+        "MISSING": 25
+      },
+      "POLK CITY": {
+        "MISSING": 1
+      },
+      "POMONA PARK": {
+        "MISSING": 3
+      },
+      "POMPANO BEACH": {
+        "MISSING": 60
+      },
+      "PONTE VEDRA": {
+        "MISSING": 1
+      },
+      "PONTE VEDRA BEACH": {
+        "MISSING": 2
+      },
+      "PORT CHARLOTTE": {
+        "MISSING": 50
+      },
+      "PORT ORANGE": {
+        "MISSING": 22
+      },
+      "PORT RICHEY": {
+        "MISSING": 15
+      },
+      "PORT SAINT JOE": {
+        "MISSING": 1
+      },
+      "PORT SAINT LUCIE": {
+        "MISSING": 87
+      },
+      "PORT ST JOE": {
+        "MISSING": 10
+      },
+      "PORT ST LUCIE": {
+        "MISSING": 160
+      },
+      "PORT ST. JOE": {
+        "MISSING": 1
+      },
+      "PORT ST. LUCIE": {
+        "MISSING": 4
+      },
+      "PORT ST. LUCIE WEST": {
+        "MISSING": 1
+      },
+      "PUNTA GORDA": {
+        "MISSING": 20
+      },
+      "PUTNAM": {
+        "MISSING": 3
+      },
+      "QUINCY": {
+        "MISSING": 14
+      },
+      "REDDICK": {
+        "MISSING": 1
+      },
+      "RIVERVIEW": {
+        "MISSING": 46
+      },
+      "RIVIERA BEACH": {
+        "MISSING": 23
+      },
+      "ROCKLEDGE": {
+        "MISSING": 30
+      },
+      "ROTONDA WEST": {
+        "MISSING": 2
+      },
+      "ROYAL PALM BEACH": {
+        "MISSING": 34
+      },
+      "RUSKIN": {
+        "MISSING": 27
+      },
+      "SAFETY HARBOR": {
+        "MISSING": 12
+      },
+      "SAINT AUGUSTINE": {
+        "MISSING": 5
+      },
+      "SAINT CLOUD": {
+        "MISSING": 26
+      },
+      "SAINT JOHNS": {
+        "MISSING": 1
+      },
+      "SAINT PETERSBURG": {
+        "MISSING": 38
+      },
+      "SANDERSON": {
+        "MISSING": 2
+      },
+      "SANFORD": {
+        "MISSING": 31
+      },
+      "SANTA ROSA": {
+        "MISSING": 4
+      },
+      "SARASOTA": {
+        "MISSING": 164
+      },
+      "SATELLITE BEACH": {
+        "MISSING": 4
+      },
+      "SEBASTIAN": {
+        "MISSING": 9
+      },
+      "SEBRING": {
+        "MISSING": 29
+      },
+      "SEFFNER": {
+        "MISSING": 14
+      },
+      "SEMINOLE": {
+        "MISSING": 32
+      },
+      "SINGER ISLAND": {
+        "MISSING": 1
+      },
+      "SORRENTO": {
+        "MISSING": 4
+      },
+      "SOUTH DAYTONA": {
+        "MISSING": 7
+      },
+      "SOUTH MIAMI": {
+        "MISSING": 4
+      },
+      "SOUTH PASADENA": {
+        "MISSING": 9
+      },
+      "SOUTHPORT": {
+        "MISSING": 1
+      },
+      "SOUTHWEST RANCHES": {
+        "MISSING": 7
+      },
+      "SPRING HILL": {
+        "MISSING": 63
+      },
+      "ST AUGUSTINE": {
+        "MISSING": 24
+      },
+      "ST CLOUD": {
+        "MISSING": 2
+      },
+      "ST PETERSBURG": {
+        "MISSING": 163
+      },
+      "ST. AUGUSTINE": {
+        "MISSING": 1
+      },
+      "ST. CLOUD": {
+        "MISSING": 1
+      },
+      "ST. JOHNS": {
+        "MISSING": 8
+      },
+      "ST. LUCIE": {
+        "MISSING": 9
+      },
+      "ST. PETERSBURG": {
+        "MISSING": 2
+      },
+      "STARKE": {
+        "MISSING": 10
+      },
+      "STUART": {
+        "MISSING": 42
+      },
+      "SUMMERFIELD": {
+        "MISSING": 4
+      },
+      "SUMTER": {
+        "MISSING": 4
+      },
+      "SUN CITY CENTER": {
+        "MISSING": 10
+      },
+      "SUNRISE": {
+        "MISSING": 59
+      },
+      "SUWANNEE": {
+        "MISSING": 3
+      },
+      "SW RANCHES": {
+        "MISSING": 1
+      },
+      "TALLAHASSEE": {
+        "MISSING": 72
+      },
+      "TAMARAC": {
+        "MISSING": 45
+      },
+      "TAMPA": {
+        "MISSING": 490
+      },
+      "TARPON SPRINGS": {
+        "MISSING": 22
+      },
+      "TAVARES": {
+        "MISSING": 16
+      },
+      "TAVERNIER": {
+        "MISSING": 6
+      },
+      "TAYLOR": {
+        "MISSING": 1
+      },
+      "TEMPLE TERRACE": {
+        "MISSING": 15
+      },
+      "TEQUESTA": {
+        "MISSING": 5
+      },
+      "THE VILLAGES": {
+        "MISSING": 10
+      },
+      "THONOTOSASSA": {
+        "MISSING": 10
+      },
+      "TITUSVILLE": {
+        "MISSING": 26
+      },
+      "TRENTON": {
+        "MISSING": 2
+      },
+      "TRINITY": {
+        "MISSING": 5
+      },
+      "UMATILLA": {
+        "MISSING": 1
+      },
+      "VALRICO": {
+        "MISSING": 22
+      },
+      "VENICE": {
+        "MISSING": 46
+      },
+      "VERNON": {
+        "MISSING": 3
+      },
+      "VERO BEACH": {
+        "MISSING": 60
+      },
+      "VIERA": {
+        "MISSING": 4
+      },
+      "VILLAGE OF PALMETTO BAY": {
+        "MISSING": 2
+      },
+      "VIRGINIA GARDENS": {
+        "MISSING": 1
+      },
+      "VOLUSIA": {
+        "MISSING": 29
+      },
+      "W MELBOURNE": {
+        "MISSING": 1
+      },
+      "W. MELBOURNE": {
+        "MISSING": 1
+      },
+      "W. PALM BEACH": {
+        "MISSING": 1
+      },
+      "WAKULLA": {
+        "MISSING": 1
+      },
+      "WALNUT HILL": {
+        "MISSING": 2
+      },
+      "WALTON": {
+        "MISSING": 2
+      },
+      "WASHINGTON": {
+        "MISSING": 2
+      },
+      "WAUCHULA": {
+        "MISSING": 9
+      },
+      "WEBSTER": {
+        "MISSING": 2
+      },
+      "WEEKI WACHEE": {
+        "MISSING": 5
+      },
+      "WELAKA": {
+        "MISSING": 1
+      },
+      "WELLINGTON": {
+        "MISSING": 40
+      },
+      "WESLEY CHAPEL": {
+        "MISSING": 31
+      },
+      "WEST MELBOURNE": {
+        "MISSING": 8
+      },
+      "WEST MIAMI": {
+        "MISSING": 3
+      },
+      "WEST PALM BCH": {
+        "MISSING": 5
+      },
+      "WEST PALM BEACH": {
+        "MISSING": 166
+      },
+      "WEST PARK": {
+        "MISSING": 10
+      },
+      "WESTON": {
+        "MISSING": 10
+      },
+      "WESTPALM": {
+        "MISSING": 1
+      },
+      "WILDWOOD": {
+        "MISSING": 6
+      },
+      "WILLISTON": {
+        "MISSING": 7
+      },
+      "WILTON MANORS": {
+        "MISSING": 12
+      },
+      "WIMAUMA": {
+        "MISSING": 4
+      },
+      "WINDERMERE": {
+        "MISSING": 6
+      },
+      "WINTER GARDEN": {
+        "MISSING": 17
+      },
+      "WINTER HAVEN": {
+        "MISSING": 62
+      },
+      "WINTER PARK": {
+        "MISSING": 48
+      },
+      "WINTER SPGS": {
+        "MISSING": 1
+      },
+      "WINTER SPRINGS": {
+        "MISSING": 11
+      },
+      "YALAHA": {
+        "MISSING": 2
+      },
+      "YBOR CITY": {
+        "MISSING": 1
+      },
+      "YULEE": {
+        "MISSING": 2
+      },
+      "ZELLWOOD": {
+        "MISSING": 1
+      },
+      "ZEPHYRHILLS": {
+        "MISSING": 25
+      },
+      "ZOLFO SPRINGS": {
+        "MISSING": 1
+      }
+    },
+    "coverage_by_operator": {
+      "UNKNOWN": {
+        "UNKNOWN": 50,
+        "PROVISIONAL": 5,
+        "AMBIGUOUS": 31,
+        "MISSING": 11004
+      }
+    },
+    "top_search_failure_reasons": [],
+    "top_identity_conflict_reasons": [],
+    "top_image_rejection_reasons": [],
+    "average_processing_time_seconds": 0.0,
+    "records_due_for_recheck": 0
+  },
+  "delta": {
+    "newly_verified_facility_images": 0,
+    "newly_rejected_images": 0,
+    "registry_records_written": 0
+  },
+  "notes": [
+    "No production registry write was authorized; the network pilot remained dry-run only.",
+    "Legacy VERIFIED labels without explicit acceptable display rights are counted as PROVISIONAL.",
+    "Photography is presentation-only and is not consumed by ranking or recommendation logic."
+  ]
+}
