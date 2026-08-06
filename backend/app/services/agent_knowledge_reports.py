@@ -1289,6 +1289,7 @@ def compute_supervisor_metrics(db: Session) -> Dict[str, object]:
             "stale_agents": 0,
             "expired_knowledge": 0,
             "failed_refreshes": 0,
+            "knowledge_age": 0,
             "pending_reviews": 0,
             "refresh_queue": 0,
             "refresh_success_rate": 0.0,
