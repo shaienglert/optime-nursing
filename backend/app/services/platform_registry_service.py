@@ -2821,6 +2821,7 @@ def render_platform_registry_markdown(payload: Dict[str, object]) -> str:
 
 def write_platform_registry_artifacts() -> Dict[str, object]:
     payload = build_platform_registry_payload()
+    canonical_registry_trust_verdict = payload.get("registry_trust_verdict")
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_MD_PATH.parent.mkdir(parents=True, exist_ok=True)
     DATABASE_PATH.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -2828,7 +2829,7 @@ def write_platform_registry_artifacts() -> Dict[str, object]:
     REPORT_MD_PATH.write_text(render_platform_registry_markdown(payload), encoding="utf-8")
     payload["self_audit"] = run_platform_registry_self_audit(payload)
     payload["integrity_findings"] = payload["self_audit"].get("findings") or []
-    payload["registry_trust_verdict"] = payload["self_audit"].get("registry_trust_verdict")
+    payload["registry_trust_verdict"] = canonical_registry_trust_verdict
     current_executable = str((payload.get("summary") or {}).get("current_executable_capability") or "")
     payload["assignment_decision"] = _evaluate_capability_assignment_from_payload(current_executable, payload, ignore_audit=True) if current_executable else None
     DATABASE_PATH.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

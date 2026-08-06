@@ -1,6 +1,6 @@
 # Platform Registry
 
-Generated at: `2026-08-06T05:40:39Z`
+Generated at: `2026-08-06T05:43:12Z`
 
 ## Business Progress
 
@@ -58,7 +58,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | resident_needs_intelligence | Resident Needs Intelligence | OPTIME Resident Needs Intelligence | VERIFIED | PARTIALLY_VERIFIED | PRODUCTION_READY | PARTIALLY_VERIFIED | test_evidence | provider_intelligence, knowledge_graph | assessment_experience, recommendation_decision_engine |  | 2026-08-06T05:29:18Z |
 | senior_living_research | Senior Living Research | OPTIME Senior Living Research | VERIFIED | PARTIALLY_VERIFIED | PRODUCTION_READY | PARTIALLY_VERIFIED | test_evidence | provider_intelligence, knowledge_graph | chief_ai_supervisor, knowledge_graph |  | 2026-08-06T05:29:18Z |
 | family_experience_intelligence | Family Experience Intelligence | OPTIME Family Experience Intelligence | VERIFIED | PARTIALLY_VERIFIED | PRODUCTION_READY | PARTIALLY_VERIFIED | test_evidence | knowledge_graph, narrative_intelligence | assessment_experience, recommendation_decision_engine |  | 2026-08-06T05:29:18Z |
-| assessment_experience | Assessment Experience | OPTIME Assessment Experience | VERIFIED | UNVERIFIED | PRODUCTION_READY | UNVERIFIED | implementation_evidence, runtime_evidence, test_evidence | knowledge_graph, resident_needs_intelligence, family_experience_intelligence | recommendation_decision_engine, canonical_universe |  | 2026-08-06T05:40:41Z |
+| assessment_experience | Assessment Experience | OPTIME Assessment Experience | VERIFIED | UNVERIFIED | PRODUCTION_READY | UNVERIFIED | implementation_evidence, runtime_evidence, test_evidence | knowledge_graph, resident_needs_intelligence, family_experience_intelligence | recommendation_decision_engine, canonical_universe |  | 2026-08-06T05:43:14Z |
 | recommendation_decision_engine | Recommendation Decision Engine | OPTIME Recommendation Engine | IMPLEMENTED | PARTIALLY_VERIFIED | BLOCKED | PARTIALLY_VERIFIED | runtime_evidence | canonical_universe, knowledge_graph, assessment_experience | family_experience_intelligence, chief_ai_supervisor | Upstream canonical universe and assessment readiness remain incomplete for full production confidence. | 2026-08-05T10:04:15Z |
 | chief_ai_supervisor | Chief AI Supervisor | OPTIME Platform Governance | VERIFIED | PARTIALLY_VERIFIED | BLOCKED | PARTIALLY_VERIFIED | runtime_evidence | constitution_governance, platform_registry, report_archive, runtime_sync, remediation_policy_engine | daily_system_health_report, platform_registry, remediation_policy_engine | Owner email delivery remains blocked by missing SMTP configuration. | 2026-08-06T05:37:03Z |
 | remediation_policy_engine | Remediation Policy Engine | OPTIME Platform Governance | VERIFIED | VERIFIED | PRODUCTION_READY | VERIFIED |  | constitution_governance | chief_ai_supervisor, daily_system_health_report |  | 2026-08-05T12:11:51Z |
@@ -66,7 +66,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | report_archive | Report Archive | OPTIME Platform Operations | VERIFIED | PARTIALLY_VERIFIED | PRODUCTION_READY | PARTIALLY_VERIFIED | test_evidence | constitution_governance | daily_system_health_report, chief_ai_supervisor |  | 2026-08-05T10:04:16Z |
 | runtime_sync | Runtime Sync | OPTIME Platform Operations | VERIFIED | VERIFIED | PRODUCTION_READY | VERIFIED |  | constitution_governance | chief_ai_supervisor, daily_system_health_report |  | 2026-08-05T12:11:51Z |
 | daily_system_health_report | Daily System Health Report | OPTIME Chief AI Supervisor | VERIFIED | PARTIALLY_VERIFIED | BLOCKED | PARTIALLY_VERIFIED | runtime_evidence | chief_ai_supervisor, report_archive | chief_ai_supervisor, email_delivery | SMTP delivery is blocked by missing required environment variables. | 2026-08-05T12:11:51Z |
-| platform_registry | Platform Registry | OPTIME Platform Governance | IMPLEMENTED | VERIFIED | PRODUCTION_READY | VERIFIED |  | constitution_governance | chief_ai_supervisor |  | 2026-08-06T05:37:12Z |
+| platform_registry | Platform Registry | OPTIME Platform Governance | IMPLEMENTED | VERIFIED | PRODUCTION_READY | VERIFIED |  | constitution_governance | chief_ai_supervisor |  | 2026-08-06T05:42:59Z |
 
 ## Capability Summary
 
@@ -192,7 +192,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | resident_needs_intelligence | PARTIALLY_VERIFIED | NO_REGRESSION | 2026-08-06T05:29:18Z | OPTIME Resident Needs Intelligence | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | test_evidence |
 | senior_living_research | PARTIALLY_VERIFIED | NO_REGRESSION | 2026-08-06T05:29:18Z | OPTIME Senior Living Research | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | test_evidence |
 | family_experience_intelligence | PARTIALLY_VERIFIED | NO_REGRESSION | 2026-08-06T05:29:18Z | OPTIME Family Experience Intelligence | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | test_evidence |
-| assessment_experience | UNVERIFIED | NO_REGRESSION | 2026-08-06T05:40:41Z | OPTIME Assessment Experience | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | implementation_evidence, runtime_evidence, test_evidence |
+| assessment_experience | UNVERIFIED | NO_REGRESSION | 2026-08-06T05:43:14Z | OPTIME Assessment Experience | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | implementation_evidence, runtime_evidence, test_evidence |
 | recommendation_decision_engine | PARTIALLY_VERIFIED | NO_REGRESSION | 2026-08-05T10:04:15Z | OPTIME Recommendation Engine | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | runtime_evidence |
 | chief_ai_supervisor | PARTIALLY_VERIFIED | NO_REGRESSION | 2026-08-06T05:37:03Z | OPTIME Platform Governance | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | runtime_evidence |
 | remediation_policy_engine | VERIFIED | NO_REGRESSION | 2026-08-05T12:11:51Z | OPTIME Platform Governance | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present |  |
@@ -200,7 +200,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | report_archive | PARTIALLY_VERIFIED | NO_REGRESSION | 2026-08-05T10:04:16Z | OPTIME Platform Operations | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | test_evidence |
 | runtime_sync | VERIFIED | NO_REGRESSION | 2026-08-05T12:11:51Z | OPTIME Platform Operations | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present |  |
 | daily_system_health_report | PARTIALLY_VERIFIED | NO_REGRESSION | 2026-08-05T12:11:51Z | OPTIME Chief AI Supervisor | deterministic acceptance contract evaluation | implementation evidence present; runtime evidence present; verification evidence present | runtime_evidence |
-| platform_registry | VERIFIED | NO_REGRESSION | 2026-08-06T05:37:12Z | OPTIME Platform Governance | deterministic acceptance contract evaluation | self audit PASS; zero circular required dependencies; zero missing capabilities; assignment gate operational |  |
+| platform_registry | VERIFIED | NO_REGRESSION | 2026-08-06T05:42:59Z | OPTIME Platform Governance | deterministic acceptance contract evaluation | self audit PASS; zero circular required dependencies; zero missing capabilities; assignment gate operational |  |
 
 ## Registry Trust Derivation
 
@@ -220,23 +220,23 @@ Generated at: `2026-08-06T05:40:39Z`
 
 | Claim ID | Field | Value | Source Type | Derivation | Last Verified |
 | --- | --- | --- | --- | --- | --- |
-| platform:capability_count | capability_count | 28 | REPOSITORY_DERIVED | len(CAPABILITY_CATALOG) | 2026-08-06T05:37:12Z |
-| platform:objective_count | objective_count | 6 | REPOSITORY_DERIVED | len(OBJECTIVE_CATALOG) | 2026-08-06T05:37:12Z |
-| platform:current_active_objective | current_active_objective | launch_nevada | OWNER_DECLARED | exactly one objective with activation_status = ACTIVE | 2026-08-06T05:40:41Z |
-| platform:current_executable_capability | current_executable_capability | source_intelligence | REPOSITORY_DERIVED | ACTIVE objective -> valid milestones -> verified dependencies -> first executable incomplete capability | 2026-08-06T05:37:12Z |
-| platform:current_blocker | current_blocker | source_intelligence | REPOSITORY_DERIVED | derived from current executable capability and unmet required dependencies | 2026-08-06T05:37:12Z |
-| platform:current_assigned_agent | current_assigned_agent | OPTIME Source Intelligence | REPOSITORY_DERIVED | canonical owner/agent mapping of current executable capability | 2026-08-06T05:37:12Z |
-| platform:current_task | current_task | Complete the remaining approved source integrations and unblock market build coverage. | REPOSITORY_DERIVED | next_action of current executable capability | 2026-08-06T05:37:12Z |
-| platform:registry_trust_verdict | registry_trust_verdict | REGISTRY_TRUSTED | REPOSITORY_DERIVED | self audit findings + evidence contract completeness + assignment gate integrity + report agreement + acceptance contracts | 2026-08-06T05:37:12Z |
-| platform:missing_capability_reference_count | missing_capability_reference_count |  | REPOSITORY_DERIVED | count(self_audit.findings where finding_type=MISSING_CAPABILITY_REFERENCE) | 2026-08-06T05:37:12Z |
-| platform:duplicate_capability_count | duplicate_capability_count |  | REPOSITORY_DERIVED | count(self_audit.findings where finding_type=DUPLICATE_CAPABILITY_ID) | 2026-08-06T05:37:12Z |
-| platform:duplicate_canonical_owner_count | duplicate_canonical_owner_count |  | REPOSITORY_DERIVED | count(self_audit.findings where finding_type=DUPLICATE_CANONICAL_RESPONSIBILITY) | 2026-08-06T05:37:12Z |
-| platform:circular_required_dependency_count | circular_required_dependency_count |  | REPOSITORY_DERIVED | count(self_audit.findings where finding_type=CIRCULAR_REQUIRED_DEPENDENCY) | 2026-08-06T05:37:12Z |
-| platform:integrity_finding_count | integrity_finding_count |  | REPOSITORY_DERIVED | len(self_audit.findings) | 2026-08-06T05:37:12Z |
+| platform:capability_count | capability_count | 28 | REPOSITORY_DERIVED | len(CAPABILITY_CATALOG) | 2026-08-06T05:42:59Z |
+| platform:objective_count | objective_count | 6 | REPOSITORY_DERIVED | len(OBJECTIVE_CATALOG) | 2026-08-06T05:42:59Z |
+| platform:current_active_objective | current_active_objective | launch_nevada | OWNER_DECLARED | exactly one objective with activation_status = ACTIVE | 2026-08-06T05:43:14Z |
+| platform:current_executable_capability | current_executable_capability | source_intelligence | REPOSITORY_DERIVED | ACTIVE objective -> valid milestones -> verified dependencies -> first executable incomplete capability | 2026-08-06T05:42:59Z |
+| platform:current_blocker | current_blocker | source_intelligence | REPOSITORY_DERIVED | derived from current executable capability and unmet required dependencies | 2026-08-06T05:42:59Z |
+| platform:current_assigned_agent | current_assigned_agent | OPTIME Source Intelligence | REPOSITORY_DERIVED | canonical owner/agent mapping of current executable capability | 2026-08-06T05:42:59Z |
+| platform:current_task | current_task | Complete the remaining approved source integrations and unblock market build coverage. | REPOSITORY_DERIVED | next_action of current executable capability | 2026-08-06T05:42:59Z |
+| platform:registry_trust_verdict | registry_trust_verdict | REGISTRY_TRUSTED | REPOSITORY_DERIVED | self audit findings + evidence contract completeness + assignment gate integrity + report agreement + acceptance contracts | 2026-08-06T05:42:59Z |
+| platform:missing_capability_reference_count | missing_capability_reference_count |  | REPOSITORY_DERIVED | count(self_audit.findings where finding_type=MISSING_CAPABILITY_REFERENCE) | 2026-08-06T05:42:59Z |
+| platform:duplicate_capability_count | duplicate_capability_count |  | REPOSITORY_DERIVED | count(self_audit.findings where finding_type=DUPLICATE_CAPABILITY_ID) | 2026-08-06T05:42:59Z |
+| platform:duplicate_canonical_owner_count | duplicate_canonical_owner_count |  | REPOSITORY_DERIVED | count(self_audit.findings where finding_type=DUPLICATE_CANONICAL_RESPONSIBILITY) | 2026-08-06T05:42:59Z |
+| platform:circular_required_dependency_count | circular_required_dependency_count |  | REPOSITORY_DERIVED | count(self_audit.findings where finding_type=CIRCULAR_REQUIRED_DEPENDENCY) | 2026-08-06T05:42:59Z |
+| platform:integrity_finding_count | integrity_finding_count |  | REPOSITORY_DERIVED | len(self_audit.findings) | 2026-08-06T05:42:59Z |
 | capability:constitution_governance:implementation_status | implementation_status | VERIFIED | REPOSITORY_DERIVED | derived from capability contract for constitution_governance | 2026-08-02T10:11:53Z |
 | capability:constitution_governance:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for constitution_governance | 2026-08-02T10:11:53Z |
 | capability:constitution_governance:production_readiness | production_readiness | PRODUCTION_READY | REPOSITORY_DERIVED | derived from capability contract for constitution_governance | 2026-08-02T10:11:53Z |
-| capability:constitution_governance:canonical_owner | canonical_owner | OPTIME Governance | REPOSITORY_DERIVED | derived from capability contract for constitution_governance | 2026-08-06T05:40:41Z |
+| capability:constitution_governance:canonical_owner | canonical_owner | OPTIME Governance | REPOSITORY_DERIVED | derived from capability contract for constitution_governance | 2026-08-06T05:43:14Z |
 | capability:constitution_governance:dependency_declarations | dependency_declarations | {'required_build_dependencies': [], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['source_intelligence', 'market_builder', 'canonical_universe', 'government_identity', 'media_intelligence', 'knowledge_graph', 'data_quality_trust', 'provider_intelligence', 'clinical_knowledge', 'clinical_evidence', 'narrative_intelligence', 'nutrition_intelligence', 'outcome_learning', 'resident_needs_intelligence', 'senior_living_research', 'family_experience_intelligence', 'assessment_experience', 'recommendation_decision_engine', 'chief_ai_supervisor', 'remediation_policy_engine', 'daily_system_health_report', 'email_delivery', 'report_archive', 'runtime_sync', 'platform_registry'], 'monitoring_relationships': []} | REPOSITORY_DERIVED | derived from capability contract for constitution_governance | 2026-08-02T10:11:53Z |
 | capability:constitution_governance:assigned_agent | assigned_agent | OPTIME Governance | RUNTIME_PROVEN | derived from capability contract for constitution_governance | 2026-08-02T10:11:53Z |
 | capability:constitution_governance:runtime_availability | runtime_availability | 2026-07-20T13:42:18Z | RUNTIME_PROVEN | derived from capability contract for constitution_governance | 2026-08-02T10:11:53Z |
@@ -245,7 +245,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | capability:canonical_universe:implementation_status | implementation_status | IMPLEMENTED | REPOSITORY_DERIVED | derived from capability contract for canonical_universe | 2026-08-05T12:11:52Z |
 | capability:canonical_universe:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for canonical_universe | 2026-08-05T12:11:52Z |
 | capability:canonical_universe:production_readiness | production_readiness | BLOCKED | REPOSITORY_DERIVED | derived from capability contract for canonical_universe | 2026-08-05T12:11:52Z |
-| capability:canonical_universe:canonical_owner | canonical_owner | OPTIME Canonical Universe | REPOSITORY_DERIVED | derived from capability contract for canonical_universe | 2026-08-06T05:40:41Z |
+| capability:canonical_universe:canonical_owner | canonical_owner | OPTIME Canonical Universe | REPOSITORY_DERIVED | derived from capability contract for canonical_universe | 2026-08-06T05:43:14Z |
 | capability:canonical_universe:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['market_builder', 'source_intelligence'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['government_identity', 'media_intelligence', 'assessment_experience', 'recommendation_decision_engine', 'chief_ai_supervisor'], 'monitoring_relationships': []} | REPOSITORY_DERIVED | derived from capability contract for canonical_universe | 2026-08-05T12:11:52Z |
 | capability:canonical_universe:assigned_agent | assigned_agent | OPTIME Canonical Universe | RUNTIME_PROVEN | derived from capability contract for canonical_universe | 2026-08-05T12:11:52Z |
 | capability:canonical_universe:runtime_availability | runtime_availability | 2026-08-05T12:11:51Z | RUNTIME_PROVEN | derived from capability contract for canonical_universe | 2026-08-05T12:11:52Z |
@@ -254,7 +254,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | capability:data_quality_trust:implementation_status | implementation_status | IMPLEMENTED | REPOSITORY_DERIVED | derived from capability contract for data_quality_trust | 2026-08-06T05:29:18Z |
 | capability:data_quality_trust:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for data_quality_trust | 2026-08-06T05:29:18Z |
 | capability:data_quality_trust:production_readiness | production_readiness | PRODUCTION_READY | REPOSITORY_DERIVED | derived from capability contract for data_quality_trust | 2026-08-06T05:29:18Z |
-| capability:data_quality_trust:canonical_owner | canonical_owner | OPTIME Data Quality | REPOSITORY_DERIVED | derived from capability contract for data_quality_trust | 2026-08-06T05:40:41Z |
+| capability:data_quality_trust:canonical_owner | canonical_owner | OPTIME Data Quality | REPOSITORY_DERIVED | derived from capability contract for data_quality_trust | 2026-08-06T05:43:14Z |
 | capability:data_quality_trust:dependency_declarations | dependency_declarations | {'required_build_dependencies': [], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['chief_ai_supervisor', 'recommendation_decision_engine'], 'monitoring_relationships': ['source_intelligence']} | REPOSITORY_DERIVED | derived from capability contract for data_quality_trust | 2026-08-06T05:29:18Z |
 | capability:data_quality_trust:assigned_agent | assigned_agent | data_quality | RUNTIME_PROVEN | derived from capability contract for data_quality_trust | 2026-08-06T05:29:18Z |
 | capability:data_quality_trust:runtime_availability | runtime_availability | 2026-07-18T04:16:33Z | RUNTIME_PROVEN | derived from capability contract for data_quality_trust | 2026-08-06T05:29:18Z |
@@ -263,7 +263,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | capability:matching_improvement:implementation_status | implementation_status | VERIFIED | REPOSITORY_DERIVED | derived from capability contract for matching_improvement | 2026-08-06T05:29:18Z |
 | capability:matching_improvement:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for matching_improvement | 2026-08-06T05:29:18Z |
 | capability:matching_improvement:production_readiness | production_readiness | PRODUCTION_READY | REPOSITORY_DERIVED | derived from capability contract for matching_improvement | 2026-08-06T05:29:18Z |
-| capability:matching_improvement:canonical_owner | canonical_owner | OPTIME Matching Improvement | REPOSITORY_DERIVED | derived from capability contract for matching_improvement | 2026-08-06T05:40:41Z |
+| capability:matching_improvement:canonical_owner | canonical_owner | OPTIME Matching Improvement | REPOSITORY_DERIVED | derived from capability contract for matching_improvement | 2026-08-06T05:43:14Z |
 | capability:matching_improvement:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['knowledge_graph', 'data_quality_trust'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['narrative_intelligence', 'outcome_learning'], 'monitoring_relationships': []} | REPOSITORY_DERIVED | derived from capability contract for matching_improvement | 2026-08-06T05:29:18Z |
 | capability:matching_improvement:assigned_agent | assigned_agent | matching_improvement | RUNTIME_PROVEN | derived from capability contract for matching_improvement | 2026-08-06T05:29:18Z |
 | capability:matching_improvement:runtime_availability | runtime_availability | 2026-07-20T22:17:42Z | RUNTIME_PROVEN | derived from capability contract for matching_improvement | 2026-08-06T05:29:18Z |
@@ -272,7 +272,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | capability:provider_intelligence:implementation_status | implementation_status | VERIFIED | REPOSITORY_DERIVED | derived from capability contract for provider_intelligence | 2026-08-06T05:29:18Z |
 | capability:provider_intelligence:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for provider_intelligence | 2026-08-06T05:29:18Z |
 | capability:provider_intelligence:production_readiness | production_readiness | PRODUCTION_READY | REPOSITORY_DERIVED | derived from capability contract for provider_intelligence | 2026-08-06T05:29:18Z |
-| capability:provider_intelligence:canonical_owner | canonical_owner | OPTIME Provider Intelligence | REPOSITORY_DERIVED | derived from capability contract for provider_intelligence | 2026-08-06T05:40:41Z |
+| capability:provider_intelligence:canonical_owner | canonical_owner | OPTIME Provider Intelligence | REPOSITORY_DERIVED | derived from capability contract for provider_intelligence | 2026-08-06T05:43:14Z |
 | capability:provider_intelligence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['data_quality_trust', 'knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['canonical_universe', 'recommendation_decision_engine', 'assessment_experience', 'activities_intelligence', 'nutrition_intelligence', 'clinical_knowledge', 'resident_needs_intelligence', 'senior_living_research', 'narrative_intelligence'], 'monitoring_relationships': []} | REPOSITORY_DERIVED | derived from capability contract for provider_intelligence | 2026-08-06T05:29:18Z |
 | capability:provider_intelligence:assigned_agent | assigned_agent | provider_intelligence | RUNTIME_PROVEN | derived from capability contract for provider_intelligence | 2026-08-06T05:29:18Z |
 | capability:provider_intelligence:runtime_availability | runtime_availability | 2026-07-18T16:46:28Z | RUNTIME_PROVEN | derived from capability contract for provider_intelligence | 2026-08-06T05:29:18Z |
@@ -281,7 +281,7 @@ Generated at: `2026-08-06T05:40:39Z`
 | capability:remediation_policy_engine:implementation_status | implementation_status | VERIFIED | REPOSITORY_DERIVED | derived from capability contract for remediation_policy_engine | 2026-08-05T12:11:51Z |
 | capability:remediation_policy_engine:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for remediation_policy_engine | 2026-08-05T12:11:51Z |
 | capability:remediation_policy_engine:production_readiness | production_readiness | PRODUCTION_READY | REPOSITORY_DERIVED | derived from capability contract for remediation_policy_engine | 2026-08-05T12:11:51Z |
-| capability:remediation_policy_engine:canonical_owner | canonical_owner | OPTIME Platform Governance | REPOSITORY_DERIVED | derived from capability contract for remediation_policy_engine | 2026-08-06T05:40:41Z |
+| capability:remediation_policy_engine:canonical_owner | canonical_owner | OPTIME Platform Governance | REPOSITORY_DERIVED | derived from capability contract for remediation_policy_engine | 2026-08-06T05:43:14Z |
 | capability:remediation_policy_engine:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['constitution_governance'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['chief_ai_supervisor', 'daily_system_health_report'], 'monitoring_relationships': []} | REPOSITORY_DERIVED | derived from capability contract for remediation_policy_engine | 2026-08-05T12:11:51Z |
 | capability:remediation_policy_engine:assigned_agent | assigned_agent | OPTIME Platform Governance | RUNTIME_PROVEN | derived from capability contract for remediation_policy_engine | 2026-08-05T12:11:51Z |
 | capability:remediation_policy_engine:runtime_availability | runtime_availability | 2026-07-17T21:36:30Z | RUNTIME_PROVEN | derived from capability contract for remediation_policy_engine | 2026-08-05T12:11:51Z |
@@ -290,57 +290,57 @@ Generated at: `2026-08-06T05:40:39Z`
 | capability:runtime_sync:implementation_status | implementation_status | VERIFIED | REPOSITORY_DERIVED | derived from capability contract for runtime_sync | 2026-08-05T12:11:51Z |
 | capability:runtime_sync:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for runtime_sync | 2026-08-05T12:11:51Z |
 | capability:runtime_sync:production_readiness | production_readiness | PRODUCTION_READY | REPOSITORY_DERIVED | derived from capability contract for runtime_sync | 2026-08-05T12:11:51Z |
-| capability:runtime_sync:canonical_owner | canonical_owner | OPTIME Platform Operations | REPOSITORY_DERIVED | derived from capability contract for runtime_sync | 2026-08-06T05:40:41Z |
+| capability:runtime_sync:canonical_owner | canonical_owner | OPTIME Platform Operations | REPOSITORY_DERIVED | derived from capability contract for runtime_sync | 2026-08-06T05:43:14Z |
 | capability:runtime_sync:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['constitution_governance'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['chief_ai_supervisor', 'daily_system_health_report'], 'monitoring_relationships': []} | REPOSITORY_DERIVED | derived from capability contract for runtime_sync | 2026-08-05T12:11:51Z |
 | capability:runtime_sync:assigned_agent | assigned_agent | OPTIME Platform Operations | RUNTIME_PROVEN | derived from capability contract for runtime_sync | 2026-08-05T12:11:51Z |
 | capability:runtime_sync:runtime_availability | runtime_availability | 2026-07-20T07:07:55Z | RUNTIME_PROVEN | derived from capability contract for runtime_sync | 2026-08-05T12:11:51Z |
 | capability:runtime_sync:test_coverage | test_coverage | 1 | REPOSITORY_DERIVED | derived from capability contract for runtime_sync | 2026-08-05T12:11:51Z |
 | capability:runtime_sync:acceptance_status | acceptance_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for runtime_sync | 2026-08-05T12:11:51Z |
-| capability:platform_registry:implementation_status | implementation_status | IMPLEMENTED | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:37:12Z |
-| capability:platform_registry:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for platform_registry | 2026-08-06T05:37:12Z |
-| capability:platform_registry:production_readiness | production_readiness | PRODUCTION_READY | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:37:12Z |
-| capability:platform_registry:canonical_owner | canonical_owner | OPTIME Platform Governance | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:40:41Z |
-| capability:platform_registry:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['constitution_governance'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['chief_ai_supervisor'], 'monitoring_relationships': []} | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:37:12Z |
-| capability:platform_registry:assigned_agent | assigned_agent | OPTIME Platform Governance | RUNTIME_PROVEN | derived from capability contract for platform_registry | 2026-08-06T05:37:12Z |
-| capability:platform_registry:runtime_availability | runtime_availability | 2026-08-06T05:37:12Z | RUNTIME_PROVEN | derived from capability contract for platform_registry | 2026-08-06T05:37:12Z |
-| capability:platform_registry:test_coverage | test_coverage | 2 | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:37:12Z |
-| capability:platform_registry:acceptance_status | acceptance_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for platform_registry | 2026-08-06T05:37:12Z |
-| objective:launch_nevada:activation_status | activation_status | ACTIVE | OWNER_DECLARED | derived from objective dashboard for launch_nevada | 2026-08-06T05:40:41Z |
-| objective:launch_nevada:completion_percentage | completion_percentage | 16.7 | REPOSITORY_DERIVED | derived from objective dashboard for launch_nevada | 2026-08-06T05:37:12Z |
-| objective:launch_nevada:milestone_count | milestone_count | 4 | REPOSITORY_DERIVED | derived from objective dashboard for launch_nevada | 2026-08-06T05:37:12Z |
-| objective:launch_nevada:current_blocker | current_blocker | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_nevada | 2026-08-06T05:37:12Z |
-| objective:launch_nevada:current_executable_capability | current_executable_capability | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_nevada | 2026-08-06T05:37:12Z |
-| objective:launch_nevada:owner_approval_state | owner_approval_state | OWNER_APPROVED | OWNER_DECLARED | derived from objective dashboard for launch_nevada | 2026-08-06T05:40:41Z |
-| objective:launch_florida:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for launch_florida | 2026-08-06T05:40:41Z |
-| objective:launch_florida:completion_percentage | completion_percentage | 16.7 | REPOSITORY_DERIVED | derived from objective dashboard for launch_florida | 2026-08-06T05:37:12Z |
-| objective:launch_florida:milestone_count | milestone_count | 4 | REPOSITORY_DERIVED | derived from objective dashboard for launch_florida | 2026-08-06T05:37:12Z |
-| objective:launch_florida:current_blocker | current_blocker | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_florida | 2026-08-06T05:37:12Z |
-| objective:launch_florida:current_executable_capability | current_executable_capability | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_florida | 2026-08-06T05:37:12Z |
-| objective:launch_florida:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for launch_florida | 2026-08-06T05:40:41Z |
-| objective:launch_texas:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for launch_texas | 2026-08-06T05:40:41Z |
-| objective:launch_texas:completion_percentage | completion_percentage | 20.0 | REPOSITORY_DERIVED | derived from objective dashboard for launch_texas | 2026-08-06T05:37:12Z |
-| objective:launch_texas:milestone_count | milestone_count | 4 | REPOSITORY_DERIVED | derived from objective dashboard for launch_texas | 2026-08-06T05:37:12Z |
-| objective:launch_texas:current_blocker | current_blocker | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_texas | 2026-08-06T05:37:12Z |
-| objective:launch_texas:current_executable_capability | current_executable_capability | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_texas | 2026-08-06T05:37:12Z |
-| objective:launch_texas:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for launch_texas | 2026-08-06T05:40:41Z |
-| objective:media_ready:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for media_ready | 2026-08-06T05:40:41Z |
-| objective:media_ready:completion_percentage | completion_percentage |  | REPOSITORY_DERIVED | derived from objective dashboard for media_ready | 2026-08-06T05:37:12Z |
-| objective:media_ready:milestone_count | milestone_count | 3 | REPOSITORY_DERIVED | derived from objective dashboard for media_ready | 2026-08-06T05:37:12Z |
-| objective:media_ready:current_blocker | current_blocker | canonical_universe | REPOSITORY_DERIVED | derived from objective dashboard for media_ready | 2026-08-06T05:37:12Z |
-| objective:media_ready:current_executable_capability | current_executable_capability | canonical_universe | REPOSITORY_DERIVED | derived from objective dashboard for media_ready | 2026-08-06T05:37:12Z |
-| objective:media_ready:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for media_ready | 2026-08-06T05:40:41Z |
-| objective:recommendation_production_ready:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:40:41Z |
-| objective:recommendation_production_ready:completion_percentage | completion_percentage | 50.0 | REPOSITORY_DERIVED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:37:12Z |
-| objective:recommendation_production_ready:milestone_count | milestone_count | 3 | REPOSITORY_DERIVED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:37:12Z |
-| objective:recommendation_production_ready:current_blocker | current_blocker | canonical_universe | REPOSITORY_DERIVED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:37:12Z |
-| objective:recommendation_production_ready:current_executable_capability | current_executable_capability | canonical_universe | REPOSITORY_DERIVED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:37:12Z |
-| objective:recommendation_production_ready:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:40:41Z |
-| objective:provider_portal_production_ready:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:40:41Z |
-| objective:provider_portal_production_ready:completion_percentage | completion_percentage | 100.0 | REPOSITORY_DERIVED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:37:12Z |
-| objective:provider_portal_production_ready:milestone_count | milestone_count | 2 | REPOSITORY_DERIVED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:37:12Z |
-| objective:provider_portal_production_ready:current_blocker | current_blocker |  | REPOSITORY_DERIVED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:37:12Z |
-| objective:provider_portal_production_ready:current_executable_capability | current_executable_capability | provider_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:37:12Z |
-| objective:provider_portal_production_ready:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:40:41Z |
+| capability:platform_registry:implementation_status | implementation_status | IMPLEMENTED | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:42:59Z |
+| capability:platform_registry:verification_status | verification_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for platform_registry | 2026-08-06T05:42:59Z |
+| capability:platform_registry:production_readiness | production_readiness | PRODUCTION_READY | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:42:59Z |
+| capability:platform_registry:canonical_owner | canonical_owner | OPTIME Platform Governance | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:43:14Z |
+| capability:platform_registry:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['constitution_governance'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['chief_ai_supervisor'], 'monitoring_relationships': []} | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:42:59Z |
+| capability:platform_registry:assigned_agent | assigned_agent | OPTIME Platform Governance | RUNTIME_PROVEN | derived from capability contract for platform_registry | 2026-08-06T05:42:59Z |
+| capability:platform_registry:runtime_availability | runtime_availability | 2026-08-06T05:42:33Z | RUNTIME_PROVEN | derived from capability contract for platform_registry | 2026-08-06T05:42:59Z |
+| capability:platform_registry:test_coverage | test_coverage | 2 | REPOSITORY_DERIVED | derived from capability contract for platform_registry | 2026-08-06T05:42:59Z |
+| capability:platform_registry:acceptance_status | acceptance_status | VERIFIED | RUNTIME_PROVEN | derived from capability contract for platform_registry | 2026-08-06T05:42:59Z |
+| objective:launch_nevada:activation_status | activation_status | ACTIVE | OWNER_DECLARED | derived from objective dashboard for launch_nevada | 2026-08-06T05:43:14Z |
+| objective:launch_nevada:completion_percentage | completion_percentage | 16.7 | REPOSITORY_DERIVED | derived from objective dashboard for launch_nevada | 2026-08-06T05:42:59Z |
+| objective:launch_nevada:milestone_count | milestone_count | 4 | REPOSITORY_DERIVED | derived from objective dashboard for launch_nevada | 2026-08-06T05:42:59Z |
+| objective:launch_nevada:current_blocker | current_blocker | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_nevada | 2026-08-06T05:42:59Z |
+| objective:launch_nevada:current_executable_capability | current_executable_capability | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_nevada | 2026-08-06T05:42:59Z |
+| objective:launch_nevada:owner_approval_state | owner_approval_state | OWNER_APPROVED | OWNER_DECLARED | derived from objective dashboard for launch_nevada | 2026-08-06T05:43:14Z |
+| objective:launch_florida:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for launch_florida | 2026-08-06T05:43:14Z |
+| objective:launch_florida:completion_percentage | completion_percentage | 16.7 | REPOSITORY_DERIVED | derived from objective dashboard for launch_florida | 2026-08-06T05:42:59Z |
+| objective:launch_florida:milestone_count | milestone_count | 4 | REPOSITORY_DERIVED | derived from objective dashboard for launch_florida | 2026-08-06T05:42:59Z |
+| objective:launch_florida:current_blocker | current_blocker | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_florida | 2026-08-06T05:42:59Z |
+| objective:launch_florida:current_executable_capability | current_executable_capability | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_florida | 2026-08-06T05:42:59Z |
+| objective:launch_florida:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for launch_florida | 2026-08-06T05:43:14Z |
+| objective:launch_texas:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for launch_texas | 2026-08-06T05:43:14Z |
+| objective:launch_texas:completion_percentage | completion_percentage | 20.0 | REPOSITORY_DERIVED | derived from objective dashboard for launch_texas | 2026-08-06T05:42:59Z |
+| objective:launch_texas:milestone_count | milestone_count | 4 | REPOSITORY_DERIVED | derived from objective dashboard for launch_texas | 2026-08-06T05:42:59Z |
+| objective:launch_texas:current_blocker | current_blocker | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_texas | 2026-08-06T05:42:59Z |
+| objective:launch_texas:current_executable_capability | current_executable_capability | source_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for launch_texas | 2026-08-06T05:42:59Z |
+| objective:launch_texas:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for launch_texas | 2026-08-06T05:43:14Z |
+| objective:media_ready:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for media_ready | 2026-08-06T05:43:14Z |
+| objective:media_ready:completion_percentage | completion_percentage |  | REPOSITORY_DERIVED | derived from objective dashboard for media_ready | 2026-08-06T05:42:59Z |
+| objective:media_ready:milestone_count | milestone_count | 3 | REPOSITORY_DERIVED | derived from objective dashboard for media_ready | 2026-08-06T05:42:59Z |
+| objective:media_ready:current_blocker | current_blocker | canonical_universe | REPOSITORY_DERIVED | derived from objective dashboard for media_ready | 2026-08-06T05:42:59Z |
+| objective:media_ready:current_executable_capability | current_executable_capability | canonical_universe | REPOSITORY_DERIVED | derived from objective dashboard for media_ready | 2026-08-06T05:42:59Z |
+| objective:media_ready:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for media_ready | 2026-08-06T05:43:14Z |
+| objective:recommendation_production_ready:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:43:14Z |
+| objective:recommendation_production_ready:completion_percentage | completion_percentage | 50.0 | REPOSITORY_DERIVED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:42:59Z |
+| objective:recommendation_production_ready:milestone_count | milestone_count | 3 | REPOSITORY_DERIVED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:42:59Z |
+| objective:recommendation_production_ready:current_blocker | current_blocker | canonical_universe | REPOSITORY_DERIVED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:42:59Z |
+| objective:recommendation_production_ready:current_executable_capability | current_executable_capability | canonical_universe | REPOSITORY_DERIVED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:42:59Z |
+| objective:recommendation_production_ready:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for recommendation_production_ready | 2026-08-06T05:43:14Z |
+| objective:provider_portal_production_ready:activation_status | activation_status | PLANNED | OWNER_DECLARED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:43:14Z |
+| objective:provider_portal_production_ready:completion_percentage | completion_percentage | 100.0 | REPOSITORY_DERIVED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:42:59Z |
+| objective:provider_portal_production_ready:milestone_count | milestone_count | 2 | REPOSITORY_DERIVED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:42:59Z |
+| objective:provider_portal_production_ready:current_blocker | current_blocker |  | REPOSITORY_DERIVED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:42:59Z |
+| objective:provider_portal_production_ready:current_executable_capability | current_executable_capability | provider_intelligence | REPOSITORY_DERIVED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:42:59Z |
+| objective:provider_portal_production_ready:owner_approval_state | owner_approval_state | OWNER_DECLARED | OWNER_DECLARED | derived from objective dashboard for provider_portal_production_ready | 2026-08-06T05:43:14Z |
 
 ## Partially Verified Claims
 
@@ -348,121 +348,121 @@ Generated at: `2026-08-06T05:40:39Z`
 | --- | --- | --- | --- | --- |
 | capability:source_intelligence:implementation_status | implementation_status | IN_PROGRESS | test_evidence | 2026-08-06T05:37:03Z |
 | capability:source_intelligence:production_readiness | production_readiness | BLOCKED | test_evidence | 2026-08-06T05:37:03Z |
-| capability:source_intelligence:canonical_owner | canonical_owner | OPTIME Source Intelligence | test_evidence | 2026-08-06T05:40:41Z |
+| capability:source_intelligence:canonical_owner | canonical_owner | OPTIME Source Intelligence | test_evidence | 2026-08-06T05:43:14Z |
 | capability:source_intelligence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['constitution_governance'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['market_builder', 'canonical_universe', 'data_quality_trust', 'chief_ai_supervisor'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:37:03Z |
 | capability:source_intelligence:assigned_agent | assigned_agent | OPTIME Source Intelligence | test_evidence | 2026-08-06T05:37:03Z |
 | capability:source_intelligence:test_coverage | test_coverage | 2 | test_evidence | 2026-08-06T05:37:03Z |
 | capability:market_builder:implementation_status | implementation_status | NOT_STARTED | runtime_evidence | 2026-08-05T12:11:52Z |
 | capability:market_builder:production_readiness | production_readiness | BLOCKED | runtime_evidence | 2026-08-05T12:11:52Z |
-| capability:market_builder:canonical_owner | canonical_owner | OPTIME Market Intelligence | runtime_evidence | 2026-08-06T05:40:41Z |
+| capability:market_builder:canonical_owner | canonical_owner | OPTIME Market Intelligence | runtime_evidence | 2026-08-06T05:43:14Z |
 | capability:market_builder:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['constitution_governance', 'source_intelligence'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['canonical_universe'], 'monitoring_relationships': []} | runtime_evidence | 2026-08-05T12:11:52Z |
 | capability:market_builder:assigned_agent | assigned_agent | OPTIME Market Intelligence | runtime_evidence | 2026-08-05T12:11:52Z |
 | capability:market_builder:test_coverage | test_coverage | 1 | runtime_evidence | 2026-08-05T12:11:52Z |
 | capability:government_identity:implementation_status | implementation_status | IMPLEMENTED | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:government_identity:production_readiness | production_readiness | BLOCKED | runtime_evidence | 2026-08-05T12:11:51Z |
-| capability:government_identity:canonical_owner | canonical_owner | OPTIME Identity Governance | runtime_evidence | 2026-08-06T05:40:41Z |
+| capability:government_identity:canonical_owner | canonical_owner | OPTIME Identity Governance | runtime_evidence | 2026-08-06T05:43:14Z |
 | capability:government_identity:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['canonical_universe'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['media_intelligence', 'recommendation_decision_engine', 'assessment_experience'], 'monitoring_relationships': []} | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:government_identity:assigned_agent | assigned_agent | OPTIME Identity Governance | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:government_identity:test_coverage | test_coverage | 1 | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:media_intelligence:implementation_status | implementation_status | IN_PROGRESS | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:media_intelligence:production_readiness | production_readiness | BLOCKED | runtime_evidence | 2026-08-05T12:11:51Z |
-| capability:media_intelligence:canonical_owner | canonical_owner | OPTIME Media Intelligence | runtime_evidence | 2026-08-06T05:40:41Z |
+| capability:media_intelligence:canonical_owner | canonical_owner | OPTIME Media Intelligence | runtime_evidence | 2026-08-06T05:43:14Z |
 | capability:media_intelligence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['canonical_universe', 'government_identity'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['recommendation_decision_engine', 'assessment_experience'], 'monitoring_relationships': []} | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:media_intelligence:assigned_agent | assigned_agent | OPTIME Media Intelligence | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:media_intelligence:test_coverage | test_coverage | 1 | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:knowledge_graph:implementation_status | implementation_status | IMPLEMENTED | test_evidence | 2026-08-06T05:29:18Z |
 | capability:knowledge_graph:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-06T05:29:18Z |
-| capability:knowledge_graph:canonical_owner | canonical_owner | OPTIME Knowledge Graph Intelligence | test_evidence | 2026-08-06T05:40:41Z |
+| capability:knowledge_graph:canonical_owner | canonical_owner | OPTIME Knowledge Graph Intelligence | test_evidence | 2026-08-06T05:43:14Z |
 | capability:knowledge_graph:dependency_declarations | dependency_declarations | {'required_build_dependencies': [], 'required_runtime_dependencies': [], 'evidence_dependencies': ['source_intelligence', 'canonical_universe'], 'optional_consumers': ['provider_intelligence', 'clinical_knowledge', 'assessment_experience', 'recommendation_decision_engine', 'chief_ai_supervisor'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:29:18Z |
 | capability:knowledge_graph:assigned_agent | assigned_agent | knowledge_graph | test_evidence | 2026-08-06T05:29:18Z |
 | capability:knowledge_graph:test_coverage | test_coverage |  | test_evidence | 2026-08-06T05:29:18Z |
 | capability:activities_intelligence:implementation_status | implementation_status | VERIFIED | test_evidence | 2026-08-06T05:29:18Z |
 | capability:activities_intelligence:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-06T05:29:18Z |
-| capability:activities_intelligence:canonical_owner | canonical_owner | OPTIME Lifestyle Intelligence | test_evidence | 2026-08-06T05:40:41Z |
+| capability:activities_intelligence:canonical_owner | canonical_owner | OPTIME Lifestyle Intelligence | test_evidence | 2026-08-06T05:43:14Z |
 | capability:activities_intelligence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['provider_intelligence', 'outcome_learning', 'knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['recommendation_decision_engine', 'assessment_experience', 'narrative_intelligence'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:29:18Z |
 | capability:activities_intelligence:assigned_agent | assigned_agent | activities_intelligence | test_evidence | 2026-08-06T05:29:18Z |
 | capability:activities_intelligence:test_coverage | test_coverage |  | test_evidence | 2026-08-06T05:29:18Z |
 | capability:clinical_knowledge:implementation_status | implementation_status | VERIFIED | test_evidence | 2026-08-06T05:29:18Z |
 | capability:clinical_knowledge:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-06T05:29:18Z |
-| capability:clinical_knowledge:canonical_owner | canonical_owner | OPTIME Clinical Intelligence | test_evidence | 2026-08-06T05:40:41Z |
+| capability:clinical_knowledge:canonical_owner | canonical_owner | OPTIME Clinical Intelligence | test_evidence | 2026-08-06T05:43:14Z |
 | capability:clinical_knowledge:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['provider_intelligence', 'knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': ['clinical_evidence', 'outcome_learning'], 'optional_consumers': ['assessment_experience', 'recommendation_decision_engine', 'family_experience_intelligence'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:29:18Z |
 | capability:clinical_knowledge:assigned_agent | assigned_agent | clinical_knowledge | test_evidence | 2026-08-06T05:29:18Z |
 | capability:clinical_knowledge:test_coverage | test_coverage |  | test_evidence | 2026-08-06T05:29:18Z |
 | capability:clinical_evidence:implementation_status | implementation_status | IN_PROGRESS | implementation_evidence, test_evidence | 2026-07-18T05:44:31Z |
 | capability:clinical_evidence:production_readiness | production_readiness | BLOCKED | implementation_evidence, test_evidence | 2026-07-18T05:44:31Z |
-| capability:clinical_evidence:canonical_owner | canonical_owner | OPTIME Evidence Intelligence | implementation_evidence, test_evidence | 2026-08-06T05:40:41Z |
+| capability:clinical_evidence:canonical_owner | canonical_owner | OPTIME Evidence Intelligence | implementation_evidence, test_evidence | 2026-08-06T05:43:14Z |
 | capability:clinical_evidence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['clinical_knowledge', 'recommendation_decision_engine', 'narrative_intelligence'], 'monitoring_relationships': []} | implementation_evidence, test_evidence | 2026-07-18T05:44:31Z |
 | capability:clinical_evidence:assigned_agent | assigned_agent | OPTIME Evidence Intelligence | implementation_evidence, test_evidence | 2026-07-18T05:44:31Z |
 | capability:clinical_evidence:test_coverage | test_coverage |  | implementation_evidence, test_evidence | 2026-07-18T05:44:31Z |
 | capability:narrative_intelligence:implementation_status | implementation_status | IN_PROGRESS | implementation_evidence, test_evidence | 2026-07-18T16:46:28Z |
 | capability:narrative_intelligence:production_readiness | production_readiness | BLOCKED | implementation_evidence, test_evidence | 2026-07-18T16:46:28Z |
-| capability:narrative_intelligence:canonical_owner | canonical_owner | OPTIME Narrative Intelligence | implementation_evidence, test_evidence | 2026-08-06T05:40:41Z |
+| capability:narrative_intelligence:canonical_owner | canonical_owner | OPTIME Narrative Intelligence | implementation_evidence, test_evidence | 2026-08-06T05:43:14Z |
 | capability:narrative_intelligence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['provider_intelligence', 'knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': ['clinical_knowledge', 'clinical_evidence', 'matching_improvement'], 'optional_consumers': ['family_experience_intelligence', 'recommendation_decision_engine'], 'monitoring_relationships': []} | implementation_evidence, test_evidence | 2026-07-18T16:46:28Z |
 | capability:narrative_intelligence:assigned_agent | assigned_agent | OPTIME Narrative Intelligence | implementation_evidence, test_evidence | 2026-07-18T16:46:28Z |
 | capability:narrative_intelligence:test_coverage | test_coverage |  | implementation_evidence, test_evidence | 2026-07-18T16:46:28Z |
 | capability:nutrition_intelligence:implementation_status | implementation_status | VERIFIED | test_evidence | 2026-08-06T05:29:18Z |
 | capability:nutrition_intelligence:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-06T05:29:18Z |
-| capability:nutrition_intelligence:canonical_owner | canonical_owner | OPTIME Nutrition Intelligence | test_evidence | 2026-08-06T05:40:41Z |
+| capability:nutrition_intelligence:canonical_owner | canonical_owner | OPTIME Nutrition Intelligence | test_evidence | 2026-08-06T05:43:14Z |
 | capability:nutrition_intelligence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['provider_intelligence', 'knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': ['clinical_knowledge'], 'optional_consumers': ['recommendation_decision_engine', 'assessment_experience'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:29:18Z |
 | capability:nutrition_intelligence:assigned_agent | assigned_agent | nutrition_intelligence | test_evidence | 2026-08-06T05:29:18Z |
 | capability:nutrition_intelligence:test_coverage | test_coverage |  | test_evidence | 2026-08-06T05:29:18Z |
 | capability:outcome_learning:implementation_status | implementation_status | VERIFIED | test_evidence | 2026-08-06T05:29:18Z |
 | capability:outcome_learning:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-06T05:29:18Z |
-| capability:outcome_learning:canonical_owner | canonical_owner | OPTIME Outcome Intelligence | test_evidence | 2026-08-06T05:40:41Z |
+| capability:outcome_learning:canonical_owner | canonical_owner | OPTIME Outcome Intelligence | test_evidence | 2026-08-06T05:43:14Z |
 | capability:outcome_learning:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['knowledge_graph', 'matching_improvement'], 'required_runtime_dependencies': [], 'evidence_dependencies': ['clinical_knowledge'], 'optional_consumers': ['recommendation_decision_engine', 'chief_ai_supervisor'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:29:18Z |
 | capability:outcome_learning:assigned_agent | assigned_agent | outcome_learning | test_evidence | 2026-08-06T05:29:18Z |
 | capability:outcome_learning:test_coverage | test_coverage |  | test_evidence | 2026-08-06T05:29:18Z |
 | capability:resident_needs_intelligence:implementation_status | implementation_status | VERIFIED | test_evidence | 2026-08-06T05:29:18Z |
 | capability:resident_needs_intelligence:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-06T05:29:18Z |
-| capability:resident_needs_intelligence:canonical_owner | canonical_owner | OPTIME Resident Needs Intelligence | test_evidence | 2026-08-06T05:40:41Z |
+| capability:resident_needs_intelligence:canonical_owner | canonical_owner | OPTIME Resident Needs Intelligence | test_evidence | 2026-08-06T05:43:14Z |
 | capability:resident_needs_intelligence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['provider_intelligence', 'knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['assessment_experience', 'recommendation_decision_engine'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:29:18Z |
 | capability:resident_needs_intelligence:assigned_agent | assigned_agent | resident_needs | test_evidence | 2026-08-06T05:29:18Z |
 | capability:resident_needs_intelligence:test_coverage | test_coverage |  | test_evidence | 2026-08-06T05:29:18Z |
 | capability:senior_living_research:implementation_status | implementation_status | VERIFIED | test_evidence | 2026-08-06T05:29:18Z |
 | capability:senior_living_research:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-06T05:29:18Z |
-| capability:senior_living_research:canonical_owner | canonical_owner | OPTIME Senior Living Research | test_evidence | 2026-08-06T05:40:41Z |
+| capability:senior_living_research:canonical_owner | canonical_owner | OPTIME Senior Living Research | test_evidence | 2026-08-06T05:43:14Z |
 | capability:senior_living_research:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['provider_intelligence', 'knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['chief_ai_supervisor', 'knowledge_graph'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:29:18Z |
 | capability:senior_living_research:assigned_agent | assigned_agent | senior_living_research | test_evidence | 2026-08-06T05:29:18Z |
 | capability:senior_living_research:test_coverage | test_coverage |  | test_evidence | 2026-08-06T05:29:18Z |
 | capability:family_experience_intelligence:implementation_status | implementation_status | VERIFIED | test_evidence | 2026-08-06T05:29:18Z |
 | capability:family_experience_intelligence:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-06T05:29:18Z |
-| capability:family_experience_intelligence:canonical_owner | canonical_owner | OPTIME Family Experience Intelligence | test_evidence | 2026-08-06T05:40:41Z |
+| capability:family_experience_intelligence:canonical_owner | canonical_owner | OPTIME Family Experience Intelligence | test_evidence | 2026-08-06T05:43:14Z |
 | capability:family_experience_intelligence:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['knowledge_graph'], 'required_runtime_dependencies': [], 'evidence_dependencies': ['narrative_intelligence'], 'optional_consumers': ['assessment_experience', 'recommendation_decision_engine'], 'monitoring_relationships': []} | test_evidence | 2026-08-06T05:29:18Z |
 | capability:family_experience_intelligence:assigned_agent | assigned_agent | family_experience | test_evidence | 2026-08-06T05:29:18Z |
 | capability:family_experience_intelligence:test_coverage | test_coverage |  | test_evidence | 2026-08-06T05:29:18Z |
-| capability:assessment_experience:implementation_status | implementation_status | VERIFIED | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:40:41Z |
-| capability:assessment_experience:production_readiness | production_readiness | PRODUCTION_READY | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:40:41Z |
-| capability:assessment_experience:canonical_owner | canonical_owner | OPTIME Assessment Experience | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:40:41Z |
-| capability:assessment_experience:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['knowledge_graph', 'resident_needs_intelligence'], 'required_runtime_dependencies': [], 'evidence_dependencies': ['family_experience_intelligence'], 'optional_consumers': ['recommendation_decision_engine', 'canonical_universe'], 'monitoring_relationships': []} | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:40:41Z |
-| capability:assessment_experience:assigned_agent | assigned_agent | OPTIME Assessment Experience | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:40:41Z |
-| capability:assessment_experience:test_coverage | test_coverage | 3 | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:40:41Z |
+| capability:assessment_experience:implementation_status | implementation_status | VERIFIED | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:43:14Z |
+| capability:assessment_experience:production_readiness | production_readiness | PRODUCTION_READY | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:43:14Z |
+| capability:assessment_experience:canonical_owner | canonical_owner | OPTIME Assessment Experience | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:43:14Z |
+| capability:assessment_experience:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['knowledge_graph', 'resident_needs_intelligence'], 'required_runtime_dependencies': [], 'evidence_dependencies': ['family_experience_intelligence'], 'optional_consumers': ['recommendation_decision_engine', 'canonical_universe'], 'monitoring_relationships': []} | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:43:14Z |
+| capability:assessment_experience:assigned_agent | assigned_agent | OPTIME Assessment Experience | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:43:14Z |
+| capability:assessment_experience:test_coverage | test_coverage | 3 | implementation_evidence, runtime_evidence, test_evidence | 2026-08-06T05:43:14Z |
 | capability:recommendation_decision_engine:implementation_status | implementation_status | IMPLEMENTED | runtime_evidence | 2026-08-05T10:04:15Z |
 | capability:recommendation_decision_engine:production_readiness | production_readiness | BLOCKED | runtime_evidence | 2026-08-05T10:04:15Z |
-| capability:recommendation_decision_engine:canonical_owner | canonical_owner | OPTIME Recommendation Engine | runtime_evidence | 2026-08-06T05:40:41Z |
+| capability:recommendation_decision_engine:canonical_owner | canonical_owner | OPTIME Recommendation Engine | runtime_evidence | 2026-08-06T05:43:14Z |
 | capability:recommendation_decision_engine:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['canonical_universe', 'knowledge_graph', 'assessment_experience'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['family_experience_intelligence', 'chief_ai_supervisor'], 'monitoring_relationships': []} | runtime_evidence | 2026-08-05T10:04:15Z |
 | capability:recommendation_decision_engine:assigned_agent | assigned_agent | OPTIME Recommendation Engine | runtime_evidence | 2026-08-05T10:04:15Z |
 | capability:recommendation_decision_engine:test_coverage | test_coverage | 1 | runtime_evidence | 2026-08-05T10:04:15Z |
 | capability:chief_ai_supervisor:implementation_status | implementation_status | VERIFIED | runtime_evidence | 2026-08-06T05:37:03Z |
 | capability:chief_ai_supervisor:production_readiness | production_readiness | BLOCKED | runtime_evidence | 2026-08-06T05:37:03Z |
-| capability:chief_ai_supervisor:canonical_owner | canonical_owner | OPTIME Platform Governance | runtime_evidence | 2026-08-06T05:40:41Z |
+| capability:chief_ai_supervisor:canonical_owner | canonical_owner | OPTIME Platform Governance | runtime_evidence | 2026-08-06T05:43:14Z |
 | capability:chief_ai_supervisor:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['constitution_governance'], 'required_runtime_dependencies': ['platform_registry', 'report_archive', 'runtime_sync', 'remediation_policy_engine'], 'evidence_dependencies': [], 'optional_consumers': ['daily_system_health_report', 'platform_registry', 'remediation_policy_engine'], 'monitoring_relationships': ['source_intelligence', 'market_builder', 'canonical_universe', 'data_quality_trust', 'email_delivery']} | runtime_evidence | 2026-08-06T05:37:03Z |
 | capability:chief_ai_supervisor:assigned_agent | assigned_agent | OPTIME Platform Governance | runtime_evidence | 2026-08-06T05:37:03Z |
 | capability:chief_ai_supervisor:test_coverage | test_coverage | 3 | runtime_evidence | 2026-08-06T05:37:03Z |
 | capability:email_delivery:implementation_status | implementation_status | IMPLEMENTED | test_evidence | 2026-07-19T14:08:21Z |
 | capability:email_delivery:production_readiness | production_readiness | BLOCKED | test_evidence | 2026-07-19T14:08:21Z |
-| capability:email_delivery:canonical_owner | canonical_owner | OPTIME Operations | test_evidence | 2026-08-06T05:40:41Z |
+| capability:email_delivery:canonical_owner | canonical_owner | OPTIME Operations | test_evidence | 2026-08-06T05:43:14Z |
 | capability:email_delivery:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['report_archive', 'constitution_governance'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['daily_system_health_report', 'chief_ai_supervisor'], 'monitoring_relationships': []} | test_evidence | 2026-07-19T14:08:21Z |
 | capability:email_delivery:assigned_agent | assigned_agent | OPTIME Operations | test_evidence | 2026-07-19T14:08:21Z |
 | capability:email_delivery:test_coverage | test_coverage |  | test_evidence | 2026-07-19T14:08:21Z |
 | capability:report_archive:implementation_status | implementation_status | VERIFIED | test_evidence | 2026-08-05T10:04:16Z |
 | capability:report_archive:production_readiness | production_readiness | PRODUCTION_READY | test_evidence | 2026-08-05T10:04:16Z |
-| capability:report_archive:canonical_owner | canonical_owner | OPTIME Platform Operations | test_evidence | 2026-08-06T05:40:41Z |
+| capability:report_archive:canonical_owner | canonical_owner | OPTIME Platform Operations | test_evidence | 2026-08-06T05:43:14Z |
 | capability:report_archive:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['constitution_governance'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['daily_system_health_report', 'chief_ai_supervisor'], 'monitoring_relationships': []} | test_evidence | 2026-08-05T10:04:16Z |
 | capability:report_archive:assigned_agent | assigned_agent | OPTIME Platform Operations | test_evidence | 2026-08-05T10:04:16Z |
 | capability:report_archive:test_coverage | test_coverage |  | test_evidence | 2026-08-05T10:04:16Z |
 | capability:daily_system_health_report:implementation_status | implementation_status | VERIFIED | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:daily_system_health_report:production_readiness | production_readiness | BLOCKED | runtime_evidence | 2026-08-05T12:11:51Z |
-| capability:daily_system_health_report:canonical_owner | canonical_owner | OPTIME Chief AI Supervisor | runtime_evidence | 2026-08-06T05:40:41Z |
+| capability:daily_system_health_report:canonical_owner | canonical_owner | OPTIME Chief AI Supervisor | runtime_evidence | 2026-08-06T05:43:14Z |
 | capability:daily_system_health_report:dependency_declarations | dependency_declarations | {'required_build_dependencies': ['chief_ai_supervisor', 'report_archive'], 'required_runtime_dependencies': [], 'evidence_dependencies': [], 'optional_consumers': ['chief_ai_supervisor', 'email_delivery'], 'monitoring_relationships': []} | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:daily_system_health_report:assigned_agent | assigned_agent | OPTIME Chief AI Supervisor | runtime_evidence | 2026-08-05T12:11:51Z |
 | capability:daily_system_health_report:test_coverage | test_coverage | 1 | runtime_evidence | 2026-08-05T12:11:51Z |
