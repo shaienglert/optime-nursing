@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppQuestionnaireProvider } from "@/context/questionnaire-provider";
 import { SiteHeader } from "@/components/brand/site-header";
+import { UnderstandingTreeCompanion } from "@/components/brand/understanding-tree-companion";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,6 +62,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AppQuestionnaireProvider>
           <SiteHeader />
+          <UnderstandingTreeCompanion />
           <div className="flex-1">{children}</div>
         </AppQuestionnaireProvider>
       </body>
