@@ -1373,7 +1373,7 @@ def _capability_public_entry_points(capability_id: str) -> List[str]:
     mapping = {
         "platform_registry": ["build_platform_registry_payload", "write_platform_registry_artifacts", "load_platform_registry", "evaluate_capability_assignment"],
         "chief_ai_supervisor": ["run_active_operations_supervisor_cycle", "evaluate_platform_registry_work_request", "start_supervisor_scheduler"],
-        "source_intelligence": ["evaluate_source_policy_for_record", "generate_status_snapshot", "render_status_report"],
+        "source_intelligence": ["migrate", "validate", "evaluate_source_policy_for_record", "generate_status_snapshot", "render_status_report"],
         "market_builder": ["scripts/build_nevada_canonical_universe.py", "scripts/run_nevada_authoritative_source_integration.py"],
         "canonical_universe": ["backend/app/services/canonical_universe.py"],
         "matching_improvement": ["_matching_improvement_work"],

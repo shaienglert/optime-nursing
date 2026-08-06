@@ -6,6 +6,8 @@ from urllib.parse import urlparse
 
 
 POLICY_VERSION = "source-policy-v1.0.0"
+SCHEMA_VERSION = "0.2.0"
+SUPPORTED_VERSIONS = [SCHEMA_VERSION]
 
 LIFECYCLE_DISCOVERED = "DISCOVERED"
 LIFECYCLE_UNDER_REVIEW = "UNDER_REVIEW"
@@ -79,6 +81,76 @@ SUPPORTED_SOURCE_TYPES = {"CSV", "XML", "API", "WEBSITE", "PORTAL_EXPORT", "SCRA
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _normalize_supported_versions(values: Any) -> List[str]:
+    supported_versions: List[str] = []
+    for value in values or []:
+        version = str(value or "").strip()
+        if not version or version in supported_versions:
+            continue
+        supported_versions.append(version)
+    return supported_versions
+
+
+def migrate(record: Mapping[str, Any]) -> Dict[str, Any]:
+    shaped = dict(record)
+    shaped["schema_version"] = SCHEMA_VERSION
+    shaped["supported_versions"] = list(SUPPORTED_VERSIONS)
+
+    policy_outcome = evaluate_source_policy(shaped)
+    shaped["policy_version"] = policy_outcome["policy_version"]
+    shaped["policy_status"] = policy_outcome["policy_status"]
+    shaped["policy_reason_codes"] = policy_outcome["policy_reason_codes"]
+    shaped["policy_confidence"] = policy_outcome["policy_confidence"]
+    shaped["policy_missing_evidence"] = policy_outcome["missing_evidence"]
+    shaped["policy_owner_review_required"] = policy_outcome["owner_review_required"]
+    shaped["next_action"] = policy_outcome["next_action"]
+    if policy_outcome.get("next_review_date"):
+        shaped["next_review_date"] = policy_outcome["next_review_date"]
+    for key, value in policy_outcome["status_dimensions"].items():
+        shaped[key] = value
+    return shaped
+
+
+def validate(record: Mapping[str, Any]) -> List[str]:
+    errors: List[str] = []
+    schema_version = str(record.get("schema_version") or "").strip()
+    supported_versions = _normalize_supported_versions(record.get("supported_versions"))
+    lifecycle_status = str(record.get("lifecycle_status") or "").strip().upper()
+
+    if schema_version != SCHEMA_VERSION:
+        errors.append(f"schema_version must be {SCHEMA_VERSION}")
+    if not supported_versions:
+        errors.append("supported_versions is required")
+    elif schema_version not in supported_versions:
+        errors.append("schema_version must be included in supported_versions")
+    elif not all(version.count(".") == 2 for version in supported_versions):
+        errors.append("supported_versions must use MAJOR.MINOR.PATCH")
+
+    if lifecycle_status and lifecycle_status not in {
+        LIFECYCLE_DISCOVERED,
+        LIFECYCLE_UNDER_REVIEW,
+        LIFECYCLE_VALIDATED,
+        LIFECYCLE_APPROVED,
+        LIFECYCLE_INTEGRATION_IN_PROGRESS,
+        LIFECYCLE_INTEGRATED,
+        LIFECYCLE_BLOCKED_TEMPORARILY,
+        LIFECYCLE_REJECTED,
+        LIFECYCLE_OWNER_DECISION_REQUIRED,
+    }:
+        errors.append(f"Unsupported lifecycle status: {lifecycle_status}")
+
+    policy_outcome = evaluate_source_policy(record)
+    for key in ("policy_version", "policy_status", "policy_confidence", "policy_reason_codes", "next_action"):
+        if record.get(key) and record.get(key) != policy_outcome.get(key):
+            errors.append(f"{key} does not match evaluated source policy")
+    if record.get("policy_missing_evidence") and list(record.get("policy_missing_evidence") or []) != policy_outcome["missing_evidence"]:
+        errors.append("policy_missing_evidence does not match evaluated source policy")
+    if bool(record.get("policy_owner_review_required")) != bool(policy_outcome["owner_review_required"]):
+        errors.append("policy_owner_review_required does not match evaluated source policy")
+
+    return errors
 
 
 def canonical_domain(url: Any) -> str:
