@@ -7,67 +7,98 @@
   color: #21312b;
 }
 
-.optime-conversation-intake main,
-.optime-conversation-intake section {
+.optime-conversation-controller main {
+  min-height: 100vh !important;
   background: transparent !important;
+  padding: 5rem 1.25rem 8rem !important;
 }
 
-.optime-conversation-intake [class*="shadow"],
-.optime-conversation-intake [class*="ring-"] {
+.optime-conversation-controller main > section {
+  max-width: 760px !important;
+  margin: 0 auto !important;
+}
+
+.optime-conversation-controller main > section > div {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
   box-shadow: none !important;
 }
 
-.optime-conversation-intake [class*="rounded-["],
-.optime-conversation-intake [class*="rounded-2xl"],
-.optime-conversation-intake [class*="rounded-3xl"] {
+/* Remove the legacy hero and AI dashboard. The homepage already introduced the person. */
+.optime-conversation-controller main section > div > section,
+.optime-conversation-controller main aside {
+  display: none !important;
+}
+
+.optime-conversation-controller main [class*="grid"] {
+  display: block !important;
+}
+
+.optime-conversation-controller article[data-conversation-question="true"] {
+  scroll-margin-top: 5rem;
+  border: 0 !important;
+  border-left: 2px solid #a9c7bd !important;
   border-radius: 0 !important;
-}
-
-.optime-conversation-intake [class*="bg-white"],
-.optime-conversation-intake [class*="bg-[#fff"],
-.optime-conversation-intake [class*="bg-[#fb"],
-.optime-conversation-intake [class*="bg-[#f8"] {
   background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 0 0 2rem !important;
+  margin: 0 !important;
 }
 
-.optime-conversation-intake [class*="border-"] {
-  border-color: transparent !important;
+.optime-conversation-controller article[data-conversation-question="true"][hidden] {
+  display: none !important;
 }
 
-.optime-conversation-intake button:not([type="submit"]),
-.optime-conversation-intake [role="button"] {
+.optime-conversation-controller article h3,
+.optime-conversation-controller article h4 {
+  max-width: 720px;
+  color: #22332d !important;
+  font-size: clamp(2rem, 5vw, 3.5rem) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.045em !important;
+}
+
+.optime-conversation-controller article p,
+.optime-conversation-controller article label {
+  color: #60716a !important;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.optime-conversation-controller article button:not([type="submit"]) {
+  display: inline-flex !important;
+  margin: 0.7rem 1.25rem 0 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   color: #31584e !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding: 0 0 0.25rem !important;
   text-align: left;
-  text-decoration: underline;
-  text-decoration-color: rgba(49, 88, 78, 0.28);
-  text-underline-offset: 0.32rem;
-  transition: color 160ms ease, text-decoration-color 160ms ease, transform 160ms ease;
+  text-decoration: none !important;
+  border-bottom: 1px solid rgba(49, 88, 78, 0.35) !important;
+  transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
-.optime-conversation-intake button:not([type="submit"]):hover,
-.optime-conversation-intake [role="button"]:hover {
+.optime-conversation-controller article button:not([type="submit"]):hover {
   color: #1f6f5d !important;
-  text-decoration-color: #1f6f5d;
-  transform: translateX(0.2rem);
+  border-bottom-color: #1f6f5d !important;
+  transform: translateX(0.15rem);
 }
 
-.optime-conversation-intake button[aria-pressed="true"],
-.optime-conversation-intake button[data-state="active"],
-.optime-conversation-intake button[class*="bg-[#7f9f88]"] {
+.optime-conversation-controller article button[class*="bg-"] {
   color: #1f6f5d !important;
   font-weight: 700 !important;
-  text-decoration-color: #1f6f5d;
+  border-bottom: 2px solid #1f6f5d !important;
 }
 
-.optime-conversation-intake input,
-.optime-conversation-intake textarea,
-.optime-conversation-intake select {
+.optime-conversation-controller input,
+.optime-conversation-controller textarea,
+.optime-conversation-controller select {
+  width: 100%;
   border: 0 !important;
   border-bottom: 1px solid #9fb6ad !important;
   border-radius: 0 !important;
@@ -78,48 +109,53 @@
   padding-right: 0 !important;
 }
 
-.optime-conversation-intake input:focus,
-.optime-conversation-intake textarea:focus,
-.optime-conversation-intake select:focus {
+.optime-conversation-controller input:focus,
+.optime-conversation-controller textarea:focus,
+.optime-conversation-controller select:focus {
   outline: none !important;
   border-bottom-color: #1f6f5d !important;
   box-shadow: 0 1px 0 #1f6f5d !important;
 }
 
-.optime-conversation-intake button[type="submit"] {
-  border-radius: 9999px !important;
-  background: #1f6f5d !important;
-  color: #fff !important;
-  box-shadow: none !important;
+.optime-conversation-navigation {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 60;
+  display: flex;
+  width: min(760px, calc(100% - 2rem));
+  transform: translateX(-50%);
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #c9d9d3;
+  background: rgba(248, 245, 239, 0.94);
+  padding: 1rem 0;
+  backdrop-filter: blur(12px);
 }
 
-.optime-conversation-intake button[type="submit"]:hover {
-  background: #185a4c !important;
+.optime-conversation-navigation button {
+  border: 0;
+  background: transparent;
+  color: #31584e;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
-.optime-conversation-intake h1,
-.optime-conversation-intake h2,
-.optime-conversation-intake h3 {
-  color: #22332d !important;
-  letter-spacing: -0.035em;
+.optime-conversation-navigation button:disabled {
+  opacity: 0.3;
 }
 
-.optime-conversation-intake p,
-.optime-conversation-intake label {
-  color: #60716a;
+.optime-conversation-next {
+  border-bottom: 2px solid #4c8b7b !important;
+  padding-bottom: 0.25rem !important;
 }
 
-.optime-conversation-intake [class*="grid-cols-"],
-.optime-conversation-intake [class*="md:grid-cols-"],
-.optime-conversation-intake [class*="lg:grid-cols-"] {
-  column-gap: 2rem !important;
-  row-gap: 1rem !important;
-}
+@media (max-width: 640px) {
+  .optime-conversation-controller main {
+    padding-top: 3rem !important;
+  }
 
-@media (min-width: 768px) {
-  .optime-conversation-intake > * {
-    max-width: 980px;
-    margin-left: auto;
-    margin-right: auto;
+  .optime-conversation-controller article[data-conversation-question="true"] {
+    padding-left: 1.25rem !important;
   }
 }
