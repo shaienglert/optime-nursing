@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { TreeOfUnderstanding } from "@/app/intake/tree-of-understanding";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 
+/** Keeps the same understanding signal visible from the first homepage answer. */
 export function UnderstandingTreeCompanion() {
   const pathname = usePathname();
   const { state } = useQuestionnaire();
