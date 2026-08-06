@@ -33,7 +33,7 @@ const ASSISTANCE_OPTIONS = [
   "daytime supervision",
   "support around the clock",
   "skilled nursing care",
-];
+] as const;
 
 const ASSISTANCE_VALUE_MAP: Record<string, string> = {
   "fully independent": "Fully independent",
@@ -54,22 +54,7 @@ const MEMORY_OPTIONS = [
   { label: "I am not sure yet", value: "Not sure" },
 ] as const;
 
-const TRUST_POINTS = [
-  {
-    title: "Built around the person",
-    text: "Care, personality, routines, language, location and budget are understood together.",
-  },
-  {
-    title: "Evidence before claims",
-    text: "Missing or uncertain information is shown clearly rather than guessed.",
-  },
-  {
-    title: "Independent recommendations",
-    text: "Commercial relationships do not determine which options appear first.",
-  },
-];
-
-type HeroStep = "relationship" | "age" | "assistance" | "memory" | "ready";
+type HeroStep = "relationship" | "age" | "assistance" | "memory";
 
 function loadPatientCaseId(): number | undefined {
   if (typeof window === "undefined") return undefined;
@@ -99,15 +84,27 @@ function personCopy(label: string): string {
   return label.replace(/^my /, "your ");
 }
 
-function ChoiceLink({ label, onClick }: { label: string; onClick: () => void }) {
+function ChoiceLink({
+  label,
+  selected = false,
+  onClick,
+}: {
+  label: string;
+  selected?: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative mr-5 mt-3 inline-flex items-center text-left text-lg font-medium text-[#315f53] transition hover:text-[#183f35]"
+      aria-pressed={selected}
+      className={`group relative mr-5 mt-3 inline-flex items-center text-left text-lg font-medium transition ${
+        selected ? "text-[#183f35]" : "text-[#315f53] hover:text-[#183f35]"
+      }`}
     >
-      <span className="border-b border-[#8fb4a8] pb-1 transition group-hover:border-[#315f53]">{label}</span>
-      <span className="ml-2 text-[#8aa79e] transition group-hover:translate-x-1 group-hover:text-[#315f53]">→</span>
+      <span className={`border-b pb-1 transition ${selected ? "border-[#183f35]" : "border-[#8fb4a8] group-hover:border-[#315f53]"}`}>
+        {selected ? "✓ " : ""}{label}
+      </span>
     </button>
   );
 }
@@ -118,6 +115,7 @@ export default function HomePage() {
   const [query, setQuery] = useState(state.notes || "");
   const [heroStep, setHeroStep] = useState<HeroStep>(state.relationship ? "age" : "relationship");
   const [relationshipLabel, setRelationshipLabel] = useState("your loved one");
+  const [selectedAssistance, setSelectedAssistance] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,17 +130,32 @@ export default function HomePage() {
     setHeroStep("assistance");
   }
 
-  function chooseAssistance(label: string): void {
-    setState({ ...state, assistanceLevel: ASSISTANCE_VALUE_MAP[label] });
+  function toggleAssistance(label: string): void {
+    setSelectedAssistance((current) =>
+      current.includes(label) ? current.filter((item) => item !== label) : [...current, label],
+    );
+  }
+
+  function continueAfterAssistance(): void {
+    if (selectedAssistance.length === 0) return;
+
+    const primaryLabel = [...selectedAssistance].sort(
+      (left, right) => ASSISTANCE_OPTIONS.indexOf(right as (typeof ASSISTANCE_OPTIONS)[number]) - ASSISTANCE_OPTIONS.indexOf(left as (typeof ASSISTANCE_OPTIONS)[number]),
+    )[0];
+    const supportSummary = selectedAssistance.map((item) => ASSISTANCE_VALUE_MAP[item]).join(", ");
+    const existingNotes = state.notes?.trim() || "";
+    const notes = [existingNotes, `Support needs selected: ${supportSummary}.`].filter(Boolean).join(" ");
+
+    setState({
+      ...state,
+      assistanceLevel: ASSISTANCE_VALUE_MAP[primaryLabel],
+      notes,
+    });
     setHeroStep("memory");
   }
 
   function chooseMemory(value: string): void {
     setState({ ...state, memoryStatus: value });
-    setHeroStep("ready");
-  }
-
-  function continueGuidedFlow(): void {
     router.push("/intake");
   }
 
@@ -172,10 +185,7 @@ export default function HomePage() {
       const currentPatientCaseId = loadPatientCaseId();
 
       const [, recommendations] = await Promise.all([
-        fetchPatientNeedsProfile({
-          questionnaire_state: canonicalQuestionnaire,
-          natural_language_query: normalized,
-        }),
+        fetchPatientNeedsProfile({ questionnaire_state: canonicalQuestionnaire, natural_language_query: normalized }),
         fetchPatientDecisionRecommendations({
           patient_case_id: currentPatientCaseId,
           questionnaire_state: canonicalQuestionnaire,
@@ -184,9 +194,7 @@ export default function HomePage() {
         }),
       ]);
 
-      if (typeof recommendations.patient_case_id === "number") {
-        savePatientCaseId(recommendations.patient_case_id);
-      }
+      if (typeof recommendations.patient_case_id === "number") savePatientCaseId(recommendations.patient_case_id);
 
       const params = new URLSearchParams();
       params.set("notes", normalized);
@@ -196,14 +204,9 @@ export default function HomePage() {
       if (state.memoryStatus) params.set("memory", state.memoryStatus);
       if (state.budget) params.set("budget", String(state.budget));
       if (state.distanceFromFamily) params.set("distanceStrategy", state.distanceFromFamily);
-
       router.push(`/results?${params.toString()}`);
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "We could not complete the search right now. Please try again."
-      );
+      setError(requestError instanceof Error ? requestError.message : "We could not complete the search right now. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -236,7 +239,7 @@ export default function HomePage() {
             </p>
 
             <div className="mt-14 max-w-4xl border-l-2 border-[#a9c7bd] pl-6 sm:pl-9">
-              {heroStep === "relationship" ? (
+              {heroStep === "relationship" && (
                 <div>
                   <p className="text-sm font-medium text-[#648077]">First, tell us who this decision is for.</p>
                   <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">Who are you looking for?</h2>
@@ -246,34 +249,40 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
-              ) : null}
+              )}
 
-              {heroStep === "age" ? (
+              {heroStep === "age" && (
                 <div>
                   <button type="button" onClick={() => setHeroStep("relationship")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change who this is for</button>
                   <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">How old is {relationshipLabel}?</h2>
                   <div className="mt-3">
-                    {AGE_OPTIONS.map((option) => (
-                      <ChoiceLink key={option} label={option} onClick={() => chooseAge(option)} />
-                    ))}
+                    {AGE_OPTIONS.map((option) => <ChoiceLink key={option} label={option} onClick={() => chooseAge(option)} />)}
                   </div>
                 </div>
-              ) : null}
+              )}
 
-              {heroStep === "assistance" ? (
+              {heroStep === "assistance" && (
                 <div>
                   <button type="button" onClick={() => setHeroStep("age")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change the age</button>
                   <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">What kind of help is needed today?</h2>
-                  <p className="mt-3 max-w-2xl text-base leading-7 text-[#60716a]">Choose the closest answer. We will refine the details together as the conversation continues.</p>
+                  <p className="mt-3 max-w-2xl text-base leading-7 text-[#60716a]">Choose every answer that applies, then continue.</p>
                   <div className="mt-3">
                     {ASSISTANCE_OPTIONS.map((option) => (
-                      <ChoiceLink key={option} label={option} onClick={() => chooseAssistance(option)} />
+                      <ChoiceLink key={option} label={option} selected={selectedAssistance.includes(option)} onClick={() => toggleAssistance(option)} />
                     ))}
                   </div>
+                  <button
+                    type="button"
+                    disabled={selectedAssistance.length === 0}
+                    onClick={continueAfterAssistance}
+                    className="mt-8 inline-flex items-center border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Next <span className="ml-2">→</span>
+                  </button>
                 </div>
-              ) : null}
+              )}
 
-              {heroStep === "memory" ? (
+              {heroStep === "memory" && (
                 <div>
                   <button type="button" onClick={() => setHeroStep("assistance")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change the support needed</button>
                   <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">Are there any memory concerns?</h2>
@@ -283,24 +292,12 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
-              ) : null}
-
-              {heroStep === "ready" ? (
-                <div>
-                  <p className="text-sm font-medium text-[#3a7969]">We have the beginning of the picture.</p>
-                  <h2 className="mt-3 max-w-3xl text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">Now let&apos;s understand what makes everyday life feel right.</h2>
-                  <p className="mt-4 max-w-2xl text-lg leading-8 text-[#60716a]">The same conversation will continue with lifestyle, family, language, location, budget and priorities.</p>
-                  <button type="button" onClick={continueGuidedFlow} className="mt-7 inline-flex items-center border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35]">
-                    Continue the conversation <span className="ml-2">→</span>
-                  </button>
-                </div>
-              ) : null}
+              )}
             </div>
 
             <button type="button" onClick={() => document.getElementById("describe")?.scrollIntoView({ behavior: "smooth" })} className="mt-12 text-sm font-medium text-[#5a756c] underline decoration-[#a8beb6] underline-offset-4 hover:text-[#315f53]">
               Or tell the story in your own words
             </button>
-
             <p className="mt-8 max-w-3xl text-sm leading-6 text-[#64766f]">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
           </div>
         </div>
@@ -311,41 +308,14 @@ export default function HomePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3a7969]">Your story matters</p>
           <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">Tell us anything the questions may not capture.</h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[#5a6d65]">Use your own words. OPTIME will combine the story with the answers already saved.</p>
-
           <form onSubmit={submit} className="mt-10 max-w-4xl">
             <label htmlFor="family-case" className="sr-only">Describe your family situation</label>
-            <textarea
-              id="family-case"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              rows={6}
-              placeholder={EXAMPLE_QUERY}
-              className="w-full resize-none border-0 border-b-2 border-[#a8beb6] bg-transparent px-0 py-5 text-xl leading-9 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#315f53] focus:ring-0"
-            />
-            {error ? <p className="mt-4 text-sm text-[#8a4434]">{error}</p> : null}
-            <div className="mt-6 flex flex-wrap items-center gap-6">
-              <button type="submit" disabled={isSubmitting} className="inline-flex items-center border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:opacity-60">
-                {isSubmitting ? "Understanding your needs..." : "See options that may fit"} <span className="ml-2">→</span>
-              </button>
-              <button type="button" onClick={() => setQuery(EXAMPLE_QUERY)} className="text-sm font-medium text-[#5e766e] underline decoration-[#a8beb6] underline-offset-4 hover:text-[#315f53]">Use an example</button>
-            </div>
+            <textarea id="family-case" value={query} onChange={(event) => setQuery(event.target.value)} rows={6} placeholder={EXAMPLE_QUERY} className="w-full resize-none border-0 border-b-2 border-[#a8beb6] bg-transparent px-0 py-5 text-xl leading-9 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#315f53] focus:ring-0" />
+            {error && <p className="mt-4 text-sm text-[#8a4434]">{error}</p>}
+            <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex items-center border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:opacity-60">
+              {isSubmitting ? "Understanding your needs..." : "See options that may fit"} <span className="ml-2">→</span>
+            </button>
           </form>
-        </div>
-      </section>
-
-      <section className="border-y border-[#dbe4df] bg-[#edf4f0]">
-        <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 lg:px-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3a7969]">How OPTIME thinks</p>
-          <h2 className="mt-4 max-w-4xl text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">One connected understanding, not a stack of filters.</h2>
-          <div className="mt-14 grid gap-10 md:grid-cols-3">
-            {TRUST_POINTS.map((point, index) => (
-              <article key={point.title} className="border-t border-[#a9c7bd] pt-6">
-                <p className="text-sm font-semibold text-[#73978c]">0{index + 1}</p>
-                <h3 className="mt-5 text-xl font-semibold text-[#29453c]">{point.title}</h3>
-                <p className="mt-3 leading-7 text-[#60716a]">{point.text}</p>
-              </article>
-            ))}
-          </div>
         </div>
       </section>
 
