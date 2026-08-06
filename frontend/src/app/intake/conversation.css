@@ -10,11 +10,11 @@
 .optime-conversation-controller main {
   min-height: 100vh !important;
   background: transparent !important;
-  padding: 5rem 1.25rem 8rem !important;
+  padding: 6.5rem 1.5rem 9rem !important;
 }
 
 .optime-conversation-controller main > section {
-  max-width: 760px !important;
+  max-width: 820px !important;
   margin: 0 auto !important;
 }
 
@@ -27,9 +27,9 @@
   box-shadow: none !important;
 }
 
-/* Remove the legacy hero and AI dashboard. The homepage already introduced the person. */
 .optime-conversation-controller main section > div > section,
-.optime-conversation-controller main aside {
+.optime-conversation-controller main aside,
+.optime-conversation-controller [data-legacy-results-action="true"] {
   display: none !important;
 }
 
@@ -38,13 +38,13 @@
 }
 
 .optime-conversation-controller article[data-conversation-question="true"] {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 6rem;
   border: 0 !important;
-  border-left: 2px solid #a9c7bd !important;
+  border-left: 3px solid #8fb7aa !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  padding: 0 0 0 2rem !important;
+  padding: 0.25rem 0 1rem 2.25rem !important;
   margin: 0 !important;
 }
 
@@ -54,59 +54,69 @@
 
 .optime-conversation-controller article h3,
 .optime-conversation-controller article h4 {
-  max-width: 720px;
-  color: #22332d !important;
-  font-size: clamp(2rem, 5vw, 3.5rem) !important;
-  line-height: 1.08 !important;
-  letter-spacing: -0.045em !important;
+  max-width: 780px;
+  color: #1f332c !important;
+  font-size: clamp(2.15rem, 4.5vw, 3.6rem) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.04em !important;
+  font-weight: 700 !important;
 }
 
 .optime-conversation-controller article p,
 .optime-conversation-controller article label {
-  color: #60716a !important;
-  font-size: 1rem;
-  line-height: 1.7;
+  color: #465e56 !important;
+  font-size: 1.2rem !important;
+  line-height: 1.7 !important;
+  font-weight: 500 !important;
 }
 
 .optime-conversation-controller article button:not([type="submit"]) {
   display: inline-flex !important;
-  margin: 0.7rem 1.25rem 0 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  min-height: 3.5rem;
+  align-items: center;
+  margin: 0.7rem 1rem 0 0 !important;
+  border: 1px solid rgba(49, 88, 78, 0.3) !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.46) !important;
   box-shadow: none !important;
-  color: #31584e !important;
-  padding: 0 0 0.25rem !important;
+  color: #294f45 !important;
+  padding: 0.75rem 1.2rem !important;
   text-align: left;
   text-decoration: none !important;
-  border-bottom: 1px solid rgba(49, 88, 78, 0.35) !important;
-  transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
+  font-size: 1.15rem !important;
+  line-height: 1.35 !important;
+  font-weight: 650 !important;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
 .optime-conversation-controller article button:not([type="submit"]):hover {
-  color: #1f6f5d !important;
-  border-bottom-color: #1f6f5d !important;
-  transform: translateX(0.15rem);
+  color: #174f42 !important;
+  border-color: #4f8c7b !important;
+  background: rgba(234, 246, 241, 0.9) !important;
+  transform: translateY(-1px);
 }
 
 .optime-conversation-controller article button[class*="bg-"] {
-  color: #1f6f5d !important;
-  font-weight: 700 !important;
-  border-bottom: 2px solid #1f6f5d !important;
+  color: #fff !important;
+  background: #286b5a !important;
+  border-color: #286b5a !important;
+  font-weight: 750 !important;
 }
 
 .optime-conversation-controller input,
 .optime-conversation-controller textarea,
 .optime-conversation-controller select {
   width: 100%;
+  min-height: 3.5rem;
   border: 0 !important;
-  border-bottom: 1px solid #9fb6ad !important;
+  border-bottom: 2px solid #8ea99f !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  color: #273630 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  color: #21352e !important;
+  padding: 0.65rem 0 !important;
+  font-size: 1.2rem !important;
+  line-height: 1.6 !important;
 }
 
 .optime-conversation-controller input:focus,
@@ -117,45 +127,97 @@
   box-shadow: 0 1px 0 #1f6f5d !important;
 }
 
+.optime-conversation-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 70;
+  height: 5px;
+  background: rgba(176, 199, 190, 0.42);
+}
+
+.optime-conversation-progress span {
+  display: block;
+  height: 100%;
+  background: #2e7b68;
+  transition: width 220ms ease;
+}
+
 .optime-conversation-navigation {
   position: fixed;
   left: 50%;
-  bottom: 1.25rem;
+  bottom: 0;
   z-index: 60;
-  display: flex;
-  width: min(760px, calc(100% - 2rem));
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  width: min(820px, 100%);
   transform: translateX(-50%);
   align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid #c9d9d3;
-  background: rgba(248, 245, 239, 0.94);
-  padding: 1rem 0;
-  backdrop-filter: blur(12px);
+  border-top: 1px solid #c2d5ce;
+  background: rgba(248, 245, 239, 0.97);
+  padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
+  backdrop-filter: blur(14px);
 }
 
 .optime-conversation-navigation button {
+  min-height: 3rem;
   border: 0;
   background: transparent;
-  color: #31584e;
-  font-size: 1rem;
-  font-weight: 700;
+  color: #254f44;
+  font-size: 1.1rem;
+  font-weight: 750;
 }
 
 .optime-conversation-navigation button:disabled {
-  opacity: 0.3;
+  opacity: 0.35;
+}
+
+.optime-conversation-count {
+  color: #657970;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.optime-conversation-back {
+  justify-self: start;
 }
 
 .optime-conversation-next {
-  border-bottom: 2px solid #4c8b7b !important;
-  padding-bottom: 0.25rem !important;
+  justify-self: end;
+  border-radius: 9999px !important;
+  background: #246b59 !important;
+  color: #fff !important;
+  padding: 0.7rem 1.2rem !important;
 }
 
 @media (max-width: 640px) {
   .optime-conversation-controller main {
-    padding-top: 3rem !important;
+    padding: 4.75rem 1rem 8.5rem !important;
   }
 
   .optime-conversation-controller article[data-conversation-question="true"] {
-    padding-left: 1.25rem !important;
+    padding-left: 1.15rem !important;
+  }
+
+  .optime-conversation-controller article h3,
+  .optime-conversation-controller article h4 {
+    font-size: 2rem !important;
+  }
+
+  .optime-conversation-controller article p,
+  .optime-conversation-controller article label,
+  .optime-conversation-controller article button:not([type="submit"]),
+  .optime-conversation-controller input,
+  .optime-conversation-controller textarea,
+  .optime-conversation-controller select {
+    font-size: 1.08rem !important;
+  }
+
+  .optime-conversation-navigation {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .optime-conversation-count {
+    font-size: 0.8rem;
   }
 }
