@@ -12,6 +12,72 @@ const EXAMPLE_QUERY =
 
 const PATIENT_CASE_ID_SESSION_KEY = "optime.patient.case.id";
 
+const RELATIONSHIP_OPTIONS = [
+  { label: "Me", value: "Myself" },
+  { label: "My mother", value: "Mom" },
+  { label: "My father", value: "Dad" },
+  { label: "My husband", value: "Spouse" },
+  { label: "My wife", value: "Spouse" },
+  { label: "A couple", value: "Couple" },
+  { label: "Someone else", value: "Relative" },
+] as const;
+
+const AGE_OPTIONS = ["60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95+"];
+
+const ASSISTANCE_OPTIONS = [
+  "Fully independent",
+  "Light assistance",
+  "Help with bathing",
+  "Help with dressing",
+  "Help with medications",
+  "Daytime supervision",
+  "24/7 support required",
+  "Skilled nursing care",
+];
+
+const MEMORY_OPTIONS = [
+  "No memory concerns",
+  "Occasionally forgetful",
+  "Mild memory issues",
+  "Significant memory issues",
+  "Not sure",
+] as const;
+
+const TRUST_POINTS = [
+  {
+    title: "Built around your family",
+    text: "Care needs, personality, routines, language, location and budget are considered together — not as separate filters.",
+  },
+  {
+    title: "Evidence before claims",
+    text: "Recommendations are based on verified information. Missing or uncertain information is shown clearly rather than guessed.",
+  },
+  {
+    title: "Independent recommendations",
+    text: "Commercial relationships do not determine rankings. The decision starts with what is right for your family.",
+  },
+];
+
+const STEPS = [
+  {
+    number: "01",
+    title: "Tell us what matters",
+    text: "Answer simple questions in a natural conversation. You can also add anything important in your own words.",
+  },
+  {
+    number: "02",
+    title: "We build the full picture",
+    text: "OPTIME organizes needs, priorities, constraints and unknowns into one clear decision profile.",
+  },
+  {
+    number: "03",
+    title: "Receive explained options",
+    text: "See which communities fit, why they fit, what may not fit and what still needs to be verified.",
+  },
+];
+
+type HeroStep = "relationship" | "age" | "assistance" | "memory" | "ready";
+
 function loadPatientCaseId(): number | undefined {
   if (typeof window === "undefined") return undefined;
   try {
@@ -33,45 +99,47 @@ function savePatientCaseId(value: number): void {
   }
 }
 
-const TRUST_POINTS = [
-  {
-    title: "Built around your family",
-    text: "Care needs, personality, routines, language, location and budget are considered together — not as separate filters.",
-  },
-  {
-    title: "Evidence before claims",
-    text: "Recommendations are based on verified information. Missing or uncertain information is shown clearly rather than guessed.",
-  },
-  {
-    title: "Independent recommendations",
-    text: "Commercial relationships do not determine rankings. The decision starts with what is right for your family.",
-  },
-];
-
-const STEPS = [
-  {
-    number: "01",
-    title: "Tell us what matters",
-    text: "Describe the person, the situation and the decision in your own words, or use the guided questionnaire.",
-  },
-  {
-    number: "02",
-    title: "We build the full picture",
-    text: "OPTIME organizes needs, priorities, constraints and unknowns into one clear decision profile.",
-  },
-  {
-    number: "03",
-    title: "Receive explained options",
-    text: "See which communities fit, why they fit, what may not fit and what still needs to be verified.",
-  },
-];
+function personCopy(label: string): string {
+  if (label === "Me") return "you";
+  if (label === "A couple") return "both of you";
+  if (label === "Someone else") return "them";
+  return label.replace(/^My /, "your ");
+}
 
 export default function HomePage() {
   const router = useRouter();
   const { state, setState } = useQuestionnaire();
   const [query, setQuery] = useState(state.notes || "");
+  const [heroStep, setHeroStep] = useState<HeroStep>(state.relationship ? "age" : "relationship");
+  const [relationshipLabel, setRelationshipLabel] = useState("your loved one");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function chooseRelationship(label: string, value: string): void {
+    setState({ ...state, relationship: value });
+    setRelationshipLabel(personCopy(label));
+    setHeroStep("age");
+  }
+
+  function chooseAge(value: string): void {
+    setState({ ...state, ageGroup: value });
+    setHeroStep("assistance");
+  }
+
+  function chooseAssistance(value: string): void {
+    setState({ ...state, assistanceLevel: value });
+    setHeroStep("memory");
+  }
+
+  function chooseMemory(value: (typeof MEMORY_OPTIONS)[number]): void {
+    const canonicalValue = value === "No memory concerns" ? "No" : value;
+    setState({ ...state, memoryStatus: canonicalValue });
+    setHeroStep("ready");
+  }
+
+  function continueGuidedFlow(): void {
+    router.push("/intake");
+  }
 
   async function runSearch(inputQuery: string): Promise<void> {
     const normalized = inputQuery.trim();
@@ -141,152 +209,156 @@ export default function HomePage() {
     void runSearch(query);
   }
 
+  const progress = heroStep === "relationship" ? 1 : heroStep === "age" ? 2 : heroStep === "assistance" ? 3 : heroStep === "memory" ? 4 : 5;
+
   return (
     <main className="min-h-screen bg-[#f8f5ef] text-[#21312b]">
       <section className="relative overflow-hidden border-b border-[#dbe4df] bg-[radial-gradient(circle_at_12%_10%,rgba(219,239,229,0.95),transparent_32%),radial-gradient(circle_at_90%_0%,rgba(255,232,202,0.9),transparent_34%),linear-gradient(180deg,#fbfaf7_0%,#f7f4ee_100%)]">
         <div className="mx-auto max-w-7xl px-5 pb-20 pt-6 sm:px-8 lg:px-12 lg:pb-28">
           <nav className="flex items-center justify-between" aria-label="Main navigation">
-            <Link href="/" className="text-xl font-semibold tracking-[-0.03em] text-[#1e4f43]">
-              OPTIME
-            </Link>
+            <Link href="/" className="text-xl font-semibold tracking-[-0.03em] text-[#1e4f43]">OPTIME</Link>
             <div className="flex items-center gap-3 text-sm font-medium">
-              <Link href="/workspace" className="hidden rounded-full px-4 py-2 text-[#486057] hover:bg-white/70 sm:inline-flex">
-                My workspace
-              </Link>
-              <Link href="/questionnaire" className="rounded-full bg-[#1f6f5d] px-5 py-2.5 text-white shadow-sm transition hover:bg-[#185a4c]">
-                Start guided process
-              </Link>
+              <Link href="/workspace" className="hidden rounded-full px-4 py-2 text-[#486057] hover:bg-white/70 sm:inline-flex">My workspace</Link>
+              <Link href="/intake" className="rounded-full bg-[#1f6f5d] px-5 py-2.5 text-white shadow-sm transition hover:bg-[#185a4c]">Continue guided process</Link>
             </div>
           </nav>
 
-          <div className="grid items-center gap-12 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:pt-24">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3a7969]">
-                Finding You the Right Way
-              </p>
+          <div className="grid items-start gap-12 pt-14 lg:grid-cols-[0.95fr_1.05fr] lg:pt-20">
+            <div className="lg:pt-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3a7969]">Finding You the Right Way</p>
               <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.06] tracking-[-0.045em] text-[#1e2e28] sm:text-6xl lg:text-7xl">
                 The right senior living decision starts with understanding the person.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-[#52645d] sm:text-xl">
-                OPTIME helps families compare care, lifestyle, location and evidence together — then explains which options fit, where the trade-offs are and what still needs checking.
+                We begin with a few simple questions, then build a complete picture of care, lifestyle, location and what matters most.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/questionnaire" className="rounded-full bg-[#1f6f5d] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_12px_30px_-16px_rgba(31,111,93,0.9)] transition hover:bg-[#185a4c]">
-                  Begin with guided questions
-                </Link>
-                <a href="#tell-us" className="rounded-full border border-[#bdcdc5] bg-white/70 px-6 py-3.5 text-sm font-semibold text-[#31584e] transition hover:bg-white">
-                  Describe the situation
-                </a>
-              </div>
-              <p className="mt-5 text-sm text-[#64766f]">
-                No paid placement determines your recommendation. Uncertainty is shown, not hidden.
-              </p>
+              <p className="mt-6 text-sm text-[#64766f]">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
             </div>
 
-            <div id="tell-us" className="rounded-[2rem] border border-white/90 bg-white/90 p-6 shadow-[0_36px_90px_-44px_rgba(47,71,61,0.5)] backdrop-blur sm:p-8">
-              <p className="text-sm font-semibold text-[#2b5f52]">Tell us who you are helping</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[#22332d]">
-                Start in your own words
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-[#60716a]">
-                Include anything that matters: care needs, personality, routines, language, family location, budget and concerns.
-              </p>
+            <div className="rounded-[2rem] border border-white/90 bg-white/92 p-6 shadow-[0_36px_90px_-44px_rgba(47,71,61,0.5)] backdrop-blur sm:p-8">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-sm font-semibold text-[#2b5f52]">Let&apos;s begin</p>
+                <p className="text-xs font-medium text-[#71827b]">Step {progress} of 5</p>
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e7efeb]">
+                <div className="h-full rounded-full bg-[#2f806c] transition-all duration-500" style={{ width: `${progress * 20}%` }} />
+              </div>
 
-              <form onSubmit={submit} className="mt-6 space-y-4">
-                <label htmlFor="family-case" className="sr-only">
-                  Describe your family situation
-                </label>
-                <textarea
-                  id="family-case"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  rows={7}
-                  placeholder={EXAMPLE_QUERY}
-                  className="w-full resize-none rounded-3xl border border-[#cfdad4] bg-[#fbfcfb] px-5 py-4 text-base leading-7 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#75a797] focus:ring-4 focus:ring-[#dcefe8]"
-                />
-                {error ? (
-                  <p className="rounded-2xl border border-[#ecc8bc] bg-[#fff4ef] px-4 py-3 text-sm text-[#8a4434]">
-                    {error}
-                  </p>
-                ) : null}
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 rounded-full bg-[#1f6f5d] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[#185a4c] disabled:cursor-not-allowed disabled:opacity-65"
-                  >
-                    {isSubmitting ? "Understanding your needs..." : "See options that may fit"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setQuery(EXAMPLE_QUERY)}
-                    className="rounded-full border border-[#cfdad4] px-5 py-3.5 text-sm font-semibold text-[#3f6057] transition hover:bg-[#f5faf7]"
-                  >
-                    Use an example
-                  </button>
+              {heroStep === "relationship" ? (
+                <div className="mt-7">
+                  <p className="text-sm leading-6 text-[#60716a]">Every recommendation begins with the person.</p>
+                  <h2 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-[#22332d]">Who are you looking for?</h2>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {RELATIONSHIP_OPTIONS.map((option) => (
+                      <button key={option.label} type="button" onClick={() => chooseRelationship(option.label, option.value)} className="rounded-2xl border border-[#cfdad4] bg-[#fbfcfb] px-5 py-4 text-left text-sm font-semibold text-[#35584f] transition hover:-translate-y-0.5 hover:border-[#78a697] hover:bg-[#f3faf7]">
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </form>
+              ) : null}
+
+              {heroStep === "age" ? (
+                <div className="mt-7">
+                  <button type="button" onClick={() => setHeroStep("relationship")} className="text-sm font-medium text-[#52736a] hover:text-[#285d4f]">← Back</button>
+                  <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d]">How old is {relationshipLabel}?</h2>
+                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {AGE_OPTIONS.map((option) => (
+                      <button key={option} type="button" onClick={() => chooseAge(option)} className="rounded-2xl border border-[#cfdad4] bg-[#fbfcfb] px-4 py-3.5 text-sm font-semibold text-[#35584f] transition hover:border-[#78a697] hover:bg-[#f3faf7]">{option}</button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {heroStep === "assistance" ? (
+                <div className="mt-7">
+                  <button type="button" onClick={() => setHeroStep("age")} className="text-sm font-medium text-[#52736a] hover:text-[#285d4f]">← Back</button>
+                  <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d]">What kind of help is needed today?</h2>
+                  <p className="mt-3 text-sm leading-6 text-[#60716a]">Choose the closest answer. We will refine it together later.</p>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {ASSISTANCE_OPTIONS.map((option) => (
+                      <button key={option} type="button" onClick={() => chooseAssistance(option)} className="rounded-2xl border border-[#cfdad4] bg-[#fbfcfb] px-4 py-3.5 text-left text-sm font-semibold text-[#35584f] transition hover:border-[#78a697] hover:bg-[#f3faf7]">{option}</button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {heroStep === "memory" ? (
+                <div className="mt-7">
+                  <button type="button" onClick={() => setHeroStep("assistance")} className="text-sm font-medium text-[#52736a] hover:text-[#285d4f]">← Back</button>
+                  <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d]">Are there any memory concerns?</h2>
+                  <div className="mt-6 grid gap-3">
+                    {MEMORY_OPTIONS.map((option) => (
+                      <button key={option} type="button" onClick={() => chooseMemory(option)} className="rounded-2xl border border-[#cfdad4] bg-[#fbfcfb] px-5 py-3.5 text-left text-sm font-semibold text-[#35584f] transition hover:border-[#78a697] hover:bg-[#f3faf7]">{option}</button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {heroStep === "ready" ? (
+                <div className="mt-7">
+                  <p className="text-sm font-semibold text-[#2f806c]">A good start</p>
+                  <h2 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-[#22332d]">We already understand the first part of the situation.</h2>
+                  <p className="mt-4 leading-7 text-[#60716a]">Continue the same guided conversation so we can understand lifestyle, family, language, location, budget and priorities.</p>
+                  <button type="button" onClick={continueGuidedFlow} className="mt-7 w-full rounded-full bg-[#1f6f5d] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[#185a4c]">Continue the conversation</button>
+                </div>
+              ) : null}
+
+              <div className="mt-7 border-t border-[#e3eae6] pt-5 text-center">
+                <a href="#describe" className="text-sm font-semibold text-[#476b61] hover:text-[#245a4c]">Prefer to describe the situation in your own words?</a>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12">
-        <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3a7969]">How OPTIME works</p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-5xl">
-            One clear process for a complicated family decision.
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {STEPS.map((step) => (
-            <article key={step.number} className="rounded-[1.75rem] border border-[#dde5e1] bg-white p-7 shadow-[0_20px_60px_-45px_rgba(33,49,43,0.55)]">
-              <p className="text-sm font-semibold text-[#6d978a]">{step.number}</p>
-              <h3 className="mt-8 text-xl font-semibold tracking-[-0.02em] text-[#253730]">{step.title}</h3>
-              <p className="mt-3 leading-7 text-[#60716a]">{step.text}</p>
-            </article>
-          ))}
+      <section id="describe" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12">
+        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3a7969]">Your story matters</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-5xl">Tell us anything the questions may not capture.</h2>
+            <p className="mt-5 text-lg leading-8 text-[#5a6d65]">Use your own words. OPTIME will combine the story with the guided answers already saved.</p>
+          </div>
+          <form onSubmit={submit} className="rounded-[2rem] border border-[#dbe4df] bg-white p-6 shadow-[0_28px_80px_-54px_rgba(33,49,43,0.55)] sm:p-8">
+            <label htmlFor="family-case" className="sr-only">Describe your family situation</label>
+            <textarea id="family-case" value={query} onChange={(event) => setQuery(event.target.value)} rows={7} placeholder={EXAMPLE_QUERY} className="w-full resize-none rounded-3xl border border-[#cfdad4] bg-[#fbfcfb] px-5 py-4 text-base leading-7 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#75a797] focus:ring-4 focus:ring-[#dcefe8]" />
+            {error ? <p className="mt-4 rounded-2xl border border-[#ecc8bc] bg-[#fff4ef] px-4 py-3 text-sm text-[#8a4434]">{error}</p> : null}
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <button type="submit" disabled={isSubmitting} className="flex-1 rounded-full bg-[#1f6f5d] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[#185a4c] disabled:cursor-not-allowed disabled:opacity-65">{isSubmitting ? "Understanding your needs..." : "See options that may fit"}</button>
+              <button type="button" onClick={() => setQuery(EXAMPLE_QUERY)} className="rounded-full border border-[#cfdad4] px-5 py-3.5 text-sm font-semibold text-[#3f6057] transition hover:bg-[#f5faf7]">Use an example</button>
+            </div>
+          </form>
         </div>
       </section>
 
       <section className="border-y border-[#dbe4df] bg-[#edf4f0]">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3a7969]">A decision you can trust</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-5xl">
-              Clear about what we know — and what we do not.
-            </h2>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-[#5a6d65]">
-              OPTIME is designed to act like a careful advisor: evidence-led, transparent about uncertainty and focused on your family rather than the loudest listing.
-            </p>
-          </div>
-          <div className="grid gap-4">
-            {TRUST_POINTS.map((point) => (
-              <article key={point.title} className="rounded-[1.5rem] border border-white/80 bg-white/80 p-6">
-                <h3 className="text-lg font-semibold text-[#29453c]">{point.title}</h3>
-                <p className="mt-2 leading-7 text-[#60716a]">{point.text}</p>
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3a7969]">How OPTIME works</p>
+          <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-5xl">One clear process for a complicated family decision.</h2>
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {STEPS.map((step) => (
+              <article key={step.number} className="rounded-[1.75rem] border border-white/80 bg-white/85 p-7">
+                <p className="text-sm font-semibold text-[#6d978a]">{step.number}</p>
+                <h3 className="mt-8 text-xl font-semibold tracking-[-0.02em] text-[#253730]">{step.title}</h3>
+                <p className="mt-3 leading-7 text-[#60716a]">{step.text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12">
-        <div className="rounded-[2.25rem] bg-[#214c41] px-6 py-12 text-white shadow-[0_32px_90px_-48px_rgba(25,57,49,0.9)] sm:px-10 lg:flex lg:items-center lg:justify-between lg:px-14">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#a8d5c8]">Ready when you are</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-5xl">
-              Start with what you know. We will help uncover what is missing.
-            </h2>
-          </div>
-          <div className="mt-8 flex flex-wrap gap-3 lg:mt-0 lg:pl-8">
-            <Link href="/questionnaire" className="rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#214c41] transition hover:bg-[#eef6f2]">
-              Start the guided process
-            </Link>
-            <a href="#tell-us" className="rounded-full border border-[#6e9b8e] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10">
-              Describe the situation
-            </a>
-          </div>
+      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3a7969]">A decision you can trust</p>
+          <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-5xl">Clear about what we know — and what we do not.</h2>
+        </div>
+        <div className="grid gap-4">
+          {TRUST_POINTS.map((point) => (
+            <article key={point.title} className="rounded-[1.5rem] border border-[#dbe4df] bg-white p-6">
+              <h3 className="text-lg font-semibold text-[#29453c]">{point.title}</h3>
+              <p className="mt-2 leading-7 text-[#60716a]">{point.text}</p>
+            </article>
+          ))}
         </div>
       </section>
 
