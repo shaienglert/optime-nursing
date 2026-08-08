@@ -1,0 +1,2447 @@
+{
+  "generated_at_utc": "2026-08-05T12:25:18Z",
+  "command_id": "OPTIME-004",
+  "parent_command_id": "OPTIME-003-HF1",
+  "principle_impact_check": {
+    "RELEVANT_EXISTING_PRINCIPLES": [
+      "PR-001",
+      "PR-002",
+      "PR-003",
+      "PR-004",
+      "PR-005",
+      "PR-006",
+      "PR-007",
+      "PR-008",
+      "PR-009"
+    ],
+    "DOES_THIS_CHANGE_ALTER_ANY_PRINCIPLE": "NO",
+    "OWNER_APPROVAL_REQUIRED": "NO",
+    "classification": "B. Implementation Completion (documentation/audit canonization)"
+  },
+  "evidence_sources": {
+    "constitution": [
+      "AGENTS.md",
+      "docs/OPTIME_PRINCIPLES.md",
+      "docs/OPTIME_PRINCIPLES_REGISTRY.md"
+    ],
+    "platform_registry": "database/platform_registry.json",
+    "agent_registry": [
+      "reports/agent_registry.md",
+      "reports/agent_report_registry.md"
+    ],
+    "system_health": [
+      "reports/platform_health_report.md",
+      "reports/system_health.md",
+      "reports/system_health_dashboard.md"
+    ],
+    "runtime": [
+      "backend/app/services/runtime_sync_service.py",
+      "GET /runtime/status production probe"
+    ],
+    "release_ledger": "reports/RELEASE_RECOVERY_LEDGER_OPTIME-001-RLS.json",
+    "architecture": [
+      "reports/system_architecture_review.md",
+      "reports/knowledge_fabric_architecture.md",
+      "reports/knowledge_workforce_architecture.md",
+      "reports/phase9_architecture_validation.md"
+    ],
+    "backend_tests": [
+      "backend\\tests\\test_chief_ai_supervisor_operations.py",
+      "backend\\tests\\test_cors_config.py",
+      "backend\\tests\\test_decision_engine_routes.py",
+      "backend\\tests\\test_facility_media_resolution.py",
+      "backend\\tests\\test_facility_parameter_service.py",
+      "backend\\tests\\test_government_identity_media.py",
+      "backend\\tests\\test_nevada_canonical_universe.py",
+      "backend\\tests\\test_patient_decision_engine.py",
+      "backend\\tests\\test_platform_registry.py",
+      "backend\\tests\\test_provider_organization_registry.py",
+      "backend\\tests\\test_remediation_policy_engine.py",
+      "backend\\tests\\test_runtime_sync_service.py",
+      "backend\\tests\\test_system_health_service.py"
+    ],
+    "frontend_tests": [
+      "frontend\\tests\\api-base-url.test.ts",
+      "frontend\\tests\\budget-utils.test.ts",
+      "frontend\\tests\\facility-experience.test.ts",
+      "frontend\\tests\\results-compare-flow.test.ts"
+    ]
+  },
+  "production_state": {
+    "health": {
+      "status": 200,
+      "payload": {
+        "status": "healthy"
+      }
+    },
+    "runtime_status": {
+      "status": 200,
+      "payload": {
+        "monitor_enabled": false,
+        "monitor_running": false,
+        "monitor_interval_seconds": 120,
+        "last_check_at": null,
+        "last_dirty": null,
+        "dirty_reasons": [],
+        "last_rebuild_attempt_at": null,
+        "last_rebuild_success_at": null,
+        "last_rebuild_duration_ms": null,
+        "last_error": null,
+        "retry_count": 0,
+        "next_retry_at": null,
+        "runtime_version_history": [],
+        "recent_events": [],
+        "dirty": false,
+        "dirty_reasons_current": [],
+        "artifact_signature": {
+          "registry": {
+            "path": "/opt/render/project/src/database/optime_parameter_registry.json",
+            "exists": true,
+            "mtime": 1785931653.0,
+            "size": 58891
+          },
+          "evidence": {
+            "path": "/opt/render/project/src/database/florida_facility_parameter_evidence.json",
+            "exists": true,
+            "mtime": 1785931653.0,
+            "size": 16406157
+          },
+          "canonical": {
+            "path": "/opt/render/project/src/database/florida_facility_universe_canonical.json",
+            "exists": true,
+            "mtime": 1785931653.0,
+            "size": 25954348
+          }
+        },
+        "runtime_version": "aefec320055dc1ac",
+        "runtime_timestamp": "2026-07-21T15:01:12+00:00",
+        "runtime_cache": {
+          "cache_loaded": true,
+          "loaded_at": "2026-08-05T12:14:56.922646+00:00",
+          "swap_count": 1,
+          "last_swap_reason": "load_or_refresh",
+          "signature": [
+            1785931653.0,
+            1785931653.0,
+            1785931653.0,
+            "/opt/render/project/src/database/florida_facility_universe_canonical.json"
+          ],
+          "runtime_version": "aefec320055dc1ac",
+          "runtime_timestamp": "2026-07-21T15:01:12+00:00"
+        }
+      }
+    },
+    "supervisor_overview": {
+      "status": 200,
+      "payload": {
+        "fresh_agents": 11,
+        "stale_agents": 0,
+        "expired_knowledge": 0,
+        "failed_refreshes": 0,
+        "knowledge_age": 0,
+        "pending_reviews": 11,
+        "refresh_queue": 0,
+        "refresh_success_rate": 1.0,
+        "average_knowledge_freshness": 0.8573,
+        "alerts": []
+      }
+    },
+    "refresh": {
+      "status": 200,
+      "payload": {
+        "attempted": 11,
+        "refreshed": 11,
+        "failures": 0,
+        "skipped": 0,
+        "retried": 0,
+        "incidents": 0,
+        "agents": [
+          {
+            "agent_id": "clinical_knowledge",
+            "agent_name": "Clinical Knowledge Agent",
+            "refresh_started_at": "2026-08-05T12:19:36.084655+00:00",
+            "refresh_completed_at": "2026-08-05T12:19:36.316888+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "CMS, Clinical guidelines, Care compare",
+            "output_target": "agent_knowledge_report_snapshots.clinical_knowledge",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "senior_living_research",
+            "agent_name": "Senior Living Research Agent",
+            "refresh_started_at": "2026-08-05T12:19:36.317066+00:00",
+            "refresh_completed_at": "2026-08-05T12:19:36.623142+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "State inspections, Official websites, Public records",
+            "output_target": "agent_knowledge_report_snapshots.senior_living_research",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "resident_needs",
+            "agent_name": "Resident Needs Intelligence Agent",
+            "refresh_started_at": "2026-08-05T12:19:36.623310+00:00",
+            "refresh_completed_at": "2026-08-05T12:19:36.823401+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Questionnaire, Adaptive responses, Outcome patterns",
+            "output_target": "agent_knowledge_report_snapshots.resident_needs",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "provider_intelligence",
+            "agent_name": "Provider Intelligence Agent",
+            "refresh_started_at": "2026-08-05T12:19:36.823549+00:00",
+            "refresh_completed_at": "2026-08-05T12:20:43.910149+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Provider portal, CMS, State inspections",
+            "output_target": "agent_knowledge_report_snapshots.provider_intelligence",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "activities_intelligence",
+            "agent_name": "Activities Intelligence Agent",
+            "refresh_started_at": "2026-08-05T12:20:43.910416+00:00",
+            "refresh_completed_at": "2026-08-05T12:20:44.224275+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Facility metadata, Public calendars, Provider updates",
+            "output_target": "agent_knowledge_report_snapshots.activities_intelligence",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "nutrition_intelligence",
+            "agent_name": "Nutrition Intelligence Agent",
+            "refresh_started_at": "2026-08-05T12:20:44.224485+00:00",
+            "refresh_completed_at": "2026-08-05T12:20:44.617291+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Facility capabilities, Clinical guidance, Provider verification",
+            "output_target": "agent_knowledge_report_snapshots.nutrition_intelligence",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "family_experience",
+            "agent_name": "Family Experience Intelligence Agent",
+            "refresh_started_at": "2026-08-05T12:20:44.617493+00:00",
+            "refresh_completed_at": "2026-08-05T12:20:45.012897+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Public reviews, Family surveys, Outcome feedback",
+            "output_target": "agent_knowledge_report_snapshots.family_experience",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "outcome_learning",
+            "agent_name": "Outcome Learning Agent",
+            "refresh_started_at": "2026-08-05T12:20:45.013078+00:00",
+            "refresh_completed_at": "2026-08-05T12:20:45.212193+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Resident outcomes, Validation runs, Cohort analytics",
+            "output_target": "agent_knowledge_report_snapshots.outcome_learning",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "matching_improvement",
+            "agent_name": "Matching Improvement Agent",
+            "refresh_started_at": "2026-08-05T12:20:45.212403+00:00",
+            "refresh_completed_at": "2026-08-05T12:20:45.523124+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Simulation audits, Validation reports, Outcome deltas",
+            "output_target": "agent_knowledge_report_snapshots.matching_improvement",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "knowledge_graph",
+            "agent_name": "Knowledge Graph Agent",
+            "refresh_started_at": "2026-08-05T12:20:45.523299+00:00",
+            "refresh_completed_at": "2026-08-05T12:20:45.911919+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Knowledge graph, Evidence links, Agent outputs",
+            "output_target": "agent_knowledge_report_snapshots.knowledge_graph",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          },
+          {
+            "agent_id": "data_quality",
+            "agent_name": "Data Quality & Trust Agent",
+            "refresh_started_at": "2026-08-05T12:20:45.912143+00:00",
+            "refresh_completed_at": "2026-08-05T12:20:46.220066+00:00",
+            "success": true,
+            "status": "SUCCESS",
+            "failing_stage": null,
+            "exception_type": null,
+            "exact_error_message": null,
+            "stack_trace_location": null,
+            "input_source": "Data quality dashboard, Conflict report, Source reliability",
+            "output_target": "agent_knowledge_report_snapshots.data_quality",
+            "retryable": true,
+            "automatic_fix_allowed": true,
+            "recommended_action": null,
+            "incident_id": null
+          }
+        ]
+      }
+    }
+  },
+  "registry_summary": {
+    "capability_count": 28,
+    "objective_count": 6,
+    "current_active_objective": "launch_nevada",
+    "current_executable_capability": "source_intelligence",
+    "registry_trust_verdict": "REGISTRY_TRUSTED",
+    "assignment_decision_reason": "ALLOWED"
+  },
+  "capabilities": [
+    {
+      "capability_id": "constitution_governance",
+      "capability_name": "Constitution & Governance",
+      "purpose": "Constitutional constraints, owner gates, and principle authority for the platform.",
+      "owner": "OPTIME Governance",
+      "dependencies": [],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/OPTIME_AGENT_SYSTEM_AUDIT.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-20T13:42:18Z', 'expires_at': '2026-08-19T13:42:18Z', 'source_version': '781e215570c81b4f7cd04b77e34a2650f73e2f31', 'stale': False, 'implementation_checksum': 'ef8aed8efb419511961855cf31483196c8bcce81'}, {'reference': 'reports/OPTIME_DECISION_INTELLIGENCE_ARCHITECTURE.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-02T15:57:05Z', 'expires_at': '2026-09-01T15:57:05Z', 'source_version': 'a376c37e273762237f0642a0b5def47be0067b77', 'stale': False, 'implementation_checksum': 'ef8aed8efb419511961855cf31483196c8bcce81'}]",
+        "execution_path=constitution_governance",
+        "latest_successful_execution=2026-08-02T15:57:05Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "source_intelligence",
+      "capability_name": "Source Intelligence",
+      "purpose": "Discover, verify, and publish trusted source coverage and lifecycle state.",
+      "owner": "OPTIME Source Intelligence",
+      "dependencies": [
+        "constitution_governance"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [
+        "backend/tests/test_source_policy_engine.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'database/source_lifecycle_registry.json', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T04:58:34Z', 'expires_at': '2026-09-04T04:58:34Z', 'source_version': 'b7d172b8dac75b44e1e5d3e4a0fbd6301602e585', 'stale': False, 'implementation_checksum': '4093c4e3de8b3e4596a9ee0e824078090fc76d9c'}, {'reference': 'reports/SOURCE_LIFECYCLE_STATUS.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T04:58:34Z', 'expires_at': '2026-09-04T04:58:34Z', 'source_version': '8060bbd07daf39d680e4cf5925adf79436d4fe8e', 'stale': False, 'implementation_checksum': '4093c4e3de8b3e4596a9ee0e824078090fc76d9c'}]",
+        "execution_path=evaluate_source_policy_for_record -> generate_status_snapshot -> render_status_report",
+        "latest_successful_execution=2026-08-05T04:58:34Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "Approved sources are not fully integrated and Florida state sources remain partially blocked."
+      ],
+      "risk": "HIGH",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "market_builder",
+      "capability_name": "Market Builder",
+      "purpose": "Prepare reusable market-specific canonical build runs and validation bundles.",
+      "owner": "OPTIME Market Intelligence",
+      "dependencies": [
+        "constitution_governance",
+        "source_intelligence"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": true,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [
+        "backend/tests/test_nevada_canonical_universe.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/NEVADA_SOURCE_INTEGRATION_REPORT.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T04:58:35Z', 'expires_at': '2026-09-04T04:58:35Z', 'source_version': '6c86f54a1943e8f8e9be2c773b421fbf03c776dd', 'stale': False, 'implementation_checksum': 'b380a4da72d2e072dbeb210b010b99c9a444a8a5'}, {'reference': 'reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T04:59:33Z', 'expires_at': '2026-09-04T04:59:33Z', 'source_version': 'e69da1033350af3a6fe037cdc2afb6477d67da4d', 'stale': False, 'implementation_checksum': 'b380a4da72d2e072dbeb210b010b99c9a444a8a5'}]",
+        "execution_path=scripts/build_nevada_canonical_universe.py -> scripts/run_nevada_authoritative_source_integration.py",
+        "latest_successful_execution=2026-08-05T04:59:33Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No generic builder entry point exists; validation remains state-specific."
+      ],
+      "risk": "HIGH",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "canonical_universe",
+      "capability_name": "Canonical Universe",
+      "purpose": "Normalize, deduplicate, and publish canonical facility identities and crosswalks.",
+      "owner": "OPTIME Canonical Universe",
+      "dependencies": [
+        "market_builder",
+        "source_intelligence"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": true,
+        "VERIFIED": true,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [
+        "backend/tests/test_nevada_canonical_universe.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'database/nevada_facility_universe_canonical.json', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T04:45:15Z', 'expires_at': '2026-09-04T04:45:15Z', 'source_version': '3287259232e32eec77bff0c06ac044719de56933', 'stale': False, 'implementation_checksum': '9517cf865e6b320ee64679bd8566b1381637a6d8'}, {'reference': 'reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T04:59:33Z', 'expires_at': '2026-09-04T04:59:33Z', 'source_version': 'e69da1033350af3a6fe037cdc2afb6477d67da4d', 'stale': False, 'implementation_checksum': '9517cf865e6b320ee64679bd8566b1381637a6d8'}]",
+        "execution_path=backend/app/services/canonical_universe.py",
+        "latest_successful_execution=2026-08-05T04:59:33Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "Layer 2 Market Builder remains state-specific and Nevada HCQC remains unintegrated."
+      ],
+      "risk": "HIGH",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "government_identity",
+      "capability_name": "Government Identity",
+      "purpose": "Resolve legal names, NPI links, state identity, and crosswalks for canonical facilities.",
+      "owner": "OPTIME Identity Governance",
+      "dependencies": [
+        "canonical_universe"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": true,
+        "VERIFIED": true,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [
+        "backend/tests/test_government_identity_media.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/GOVERNMENT_IDENTITY_MEDIA_COVERAGE.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-03T17:38:49Z', 'expires_at': '2026-09-02T17:38:49Z', 'source_version': 'cc39c165e357427a2cd85d4b87298dd1a4793e8d', 'stale': False, 'implementation_checksum': '2bac429c7f5d78a12bbac24101ba6240307fae52'}]",
+        "execution_path=government_identity",
+        "latest_successful_execution=2026-08-03T17:38:49Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "Government identity resolution still depends on incomplete canonical universe coverage."
+      ],
+      "risk": "HIGH",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "media_intelligence",
+      "capability_name": "Media Intelligence",
+      "purpose": "Verify facility images and media identity without letting generic media become evidence.",
+      "owner": "OPTIME Media Intelligence",
+      "dependencies": [
+        "canonical_universe",
+        "government_identity"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [
+        "backend/tests/test_facility_media_resolution.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/MEDIA_LIVE_PILOT_FAILURE_ANALYSIS.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-04T18:26:51Z', 'expires_at': '2026-09-03T18:26:51Z', 'source_version': 'ba8bffd650136b64df0ca2c7c09c16d144b7e4ac', 'stale': False, 'implementation_checksum': '040f2b8874c21a5092fe3b98984930910ccba768'}, {'reference': 'reports/GOVERNMENT_IDENTITY_MEDIA_COVERAGE.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-03T17:38:49Z', 'expires_at': '2026-09-02T17:38:49Z', 'source_version': 'cc39c165e357427a2cd85d4b87298dd1a4793e8d', 'stale': False, 'implementation_checksum': '040f2b8874c21a5092fe3b98984930910ccba768'}]",
+        "execution_path=media_intelligence",
+        "latest_successful_execution=2026-08-04T18:26:51Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "Rights validation is not integrated for the media pilot and generic media remains non-facility-specific."
+      ],
+      "risk": "HIGH",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "knowledge_graph",
+      "capability_name": "Knowledge Graph",
+      "purpose": "Link knowledge objects into an explainable, deduplicated platform graph.",
+      "owner": "OPTIME Knowledge Graph Intelligence",
+      "dependencies": [
+        "source_intelligence",
+        "canonical_universe"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": true,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/knowledge_graph_design.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T20:53:55Z', 'expires_at': '2026-08-16T20:53:55Z', 'source_version': 'd1cfa60b6718c49339a1a8fad3526b980f143152', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/knowledge_repository_schema.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T04:16:33Z', 'expires_at': '2026-08-17T04:16:33Z', 'source_version': 'f944460558e5000e6a8bbd950d83dc0ea253fadb', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=knowledge_graph",
+        "latest_successful_execution=2026-07-18T04:16:33Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "data_quality_trust",
+      "capability_name": "Data Quality & Trust",
+      "purpose": "Protect freshness, provenance, and conflict resolution across prepared knowledge.",
+      "owner": "OPTIME Data Quality",
+      "dependencies": [],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": true,
+        "VERIFIED": true,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [
+        "backend/tests/test_remediation_policy_engine.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/platform_health_report.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T21:36:30Z', 'expires_at': '2026-08-16T21:36:30Z', 'source_version': 'f5bc1a9834dc17478e56406767ddfbaab3208511', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/knowledge_quality_framework.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T04:16:33Z', 'expires_at': '2026-08-17T04:16:33Z', 'source_version': '86f18f2de660b9ca2b10c9707d8d2953beb72376', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=data_quality_trust",
+        "latest_successful_execution=2026-07-18T04:16:33Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No explicit debt captured in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "matching_improvement",
+      "capability_name": "Matching Improvement",
+      "purpose": "Apply validated ranking-policy improvements and guardrails.",
+      "owner": "OPTIME Matching Improvement",
+      "dependencies": [
+        "knowledge_graph",
+        "data_quality_trust"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [
+        "backend/tests/test_platform_registry.py",
+        "backend/tests/test_chief_ai_supervisor_operations.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/AGENT_EXECUTION_AUTHORITY_REPORT.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-20T22:17:42Z', 'expires_at': '2026-08-19T22:17:42Z', 'source_version': 'cdc8816a387d002bc8b7e3d56ce8eb1aee785aa0', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/REAL_AGENT_VALUE_RUN.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-20T13:56:57Z', 'expires_at': '2026-08-19T13:56:57Z', 'source_version': '2f87a872b3ede8a72eafa4acdbe1ccb8cff062b2', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/recommendation_trace.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T21:27:42Z', 'expires_at': '2026-08-16T21:27:42Z', 'source_version': '86b5f6617dc4c89ab71a841677ef389c5fc021c6', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=_matching_improvement_work",
+        "latest_successful_execution=2026-07-20T22:17:42Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No explicit debt captured in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "provider_intelligence",
+      "capability_name": "Provider Intelligence",
+      "purpose": "Discover and verify provider capabilities so recommendations use prepared provider intelligence.",
+      "owner": "OPTIME Provider Intelligence",
+      "dependencies": [
+        "data_quality_trust",
+        "knowledge_graph"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [
+        "backend/tests/test_chief_ai_supervisor_operations.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/platform_intelligence_report.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T04:08:05Z', 'expires_at': '2026-08-17T04:08:05Z', 'source_version': '6a113db00b3233c7a0940d8990c5e28cf2e9edf6', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/agent_registry.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:46:28Z', 'expires_at': '2026-08-17T16:46:28Z', 'source_version': '40654f5e70a0b97e378e0487b412011cdfb249db', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=provider_intelligence",
+        "latest_successful_execution=2026-07-18T16:46:28Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No explicit debt captured in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "activities_intelligence",
+      "capability_name": "Activities Intelligence",
+      "purpose": "Publish verified activities and engagement intelligence that improves lifestyle fit recommendations.",
+      "owner": "OPTIME Lifestyle Intelligence",
+      "dependencies": [
+        "provider_intelligence",
+        "outcome_learning",
+        "knowledge_graph"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/agent_registry.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:46:28Z', 'expires_at': '2026-08-17T16:46:28Z', 'source_version': '40654f5e70a0b97e378e0487b412011cdfb249db', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/agent_task_queue.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:43:29Z', 'expires_at': '2026-08-17T16:43:29Z', 'source_version': 'fe67f43a7c8f17bc0f016ccfca480557cf1863fc', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=activities_intelligence",
+        "latest_successful_execution=2026-07-18T16:46:28Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "PARTIALLY_DOMAIN_SPECIFIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "NO",
+        "Mortgage": "NO",
+        "Law": "NO",
+        "Insurance": "NO",
+        "Education": "NO",
+        "Other": "NO"
+      }
+    },
+    {
+      "capability_id": "clinical_knowledge",
+      "capability_name": "Clinical Knowledge",
+      "purpose": "Discover and validate trusted clinical guidance for care-fit recommendations.",
+      "owner": "OPTIME Clinical Intelligence",
+      "dependencies": [
+        "provider_intelligence",
+        "knowledge_graph",
+        "clinical_evidence",
+        "outcome_learning"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/clinical_knowledge_platform.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T20:51:12Z', 'expires_at': '2026-08-16T20:51:12Z', 'source_version': 'fc1a65d2d80faf42978623046d6ddf64bc911e3d', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/clinical_evidence_validation.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T20:56:53Z', 'expires_at': '2026-08-16T20:56:53Z', 'source_version': '4c54c8276db92fec6416347094c15c595a310717', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=clinical_knowledge",
+        "latest_successful_execution=2026-07-17T20:56:53Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "PARTIALLY_DOMAIN_SPECIFIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "NO",
+        "Mortgage": "NO",
+        "Law": "NO",
+        "Insurance": "NO",
+        "Education": "NO",
+        "Other": "NO"
+      }
+    },
+    {
+      "capability_id": "clinical_evidence",
+      "capability_name": "Clinical Evidence",
+      "purpose": "Attach trusted evidence to clinical and recommendation claims.",
+      "owner": "OPTIME Evidence Intelligence",
+      "dependencies": [
+        "knowledge_graph"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/clinical_evidence_validation.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T20:56:53Z', 'expires_at': '2026-08-16T20:56:53Z', 'source_version': '4c54c8276db92fec6416347094c15c595a310717', 'stale': False, 'implementation_checksum': '61f34f1d4d6fbe0e2107990f23c9bc2a78ac0cb8'}, {'reference': 'reports/knowledge_validation_framework.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T05:44:31Z', 'expires_at': '2026-08-17T05:44:31Z', 'source_version': '1d9e3fa2a45d089946b9aa3e8f0c8c52dd6ffcdc', 'stale': False, 'implementation_checksum': '61f34f1d4d6fbe0e2107990f23c9bc2a78ac0cb8'}]",
+        "execution_path=clinical_evidence",
+        "latest_successful_execution=2026-07-18T05:44:31Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "Automated external evidence monitoring is not configured.",
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "HIGH",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "narrative_intelligence",
+      "capability_name": "Narrative Intelligence",
+      "purpose": "Produce advisor-ready explanations and trust-clarity narratives from prepared knowledge.",
+      "owner": "OPTIME Narrative Intelligence",
+      "dependencies": [
+        "provider_intelligence",
+        "knowledge_graph",
+        "clinical_knowledge",
+        "clinical_evidence",
+        "matching_improvement"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/OPTIME_IMMERSIVE_EDITORIAL_EXPERIENCE_STRATEGY.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-02T20:54:25Z', 'expires_at': '2026-09-01T20:54:25Z', 'source_version': '724ee255b02311557311ee839cdc0575500dae55', 'stale': False, 'implementation_checksum': '16d6d175553ecbdb6379dd730d2054dca9631943'}, {'reference': 'reports/agent_registry.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:46:28Z', 'expires_at': '2026-08-17T16:46:28Z', 'source_version': '40654f5e70a0b97e378e0487b412011cdfb249db', 'stale': False, 'implementation_checksum': '16d6d175553ecbdb6379dd730d2054dca9631943'}]",
+        "execution_path=narrative_intelligence",
+        "latest_successful_execution=2026-08-02T20:54:25Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "Upstream evidence and knowledge coverage remain insufficient for fully trusted narratives.",
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "HIGH",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "nutrition_intelligence",
+      "capability_name": "Nutrition Intelligence",
+      "purpose": "Discover and verify dietary support capabilities for nutrition and allergy needs.",
+      "owner": "OPTIME Nutrition Intelligence",
+      "dependencies": [
+        "provider_intelligence",
+        "knowledge_graph",
+        "clinical_knowledge"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/agent_registry.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:46:28Z', 'expires_at': '2026-08-17T16:46:28Z', 'source_version': '40654f5e70a0b97e378e0487b412011cdfb249db', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/knowledge_workforce_architecture.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T04:16:33Z', 'expires_at': '2026-08-17T04:16:33Z', 'source_version': '65b0d2625199793568ffe6313151927ed7099507', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=nutrition_intelligence",
+        "latest_successful_execution=2026-07-18T16:46:28Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "PARTIALLY_DOMAIN_SPECIFIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "NO",
+        "Mortgage": "NO",
+        "Law": "NO",
+        "Insurance": "NO",
+        "Education": "NO",
+        "Other": "NO"
+      }
+    },
+    {
+      "capability_id": "outcome_learning",
+      "capability_name": "Outcome Learning",
+      "purpose": "Transform outcome signals into prepared knowledge that improves fit, safety, and quality.",
+      "owner": "OPTIME Outcome Intelligence",
+      "dependencies": [
+        "knowledge_graph",
+        "matching_improvement",
+        "clinical_knowledge"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/agent_registry.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:46:28Z', 'expires_at': '2026-08-17T16:46:28Z', 'source_version': '40654f5e70a0b97e378e0487b412011cdfb249db', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/knowledge_growth_matrix.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T05:47:55Z', 'expires_at': '2026-08-17T05:47:55Z', 'source_version': 'fed29f9f8eb130f8bfb9bf1fd4febc3580e36913', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=outcome_learning",
+        "latest_successful_execution=2026-07-18T16:46:28Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "resident_needs_intelligence",
+      "capability_name": "Resident Needs Intelligence",
+      "purpose": "Model resident needs and constraints for fit and safety.",
+      "owner": "OPTIME Resident Needs Intelligence",
+      "dependencies": [
+        "provider_intelligence",
+        "knowledge_graph"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/agent_registry.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:46:28Z', 'expires_at': '2026-08-17T16:46:28Z', 'source_version': '40654f5e70a0b97e378e0487b412011cdfb249db', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/knowledge_workforce_architecture.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T04:16:33Z', 'expires_at': '2026-08-17T04:16:33Z', 'source_version': '65b0d2625199793568ffe6313151927ed7099507', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=resident_needs_intelligence",
+        "latest_successful_execution=2026-07-18T16:46:28Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "senior_living_research",
+      "capability_name": "Senior Living Research",
+      "purpose": "Produce verified senior living research summaries and knowledge signals.",
+      "owner": "OPTIME Senior Living Research",
+      "dependencies": [
+        "provider_intelligence",
+        "knowledge_graph"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/agent_registry.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:46:28Z', 'expires_at': '2026-08-17T16:46:28Z', 'source_version': '40654f5e70a0b97e378e0487b412011cdfb249db', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/agent_daily_missions.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-18T16:43:29Z', 'expires_at': '2026-08-17T16:43:29Z', 'source_version': 'f565a2923e1f7afa64a0d2c4ea5a21988c069c72', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=senior_living_research",
+        "latest_successful_execution=2026-07-18T16:46:28Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "family_experience_intelligence",
+      "capability_name": "Family Experience Intelligence",
+      "purpose": "Convert prepared knowledge into family-ready guidance and trust clarity.",
+      "owner": "OPTIME Family Experience Intelligence",
+      "dependencies": [
+        "knowledge_graph",
+        "narrative_intelligence"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/family_experience_report.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-19T09:54:12Z', 'expires_at': '2026-08-18T09:54:12Z', 'source_version': '883058ecbc6557b3847c56b3168ade7c17773c12', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}, {'reference': 'reports/family_journey_review.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T21:01:35Z', 'expires_at': '2026-08-16T21:01:35Z', 'source_version': '26562d0f2cfb3ae7b2f0db72b50c299551e58efa', 'stale': False, 'implementation_checksum': 'eb3083f3d24c7e38cac0534a208502221bc0be03'}]",
+        "execution_path=family_experience_intelligence",
+        "latest_successful_execution=2026-07-19T09:54:12Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "DOMAIN_CONFIGURABLE",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "CONFIG_ONLY",
+        "Mortgage": "CONFIG_ONLY",
+        "Law": "CONFIG_ONLY",
+        "Insurance": "CONFIG_ONLY",
+        "Education": "CONFIG_ONLY",
+        "Other": "CONFIG_ONLY"
+      }
+    },
+    {
+      "capability_id": "assessment_experience",
+      "capability_name": "Assessment Experience",
+      "purpose": "Own the family assessment journey and collect decision-relevant preferences.",
+      "owner": "OPTIME Assessment Experience",
+      "dependencies": [
+        "knowledge_graph",
+        "resident_needs_intelligence",
+        "family_experience_intelligence"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [
+        "frontend/tests/assessment-conversation.test.ts",
+        "frontend/tests/assessment-profile.test.ts",
+        "frontend/tests/assessment-schema.test.ts"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/ADAPTIVE_INTERVIEW_CURRENT_CODE_EXTRACT.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-03T17:56:30Z', 'expires_at': '2026-09-02T17:56:30Z', 'source_version': 'a3aa672db08336bbf4e54063221164494ba7e6f0', 'stale': False, 'implementation_checksum': '9e271cd63bfa3b566b5d35cb4123b648ba45e53f'}, {'reference': 'reports/assessment-ux-review', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-02T11:11:22Z', 'expires_at': '2026-09-01T11:11:22Z', 'source_version': None, 'stale': False, 'implementation_checksum': '9e271cd63bfa3b566b5d35cb4123b648ba45e53f'}]",
+        "execution_path=assessment_experience",
+        "latest_successful_execution=2026-08-03T17:56:30Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No explicit debt captured in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "PARTIALLY_DOMAIN_SPECIFIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "NO",
+        "Mortgage": "NO",
+        "Law": "NO",
+        "Insurance": "NO",
+        "Education": "NO",
+        "Other": "NO"
+      }
+    },
+    {
+      "capability_id": "recommendation_decision_engine",
+      "capability_name": "Recommendation Decision Engine",
+      "purpose": "Convert prepared knowledge and assessment inputs into governed recommendations.",
+      "owner": "OPTIME Recommendation Engine",
+      "dependencies": [
+        "canonical_universe",
+        "knowledge_graph",
+        "assessment_experience"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": true,
+        "VERIFIED": true,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [
+        "backend/tests/test_patient_decision_engine.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/OPTIME_END_TO_END_DECISION_SIMULATION.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-02T17:23:14Z', 'expires_at': '2026-09-01T17:23:14Z', 'source_version': '0058a73544d0048b648fa5ad840550b71b80450f', 'stale': False, 'implementation_checksum': 'da2d84715821c84c0412e79f11334f14bf3c5a2a'}, {'reference': 'reports/OPTIME_END_TO_END_FAMILY_EXPLANATION.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-02T17:23:14Z', 'expires_at': '2026-09-01T17:23:14Z', 'source_version': '7d484899220f8a8f9e342a8faa8b7d348d3a0b28', 'stale': False, 'implementation_checksum': 'da2d84715821c84c0412e79f11334f14bf3c5a2a'}]",
+        "execution_path=recommendation_decision_engine",
+        "latest_successful_execution=2026-08-02T17:23:14Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "Upstream canonical universe and assessment readiness remain incomplete for full production confidence."
+      ],
+      "risk": "HIGH",
+      "generic_score": "PARTIALLY_DOMAIN_SPECIFIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "NO",
+        "Mortgage": "NO",
+        "Law": "NO",
+        "Insurance": "NO",
+        "Education": "NO",
+        "Other": "NO"
+      }
+    },
+    {
+      "capability_id": "chief_ai_supervisor",
+      "capability_name": "Chief AI Supervisor",
+      "purpose": "Coordinate incidents, scheduler cycles, readiness, and publication readiness.",
+      "owner": "OPTIME Platform Governance",
+      "dependencies": [
+        "constitution_governance",
+        "platform_registry",
+        "report_archive",
+        "runtime_sync",
+        "remediation_policy_engine"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [
+        "backend/tests/test_chief_ai_supervisor_operations.py",
+        "backend/tests/test_system_health_service.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'database/system_recovery_state.json', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T08:56:44Z', 'expires_at': '2026-08-05T10:56:44Z', 'source_version': '8a789c8353ab65f68276a788d0f09933bcdef8e3', 'stale': False, 'implementation_checksum': 'bd1ac6cc9adc32a26ed3a1f7eee81bc6c9f0f4e2'}, {'reference': 'reports/DAILY_SYSTEM_HEALTH.json', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T06:50:37Z', 'expires_at': '2026-08-05T08:50:37Z', 'source_version': '5b2e41a5a658d3a784a197e248976a436bfa7f3d', 'stale': True, 'implementation_checksum': 'bd1ac6cc9adc32a26ed3a1f7eee81bc6c9f0f4e2'}]",
+        "execution_path=run_active_operations_supervisor_cycle -> evaluate_platform_registry_work_request -> start_supervisor_scheduler",
+        "latest_successful_execution=2026-08-05T08:56:44Z",
+        "execution_type=LIVE_EXECUTION"
+      ],
+      "technical_debt": [
+        "Owner email delivery remains blocked by missing SMTP configuration."
+      ],
+      "risk": "HIGH",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "remediation_policy_engine",
+      "capability_name": "Remediation Policy Engine",
+      "purpose": "Select bounded allowlisted remediation actions for known failure types.",
+      "owner": "OPTIME Platform Governance",
+      "dependencies": [
+        "constitution_governance"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [
+        "backend/tests/test_remediation_policy_engine.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/platform_health_report.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T21:36:30Z', 'expires_at': '2026-08-16T21:36:30Z', 'source_version': 'f5bc1a9834dc17478e56406767ddfbaab3208511', 'stale': False, 'implementation_checksum': 'd3447419ef791834020dcd82111d30273e609471'}]",
+        "execution_path=remediation_policy_engine",
+        "latest_successful_execution=2026-07-17T21:36:30Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No explicit debt captured in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "email_delivery",
+      "capability_name": "Email Delivery",
+      "purpose": "Send owner-facing reports through the canonical SMTP path.",
+      "owner": "OPTIME Operations",
+      "dependencies": [
+        "report_archive",
+        "constitution_governance"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": true,
+        "VERIFIED": false,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/DAILY_SYSTEM_HEALTH.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T06:50:37Z', 'expires_at': '2026-09-04T06:50:37Z', 'source_version': '663bfac0a89993236ed8d713e4671cad57d37533', 'stale': False, 'implementation_checksum': '03c85f1dbbb7e6172ac4bd0da93db48f5b7e8304'}, {'reference': 'reports/platform_health_report.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-17T21:36:30Z', 'expires_at': '2026-08-16T21:36:30Z', 'source_version': 'f5bc1a9834dc17478e56406767ddfbaab3208511', 'stale': False, 'implementation_checksum': '03c85f1dbbb7e6172ac4bd0da93db48f5b7e8304'}]",
+        "execution_path=email_delivery",
+        "latest_successful_execution=2026-08-05T06:50:37Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "OPTIME_SMTP_HOST and OPTIME_SMTP_FROM are missing from environment configuration.",
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "HIGH",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "report_archive",
+      "capability_name": "Report Archive",
+      "purpose": "Persist and version report artifacts and sent-status records.",
+      "owner": "OPTIME Platform Operations",
+      "dependencies": [
+        "constitution_governance"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": true,
+        "IMPLEMENTED": false,
+        "VERIFIED": false,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=PARTIALLY_VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/daily/index.json', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T06:50:38Z', 'expires_at': '2026-09-04T06:50:38Z', 'source_version': '4206a1984f0a54638e024a471359ebd504187b44', 'stale': False, 'implementation_checksum': '3625ab01941802714bba961d4244c7334207d21f'}, {'reference': 'reports/daily/latest.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T06:50:37Z', 'expires_at': '2026-09-04T06:50:37Z', 'source_version': '663bfac0a89993236ed8d713e4671cad57d37533', 'stale': False, 'implementation_checksum': '3625ab01941802714bba961d4244c7334207d21f'}]",
+        "execution_path=report_archive",
+        "latest_successful_execution=2026-08-05T06:50:38Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "missing_proof_classes=test_evidence",
+        "No dedicated tests listed in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "runtime_sync",
+      "capability_name": "Runtime Sync",
+      "purpose": "Track schema drift and keep runtime metadata aligned with the live database.",
+      "owner": "OPTIME Platform Operations",
+      "dependencies": [
+        "constitution_governance"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [
+        "backend/tests/test_runtime_sync_service.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/GOVERNED_RUNTIME_INTEGRATION_REPORT.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-07-20T07:07:55Z', 'expires_at': '2026-08-19T07:07:55Z', 'source_version': '54492042dda5103e7a2be4dd9de82dc9201621e8', 'stale': False, 'implementation_checksum': '035b70822e6b33a5c1701da4b73defbf62cf1252'}]",
+        "execution_path=runtime_sync",
+        "latest_successful_execution=2026-07-20T07:07:55Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No explicit debt captured in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "daily_system_health_report",
+      "capability_name": "Daily System Health Report",
+      "purpose": "Generate the canonical daily owner report and capture delivery state.",
+      "owner": "OPTIME Chief AI Supervisor",
+      "dependencies": [
+        "chief_ai_supervisor",
+        "report_archive"
+      ],
+      "current_status": "BLOCKED",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": false,
+        "VERIFIED": true,
+        "PRODUCTION_READY": false,
+        "BLOCKED": true,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=BLOCKED",
+        "blockers=1"
+      ],
+      "tests": [
+        "backend/tests/test_system_health_service.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'reports/DAILY_SYSTEM_HEALTH.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T06:50:37Z', 'expires_at': '2026-09-04T06:50:37Z', 'source_version': '663bfac0a89993236ed8d713e4671cad57d37533', 'stale': False, 'implementation_checksum': '02a37950ae26a514403a24540d890d40c13f02f9'}, {'reference': 'reports/DAILY_SYSTEM_HEALTH.json', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T06:50:37Z', 'expires_at': '2026-09-04T06:50:37Z', 'source_version': '5b2e41a5a658d3a784a197e248976a436bfa7f3d', 'stale': False, 'implementation_checksum': '02a37950ae26a514403a24540d890d40c13f02f9'}]",
+        "execution_path=daily_system_health_report",
+        "latest_successful_execution=2026-08-05T06:50:37Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "SMTP delivery is blocked by missing required environment variables."
+      ],
+      "risk": "HIGH",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    },
+    {
+      "capability_id": "platform_registry",
+      "capability_name": "Platform Registry",
+      "purpose": "Canonical inventory of platform capabilities, dependencies, readiness, and business progress.",
+      "owner": "OPTIME Platform Governance",
+      "dependencies": [
+        "constitution_governance"
+      ],
+      "current_status": "PRODUCTION_READY",
+      "status_breakdown": {
+        "NOT_STARTED": false,
+        "IN_PROGRESS": false,
+        "IMPLEMENTED": true,
+        "VERIFIED": true,
+        "PRODUCTION_READY": true,
+        "BLOCKED": false,
+        "DEPRECATED": false
+      },
+      "production_evidence": [
+        "acceptance_status=VERIFIED",
+        "production_readiness=PRODUCTION_READY"
+      ],
+      "tests": [
+        "backend/tests/test_platform_registry.py"
+      ],
+      "runtime_evidence": [
+        "runtime_proof=[{'reference': 'database/platform_registry.json', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T08:14:58Z', 'expires_at': '2026-08-05T14:14:58Z', 'source_version': '496701fcb31265716b0a7f755d6f68fcddf36718', 'stale': False, 'implementation_checksum': '559af05daf1fee48a3555deac95c4d54b445c611'}, {'reference': 'reports/PLATFORM_REGISTRY.json', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T08:14:58Z', 'expires_at': '2026-08-05T14:14:58Z', 'source_version': '496701fcb31265716b0a7f755d6f68fcddf36718', 'stale': False, 'implementation_checksum': '559af05daf1fee48a3555deac95c4d54b445c611'}, {'reference': 'reports/PLATFORM_REGISTRY.md', 'proof_kind': 'RUNTIME', 'exists': True, 'observed_at': '2026-08-05T08:14:58Z', 'expires_at': '2026-08-05T14:14:58Z', 'source_version': 'd7975986fb99472235fb2bdc35e3955921c26df7', 'stale': False, 'implementation_checksum': '559af05daf1fee48a3555deac95c4d54b445c611'}]",
+        "execution_path=build_platform_registry_payload -> write_platform_registry_artifacts -> load_platform_registry -> evaluate_capability_assignment",
+        "latest_successful_execution=2026-08-05T08:14:58Z",
+        "execution_type=CONTROLLED_REPLAY"
+      ],
+      "technical_debt": [
+        "No explicit debt captured in capability contract"
+      ],
+      "risk": "LOW",
+      "generic_score": "FULLY_GENERIC",
+      "reusable_by": {
+        "Nursing": "YES",
+        "Jobs": "YES",
+        "Mortgage": "YES",
+        "Law": "YES",
+        "Insurance": "YES",
+        "Education": "YES",
+        "Other": "YES"
+      }
+    }
+  ],
+  "gap_analysis": [
+    {
+      "layer": "Governance and Constitution",
+      "existing": [
+        "Constitution + Principles docs",
+        "Platform registry with assignment gate",
+        "Owner-approval protocol in AGENTS.md"
+      ],
+      "missing": [
+        "Automated principle-impact lint in CI"
+      ],
+      "partial": [
+        "Registry trust checks rely on generated artifacts, not immutable release signatures"
+      ],
+      "remove": [],
+      "duplicates": [
+        "Multiple governance/status reports with overlapping metrics"
+      ],
+      "principle_violations": [],
+      "universality_blockers": [
+        "Objective portfolio currently anchored to Nevada launch sequence"
+      ]
+    },
+    {
+      "layer": "Data and Source Intelligence",
+      "existing": [
+        "source_intelligence capability",
+        "canonical_universe structures",
+        "provider_organization registry service"
+      ],
+      "missing": [
+        "Cross-domain source adapters outside senior-living sources"
+      ],
+      "partial": [
+        "market_builder is NOT_STARTED",
+        "source_intelligence production_readiness BLOCKED"
+      ],
+      "remove": [],
+      "duplicates": [
+        "Legacy report-only source inventories overlap with canonical registries"
+      ],
+      "principle_violations": [],
+      "universality_blockers": [
+        "Florida/Nevada specific source contracts"
+      ]
+    },
+    {
+      "layer": "Knowledge and Agent Operations",
+      "existing": [
+        "11 agent knowledge snapshots + refresh events",
+        "chief_ai_supervisor orchestration",
+        "runtime_sync service"
+      ],
+      "missing": [
+        "Domain-agnostic agent spec compiler"
+      ],
+      "partial": [
+        "Agent registry markdown still contains UNPROVEN placeholders"
+      ],
+      "remove": [
+        "UNPROVEN placeholder identity rows once runtime-proven registry is canonicalized"
+      ],
+      "duplicates": [
+        "agent_registry.md vs platform agent catalog outputs"
+      ],
+      "principle_violations": [],
+      "universality_blockers": [
+        "Agent prompts and mission text tied to senior-living ontology"
+      ]
+    },
+    {
+      "layer": "Decision and Recommendation",
+      "existing": [
+        "recommendation_decision_engine capability",
+        "matching_improvement capability",
+        "patient decision APIs"
+      ],
+      "missing": [
+        "Universal objective-to-scoring policy compiler"
+      ],
+      "partial": [
+        "recommendation_decision_engine production_readiness BLOCKED by upstream readiness"
+      ],
+      "remove": [],
+      "duplicates": [
+        "Frontend and backend scoring/presentation logic overlap in places"
+      ],
+      "principle_violations": [],
+      "universality_blockers": [
+        "Clinical/care-specific parameter ontology in current engine"
+      ]
+    },
+    {
+      "layer": "Experience and Delivery",
+      "existing": [
+        "assessment_experience capability",
+        "frontend compare and results flows"
+      ],
+      "missing": [
+        "Domain template system for intake/UI rendering"
+      ],
+      "partial": [
+        "assessment_experience currently senior-living focused"
+      ],
+      "remove": [],
+      "duplicates": [
+        "Multiple dashboard reports for similar health/review dimensions"
+      ],
+      "principle_violations": [],
+      "universality_blockers": [
+        "Current language and intake fields are healthcare-centric"
+      ]
+    }
+  ],
+  "universal_platform_readiness": {
+    "OPTIME Jobs": {
+      "immediately_reusable": [
+        "constitution_governance",
+        "knowledge_graph",
+        "data_quality_trust",
+        "remediation_policy_engine",
+        "report_archive",
+        "runtime_sync",
+        "platform_registry"
+      ],
+      "configuration_only": [
+        "matching_improvement",
+        "provider_intelligence",
+        "outcome_learning",
+        "resident_needs_intelligence",
+        "senior_living_research",
+        "family_experience_intelligence"
+      ],
+      "new_code_required": [
+        "source_intelligence",
+        "market_builder",
+        "canonical_universe",
+        "government_identity",
+        "media_intelligence",
+        "activities_intelligence",
+        "clinical_knowledge",
+        "clinical_evidence",
+        "narrative_intelligence",
+        "nutrition_intelligence",
+        "assessment_experience",
+        "recommendation_decision_engine",
+        "chief_ai_supervisor",
+        "email_delivery",
+        "daily_system_health_report"
+      ]
+    },
+    "OPTIME Mortgage": {
+      "immediately_reusable": [
+        "constitution_governance",
+        "knowledge_graph",
+        "data_quality_trust",
+        "remediation_policy_engine",
+        "report_archive",
+        "runtime_sync",
+        "platform_registry"
+      ],
+      "configuration_only": [
+        "matching_improvement",
+        "provider_intelligence",
+        "outcome_learning",
+        "resident_needs_intelligence",
+        "senior_living_research",
+        "family_experience_intelligence"
+      ],
+      "new_code_required": [
+        "source_intelligence",
+        "market_builder",
+        "canonical_universe",
+        "government_identity",
+        "media_intelligence",
+        "activities_intelligence",
+        "clinical_knowledge",
+        "clinical_evidence",
+        "narrative_intelligence",
+        "nutrition_intelligence",
+        "assessment_experience",
+        "recommendation_decision_engine",
+        "chief_ai_supervisor",
+        "email_delivery",
+        "daily_system_health_report"
+      ]
+    },
+    "OPTIME Lawyers": {
+      "immediately_reusable": [
+        "constitution_governance",
+        "knowledge_graph",
+        "data_quality_trust",
+        "remediation_policy_engine",
+        "report_archive",
+        "runtime_sync",
+        "platform_registry"
+      ],
+      "configuration_only": [
+        "matching_improvement",
+        "provider_intelligence",
+        "outcome_learning",
+        "resident_needs_intelligence",
+        "senior_living_research",
+        "family_experience_intelligence"
+      ],
+      "new_code_required": [
+        "source_intelligence",
+        "market_builder",
+        "canonical_universe",
+        "government_identity",
+        "media_intelligence",
+        "activities_intelligence",
+        "clinical_knowledge",
+        "clinical_evidence",
+        "narrative_intelligence",
+        "nutrition_intelligence",
+        "assessment_experience",
+        "recommendation_decision_engine",
+        "chief_ai_supervisor",
+        "email_delivery",
+        "daily_system_health_report"
+      ]
+    },
+    "OPTIME Insurance": {
+      "immediately_reusable": [
+        "constitution_governance",
+        "knowledge_graph",
+        "data_quality_trust",
+        "remediation_policy_engine",
+        "report_archive",
+        "runtime_sync",
+        "platform_registry"
+      ],
+      "configuration_only": [
+        "matching_improvement",
+        "provider_intelligence",
+        "outcome_learning",
+        "resident_needs_intelligence",
+        "senior_living_research",
+        "family_experience_intelligence"
+      ],
+      "new_code_required": [
+        "source_intelligence",
+        "market_builder",
+        "canonical_universe",
+        "government_identity",
+        "media_intelligence",
+        "activities_intelligence",
+        "clinical_knowledge",
+        "clinical_evidence",
+        "narrative_intelligence",
+        "nutrition_intelligence",
+        "assessment_experience",
+        "recommendation_decision_engine",
+        "chief_ai_supervisor",
+        "email_delivery",
+        "daily_system_health_report"
+      ]
+    },
+    "OPTIME Healthcare": {
+      "immediately_reusable": [
+        "constitution_governance",
+        "knowledge_graph",
+        "data_quality_trust",
+        "remediation_policy_engine",
+        "report_archive",
+        "runtime_sync",
+        "platform_registry"
+      ],
+      "configuration_only": [
+        "matching_improvement",
+        "provider_intelligence",
+        "outcome_learning",
+        "resident_needs_intelligence",
+        "senior_living_research",
+        "family_experience_intelligence"
+      ],
+      "new_code_required": [
+        "source_intelligence",
+        "market_builder",
+        "canonical_universe",
+        "government_identity",
+        "media_intelligence",
+        "activities_intelligence",
+        "clinical_knowledge",
+        "clinical_evidence",
+        "narrative_intelligence",
+        "nutrition_intelligence",
+        "assessment_experience",
+        "recommendation_decision_engine",
+        "chief_ai_supervisor",
+        "email_delivery",
+        "daily_system_health_report"
+      ]
+    }
+  },
+  "autonomous_platform_readiness": [
+    {
+      "component": "Universal Domain Intake",
+      "status": "PARTIAL",
+      "evidence": "Assessment and intake exist but are healthcare-shaped."
+    },
+    {
+      "component": "Objective Compiler",
+      "status": "PARTIAL",
+      "evidence": "Objective stack exists in platform_registry but not as generic compiler service."
+    },
+    {
+      "component": "Objective Portfolio",
+      "status": "YES",
+      "evidence": "objective_dashboards in platform_registry.json."
+    },
+    {
+      "component": "Capability Planner",
+      "status": "PARTIAL",
+      "evidence": "Dependency and assignment logic exists; no domain-agnostic planning API."
+    },
+    {
+      "component": "Dependency Planner",
+      "status": "PARTIAL",
+      "evidence": "Required build/runtime dependency checks implemented."
+    },
+    {
+      "component": "Agent Planner",
+      "status": "PARTIAL",
+      "evidence": "Supervisor orchestrates agents; portfolio-to-agent planning is limited."
+    },
+    {
+      "component": "Source Planner",
+      "status": "PARTIAL",
+      "evidence": "Source lifecycle exists; multi-domain planner missing."
+    },
+    {
+      "component": "Validation Planner",
+      "status": "PARTIAL",
+      "evidence": "Rich tests/report validations exist; unified planner missing."
+    },
+    {
+      "component": "Execution Planner",
+      "status": "PARTIAL",
+      "evidence": "Supervisor cycles exist; release execution planner incomplete."
+    },
+    {
+      "component": "Learning Planner",
+      "status": "PARTIAL",
+      "evidence": "Outcome learning exists; cross-domain learning planner missing."
+    },
+    {
+      "component": "Knowledge Planner",
+      "status": "PARTIAL",
+      "evidence": "Knowledge fabric and agents exist; generic ontology planner missing."
+    },
+    {
+      "component": "Governance Planner",
+      "status": "YES",
+      "evidence": "Constitution + registry + owner gates operational."
+    },
+    {
+      "component": "Runtime Planner",
+      "status": "PARTIAL",
+      "evidence": "runtime_sync provides drift detection; full release-runtime planner missing."
+    },
+    {
+      "component": "Self Monitoring",
+      "status": "PARTIAL",
+      "evidence": "Incidents + health reports exist; evidence shows intermittent production failures."
+    },
+    {
+      "component": "Self Remediation",
+      "status": "PARTIAL",
+      "evidence": "remediation_policy_engine exists; bounded action set only."
+    },
+    {
+      "component": "Continuous Improvement",
+      "status": "PARTIAL",
+      "evidence": "Numerous audits and outcome loops exist but not fully automated end-to-end."
+    }
+  ],
+  "missing_capabilities": [
+    {
+      "capability_id": "universal_domain_intake_schema_engine",
+      "priority": "P0",
+      "dependencies": [
+        "constitution_governance",
+        "assessment_experience"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 1,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "objective_compiler_service",
+      "priority": "P0",
+      "dependencies": [
+        "platform_registry",
+        "constitution_governance"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 1,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "capability_planning_api",
+      "priority": "P0",
+      "dependencies": [
+        "platform_registry",
+        "chief_ai_supervisor"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 1,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "cross_domain_source_adapter_framework",
+      "priority": "P0",
+      "dependencies": [
+        "source_intelligence",
+        "market_builder"
+      ],
+      "estimated_complexity": "L",
+      "estimated_sprint": 2,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "universal_ontology_registry",
+      "priority": "P0",
+      "dependencies": [
+        "knowledge_graph",
+        "platform_registry"
+      ],
+      "estimated_complexity": "L",
+      "estimated_sprint": 2,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "domain_template_packager",
+      "priority": "P0",
+      "dependencies": [
+        "assessment_experience",
+        "narrative_intelligence"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 2,
+      "business_value": "High",
+      "technical_value": "Medium"
+    },
+    {
+      "capability_id": "release_commit_provenance_api",
+      "priority": "P1",
+      "dependencies": [
+        "chief_ai_supervisor",
+        "platform_registry"
+      ],
+      "estimated_complexity": "S",
+      "estimated_sprint": 2,
+      "business_value": "Medium",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "runtime_evidence_signature_ledger",
+      "priority": "P1",
+      "dependencies": [
+        "runtime_sync",
+        "report_archive"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 3,
+      "business_value": "Medium",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "production_schema_drift_guard",
+      "priority": "P1",
+      "dependencies": [
+        "runtime_sync",
+        "chief_ai_supervisor"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 3,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "agent_registry_runtime_canonicalization",
+      "priority": "P1",
+      "dependencies": [
+        "chief_ai_supervisor",
+        "platform_registry"
+      ],
+      "estimated_complexity": "S",
+      "estimated_sprint": 3,
+      "business_value": "Medium",
+      "technical_value": "Medium"
+    },
+    {
+      "capability_id": "validation_planner_orchestrator",
+      "priority": "P1",
+      "dependencies": [
+        "chief_ai_supervisor",
+        "platform_registry"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 3,
+      "business_value": "Medium",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "domain_neutral_scoring_policy_registry",
+      "priority": "P1",
+      "dependencies": [
+        "matching_improvement",
+        "recommendation_decision_engine"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 4,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "explanation_policy_linter",
+      "priority": "P2",
+      "dependencies": [
+        "narrative_intelligence",
+        "clinical_evidence"
+      ],
+      "estimated_complexity": "S",
+      "estimated_sprint": 4,
+      "business_value": "Medium",
+      "technical_value": "Medium"
+    },
+    {
+      "capability_id": "objective_to_agent_auto_assignment",
+      "priority": "P2",
+      "dependencies": [
+        "platform_registry",
+        "chief_ai_supervisor"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 4,
+      "business_value": "Medium",
+      "technical_value": "Medium"
+    },
+    {
+      "capability_id": "cross_domain_benchmark_harness",
+      "priority": "P2",
+      "dependencies": [
+        "benchmark",
+        "matching_improvement"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 5,
+      "business_value": "Medium",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "tenant_isolation_boundary_service",
+      "priority": "P2",
+      "dependencies": [
+        "platform_registry",
+        "runtime_sync"
+      ],
+      "estimated_complexity": "L",
+      "estimated_sprint": 5,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "policy_impact_ci_gate",
+      "priority": "P2",
+      "dependencies": [
+        "constitution_governance",
+        "platform_registry"
+      ],
+      "estimated_complexity": "S",
+      "estimated_sprint": 5,
+      "business_value": "Medium",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "domain_portability_test_matrix",
+      "priority": "P2",
+      "dependencies": [
+        "validation_planner_orchestrator",
+        "cross_domain_source_adapter_framework"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 6,
+      "business_value": "High",
+      "technical_value": "High"
+    },
+    {
+      "capability_id": "continuous_improvement_control_tower",
+      "priority": "P3",
+      "dependencies": [
+        "outcome_learning",
+        "chief_ai_supervisor",
+        "runtime_sync"
+      ],
+      "estimated_complexity": "M",
+      "estimated_sprint": 6,
+      "business_value": "Medium",
+      "technical_value": "Medium"
+    },
+    {
+      "capability_id": "deployment_state_attestation_service",
+      "priority": "P3",
+      "dependencies": [
+        "release_commit_provenance_api",
+        "runtime_evidence_signature_ledger"
+      ],
+      "estimated_complexity": "S",
+      "estimated_sprint": 6,
+      "business_value": "Medium",
+      "technical_value": "High"
+    }
+  ],
+  "roadmap_consistency": {
+    "remaining_existing_capabilities": [
+      "source_intelligence",
+      "market_builder",
+      "canonical_universe",
+      "government_identity",
+      "media_intelligence",
+      "clinical_evidence",
+      "narrative_intelligence",
+      "recommendation_decision_engine",
+      "chief_ai_supervisor",
+      "email_delivery",
+      "daily_system_health_report"
+    ],
+    "remaining_missing_capabilities": [
+      "universal_domain_intake_schema_engine",
+      "objective_compiler_service",
+      "capability_planning_api",
+      "cross_domain_source_adapter_framework",
+      "universal_ontology_registry",
+      "domain_template_packager",
+      "release_commit_provenance_api",
+      "runtime_evidence_signature_ledger",
+      "production_schema_drift_guard",
+      "agent_registry_runtime_canonicalization",
+      "validation_planner_orchestrator",
+      "domain_neutral_scoring_policy_registry",
+      "explanation_policy_linter",
+      "objective_to_agent_auto_assignment",
+      "cross_domain_benchmark_harness",
+      "tenant_isolation_boundary_service",
+      "policy_impact_ci_gate",
+      "domain_portability_test_matrix",
+      "continuous_improvement_control_tower",
+      "deployment_state_attestation_service"
+    ],
+    "missing_from_roadmap": [],
+    "duplicates_in_roadmap": []
+  },
+  "platform_metrics": {
+    "platform_completion_pct": 60.7,
+    "platform_production_pct": 60.7,
+    "platform_universality_pct": 77.7,
+    "platform_autonomy_pct": 56.2
+  },
+  "critical_blockers": [
+    {
+      "capability_id": "source_intelligence",
+      "debt": "Approved sources are not fully integrated and Florida state sources remain partially blocked."
+    },
+    {
+      "capability_id": "market_builder",
+      "debt": "No generic builder entry point exists; validation remains state-specific."
+    },
+    {
+      "capability_id": "canonical_universe",
+      "debt": "Layer 2 Market Builder remains state-specific and Nevada HCQC remains unintegrated."
+    },
+    {
+      "capability_id": "government_identity",
+      "debt": "Government identity resolution still depends on incomplete canonical universe coverage."
+    },
+    {
+      "capability_id": "media_intelligence",
+      "debt": "Rights validation is not integrated for the media pilot and generic media remains non-facility-specific."
+    },
+    {
+      "capability_id": "clinical_evidence",
+      "debt": "Automated external evidence monitoring is not configured."
+    },
+    {
+      "capability_id": "narrative_intelligence",
+      "debt": "Upstream evidence and knowledge coverage remain insufficient for fully trusted narratives."
+    },
+    {
+      "capability_id": "recommendation_decision_engine",
+      "debt": "Upstream canonical universe and assessment readiness remain incomplete for full production confidence."
+    },
+    {
+      "capability_id": "chief_ai_supervisor",
+      "debt": "Owner email delivery remains blocked by missing SMTP configuration."
+    },
+    {
+      "capability_id": "email_delivery",
+      "debt": "OPTIME_SMTP_HOST and OPTIME_SMTP_FROM are missing from environment configuration."
+    },
+    {
+      "capability_id": "daily_system_health_report",
+      "debt": "SMTP delivery is blocked by missing required environment variables."
+    }
+  ],
+  "top_20_missing_capabilities": [
+    "universal_domain_intake_schema_engine",
+    "objective_compiler_service",
+    "capability_planning_api",
+    "cross_domain_source_adapter_framework",
+    "universal_ontology_registry",
+    "domain_template_packager",
+    "release_commit_provenance_api",
+    "runtime_evidence_signature_ledger",
+    "production_schema_drift_guard",
+    "agent_registry_runtime_canonicalization",
+    "validation_planner_orchestrator",
+    "domain_neutral_scoring_policy_registry",
+    "explanation_policy_linter",
+    "objective_to_agent_auto_assignment",
+    "cross_domain_benchmark_harness",
+    "tenant_isolation_boundary_service",
+    "policy_impact_ci_gate",
+    "domain_portability_test_matrix",
+    "continuous_improvement_control_tower",
+    "deployment_state_attestation_service"
+  ],
+  "immediate_next_sprint": {
+    "sprint": 1,
+    "objective": "Universal planning foundation",
+    "capabilities": [
+      "source_intelligence",
+      "market_builder",
+      "universal_domain_intake_schema_engine",
+      "objective_compiler_service",
+      "capability_planning_api"
+    ],
+    "dependencies": [
+      "constitution_governance",
+      "platform_registry"
+    ],
+    "exit_criteria": [
+      "Objective compiler produces governed active objective graph",
+      "Domain intake schemas externalized from nursing-only defaults"
+    ]
+  },
+  "estimated_remaining_sprints": 7,
+  "estimated_platform_readiness": "Q4-2026 (evidence-based estimate)",
+  "READY_FOR_UNIVERSAL_DOMAIN_ENGINE": "NO"
+}

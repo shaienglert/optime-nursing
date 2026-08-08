@@ -1,0 +1,121 @@
+name: OPTIME Guardian
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  optime-guardian:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Guardian gate
+        id: guardian
+        continue-on-error: true
+        working-directory: frontend
+        run: npm run guardian
+
+      - name: Read Guardian status
+        id: guardian_status
+        run: |
+          node -e "const fs=require('fs');const status=JSON.parse(fs.readFileSync('reports/guardian/status.json','utf8'));process.stdout.write('verdict='+status.verdict+'\n');process.stdout.write('fingerprint='+status.fingerprint+'\n');process.stdout.write('violations='+status.violationCount+'\n');" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Guardian artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: optime-guardian-report-${{ github.run_id }}
+          path: reports/guardian
+          if-no-files-found: error
+
+      - name: Create or update Guardian incident issue
+        if: always() && steps.guardian_status.outputs.verdict == 'BLOCK'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fingerprint = '${{ steps.guardian_status.outputs.fingerprint }}';
+            const violations = '${{ steps.guardian_status.outputs.violations }}';
+            const marker = `guardian-fingerprint:${fingerprint}`;
+            const title = `Guardian BLOCK ${fingerprint}`;
+            const label = 'guardian-block';
+
+            const { data: labels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            if (!labels.find((entry) => entry.name === label)) {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: 'B60205',
+                description: 'Guardian constitutional block incident',
+              });
+            }
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+              per_page: 100,
+            });
+
+            const existing = issues.find((issue) => (issue.body || '').includes(marker));
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              `OPTIME Guardian returned BLOCK.`,
+              ``,
+              `- Fingerprint: ${fingerprint}`,
+              `- Violations: ${violations}`,
+              `- Workflow run: ${runUrl}`,
+              ``,
+              marker,
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.createIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [label],
+              });
+            }
+
+      - name: Enforce hard stop on BLOCK
+        if: always() && steps.guardian_status.outputs.verdict == 'BLOCK'
+        run: |
+          echo "Guardian returned BLOCK. Stopping pipeline."
+          exit 1

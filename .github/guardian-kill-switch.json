@@ -1,0 +1,5 @@
+{
+  "manualBlock": false,
+  "reason": "Set manualBlock=true only for active incident containment.",
+  "updatedBy": "guardian-bootstrap"
+}

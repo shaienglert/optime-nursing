@@ -1,0 +1,254 @@
+{
+  "schemaVersion": "1.0.0",
+  "runAt": "2026-08-08T06:07:22.012Z",
+  "verdict": "PASS",
+  "modules": [
+    {
+      "moduleId": "simulation-policy-audit",
+      "title": "Simulation Policy Audit",
+      "findings": [
+        {
+          "ruleId": "GUARD-SIM-101",
+          "severity": "LOW",
+          "status": "PASS",
+          "message": "[DEPLOYMENT-KILL-PASS] Data truth classification remains compliant.",
+          "evidence": [
+            "jobSourceType=UNKNOWN",
+            "attemptedReportedAs=UNKNOWN",
+            "mode=legal"
+          ],
+          "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+          "requiredAction": "None."
+        },
+        {
+          "ruleId": "GUARD-SIM-102",
+          "severity": "LOW",
+          "status": "PASS",
+          "message": "[DEPLOYMENT-KILL-PASS] MUST requirement handling is compliant.",
+          "evidence": [
+            "requirementLevel=UNKNOWN",
+            "candidateMinTeamSize=UNKNOWN",
+            "jobTeamSize=UNKNOWN",
+            "attemptedOutcome=UNKNOWN"
+          ],
+          "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+          "requiredAction": "None."
+        },
+        {
+          "ruleId": "GUARD-SIM-103",
+          "severity": "LOW",
+          "status": "PASS",
+          "message": "[DEPLOYMENT-KILL-PASS] UNKNOWN handling remains compliant.",
+          "evidence": [
+            "jobTeamSize=UNKNOWN",
+            "attemptedOutcome=UNKNOWN",
+            "evidenceIdsCount=0"
+          ],
+          "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+          "requiredAction": "None."
+        },
+        {
+          "ruleId": "GUARD-SIM-104",
+          "severity": "LOW",
+          "status": "PASS",
+          "message": "[DEPLOYMENT-KILL-PASS] Learning mutation governance is compliant.",
+          "evidence": [
+            "attemptedMutation=UNKNOWN",
+            "evidenceIdsCount=0",
+            "userApproval=false"
+          ],
+          "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+          "requiredAction": "None."
+        },
+        {
+          "ruleId": "GUARD-SIM-105",
+          "severity": "LOW",
+          "status": "PASS",
+          "message": "[DEPLOYMENT-KILL-PASS] Privacy exposure handling is compliant.",
+          "evidence": [
+            "isPrivate=false",
+            "attemptPublicSearchable=false",
+            "explicitConsent=false"
+          ],
+          "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+          "requiredAction": "None."
+        },
+        {
+          "ruleId": "GUARD-SIM-106",
+          "severity": "LOW",
+          "status": "PASS",
+          "message": "[DEPLOYMENT-KILL-PASS] Search approval gating is compliant.",
+          "evidence": [
+            "attemptExecuteSearch=true",
+            "searchIntentApproval=true",
+            "hasCareerDNA=true",
+            "hasSearchIntent=true"
+          ],
+          "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+          "requiredAction": "None."
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "moduleId": "agent-behavior-audit",
+      "title": "Agent Behavior Audit",
+      "findings": [
+        {
+          "ruleId": "GUARD-AGT-001",
+          "severity": "LOW",
+          "status": "PASS",
+          "message": "Supervisor watchdog script is present.",
+          "evidence": [
+            "scripts/run_supervisor_watchdog.py found"
+          ],
+          "filePath": "scripts/run_supervisor_watchdog.py",
+          "requiredAction": "None."
+        },
+        {
+          "ruleId": "GUARD-AGT-004",
+          "severity": "LOW",
+          "status": "PASS",
+          "message": "Manual Guardian kill switch is not active.",
+          "evidence": [
+            "manualBlock: false"
+          ],
+          "filePath": ".github/guardian-kill-switch.json",
+          "requiredAction": "None."
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "findings": [
+    {
+      "ruleId": "GUARD-SIM-101",
+      "severity": "LOW",
+      "status": "PASS",
+      "message": "[DEPLOYMENT-KILL-PASS] Data truth classification remains compliant.",
+      "evidence": [
+        "jobSourceType=UNKNOWN",
+        "attemptedReportedAs=UNKNOWN",
+        "mode=legal"
+      ],
+      "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+      "requiredAction": "None.",
+      "moduleId": "simulation-policy-audit",
+      "moduleTitle": "Simulation Policy Audit"
+    },
+    {
+      "ruleId": "GUARD-SIM-102",
+      "severity": "LOW",
+      "status": "PASS",
+      "message": "[DEPLOYMENT-KILL-PASS] MUST requirement handling is compliant.",
+      "evidence": [
+        "requirementLevel=UNKNOWN",
+        "candidateMinTeamSize=UNKNOWN",
+        "jobTeamSize=UNKNOWN",
+        "attemptedOutcome=UNKNOWN"
+      ],
+      "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+      "requiredAction": "None.",
+      "moduleId": "simulation-policy-audit",
+      "moduleTitle": "Simulation Policy Audit"
+    },
+    {
+      "ruleId": "GUARD-SIM-103",
+      "severity": "LOW",
+      "status": "PASS",
+      "message": "[DEPLOYMENT-KILL-PASS] UNKNOWN handling remains compliant.",
+      "evidence": [
+        "jobTeamSize=UNKNOWN",
+        "attemptedOutcome=UNKNOWN",
+        "evidenceIdsCount=0"
+      ],
+      "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+      "requiredAction": "None.",
+      "moduleId": "simulation-policy-audit",
+      "moduleTitle": "Simulation Policy Audit"
+    },
+    {
+      "ruleId": "GUARD-SIM-104",
+      "severity": "LOW",
+      "status": "PASS",
+      "message": "[DEPLOYMENT-KILL-PASS] Learning mutation governance is compliant.",
+      "evidence": [
+        "attemptedMutation=UNKNOWN",
+        "evidenceIdsCount=0",
+        "userApproval=false"
+      ],
+      "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+      "requiredAction": "None.",
+      "moduleId": "simulation-policy-audit",
+      "moduleTitle": "Simulation Policy Audit"
+    },
+    {
+      "ruleId": "GUARD-SIM-105",
+      "severity": "LOW",
+      "status": "PASS",
+      "message": "[DEPLOYMENT-KILL-PASS] Privacy exposure handling is compliant.",
+      "evidence": [
+        "isPrivate=false",
+        "attemptPublicSearchable=false",
+        "explicitConsent=false"
+      ],
+      "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+      "requiredAction": "None.",
+      "moduleId": "simulation-policy-audit",
+      "moduleTitle": "Simulation Policy Audit"
+    },
+    {
+      "ruleId": "GUARD-SIM-106",
+      "severity": "LOW",
+      "status": "PASS",
+      "message": "[DEPLOYMENT-KILL-PASS] Search approval gating is compliant.",
+      "evidence": [
+        "attemptExecuteSearch=true",
+        "searchIntentApproval=true",
+        "hasCareerDNA=true",
+        "hasSearchIntent=true"
+      ],
+      "filePath": "frontend\\.guardian-sim\\deployment-gate.json",
+      "requiredAction": "None.",
+      "moduleId": "simulation-policy-audit",
+      "moduleTitle": "Simulation Policy Audit"
+    },
+    {
+      "ruleId": "GUARD-AGT-001",
+      "severity": "LOW",
+      "status": "PASS",
+      "message": "Supervisor watchdog script is present.",
+      "evidence": [
+        "scripts/run_supervisor_watchdog.py found"
+      ],
+      "filePath": "scripts/run_supervisor_watchdog.py",
+      "requiredAction": "None.",
+      "moduleId": "agent-behavior-audit",
+      "moduleTitle": "Agent Behavior Audit"
+    },
+    {
+      "ruleId": "GUARD-AGT-004",
+      "severity": "LOW",
+      "status": "PASS",
+      "message": "Manual Guardian kill switch is not active.",
+      "evidence": [
+        "manualBlock: false"
+      ],
+      "filePath": ".github/guardian-kill-switch.json",
+      "requiredAction": "None.",
+      "moduleId": "agent-behavior-audit",
+      "moduleTitle": "Agent Behavior Audit"
+    }
+  ],
+  "status": {
+    "runAt": "2026-08-08T06:07:22.012Z",
+    "verdict": "PASS",
+    "violationCount": 0,
+    "warningCount": 0,
+    "fingerprint": "e3b0c44298fc1c14",
+    "agentExecutionAllowed": true,
+    "gate": "GO",
+    "requiredCheck": "optime-guardian",
+    "incident": null
+  }
+}

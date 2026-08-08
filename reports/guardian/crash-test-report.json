@@ -1,0 +1,123 @@
+{
+  "generatedAt": "2026-08-08T06:07:22.173Z",
+  "attacksTested": 6,
+  "attacksBlocked": 6,
+  "falsePasses": 0,
+  "legalScenariosTested": 6,
+  "legalScenariosPassed": 6,
+  "falseBlocks": 0,
+  "deploymentBlockedByGuardian": true,
+  "deploymentAllowedAfterCorrection": true,
+  "finalGuardianVerdict": "GUARDIAN PASSED",
+  "guardianProductionReady": true,
+  "table": [
+    [
+      "ATTACK-1",
+      "DATA TRUTH",
+      "GUARDIAN BLOCK",
+      "GUARDIAN BLOCK",
+      1,
+      "YES",
+      "PASS"
+    ],
+    [
+      "ATTACK-2",
+      "MUST VIOLATION",
+      "GUARDIAN BLOCK",
+      "GUARDIAN BLOCK",
+      1,
+      "YES",
+      "PASS"
+    ],
+    [
+      "ATTACK-3",
+      "UNKNOWN CORRUPTION",
+      "GUARDIAN BLOCK",
+      "GUARDIAN BLOCK",
+      1,
+      "YES",
+      "PASS"
+    ],
+    [
+      "ATTACK-4",
+      "UNSUPPORTED LEARNING",
+      "GUARDIAN BLOCK",
+      "GUARDIAN BLOCK",
+      1,
+      "YES",
+      "PASS"
+    ],
+    [
+      "ATTACK-5",
+      "PRIVACY",
+      "GUARDIAN BLOCK",
+      "GUARDIAN BLOCK",
+      1,
+      "YES",
+      "PASS"
+    ],
+    [
+      "ATTACK-6",
+      "SEARCH APPROVAL",
+      "GUARDIAN BLOCK",
+      "GUARDIAN BLOCK",
+      1,
+      "YES",
+      "PASS"
+    ],
+    [
+      "LEGAL-1",
+      "DATA TRUTH COMPLIANT",
+      "GUARDIAN PASS",
+      "GUARDIAN PASS",
+      0,
+      "NO",
+      "PASS"
+    ],
+    [
+      "LEGAL-2",
+      "MUST EXCLUSION COMPLIANT",
+      "GUARDIAN PASS",
+      "GUARDIAN PASS",
+      0,
+      "NO",
+      "PASS"
+    ],
+    [
+      "LEGAL-3",
+      "UNKNOWN RETAINED COMPLIANT",
+      "GUARDIAN PASS",
+      "GUARDIAN PASS",
+      0,
+      "NO",
+      "PASS"
+    ],
+    [
+      "LEGAL-4",
+      "LEARNING EVIDENCED COMPLIANT",
+      "GUARDIAN PASS",
+      "GUARDIAN PASS",
+      0,
+      "NO",
+      "PASS"
+    ],
+    [
+      "LEGAL-5",
+      "PRIVACY CONSENT COMPLIANT",
+      "GUARDIAN PASS",
+      "GUARDIAN PASS",
+      0,
+      "NO",
+      "PASS"
+    ],
+    [
+      "LEGAL-6",
+      "SEARCH APPROVAL COMPLIANT",
+      "GUARDIAN PASS",
+      "GUARDIAN PASS",
+      0,
+      "NO",
+      "PASS"
+    ]
+  ]
+}

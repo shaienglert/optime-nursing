@@ -1,0 +1,11 @@
+{
+  "runAt": "2026-08-08T06:07:22.012Z",
+  "verdict": "PASS",
+  "violationCount": 0,
+  "warningCount": 0,
+  "fingerprint": "e3b0c44298fc1c14",
+  "agentExecutionAllowed": true,
+  "gate": "GO",
+  "requiredCheck": "optime-guardian",
+  "incident": null
+}

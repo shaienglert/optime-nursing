@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "guardian": "node scripts/guardian.cjs",
+    "guardian:crash-test": "node scripts/guardian-crash-test.cjs",
     "test": "npm run lint",
     "test:truth": "vitest run tests/budget-utils.test.ts",
     "test:os-boundary": "vitest run tests/os-adapter.test.ts tests/architecture-boundary.test.ts"

@@ -1,0 +1,142 @@
+{
+  "generated_at_utc": "2026-08-05T12:25:18Z",
+  "command_id": "OPTIME-004",
+  "remaining_capabilities_total": 31,
+  "sprints": [
+    {
+      "sprint": 1,
+      "objective": "Universal planning foundation",
+      "capabilities": [
+        "source_intelligence",
+        "market_builder",
+        "universal_domain_intake_schema_engine",
+        "objective_compiler_service",
+        "capability_planning_api"
+      ],
+      "dependencies": [
+        "constitution_governance",
+        "platform_registry"
+      ],
+      "exit_criteria": [
+        "Objective compiler produces governed active objective graph",
+        "Domain intake schemas externalized from nursing-only defaults"
+      ]
+    },
+    {
+      "sprint": 2,
+      "objective": "Cross-domain source and ontology portability",
+      "capabilities": [
+        "canonical_universe",
+        "government_identity",
+        "media_intelligence",
+        "cross_domain_source_adapter_framework",
+        "universal_ontology_registry",
+        "domain_template_packager",
+        "release_commit_provenance_api"
+      ],
+      "dependencies": [
+        "source_intelligence",
+        "market_builder"
+      ],
+      "exit_criteria": [
+        "At least one non-nursing domain source adapter passes validation",
+        "Deployment exposes commit provenance endpoint"
+      ]
+    },
+    {
+      "sprint": 3,
+      "objective": "Runtime truth and agent-state canonicalization",
+      "capabilities": [
+        "clinical_evidence",
+        "narrative_intelligence",
+        "recommendation_decision_engine",
+        "daily_system_health_report",
+        "runtime_evidence_signature_ledger",
+        "production_schema_drift_guard",
+        "agent_registry_runtime_canonicalization",
+        "validation_planner_orchestrator"
+      ],
+      "dependencies": [
+        "runtime_sync",
+        "chief_ai_supervisor",
+        "report_archive"
+      ],
+      "exit_criteria": [
+        "Production drift guard blocks incompatible schema deploys",
+        "Agent registry placeholders eliminated from canonical surfaces"
+      ]
+    },
+    {
+      "sprint": 4,
+      "objective": "Decision policy generalization",
+      "capabilities": [
+        "domain_neutral_scoring_policy_registry",
+        "explanation_policy_linter",
+        "objective_to_agent_auto_assignment"
+      ],
+      "dependencies": [
+        "matching_improvement",
+        "platform_registry"
+      ],
+      "exit_criteria": [
+        "Scoring policy versioned independently from domain ontology",
+        "Automated assignment remains constitution-compliant"
+      ]
+    },
+    {
+      "sprint": 5,
+      "objective": "Enterprise hardening and governance automation",
+      "capabilities": [
+        "cross_domain_benchmark_harness",
+        "tenant_isolation_boundary_service",
+        "policy_impact_ci_gate"
+      ],
+      "dependencies": [
+        "validation_planner_orchestrator",
+        "platform_registry"
+      ],
+      "exit_criteria": [
+        "Cross-domain benchmark harness green for two non-nursing domains",
+        "Principle impact gate enforced in CI"
+      ]
+    },
+    {
+      "sprint": 6,
+      "objective": "Portability assurance and control tower",
+      "capabilities": [
+        "domain_portability_test_matrix",
+        "continuous_improvement_control_tower",
+        "deployment_state_attestation_service"
+      ],
+      "dependencies": [
+        "runtime_evidence_signature_ledger",
+        "cross_domain_source_adapter_framework"
+      ],
+      "exit_criteria": [
+        "Portability matrix published and repeatable",
+        "Deployment attestation closes release-to-runtime proof gap"
+      ]
+    },
+    {
+      "sprint": 7,
+      "objective": "Blocked capability closure and production hardening",
+      "capabilities": [
+        "chief_ai_supervisor",
+        "email_delivery"
+      ],
+      "dependencies": [
+        "daily_system_health_report",
+        "runtime_sync"
+      ],
+      "exit_criteria": [
+        "Supervisor endpoints and refresh pipeline pass sustained production SLO window",
+        "Owner email delivery unblocked in production"
+      ]
+    }
+  ],
+  "consistency": {
+    "missing_from_roadmap": [],
+    "duplicates": [],
+    "all_remaining_covered_exactly_once": true
+  }
+}

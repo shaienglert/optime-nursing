@@ -1,0 +1,12 @@
+{
+  "incidentType": "GUARDIAN_BLOCK",
+  "fingerprint": "314ee4a598712d08",
+  "firstSeenAt": "2026-08-08T06:07:21.058Z",
+  "lastSeenAt": "2026-08-08T06:07:21.058Z",
+  "unresolved": false,
+  "violationCount": 1,
+  "ruleIds": [
+    "GUARD-SIM-106"
+  ],
+  "resolvedAt": "2026-08-08T06:07:22.012Z"
+}
