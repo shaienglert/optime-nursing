@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/probe_nevada_hcqc_export.py'
+      - 'scripts/extract_nevada_hcqc_alis.py'
       - '.github/workflows/nevada-source-probe.yml'
       - 'scripts/build_nevada_canonical_universe.py'
   workflow_dispatch:
@@ -14,11 +15,22 @@ permissions:
 jobs:
   probe-nevada-hcqc:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Probe official Nevada HCQC export surface
+      - name: Probe official Nevada HCQC result surface
         run: python scripts/probe_nevada_hcqc_export.py
+      - name: Extract Nevada HCQC ALiS licensed facilities
+        run: python scripts/extract_nevada_hcqc_alis.py --skip-details --throttle 0
+      - name: Upload Nevada ALiS extraction evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nevada-hcqc-alis-extraction
+          path: |
+            data/nevada/raw/hcqc_alis_facilities.csv
+            reports/NEVADA_HCQC_ALIS_EXTRACTION.json
+          if-no-files-found: error
