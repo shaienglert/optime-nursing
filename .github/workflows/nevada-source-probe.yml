@@ -1,0 +1,24 @@
+name: Nevada Source Probe
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/probe_nevada_hcqc_export.py'
+      - '.github/workflows/nevada-source-probe.yml'
+      - 'scripts/build_nevada_canonical_universe.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-nevada-hcqc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Probe official Nevada HCQC export surface
+        run: python scripts/probe_nevada_hcqc_export.py
