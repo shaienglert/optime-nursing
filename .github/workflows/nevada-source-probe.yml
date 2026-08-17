@@ -5,6 +5,8 @@ on:
     paths:
       - 'scripts/probe_nevada_hcqc_export.py'
       - 'scripts/extract_nevada_hcqc_alis.py'
+      - 'scripts/normalize_nevada_hcqc_geography.py'
+      - 'scripts/fetch_nevada_cms_provider_data.py'
       - '.github/workflows/nevada-source-probe.yml'
       - 'scripts/build_nevada_canonical_universe.py'
   workflow_dispatch:
@@ -15,7 +17,7 @@ permissions:
 jobs:
   probe-nevada-hcqc:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,12 +27,20 @@ jobs:
         run: python scripts/probe_nevada_hcqc_export.py
       - name: Extract Nevada HCQC ALiS licensed facilities and AGC details
         run: python scripts/extract_nevada_hcqc_alis.py --throttle 0
-      - name: Upload Nevada ALiS extraction evidence
+      - name: Normalize Nevada geography with Census evidence
+        run: python scripts/normalize_nevada_hcqc_geography.py
+      - name: Fetch live CMS Nevada nursing facilities
+        run: python scripts/fetch_nevada_cms_provider_data.py
+      - name: Upload Nevada source evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nevada-hcqc-alis-extraction
+          name: nevada-source-evidence
           path: |
             data/nevada/raw/hcqc_alis_facilities.csv
+            data/nevada/clean/hcqc_alis_facilities.csv
+            data/nevada/raw/cms_provider_information_nv.csv
             reports/NEVADA_HCQC_ALIS_EXTRACTION.json
-          if-no-files-found: error
+            reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json
+            reports/NEVADA_CMS_PROVIDER_EXTRACTION.json
+          if-no-files-found: warn
