@@ -13,7 +13,9 @@ SEARCH_URL = "https://nvdpbh.aithent.com/Protected/LIC/LicenseeSearch.aspx?Progr
 UA = "Mozilla/5.0 OPTIME-Nursing/1.0 (+facility-universe-research)"
 BUSINESS_UNIT = "ctl00$ContentPlaceHolder1$ucLicenseeSearchPublic$ddlBusinessUnit"
 LICENSE_TYPE = "ctl00$ContentPlaceHolder1$ucLicenseeSearchPublic$cmbLicenseType"
+SEARCH_TARGET = "ctl00$ContentPlaceHolder1$CommonLinkButton1"
 EXPORT_TARGET = "ctl00$ContentPlaceHolder1$btnGenerateExcel"
+TOTAL_RECORDS = "ctl00$ContentPlaceHolder1$ucLicenseeSearchResult$hdnTotalRecords"
 
 @dataclass
 class SelectInfo:
@@ -88,7 +90,7 @@ def request_page(opener, data: dict[str, str] | None = None):
         return response.geturl(), response.read(), dict(response.headers.items()), getattr(response, "status", None)
 
 
-def state_postback(opener, parser: FormParser, target: str, license_type: str) -> tuple[FormParser, dict[str, object]]:
+def postback(opener, parser: FormParser, target: str, license_type: str):
     payload = dict(parser.hidden)
     payload["__EVENTTARGET"] = target
     payload["__EVENTARGUMENT"] = ""
@@ -96,15 +98,16 @@ def state_postback(opener, parser: FormParser, target: str, license_type: str) -
     payload[LICENSE_TYPE] = license_type
     final_url, raw, headers, status = request_page(opener, payload)
     refreshed = parse_page(raw)
-    return refreshed, {"target": target, "license_type": license_type, "status": status, "final_url": final_url, "content_type": headers.get("Content-Type", ""), "bytes": len(raw), "viewstate_refreshed": bool(refreshed.hidden.get("__VIEWSTATE"))}
+    return refreshed, raw, headers, {"target": target, "status": status, "final_url": final_url, "bytes": len(raw), "viewstate_refreshed": bool(refreshed.hidden.get("__VIEWSTATE")), "total_records": refreshed.hidden.get(TOTAL_RECORDS)}
 
 
 def export_type(license_type: str) -> dict[str, object]:
     opener = build_opener(HTTPCookieProcessor(CookieJar()))
     _url, raw, _headers, _status = request_page(opener)
     parser = parse_page(raw)
-    parser, selection = state_postback(opener, parser, LICENSE_TYPE, license_type)
-    search_controls = [a for a in parser.anchors if "search" in " ".join(a.values()).lower()]
+
+    parser, _raw, _headers, selection = postback(opener, parser, LICENSE_TYPE, license_type)
+    parser, _raw, _headers, search = postback(opener, parser, SEARCH_TARGET, license_type)
 
     payload = dict(parser.hidden)
     payload["__EVENTTARGET"] = EXPORT_TARGET
@@ -117,7 +120,7 @@ def export_type(license_type: str) -> dict[str, object]:
     return {
         "license_type": license_type,
         "selection_postback": selection,
-        "search_controls_after_selection": search_controls[:12],
+        "search_postback": search,
         "status": status,
         "final_url": final_url,
         "content_type": content_type,
@@ -138,16 +141,19 @@ def main() -> int:
     missing = sorted(expected - set(license_options))
     if missing:
         raise SystemExit(f"Missing expected Nevada HCQC license types: {missing}")
+    search_control = next((a for a in parser.anchors if a.get("text", "").strip().lower() == "search"), None)
     export_control = next((a for a in parser.anchors if "generate excel" in a.get("text", "").lower()), None)
+    if not search_control or SEARCH_TARGET not in search_control.get("href", ""):
+        raise SystemExit("Search postback target was not confirmed")
     if not export_control or EXPORT_TARGET not in export_control.get("href", ""):
         raise SystemExit("Generate Excel postback target was not confirmed")
 
     exports = [export_type(code) for code in ("AGC", "SNF", "SFD")]
-    result = {"requested_url": SEARCH_URL, "final_url": final_url, "license_types": {code: license_options[code] for code in ("AGC", "SNF", "SFD")}, "export_target": EXPORT_TARGET, "exports": exports}
+    result = {"requested_url": SEARCH_URL, "final_url": final_url, "license_types": {code: license_options[code] for code in ("AGC", "SNF", "SFD")}, "search_target": SEARCH_TARGET, "export_target": EXPORT_TARGET, "exports": exports}
     print(json.dumps(result, indent=2))
     failed = [item for item in exports if not item["looks_like_excel"]]
     if failed:
-        raise SystemExit(f"Nevada HCQC export did not return Excel after selection postback for: {[item['license_type'] for item in failed]}")
+        raise SystemExit(f"Nevada HCQC export failed after Search for: {[item['license_type'] for item in failed]}")
     return 0
 
 if __name__ == "__main__":
