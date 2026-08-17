@@ -22,6 +22,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Audit Nevada facility universe
+        run: python scripts/audit_nevada_facility_universe.py
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
