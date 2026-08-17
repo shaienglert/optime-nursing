@@ -20,15 +20,49 @@ def clean(value: str) -> str:
     return re.sub(r"\s+", " ", html.unescape(value or "")).strip()
 
 
-def parse_official_detail(raw: bytes, url: str) -> dict:
-    """Parse only explicit fields from the Nevada ALiS View Detail surface.
+def _strip_tags(fragment: str) -> str:
+    return clean(re.sub(r"<[^>]+>", " ", fragment, flags=re.S))
 
-    The View Detail page contains a credential table with an Endorsement column,
-    a Facility Bed Information table whose counts are input values, and an
-    inspection/SOD table. Generic labels such as 'Category-II (Alzheimer’s)'
-    are not evidence unless their bed count is > 0 or the credential has an
-    explicit Alzheimer/dementia/memory-care endorsement.
+
+def parse_inspection_rows(decoded: str) -> list[dict[str, object]]:
+    """Extract the explicit ALiS Statement of Deficiency / Plan of Correction grid.
+
+    This grid is nested in the detail page and the generic table parser can flatten
+    it incorrectly, so it is parsed from the table id and hidden evidence ids.
     """
+    match = re.search(
+        r'<table[^>]+id="ctl00_ContentPlaceHolder1_ucSODgrid_ResultsGrid"[^>]*>.*?<tbody>(.*?)</tbody>\s*</table>',
+        decoded,
+        flags=re.I | re.S,
+    )
+    if not match:
+        return []
+    rows: list[dict[str, object]] = []
+    for row_html in re.findall(r"<tr[^>]*>(.*?)</tr>", match.group(1), flags=re.I | re.S):
+        cells = re.findall(r"<td[^>]*>(.*?)</td>", row_html, flags=re.I | re.S)
+        if len(cells) < 5:
+            continue
+        def hidden(suffix: str) -> str:
+            m = re.search(rf'id="[^"]*{re.escape(suffix)}"[^>]*value="([^"]*)"', row_html, flags=re.I | re.S)
+            return clean(m.group(1)) if m else "UNKNOWN"
+        document_count_match = re.search(r'lblCount"[^>]*>\s*\((\d+)\)', row_html, flags=re.I | re.S)
+        rows.append({
+            "inspection_date_time": _strip_tags(cells[0]) or "UNKNOWN",
+            "inspection_number": _strip_tags(cells[1]) or "UNKNOWN",
+            "event_id": _strip_tags(cells[2]) or "UNKNOWN",
+            "grade": _strip_tags(cells[3]) or "UNKNOWN",
+            "sod_poc_available": "SOD/POC" in cells[4],
+            "inspection_id": hidden("hdInspectionId"),
+            "sod_id": hidden("hdSODId"),
+            "sod_status_code": hidden("hdSODStatusCode"),
+            "sod_status_reason_code": hidden("hdSODStatusReasonCode"),
+            "inspection_source_code": hidden("hdInspectionSourceCode"),
+            "document_count": int(document_count_match.group(1)) if document_count_match else 0,
+        })
+    return rows
+
+
+def parse_official_detail(raw: bytes, url: str) -> dict:
     fallback = extract_detail(raw, url)
     parser = parse_page(raw)
     decoded = raw.decode("utf-8", errors="replace")
@@ -36,13 +70,11 @@ def parse_official_detail(raw: bytes, url: str) -> dict:
     endorsements: list[str] = []
     credential_statuses: list[str] = []
     credential_numbers: list[str] = []
-    inspection_rows: list[dict[str, str]] = []
 
     for table in parser.tables:
         if not table:
             continue
-        header = table[0]
-        normalized_header = [clean(cell).lower() for cell in header]
+        normalized_header = [clean(cell).lower() for cell in table[0]]
         if normalized_header[:5] == ["credential type", "credential number", "endorsement", "status", "expiration date"]:
             for row in table[1:]:
                 if len(row) < 5:
@@ -52,19 +84,9 @@ def parse_official_detail(raw: bytes, url: str) -> dict:
                 if endorsement:
                     endorsements.append(endorsement)
                 credential_statuses.append(clean(row[3]))
-        elif normalized_header[:3] == ["inspection date-time", "inspection number", "event id"]:
-            for row in table[1:]:
-                if len(row) < 3:
-                    continue
-                inspection_rows.append({
-                    "inspection_date_time": clean(row[0]),
-                    "inspection_number": clean(row[1]),
-                    "event_id": clean(row[2]),
-                    "grade": clean(row[3]) if len(row) > 3 else "UNKNOWN",
-                })
 
-    # Bed counts are readonly input values rather than text nodes, so parse their
-    # explicit HTML values. The pattern is scoped to the Alzheimer category row.
+    inspection_rows = parse_inspection_rows(decoded)
+
     memory_bed_count = None
     memory_row = re.search(
         r"Category-II\s*\(Alzheimer(?:&rsquo;|&#39;|['’])s\).*?txtCount\"[^>]*\bvalue=\"(\d+)\"",
@@ -99,6 +121,7 @@ def parse_official_detail(raw: bytes, url: str) -> dict:
         "total_bed_count": total_bed_count if total_bed_count is not None else "UNKNOWN",
         "inspection_count_on_detail_surface": len(inspection_rows),
         "latest_inspection": inspection_rows[0] if inspection_rows else "UNKNOWN",
+        "inspection_rows": inspection_rows,
     })
     return {
         "detail_url": url,
@@ -146,6 +169,8 @@ def main() -> int:
     confirmed = 0
     with_memory_beds = 0
     inspections_exposed = 0
+    total_inspections = 0
+    with_sod_poc = 0
     field_keys: set[str] = set()
     response_sizes: list[int] = []
     sample_written = False
@@ -173,8 +198,11 @@ def main() -> int:
                 memory_beds = fields.get("memory_bed_count")
                 if isinstance(memory_beds, int) and memory_beds > 0:
                     with_memory_beds += 1
-                if int(fields.get("inspection_count_on_detail_surface") or 0) > 0:
+                inspection_rows = detail.get("inspection_rows") or []
+                if inspection_rows:
                     inspections_exposed += 1
+                    total_inspections += len(inspection_rows)
+                    with_sod_poc += int(any(bool(item.get("sod_poc_available")) for item in inspection_rows))
             except Exception as exc:
                 failures += 1
                 rows[i]["official_detail"] = json.dumps({"error": type(exc).__name__, "message": str(exc)[:200]})
@@ -185,8 +213,7 @@ def main() -> int:
     fields = list(rows[0].keys())
     with output.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(rows)
+        writer.writeheader(); writer.writerows(rows)
 
     report = {
         "agc_targets": len(targets),
@@ -195,6 +222,8 @@ def main() -> int:
         "memory_confirmed_official_detail": confirmed,
         "facilities_with_positive_alzheimer_bed_count": with_memory_beds,
         "facilities_with_inspections_on_detail_surface": inspections_exposed,
+        "inspection_rows_exposed": total_inspections,
+        "facilities_with_sod_poc_links": with_sod_poc,
         "observed_detail_field_keys": sorted(field_keys),
         "response_bytes_min": min(response_sizes) if response_sizes else 0,
         "response_bytes_max": max(response_sizes) if response_sizes else 0,
@@ -202,9 +231,7 @@ def main() -> int:
         "classification_policy": "Memory Care is confirmed only by an explicit ALiS endorsement or a positive official Alzheimer bed count. Generic page labels and facility names are never proof.",
         "output": str(output),
     }
-    rp = Path(args.report)
-    rp.parent.mkdir(parents=True, exist_ok=True)
-    rp.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    rp = Path(args.report); rp.parent.mkdir(parents=True, exist_ok=True); rp.write_text(json.dumps(report, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     if failures:
         raise SystemExit(f"AGC detail enrichment incomplete after retries: {failures} failures")
