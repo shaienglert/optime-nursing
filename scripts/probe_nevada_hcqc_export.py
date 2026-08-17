@@ -22,11 +22,14 @@ class FormParser(HTMLParser):
         self.hidden: dict[str, str] = {}
         self.selects: list[SelectInfo] = []
         self.inputs: list[dict[str, str]] = []
+        self.anchors: list[dict[str, str]] = []
         self.forms: list[dict[str, str]] = []
         self._select_name: str | None = None
         self._options: list[tuple[str, str]] = []
         self._option_value = ""
         self._option_text: list[str] = []
+        self._anchor_attrs: dict[str, str] | None = None
+        self._anchor_text: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         a = {k: (v or "") for k, v in attrs}
@@ -36,6 +39,9 @@ class FormParser(HTMLParser):
             self.inputs.append(a)
             if a.get("type", "").lower() == "hidden" and a.get("name"):
                 self.hidden[a["name"]] = a.get("value", "")
+        elif tag == "a":
+            self._anchor_attrs = a
+            self._anchor_text = []
         elif tag == "select":
             self._select_name = a.get("name") or a.get("id")
             self._options = []
@@ -46,6 +52,8 @@ class FormParser(HTMLParser):
     def handle_data(self, data: str) -> None:
         if self._select_name:
             self._option_text.append(data)
+        if self._anchor_attrs is not None:
+            self._anchor_text.append(data)
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "option" and self._select_name:
@@ -56,6 +64,12 @@ class FormParser(HTMLParser):
             self.selects.append(SelectInfo(self._select_name, self._options))
             self._select_name = None
             self._options = []
+        elif tag == "a" and self._anchor_attrs is not None:
+            item = dict(self._anchor_attrs)
+            item["text"] = re.sub(r"\s+", " ", html.unescape("".join(self._anchor_text))).strip()
+            self.anchors.append(item)
+            self._anchor_attrs = None
+            self._anchor_text = []
 
 
 def fetch() -> tuple[str, str]:
@@ -66,7 +80,7 @@ def fetch() -> tuple[str, str]:
 
 
 def keep_attrs(item: dict[str, str]) -> dict[str, str]:
-    return {k: v for k, v in item.items() if k in {"name", "id", "value", "type", "title", "alt", "src", "onclick"}}
+    return {k: v for k, v in item.items() if k in {"name", "id", "value", "type", "title", "alt", "src", "onclick", "href", "text", "issubmit"}}
 
 
 def main() -> int:
@@ -86,13 +100,8 @@ def main() -> int:
             wanted.append({"name": select.name, "matching_options": matching, "option_count": len(select.options)})
     export_controls = [
         keep_attrs(control)
-        for control in parser.inputs
+        for control in [*parser.inputs, *parser.anchors]
         if any(token in " ".join(control.values()).lower() for token in ("excel", "export", "generate"))
-    ]
-    actionable_controls = [
-        keep_attrs(control)
-        for control in parser.inputs
-        if control.get("type", "").lower() in {"submit", "button", "image"}
     ]
     result = {
         "requested_url": SEARCH_URL,
@@ -102,14 +111,13 @@ def main() -> int:
         "hidden_field_names": sorted(parser.hidden),
         "relevant_selects": wanted,
         "export_controls": export_controls,
-        "actionable_controls": actionable_controls[:40],
         "contains_generate_excel": "generate excel" in body.lower(),
     }
     print(json.dumps(result, indent=2))
     if not wanted:
         raise SystemExit("HCQC page loaded, but no relevant facility-type option was discoverable")
-    if not result["contains_generate_excel"]:
-        raise SystemExit("HCQC page did not expose Generate Excel")
+    if not export_controls:
+        raise SystemExit("HCQC page contains Generate Excel text, but the postback control was not identified")
     return 0
 
 if __name__ == "__main__":
