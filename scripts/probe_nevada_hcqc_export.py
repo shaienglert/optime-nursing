@@ -5,11 +5,15 @@ import json
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from urllib.request import Request, build_opener, HTTPCookieProcessor
 from http.cookiejar import CookieJar
+from urllib.parse import urlencode
+from urllib.request import Request, build_opener, HTTPCookieProcessor
 
 SEARCH_URL = "https://nvdpbh.aithent.com/Protected/LIC/LicenseeSearch.aspx?Program=HHF&PubliSearch=Y&returnURL=~%2FLogin.aspx%3FTI%3D0"
 UA = "Mozilla/5.0 OPTIME-Nursing/1.0 (+facility-universe-research)"
+BUSINESS_UNIT = "ctl00$ContentPlaceHolder1$ucLicenseeSearchPublic$ddlBusinessUnit"
+LICENSE_TYPE = "ctl00$ContentPlaceHolder1$ucLicenseeSearchPublic$cmbLicenseType"
+EXPORT_TARGET = "ctl00$ContentPlaceHolder1$btnGenerateExcel"
 
 @dataclass
 class SelectInfo:
@@ -21,9 +25,7 @@ class FormParser(HTMLParser):
         super().__init__()
         self.hidden: dict[str, str] = {}
         self.selects: list[SelectInfo] = []
-        self.inputs: list[dict[str, str]] = []
         self.anchors: list[dict[str, str]] = []
-        self.forms: list[dict[str, str]] = []
         self._select_name: str | None = None
         self._options: list[tuple[str, str]] = []
         self._option_value = ""
@@ -33,12 +35,8 @@ class FormParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         a = {k: (v or "") for k, v in attrs}
-        if tag == "form":
-            self.forms.append(a)
-        elif tag == "input":
-            self.inputs.append(a)
-            if a.get("type", "").lower() == "hidden" and a.get("name"):
-                self.hidden[a["name"]] = a.get("value", "")
+        if tag == "input" and a.get("type", "").lower() == "hidden" and a.get("name"):
+            self.hidden[a["name"]] = a.get("value", "")
         elif tag == "a":
             self._anchor_attrs = a
             self._anchor_text = []
@@ -72,52 +70,94 @@ class FormParser(HTMLParser):
             self._anchor_text = []
 
 
-def fetch() -> tuple[str, str]:
-    opener = build_opener(HTTPCookieProcessor(CookieJar()))
-    req = Request(SEARCH_URL, headers={"User-Agent": UA})
-    with opener.open(req, timeout=45) as response:
-        return response.geturl(), response.read().decode("utf-8", errors="replace")
+def parse_page(body: bytes) -> FormParser:
+    parser = FormParser()
+    parser.feed(body.decode("utf-8", errors="replace"))
+    return parser
 
 
-def keep_attrs(item: dict[str, str]) -> dict[str, str]:
-    return {k: v for k, v in item.items() if k in {"name", "id", "value", "type", "title", "alt", "src", "onclick", "href", "text", "issubmit"}}
+def get_page(opener):
+    request = Request(SEARCH_URL, headers={"User-Agent": UA})
+    with opener.open(request, timeout=45) as response:
+        return response.geturl(), response.read(), dict(response.headers.items())
+
+
+def export_type(opener, parser: FormParser, license_type: str) -> dict[str, object]:
+    payload = dict(parser.hidden)
+    payload["__EVENTTARGET"] = EXPORT_TARGET
+    payload["__EVENTARGUMENT"] = ""
+    payload[BUSINESS_UNIT] = "HHF"
+    payload[LICENSE_TYPE] = license_type
+    body = urlencode(payload).encode("utf-8")
+    request = Request(
+        SEARCH_URL,
+        data=body,
+        headers={
+            "User-Agent": UA,
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Referer": SEARCH_URL,
+        },
+        method="POST",
+    )
+    with opener.open(request, timeout=60) as response:
+        raw = response.read()
+        headers = dict(response.headers.items())
+        content_type = headers.get("Content-Type", "")
+        disposition = headers.get("Content-Disposition", "")
+        signature = raw[:16].hex()
+        text_prefix = raw[:240].decode("utf-8", errors="replace") if "text" in content_type.lower() or "html" in content_type.lower() else None
+        return {
+            "license_type": license_type,
+            "status": getattr(response, "status", None),
+            "final_url": response.geturl(),
+            "content_type": content_type,
+            "content_disposition": disposition,
+            "bytes": len(raw),
+            "signature_hex": signature,
+            "text_prefix": text_prefix,
+            "looks_like_excel": (
+                raw.startswith(b"PK\x03\x04")
+                or raw.startswith(bytes.fromhex("d0cf11e0a1b11ae1"))
+                or "excel" in content_type.lower()
+                or ".xls" in disposition.lower()
+            ),
+        }
 
 
 def main() -> int:
-    final_url, body = fetch()
-    parser = FormParser()
-    parser.feed(body)
-    wanted = []
-    for select in parser.selects:
-        matching = [
-            {"value": value, "text": text}
-            for value, text in select.options
-            if any(token in text.lower() for token in (
-                "health facilit", "residential facility", "skilled nursing", "nursing facilit", "continuing care"
-            ))
-        ]
-        if matching:
-            wanted.append({"name": select.name, "matching_options": matching, "option_count": len(select.options)})
-    export_controls = [
-        keep_attrs(control)
-        for control in [*parser.inputs, *parser.anchors]
-        if any(token in " ".join(control.values()).lower() for token in ("excel", "export", "generate"))
-    ]
+    opener = build_opener(HTTPCookieProcessor(CookieJar()))
+    final_url, raw, _headers = get_page(opener)
+    parser = parse_page(raw)
+    license_options = {
+        value: text
+        for select in parser.selects
+        if select.name == LICENSE_TYPE
+        for value, text in select.options
+    }
+    expected = {"AGC", "SNF", "SFD"}
+    missing = sorted(expected - set(license_options))
+    if missing:
+        raise SystemExit(f"Missing expected Nevada HCQC license types: {missing}")
+
+    export_control = next(
+        (a for a in parser.anchors if "generate excel" in a.get("text", "").lower()),
+        None,
+    )
+    if not export_control or EXPORT_TARGET not in export_control.get("href", ""):
+        raise SystemExit("Generate Excel postback target was not confirmed")
+
+    exports = [export_type(opener, parser, code) for code in ("AGC", "SNF", "SFD")]
     result = {
         "requested_url": SEARCH_URL,
         "final_url": final_url,
-        "html_bytes": len(body.encode("utf-8")),
-        "form": parser.forms[0] if parser.forms else None,
-        "hidden_field_names": sorted(parser.hidden),
-        "relevant_selects": wanted,
-        "export_controls": export_controls,
-        "contains_generate_excel": "generate excel" in body.lower(),
+        "license_types": {code: license_options[code] for code in ("AGC", "SNF", "SFD")},
+        "export_target": EXPORT_TARGET,
+        "exports": exports,
     }
     print(json.dumps(result, indent=2))
-    if not wanted:
-        raise SystemExit("HCQC page loaded, but no relevant facility-type option was discoverable")
-    if not export_controls:
-        raise SystemExit("HCQC page contains Generate Excel text, but the postback control was not identified")
+    failed = [item for item in exports if not item["looks_like_excel"]]
+    if failed:
+        raise SystemExit(f"Nevada HCQC export did not return Excel for: {[item['license_type'] for item in failed]}")
     return 0
 
 if __name__ == "__main__":
