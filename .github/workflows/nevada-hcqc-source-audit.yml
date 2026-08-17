@@ -24,13 +24,26 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install browser extractor
+      - name: Install source tooling
         run: |
-          python -m pip install --disable-pip-version-check playwright==1.55.0
+          python -m pip install --disable-pip-version-check playwright==1.55.0 xlrd==2.0.1
           python -m playwright install chromium
 
       - name: Download official Nevada HCQC facility exports
         run: python scripts/fetch_nevada_hcqc_licenses.py
+
+      - name: Inspect official export schema
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xlrd
+          for path in sorted(Path('data/nevada/hcqc').glob('*.xls')):
+              book = xlrd.open_workbook(path)
+              sheet = book.sheet_by_index(0)
+              print(f'=== {path.name} rows={sheet.nrows} cols={sheet.ncols} ===')
+              for r in range(min(sheet.nrows, 6)):
+                  print([sheet.cell_value(r, c) for c in range(sheet.ncols)])
+          PY
 
       - name: Upload source audit
         if: always()
