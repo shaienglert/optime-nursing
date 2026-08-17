@@ -1,0 +1,41 @@
+name: Nevada HCQC Source Audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/fetch_nevada_hcqc_licenses.py'
+      - '.github/workflows/nevada-hcqc-source-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-hcqc-export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install browser extractor
+        run: |
+          python -m pip install --disable-pip-version-check playwright==1.55.0
+          python -m playwright install chromium
+
+      - name: Download official Nevada HCQC facility exports
+        run: python scripts/fetch_nevada_hcqc_licenses.py
+
+      - name: Upload source audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nevada-hcqc-source-audit-${{ github.run_id }}
+          path: data/nevada/hcqc
+          if-no-files-found: error
