@@ -6,6 +6,7 @@ on:
     paths:
       - 'scripts/fetch_nevada_hcqc_licenses.py'
       - 'scripts/normalize_nevada_hcqc_exports.py'
+      - 'scripts/enrich_nevada_universe_with_hcqc.py'
       - '.github/workflows/nevada-hcqc-source-audit.yml'
   workflow_dispatch:
 
@@ -19,23 +20,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Install source tooling
         run: |
           python -m pip install --disable-pip-version-check playwright==1.55.0 xlrd==2.0.1
           python -m playwright install chromium
-
       - name: Download official Nevada HCQC facility exports
         run: python scripts/fetch_nevada_hcqc_licenses.py
-
       - name: Normalize official Nevada HCQC exports
         run: python scripts/normalize_nevada_hcqc_exports.py
-
+      - name: Enrich canonical Nevada universe without deleting existing evidence
+        run: python scripts/enrich_nevada_universe_with_hcqc.py
       - name: Upload source audit
         if: always()
         uses: actions/upload-artifact@v4
