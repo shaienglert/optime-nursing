@@ -8,6 +8,7 @@ on:
       - 'scripts/enrich_nevada_alis_details.py'
       - 'scripts/normalize_nevada_hcqc_geography.py'
       - 'scripts/fetch_nevada_cms_provider_data.py'
+      - 'scripts/fetch_las_vegas_business_license_candidates.py'
       - '.github/workflows/nevada-source-probe.yml'
       - 'scripts/build_nevada_canonical_universe.py'
   workflow_dispatch:
@@ -18,7 +19,7 @@ permissions:
 jobs:
   probe-nevada-hcqc:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -29,11 +30,18 @@ jobs:
       - name: Extract every Nevada HCQC ALiS license record
         run: python scripts/extract_nevada_hcqc_alis.py --skip-details --throttle 0
       - name: Enrich every AGC from official View Detail
+        id: details
+        continue-on-error: true
         run: python scripts/enrich_nevada_alis_details.py --workers 8
       - name: Normalize Nevada geography with Census evidence
+        if: always()
         run: python scripts/normalize_nevada_hcqc_geography.py
       - name: Fetch live CMS Nevada nursing facilities
+        if: always()
         run: python scripts/fetch_nevada_cms_provider_data.py
+      - name: Fetch official Las Vegas business-license candidates
+        if: always()
+        run: python scripts/fetch_las_vegas_business_license_candidates.py
       - name: Upload Nevada source evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -43,9 +51,23 @@ jobs:
             data/nevada/raw/hcqc_alis_facilities.csv
             data/nevada/clean/hcqc_alis_facilities.csv
             data/nevada/raw/cms_provider_information_nv.csv
+            data/nevada/raw/las_vegas_business_license_senior_candidates.json
             reports/NEVADA_HCQC_ALIS_EXTRACTION.json
             reports/NEVADA_HCQC_ALIS_DETAIL_ENRICHMENT.json
             reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json
             reports/NEVADA_CMS_PROVIDER_EXTRACTION.json
+            reports/LAS_VEGAS_BUSINESS_LICENSE_CANDIDATES.json
             reports/evidence/nevada_alis_agc_detail_sample.html
           if-no-files-found: warn
+      - name: Final Nevada source gate
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('reports/NEVADA_HCQC_ALIS_DETAIL_ENRICHMENT.json')
+          if not p.exists(): raise SystemExit('Missing AGC detail report')
+          r=json.loads(p.read_text())
+          if r.get('detail_failures') != 0: raise SystemExit(f"AGC detail failures remain: {r.get('detail_failures')}")
+          for required in ['reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json','reports/NEVADA_CMS_PROVIDER_EXTRACTION.json','reports/LAS_VEGAS_BUSINESS_LICENSE_CANDIDATES.json']:
+              if not pathlib.Path(required).exists(): raise SystemExit(f'Missing required evidence: {required}')
+          PY
