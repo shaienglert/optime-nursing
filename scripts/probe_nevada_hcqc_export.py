@@ -81,11 +81,7 @@ def request_page(opener, data: dict[str, str] | None = None):
     request = Request(
         SEARCH_URL,
         data=encoded,
-        headers={
-            "User-Agent": UA,
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Referer": SEARCH_URL,
-        },
+        headers={"User-Agent": UA, "Content-Type": "application/x-www-form-urlencoded", "Referer": SEARCH_URL},
         method="POST" if data is not None else "GET",
     )
     with opener.open(request, timeout=60) as response:
@@ -100,23 +96,15 @@ def state_postback(opener, parser: FormParser, target: str, license_type: str) -
     payload[LICENSE_TYPE] = license_type
     final_url, raw, headers, status = request_page(opener, payload)
     refreshed = parse_page(raw)
-    return refreshed, {
-        "target": target,
-        "license_type": license_type,
-        "status": status,
-        "final_url": final_url,
-        "content_type": headers.get("Content-Type", ""),
-        "bytes": len(raw),
-        "viewstate_refreshed": bool(refreshed.hidden.get("__VIEWSTATE")),
-    }
+    return refreshed, {"target": target, "license_type": license_type, "status": status, "final_url": final_url, "content_type": headers.get("Content-Type", ""), "bytes": len(raw), "viewstate_refreshed": bool(refreshed.hidden.get("__VIEWSTATE"))}
 
 
 def export_type(license_type: str) -> dict[str, object]:
     opener = build_opener(HTTPCookieProcessor(CookieJar()))
     _url, raw, _headers, _status = request_page(opener)
     parser = parse_page(raw)
-
     parser, selection = state_postback(opener, parser, LICENSE_TYPE, license_type)
+    search_controls = [a for a in parser.anchors if "search" in " ".join(a.values()).lower()]
 
     payload = dict(parser.hidden)
     payload["__EVENTTARGET"] = EXPORT_TARGET
@@ -129,6 +117,7 @@ def export_type(license_type: str) -> dict[str, object]:
     return {
         "license_type": license_type,
         "selection_postback": selection,
+        "search_controls_after_selection": search_controls[:12],
         "status": status,
         "final_url": final_url,
         "content_type": content_type,
@@ -136,12 +125,7 @@ def export_type(license_type: str) -> dict[str, object]:
         "bytes": len(exported),
         "signature_hex": exported[:16].hex(),
         "text_prefix": exported[:320].decode("utf-8", errors="replace") if "html" in content_type.lower() or "text" in content_type.lower() else None,
-        "looks_like_excel": (
-            exported.startswith(b"PK\x03\x04")
-            or exported.startswith(bytes.fromhex("d0cf11e0a1b11ae1"))
-            or "excel" in content_type.lower()
-            or ".xls" in disposition.lower()
-        ),
+        "looks_like_excel": exported.startswith(b"PK\x03\x04") or exported.startswith(bytes.fromhex("d0cf11e0a1b11ae1")) or "excel" in content_type.lower() or ".xls" in disposition.lower(),
     }
 
 
@@ -149,12 +133,7 @@ def main() -> int:
     opener = build_opener(HTTPCookieProcessor(CookieJar()))
     final_url, raw, _headers, _status = request_page(opener)
     parser = parse_page(raw)
-    license_options = {
-        value: text
-        for select in parser.selects
-        if select.name == LICENSE_TYPE
-        for value, text in select.options
-    }
+    license_options = {value: text for select in parser.selects if select.name == LICENSE_TYPE for value, text in select.options}
     expected = {"AGC", "SNF", "SFD"}
     missing = sorted(expected - set(license_options))
     if missing:
@@ -164,13 +143,7 @@ def main() -> int:
         raise SystemExit("Generate Excel postback target was not confirmed")
 
     exports = [export_type(code) for code in ("AGC", "SNF", "SFD")]
-    result = {
-        "requested_url": SEARCH_URL,
-        "final_url": final_url,
-        "license_types": {code: license_options[code] for code in ("AGC", "SNF", "SFD")},
-        "export_target": EXPORT_TARGET,
-        "exports": exports,
-    }
+    result = {"requested_url": SEARCH_URL, "final_url": final_url, "license_types": {code: license_options[code] for code in ("AGC", "SNF", "SFD")}, "export_target": EXPORT_TARGET, "exports": exports}
     print(json.dumps(result, indent=2))
     failed = [item for item in exports if not item["looks_like_excel"]]
     if failed:
