@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/probe_nevada_hcqc_export.py'
       - 'scripts/extract_nevada_hcqc_alis.py'
+      - 'scripts/enrich_nevada_alis_details.py'
       - 'scripts/normalize_nevada_hcqc_geography.py'
       - 'scripts/fetch_nevada_cms_provider_data.py'
       - '.github/workflows/nevada-source-probe.yml'
@@ -17,7 +18,7 @@ permissions:
 jobs:
   probe-nevada-hcqc:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,8 +26,10 @@ jobs:
           python-version: '3.12'
       - name: Probe official Nevada HCQC result surface
         run: python scripts/probe_nevada_hcqc_export.py
-      - name: Extract Nevada HCQC ALiS licensed facilities and AGC details
-        run: python scripts/extract_nevada_hcqc_alis.py --throttle 0
+      - name: Extract every Nevada HCQC ALiS license record
+        run: python scripts/extract_nevada_hcqc_alis.py --skip-details --throttle 0
+      - name: Enrich every AGC from official View Detail in parallel
+        run: python scripts/enrich_nevada_alis_details.py --workers 20
       - name: Normalize Nevada geography with Census evidence
         run: python scripts/normalize_nevada_hcqc_geography.py
       - name: Fetch live CMS Nevada nursing facilities
@@ -41,6 +44,7 @@ jobs:
             data/nevada/clean/hcqc_alis_facilities.csv
             data/nevada/raw/cms_provider_information_nv.csv
             reports/NEVADA_HCQC_ALIS_EXTRACTION.json
+            reports/NEVADA_HCQC_ALIS_DETAIL_ENRICHMENT.json
             reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json
             reports/NEVADA_CMS_PROVIDER_EXTRACTION.json
           if-no-files-found: warn
