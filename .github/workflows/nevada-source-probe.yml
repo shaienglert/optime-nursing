@@ -9,8 +9,9 @@ on:
       - 'scripts/normalize_nevada_hcqc_geography.py'
       - 'scripts/fetch_nevada_cms_provider_data.py'
       - 'scripts/fetch_las_vegas_business_license_candidates.py'
+      - 'scripts/finalize_nevada_canonical_universe.py'
+      - 'backend/tests/test_nevada_live_finalizer.py'
       - '.github/workflows/nevada-source-probe.yml'
-      - 'scripts/build_nevada_canonical_universe.py'
   workflow_dispatch:
 
 permissions:
@@ -19,12 +20,16 @@ permissions:
 jobs:
   probe-nevada-hcqc:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install test tooling
+        run: python -m pip install --disable-pip-version-check pytest
+      - name: Run deterministic Nevada semantic tests
+        run: python -m pytest backend/tests/test_nevada_live_finalizer.py -q
       - name: Probe official Nevada HCQC result surface
         run: python scripts/probe_nevada_hcqc_export.py
       - name: Extract every Nevada HCQC ALiS license record
@@ -33,7 +38,7 @@ jobs:
         id: details
         continue-on-error: true
         run: python scripts/enrich_nevada_alis_details.py --workers 8
-      - name: Normalize Nevada geography with Census evidence
+      - name: Normalize Nevada geography from official ALiS address evidence
         if: always()
         run: python scripts/normalize_nevada_hcqc_geography.py
       - name: Fetch live CMS Nevada nursing facilities
@@ -42,7 +47,10 @@ jobs:
       - name: Fetch official Las Vegas business-license candidates
         if: always()
         run: python scripts/fetch_las_vegas_business_license_candidates.py
-      - name: Upload Nevada source evidence
+      - name: Build canonical Nevada facility universe
+        if: always()
+        run: python scripts/finalize_nevada_canonical_universe.py
+      - name: Upload Nevada source and canonical evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -52,22 +60,38 @@ jobs:
             data/nevada/clean/hcqc_alis_facilities.csv
             data/nevada/raw/cms_provider_information_nv.csv
             data/nevada/raw/las_vegas_business_license_senior_candidates.json
+            data/nevada/canonical/*.json
+            database/nevada_facility_universe_canonical.json
             reports/NEVADA_HCQC_ALIS_EXTRACTION.json
             reports/NEVADA_HCQC_ALIS_DETAIL_ENRICHMENT.json
             reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json
             reports/NEVADA_CMS_PROVIDER_EXTRACTION.json
             reports/LAS_VEGAS_BUSINESS_LICENSE_CANDIDATES.json
+            reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.json
+            reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.md
             reports/evidence/nevada_alis_agc_detail_sample.html
           if-no-files-found: warn
-      - name: Final Nevada source gate
+      - name: Final Nevada source and canonical gate
         if: always()
         run: |
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('reports/NEVADA_HCQC_ALIS_DETAIL_ENRICHMENT.json')
-          if not p.exists(): raise SystemExit('Missing AGC detail report')
-          r=json.loads(p.read_text())
-          if r.get('detail_failures') != 0: raise SystemExit(f"AGC detail failures remain: {r.get('detail_failures')}")
-          for required in ['reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json','reports/NEVADA_CMS_PROVIDER_EXTRACTION.json','reports/LAS_VEGAS_BUSINESS_LICENSE_CANDIDATES.json']:
+          detail=pathlib.Path('reports/NEVADA_HCQC_ALIS_DETAIL_ENRICHMENT.json')
+          if not detail.exists(): raise SystemExit('Missing AGC detail report')
+          d=json.loads(detail.read_text())
+          if d.get('detail_failures') != 0: raise SystemExit(f"AGC detail failures remain: {d.get('detail_failures')}")
+          for required in [
+              'reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json',
+              'reports/NEVADA_CMS_PROVIDER_EXTRACTION.json',
+              'reports/LAS_VEGAS_BUSINESS_LICENSE_CANDIDATES.json',
+              'reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.json',
+              'database/nevada_facility_universe_canonical.json',
+          ]:
               if not pathlib.Path(required).exists(): raise SystemExit(f'Missing required evidence: {required}')
+          r=json.loads(pathlib.Path('reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.json').read_text())
+          if r.get('canonical_facilities_unique', 0) <= 0: raise SystemExit('Canonical universe is empty')
+          if r.get('nevada_official_license_records') != 503: raise SystemExit(f"Unexpected live ALiS license count: {r.get('nevada_official_license_records')}")
+          if r.get('cms_source_records', 0) <= 0: raise SystemExit('CMS source is empty')
+          if r.get('subsets', {}).get('las_vegas_valley', 0) <= 0: raise SystemExit('Las Vegas Valley subset is empty')
+          print(json.dumps(r, indent=2))
           PY
