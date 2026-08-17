@@ -15,7 +15,7 @@ permissions:
 jobs:
   probe-nevada-hcqc:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,8 +23,8 @@ jobs:
           python-version: '3.12'
       - name: Probe official Nevada HCQC result surface
         run: python scripts/probe_nevada_hcqc_export.py
-      - name: Extract Nevada HCQC ALiS licensed facilities
-        run: python scripts/extract_nevada_hcqc_alis.py --skip-details --throttle 0
+      - name: Extract Nevada HCQC ALiS licensed facilities and AGC details
+        run: python scripts/extract_nevada_hcqc_alis.py --throttle 0
       - name: Upload Nevada ALiS extraction evidence
         if: always()
         uses: actions/upload-artifact@v4
