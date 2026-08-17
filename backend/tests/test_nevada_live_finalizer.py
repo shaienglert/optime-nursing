@@ -28,7 +28,7 @@ def alis(name="ALPHA CARE", address="100 MAIN ST", ccn="295001", memory="UNKNOWN
         "first_issue_date": "01/01/2020",
         "primary_contact_name": "ADMIN ONE",
         "primary_contact_role": "Administrator",
-        "bed_count": "9",
+        "capacity": "9",
         "federal_provider_number": ccn,
         "detail_url": "https://example.invalid/detail",
         "official_detail": detail,
@@ -42,7 +42,7 @@ def alis(name="ALPHA CARE", address="100 MAIN ST", ccn="295001", memory="UNKNOWN
 
 def cms(ccn="295001", name="ALPHA CARE", address="100 MAIN STREET"):
     return {
-        "Federal Provider Number": ccn,
+        "CMS Certification Number (CCN)": ccn,
         "Provider Name": name,
         "Provider Address": address,
         "City/Town": "LAS VEGAS",
@@ -66,9 +66,24 @@ def test_exact_ccn_is_strongest_identity():
     assert payload["report"]["canonical_facilities_unique"] == 1
 
 
+def test_live_cms_ccn_header_is_supported():
+    payload = build([alis(ccn="295888")], [cms(ccn="295888")], [])
+    assert payload["report"]["source_identity_merges"] == 1
+    assert payload["records"][0]["cms_ccn"] == "295888"
+
+
 def test_exact_normalized_name_address_fallback_is_allowed():
     payload = build([alis(ccn="")], [cms(ccn="295999")], [])
     assert payload["report"]["merge_methods"]["EXACT_NORMALIZED_NAME_ADDRESS_CITY_ZIP"] == 1
+    assert payload["report"]["canonical_facilities_unique"] == 1
+
+
+def test_truncated_cms_name_requires_exact_normalized_address():
+    a = alis(name="CORONADO RIDGE SKILLED NURSING AND REHABILITATION CENTER", address="2855 W HORIZON RIDGE PKWY", ccn="")
+    a["license_type"] = "SNF"
+    row = cms(ccn="295012", name="CORONADO RIDGE SKILLED NURSING & REHABILITATION CE", address="2855 WEST HORIZON RIDGE PARKWAY")
+    payload = build([a], [row], [])
+    assert payload["report"]["merge_methods"]["EXACT_NORMALIZED_ADDRESS_COMPATIBLE_TRUNCATED_NAME"] == 1
     assert payload["report"]["canonical_facilities_unique"] == 1
 
 
@@ -99,7 +114,7 @@ def test_senior_name_business_license_remains_candidate_unknown():
     }]
     payload = build([alis()], [], business)
     assert payload["report"]["independent_living_confirmed"] == 0
-    assert payload["report"]["independent_living_candidates_unknown"] == 1
+    assert payload["report"]["independent_living_candidates_unknown_active_unique"] == 1
     assert payload["independent_living_discovery_candidates"][0]["classification"] == "INDEPENDENT_LIVING_CANDIDATE_UNKNOWN"
 
 
