@@ -24,7 +24,7 @@
     {"name":"SeniorHousingNet","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY","urls":["https://www.seniorhousingnet.com/seniorliving-search/las-vegas_nv"]},
     {"name":"AssistedLiving.org","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY_ASSISTED_LIVING_RFG","urls":["https://www.assistedliving.org/nevada/las-vegas/"]},
     {"name":"NursingHomeDatabase","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY_SKILLED_NURSING","urls":["https://www.nursinghomedatabase.com/list/bestskillednursinghome/NV","https://www.nursinghomedatabase.com/list/bestskillednursinghome/NV/LAS%20VEGAS","https://www.nursinghomedatabase.com/list/worstskillednursinghome/NV/LAS%20VEGAS"]},
-    {"name":"NursingHomes.com","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY_SKILLED_NURSING","urls":["https://www.nursinghomes.com/nv/las-vegas/"],"zero_match_policy":"UNKNOWN_WHEN_IDENTITY_CONTENT_UNVERIFIABLE"}
+    {"name":"NursingHomes.com","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY_SKILLED_NURSING","urls":[],"blocked_or_unverifiable_url":"https://www.nursinghomes.com/nv/las-vegas/","zero_match_policy":"UNKNOWN_WHEN_IDENTITY_CONTENT_UNVERIFIABLE","precision_concern":"Public Las Vegas surface currently returns anti-bot or identity-unverifiable content in automated probes; generic coverage remains UNKNOWN until a governed adapter can identify records."}
   ],
   "truth_policy": {
     "licensing":"Nevada HCQC/ALiS",
