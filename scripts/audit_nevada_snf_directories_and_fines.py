@@ -95,23 +95,40 @@ def directory_match(record: dict, page: str) -> bool:
     return bool(name and city and name in page and city in page)
 
 
+def directory_content_is_auditable(name: str, page: str, matched_count: int) -> bool:
+    normalized = norm(page)
+    if matched_count > 0:
+        return True
+    if name == "NursingHomes.com":
+        # This source can return an HTTP 200 challenge/generic shell instead of listing data.
+        # Without even one strongly identifiable canonical facility, zero is not auditable.
+        return False
+    return bool(normalized)
+
+
+def unknown_directory_result(name: str, records: list[dict], fetches: list[dict], status: str) -> dict:
+    return {
+        "source": name,
+        "status": status,
+        "denominator": len(records),
+        "covered": "UNKNOWN",
+        "missing": "UNKNOWN",
+        "coverage_pct": "UNKNOWN",
+        "matched_canonical_ids": [],
+        "fetches": [{k: v for k, v in f.items() if k != "text"} for f in fetches],
+        "policy": "Unavailable, challenged, or identity-unverifiable source content is UNKNOWN, never zero coverage.",
+    }
+
+
 def audit_directory(name: str, urls: list[str], records: list[dict]) -> dict:
     fetches = [fetch_text(url) for url in urls]
     usable = [f for f in fetches if f.get("status") == "REACHABLE"]
     if not usable:
-        return {
-            "source": name,
-            "status": "SOURCE_UNAVAILABLE_OR_BLOCKED",
-            "denominator": len(records),
-            "covered": "UNKNOWN",
-            "missing": "UNKNOWN",
-            "coverage_pct": "UNKNOWN",
-            "matched_canonical_ids": [],
-            "fetches": [{k: v for k, v in f.items() if k != "text"} for f in fetches],
-            "policy": "Blocked/challenge pages are UNKNOWN, never zero coverage.",
-        }
+        return unknown_directory_result(name, records, fetches, "SOURCE_UNAVAILABLE_OR_BLOCKED")
     page = " ".join(str(f.get("text") or "") for f in usable)
     matched = [r for r in records if directory_match(r, page)]
+    if not directory_content_is_auditable(name, page, len(matched)):
+        return unknown_directory_result(name, records, fetches, "SOURCE_CONTENT_UNVERIFIABLE_OR_BLOCKED")
     return {
         "source": name,
         "status": "LIVE_FETCHED",
@@ -202,7 +219,7 @@ def main() -> int:
         "fines": fines,
         "truth_policy": [
             "CMS/ALiS remain truth sources; directories are discovery/enrichment only.",
-            "Blocked source pages produce UNKNOWN, never zero.",
+            "Blocked or identity-unverifiable source pages produce UNKNOWN, never zero.",
             "CMS penalty identity joins only by exact CCN.",
         ],
     }
