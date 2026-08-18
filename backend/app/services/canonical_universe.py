@@ -14,6 +14,14 @@ DATABASE_DIR = REPO_ROOT / "database"
 LAS_VEGAS_RUNTIME_PART_NAMES = tuple(
     f"las_vegas_runtime_v2/part{index:02}.b64" for index in range(6)
 )
+LAS_VEGAS_RUNTIME_PART_SHA256 = (
+    "b5c9e1647f7a702ab21e44c719355f30d329c66e230f7882c77ac1f065b52b6d",
+    "538f1ea655ed543db3dcbb39ce0e974d83d2ebe33729953070e11c5d35fb9870",
+    "1b448f458254ec08095807cca7c16aa2d9e0aff7945a35555d027110f694458d",
+    "6529ab7fb9e7341c62c177e5c034545918291a3e222d24417b4de8c998a9944d",
+    "0b68a88106b9adad9b5f1d394829e47c1003f74baeccc3520cd92cfc79a0c410",
+    "deb181a63fc473c20710d6e3f9e65aea796626fc9b42f3686663121694f9092d",
+)
 LAS_VEGAS_RUNTIME_SHA256 = "bec25381d013cf39001fbdb8ab02d9c15b6a451a9e78dcedd1309178203346f4"
 LAS_VEGAS_RUNTIME_CACHE = Path(tempfile.gettempdir()) / "optime-nevada-las-vegas-runtime-projection.json"
 
@@ -67,14 +75,24 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
             return target
 
     try:
-        encoded = "".join(path.read_text(encoding="utf-8").strip() for path in parts)
+        part_texts = []
+        for index, path in enumerate(parts):
+            text = path.read_text(encoding="utf-8").strip()
+            actual_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            if actual_sha != LAS_VEGAS_RUNTIME_PART_SHA256[index]:
+                raise ValueError(
+                    f"runtime projection part {index:02} checksum mismatch: "
+                    f"len={len(text)} sha256={actual_sha} expected={LAS_VEGAS_RUNTIME_PART_SHA256[index]}"
+                )
+            part_texts.append(text)
+        encoded = "".join(part_texts)
         compressed = base64.b64decode(encoded, validate=True)
         decoded = gzip.decompress(compressed)
         if hashlib.sha256(decoded).hexdigest() != LAS_VEGAS_RUNTIME_SHA256:
             raise ValueError("runtime projection checksum mismatch")
         payload = json.loads(decoded.decode("utf-8"))
     except Exception as exc:
-        raise RuntimeError("Invalid pinned Las Vegas runtime projection parts") from exc
+        raise RuntimeError(f"Invalid pinned Las Vegas runtime projection parts: {exc}") from exc
 
     records = payload.get("records") or []
     if payload.get("record_count") != 364 or len(records) != 364:
