@@ -5,19 +5,32 @@ from __future__ import annotations
 The legacy scorer remains the capability/evidence scorer. This facade adds the
 missing care-setting decision layer so a more intensive setting does not outrank
 a suitable residential setting merely because it has more verified clinical
-capabilities.
+capabilities. Nevada ALiS inspection history is used only as a governed tie-breaker
+within otherwise similarly matched residential candidates.
 """
 
+import base64
+import gzip
+import hashlib
 import importlib.util
+import json
 import sys
+from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List
 
 from app.services.facility_parameter_service import get_canonical_facility_index
 
 
+_REPO_ROOT = Path(__file__).resolve().parents[4]
 _LEGACY_MODULE_NAME = "app.services._patient_decision_engine_legacy"
 _LEGACY_PATH = Path(__file__).resolve().parent.parent / "patient_decision_engine.py"
+_REGULATORY_PATH = _REPO_ROOT / "database" / "las_vegas_regulatory_summary.b64"
+_REGULATORY_TEXT_SHA256 = "17a9a1a1c0dc4c1eb8fe42b7de1bdc24c014cd216dbe039d82c996b540146575"
+_REGULATORY_PAYLOAD_SHA256 = "a2b2fd299366d06367ba162744fab0f1366c66810e0f13ff448fa51233068840"
+_REGULATORY_RECORD_COUNT = 313
+
 _spec = importlib.util.spec_from_file_location(_LEGACY_MODULE_NAME, _LEGACY_PATH)
 if _spec is None or _spec.loader is None:
     raise RuntimeError(f"Unable to load patient decision engine core: {_LEGACY_PATH}")
@@ -56,6 +69,28 @@ CARE_SETTING_ORDER = {
     "OVERLEVEL": 2,
     "INSUFFICIENT_SETTING": 3,
 }
+GRADE_ORDER = {"A": 0, "B": 1, "C": 2, "D": 3, "UNKNOWN": 4}
+
+
+@lru_cache(maxsize=1)
+def _regulatory_index() -> Dict[str, Dict[str, Any]]:
+    text = _REGULATORY_PATH.read_text(encoding="utf-8").strip()
+    actual_text_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    if actual_text_sha != _REGULATORY_TEXT_SHA256:
+        raise RuntimeError(
+            f"Las Vegas regulatory summary checksum mismatch: {actual_text_sha}"
+        )
+    decoded = gzip.decompress(base64.b64decode(text, validate=True))
+    actual_payload_sha = hashlib.sha256(decoded).hexdigest()
+    if actual_payload_sha != _REGULATORY_PAYLOAD_SHA256:
+        raise RuntimeError(
+            f"Las Vegas regulatory payload checksum mismatch: {actual_payload_sha}"
+        )
+    payload = json.loads(decoded.decode("utf-8"))
+    records = payload.get("records") or {}
+    if payload.get("record_count") != _REGULATORY_RECORD_COUNT or len(records) != _REGULATORY_RECORD_COUNT:
+        raise RuntimeError("Las Vegas regulatory summary must contain exactly 313 RFG records")
+    return records
 
 
 def _need_is_high_yes(needs: List[Dict[str, Any]], parameter_ids: set[str]) -> bool:
@@ -125,6 +160,38 @@ def _care_setting_fit(
     return {"status": "POSSIBLE_FIT", "reason": "Care-setting fit requires direct verification."}
 
 
+def _date_sort_value(value: Any) -> float:
+    text = str(value or "").strip()
+    if not text or text.upper() == "UNKNOWN":
+        return 0.0
+    for fmt in ("%m/%d/%Y %I:%M %p", "%m/%d/%Y %H:%M %p", "%m/%d/%Y %H:%M", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(text, fmt).timestamp()
+        except ValueError:
+            continue
+    return 0.0
+
+
+def _regulatory_sort_tuple(row: Dict[str, Any]) -> tuple[Any, ...]:
+    history = row.get("regulatory_history") or {}
+    if not history:
+        # UNKNOWN stays UNKNOWN. It sorts after known inspection evidence, not as a failure.
+        return (0, GRADE_ORDER["UNKNOWN"], 0, 0, 0, 0, 0, 0.0)
+    counts = history.get("grade_counts") or {}
+    disciplinary = str(history.get("disciplinary_action") or "UNKNOWN").upper()
+    latest_grade = str(history.get("latest_known_grade") or "UNKNOWN").upper()
+    return (
+        1 if disciplinary == "Y" else 0,
+        GRADE_ORDER.get(latest_grade, GRADE_ORDER["UNKNOWN"]),
+        int(counts.get("D") or 0),
+        int(counts.get("C") or 0),
+        int(counts.get("B") or 0),
+        -int(counts.get("A") or 0),
+        -int(history.get("known_grade_count") or 0),
+        -_date_sort_value(history.get("latest_known_grade_date")),
+    )
+
+
 def _result_sort_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     setting = row.get("care_setting_fit") or {}
     setting_order = CARE_SETTING_ORDER.get(str(setting.get("status") or "POSSIBLE_FIT"), 1)
@@ -134,6 +201,7 @@ def _result_sort_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         setting_order,
         eligibility_order,
         -(float(row.get("patient_match_score") or 0.0)),
+        *_regulatory_sort_tuple(row),
         -(float(row.get("quality_safety_score") or 0.0)),
         -(float(row.get("staffing_score") or 0.0)),
         -(float(row.get("capability_depth_score") or 0.0)),
@@ -153,6 +221,7 @@ def _assign_display_ranks(rows: List[Dict[str, Any]]) -> None:
             setting.get("status"),
             row.get("eligibility_status"),
             row.get("patient_match_score"),
+            _regulatory_sort_tuple(row),
             row.get("quality_safety_score"),
             row.get("staffing_score"),
             row.get("capability_depth_score"),
@@ -183,12 +252,15 @@ def run_patient_decision_engine(
     profile = core.get("patient_needs_profile") or {}
     context = _care_setting_context(profile)
     canonical_index = get_canonical_facility_index()
+    regulatory = _regulatory_index()
     results = list(core.get("results") or [])
 
     for row in results:
         canonical_id = str(row.get("canonical_facility_id") or "")
         canonical_row = canonical_index.get(canonical_id) or {}
         row["care_setting_fit"] = _care_setting_fit(context, row, canonical_row)
+        if canonical_id in regulatory:
+            row["regulatory_history"] = regulatory[canonical_id]
 
     results.sort(key=_result_sort_key)
     selected = results[: max(0, int(limit or 0))]
@@ -200,6 +272,7 @@ def run_patient_decision_engine(
         "version": "v1",
         "context": context,
         "principle": "least-intensive appropriate setting before excess capability",
+        "regulatory_tie_break": "Nevada HCQC / ALiS official grade history; UNKNOWN remains UNKNOWN",
     }
     return core
 
