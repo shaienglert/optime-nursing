@@ -1,0 +1,64 @@
+name: Nevada Penalty Citation Linkage
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/fetch_nevada_cms_health_deficiencies.py'
+      - 'scripts/link_nevada_cms_penalties_to_citations.py'
+      - 'backend/tests/test_nevada_penalty_citation_linkage.py'
+      - '.github/workflows/nevada-penalty-citation-linkage.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  penalty-citation-linkage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check pytest
+      - name: Run deterministic linkage tests
+        run: python -m pytest backend/tests/test_nevada_penalty_citation_linkage.py -q
+      - name: Fetch current Nevada CMS penalties
+        run: python scripts/fetch_nevada_cms_penalties.py
+      - name: Fetch current Nevada CMS health deficiencies
+        run: python scripts/fetch_nevada_cms_health_deficiencies.py
+      - name: Build current Nevada canonical universe inputs
+        run: |
+          python scripts/probe_nevada_hcqc_export.py
+          python scripts/extract_nevada_hcqc_alis.py --skip-details --throttle 0
+          python scripts/enrich_nevada_alis_details.py --workers 8
+          python scripts/normalize_nevada_hcqc_geography.py
+          python scripts/fetch_nevada_cms_provider_data.py
+          python scripts/fetch_las_vegas_business_license_candidates.py
+          python scripts/verify_nevada_independent_living.py
+          python scripts/finalize_nevada_canonical_universe.py
+      - name: Link Valley penalties to related citations
+        run: python scripts/link_nevada_cms_penalties_to_citations.py
+      - name: Gate linkage evidence
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('reports/NEVADA_CMS_PENALTY_CITATION_LINKAGE.json')
+          if not p.exists(): raise SystemExit('Missing penalty citation linkage report')
+          r=json.loads(p.read_text())
+          s=r.get('summary',{})
+          if s.get('valley_penalty_events',0)<=0: raise SystemExit('No Valley penalty events')
+          if s.get('events_with_related_citations',0)<=0: raise SystemExit('No penalty events received related citation evidence')
+          for e in r.get('events',[]):
+              if e.get('related_citations') and e.get('linkage_confidence')=='UNKNOWN_NO_TEMPORAL_MATCH': raise SystemExit('Semantic contradiction in linkage confidence')
+          print(json.dumps(s,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nevada-penalty-citation-evidence
+          path: |
+            data/nevada/raw/cms_penalties_nv.csv
+            data/nevada/raw/cms_health_deficiencies_nv.csv
+            reports/NEVADA_CMS_HEALTH_DEFICIENCIES_EXTRACTION.json
+            reports/NEVADA_CMS_PENALTY_CITATION_LINKAGE.json
