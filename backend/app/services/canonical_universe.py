@@ -11,11 +11,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATABASE_DIR = REPO_ROOT / "database"
-LAS_VEGAS_RUNTIME_PART_NAMES = (
-    "nevada_las_vegas_runtime_projection.part00.b64",
-    "nevada_las_vegas_runtime_projection.part01.b64",
+LAS_VEGAS_RUNTIME_PART_NAMES = tuple(
+    f"las_vegas_runtime_v2/part{index:02}.b64" for index in range(6)
 )
-LAS_VEGAS_RUNTIME_SHA256 = "89361bfbca4c03b3e28348d28e04dd2231625938a0adf130831dfe2faa021e5b"
+LAS_VEGAS_RUNTIME_SHA256 = "bec25381d013cf39001fbdb8ab02d9c15b6a451a9e78dcedd1309178203346f4"
 LAS_VEGAS_RUNTIME_CACHE = Path(tempfile.gettempdir()) / "optime-nevada-las-vegas-runtime-projection.json"
 
 MARKET_UNIVERSE_FILES = {
@@ -50,8 +49,6 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
     parts = _las_vegas_part_paths(database_dir)
     missing = [path for path in parts if not path.is_file()]
     if missing:
-        # Preserve compatibility with isolated loader tests that create the historical
-        # filename. Production DATABASE_DIR never falls back to the stale repo artifact.
         legacy = database_dir / "nevada_facility_universe_canonical.json"
         if database_dir != DATABASE_DIR and legacy.is_file():
             return legacy
@@ -123,7 +120,7 @@ def canonical_universe_source_label(market: str | None = None) -> str:
     raw_market = str(market or configured_canonical_market()).strip().lower()
     normalized = MARKET_ALIASES.get(raw_market, raw_market)
     if normalized == "las-vegas":
-        return "database/nevada_las_vegas_runtime_projection.part*.b64"
+        return "database/las_vegas_runtime_v2/part*.b64"
     path = resolve_canonical_universe_path(normalized)
     try:
         return path.relative_to(REPO_ROOT).as_posix()
