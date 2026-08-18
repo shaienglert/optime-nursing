@@ -31,17 +31,25 @@ def link(penalties: list[dict], deficiencies: list[dict], valley_ccns: set[str])
         for r in by_ccn.get(ccn, []):
             sd=d(r.get('Survey Date'))
             if not pd or not sd: continue
-            delta=(pd-sd).days
-            if 0 <= delta <= 180:
-                candidates.append((delta,r))
+            signed_delta=(sd-pd).days
+            distance=abs(signed_delta)
+            if distance <= 180:
+                candidates.append((distance,signed_delta,r))
         if candidates:
             nearest=min(x[0] for x in candidates)
-            nearest_rows=[r for delta,r in candidates if delta==nearest]
-            confidence='EXACT_SURVEY_DATE' if nearest==0 else ('NEAREST_PRIOR_SURVEY_WITHIN_30_DAYS' if nearest<=30 else 'NEAREST_PRIOR_SURVEY_WITHIN_180_DAYS')
+            nearest_rows=[(signed,r) for distance,signed,r in candidates if distance==nearest]
+            signed_days=nearest_rows[0][0]
+            rows=[r for _,r in nearest_rows]
+            if nearest==0:
+                confidence='EXACT_SURVEY_DATE'
+            elif nearest<=30:
+                confidence='NEAREST_SURVEY_WITHIN_30_DAYS'
+            else:
+                confidence='NEAREST_SURVEY_WITHIN_180_DAYS'
         else:
-            nearest=None; nearest_rows=[]; confidence='UNKNOWN_NO_TEMPORAL_MATCH'
+            nearest=None; signed_days=None; rows=[]; confidence='UNKNOWN_NO_TEMPORAL_MATCH'
         citations=[]
-        for r in sorted(nearest_rows, key=lambda x: severity_rank(x.get('Scope Severity Code')), reverse=True):
+        for r in sorted(rows, key=lambda x: severity_rank(x.get('Scope Severity Code')), reverse=True):
             citations.append({
                 'survey_date': r.get('Survey Date'),
                 'f_tag': f"{r.get('Deficiency Prefix','')}{r.get('Deficiency Tag Number','')}",
@@ -61,11 +69,12 @@ def link(penalties: list[dict], deficiencies: list[dict], valley_ccns: set[str])
             'fine_id': p.get('Fine ID'),
             'fine_amount': p.get('Fine Amount'),
             'linkage_confidence': confidence,
-            'days_from_nearest_prior_survey': nearest if nearest is not None else 'UNKNOWN',
+            'days_between_penalty_and_nearest_survey': signed_days if signed_days is not None else 'UNKNOWN',
+            'absolute_days_to_nearest_survey': nearest if nearest is not None else 'UNKNOWN',
             'related_citations': citations,
-            'causality_warning': 'CMS states penalties may be based on citations identified during inspections, but the Penalties dataset does not expose a direct penalty-to-citation key. Related citations below are temporal/CCN associations unless CMS publishes a direct link.'
+            'causality_warning': 'CMS states penalties are enforcement remedies tied to cited noncompliance, but the public Penalties dataset does not expose a direct penalty-to-citation key. Penalty Date can represent the earliest date of noncompliance and may precede the survey. Related citations below are exact-CCN temporal associations unless a direct CMS link is available.'
         })
-    return {'schema_version':'nevada-cms-penalty-citation-linkage-v1.0.0','events':events}
+    return {'schema_version':'nevada-cms-penalty-citation-linkage-v1.1.0','events':events}
 
 
 def main() -> int:
@@ -79,7 +88,8 @@ def main() -> int:
         'valley_penalty_events':len(result['events']),
         'events_with_related_citations':sum(bool(e['related_citations']) for e in result['events']),
         'events_without_temporal_match':sum(not e['related_citations'] for e in result['events']),
-        'unique_ccns':len({e['ccn'] for e in result['events']})
+        'unique_ccns':len({e['ccn'] for e in result['events']}),
+        'exact_survey_date_matches':sum(e['linkage_confidence']=='EXACT_SURVEY_DATE' for e in result['events']),
     }
     Path(args.output).parent.mkdir(parents=True,exist_ok=True); Path(args.output).write_text(json.dumps(result,indent=2)+"\n",encoding='utf-8')
     print(json.dumps(result['summary'],indent=2)); return 0
