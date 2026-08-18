@@ -12,6 +12,7 @@ from app.services.facility_parameter_service import (
     get_runtime_cache_status,
     refresh_runtime_cache,
 )
+from app.services.patient_decision_engine import run_patient_decision_engine
 
 
 class NevadaProductionRuntimeTests(unittest.TestCase):
@@ -54,7 +55,6 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         self.assertEqual(rows["adl_support"]["raw_value"], "YES")
         self.assertIn("taxonomy", rows["adl_support"]["source"].lower())
         self.assertEqual(rows["adl_support"]["evidence_strength"], "TAXONOMY_INFERRED")
-        # Medication and transfer services must not be invented from RFG licensure alone.
         self.assertEqual(rows["medication_support"]["raw_value"], "UNKNOWN")
         self.assertEqual(rows["transfer_assistance"]["raw_value"], "UNKNOWN")
 
@@ -81,6 +81,58 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         rows = {row["parameter_id"]: row for row in table["rows"]}
         self.assertEqual(rows["skilled_nursing_capabilities"]["raw_value"], "YES")
         self.assertEqual(rows["nursing_24_7"]["raw_value"], "YES")
+
+    def test_adl_profile_routes_to_assisted_living_before_skilled_nursing(self) -> None:
+        questionnaire = {
+            "relationship": "Dad",
+            "ageGroup": "80-84",
+            "assistanceLevel": "Needs assistance with bathing and dressing",
+            "memoryStatus": "No",
+            "budget": 6500,
+            "distanceFromFamily": "Balanced location",
+        }
+        natural_language = (
+            "My father is 84, recently widowed, and lives in Las Vegas. "
+            "He has difficulty with bathing, dressing, meals and medication. "
+            "He is mentally alert, has no dementia, is still mobile, and needs daily help."
+        )
+        result = run_patient_decision_engine(questionnaire, natural_language, limit=5)
+        self.assertEqual(result["result_count"], 5)
+        self.assertEqual(result["total_candidates_scored"], 364)
+        context = result["care_setting_policy"]["context"]
+        self.assertFalse(context["requires_skilled"])
+        self.assertTrue(context["needs_residential_assistance"])
+        self.assertTrue(all(row["canonical_type"] == "ASSISTED_LIVING_RFG" for row in result["results"]))
+        self.assertTrue(all(row["care_setting_fit"]["status"] == "PRIMARY_FIT" for row in result["results"]))
+        self.assertFalse(
+            any(
+                need.get("parameter_id") in {"skilled_nursing_capabilities", "nursing_24_7"}
+                and need.get("requirement_level") in {"REQUIRED", "HIGH"}
+                for need in result["patient_needs_profile"]["needs"]
+            )
+        )
+
+    def test_relationship_does_not_change_objective_care_setting_ranking(self) -> None:
+        base = {
+            "ageGroup": "80-84",
+            "assistanceLevel": "Needs assistance with bathing and dressing",
+            "memoryStatus": "No",
+            "budget": 6500,
+            "distanceFromFamily": "Balanced location",
+        }
+        son = run_patient_decision_engine(
+            {**base, "relationship": "Dad"},
+            "My father is 84, recently widowed, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing, meals and medication. No dementia.",
+            limit=5,
+        )
+        self_search = run_patient_decision_engine(
+            {**base, "relationship": "Myself"},
+            "I am 84, recently widowed, live in Las Vegas, am mentally alert and mobile, and need help with bathing, dressing, meals and medication. No dementia.",
+            limit=5,
+        )
+        son_ids = [row["canonical_facility_id"] for row in son["results"]]
+        self_ids = [row["canonical_facility_id"] for row in self_search["results"]]
+        self.assertEqual(son_ids, self_ids)
 
 
 if __name__ == "__main__":
