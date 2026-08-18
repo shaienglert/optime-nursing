@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import gzip
+import hashlib
 import json
 import os
 import tempfile
@@ -10,7 +11,11 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATABASE_DIR = REPO_ROOT / "database"
-LAS_VEGAS_RUNTIME_PROJECTION = DATABASE_DIR / "nevada_las_vegas_runtime_projection.json.gz.b64"
+LAS_VEGAS_RUNTIME_PART_NAMES = (
+    "nevada_las_vegas_runtime_projection.part00.b64",
+    "nevada_las_vegas_runtime_projection.part01.b64",
+)
+LAS_VEGAS_RUNTIME_SHA256 = "89361bfbca4c03b3e28348d28e04dd2231625938a0adf130831dfe2faa021e5b"
 LAS_VEGAS_RUNTIME_CACHE = Path(tempfile.gettempdir()) / "optime-nevada-las-vegas-runtime-projection.json"
 
 MARKET_UNIVERSE_FILES = {
@@ -29,8 +34,6 @@ MARKET_ALIASES = {
 
 
 def configured_canonical_market() -> str:
-    # Las Vegas is the active production market. Explicit environment configuration
-    # still wins, so Florida remains reproducible for its own workflows/tests.
     value = str(
         os.getenv("OPTIME_CANONICAL_MARKET")
         or os.getenv("NEXT_PUBLIC_ASSESSMENT_REGION")
@@ -39,35 +42,48 @@ def configured_canonical_market() -> str:
     return MARKET_ALIASES.get(value, value)
 
 
+def _las_vegas_part_paths(database_dir: Path) -> tuple[Path, ...]:
+    return tuple(database_dir / name for name in LAS_VEGAS_RUNTIME_PART_NAMES)
+
+
 def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: bool) -> Path:
-    source = database_dir / LAS_VEGAS_RUNTIME_PROJECTION.name
-    if not source.is_file():
-        # Isolated loader tests/legacy tooling may provide the old filename explicitly.
-        # Production DATABASE_DIR never falls back: it requires the pinned verified projection.
+    parts = _las_vegas_part_paths(database_dir)
+    missing = [path for path in parts if not path.is_file()]
+    if missing:
+        # Preserve compatibility with isolated loader tests that create the historical
+        # filename. Production DATABASE_DIR never falls back to the stale repo artifact.
         legacy = database_dir / "nevada_facility_universe_canonical.json"
         if database_dir != DATABASE_DIR and legacy.is_file():
             return legacy
         if require_exists:
-            raise FileNotFoundError(f"Pinned Las Vegas runtime projection is missing: {source}")
-        return source
+            raise FileNotFoundError(
+                "Pinned Las Vegas runtime projection part(s) missing: "
+                + ", ".join(str(path) for path in missing)
+            )
+        return parts[0]
 
-    # For the repository database directory use /tmp so serverless/read-only filesystems
-    # remain safe. Tests with an isolated database_dir receive a sibling materialization.
     target = LAS_VEGAS_RUNTIME_CACHE if database_dir == DATABASE_DIR else database_dir / "nevada_las_vegas_runtime_projection.json"
-    source_mtime = source.stat().st_mtime_ns
+    source_mtime = max(path.stat().st_mtime_ns for path in parts)
     if target.is_file() and target.stat().st_mtime_ns >= source_mtime:
-        return target
+        decoded = target.read_bytes()
+        if hashlib.sha256(decoded).hexdigest() == LAS_VEGAS_RUNTIME_SHA256:
+            return target
 
     try:
-        compressed = base64.b64decode(source.read_text(encoding="utf-8").strip(), validate=True)
+        encoded = "".join(path.read_text(encoding="utf-8").strip() for path in parts)
+        compressed = base64.b64decode(encoded, validate=True)
         decoded = gzip.decompress(compressed)
+        if hashlib.sha256(decoded).hexdigest() != LAS_VEGAS_RUNTIME_SHA256:
+            raise ValueError("runtime projection checksum mismatch")
         payload = json.loads(decoded.decode("utf-8"))
     except Exception as exc:
-        raise RuntimeError(f"Invalid pinned Las Vegas runtime projection: {source}") from exc
+        raise RuntimeError("Invalid pinned Las Vegas runtime projection parts") from exc
 
     records = payload.get("records") or []
-    if payload.get("record_count") != len(records) or len(records) <= 0:
-        raise RuntimeError("Pinned Las Vegas runtime projection failed record-count validation")
+    if payload.get("record_count") != 364 or len(records) != 364:
+        raise RuntimeError("Pinned Las Vegas runtime projection must contain exactly 364 Valley records")
+    if payload.get("source_universe_record_count") != 517:
+        raise RuntimeError("Pinned Las Vegas runtime projection source universe must contain 517 records")
     if any(str(row.get("state") or "").upper() != "NV" for row in records):
         raise RuntimeError("Pinned Las Vegas runtime projection contains non-Nevada records")
     if any(row.get("is_las_vegas_valley") is not True for row in records):
@@ -107,7 +123,7 @@ def canonical_universe_source_label(market: str | None = None) -> str:
     raw_market = str(market or configured_canonical_market()).strip().lower()
     normalized = MARKET_ALIASES.get(raw_market, raw_market)
     if normalized == "las-vegas":
-        return f"database/{LAS_VEGAS_RUNTIME_PROJECTION.name}"
+        return "database/nevada_las_vegas_runtime_projection.part*.b64"
     path = resolve_canonical_universe_path(normalized)
     try:
         return path.relative_to(REPO_ROOT).as_posix()
