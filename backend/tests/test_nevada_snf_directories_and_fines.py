@@ -6,7 +6,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from audit_nevada_snf_directories_and_fines import audit_fines, directory_match, is_block_page, snf_valley  # noqa: E402
+from audit_nevada_snf_directories_and_fines import (  # noqa: E402
+    audit_fines,
+    directory_content_is_auditable,
+    directory_match,
+    is_block_page,
+    snf_valley,
+)
 
 
 def record(name="ADVANCED HEALTH CARE OF LAS VEGAS", address="5840 W SUNSET RD", city="LAS VEGAS", zip_code="89118", ccn="295090"):
@@ -24,6 +30,11 @@ def record(name="ADVANCED HEALTH CARE OF LAS VEGAS", address="5840 W SUNSET RD",
 
 def test_incapsula_challenge_is_blocked_not_live_zero():
     assert is_block_page("Request unsuccessful. Incapsula incident ID: 123") is True
+
+
+def test_nursinghomes_http_200_without_identity_is_unknown_not_zero():
+    assert directory_content_is_auditable("NursingHomes.com", "generic shell returned with status 200", 0) is False
+    assert directory_content_is_auditable("NursingHomes.com", "usable facility content", 1) is True
 
 
 def test_statewide_directory_address_matches_strongly():
