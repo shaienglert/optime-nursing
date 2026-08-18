@@ -9,8 +9,11 @@ on:
       - 'scripts/normalize_nevada_hcqc_geography.py'
       - 'scripts/fetch_nevada_cms_provider_data.py'
       - 'scripts/fetch_las_vegas_business_license_candidates.py'
+      - 'scripts/verify_nevada_independent_living.py'
       - 'scripts/finalize_nevada_canonical_universe.py'
+      - 'data/nevada/verified/independent_living_primary_evidence.json'
       - 'backend/tests/test_nevada_live_finalizer.py'
+      - 'backend/tests/test_nevada_independent_living.py'
       - '.github/workflows/nevada-source-probe.yml'
   workflow_dispatch:
 
@@ -20,7 +23,7 @@ permissions:
 jobs:
   probe-nevada-hcqc:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -29,7 +32,7 @@ jobs:
       - name: Install test tooling
         run: python -m pip install --disable-pip-version-check pytest
       - name: Run deterministic Nevada semantic tests
-        run: python -m pytest backend/tests/test_nevada_live_finalizer.py -q
+        run: python -m pytest backend/tests/test_nevada_live_finalizer.py backend/tests/test_nevada_independent_living.py -q
       - name: Probe official Nevada HCQC result surface
         run: python scripts/probe_nevada_hcqc_export.py
       - name: Extract every Nevada HCQC ALiS license record
@@ -47,6 +50,9 @@ jobs:
       - name: Fetch official Las Vegas business-license candidates
         if: always()
         run: python scripts/fetch_las_vegas_business_license_candidates.py
+      - name: Verify Independent Living candidates against governed primary evidence
+        if: always()
+        run: python scripts/verify_nevada_independent_living.py
       - name: Build canonical Nevada facility universe
         if: always()
         run: python scripts/finalize_nevada_canonical_universe.py
@@ -60,6 +66,8 @@ jobs:
             data/nevada/clean/hcqc_alis_facilities.csv
             data/nevada/raw/cms_provider_information_nv.csv
             data/nevada/raw/las_vegas_business_license_senior_candidates.json
+            data/nevada/verified/independent_living_primary_evidence.json
+            data/nevada/verified/independent_living_verification.json
             data/nevada/canonical/*.json
             database/nevada_facility_universe_canonical.json
             reports/NEVADA_HCQC_ALIS_EXTRACTION.json
@@ -67,6 +75,7 @@ jobs:
             reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json
             reports/NEVADA_CMS_PROVIDER_EXTRACTION.json
             reports/LAS_VEGAS_BUSINESS_LICENSE_CANDIDATES.json
+            reports/NEVADA_INDEPENDENT_LIVING_VERIFICATION.json
             reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.json
             reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.md
             reports/evidence/nevada_alis_agc_detail_sample.html
@@ -84,14 +93,23 @@ jobs:
               'reports/NEVADA_HCQC_GEOGRAPHY_NORMALIZATION.json',
               'reports/NEVADA_CMS_PROVIDER_EXTRACTION.json',
               'reports/LAS_VEGAS_BUSINESS_LICENSE_CANDIDATES.json',
+              'reports/NEVADA_INDEPENDENT_LIVING_VERIFICATION.json',
               'reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.json',
               'database/nevada_facility_universe_canonical.json',
           ]:
               if not pathlib.Path(required).exists(): raise SystemExit(f'Missing required evidence: {required}')
+          iv=json.loads(pathlib.Path('reports/NEVADA_INDEPENDENT_LIVING_VERIFICATION.json').read_text())
+          counts=iv.get('counts', {})
+          if counts.get('identity_failures') != 0: raise SystemExit(f"Independent Living identity failures: {counts.get('identity_failures')}")
+          classified=sum(counts.get(k,0) for k in ('confirmed_primary','not_independent_living_primary','unknown'))
+          if classified != counts.get('active_unique_candidates'): raise SystemExit('Independent Living candidate accounting does not reconcile')
           r=json.loads(pathlib.Path('reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.json').read_text())
           if r.get('canonical_facilities_unique', 0) <= 0: raise SystemExit('Canonical universe is empty')
           if r.get('nevada_official_license_records') != 503: raise SystemExit(f"Unexpected live ALiS license count: {r.get('nevada_official_license_records')}")
           if r.get('cms_source_records', 0) <= 0: raise SystemExit('CMS source is empty')
+          if r.get('independent_living_confirmed', 0) != counts.get('confirmed_primary', 0): raise SystemExit('Independent Living canonical count does not match governed verification')
+          if r.get('independent_living_false_positive_primary', 0) != counts.get('not_independent_living_primary', 0): raise SystemExit('Independent Living false-positive count does not reconcile')
+          if r.get('independent_living_candidates_unknown_active_unique', 0) != counts.get('unknown', 0): raise SystemExit('Independent Living UNKNOWN count does not reconcile')
           if r.get('subsets', {}).get('las_vegas_valley', 0) <= 0: raise SystemExit('Las Vegas Valley subset is empty')
           print(json.dumps(r, indent=2))
           PY
