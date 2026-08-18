@@ -42,6 +42,11 @@ def configured_canonical_market() -> str:
 def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: bool) -> Path:
     source = database_dir / LAS_VEGAS_RUNTIME_PROJECTION.name
     if not source.is_file():
+        # Isolated loader tests/legacy tooling may provide the old filename explicitly.
+        # Production DATABASE_DIR never falls back: it requires the pinned verified projection.
+        legacy = database_dir / "nevada_facility_universe_canonical.json"
+        if database_dir != DATABASE_DIR and legacy.is_file():
+            return legacy
         if require_exists:
             raise FileNotFoundError(f"Pinned Las Vegas runtime projection is missing: {source}")
         return source
@@ -99,7 +104,8 @@ def resolve_canonical_universe_path(
 
 
 def canonical_universe_source_label(market: str | None = None) -> str:
-    normalized = MARKET_ALIASES.get(str(market or configured_canonical_market()).strip().lower(), str(market or configured_canonical_market()).strip().lower())
+    raw_market = str(market or configured_canonical_market()).strip().lower()
+    normalized = MARKET_ALIASES.get(raw_market, raw_market)
     if normalized == "las-vegas":
         return f"database/{LAS_VEGAS_RUNTIME_PROJECTION.name}"
     path = resolve_canonical_universe_path(normalized)
