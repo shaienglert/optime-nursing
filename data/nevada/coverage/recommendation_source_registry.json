@@ -1,0 +1,36 @@
+{
+  "schema_version": "nevada-recommendation-source-registry-v1.0.0",
+  "origin": "scripts/build_community_intelligence_coverage.py SOURCE_NAMES minus the three core truth/inspection surfaces: CMS, State License Registry, State Inspections",
+  "governed_recommendation_sources": [
+    {"name":"Deficiency Reports","role":"OFFICIAL_ENRICHMENT","coverage_semantics":"facility has structured deficiency/SOD evidence already captured from official surfaces","denominator_scope":"CARE_FACILITIES"},
+    {"name":"Fines","role":"OFFICIAL_ENRICHMENT","coverage_semantics":"facility has structured fine evidence; absence of an ingested fine source is UNKNOWN, not zero fines","denominator_scope":"CARE_FACILITIES"},
+    {"name":"License Actions","role":"OFFICIAL_ENRICHMENT","coverage_semantics":"facility has explicit license/disciplinary action evidence","denominator_scope":"NEVADA_LICENSED_CARE_FACILITIES"},
+    {"name":"Google Reviews","role":"REPUTATION_ENRICHMENT","coverage_semantics":"facility has a deterministic matched review/place surface","denominator_scope":"LAS_VEGAS_VALLEY"},
+    {"name":"Caring.com","role":"DIRECTORY_DISCOVERY_ENRICHMENT","coverage_semantics":"canonical facility exact normalized address appears on governed listing surfaces","denominator_scope":"LAS_VEGAS_VALLEY","urls":["https://www.caring.com/senior-living/assisted-living/nevada/las-vegas","https://www.caring.com/senior-living/independent-living/nevada/las-vegas","https://www.caring.com/senior-living/memory-care-facilities/nevada/las-vegas","https://www.caring.com/senior-living/nursing-homes/nevada/las-vegas"]},
+    {"name":"A Place For Mom","role":"DIRECTORY_DISCOVERY_ENRICHMENT","coverage_semantics":"canonical facility exact normalized address appears on governed listing surfaces","denominator_scope":"LAS_VEGAS_VALLEY","urls":["https://www.aplaceformom.com/assisted-living/nevada/las-vegas","https://www.aplaceformom.com/independent-living/nevada/las-vegas","https://www.aplaceformom.com/memory-care/nevada/las-vegas","https://www.aplaceformom.com/nursing-homes/nevada/las-vegas","https://www.aplaceformom.com/senior-apartments/nevada/las-vegas"]},
+    {"name":"SeniorAdvisor","role":"DIRECTORY_DISCOVERY_ENRICHMENT","coverage_semantics":"canonical facility exact normalized address appears on governed listing surfaces","denominator_scope":"LAS_VEGAS_VALLEY","urls":["https://www.senioradvisor.com/las-vegas-nv/assisted-living","https://www.senioradvisor.com/las-vegas-nv/independent-living","https://www.senioradvisor.com/las-vegas-nv/memory-care"]},
+    {"name":"Yelp","role":"REPUTATION_DISCOVERY_ENRICHMENT","coverage_semantics":"deterministic listing coverage requires a governed API/search adapter; public search pages are not treated as exhaustive","denominator_scope":"LAS_VEGAS_VALLEY"},
+    {"name":"Seniorly","role":"DIRECTORY_DISCOVERY_ENRICHMENT","coverage_semantics":"canonical facility exact normalized address appears on governed listing surfaces","denominator_scope":"LAS_VEGAS_VALLEY","urls":["https://www.seniorly.com/assisted-living/nevada/las-vegas","https://www.seniorly.com/independent-living/nevada/las-vegas","https://www.seniorly.com/memory-care/nevada/las-vegas","https://www.seniorly.com/skilled-nursing-facility/nevada/las-vegas","https://www.seniorly.com/active-adult/nevada/las-vegas"]},
+    {"name":"Indeed","role":"WORKFORCE_ENRICHMENT","coverage_semantics":"employment/recruiting evidence, not a facility-universe directory","denominator_scope":"NOT_APPLICABLE"},
+    {"name":"Glassdoor","role":"WORKFORCE_REPUTATION_ENRICHMENT","coverage_semantics":"employment/recruiting evidence, not a facility-universe directory","denominator_scope":"NOT_APPLICABLE"},
+    {"name":"Local News","role":"OPEN_WEB_ENRICHMENT","coverage_semantics":"event/evidence discovery, not an exhaustive facility-universe directory","denominator_scope":"NOT_APPLICABLE"},
+    {"name":"Press Releases","role":"OPEN_WEB_ENRICHMENT","coverage_semantics":"operator/event evidence, not an exhaustive facility-universe directory","denominator_scope":"NOT_APPLICABLE"},
+    {"name":"Ownership Changes","role":"CORPORATE_ENRICHMENT","coverage_semantics":"ownership-change evidence only; no exhaustive discovery denominator","denominator_scope":"NOT_APPLICABLE"},
+    {"name":"Lawsuits","role":"LEGAL_ENRICHMENT","coverage_semantics":"legal evidence only; no exhaustive discovery denominator","denominator_scope":"NOT_APPLICABLE"},
+    {"name":"Court Records","role":"LEGAL_SOURCE_ENRICHMENT","coverage_semantics":"court evidence only; no exhaustive discovery denominator","denominator_scope":"NOT_APPLICABLE"}
+  ],
+  "supplemental_directory_sources": [
+    {"name":"AgeSong","role":"DIRECTORY_DISCOVERY_ENRICHMENT_ONLY","denominator_scope":"LAS_VEGAS_VALLEY_ASSISTED_LIVING_RFG","urls":["https://agesong.com/states/nevada/las-vegas/","https://agesong.com/states/nevada/north-las-vegas/","https://agesong.com/states/nevada/henderson/"],"precision_concern":"Directory claims licensing-like status and may contain stale/duplicate/expanded records; never source of truth."},
+    {"name":"SeniorHousingNet","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY","urls":["https://www.seniorhousingnet.com/seniorliving-search/las-vegas_nv"]},
+    {"name":"AssistedLiving.org","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY_ASSISTED_LIVING_RFG","urls":["https://www.assistedliving.org/nevada/las-vegas/"]},
+    {"name":"NursingHomeDatabase","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY_SKILLED_NURSING","urls":["https://www.nursinghomedatabase.com/list/bestskillednursinghomesinlasvegasnv"]},
+    {"name":"NursingHomes.com","role":"DIRECTORY_DISCOVERY_ENRICHMENT","denominator_scope":"LAS_VEGAS_VALLEY_SKILLED_NURSING","urls":["https://www.nursinghomes.com/nv/las-vegas/"]}
+  ],
+  "truth_policy": {
+    "licensing":"Nevada HCQC/ALiS",
+    "federal_nursing":"CMS Care Compare",
+    "independent_living":"primary operator/provider/property evidence plus business-license identity",
+    "directories":"discovery/coverage/enrichment only",
+    "unknown":"preserve UNKNOWN; source unavailability does not mean zero coverage"
+  }
+}
