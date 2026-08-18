@@ -24,10 +24,13 @@ MARKET_ALIASES = {
 
 
 def configured_canonical_market() -> str:
+    # Nevada / Las Vegas is the active production market for OPTIME Nursing now.
+    # Explicit environment configuration always wins, so Florida remains reproducible
+    # with OPTIME_CANONICAL_MARKET=florida when running its workflows/tests.
     value = str(
         os.getenv("OPTIME_CANONICAL_MARKET")
         or os.getenv("NEXT_PUBLIC_ASSESSMENT_REGION")
-        or "florida"
+        or "las-vegas"
     ).strip().lower()
     return MARKET_ALIASES.get(value, value)
 
@@ -38,7 +41,9 @@ def resolve_canonical_universe_path(
     database_dir: Path = DATABASE_DIR,
     require_exists: bool = True,
 ) -> Path:
-    normalized = MARKET_ALIASES.get(str(market or configured_canonical_market()).strip().lower(), str(market or configured_canonical_market()).strip().lower())
+    configured = market or configured_canonical_market()
+    normalized_input = str(configured).strip().lower()
+    normalized = MARKET_ALIASES.get(normalized_input, normalized_input)
     filename = MARKET_UNIVERSE_FILES.get(normalized)
     if not filename:
         supported = ", ".join(sorted(MARKET_UNIVERSE_FILES))
