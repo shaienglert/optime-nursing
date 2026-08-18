@@ -11,12 +11,23 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATABASE_DIR = REPO_ROOT / "database"
-LAS_VEGAS_RUNTIME_PART_NAMES = tuple(
-    f"las_vegas_runtime_v2/part{index:02}.b64" for index in range(6)
+LAS_VEGAS_RUNTIME_PART_NAMES = (
+    "las_vegas_runtime_v2/part00.b64",
+    "las_vegas_runtime_v2/part01a.b64",
+    "las_vegas_runtime_v2/part01b.b64",
+    "las_vegas_runtime_v2/part01c.b64",
+    "las_vegas_runtime_v2/part01d.b64",
+    "las_vegas_runtime_v2/part02.b64",
+    "las_vegas_runtime_v2/part03.b64",
+    "las_vegas_runtime_v2/part04.b64",
+    "las_vegas_runtime_v2/part05.b64",
 )
 LAS_VEGAS_RUNTIME_PART_SHA256 = (
     "b5c9e1647f7a702ab21e44c719355f30d329c66e230f7882c77ac1f065b52b6d",
-    "538f1ea655ed543db3dcbb39ce0e974d83d2ebe33729953070e11c5d35fb9870",
+    "f23f6d00135ac6ebdb4eac0a3106651397c6c9b92bf715613b2d73a2951a4e34",
+    "82ba8ae7e9c6d27b3be24d321d88a109be6d2398d94af85060f1619b56908e39",
+    "6d6ab51039439abc36cb327bd7bea7eeadf3b7204087a3a374a51c123e03339e",
+    "874f9834d6f5315165910dc431689ef7483d68aeec0534df314cab9565466102",
     "1b448f458254ec08095807cca7c16aa2d9e0aff7945a35555d027110f694458d",
     "6529ab7fb9e7341c62c177e5c034545918291a3e222d24417b4de8c998a9944d",
     "0b68a88106b9adad9b5f1d394829e47c1003f74baeccc3520cd92cfc79a0c410",
@@ -29,7 +40,6 @@ MARKET_UNIVERSE_FILES = {
     "florida": "florida_facility_universe_canonical.json",
     "nevada": "nevada_facility_universe_canonical.json",
 }
-
 MARKET_ALIASES = {
     "fl": "florida",
     "miami": "florida",
@@ -41,11 +51,7 @@ MARKET_ALIASES = {
 
 
 def configured_canonical_market() -> str:
-    value = str(
-        os.getenv("OPTIME_CANONICAL_MARKET")
-        or os.getenv("NEXT_PUBLIC_ASSESSMENT_REGION")
-        or "las-vegas"
-    ).strip().lower()
+    value = str(os.getenv("OPTIME_CANONICAL_MARKET") or os.getenv("NEXT_PUBLIC_ASSESSMENT_REGION") or "las-vegas").strip().lower()
     return MARKET_ALIASES.get(value, value)
 
 
@@ -61,10 +67,7 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
         if database_dir != DATABASE_DIR and legacy.is_file():
             return legacy
         if require_exists:
-            raise FileNotFoundError(
-                "Pinned Las Vegas runtime projection part(s) missing: "
-                + ", ".join(str(path) for path in missing)
-            )
+            raise FileNotFoundError("Pinned Las Vegas runtime projection part(s) missing: " + ", ".join(str(path) for path in missing))
         return parts[0]
 
     target = LAS_VEGAS_RUNTIME_CACHE if database_dir == DATABASE_DIR else database_dir / "nevada_las_vegas_runtime_projection.json"
@@ -80,14 +83,9 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
             text = path.read_text(encoding="utf-8").strip()
             actual_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
             if actual_sha != LAS_VEGAS_RUNTIME_PART_SHA256[index]:
-                raise ValueError(
-                    f"runtime projection part {index:02} checksum mismatch: "
-                    f"len={len(text)} sha256={actual_sha} expected={LAS_VEGAS_RUNTIME_PART_SHA256[index]}"
-                )
+                raise ValueError(f"runtime projection part {index:02} checksum mismatch: len={len(text)} sha256={actual_sha} expected={LAS_VEGAS_RUNTIME_PART_SHA256[index]}")
             part_texts.append(text)
-        encoded = "".join(part_texts)
-        compressed = base64.b64decode(encoded, validate=True)
-        decoded = gzip.decompress(compressed)
+        decoded = gzip.decompress(base64.b64decode("".join(part_texts), validate=True))
         if hashlib.sha256(decoded).hexdigest() != LAS_VEGAS_RUNTIME_SHA256:
             raise ValueError("runtime projection checksum mismatch")
         payload = json.loads(decoded.decode("utf-8"))
@@ -111,19 +109,12 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
     return target
 
 
-def resolve_canonical_universe_path(
-    market: str | None = None,
-    *,
-    database_dir: Path = DATABASE_DIR,
-    require_exists: bool = True,
-) -> Path:
+def resolve_canonical_universe_path(market: str | None = None, *, database_dir: Path = DATABASE_DIR, require_exists: bool = True) -> Path:
     configured = market or configured_canonical_market()
     normalized_input = str(configured).strip().lower()
     normalized = MARKET_ALIASES.get(normalized_input, normalized_input)
-
     if normalized == "las-vegas":
         return _materialize_las_vegas_projection(database_dir=database_dir, require_exists=require_exists)
-
     filename = MARKET_UNIVERSE_FILES.get(normalized)
     if not filename:
         supported = ", ".join(sorted({*MARKET_UNIVERSE_FILES, "las-vegas"}))
