@@ -6,17 +6,27 @@ sys.path.insert(0,str(ROOT/'scripts'))
 from link_nevada_cms_penalties_to_citations import link
 
 
-def test_exact_ccn_and_prior_survey_only():
+def test_exact_ccn_uses_nearest_survey_either_direction():
     penalties=[{'CMS Certification Number (CCN)':'295090','Provider Name':'X','Penalty Date':'2026-03-15','Penalty Type':'Fine','Fine ID':'1','Fine Amount':'1000'}]
     defs=[
         {'CMS Certification Number (CCN)':'295090','Survey Date':'2026-03-01','Deficiency Prefix':'F','Deficiency Tag Number':'0689','Deficiency Category':'Quality','Deficiency Description':'Prevent accidents','Scope Severity Code':'J'},
-        {'CMS Certification Number (CCN)':'999999','Survey Date':'2026-03-14','Deficiency Prefix':'F','Deficiency Tag Number':'0600','Deficiency Category':'Abuse','Deficiency Description':'Wrong facility','Scope Severity Code':'K'},
+        {'CMS Certification Number (CCN)':'999999','Survey Date':'2026-03-14','Deficiency Prefix':'F','Deficiency Tag Number':'0600','DeficiencyCategory':'Abuse','Deficiency Description':'Wrong facility','Scope Severity Code':'K'},
         {'CMS Certification Number (CCN)':'295090','Survey Date':'2026-03-20','Deficiency Prefix':'F','Deficiency Tag Number':'0600','Deficiency Category':'Abuse','Deficiency Description':'Future survey','Scope Severity Code':'K'},
     ]
     result=link(penalties,defs,{'295090'})['events'][0]
-    assert result['linkage_confidence']=='NEAREST_PRIOR_SURVEY_WITHIN_30_DAYS'
+    assert result['linkage_confidence']=='NEAREST_SURVEY_WITHIN_30_DAYS'
+    assert result['days_between_penalty_and_nearest_survey']==5
     assert len(result['related_citations'])==1
-    assert result['related_citations'][0]['f_tag']=='F0689'
+    assert result['related_citations'][0]['f_tag']=='F0600'
+
+
+def test_penalty_date_can_precede_survey_date():
+    penalties=[{'CMS Certification Number (CCN)':'295090','Penalty Date':'2026-03-01','Penalty Type':'Fine'}]
+    defs=[{'CMS Certification Number (CCN)':'295090','Survey Date':'2026-03-10','Deficiency Prefix':'F','Deficiency Tag Number':'0689','Scope Severity Code':'J'}]
+    event=link(penalties,defs,{'295090'})['events'][0]
+    assert event['linkage_confidence']=='NEAREST_SURVEY_WITHIN_30_DAYS'
+    assert event['days_between_penalty_and_nearest_survey']==9
+    assert event['related_citations'][0]['f_tag']=='F0689'
 
 
 def test_no_direct_link_remains_unknown_when_no_temporal_match():
