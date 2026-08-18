@@ -11,31 +11,26 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATABASE_DIR = REPO_ROOT / "database"
-LAS_VEGAS_RUNTIME_PART_NAMES = (
-    "las_vegas_runtime_v2/part00.b64",
-    "las_vegas_runtime_v2/part01a.b64",
-    "las_vegas_runtime_v2/part01b.b64",
-    "las_vegas_runtime_v2/part01c.b64",
-    "las_vegas_runtime_v2/part01d.b64",
-    "las_vegas_runtime_v2/part02.b64",
-    "las_vegas_runtime_v2/part03.b64",
-    "las_vegas_runtime_v2/part04.b64",
-    "las_vegas_runtime_v2/part05.b64",
+LAS_VEGAS_RUNTIME_PART_NAMES = tuple(
+    f"las_vegas_runtime_v3/part{index:02}.b64" for index in range(12)
 )
 LAS_VEGAS_RUNTIME_PART_SHA256 = (
-    "b5c9e1647f7a702ab21e44c719355f30d329c66e230f7882c77ac1f065b52b6d",
-    "f23f6d00135ac6ebdb4eac0a3106651397c6c9b92bf715613b2d73a2951a4e34",
-    "82ba8ae7e9c6d27b3be24d321d88a109be6d2398d94af85060f1619b56908e39",
-    "6d6ab51039439abc36cb327bd7bea7eeadf3b7204087a3a374a51c123e03339e",
-    "874f9834d6f5315165910dc431689ef7483d68aeec0534df314cab9565466102",
-    "1b448f458254ec08095807cca7c16aa2d9e0aff7945a35555d027110f694458d",
-    "6529ab7fb9e7341c62c177e5c034545918291a3e222d24417b4de8c998a9944d",
-    "0b68a88106b9adad9b5f1d394829e47c1003f74baeccc3520cd92cfc79a0c410",
-    "deb181a63fc473c20710d6e3f9e65aea796626fc9b42f3686663121694f9092d",
+    "5b87a8400380f713456005e1a8769b64b800e1b203a6594229d6acbc76f579a4",
+    "dcf8d61494bc11d6f9cf657060c902f198c7f0f51e8c12d3376c49898a562b38",
+    "e16a4c19d75859abf07398cc264ac088fb5526a8829c281f9b7ac2b3f51ca3ef",
+    "3377d5bb337203119532d6ec502986fdfffa377851ea2b5089e9d0aa1e6c5b4f",
+    "5ad8362ce8ceb82f030f67f1be5674cdd73263e485c4c4f3df30d55c2a1e2d9b",
+    "e128cf674810f59fff0c95c6392a021d2baeb34ecabfe46f4740b34b8b10d067",
+    "b592731cbc21789cd1265ae7c5f819e45380760d590bf4ea9a36ec6dd7c900a4",
+    "ae05c1ada66a29a26048df960799f3e8c6ce5f6c31b5acd10ac556c06351dbbb",
+    "afcfc098e8a097ace531682fca26841acd0b79d84e04bad56819eeff774d9390",
+    "eb0e3f39feb29b1a0363e83d4f304df0b291e8f92a124c27e3e2c558f851f6ce",
+    "21743e81dcbbe52d6d79bd6cbed5e3f4c70858ed4c2519f732be4022630c0e50",
+    "56e0a681bb0319965edfb1d31f7020d6fe3b6133fe6d13f9816e66ac9bc5a3df",
 )
-LAS_VEGAS_RUNTIME_PART_LENGTHS = (20000, 5000, 5000, 5000, 5000, 20000, 20000, 20000, 15824)
-LAS_VEGAS_RUNTIME_SHA256 = "bec25381d013cf39001fbdb8ab02d9c15b6a451a9e78dcedd1309178203346f4"
-LAS_VEGAS_RUNTIME_CACHE = Path(tempfile.gettempdir()) / "optime-nevada-las-vegas-runtime-projection.json"
+LAS_VEGAS_RUNTIME_PART_LENGTHS = (4500,) * 11 + (1936,)
+LAS_VEGAS_RUNTIME_SHA256 = "1bd929d11a7defcbdc7489fbc1a7c83196bff8600c2480df5819bdcd3dcaf62b"
+LAS_VEGAS_RUNTIME_CACHE = Path(tempfile.gettempdir()) / "optime-nevada-las-vegas-runtime-projection-v3.json"
 
 MARKET_UNIVERSE_FILES = {
     "florida": "florida_facility_universe_canonical.json",
@@ -52,7 +47,11 @@ MARKET_ALIASES = {
 
 
 def configured_canonical_market() -> str:
-    value = str(os.getenv("OPTIME_CANONICAL_MARKET") or os.getenv("NEXT_PUBLIC_ASSESSMENT_REGION") or "las-vegas").strip().lower()
+    value = str(
+        os.getenv("OPTIME_CANONICAL_MARKET")
+        or os.getenv("NEXT_PUBLIC_ASSESSMENT_REGION")
+        or "las-vegas"
+    ).strip().lower()
     return MARKET_ALIASES.get(value, value)
 
 
@@ -60,28 +59,27 @@ def _las_vegas_part_paths(database_dir: Path) -> tuple[Path, ...]:
     return tuple(database_dir / name for name in LAS_VEGAS_RUNTIME_PART_NAMES)
 
 
-def _recover_exact_single_insert(text: str, expected_sha: str, expected_length: int) -> str | None:
-    if len(text) != expected_length + 1:
-        return None
-    for index in range(len(text)):
-        candidate = text[:index] + text[index + 1 :]
-        if hashlib.sha256(candidate.encode("utf-8")).hexdigest() == expected_sha:
-            return candidate
-    return None
-
-
 def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: bool) -> Path:
     parts = _las_vegas_part_paths(database_dir)
     missing = [path for path in parts if not path.is_file()]
     if missing:
+        # Preserve compatibility only for isolated unit tests that inject the historical
+        # filename. Production never falls back to the stale Nevada repo artifact.
         legacy = database_dir / "nevada_facility_universe_canonical.json"
         if database_dir != DATABASE_DIR and legacy.is_file():
             return legacy
         if require_exists:
-            raise FileNotFoundError("Pinned Las Vegas runtime projection part(s) missing: " + ", ".join(str(path) for path in missing))
+            raise FileNotFoundError(
+                "Pinned Las Vegas runtime projection part(s) missing: "
+                + ", ".join(str(path) for path in missing)
+            )
         return parts[0]
 
-    target = LAS_VEGAS_RUNTIME_CACHE if database_dir == DATABASE_DIR else database_dir / "nevada_las_vegas_runtime_projection.json"
+    target = (
+        LAS_VEGAS_RUNTIME_CACHE
+        if database_dir == DATABASE_DIR
+        else database_dir / "nevada_las_vegas_runtime_projection_v3.json"
+    )
     source_mtime = max(path.stat().st_mtime_ns for path in parts)
     if target.is_file() and target.stat().st_mtime_ns >= source_mtime:
         decoded = target.read_bytes()
@@ -89,26 +87,34 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
             return target
 
     try:
-        part_texts = []
+        part_texts: list[str] = []
         for index, path in enumerate(parts):
             text = path.read_text(encoding="utf-8").strip()
-            expected_sha = LAS_VEGAS_RUNTIME_PART_SHA256[index]
+            if len(text) != LAS_VEGAS_RUNTIME_PART_LENGTHS[index]:
+                raise ValueError(
+                    f"runtime projection part {index:02} length mismatch: "
+                    f"len={len(text)} expected={LAS_VEGAS_RUNTIME_PART_LENGTHS[index]}"
+                )
             actual_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            expected_sha = LAS_VEGAS_RUNTIME_PART_SHA256[index]
             if actual_sha != expected_sha:
-                recovered = _recover_exact_single_insert(text, expected_sha, LAS_VEGAS_RUNTIME_PART_LENGTHS[index])
-                if recovered is None:
-                    raise ValueError(
-                        f"runtime projection part {index:02} checksum mismatch: "
-                        f"len={len(text)} sha256={actual_sha} expected={expected_sha}"
-                    )
-                text = recovered
+                raise ValueError(
+                    f"runtime projection part {index:02} checksum mismatch: "
+                    f"sha256={actual_sha} expected={expected_sha}"
+                )
             part_texts.append(text)
-        decoded = gzip.decompress(base64.b64decode("".join(part_texts), validate=True))
-        if hashlib.sha256(decoded).hexdigest() != LAS_VEGAS_RUNTIME_SHA256:
-            raise ValueError("runtime projection checksum mismatch")
+
+        compressed = base64.b64decode("".join(part_texts), validate=True)
+        decoded = gzip.decompress(compressed)
+        actual_payload_sha = hashlib.sha256(decoded).hexdigest()
+        if actual_payload_sha != LAS_VEGAS_RUNTIME_SHA256:
+            raise ValueError(
+                f"runtime projection checksum mismatch: "
+                f"sha256={actual_payload_sha} expected={LAS_VEGAS_RUNTIME_SHA256}"
+            )
         payload = json.loads(decoded.decode("utf-8"))
     except Exception as exc:
-        raise RuntimeError(f"Invalid pinned Las Vegas runtime projection parts: {exc}") from exc
+        raise RuntimeError(f"Invalid pinned Las Vegas runtime projection: {exc}") from exc
 
     records = payload.get("records") or []
     if payload.get("record_count") != 364 or len(records) != 364:
@@ -127,19 +133,31 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
     return target
 
 
-def resolve_canonical_universe_path(market: str | None = None, *, database_dir: Path = DATABASE_DIR, require_exists: bool = True) -> Path:
+def resolve_canonical_universe_path(
+    market: str | None = None,
+    *,
+    database_dir: Path = DATABASE_DIR,
+    require_exists: bool = True,
+) -> Path:
     configured = market or configured_canonical_market()
     normalized_input = str(configured).strip().lower()
     normalized = MARKET_ALIASES.get(normalized_input, normalized_input)
     if normalized == "las-vegas":
-        return _materialize_las_vegas_projection(database_dir=database_dir, require_exists=require_exists)
+        return _materialize_las_vegas_projection(
+            database_dir=database_dir,
+            require_exists=require_exists,
+        )
     filename = MARKET_UNIVERSE_FILES.get(normalized)
     if not filename:
         supported = ", ".join(sorted({*MARKET_UNIVERSE_FILES, "las-vegas"}))
-        raise ValueError(f"Unsupported canonical market '{normalized}'. Supported markets: {supported}")
+        raise ValueError(
+            f"Unsupported canonical market '{normalized}'. Supported markets: {supported}"
+        )
     path = database_dir / filename
     if require_exists and not path.is_file():
-        raise FileNotFoundError(f"Canonical universe for market '{normalized}' is missing: {path}")
+        raise FileNotFoundError(
+            f"Canonical universe for market '{normalized}' is missing: {path}"
+        )
     return path
 
 
@@ -147,7 +165,7 @@ def canonical_universe_source_label(market: str | None = None) -> str:
     raw_market = str(market or configured_canonical_market()).strip().lower()
     normalized = MARKET_ALIASES.get(raw_market, raw_market)
     if normalized == "las-vegas":
-        return "database/las_vegas_runtime_v2/part*.b64"
+        return "database/las_vegas_runtime_v3/part*.b64"
     path = resolve_canonical_universe_path(normalized)
     try:
         return path.relative_to(REPO_ROOT).as_posix()
