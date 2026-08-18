@@ -1,0 +1,162 @@
+{
+  "schema_version": "nevada-independent-living-evidence-v1.0.0",
+  "policy": {
+    "confirmation_rule": "Confirm only when a primary operator/provider/property source explicitly identifies the property as senior apartments, 55+ senior housing, independent senior rental housing, or equivalent non-care senior residential housing. A senior token in a business name is insufficient.",
+    "false_positive_rule": "Reject an Independent Living classification when a primary source explicitly identifies the business/address as a non-residential service such as adult day care.",
+    "unknown_rule": "If exact-property primary evidence is insufficient or ambiguous, preserve UNKNOWN.",
+    "source_role": "PRIMARY_OPERATOR_OR_PROVIDER_EVIDENCE"
+  },
+  "records": [
+    {
+      "business_license_number": "G73-05676",
+      "expected_business_name": "SUNRISE SENIOR",
+      "expected_address": "571 30th St",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://www.liveatsunriseseniorvillagenv.com/",
+      "secondary_primary_source_url": "https://ggidevelopment.com/property-focus-sunrise-senior-village/",
+      "evidence_summary": "Property/developer sources identify Sunrise Senior Village at 571 North 30th Street as senior affordable apartment housing.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "G62-06096",
+      "expected_business_name": "Westcliff Pines 2 Senior Apartments",
+      "expected_address": "8286 Silver Sky Dr 2",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://westcliffpines.nevadahand.org/index.aspx",
+      "evidence_summary": "Nevada HAND identifies Westcliff Pines as a 55+ senior apartment community on Silver Sky Drive.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "A07-01591",
+      "expected_business_name": "STEWART PINES II SENIOR APTS",
+      "expected_address": "1391 Stewart Ave",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://nevadahand.org/stewart-pines-senior-apartments/",
+      "evidence_summary": "Nevada HAND explicitly describes Stewart Pines as independent senior affordable rental housing and 55+ senior apartments at 1391 East Stewart Avenue.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "G68-05041",
+      "expected_business_name": "Winterhaven Senior Apartments",
+      "expected_address": "3300 Winterhaven St",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://www.winterhavenseniorapartments.com/",
+      "evidence_summary": "The official property site identifies Winterhaven as a 55+ active adult community at 3300 Winterhaven Street.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "G63-02041",
+      "expected_business_name": "MCKNIGHT SENIOR I VILLAGE LP",
+      "expected_address": "651 Mcknight St",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://gksseniorliving.com/properties/mcknight/",
+      "evidence_summary": "GKS Senior Living identifies McKnight Senior Village as senior apartment living with individual apartment kitchens and community amenities.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "G63-01280",
+      "expected_business_name": "Westcliff Heights Senior Apartments",
+      "expected_address": "8206 Silver Sky Dr 3",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://westcliffpines.nevadahand.org/index.aspx",
+      "evidence_summary": "Nevada HAND identifies Westcliff Heights and Westcliff Pines as two 55+ senior apartment communities on Silver Sky Drive.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "A07-01972",
+      "expected_business_name": "MCKNIGHT SENIOR VILLAGE II LIM",
+      "expected_address": "651 Mcknight St",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://gksseniorliving.com/properties/mcknight-ii/",
+      "evidence_summary": "GKS Senior Living identifies McKnight Senior Village II as senior apartment living with two-bedroom residential units and community amenities.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "A07-90221",
+      "expected_business_name": "NEVADA SENIOR SERVICES INC",
+      "expected_address": "901 N Jones Blvd",
+      "classification": "NOT_INDEPENDENT_LIVING_PRIMARY",
+      "canonical_type": "UNKNOWN",
+      "primary_source_url": "https://www.nevadaseniorservices.org/adult-day",
+      "evidence_summary": "Nevada Senior Services identifies 901 North Jones Boulevard as its Adult Day ReCreation Center, not a residential senior apartment property.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "G66-05985",
+      "expected_business_name": "Louise Shell Senior Community",
+      "expected_address": "2101 N Martin L King Blvd",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://cdpcn.com/properties",
+      "evidence_summary": "Community Development Programs Center of Nevada lists Louise Shell Senior Apartments at 2101 N Martin Luther King Boulevard under Senior Living.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "A07-01948",
+      "expected_business_name": "MONSIGNOR C T SHALLOW SENIOR",
+      "expected_address": "561 N Mojave Rd",
+      "classification": "UNKNOWN",
+      "canonical_type": "UNKNOWN",
+      "primary_source_url": "UNKNOWN",
+      "evidence_summary": "No exact-property primary source has been verified strongly enough to classify this business-license candidate.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "A07-01639",
+      "expected_business_name": "BONANZA PINES SENIOR APARTMENT",
+      "expected_address": "4170 E Bonanza Rd",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://bonanzapines.nevadahand.org/",
+      "evidence_summary": "Nevada HAND identifies Bonanza Pines Senior Apartments at 4170 E Bonanza Road as affordable senior apartment homes.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "G67-07776",
+      "expected_business_name": "East Sahara Senior Housing Limited Partnership",
+      "expected_address": "978 E Sahara Ave",
+      "classification": "UNKNOWN",
+      "canonical_type": "UNKNOWN",
+      "primary_source_url": "UNKNOWN",
+      "evidence_summary": "Ownership/business records were found, but no exact-property primary operator/provider source was verified strongly enough to classify the property.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "A07-01719",
+      "expected_business_name": "BONANZA PINES III SENIOR APTS",
+      "expected_address": "4180 E Bonanza Rd",
+      "classification": "UNKNOWN",
+      "canonical_type": "UNKNOWN",
+      "primary_source_url": "https://bonanzapines.nevadahand.org/",
+      "evidence_summary": "The primary Bonanza Pines source confirms the adjacent senior apartment campus, but does not clearly establish the exact 4180 E Bonanza / Bonanza Pines III business-license entity separately.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "A07-01646",
+      "expected_business_name": "SENATOR HARRY REID SENIOR APTM",
+      "expected_address": "328 N 11th St",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://gpmglv.com/homes/senator-harry-reid-senior-apartments",
+      "evidence_summary": "The property manager identifies Senator Harry Reid Senior Apartments at 328 N 11th Street as senior living designed for seniors with apartment units.",
+      "care_services_inferred": false
+    },
+    {
+      "business_license_number": "A07-01384",
+      "expected_business_name": "VINTAGE DESERT ROSE SENIOR APA",
+      "expected_address": "1701 N Jones Blvd",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://vintagedesertrose.usamfm.com/",
+      "evidence_summary": "The official property site identifies Vintage Desert Rose as an affordable senior apartment community for residents 55+ at 1701 North Jones Boulevard.",
+      "care_services_inferred": false
+    }
+  ]
+}
