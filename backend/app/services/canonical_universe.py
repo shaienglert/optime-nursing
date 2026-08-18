@@ -33,6 +33,7 @@ LAS_VEGAS_RUNTIME_PART_SHA256 = (
     "0b68a88106b9adad9b5f1d394829e47c1003f74baeccc3520cd92cfc79a0c410",
     "deb181a63fc473c20710d6e3f9e65aea796626fc9b42f3686663121694f9092d",
 )
+LAS_VEGAS_RUNTIME_PART_LENGTHS = (20000, 5000, 5000, 5000, 5000, 20000, 20000, 20000, 15824)
 LAS_VEGAS_RUNTIME_SHA256 = "bec25381d013cf39001fbdb8ab02d9c15b6a451a9e78dcedd1309178203346f4"
 LAS_VEGAS_RUNTIME_CACHE = Path(tempfile.gettempdir()) / "optime-nevada-las-vegas-runtime-projection.json"
 
@@ -59,6 +60,16 @@ def _las_vegas_part_paths(database_dir: Path) -> tuple[Path, ...]:
     return tuple(database_dir / name for name in LAS_VEGAS_RUNTIME_PART_NAMES)
 
 
+def _recover_exact_single_insert(text: str, expected_sha: str, expected_length: int) -> str | None:
+    if len(text) != expected_length + 1:
+        return None
+    for index in range(len(text)):
+        candidate = text[:index] + text[index + 1 :]
+        if hashlib.sha256(candidate.encode("utf-8")).hexdigest() == expected_sha:
+            return candidate
+    return None
+
+
 def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: bool) -> Path:
     parts = _las_vegas_part_paths(database_dir)
     missing = [path for path in parts if not path.is_file()]
@@ -81,9 +92,16 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
         part_texts = []
         for index, path in enumerate(parts):
             text = path.read_text(encoding="utf-8").strip()
+            expected_sha = LAS_VEGAS_RUNTIME_PART_SHA256[index]
             actual_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
-            if actual_sha != LAS_VEGAS_RUNTIME_PART_SHA256[index]:
-                raise ValueError(f"runtime projection part {index:02} checksum mismatch: len={len(text)} sha256={actual_sha} expected={LAS_VEGAS_RUNTIME_PART_SHA256[index]}")
+            if actual_sha != expected_sha:
+                recovered = _recover_exact_single_insert(text, expected_sha, LAS_VEGAS_RUNTIME_PART_LENGTHS[index])
+                if recovered is None:
+                    raise ValueError(
+                        f"runtime projection part {index:02} checksum mismatch: "
+                        f"len={len(text)} sha256={actual_sha} expected={expected_sha}"
+                    )
+                text = recovered
             part_texts.append(text)
         decoded = gzip.decompress(base64.b64decode("".join(part_texts), validate=True))
         if hashlib.sha256(decoded).hexdigest() != LAS_VEGAS_RUNTIME_SHA256:
