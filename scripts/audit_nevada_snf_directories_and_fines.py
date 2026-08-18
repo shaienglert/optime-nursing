@@ -82,6 +82,7 @@ def snf_valley(records: list[dict]) -> list[dict]:
 
 
 def directory_match(record: dict, page: str) -> bool:
+    page = norm_addr(page)
     address = norm_addr(record.get("address"))
     name = norm(record.get("facility_name"))
     city = norm(record.get("city"))
@@ -89,10 +90,8 @@ def directory_match(record: dict, page: str) -> bool:
     zip_code = z.group(0) if z else ""
     if not address:
         return False
-    # Strongest: normalized address. Statewide NursingHomeDatabase listing publishes full addresses.
     if address in page and (not zip_code or zip_code in page):
         return True
-    # Ranked city pages may omit street addresses; require name + city in that case and mark method separately.
     return bool(name and city and name in page and city in page)
 
 
@@ -111,7 +110,7 @@ def audit_directory(name: str, urls: list[str], records: list[dict]) -> dict:
             "fetches": [{k: v for k, v in f.items() if k != "text"} for f in fetches],
             "policy": "Blocked/challenge pages are UNKNOWN, never zero coverage.",
         }
-    page = norm_addr(" ".join(str(f.get("text") or "") for f in usable))
+    page = " ".join(str(f.get("text") or "") for f in usable)
     matched = [r for r in records if directory_match(r, page)]
     return {
         "source": name,
