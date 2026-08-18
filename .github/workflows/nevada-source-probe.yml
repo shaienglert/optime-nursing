@@ -11,9 +11,12 @@ on:
       - 'scripts/fetch_las_vegas_business_license_candidates.py'
       - 'scripts/verify_nevada_independent_living.py'
       - 'scripts/finalize_nevada_canonical_universe.py'
+      - 'scripts/audit_nevada_recommendation_source_coverage.py'
       - 'data/nevada/verified/independent_living_primary_evidence.json'
+      - 'data/nevada/coverage/recommendation_source_registry.json'
       - 'backend/tests/test_nevada_live_finalizer.py'
       - 'backend/tests/test_nevada_independent_living.py'
+      - 'backend/tests/test_nevada_recommendation_coverage.py'
       - '.github/workflows/nevada-source-probe.yml'
   workflow_dispatch:
 
@@ -23,7 +26,7 @@ permissions:
 jobs:
   probe-nevada-hcqc:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,7 +35,7 @@ jobs:
       - name: Install test tooling
         run: python -m pip install --disable-pip-version-check pytest
       - name: Run deterministic Nevada semantic tests
-        run: python -m pytest backend/tests/test_nevada_live_finalizer.py backend/tests/test_nevada_independent_living.py -q
+        run: python -m pytest backend/tests/test_nevada_live_finalizer.py backend/tests/test_nevada_independent_living.py backend/tests/test_nevada_recommendation_coverage.py -q
       - name: Probe official Nevada HCQC result surface
         run: python scripts/probe_nevada_hcqc_export.py
       - name: Extract every Nevada HCQC ALiS license record
@@ -56,6 +59,9 @@ jobs:
       - name: Build canonical Nevada facility universe
         if: always()
         run: python scripts/finalize_nevada_canonical_universe.py
+      - name: Audit 16 recommendation sources and supplemental directories
+        if: always()
+        run: python scripts/audit_nevada_recommendation_source_coverage.py
       - name: Upload Nevada source and canonical evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -68,6 +74,7 @@ jobs:
             data/nevada/raw/las_vegas_business_license_senior_candidates.json
             data/nevada/verified/independent_living_primary_evidence.json
             data/nevada/verified/independent_living_verification.json
+            data/nevada/coverage/recommendation_source_registry.json
             data/nevada/canonical/*.json
             database/nevada_facility_universe_canonical.json
             reports/NEVADA_HCQC_ALIS_EXTRACTION.json
@@ -78,9 +85,11 @@ jobs:
             reports/NEVADA_INDEPENDENT_LIVING_VERIFICATION.json
             reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.json
             reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.md
+            reports/NEVADA_RECOMMENDATION_SOURCE_COVERAGE.json
+            reports/NEVADA_RECOMMENDATION_SOURCE_COVERAGE.md
             reports/evidence/nevada_alis_agc_detail_sample.html
           if-no-files-found: warn
-      - name: Final Nevada source and canonical gate
+      - name: Final Nevada source, canonical, and coverage gate
         if: always()
         run: |
           python - <<'PY'
@@ -95,6 +104,7 @@ jobs:
               'reports/LAS_VEGAS_BUSINESS_LICENSE_CANDIDATES.json',
               'reports/NEVADA_INDEPENDENT_LIVING_VERIFICATION.json',
               'reports/NEVADA_CANONICAL_FACILITY_UNIVERSE_REPORT.json',
+              'reports/NEVADA_RECOMMENDATION_SOURCE_COVERAGE.json',
               'database/nevada_facility_universe_canonical.json',
           ]:
               if not pathlib.Path(required).exists(): raise SystemExit(f'Missing required evidence: {required}')
@@ -111,5 +121,10 @@ jobs:
           if r.get('independent_living_false_positive_primary', 0) != counts.get('not_independent_living_primary', 0): raise SystemExit('Independent Living false-positive count does not reconcile')
           if r.get('independent_living_candidates_unknown_active_unique', 0) != counts.get('unknown', 0): raise SystemExit('Independent Living UNKNOWN count does not reconcile')
           if r.get('subsets', {}).get('las_vegas_valley', 0) <= 0: raise SystemExit('Las Vegas Valley subset is empty')
+          cov=json.loads(pathlib.Path('reports/NEVADA_RECOMMENDATION_SOURCE_COVERAGE.json').read_text())
+          if cov.get('governed_source_count') != 16: raise SystemExit(f"Expected 16 governed recommendation sources, got {cov.get('governed_source_count')}")
+          if cov.get('canonical_facilities') != r.get('canonical_facilities_unique'): raise SystemExit('Coverage audit canonical denominator does not reconcile')
+          if cov.get('las_vegas_valley_facilities') != r.get('subsets',{}).get('las_vegas_valley'): raise SystemExit('Coverage audit Valley denominator does not reconcile')
           print(json.dumps(r, indent=2))
+          print(json.dumps({'coverage_sources':cov.get('governed_source_count'),'supplemental_directories':cov.get('supplemental_directory_count')}, indent=2))
           PY
