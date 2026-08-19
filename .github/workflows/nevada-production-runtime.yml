@@ -12,6 +12,7 @@ on:
       - 'backend/app/services/patient_decision_engine.py'
       - 'backend/app/services/patient_decision_engine/**'
       - 'backend/app/services/patient_decision_engine_runtime/**'
+      - 'backend/requirements.txt'
       - 'backend/tests/test_main_decision_runtime_contract.py'
       - 'backend/tests/test_nevada_production_runtime.py'
       - 'backend/tests/test_patient_decision_engine_import_resolution.py'
@@ -33,6 +34,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend runtime dependencies
+        run: python -m pip install -r backend/requirements.txt
       - name: Run deterministic Nevada runtime tests
         run: |
           python -m unittest \
