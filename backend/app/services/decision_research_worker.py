@@ -206,7 +206,7 @@ def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
                 item.error_message = None if positive else "RESEARCH_COMPLETED_NO_REQUESTED_PUBLIC_CLAIM_VERIFIED"
                 succeeded += 1
             except Exception as exc:
-                _LOG.exception("decision evidence item failed id=%s facility=%s", item.id, payload.get("facility_name") if isinstance(payload, dict) else None)
+                _LOG.exception("decision evidence item failed id=%s", item.id)
                 if int(item.attempts or 0) >= int(item.max_attempts or 3):
                     item.status = "FAILED"
                     item.finished_at = datetime.now(timezone.utc)
