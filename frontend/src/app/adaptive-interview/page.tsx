@@ -12,6 +12,8 @@ type AdaptiveQuestion = {
   reason?: string;
   decision_dimensions?: string[];
   information_gain?: string;
+  answer_options?: string[];
+  policy_reference?: string;
 };
 
 type HumanDecisionContext = {
@@ -36,33 +38,27 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence): Huma
   };
 }
 
-function applyAdaptiveAnswer(
-  state: QuestionnaireState,
-  questionKey: string,
-  answer: string,
-): QuestionnaireState {
+function applyAdaptiveAnswer(state: QuestionnaireState, questionKey: string, answer: string): QuestionnaireState {
   const next = JSON.parse(JSON.stringify(state)) as QuestionnaireState;
-
   if (questionKey === "community_size_preference") {
     next.humanIntelligenceV2.personalityProfile.communitySizePreference = answer;
     return next;
   }
-
   if (questionKey === "social_interaction_need_after_loss") {
     next.humanIntelligenceV2.familyProfile.socialInteractionNeed = answer;
     return next;
   }
-
+  if (questionKey === "move_participation") {
+    next.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove = answer;
+    return next;
+  }
   throw new Error(`Unsupported adaptive question: ${questionKey}`);
 }
 
-function optionsFor(questionKey: string): string[] {
-  if (questionKey === "community_size_preference") {
-    return ["Small community", "Large community", "No preference"];
-  }
-  if (questionKey === "social_interaction_need_after_loss") {
-    return ["High", "Low", "Neither"];
-  }
+function fallbackOptions(questionKey: string): string[] {
+  if (questionKey === "community_size_preference") return ["Small community", "Medium community", "Large community", "No preference"];
+  if (questionKey === "social_interaction_need_after_loss") return ["Helpful", "Overwhelming", "Neither", "Not sure"];
+  if (questionKey === "move_participation") return ["Positive and involved", "Cautious but open", "Reluctant or feels pushed", "Not sure"];
   return [];
 }
 
@@ -84,9 +80,7 @@ export default function AdaptiveInterviewPage() {
       })) as NeedsProfileWithDecisionIntelligence;
       setProfile(response);
       const context = getDecisionContext(response);
-      if (context.decision_readiness === "READY" || (context.adaptive_questions || []).length === 0) {
-        router.replace(destination);
-      }
+      if (context.decision_readiness === "READY" || (context.adaptive_questions || []).length === 0) router.replace(destination);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to continue the decision interview.");
     } finally {
@@ -106,7 +100,7 @@ export default function AdaptiveInterviewPage() {
 
   const context = useMemo(() => (profile ? getDecisionContext(profile) : {}), [profile]);
   const question = context.adaptive_questions?.[0] || null;
-  const options = question ? optionsFor(question.question_key) : [];
+  const options = question ? (question.answer_options?.length ? question.answer_options : fallbackOptions(question.question_key)) : [];
 
   const answerQuestion = async (answer: string) => {
     if (!question) return;
@@ -118,7 +112,7 @@ export default function AdaptiveInterviewPage() {
         question_key: question.question_key,
         answer,
         signal_type: "decision-interview",
-        signal_json: JSON.stringify({ decision_dimensions: question.decision_dimensions || [] }),
+        signal_json: JSON.stringify({ decision_dimensions: question.decision_dimensions || [], policy_reference: question.policy_reference || null }),
         weights_json: JSON.stringify({ information_gain: question.information_gain || "UNKNOWN" }),
         impact_explanation: question.reason || "Answer used by governed Human Intelligence runtime.",
         info_gain_score: question.information_gain === "HIGH" ? 1 : 0,
@@ -134,17 +128,10 @@ export default function AdaptiveInterviewPage() {
       <section className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">OPTIME Decision Interview</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">One important question at a time</h1>
-        <p className="mt-3 text-base leading-7 text-slate-600">
-          We only ask when the answer can materially change the decision. Missing information stays unknown until you answer it.
-        </p>
+        <p className="mt-3 text-base leading-7 text-slate-600">We only ask when the answer can materially change eligibility, ordering, an important trade-off, or the transition plan. Missing information stays unknown until you answer it.</p>
 
-        {loading ? (
-          <div className="mt-10 rounded-2xl bg-slate-50 p-6 text-slate-700">Checking what still matters for this decision...</div>
-        ) : null}
-
-        {error ? (
-          <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-800">{error}</div>
-        ) : null}
+        {loading ? <div className="mt-10 rounded-2xl bg-slate-50 p-6 text-slate-700">Checking what still matters for this decision...</div> : null}
+        {error ? <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-800">{error}</div> : null}
 
         {!loading && question ? (
           <div className="mt-10">
@@ -154,13 +141,8 @@ export default function AdaptiveInterviewPage() {
             </div>
             <div className="mt-6 grid gap-3">
               {options.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => void answerQuestion(option)}
-                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left font-medium text-slate-900 transition hover:border-emerald-400 hover:bg-emerald-50"
-                >
-                  {option === "High" ? "More daily social contact would feel helpful" : option === "Low" ? "More daily social contact would feel overwhelming" : option === "Neither" ? "Neither — no strong preference right now" : option}
+                <button key={option} type="button" onClick={() => void answerQuestion(option)} className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left font-medium text-slate-900 transition hover:border-emerald-400 hover:bg-emerald-50">
+                  {option}
                 </button>
               ))}
             </div>
