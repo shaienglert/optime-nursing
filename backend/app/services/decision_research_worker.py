@@ -11,23 +11,13 @@ import requests
 
 from app.database import SessionLocal
 from app.models.agent_execution import AgentJobRun, AgentKnowledgeRecord, AgentQueueItem, AgentWorker
-from app.services.canonical_universe import get_canonical_facility_index
 from app.services.decision_agent_bridge import QUEUE_TYPE
+from app.services.facility_parameter_service import get_canonical_facility_index
 
 _TIMEOUT = 12
-_SKIP_DOMAINS = (
-    "aplaceformom.com", "caring.com", "seniorly.com", "yelp.com", "facebook.com",
-    "instagram.com", "linkedin.com", "youtube.com", "google.com", "mapquest.com",
-)
-_SOCIAL_TERMS = (
-    "activities", "activity calendar", "social events", "daily events", "engagement",
-    "outings", "clubs", "fitness", "art studio", "movie theater", "cinema", "games",
-    "live music", "community events", "life enrichment",
-)
-_MEDICATION_TERMS = (
-    "medication management", "medication assistance", "medication reminders",
-    "medication administration", "manage medications", "medication support",
-)
+_SKIP_DOMAINS = ("aplaceformom.com", "caring.com", "seniorly.com", "yelp.com", "facebook.com", "instagram.com", "linkedin.com", "youtube.com", "google.com", "mapquest.com")
+_SOCIAL_TERMS = ("activities", "activity calendar", "social events", "daily events", "engagement", "outings", "clubs", "fitness", "art studio", "movie theater", "cinema", "games", "live music", "community events", "life enrichment")
+_MEDICATION_TERMS = ("medication management", "medication assistance", "medication reminders", "medication administration", "manage medications", "medication support")
 _TRANSPORT_TERMS = ("transportation", "scheduled transportation", "transport service")
 _DINING_TERMS = ("restaurant-style dining", "restaurant style dining", "all-day dining", "dining room", "chef")
 
@@ -47,7 +37,6 @@ def _candidate_official_url(facility_name: str, city: str, canonical_id: str) ->
         value = str(canonical.get(key) or "").strip()
         if value.startswith("http"):
             return value
-
     query = f"{facility_name} {city or 'Las Vegas'} NV assisted living official"
     search_url = f"https://html.duckduckgo.com/html/?q={requests.utils.quote(query)}"
     try:
@@ -98,19 +87,7 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
     city = str(payload.get("city") or "LAS VEGAS")
     requested = [str(x) for x in payload.get("requested_parameters") or []]
     source_url = _candidate_official_url(facility_name, city, canonical_id)
-    research: Dict[str, Any] = {
-        "market": "las-vegas",
-        "canonical_facility_id": canonical_id,
-        "facility_name": facility_name,
-        "requested_parameters": requested,
-        "research_completed": True,
-        "source_url": source_url,
-        "observed_at": datetime.now(timezone.utc).isoformat(),
-        "social_engagement_verified": False,
-        "medication_support_verified": False,
-        "transportation_verified": False,
-        "dining_verified": False,
-    }
+    research: Dict[str, Any] = {"market": "las-vegas", "canonical_facility_id": canonical_id, "facility_name": facility_name, "requested_parameters": requested, "research_completed": True, "source_url": source_url, "observed_at": datetime.now(timezone.utc).isoformat(), "social_engagement_verified": False, "medication_support_verified": False, "transportation_verified": False, "dining_verified": False}
     if source_url:
         try:
             body, status = _fetch(source_url)
@@ -129,9 +106,7 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
 
 def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
     db = SessionLocal()
-    processed = 0
-    succeeded = 0
-    failed = 0
+    processed = succeeded = failed = 0
     run = AgentJobRun(agent_key="decision_evidence_research", status="RUNNING")
     db.add(run)
     db.commit()
