@@ -33,7 +33,6 @@ const COUPLE_SHARED = {
   budget: 12000,
   distanceFromFamily: "Balanced location",
   humanIntelligenceV2: {
-    personalityProfile: { communitySizePreference: "Large community" },
     familyProfile: { socialInteractionNeed: "Helpful daily social contact" },
     transitionRiskProfile: { attitudeTowardMove: "Cautious but open" },
   },
@@ -51,12 +50,12 @@ const PERSONAS = {
   son84_large_social: { questionnaire_state: answeredState("Large community", "Helpful daily social contact"), natural_language_query: BASE_QUERY, limit: 5 },
   couple80_rehab_son: {
     questionnaire_state: { ...COUPLE_SHARED, relationship: "Dad" },
-    natural_language_query: "I am the adult son looking for senior living in Las Vegas for my parents, both over 80. My father recently had spinal surgery and currently needs rehabilitation. He is expected to walk again, but for about the next three months he will need caregiver help with bathing and dressing. My mother is independent and they want to move together. Neither has dementia. They strongly prefer a larger senior living community with lots of culture, lectures, classes, clubs, activities and social opportunities in Las Vegas.",
+    natural_language_query: "I am the adult son looking for senior living in Las Vegas for my parents, both over 80. My father recently had spinal surgery and currently needs rehabilitation. He is expected to walk again, but for about the next three months he will need caregiver help with bathing and dressing. My mother is independent and they want to move together. Neither has dementia. They want a senior living community with lots of culture, lectures, classes, clubs, activities and social opportunities in Las Vegas.",
     limit: 5,
   },
   couple80_rehab_wife: {
     questionnaire_state: { ...COUPLE_SHARED, relationship: "Myself" },
-    natural_language_query: "I am over 80 and I am looking in Las Vegas for a senior living community for my husband and me to move into together. My husband is also over 80 and recently had spinal surgery. He currently needs rehabilitation and is expected to walk again, but for about the next three months he will need caregiver help with bathing and dressing. I am independent. Neither of us has dementia. We strongly want a larger community with lots of culture, lectures, classes, clubs, activities and social opportunities.",
+    natural_language_query: "I am over 80 and I am looking in Las Vegas for a senior living community for my husband and me to move into together. My husband is also over 80 and recently had spinal surgery. He currently needs rehabilitation and is expected to walk again, but for about the next three months he will need caregiver help with bathing and dressing. I am independent. Neither of us has dementia. We want lots of culture, lectures, classes, clubs, activities and social opportunities.",
     limit: 5,
   },
 } as const;
@@ -68,6 +67,12 @@ type Recommendation = {
   patient_match_score?: number; care_setting_fit?: { status?: string };
   success_factor_trace?: { factors?: unknown[] };
   human_person_fit?: { community_size?: { official_bed_count?: number | string; community_size_band?: string; preference?: string; fit_score?: number | string; not_a_quality_factor?: boolean } };
+  client_intent_fit?: {
+    hard_gate?: string; must_pass?: string[]; must_unknown?: string[]; must_fail?: string[];
+    nice_match?: string[]; nice_unknown?: string[];
+    public_reputation?: { rating?: number | string; review_count?: number | string; source?: string; identity_verified?: boolean };
+    relevant_evidence_known_count?: number; relevant_evidence_unknown_count?: number;
+  };
   tie_break_explanation_vs_next?: { deciding_dimension?: string };
 };
 type DecisionIntelligence = {
@@ -77,6 +82,9 @@ type DecisionIntelligence = {
   success_factor_policy?: { factors?: unknown[] };
   agent_evidence_bridge?: { status?: string; tasks_queued?: number; decision_finality?: string; material_gaps?: unknown[] };
   decision_finality?: string;
+  ranking_order?: string[];
+  must_gate?: { survivors?: number; rejected?: number; selected_must_unknown_count?: number };
+  strategy_universe?: { status?: string };
 };
 type RecommendationPayload = {
   patient_needs_profile?: { location_city?: string | null; decision_intelligence?: DecisionIntelligence };
@@ -115,6 +123,9 @@ export async function GET(request: NextRequest) {
         agent_bridge_status: intelligence?.agent_evidence_bridge?.status ?? null,
         agent_tasks_queued: intelligence?.agent_evidence_bridge?.tasks_queued ?? null,
         decision_finality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
+        ranking_order: intelligence?.ranking_order ?? null,
+        strategy_universe_status: intelligence?.strategy_universe?.status ?? null,
+        must_gate: intelligence?.must_gate ?? null,
         success_factor_count: intelligence?.success_factor_policy?.factors?.length ?? null,
         result_count: payload.result_count ?? null,
         total_candidates_scored: payload.total_candidates_scored ?? null,
@@ -123,6 +134,15 @@ export async function GET(request: NextRequest) {
           rank_position: row.rank_position ?? null, rank_display: row.rank_display ?? null, rank_tie_status: row.rank_tie_status ?? null,
           tied_with_count: row.tied_with?.length ?? 0, patient_match_score: row.patient_match_score ?? null,
           care_setting_fit: row.care_setting_fit?.status ?? null, community_size: row.human_person_fit?.community_size ?? null,
+          must_gate: row.client_intent_fit?.hard_gate ?? null,
+          must_pass: row.client_intent_fit?.must_pass ?? [],
+          must_unknown: row.client_intent_fit?.must_unknown ?? [],
+          must_fail: row.client_intent_fit?.must_fail ?? [],
+          nice_match: row.client_intent_fit?.nice_match ?? [],
+          nice_unknown: row.client_intent_fit?.nice_unknown ?? [],
+          public_reputation: row.client_intent_fit?.public_reputation ?? null,
+          evidence_known: row.client_intent_fit?.relevant_evidence_known_count ?? null,
+          evidence_unknown: row.client_intent_fit?.relevant_evidence_unknown_count ?? null,
           success_factor_count: row.success_factor_trace?.factors?.length ?? null,
           next_deciding_dimension: row.tie_break_explanation_vs_next?.deciding_dimension ?? null,
         })),
