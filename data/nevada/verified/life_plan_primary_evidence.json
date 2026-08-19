@@ -1,0 +1,31 @@
+{
+  "schema_version": "nevada-life-plan-primary-evidence-v1.0.0",
+  "policy": {
+    "rule": "Life Plan / CCRC is a campus modality, not a replacement for Nevada licensing truth. Apply only to exact canonical entities on the verified campus; preserve each entity's licensed canonical_type.",
+    "unknown_rule": "No primary operator evidence or no exact canonical campus identity means UNKNOWN.",
+    "source_role": "PRIMARY_OPERATOR_OR_PROVIDER_EVIDENCE"
+  },
+  "records": [
+    {
+      "campus_group_id": "NV-CAMPUS-20F59B6BC27E8A9E",
+      "canonical_facility_ids": [
+        "NV-LIC-4000-AGC-31",
+        "NV-LIC-4529-SNF-31"
+      ],
+      "expected_address": "10401 W Charleston Blvd",
+      "expected_city": "Las Vegas",
+      "expected_zip": "89135",
+      "operator_name": "HumanGood",
+      "community_name": "Las Ventanas at Summerlin",
+      "modalities": [
+        "INDEPENDENT_LIVING",
+        "LIFE_PLAN_CCRC"
+      ],
+      "primary_source_url": "https://www.humangood.org/las-ventanas-at-summerlin",
+      "independent_living_source_url": "https://www.humangood.org/las-ventanas-at-summerlin/senior-living-options/independent-living",
+      "rehabilitation_source_url": "https://www.humangood.org/las-ventanas-at-summerlin/post-acute-rehab/services",
+      "evidence_summary": "HumanGood identifies Las Ventanas at Summerlin at 10401 W Charleston Blvd as Nevada's only Life Plan Community. The same campus offers independent living, assisted living, memory support, skilled nursing and short-stay rehabilitation.",
+      "licensing_type_overridden": false
+    }
+  ]
+}
