@@ -6,6 +6,8 @@ import threading
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
+from sqlalchemy import inspect
+
 from app.database import SessionLocal
 from app.models.agent_execution import AgentKnowledgeRecord, AgentQueueItem, AgentWorker
 from app.services.facility_parameter_service import get_facility_parameter_table
@@ -20,10 +22,17 @@ _QUALITY_SAFETY_PARAMETERS = (
     "penalties_fines",
     "sanctions_final_orders",
 )
+_AGENT_TABLES = {"agent_knowledge_records", "agent_queue_items", "agent_workers"}
 
 
 def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
+
+
+def _agent_schema_available(db) -> bool:
+    bind = db.get_bind()
+    tables = set(inspect(bind).get_table_names())
+    return _AGENT_TABLES.issubset(tables)
 
 
 def _material_dimensions(human_context: Dict[str, Any]) -> Dict[str, tuple[str, ...]]:
@@ -218,6 +227,22 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
     queued = 0
     researched_unknown = 0
     try:
+        bind = db.get_bind()
+        if not _agent_schema_available(db):
+            if bind.dialect.name == "sqlite":
+                return {
+                    "status": "LOCAL_AGENT_SCHEMA_NOT_INITIALIZED",
+                    "market": "las-vegas",
+                    "market_scoped": True,
+                    "material_gaps": [],
+                    "tasks_queued": 0,
+                    "pending_backlog": 0,
+                    "researched_unknown_count": 0,
+                    "decision_finality": "PROVISIONAL_LOCAL_AGENT_SCHEMA_NOT_INITIALIZED",
+                    "policy": "Local/test SQLite may omit agent persistence tables; production PostgreSQL must contain them.",
+                }
+            raise RuntimeError("Production agent persistence schema is incomplete")
+
         dimensions = _material_dimensions(human_context)
         for row in rows:
             cid = str(row.get("canonical_facility_id") or "")
