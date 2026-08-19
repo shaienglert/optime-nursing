@@ -24,6 +24,11 @@ def _norm_addr(value: Any) -> str:
         " avenue ": " ave ",
         " boulevard ": " blvd ",
         " drive ": " dr ",
+        " lane ": " ln ",
+        " court ": " ct ",
+        " place ": " pl ",
+        " highway ": " hwy ",
+        " parkway ": " pkwy ",
         " north ": " n ",
         " south ": " s ",
         " east ": " e ",
@@ -31,6 +36,20 @@ def _norm_addr(value: Any) -> str:
     }.items():
         text = text.replace(source, target)
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _zip(value: Any) -> str:
+    digits = re.sub(r"\D+", "", str(value or ""))
+    return digits[:5]
+
+
+def _street_key(value: Any) -> str:
+    text = _norm_addr(value)
+    if not text:
+        return ""
+    # Ignore apartment/suite/unit suffixes while retaining the street number and name.
+    text = re.split(r"\s+(?:apt|apartment|suite|ste|unit|building|bldg|#)\s*", text, maxsplit=1)[0]
+    return text.strip()
 
 
 def _read(path: Path) -> Dict[str, Any]:
@@ -61,6 +80,35 @@ def _same_market(row: Dict[str, Any], record: Dict[str, Any]) -> bool:
     return True
 
 
+def _provider_identity_matches(row: Dict[str, Any], record: Dict[str, Any], canonical_id: str, name: str, address: str) -> bool:
+    if not _same_market(row, record):
+        return False
+    governed_ids = {str(value) for value in record.get("canonical_facility_ids") or []}
+    if canonical_id and canonical_id in governed_ids:
+        return True
+
+    aliases = {_norm(record.get("community_name"))}
+    aliases.update(_norm(value) for value in record.get("aliases") or [])
+    record_address = _norm_addr(record.get("address"))
+    if address and record_address and address == record_address:
+        return True
+    if _street_key(address) and _street_key(address) == _street_key(record_address):
+        return True
+
+    exact_name_match = bool(name and name in aliases)
+    if not exact_name_match:
+        return False
+    row_zip = _zip(row.get("zip") or row.get("postal_code"))
+    record_zip = _zip(record.get("zip"))
+    if row_zip and record_zip:
+        return row_zip == record_zip
+    # Exact governed provider name/alias within the same city/state is accepted
+    # when one side lacks ZIP, but a conflicting street number is not.
+    row_number = (address.split(" ", 1)[0] if address else "")
+    record_number = (record_address.split(" ", 1)[0] if record_address else "")
+    return not (row_number and record_number and row_number.isdigit() and record_number.isdigit() and row_number != record_number)
+
+
 def get_provider_housing_evidence(row: Dict[str, Any]) -> Dict[str, Any]:
     name = _norm(row.get("facility_name") or row.get("name"))
     address = _norm_addr(row.get("address") or row.get("facility_address"))
@@ -76,15 +124,7 @@ def get_provider_housing_evidence(row: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     for record in _provider_records():
-        governed_ids = {str(value) for value in record.get("canonical_facility_ids") or []}
-        aliases = {_norm(record.get("community_name"))}
-        aliases.update(_norm(value) for value in record.get("aliases") or [])
-        record_address = _norm_addr(record.get("address"))
-        id_match = bool(canonical_id and canonical_id in governed_ids)
-        exact_address_match = bool(address and record_address and address == record_address and _same_market(row, record))
-        exact_name_match = bool(name and name in aliases and _same_market(row, record))
-        identity_match = exact_address_match or (exact_name_match and address == record_address)
-        if not (id_match or identity_match):
+        if not _provider_identity_matches(row, record, canonical_id, name, address):
             continue
         result["matched"] = True
         result["provider_aliases"] = [str(record.get("community_name") or "")] + [str(value) for value in record.get("aliases") or []]
@@ -98,6 +138,10 @@ def get_provider_housing_evidence(row: Dict[str, Any]) -> Dict[str, Any]:
             result["provider_housing_evidence"] = {
                 "community_name": record.get("community_name") or "UNKNOWN",
                 "aliases": [str(value) for value in record.get("aliases") or []],
+                "address": record.get("address") or "UNKNOWN",
+                "city": record.get("city") or "UNKNOWN",
+                "state": record.get("state") or "UNKNOWN",
+                "zip": record.get("zip") or "UNKNOWN",
                 "source_url": record.get("primary_source_url") or "UNKNOWN",
                 "summary": record.get("evidence_summary") or "UNKNOWN",
                 "evidence": record.get("evidence") or {},
@@ -141,17 +185,26 @@ def attach_provider_housing_evidence(rows: list[Dict[str, Any]]) -> None:
         if evidence.get("campus_group_id"):
             row["campus_group_id"] = evidence["campus_group_id"]
         if evidence.get("provider_housing_evidence"):
-            row["provider_housing_evidence"] = evidence["provider_housing_evidence"]
+            provider = evidence["provider_housing_evidence"]
+            row["provider_housing_evidence"] = provider
             aliases = [str(value) for value in row.get("aliases") or []]
             for alias in evidence.get("provider_aliases") or []:
                 if alias and alias not in aliases:
                     aliases.append(alias)
             if aliases:
                 row["aliases"] = aliases
-            community_name = str((evidence.get("provider_housing_evidence") or {}).get("community_name") or "").strip()
+            community_name = str(provider.get("community_name") or "").strip()
             if community_name:
                 row.setdefault("licensed_facility_name", row.get("facility_name") or row.get("name") or "UNKNOWN")
                 row["facility_name"] = community_name
+            provider_address = str(provider.get("address") or "").strip()
+            if provider_address and provider_address.upper() != "UNKNOWN":
+                row.setdefault("licensed_address", row.get("address") or row.get("facility_address") or "UNKNOWN")
+                row["address"] = provider_address
+            for key in ("city", "state", "zip"):
+                value = str(provider.get(key) or "").strip()
+                if value and value.upper() != "UNKNOWN":
+                    row[key] = value
         if evidence.get("life_plan_primary_evidence"):
             row["life_plan_primary_evidence"] = evidence["life_plan_primary_evidence"]
 
