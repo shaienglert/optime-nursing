@@ -276,6 +276,7 @@ export type PatientNeedsProfile = {
   profile_key?: string | null;
   location_city?: string | null;
   natural_language_mapping: Record<string, unknown>;
+  decision_intelligence?: Record<string, unknown>;
 };
 
 export type DecisionEngineRecommendation = {
@@ -337,6 +338,8 @@ export type DecisionEngineRecommendation = {
   } | null;
   parameter_badges: string[];
   comparison_parameter_ids: string[];
+  human_person_fit?: Record<string, unknown>;
+  success_factor_trace?: Record<string, unknown>;
 };
 
 export type DecisionEngineResponse = {
@@ -348,6 +351,8 @@ export type DecisionEngineResponse = {
   result_count: number;
   total_candidates_scored: number;
   availability_policy: string;
+  decision_intelligence?: Record<string, unknown>;
+  recommendation_audit_trace?: Record<string, unknown>;
   tie_break_policy?: {
     thresholds: Record<string, number>;
     true_tie_label: string;

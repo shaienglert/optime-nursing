@@ -331,6 +331,8 @@ class PatientDecisionEngineOut(BaseModel):
     total_candidates_scored: int
     availability_policy: str
     care_setting_policy: Dict[str, Any] = Field(default_factory=dict)
+    decision_intelligence: Dict[str, Any] = Field(default_factory=dict)
+    recommendation_audit_trace: Dict[str, Any] = Field(default_factory=dict)
 
 
 class PatientNeedsProfileOut(BaseModel):
@@ -341,6 +343,7 @@ class PatientNeedsProfileOut(BaseModel):
     profile_key: Optional[str] = None
     location_city: Optional[str] = None
     natural_language_mapping: Dict[str, Any]
+    decision_intelligence: Dict[str, Any] = Field(default_factory=dict)
 
 
 class PatientComparisonContextOut(BaseModel):
