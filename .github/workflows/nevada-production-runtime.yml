@@ -8,6 +8,7 @@ on:
       - 'backend/app/services/canonical_universe.py'
       - 'backend/app/services/facility_parameter_service.py'
       - 'backend/app/services/human_intelligence_runtime.py'
+      - 'backend/app/services/human_intelligence_runtime_verified.py'
       - 'backend/app/services/patient_decision_engine.py'
       - 'backend/app/services/patient_decision_engine/**'
       - 'backend/app/services/patient_decision_engine_runtime/**'
