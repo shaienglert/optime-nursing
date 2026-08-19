@@ -12,6 +12,8 @@ on:
       - 'backend/app/services/human_intelligence_runtime_verified.py'
       - 'backend/app/services/living_strategy_runtime.py'
       - 'backend/app/services/client_intent_runtime.py'
+      - 'backend/app/services/provider_housing_runtime.py'
+      - 'backend/app/services/public_reputation_runtime.py'
       - 'backend/app/services/success_factor_runtime.py'
       - 'backend/app/services/decision_governance_runtime.py'
       - 'backend/app/services/decision_agent_bridge.py'
@@ -23,12 +25,17 @@ on:
       - 'backend/tests/test_database_runtime.py'
       - 'backend/tests/test_main_decision_runtime_contract.py'
       - 'backend/tests/test_nevada_production_runtime.py'
+      - 'backend/tests/test_provider_housing_runtime.py'
       - 'backend/tests/test_patient_decision_engine_import_resolution.py'
       - 'backend/tests/test_human_intelligence_runtime_integration.py'
       - 'backend/tests/test_adaptive_interview_roundtrip.py'
       - 'backend/tests/test_success_factor_runtime.py'
       - 'backend/tests/test_decision_governance_runtime.py'
       - 'backend/tests/test_decision_agent_bridge.py'
+      - 'data/nevada/verified/independent_living_primary_evidence.json'
+      - 'data/nevada/verified/provider_housing_primary_evidence.json'
+      - 'data/nevada/verified/life_plan_primary_evidence.json'
+      - 'data/nevada/verified/public_reputation_snapshot.json'
       - 'frontend/src/app/adaptive-interview/**'
       - 'frontend/src/app/api/ops/smoke/recommendations/**'
       - 'database/las_vegas_person_fit_summary_v1.b64'
@@ -58,6 +65,7 @@ jobs:
             backend.tests.test_database_runtime \
             backend.tests.test_facility_parameter_service \
             backend.tests.test_nevada_production_runtime \
+            backend.tests.test_provider_housing_runtime \
             backend.tests.test_patient_decision_engine_import_resolution \
             backend.tests.test_human_intelligence_runtime_integration \
             backend.tests.test_adaptive_interview_roundtrip \
@@ -154,7 +162,6 @@ jobs:
               'memoryStatus': 'No',
               'distanceFromFamily': 'Balanced location',
               'humanIntelligenceV2': {
-                  'personalityProfile': {'communitySizePreference': 'Large community'},
                   'familyProfile': {'socialInteractionNeed': 'Very important'},
               },
           }
@@ -175,20 +182,27 @@ jobs:
           must_keys = {m['key'] for m in intent['must_haves']}
           assert {'LAS_VEGAS','COUPLE_CORESIDENCE','ADL_SUPPORT_AVAILABLE','REHAB_PATH_AVAILABLE','RECOVERY_TRANSITION_COMPATIBLE'}.issubset(must_keys), must_keys
           assert 'RICH_CULTURE_AND_ACTIVITIES' in {n['key'] for n in intent['nice_to_haves']}
+          assert 'COMMUNITY_ENVIRONMENT_MATCH' not in {n['key'] for n in intent['nice_to_haves']}, 'benchmark invented a community-size preference'
           couple_questions = [q['question_key'] for q in couple['decision_intelligence']['human_intelligence']['adaptive_questions']]
           for required in ('medicare_status', 'move_timing_vs_rehab', 'monthly_budget', 'ccrc_entrance_fee_tolerance'):
               assert required in couple_questions, couple_questions
+          universe = couple['decision_intelligence']['strategy_universe']
+          assert universe['status'] == 'SUFFICIENT_FOR_LEADING_STRATEGIES', universe
+          assert 'LIFE_PLAN_CCRC' not in universe['missing_classes'], universe
           assert couple['decision_intelligence']['decision_finality'].startswith('PROVISIONAL_'), couple['decision_intelligence']['decision_finality']
           assert all((r.get('client_intent_fit') or {}).get('hard_gate') != 'FAIL' for r in couple['results'])
           need_ids = {n['parameter_id'] for n in couple['patient_needs_profile']['needs']}
           assert {'pt', 'ot', 'adl_support'}.issubset(need_ids), need_ids
+          top_names = [r['facility_name'] for r in couple['results']]
+          assert any('Las Ventanas' in name for name in top_names), f'governed Life Plan candidate missing from culture/rehab couple Top-5: {top_names}'
           output['couple_rehab'] = {
               'strategy_ids': strategy_ids,
               'must_keys': sorted(must_keys),
               'questions': couple_questions,
-              'strategy_universe': couple['decision_intelligence']['strategy_universe'],
+              'strategy_universe': universe,
               'decision_finality': couple['decision_intelligence']['decision_finality'],
-              'top5': [r['facility_name'] for r in couple['results']],
+              'top5': top_names,
+              'top5_fit': [r.get('client_intent_fit') for r in couple['results']],
           }
           print('NEVADA_PERSONA_E2E=' + json.dumps(output, indent=2))
           PY
