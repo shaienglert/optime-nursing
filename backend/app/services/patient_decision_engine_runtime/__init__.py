@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
-from app.services.human_intelligence_runtime import (
+from app.services.human_intelligence_runtime_verified import (
     attach_human_person_fit,
     build_human_intelligence_context,
     has_explicit_person_fit_preference,
