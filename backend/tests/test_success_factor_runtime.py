@@ -56,14 +56,22 @@ class SuccessFactorRuntimeTests(unittest.TestCase):
             natural_language_query="My father is 84, recently widowed, mobile and mentally alert in Las Vegas and needs ADL help.",
             limit=2,
         )
-        self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v2")
+        self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v3.1")
+        self.assertIn("living_strategy", result["decision_intelligence"])
+        self.assertIn("client_intent", result["decision_intelligence"])
         self.assertIn("success_factor_policy", result["decision_intelligence"])
         self.assertIn("recommendation_audit_trace", result)
         self.assertEqual(len(result["results"]), 2)
         for row in result["results"]:
             self.assertEqual(len(row["success_factor_trace"]["factors"]), 16)
             self.assertIn("success_factor_summary", row["explanation"])
+            self.assertIn("client_intent_fit", row)
         rules = result["recommendation_audit_trace"]["decision_rules_applied"]
+        self.assertIn("client_intent_first", rules)
+        self.assertIn("verified_must_mismatch_rejected", rules)
+        self.assertIn("nice_to_have_orders_survivors", rules)
+        self.assertIn("government_regulatory_after_fit", rules)
+        self.assertIn("living_strategy_before_facility_ranking", rules)
         self.assertIn("facility_size_not_independent_quality", rules)
         self.assertIn("success_factor_influence_classes_no_unvalidated_numeric_weights", rules)
 

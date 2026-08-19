@@ -30,14 +30,24 @@ def _material_dimensions(human_context: Dict[str, Any]) -> Dict[str, tuple[str, 
     signals = human_context.get("signals") if isinstance(human_context.get("signals"), dict) else {}
     social = signals.get("social_transition_priority") if isinstance(signals.get("social_transition_priority"), dict) else {}
     independence = signals.get("independence_priority") if isinstance(signals.get("independence_priority"), dict) else {}
+    strategy = human_context.get("living_strategy") if isinstance(human_context.get("living_strategy"), dict) else {}
+    strategy_signals = strategy.get("signals") if isinstance(strategy.get("signals"), dict) else {}
+    household = strategy.get("household") if isinstance(strategy.get("household"), dict) else {}
+
     out: Dict[str, tuple[str, ...]] = {
         "care_support": ("medication_support", "adl_support"),
         "facility_quality_safety": _QUALITY_SAFETY_PARAMETERS,
     }
-    if _upper(social.get("value")) == "HIGH":
+    if _upper(social.get("value")) == "HIGH" or bool(strategy_signals.get("high_social_culture_priority")):
         out["social_engagement"] = ("activities", "transportation")
     if _upper(independence.get("value")) == "HIGH":
         out["autonomy_choice"] = ("transportation", "private_shared_rooms")
+    if bool(strategy_signals.get("rehabilitation_need_detected")):
+        out["rehab_path"] = ("pt", "ot", "rehabilitation")
+    if str(household.get("type") or "") == "COUPLE":
+        out["couple_coresidence"] = ("couple_occupancy", "second_person_policy")
+    if bool(strategy_signals.get("expected_recovery")):
+        out["recovery_transition"] = ("outside_care_allowed", "continuum_of_care")
     return out
 
 
@@ -86,6 +96,8 @@ def _resolve_with_agent_evidence(unknown: List[str], dimension: str, evidence: L
         elif dimension == "care_support":
             if payload.get("medication_support_verified") is True:
                 unresolved.discard("medication_support")
+            if payload.get("adl_support_verified") is True:
+                unresolved.discard("adl_support")
         elif dimension == "autonomy_choice":
             if payload.get("transportation_verified") is True:
                 unresolved.discard("transportation")
@@ -93,6 +105,17 @@ def _resolve_with_agent_evidence(unknown: List[str], dimension: str, evidence: L
             verified_parameters = payload.get("regulatory_parameters_verified") if isinstance(payload.get("regulatory_parameters_verified"), list) else []
             for parameter_id in verified_parameters:
                 unresolved.discard(str(parameter_id))
+        elif dimension == "rehab_path":
+            if payload.get("rehab_verified") is True or payload.get("pt_ot_verified") is True:
+                unresolved.difference_update({"pt", "ot", "rehabilitation"})
+        elif dimension == "couple_coresidence":
+            if payload.get("couple_coresidence_verified") is True:
+                unresolved.difference_update({"couple_occupancy", "second_person_policy"})
+        elif dimension == "recovery_transition":
+            if payload.get("outside_care_allowed_verified") is True:
+                unresolved.discard("outside_care_allowed")
+            if payload.get("continuum_of_care_verified") is True:
+                unresolved.discard("continuum_of_care")
     return sorted(unresolved)
 
 
@@ -225,7 +248,7 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
         else:
             finality = "EVIDENCE_COMPLETE_FOR_MATERIAL_DIMENSIONS"
             status = "MATERIAL_EVIDENCE_AVAILABLE"
-        return {"status": status, "market": "las-vegas", "market_scoped": True, "material_gaps": gaps, "tasks_queued": queued, "pending_backlog": pending_backlog, "researched_unknown_count": researched_unknown, "decision_finality": finality, "policy": "resident unknown -> ask; facility unknown -> agent research; unknown is not mismatch"}
+        return {"status": status, "market": "las-vegas", "market_scoped": True, "material_gaps": gaps, "tasks_queued": queued, "pending_backlog": pending_backlog, "researched_unknown_count": researched_unknown, "decision_finality": finality, "policy": "client intent first; resident unknown -> ask; facility MUST unknown -> agent research; unknown is not mismatch"}
     except Exception as exc:
         db.rollback()
         _LOG.exception("agent evidence bridge unavailable")
