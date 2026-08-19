@@ -178,8 +178,11 @@ def _kick_worker_async() -> None:
     def run() -> None:
         try:
             from app.services.decision_research_worker import process_pending_decision_research
-            result = process_pending_decision_research(limit=60)
-            _LOG.info("decision evidence worker result=%s", result)
+            while True:
+                result = process_pending_decision_research(limit=60)
+                _LOG.info("decision evidence worker result=%s", result)
+                if result.get("status") == "ALREADY_RUNNING" or not int(result.get("remaining") or 0):
+                    break
         except Exception:
             _LOG.exception("decision evidence worker crashed")
 
@@ -210,7 +213,8 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
                 elif _queue(db, row, dimension, unknown):
                     queued += 1
         db.commit()
-        if queued > 0:
+        pending_backlog = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").count()
+        if queued > 0 or pending_backlog > 0:
             _kick_worker_async()
         if gaps and queued == 0 and researched_unknown == len(gaps):
             finality = "PROVISIONAL_DIRECT_VERIFICATION_REQUIRED"
@@ -221,7 +225,7 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
         else:
             finality = "EVIDENCE_COMPLETE_FOR_MATERIAL_DIMENSIONS"
             status = "MATERIAL_EVIDENCE_AVAILABLE"
-        return {"status": status, "market": "las-vegas", "market_scoped": True, "material_gaps": gaps, "tasks_queued": queued, "researched_unknown_count": researched_unknown, "decision_finality": finality, "policy": "resident unknown -> ask; facility unknown -> agent research; unknown is not mismatch"}
+        return {"status": status, "market": "las-vegas", "market_scoped": True, "material_gaps": gaps, "tasks_queued": queued, "pending_backlog": pending_backlog, "researched_unknown_count": researched_unknown, "decision_finality": finality, "policy": "resident unknown -> ask; facility unknown -> agent research; unknown is not mismatch"}
     except Exception as exc:
         db.rollback()
         _LOG.exception("agent evidence bridge unavailable")
