@@ -10,6 +10,7 @@
       "record_key": "LAS_VENTANAS_SUMMERLIN",
       "community_name": "Las Ventanas at Summerlin",
       "aliases": ["Las Ventanas at Summerlin"],
+      "canonical_facility_ids": ["NV-LIC-4000-AGC-31", "NV-LIC-4529-SNF-31"],
       "address": "10401 W Charleston Blvd",
       "city": "Las Vegas",
       "state": "NV",
