@@ -3,10 +3,13 @@ name: Nevada Production Recommendation Runtime
 on:
   pull_request:
     paths:
+      - 'backend/app/services/__init__.py'
       - 'backend/app/services/canonical_universe.py'
       - 'backend/app/services/facility_parameter_service.py'
       - 'backend/app/services/patient_decision_engine.py'
+      - 'backend/app/services/patient_decision_engine/**'
       - 'backend/tests/test_nevada_production_runtime.py'
+      - 'backend/tests/test_patient_decision_engine_import_resolution.py'
       - 'database/nevada_facility_universe_canonical.json'
       - 'database/optime_parameter_registry.json'
       - '.github/workflows/nevada-production-runtime.yml'
@@ -27,7 +30,8 @@ jobs:
         run: |
           python -m unittest \
             backend.tests.test_facility_parameter_service \
-            backend.tests.test_nevada_production_runtime
+            backend.tests.test_nevada_production_runtime \
+            backend.tests.test_patient_decision_engine_import_resolution
       - name: Run real son and self personas through decision engine
         run: |
           python - <<'PY'
@@ -73,14 +77,22 @@ jobs:
               result = run_patient_decision_engine(**persona, limit=5)
               assert result['result_count'] > 0, f'{key}: no recommendations'
               assert result['total_candidates_scored'] > 0, f'{key}: no candidates scored'
+              assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f"{key}: location not governed"
+              assert result['care_setting_policy']['version'] == 'v1.1', f"{key}: wrong care-setting policy"
+              assert [row.get('rank_position') for row in result['results']] == [1, 2, 3, 4, 5], f"{key}: stale rank metadata"
+              assert all(row.get('rank_tie_status') == 'UNIQUE_RANK' for row in result['results']), f"{key}: unexpected Top-5 tie"
               for row in result['results']:
                   assert str(row.get('state') or '').upper() == 'NV', f"{key}: non-NV result {row}"
-                  assert str(row.get('city') or '').strip().lower() in allowed_cities, f"{key}: outside Valley {row}"
+                  assert str(row.get('city') or '').strip().lower() == 'las vegas', f"{key}: city constraint missed {row}"
               output[key] = {
                   'total_candidates_scored': result['total_candidates_scored'],
+                  'location_city': result['patient_needs_profile']['location_city'],
+                  'care_setting_policy_version': result['care_setting_policy']['version'],
                   'top5': [
                       {
                           'rank': row.get('rank_display'),
+                          'rank_position': row.get('rank_position'),
+                          'rank_tie_status': row.get('rank_tie_status'),
                           'name': row.get('facility_name'),
                           'city': row.get('city'),
                           'type': row.get('canonical_type'),
