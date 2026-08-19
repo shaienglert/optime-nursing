@@ -17,6 +17,8 @@ already has a governed score (for example community-environment congruence).
 
 from typing import Any, Dict, List
 
+from app.services.public_reputation_runtime import get_public_reputation
+
 
 def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
@@ -25,6 +27,27 @@ def _upper(value: Any) -> str:
 def _agent_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     evidence = row.get("agent_person_fit_evidence") if isinstance(row.get("agent_person_fit_evidence"), list) else []
     return [item.get("payload") for item in evidence if isinstance(item.get("payload"), dict)]
+
+
+def _governed_provider_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
+    provider_evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else {}
+    if provider_evidence:
+        out.append(provider_evidence)
+
+    life_plan = row.get("life_plan_primary_evidence") if isinstance(row.get("life_plan_primary_evidence"), dict) else {}
+    if life_plan:
+        direct: Dict[str, Any] = {}
+        if str(life_plan.get("rehabilitation_source_url") or "").startswith("http"):
+            direct["rehab_verified"] = True
+            direct["pt_ot_verified"] = True
+        modalities = {_upper(value) for value in row.get("housing_modalities") or []}
+        if "LIFE_PLAN_CCRC" in modalities:
+            direct["continuum_of_care_verified"] = True
+        if direct:
+            out.append(direct)
+    return out
 
 
 def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any]) -> Dict[str, Any]:
@@ -75,7 +98,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
 
     return {
-        "version": "client-intent-runtime-v1.1",
+        "version": "client-intent-runtime-v1.2",
         "must_haves": must,
         "nice_to_haves": nice,
         "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
@@ -98,7 +121,10 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     setting_status = _upper(setting.get("status"))
     person = row.get("human_person_fit") if isinstance(row.get("human_person_fit"), dict) else {}
     size = person.get("community_size") if isinstance(person.get("community_size"), dict) else {}
-    payloads = _agent_payloads(row)
+    agent_payloads = _agent_payloads(row)
+    provider_payloads = _governed_provider_payloads(row)
+    payloads = [*agent_payloads, *provider_payloads]
+    modalities = {_upper(value) for value in row.get("housing_modalities") or []}
 
     for must in intent.get("must_haves") or []:
         key = str(must.get("key") or "")
@@ -113,26 +139,40 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 must_pass.append(key)
         elif key == "ADL_SUPPORT_AVAILABLE":
-            if setting_status == "INSUFFICIENT_SETTING":
+            if setting_status == "INSUFFICIENT_SETTING" and not any(p.get("outside_care_allowed_verified") is True for p in payloads):
                 hard_fail.append(key)
-            elif canonical_type == "ASSISTED_LIVING_RFG" or any(p.get("adl_support_verified") is True for p in payloads):
+            elif canonical_type == "ASSISTED_LIVING_RFG" or any(p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True for p in payloads):
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
         elif key == "REHAB_PATH_AVAILABLE":
-            if canonical_type == "SKILLED_NURSING" or any(p.get("rehab_verified") is True or p.get("pt_ot_verified") is True for p in payloads):
+            if canonical_type == "SKILLED_NURSING" or any(
+                p.get("rehab_verified") is True
+                or p.get("pt_ot_verified") is True
+                or p.get("pt_ot_external_path_verified") is True
+                for p in payloads
+            ):
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
         elif key == "COUPLE_CORESIDENCE":
-            if any(p.get("couple_coresidence_verified") is True for p in payloads):
+            if any(
+                p.get("couple_coresidence_verified") is True
+                or p.get("same_apartment_transition_verified") is True
+                for p in payloads
+            ):
                 must_pass.append(key)
             elif any(p.get("couple_coresidence_verified") is False for p in payloads):
                 hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "RECOVERY_TRANSITION_COMPATIBLE":
-            if any(p.get("outside_care_allowed_verified") is True or p.get("continuum_of_care_verified") is True for p in payloads):
+            if "LIFE_PLAN_CCRC" in modalities or any(
+                p.get("outside_care_allowed_verified") is True
+                or p.get("continuum_of_care_verified") is True
+                or p.get("same_apartment_transition_verified") is True
+                for p in payloads
+            ):
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
@@ -171,17 +211,29 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 nice_unknown.append(key)
 
-    web_rating = None
-    web_review_count = None
-    for payload in payloads:
-        rating = payload.get("public_rating")
-        count = payload.get("public_review_count")
-        if isinstance(rating, (int, float)):
-            web_rating = max(float(rating), web_rating or float(rating))
-        if isinstance(count, int):
-            web_review_count = max(int(count), web_review_count or int(count))
+    reputation = get_public_reputation(row)
+    web_rating = reputation.get("rating") if isinstance(reputation.get("rating"), (int, float)) else None
+    web_review_count = reputation.get("review_count") if isinstance(reputation.get("review_count"), int) else None
+    reputation_source = reputation.get("source") if reputation.get("identity_verified") is True else "UNKNOWN"
+    reputation_observed_at = reputation.get("observed_at") if reputation.get("identity_verified") is True else "UNKNOWN"
 
-    relevant_known = len(must_pass) + len(nice_match) + len(row.get("matched_needs") or []) + len(row.get("agent_person_fit_evidence") or [])
+    if web_rating is None or web_review_count is None:
+        for payload in agent_payloads:
+            if web_rating is None and isinstance(payload.get("public_rating"), (int, float)):
+                web_rating = float(payload.get("public_rating"))
+                reputation_source = payload.get("public_reputation_source") or "AGENT_RESEARCH"
+            if web_review_count is None and isinstance(payload.get("public_review_count"), int):
+                web_review_count = int(payload.get("public_review_count"))
+                reputation_source = payload.get("public_reputation_source") or reputation_source
+
+    relevant_known = (
+        len(must_pass)
+        + len(nice_match)
+        + len(row.get("matched_needs") or [])
+        + len(agent_payloads)
+        + len(provider_payloads)
+        + (1 if reputation.get("identity_verified") is True else 0)
+    )
     relevant_unknown = len(must_unknown) + len(nice_unknown) + len(row.get("unknown_critical_needs") or [])
 
     return {
@@ -195,6 +247,10 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "public_reputation": {
             "rating": web_rating if web_rating is not None else "UNKNOWN",
             "review_count": web_review_count if web_review_count is not None else "UNKNOWN",
+            "source": reputation_source,
+            "observed_at": reputation_observed_at,
+            "identity_verified": reputation.get("identity_verified") is True,
+            "role": "REPUTATION_ENRICHMENT_ONLY",
         },
         "relevant_evidence_known_count": relevant_known,
         "relevant_evidence_unknown_count": relevant_unknown,
