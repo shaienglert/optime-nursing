@@ -3,6 +3,7 @@ name: Nevada Production Recommendation Runtime
 on:
   pull_request:
     paths:
+      - 'backend/app/main.py'
       - 'backend/app/services/__init__.py'
       - 'backend/app/services/canonical_universe.py'
       - 'backend/app/services/facility_parameter_service.py'
@@ -71,7 +72,6 @@ jobs:
               },
           }
 
-          allowed_cities = {'las vegas', 'north las vegas', 'henderson'}
           output = {}
           for key, persona in personas.items():
               result = run_patient_decision_engine(**persona, limit=5)
