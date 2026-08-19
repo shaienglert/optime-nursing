@@ -1,11 +1,6 @@
 from __future__ import annotations
 
-"""Integrated production decision runtime.
-
-This layer composes governed care/regulatory matching, Human Intelligence, the
-approved Resident–Senior Living Success Factors decision policy, market-scoped
-agent evidence, and governed Knowledge Fabric / outcome-learning audit context.
-"""
+"""Integrated production decision runtime."""
 
 import importlib.util
 import sys
@@ -14,26 +9,19 @@ from typing import Any, Dict, List
 
 from app.services.decision_agent_bridge import attach_agent_evidence_and_queue_gaps, social_evidence_sort_key
 from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
-from app.services.human_intelligence_runtime_verified import (
-    attach_human_person_fit,
-    build_human_intelligence_context,
-    has_explicit_person_fit_preference,
-    person_fit_sort_key,
-)
+from app.services.human_intelligence_runtime_verified import attach_human_person_fit, build_human_intelligence_context, has_explicit_person_fit_preference, person_fit_sort_key
 from app.services.success_factor_runtime import build_success_factor_trace, summarize_trace
 
 _SERVICES_DIR = Path(__file__).resolve().parent.parent
 _GOVERNED_DIR = _SERVICES_DIR / "patient_decision_engine"
 _GOVERNED_INIT = _GOVERNED_DIR / "__init__.py"
 _GOVERNED_PRIVATE_NAME = "app.services._patient_decision_engine_governed"
-
 _spec = importlib.util.spec_from_file_location(_GOVERNED_PRIVATE_NAME, _GOVERNED_INIT, submodule_search_locations=[str(_GOVERNED_DIR)])
 if _spec is None or _spec.loader is None:
     raise RuntimeError(f"Unable to load governed patient decision engine: {_GOVERNED_INIT}")
 _governed = importlib.util.module_from_spec(_spec)
 sys.modules[_GOVERNED_PRIVATE_NAME] = _governed
 _spec.loader.exec_module(_governed)
-
 _regulatory_index = _governed._regulatory_index
 build_patient_comparison_context = _governed.build_patient_comparison_context
 
@@ -59,16 +47,28 @@ _ELIGIBILITY_ORDER = {"ELIGIBLE": 0, "POTENTIALLY_ELIGIBLE": 1, "INSUFFICIENT_EV
 
 def _stable_person_fit_key(row: Dict[str, Any], original_index: int) -> tuple[Any, ...]:
     setting = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
-    setting_status = str(setting.get("status") or "POSSIBLE_FIT")
-    eligibility = str(row.get("eligibility_status") or "INSUFFICIENT_EVIDENCE")
-    patient_match = float(row.get("patient_match_score") or 0.0)
-    return (_CARE_SETTING_ORDER.get(setting_status, 1), _ELIGIBILITY_ORDER.get(eligibility, 2), -patient_match, *person_fit_sort_key(row), *social_evidence_sort_key(row), original_index)
+    return (
+        _CARE_SETTING_ORDER.get(str(setting.get("status") or "POSSIBLE_FIT"), 1),
+        _ELIGIBILITY_ORDER.get(str(row.get("eligibility_status") or "INSUFFICIENT_EVIDENCE"), 2),
+        -float(row.get("patient_match_score") or 0.0),
+        *person_fit_sort_key(row),
+        *social_evidence_sort_key(row),
+        original_index,
+    )
 
 
 def _social_priority_is_explicit_high(human_context: Dict[str, Any]) -> bool:
     signals = human_context.get("signals") if isinstance(human_context.get("signals"), dict) else {}
     social = signals.get("social_transition_priority") if isinstance(signals.get("social_transition_priority"), dict) else {}
     return str(social.get("value") or "UNKNOWN").upper() == "HIGH"
+
+
+def _rank_effect(explicit_person_fit: bool, explicit_social_fit: bool) -> str:
+    if explicit_social_fit:
+        return "ACTIVE_GOVERNED_PERSON_FIT"
+    if explicit_person_fit:
+        return "ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE"
+    return "WAITING_FOR_EXPLICIT_PREFERENCE_OR_EVIDENCE"
 
 
 def _reassign_rank_metadata(rows: List[Dict[str, Any]]) -> None:
@@ -95,7 +95,6 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
     rows = list(core.get("results") or [])
     attach_human_person_fit(rows, human_context)
-
     research_pool_size = min(len(rows), max(20, int(limit or 50)))
     agent_bridge = attach_agent_evidence_and_queue_gaps(rows[:research_pool_size], human_context)
 
@@ -110,7 +109,6 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     selected = rows[: max(0, int(limit or 0))]
     core["results"] = selected
     core["result_count"] = len(selected)
-
     patient_profile = core.get("patient_needs_profile") if isinstance(core.get("patient_needs_profile"), dict) else {}
     presearch_policy = build_success_factor_trace(questionnaire_state, patient_profile)
     readiness = str(human_context.get("decision_readiness") or "UNKNOWN")
@@ -120,7 +118,7 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
         "version": "decision-intelligence-runtime-v2",
         "human_intelligence": human_context,
         "success_factor_policy": presearch_policy,
-        "person_fit_rank_effect": "ACTIVE_GOVERNED_PERSON_FIT" if (explicit_person_fit or explicit_social_fit) else "WAITING_FOR_EXPLICIT_PREFERENCE_OR_EVIDENCE",
+        "person_fit_rank_effect": _rank_effect(explicit_person_fit, explicit_social_fit),
         "agent_evidence_bridge": agent_bridge,
         "decision_finality": finality,
         "facility_person_fit_evidence": "Only market-scoped governed evidence may affect fit. Missing facility evidence becomes agent research; missing resident preference becomes a question.",
