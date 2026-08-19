@@ -69,14 +69,16 @@ def attach_human_person_fit(rows: List[Dict[str, Any]], human_context: Dict[str,
                 "fit_score": fit if fit is not None else "UNKNOWN",
                 "source": "Nevada HCQC / ALiS official detail" if beds is not None else "UNKNOWN",
                 "evidence_class": "REGULATORY_VERIFIED" if beds is not None else "UNKNOWN",
+                "policy_role": "EXPLICIT_PREFERENCE_CONGRUENCE_ONLY",
+                "not_a_quality_factor": True,
             },
             "social_transition_fit": {
                 "status": "UNKNOWN",
-                "reason": "No verified Nevada facility social-engagement evidence is attached to this candidate yet.",
+                "reason": "No verified Nevada facility social-climate/engagement outcome evidence is attached yet.",
             },
             "independence_fit": {
                 "status": "UNKNOWN",
-                "reason": "No verified Nevada facility independence/lifestyle evidence is attached to this candidate yet.",
+                "reason": "No verified Nevada facility autonomy/choice evidence is attached yet.",
             },
         }
 

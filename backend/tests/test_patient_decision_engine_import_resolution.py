@@ -22,10 +22,7 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
     def test_public_import_resolves_to_integrated_runtime(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
         module_file = Path(module.__file__).as_posix()
-        self.assertTrue(
-            module_file.endswith("/app/services/patient_decision_engine_runtime/__init__.py"),
-            module_file,
-        )
+        self.assertTrue(module_file.endswith("/app/services/patient_decision_engine_runtime/__init__.py"), module_file)
 
     def test_public_import_exposes_nevada_governed_behavior(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
@@ -41,10 +38,10 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
             "My father is 84, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing, meals and medication. No dementia.",
             limit=5,
         )
-
         self.assertEqual(result["patient_needs_profile"]["location_city"], "LAS VEGAS")
         self.assertEqual(result["care_setting_policy"]["version"], "v1.1")
-        self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v1")
+        self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v2")
+        self.assertEqual(len(result["decision_intelligence"]["success_factor_policy"]["factors"]), 16)
         self.assertEqual([row["rank_position"] for row in result["results"]], [1, 2, 3, 4, 5])
         self.assertTrue(all(row["rank_tie_status"] == "UNIQUE_RANK" for row in result["results"]))
         self.assertTrue(all(row["city"] == "LAS VEGAS" for row in result["results"]))

@@ -9,6 +9,7 @@ on:
       - 'backend/app/services/facility_parameter_service.py'
       - 'backend/app/services/human_intelligence_runtime.py'
       - 'backend/app/services/human_intelligence_runtime_verified.py'
+      - 'backend/app/services/success_factor_runtime.py'
       - 'backend/app/services/patient_decision_engine.py'
       - 'backend/app/services/patient_decision_engine/**'
       - 'backend/app/services/patient_decision_engine_runtime/**'
@@ -17,6 +18,10 @@ on:
       - 'backend/tests/test_nevada_production_runtime.py'
       - 'backend/tests/test_patient_decision_engine_import_resolution.py'
       - 'backend/tests/test_human_intelligence_runtime_integration.py'
+      - 'backend/tests/test_adaptive_interview_roundtrip.py'
+      - 'backend/tests/test_success_factor_runtime.py'
+      - 'frontend/src/app/adaptive-interview/**'
+      - 'frontend/src/app/api/ops/smoke/recommendations/**'
       - 'database/las_vegas_person_fit_summary_v1.b64'
       - 'database/nevada_facility_universe_canonical.json'
       - 'database/optime_parameter_registry.json'
@@ -45,43 +50,34 @@ jobs:
             backend.tests.test_nevada_production_runtime \
             backend.tests.test_patient_decision_engine_import_resolution \
             backend.tests.test_human_intelligence_runtime_integration \
+            backend.tests.test_adaptive_interview_roundtrip \
+            backend.tests.test_success_factor_runtime \
             backend.tests.test_main_decision_runtime_contract
-      - name: Run real son and self personas through decision engine
+      - name: Run real son and self personas through integrated decision engine
         run: |
           python - <<'PY'
           import json
+          from copy import deepcopy
           from app.services.patient_decision_engine import run_patient_decision_engine
 
+          base = {
+              'relationship': 'Dad',
+              'ageGroup': '80-84',
+              'assistanceLevel': 'Needs assistance with bathing and dressing',
+              'memoryStatus': 'No',
+              'budget': 6500,
+              'distanceFromFamily': 'Balanced location',
+          }
+          query = (
+              'My father is 84, recently widowed, and lives in Las Vegas. '
+              'He has difficulty with bathing, dressing, meals and medication. '
+              'He is mentally alert, has no dementia, is still mobile, and needs daily help.'
+          )
           personas = {
-              'son_for_father': {
-                  'questionnaire_state': {
-                      'relationship': 'Dad',
-                      'ageGroup': '80-84',
-                      'assistanceLevel': 'Needs assistance with bathing and dressing',
-                      'memoryStatus': 'No',
-                      'budget': 6500,
-                      'distanceFromFamily': 'Balanced location',
-                  },
-                  'natural_language_query': (
-                      'My father is 84, recently widowed, and lives in Las Vegas. '
-                      'He has difficulty with bathing, dressing, meals and medication. '
-                      'He is mentally alert, has no dementia, is still mobile, and needs daily help.'
-                  ),
-              },
+              'son_for_father': {'questionnaire_state': base, 'natural_language_query': query},
               'self_search': {
-                  'questionnaire_state': {
-                      'relationship': 'Myself',
-                      'ageGroup': '80-84',
-                      'assistanceLevel': 'Needs assistance with bathing and dressing',
-                      'memoryStatus': 'No',
-                      'budget': 6500,
-                      'distanceFromFamily': 'Balanced location',
-                  },
-                  'natural_language_query': (
-                      'I am 84, recently widowed, and live in Las Vegas. '
-                      'I have difficulty with bathing, dressing, meals and medication. '
-                      'I am mentally alert, have no dementia, am still mobile, and need some daily help.'
-                  ),
+                  'questionnaire_state': {**base, 'relationship': 'Myself'},
+                  'natural_language_query': query.replace('My father is', 'I am').replace('He has', 'I have').replace('He is', 'I am').replace('needs daily help', 'need daily help'),
               },
           }
 
@@ -90,44 +86,48 @@ jobs:
               result = run_patient_decision_engine(**persona, limit=5)
               assert result['result_count'] > 0, f'{key}: no recommendations'
               assert result['total_candidates_scored'] > 0, f'{key}: no candidates scored'
-              assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f"{key}: location not governed"
-              assert result['care_setting_policy']['version'] == 'v1.1', f"{key}: wrong care-setting policy"
-              assert result['decision_intelligence']['version'] == 'decision-intelligence-runtime-v1', f"{key}: decision intelligence missing"
+              assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f'{key}: location not governed'
+              assert result['care_setting_policy']['version'] == 'v1.1', f'{key}: wrong care-setting policy'
+              assert result['decision_intelligence']['version'] == 'decision-intelligence-runtime-v2', f'{key}: decision intelligence missing'
               human = result['decision_intelligence']['human_intelligence']
-              assert human['signals']['recent_bereavement']['value'] == 'YES', f"{key}: bereavement signal lost"
-              assert human['decision_readiness'] == 'NEEDS_CLARIFICATION', f"{key}: missing clarification gate"
-              assert any(q['question_key'] == 'community_size_preference' for q in human['adaptive_questions']), f"{key}: community-style question missing"
-              assert [row.get('rank_position') for row in result['results']] == [1, 2, 3, 4, 5], f"{key}: stale rank metadata"
-              assert all(row.get('rank_tie_status') == 'UNIQUE_RANK' for row in result['results']), f"{key}: unexpected Top-5 tie"
+              assert human['signals']['recent_bereavement']['value'] == 'YES', f'{key}: bereavement signal lost'
+              assert human['decision_readiness'] == 'NEEDS_CLARIFICATION', f'{key}: missing clarification gate'
+              question_keys = [q['question_key'] for q in human['adaptive_questions']]
+              assert question_keys == ['community_size_preference', 'social_interaction_need_after_loss', 'move_participation'], f'{key}: wrong NBQ sequence {question_keys}'
+              assert len(result['decision_intelligence']['success_factor_policy']['factors']) == 16, f'{key}: success-factor canon disconnected'
+              assert 'recommendation_audit_trace' in result, f'{key}: audit trace missing'
+              assert [row.get('rank_position') for row in result['results']] == [1, 2, 3, 4, 5], f'{key}: stale rank metadata'
+              assert all(row.get('rank_tie_status') == 'UNIQUE_RANK' for row in result['results']), f'{key}: unexpected Top-5 tie'
               for row in result['results']:
-                  assert str(row.get('state') or '').upper() == 'NV', f"{key}: non-NV result {row}"
-                  assert str(row.get('city') or '').strip().lower() == 'las vegas', f"{key}: city constraint missed {row}"
-                  assert 'human_person_fit' in row, f"{key}: person-fit evidence missing {row.get('facility_name')}"
-                  assert row.get('explanation', {}).get('decision_readiness') == 'NEEDS_CLARIFICATION', f"{key}: readiness not exposed"
-              output[key] = {
-                  'total_candidates_scored': result['total_candidates_scored'],
-                  'location_city': result['patient_needs_profile']['location_city'],
-                  'care_setting_policy_version': result['care_setting_policy']['version'],
-                  'decision_intelligence_version': result['decision_intelligence']['version'],
-                  'decision_readiness': human['decision_readiness'],
-                  'adaptive_questions': human['adaptive_questions'],
-                  'top5': [
-                      {
-                          'rank': row.get('rank_display'),
-                          'rank_position': row.get('rank_position'),
-                          'rank_tie_status': row.get('rank_tie_status'),
-                          'name': row.get('facility_name'),
-                          'city': row.get('city'),
-                          'type': row.get('canonical_type'),
-                          'eligibility': row.get('eligibility_status'),
-                          'patient_match_score': row.get('patient_match_score'),
-                          'quality_safety_score': row.get('quality_safety_score'),
-                          'evidence_confidence': row.get('evidence_confidence'),
-                          'community_size': row.get('human_person_fit', {}).get('community_size'),
-                          'needs_verification': row.get('explanation', {}).get('needs_verification', []),
-                      }
-                      for row in result['results']
-                  ],
+                  assert str(row.get('state') or '').upper() == 'NV', f'{key}: non-NV result {row}'
+                  assert str(row.get('city') or '').strip().lower() == 'las vegas', f'{key}: city constraint missed {row}'
+                  assert 'human_person_fit' in row, f'{key}: person-fit evidence missing'
+                  assert len(row['success_factor_trace']['factors']) == 16, f'{key}: per-facility factor trace incomplete'
+              output[key] = {'decision_readiness': human['decision_readiness'], 'adaptive_questions': question_keys, 'top5': [row.get('facility_name') for row in result['results']]}
+
+          def answered(size):
+              state = deepcopy(base)
+              state['humanIntelligenceV2'] = {
+                  'personalityProfile': {'communitySizePreference': size},
+                  'familyProfile': {'socialInteractionNeed': 'Neither'},
+                  'transitionRiskProfile': {'attitudeTowardMove': 'Cautious but open'},
               }
+              return run_patient_decision_engine(state, query, limit=5)
+
+          large = answered('Large community')
+          small = answered('Small community')
+          for label, result in [('large', large), ('small', small)]:
+              human = result['decision_intelligence']['human_intelligence']
+              assert human['decision_readiness'] == 'READY', f'{label}: interview did not close'
+              assert human['adaptive_questions'] == [], f'{label}: stale questions after answers'
+              assert result['decision_intelligence']['person_fit_rank_effect'] == 'ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE'
+          large_ids = [r['canonical_facility_id'] for r in large['results']]
+          small_ids = [r['canonical_facility_id'] for r in small['results']]
+          assert large_ids != small_ids, 'Explicit environment preference does not change Top-5'
+          assert all(r['human_person_fit']['community_size']['not_a_quality_factor'] for r in large['results'] + small['results'])
+          output['answered_variants'] = {
+              'large_top5': [r['facility_name'] for r in large['results']],
+              'small_top5': [r['facility_name'] for r in small['results']],
+          }
           print('NEVADA_PERSONA_E2E=' + json.dumps(output, indent=2))
           PY

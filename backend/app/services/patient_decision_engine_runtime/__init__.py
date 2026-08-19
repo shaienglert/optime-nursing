@@ -2,10 +2,10 @@ from __future__ import annotations
 
 """Integrated production decision runtime.
 
-This layer composes the existing governed care/regulatory engine with Human
-Intelligence. It does not import the historical frontend ranking engine because
-that engine contains heuristic/synthetic facility inference that is not allowed
-in the canonical production path.
+This layer composes governed care/regulatory matching, Human Intelligence, and
+the approved Resident–Senior Living Success Factors decision policy. It does not
+import the historical frontend ranking engine because that engine contains
+heuristic/synthetic facility inference that is not allowed in production.
 """
 
 import importlib.util
@@ -19,6 +19,7 @@ from app.services.human_intelligence_runtime_verified import (
     has_explicit_person_fit_preference,
     person_fit_sort_key,
 )
+from app.services.success_factor_runtime import build_success_factor_trace, summarize_trace
 
 _SERVICES_DIR = Path(__file__).resolve().parent.parent
 _GOVERNED_DIR = _SERVICES_DIR / "patient_decision_engine"
@@ -40,28 +41,20 @@ _regulatory_index = _governed._regulatory_index
 build_patient_comparison_context = _governed.build_patient_comparison_context
 
 
-def build_patient_needs_profile(
-    questionnaire_state: Dict[str, Any], natural_language_query: str = ""
-) -> Dict[str, Any]:
-    """Build governed needs plus pre-ranking Human Intelligence interview state.
-
-    This is the canonical pre-recommendation bridge. It lets the client ask the
-    next evidence-safe Human Intelligence question before ranking facilities.
-    Missing person-fit facts remain UNKNOWN; no frontend heuristic is required.
-    """
-    profile = _governed.build_patient_needs_profile(
-        questionnaire_state, natural_language_query
-    )
+def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
+    profile = _governed.build_patient_needs_profile(questionnaire_state, natural_language_query)
     human_context = build_human_intelligence_context(
         questionnaire_state=questionnaire_state,
         natural_language_query=natural_language_query,
     )
+    factor_policy = build_success_factor_trace(questionnaire_state, profile)
     profile["decision_intelligence"] = {
-        "version": "decision-intelligence-runtime-v1",
+        "version": "decision-intelligence-runtime-v2",
         "human_intelligence": human_context,
+        "success_factor_policy": factor_policy,
         "decision_readiness": human_context.get("decision_readiness"),
         "adaptive_questions": human_context.get("adaptive_questions") or [],
-        "production_principle": "ask for missing material person-fit facts; never infer them from bereavement, living-alone duration, or demographics",
+        "production_principle": "ask only for missing material facts that can alter eligibility, ordering, a meaningful trade-off, or transition support; never infer protected-trait or bereavement preferences",
     }
     return profile
 
@@ -109,10 +102,10 @@ def _reassign_rank_metadata(rows: List[Dict[str, Any]]) -> None:
         next_size = next_person.get("community_size") if isinstance(next_person.get("community_size"), dict) else {}
         if current_size.get("fit_score") != next_size.get("fit_score"):
             row["tie_break_explanation_vs_next"] = {
-                "why_ranked_above": "Explicit community-size preference changed the person-fit order using Nevada official bed-count evidence.",
-                "deciding_dimension": "human_person_fit.community_size",
+                "why_ranked_above": "The resident explicitly stated a community-style preference; verified licensed capacity is used only to evaluate that preference congruence, never as an independent quality factor.",
+                "deciding_dimension": "preference_congruence.community_environment",
                 "remained_equal": ["care_setting_fit", "eligibility", "patient_match"],
-                "remaining_unknown": ["social_transition_fit", "independence_fit"],
+                "remaining_unknown": ["social_climate", "autonomy_choice_fit", "resident_staff_relationship"],
             }
 
 
@@ -145,16 +138,18 @@ def run_patient_decision_engine(
     core["results"] = selected
     core["result_count"] = len(selected)
 
+    patient_profile = core.get("patient_needs_profile") if isinstance(core.get("patient_needs_profile"), dict) else {}
+    presearch_policy = build_success_factor_trace(questionnaire_state, patient_profile)
     decision_intelligence = {
-        "version": "decision-intelligence-runtime-v1",
+        "version": "decision-intelligence-runtime-v2",
         "human_intelligence": human_context,
-        "person_fit_rank_effect": "ACTIVE" if explicit_person_fit else "WAITING_FOR_EXPLICIT_PREFERENCE",
-        "facility_person_fit_evidence": "Nevada HCQC / ALiS official bed count; lifestyle/social evidence remains UNKNOWN unless separately verified",
-        "production_principle": "care/regulatory eligibility first; evidence-backed person fit before regulatory tie-break when explicitly supplied",
+        "success_factor_policy": presearch_policy,
+        "person_fit_rank_effect": "ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE" if explicit_person_fit else "WAITING_FOR_EXPLICIT_PREFERENCE_OR_EVIDENCE",
+        "facility_person_fit_evidence": "Only governed facility/public evidence may affect success-factor fit; unavailable social/autonomy/relationship evidence remains UNKNOWN.",
+        "production_principle": "care/regulatory eligibility first; approved Success Factors influence ordering only when resident relevance and facility evidence are both known; research-only factors never rank independently",
     }
     core["decision_intelligence"] = decision_intelligence
 
-    patient_profile = core.get("patient_needs_profile")
     if isinstance(patient_profile, dict):
         patient_profile["decision_intelligence"] = decision_intelligence
     care_policy = core.get("care_setting_policy")
@@ -163,11 +158,50 @@ def run_patient_decision_engine(
 
     readiness = human_context.get("decision_readiness")
     questions = human_context.get("adaptive_questions") or []
+    audit_rows: List[Dict[str, Any]] = []
     for row in selected:
+        factor_trace = build_success_factor_trace(questionnaire_state, patient_profile, row)
+        trace_summary = summarize_trace(factor_trace)
+        row["success_factor_trace"] = factor_trace
         explanation = row.setdefault("explanation", {})
         explanation["decision_readiness"] = readiness
         explanation["adaptive_questions"] = questions
         explanation["human_person_fit"] = row.get("human_person_fit")
+        explanation["success_factor_summary"] = trace_summary
+        audit_rows.append({
+            "canonical_facility_id": row.get("canonical_facility_id"),
+            "rank_position": row.get("rank_position"),
+            "eligibility_status": row.get("eligibility_status"),
+            "care_setting_fit": (row.get("care_setting_fit") or {}).get("status"),
+            "matched_needs": [item.get("parameter_id") for item in row.get("matched_needs") or []],
+            "unknown_critical_needs": [item.get("parameter_id") for item in row.get("unknown_critical_needs") or []],
+            "success_factors_known_both_sides": trace_summary.get("known_on_both_sides") or [],
+            "success_factors_facility_unknown": trace_summary.get("facility_evidence_unknown") or [],
+        })
+
+    core["recommendation_audit_trace"] = {
+        "model_version": "decision-intelligence-runtime-v2",
+        "facts_used": {
+            "patient_needs": [item.get("parameter_id") for item in patient_profile.get("needs") or []],
+            "human_signals": human_context.get("signals") or {},
+        },
+        "decision_rules_applied": [
+            "care_setting_fit_before_person_fit",
+            "unknown_is_not_mismatch",
+            "explicit_preferences_before_inference",
+            "success_factor_influence_classes_no_unvalidated_numeric_weights",
+            "facility_size_not_independent_quality",
+            "regulatory_evidence_governed_tie_break",
+        ],
+        "evidence_references": [
+            "Nevada HCQC / ALiS",
+            "CMS when applicable",
+            "reports/RESIDENT_SENIOR_LIVING_SUCCESS_FACTORS_CANON_V1.md",
+            "reports/RECOMMENDATION_INFLUENCE_MODEL_V1.md",
+            "reports/RECOMMENDATION_REQUIRED_DATA_AND_NBQ_V1.md",
+        ],
+        "recommendations": audit_rows,
+    }
 
     return core
 
