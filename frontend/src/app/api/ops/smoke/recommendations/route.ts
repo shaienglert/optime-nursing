@@ -26,6 +26,18 @@ const answeredState = (communitySizePreference: string, socialInteractionNeed = 
     transitionRiskProfile: { attitudeTowardMove: "Cautious but open" },
   },
 });
+const COUPLE_SHARED = {
+  ageGroup: "80-84",
+  assistanceLevel: "Needs assistance with bathing and dressing",
+  memoryStatus: "No",
+  budget: 12000,
+  distanceFromFamily: "Balanced location",
+  humanIntelligenceV2: {
+    personalityProfile: { communitySizePreference: "Large community" },
+    familyProfile: { socialInteractionNeed: "Helpful daily social contact" },
+    transitionRiskProfile: { attitudeTowardMove: "Cautious but open" },
+  },
+};
 
 const PERSONAS = {
   son84: { questionnaire_state: BASE_SON_84, natural_language_query: BASE_QUERY, limit: 5 },
@@ -37,6 +49,16 @@ const PERSONAS = {
   son84_large_neutral: { questionnaire_state: answeredState("Large community"), natural_language_query: BASE_QUERY, limit: 5 },
   son84_small_neutral: { questionnaire_state: answeredState("Small community"), natural_language_query: BASE_QUERY, limit: 5 },
   son84_large_social: { questionnaire_state: answeredState("Large community", "Helpful daily social contact"), natural_language_query: BASE_QUERY, limit: 5 },
+  couple80_rehab_son: {
+    questionnaire_state: { ...COUPLE_SHARED, relationship: "Dad" },
+    natural_language_query: "I am the adult son looking for senior living in Las Vegas for my parents, both over 80. My father recently had spinal surgery and currently needs rehabilitation. He is expected to walk again, but for about the next three months he will need caregiver help with bathing and dressing. My mother is independent and they want to move together. Neither has dementia. They strongly prefer a larger senior living community with lots of culture, lectures, classes, clubs, activities and social opportunities in Las Vegas.",
+    limit: 5,
+  },
+  couple80_rehab_wife: {
+    questionnaire_state: { ...COUPLE_SHARED, relationship: "Myself" },
+    natural_language_query: "I am over 80 and I am looking in Las Vegas for a senior living community for my husband and me to move into together. My husband is also over 80 and recently had spinal surgery. He currently needs rehabilitation and is expected to walk again, but for about the next three months he will need caregiver help with bathing and dressing. I am independent. Neither of us has dementia. We strongly want a larger community with lots of culture, lectures, classes, clubs, activities and social opportunities.",
+    limit: 5,
+  },
 } as const;
 
 type PersonaKey = keyof typeof PERSONAS;
