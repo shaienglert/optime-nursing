@@ -10,6 +10,7 @@ on:
       - 'backend/app/services/human_intelligence_runtime.py'
       - 'backend/app/services/human_intelligence_runtime_verified.py'
       - 'backend/app/services/success_factor_runtime.py'
+      - 'backend/app/services/decision_governance_runtime.py'
       - 'backend/app/services/patient_decision_engine.py'
       - 'backend/app/services/patient_decision_engine/**'
       - 'backend/app/services/patient_decision_engine_runtime/**'
@@ -20,6 +21,7 @@ on:
       - 'backend/tests/test_human_intelligence_runtime_integration.py'
       - 'backend/tests/test_adaptive_interview_roundtrip.py'
       - 'backend/tests/test_success_factor_runtime.py'
+      - 'backend/tests/test_decision_governance_runtime.py'
       - 'frontend/src/app/adaptive-interview/**'
       - 'frontend/src/app/api/ops/smoke/recommendations/**'
       - 'database/las_vegas_person_fit_summary_v1.b64'
@@ -52,6 +54,7 @@ jobs:
             backend.tests.test_human_intelligence_runtime_integration \
             backend.tests.test_adaptive_interview_roundtrip \
             backend.tests.test_success_factor_runtime \
+            backend.tests.test_decision_governance_runtime \
             backend.tests.test_main_decision_runtime_contract
       - name: Run real son and self personas through integrated decision engine
         run: |
@@ -96,6 +99,12 @@ jobs:
               assert question_keys == ['community_size_preference', 'social_interaction_need_after_loss', 'move_participation'], f'{key}: wrong NBQ sequence {question_keys}'
               assert len(result['decision_intelligence']['success_factor_policy']['factors']) == 16, f'{key}: success-factor canon disconnected'
               assert 'recommendation_audit_trace' in result, f'{key}: audit trace missing'
+              governed = result['decision_intelligence'].get('governed_knowledge_learning') or {}
+              assert governed.get('status') in {'CONNECTED', 'UNAVAILABLE'}, f'{key}: governance bridge missing'
+              assert (governed.get('knowledge_fabric') or {}).get('automatic_rank_effect') == 'NONE', f'{key}: raw Knowledge Fabric altered rank'
+              assert (governed.get('outcome_learning') or {}).get('automatic_rank_effect') == 'NONE', f'{key}: outcomes altered rank automatically'
+              persistence = (result.get('recommendation_audit_trace') or {}).get('persistence') or {}
+              assert persistence.get('status') in {'PERSISTED', 'PERSISTENCE_FAILED'}, f'{key}: audit persistence status missing'
               assert [row.get('rank_position') for row in result['results']] == [1, 2, 3, 4, 5], f'{key}: stale rank metadata'
               assert all(row.get('rank_tie_status') == 'UNIQUE_RANK' for row in result['results']), f'{key}: unexpected Top-5 tie'
               for row in result['results']:
