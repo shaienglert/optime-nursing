@@ -37,9 +37,6 @@ _governed = importlib.util.module_from_spec(_spec)
 sys.modules[_GOVERNED_PRIVATE_NAME] = _governed
 _spec.loader.exec_module(_governed)
 
-# Preserve the public contract consumed by app.main while routing recommendation
-# execution through this integrated runtime. These are delegated to the governed
-# evidence layer; no duplicate regulatory implementation is introduced here.
 _regulatory_index = _governed._regulatory_index
 build_patient_needs_profile = _governed.build_patient_needs_profile
 build_patient_comparison_context = _governed.build_patient_comparison_context
@@ -123,13 +120,26 @@ def run_patient_decision_engine(
     selected = rows[: max(0, int(limit or 0))]
     core["results"] = selected
     core["result_count"] = len(selected)
-    core["decision_intelligence"] = {
+
+    decision_intelligence = {
         "version": "decision-intelligence-runtime-v1",
         "human_intelligence": human_context,
         "person_fit_rank_effect": "ACTIVE" if explicit_person_fit else "WAITING_FOR_EXPLICIT_PREFERENCE",
         "facility_person_fit_evidence": "Nevada HCQC / ALiS official bed count; lifestyle/social evidence remains UNKNOWN unless separately verified",
         "production_principle": "care/regulatory eligibility first; evidence-backed person fit before regulatory tie-break when explicitly supplied",
     }
+    core["decision_intelligence"] = decision_intelligence
+
+    # FastAPI's historical response model does not yet declare the new top-level
+    # field. Carry the same governed context through two existing dictionary fields
+    # so it survives response-model serialization and reaches clients today. These
+    # are compatibility transports, not alternate decision engines.
+    patient_profile = core.get("patient_needs_profile")
+    if isinstance(patient_profile, dict):
+        patient_profile["decision_intelligence"] = decision_intelligence
+    care_policy = core.get("care_setting_policy")
+    if isinstance(care_policy, dict):
+        care_policy["decision_intelligence"] = decision_intelligence
 
     readiness = human_context.get("decision_readiness")
     questions = human_context.get("adaptive_questions") or []
