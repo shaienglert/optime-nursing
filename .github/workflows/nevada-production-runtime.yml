@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'backend/app/main.py'
+      - 'backend/app/database.py'
       - 'backend/app/services/__init__.py'
       - 'backend/app/services/canonical_universe.py'
       - 'backend/app/services/facility_parameter_service.py'
@@ -15,6 +16,7 @@ on:
       - 'backend/app/services/patient_decision_engine/**'
       - 'backend/app/services/patient_decision_engine_runtime/**'
       - 'backend/requirements.txt'
+      - 'backend/tests/test_database_runtime.py'
       - 'backend/tests/test_main_decision_runtime_contract.py'
       - 'backend/tests/test_nevada_production_runtime.py'
       - 'backend/tests/test_patient_decision_engine_import_resolution.py'
@@ -48,6 +50,7 @@ jobs:
       - name: Run deterministic Nevada runtime tests
         run: |
           python -m unittest \
+            backend.tests.test_database_runtime \
             backend.tests.test_facility_parameter_service \
             backend.tests.test_nevada_production_runtime \
             backend.tests.test_patient_decision_engine_import_resolution \
