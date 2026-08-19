@@ -5,6 +5,22 @@ import unittest
 
 
 class MainDecisionRuntimeContractTests(unittest.TestCase):
+    def _questionnaire(self) -> dict:
+        return {
+            "relationship": "Dad",
+            "ageGroup": "80-84",
+            "assistanceLevel": "Needs assistance with bathing and dressing",
+            "memoryStatus": "No",
+            "budget": 6500,
+            "distanceFromFamily": "Balanced location",
+        }
+
+    def _query(self) -> str:
+        return (
+            "My father is 84, recently widowed, lives in Las Vegas, is mentally alert and mobile, "
+            "and needs help with bathing, dressing, meals and medication. No dementia."
+        )
+
     def test_main_imports_integrated_decision_runtime_contract(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
@@ -15,30 +31,38 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertTrue(callable(decision.run_patient_decision_engine))
         self.assertIsNotNone(main.app)
 
+    def test_pre_ranking_decision_intelligence_survives_patient_needs_response_model(self) -> None:
+        main = importlib.import_module("app.main")
+        decision = importlib.import_module("app.services.patient_decision_engine")
+        profile = decision.build_patient_needs_profile(self._questionnaire(), self._query())
+        serialized = main.PatientNeedsProfileOut.model_validate(profile).model_dump()
+        self.assertIn("decision_intelligence", serialized)
+        intelligence = serialized["decision_intelligence"]
+        self.assertEqual(intelligence["version"], "decision-intelligence-runtime-v2")
+        self.assertEqual(len(intelligence["success_factor_policy"]["factors"]), 16)
+        self.assertEqual(
+            [q["question_key"] for q in intelligence["adaptive_questions"]],
+            ["community_size_preference", "social_interaction_need_after_loss", "move_participation"],
+        )
+
     def test_decision_context_and_success_factor_trace_survive_fastapi_response_model(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
         result = decision.run_patient_decision_engine(
-            questionnaire_state={
-                "relationship": "Dad",
-                "ageGroup": "80-84",
-                "assistanceLevel": "Needs assistance with bathing and dressing",
-                "memoryStatus": "No",
-                "budget": 6500,
-                "distanceFromFamily": "Balanced location",
-            },
-            natural_language_query=(
-                "My father is 84, recently widowed, lives in Las Vegas, is mentally alert and mobile, "
-                "and needs help with bathing, dressing, meals and medication. No dementia."
-            ),
+            questionnaire_state=self._questionnaire(),
+            natural_language_query=self._query(),
             limit=5,
         )
         serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()
+        self.assertIn("decision_intelligence", serialized)
+        self.assertIn("recommendation_audit_trace", serialized)
         patient_decision = serialized["patient_needs_profile"]["decision_intelligence"]
         policy_decision = serialized["care_setting_policy"]["decision_intelligence"]
+        top_decision = serialized["decision_intelligence"]
 
         self.assertEqual(patient_decision["version"], "decision-intelligence-runtime-v2")
         self.assertEqual(policy_decision["version"], "decision-intelligence-runtime-v2")
+        self.assertEqual(top_decision["version"], "decision-intelligence-runtime-v2")
         self.assertEqual(len(patient_decision["success_factor_policy"]["factors"]), 16)
         human = patient_decision["human_intelligence"]
         self.assertEqual(human["decision_readiness"], "NEEDS_CLARIFICATION")
@@ -51,6 +75,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertEqual(len(first["success_factor_trace"]["factors"]), 16)
         self.assertIn("success_factor_summary", first["explanation"])
         self.assertIn("facility_size_as_independent_quality_factor", first["success_factor_trace"]["research_only_not_ranked"])
+        self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v2")
 
 
 if __name__ == "__main__":
