@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import unittest
 
 from app.services.patient_decision_engine_runtime import build_patient_needs_profile, run_patient_decision_engine
@@ -77,6 +78,33 @@ class SuccessFactorRuntimeTests(unittest.TestCase):
                 size = row["human_person_fit"]["community_size"]
                 self.assertTrue(size["not_a_quality_factor"])
                 self.assertEqual(size["policy_role"], "EXPLICIT_PREFERENCE_CONGRUENCE_ONLY")
+
+    def test_legacy_frontend_v2_scores_are_non_authoritative(self) -> None:
+        base = self._state("Large community")
+        manipulated = copy.deepcopy(base)
+        manipulated["humanIntelligenceV2"]["scoringEngine"] = {
+            "overallConfidence": 100,
+            "scoringWeights": {"social": 999, "quality": -999},
+            "outputScores": {
+                "social_fit_score": 100,
+                "family_fit_score": 0,
+                "community_style_score": 0,
+                "independence_fit_score": 100,
+                "transition_success_probability": 100,
+                "loneliness_risk_score": 0,
+            },
+        }
+        query = "recently widowed, mentally alert and mobile, needs ADL help in Las Vegas"
+        normal_result = run_patient_decision_engine(base, query, limit=5)
+        manipulated_result = run_patient_decision_engine(manipulated, query, limit=5)
+        self.assertEqual(
+            [row["canonical_facility_id"] for row in normal_result["results"]],
+            [row["canonical_facility_id"] for row in manipulated_result["results"]],
+        )
+        self.assertEqual(
+            normal_result["decision_intelligence"]["human_intelligence"]["signals"],
+            manipulated_result["decision_intelligence"]["human_intelligence"]["signals"],
+        )
 
 
 if __name__ == "__main__":
