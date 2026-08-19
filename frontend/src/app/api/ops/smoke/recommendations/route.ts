@@ -4,10 +4,10 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const BACKEND_BASE = (
-  process.env.BACKEND_PROXY_TARGET ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.BACKEND_INTERNAL_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
   "https://optime-nursing.onrender.com"
-).replace(/\/$/, "");
+).replace(/\/+$/, "");
 
 const PERSONAS = {
   son84: {
@@ -76,7 +76,6 @@ export async function GET(request: NextRequest) {
       smoke: true,
       persona,
       generated_at: new Date().toISOString(),
-      backend: BACKEND_BASE,
       result: body,
     },
     { headers: { "Cache-Control": "no-store" } },
