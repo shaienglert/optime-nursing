@@ -13,6 +13,7 @@ from app.services.facility_parameter_service import (
     refresh_runtime_cache,
 )
 from app.services.patient_decision_engine import run_patient_decision_engine
+from app.services.public_reputation_runtime import get_public_reputation
 
 
 class NevadaProductionRuntimeTests(unittest.TestCase):
@@ -32,7 +33,7 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
     def test_runtime_contains_only_las_vegas_valley_nevada_entities(self) -> None:
         index = get_canonical_facility_index()
         ids = get_all_canonical_facility_ids()
-        self.assertGreater(len(ids), 0)
+        self.assertGreaterEqual(len(ids), 364)
         self.assertEqual(set(ids), set(index))
         self.assertTrue(all(str(row.get("state") or "").upper() == "NV" for row in index.values()))
         self.assertTrue(all(row.get("is_las_vegas_valley") is True for row in index.values()))
@@ -42,6 +43,39 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         self.assertEqual(status["market"], "las-vegas")
         self.assertEqual(status["canonical_count"], len(index))
         self.assertGreater(status["evidence_count"], 0)
+
+    def test_verified_housing_overlay_adds_il_and_life_plan_modalities(self) -> None:
+        index = get_canonical_facility_index()
+        self.assertIn("NV-PROVIDER-IL-REVEL-VEGAS", index)
+        revel = index["NV-PROVIDER-IL-REVEL-VEGAS"]
+        self.assertEqual(revel["canonical_type"], "INDEPENDENT_LIVING")
+        self.assertIn("INDEPENDENT_LIVING", revel.get("housing_modalities") or [])
+        self.assertIn("provider_housing_evidence", revel)
+
+        for canonical_id in ("NV-LIC-4000-AGC-31", "NV-LIC-4529-SNF-31"):
+            self.assertIn(canonical_id, index)
+            row = index[canonical_id]
+            self.assertIn("LIFE_PLAN_CCRC", row.get("housing_modalities") or [])
+            self.assertIn("INDEPENDENT_LIVING", row.get("housing_modalities") or [])
+            self.assertIn("life_plan_primary_evidence", row)
+
+    def test_public_reputation_requires_exact_name_and_address(self) -> None:
+        exact = get_public_reputation({
+            "facility_name": "Oakey Assisted Living",
+            "address": "3900 W Oakey Blvd",
+            "city": "Las Vegas",
+        })
+        self.assertTrue(exact["identity_verified"])
+        self.assertEqual(exact["rating"], 4.3)
+        self.assertEqual(exact["review_count"], 46)
+
+        wrong_address = get_public_reputation({
+            "facility_name": "Oakey Assisted Living",
+            "address": "9999 Wrong Address",
+            "city": "Las Vegas",
+        })
+        self.assertFalse(wrong_address["identity_verified"])
+        self.assertEqual(wrong_address["rating"], "UNKNOWN")
 
     def test_assisted_living_adl_support_is_taxonomy_inference_not_invented_service_detail(self) -> None:
         index = get_canonical_facility_index()
@@ -98,7 +132,7 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         )
         result = run_patient_decision_engine(questionnaire, natural_language, limit=5)
         self.assertEqual(result["result_count"], 5)
-        self.assertEqual(result["total_candidates_scored"], 364)
+        self.assertGreaterEqual(result["total_candidates_scored"], 364)
         context = result["care_setting_policy"]["context"]
         self.assertFalse(context["requires_skilled"])
         self.assertTrue(context["needs_residential_assistance"])
