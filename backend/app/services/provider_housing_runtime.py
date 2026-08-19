@@ -19,20 +19,10 @@ def _norm(value: Any) -> str:
 def _norm_addr(value: Any) -> str:
     text = f" {_norm(value)} "
     for source, target in {
-        " street ": " st ",
-        " road ": " rd ",
-        " avenue ": " ave ",
-        " boulevard ": " blvd ",
-        " drive ": " dr ",
-        " lane ": " ln ",
-        " court ": " ct ",
-        " place ": " pl ",
-        " highway ": " hwy ",
-        " parkway ": " pkwy ",
-        " north ": " n ",
-        " south ": " s ",
-        " east ": " e ",
-        " west ": " w ",
+        " street ": " st ", " road ": " rd ", " avenue ": " ave ", " boulevard ": " blvd ",
+        " drive ": " dr ", " lane ": " ln ", " court ": " ct ", " place ": " pl ",
+        " highway ": " hwy ", " parkway ": " pkwy ", " north ": " n ", " south ": " s ",
+        " east ": " e ", " west ": " w ",
     }.items():
         text = text.replace(source, target)
     return re.sub(r"\s+", " ", text).strip()
@@ -47,7 +37,6 @@ def _street_key(value: Any) -> str:
     text = _norm_addr(value)
     if not text:
         return ""
-    # Ignore apartment/suite/unit suffixes while retaining the street number and name.
     text = re.split(r"\s+(?:apt|apartment|suite|ste|unit|building|bldg|#)\s*", text, maxsplit=1)[0]
     return text.strip()
 
@@ -69,10 +58,8 @@ def _life_plan_records() -> list[Dict[str, Any]]:
 
 
 def _same_market(row: Dict[str, Any], record: Dict[str, Any]) -> bool:
-    row_city = _norm(row.get("city"))
-    row_state = _norm(row.get("state"))
-    record_city = _norm(record.get("city"))
-    record_state = _norm(record.get("state"))
+    row_city, row_state = _norm(row.get("city")), _norm(row.get("state"))
+    record_city, record_state = _norm(record.get("city")), _norm(record.get("state"))
     if row_city and record_city and row_city != record_city:
         return False
     if row_state and record_state and row_state != record_state:
@@ -86,7 +73,6 @@ def _provider_identity_matches(row: Dict[str, Any], record: Dict[str, Any], cano
     governed_ids = {str(value) for value in record.get("canonical_facility_ids") or []}
     if canonical_id and canonical_id in governed_ids:
         return True
-
     aliases = {_norm(record.get("community_name"))}
     aliases.update(_norm(value) for value in record.get("aliases") or [])
     record_address = _norm_addr(record.get("address"))
@@ -94,18 +80,13 @@ def _provider_identity_matches(row: Dict[str, Any], record: Dict[str, Any], cano
         return True
     if _street_key(address) and _street_key(address) == _street_key(record_address):
         return True
-
-    exact_name_match = bool(name and name in aliases)
-    if not exact_name_match:
+    if not (name and name in aliases):
         return False
-    row_zip = _zip(row.get("zip") or row.get("postal_code"))
-    record_zip = _zip(record.get("zip"))
+    row_zip, record_zip = _zip(row.get("zip") or row.get("postal_code")), _zip(record.get("zip"))
     if row_zip and record_zip:
         return row_zip == record_zip
-    # Exact governed provider name/alias within the same city/state is accepted
-    # when one side lacks ZIP, but a conflicting street number is not.
-    row_number = (address.split(" ", 1)[0] if address else "")
-    record_number = (record_address.split(" ", 1)[0] if record_address else "")
+    row_number = address.split(" ", 1)[0] if address else ""
+    record_number = record_address.split(" ", 1)[0] if record_address else ""
     return not (row_number and record_number and row_number.isdigit() and record_number.isdigit() and row_number != record_number)
 
 
@@ -114,37 +95,22 @@ def get_provider_housing_evidence(row: Dict[str, Any]) -> Dict[str, Any]:
     address = _norm_addr(row.get("address") or row.get("facility_address"))
     canonical_id = str(row.get("canonical_facility_id") or row.get("canonical_id") or "")
     canonical_type = str(row.get("canonical_type") or "UNKNOWN").upper()
-    result: Dict[str, Any] = {
-        "matched": False,
-        "housing_modalities": [],
-        "provider_housing_evidence": None,
-        "provider_aliases": [],
-        "life_plan_primary_evidence": None,
-        "campus_group_id": None,
-    }
+    result: Dict[str, Any] = {"matched": False, "housing_modalities": [], "provider_housing_evidence": None, "provider_aliases": [], "life_plan_primary_evidence": None, "campus_group_id": None}
 
     for record in _provider_records():
         if not _provider_identity_matches(row, record, canonical_id, name, address):
             continue
         result["matched"] = True
         result["provider_aliases"] = [str(record.get("community_name") or "")] + [str(value) for value in record.get("aliases") or []]
-
-        # Provider lifestyle evidence describes the residential community, not a
-        # skilled-nursing license component on the same campus. Keep the SNF row
-        # available for rehab/continuum evidence, but do not let campus lifestyle
-        # claims turn the SNF component into a duplicate lifestyle recommendation.
         if canonical_type != "SKILLED_NURSING":
             result["housing_modalities"] = list(record.get("housing_modalities") or [])
             result["provider_housing_evidence"] = {
                 "community_name": record.get("community_name") or "UNKNOWN",
                 "aliases": [str(value) for value in record.get("aliases") or []],
-                "address": record.get("address") or "UNKNOWN",
-                "city": record.get("city") or "UNKNOWN",
-                "state": record.get("state") or "UNKNOWN",
-                "zip": record.get("zip") or "UNKNOWN",
+                "address": record.get("address") or "UNKNOWN", "city": record.get("city") or "UNKNOWN",
+                "state": record.get("state") or "UNKNOWN", "zip": record.get("zip") or "UNKNOWN",
                 "source_url": record.get("primary_source_url") or "UNKNOWN",
-                "summary": record.get("evidence_summary") or "UNKNOWN",
-                "evidence": record.get("evidence") or {},
+                "summary": record.get("evidence_summary") or "UNKNOWN", "evidence": record.get("evidence") or {},
             }
         break
 
@@ -159,16 +125,70 @@ def get_provider_housing_evidence(row: Dict[str, Any]) -> Dict[str, Any]:
                     modalities.append(modality)
             result["housing_modalities"] = modalities
             result["life_plan_primary_evidence"] = {
-                "community_name": record.get("community_name") or "UNKNOWN",
-                "operator_name": record.get("operator_name") or "UNKNOWN",
-                "source_url": record.get("primary_source_url") or "UNKNOWN",
-                "independent_living_source_url": record.get("independent_living_source_url") or "UNKNOWN",
-                "rehabilitation_source_url": record.get("rehabilitation_source_url") or "UNKNOWN",
-                "summary": record.get("evidence_summary") or "UNKNOWN",
+                "community_name": record.get("community_name") or "UNKNOWN", "operator_name": record.get("operator_name") or "UNKNOWN",
+                "source_url": record.get("primary_source_url") or "UNKNOWN", "independent_living_source_url": record.get("independent_living_source_url") or "UNKNOWN",
+                "rehabilitation_source_url": record.get("rehabilitation_source_url") or "UNKNOWN", "summary": record.get("evidence_summary") or "UNKNOWN",
             }
             break
-
     return result
+
+
+def _component_priority(row: Dict[str, Any]) -> int:
+    return {"INDEPENDENT_LIVING": 0, "ASSISTED_LIVING_RFG": 1, "SKILLED_NURSING": 2}.get(str(row.get("canonical_type") or "UNKNOWN").upper(), 3)
+
+
+def _recommendation_group_key(row: Dict[str, Any]) -> str:
+    campus = str(row.get("campus_group_id") or "").strip()
+    if campus:
+        return f"CAMPUS:{campus}"
+    provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
+    community = _norm(provider.get("community_name"))
+    address = _norm_addr(provider.get("address") or row.get("address"))
+    if community and address:
+        return f"PROVIDER:{community}|{address}"
+    return ""
+
+
+def _merge_component(target: Dict[str, Any], source: Dict[str, Any]) -> None:
+    components = list(target.get("campus_components") or [])
+    for row in (target, source):
+        component = {
+            "canonical_facility_id": row.get("canonical_facility_id") or row.get("canonical_id") or "UNKNOWN",
+            "canonical_type": row.get("canonical_type") or "UNKNOWN",
+            "licensed_facility_name": row.get("licensed_facility_name") or row.get("facility_name") or "UNKNOWN",
+        }
+        if component not in components:
+            components.append(component)
+    target["campus_components"] = components
+    modalities = list(target.get("housing_modalities") or [])
+    for modality in source.get("housing_modalities") or []:
+        if modality not in modalities:
+            modalities.append(modality)
+    if modalities:
+        target["housing_modalities"] = modalities
+    if not target.get("life_plan_primary_evidence") and source.get("life_plan_primary_evidence"):
+        target["life_plan_primary_evidence"] = source["life_plan_primary_evidence"]
+
+
+def _dedupe_recommendation_campuses(rows: list[Dict[str, Any]]) -> None:
+    groups: dict[str, list[Dict[str, Any]]] = {}
+    ungrouped: list[Dict[str, Any]] = []
+    for row in rows:
+        key = _recommendation_group_key(row)
+        if key:
+            groups.setdefault(key, []).append(row)
+        else:
+            ungrouped.append(row)
+    selected: list[Dict[str, Any]] = list(ungrouped)
+    for members in groups.values():
+        ordered = sorted(members, key=_component_priority)
+        primary = ordered[0]
+        for component in ordered[1:]:
+            _merge_component(primary, component)
+        selected.append(primary)
+    original_order = {id(row): idx for idx, row in enumerate(rows)}
+    selected.sort(key=lambda row: original_order.get(id(row), len(rows)))
+    rows[:] = selected
 
 
 def attach_provider_housing_evidence(rows: list[Dict[str, Any]]) -> None:
@@ -207,6 +227,7 @@ def attach_provider_housing_evidence(rows: list[Dict[str, Any]]) -> None:
                     row[key] = value
         if evidence.get("life_plan_primary_evidence"):
             row["life_plan_primary_evidence"] = evidence["life_plan_primary_evidence"]
+    _dedupe_recommendation_campuses(rows)
 
 
 __all__ = ["attach_provider_housing_evidence", "get_provider_housing_evidence"]
