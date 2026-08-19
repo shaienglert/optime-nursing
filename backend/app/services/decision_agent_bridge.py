@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
@@ -119,6 +120,17 @@ def _queue(db, row: Dict[str, Any], dimension: str, unknown: List[str]) -> bool:
     return True
 
 
+def _kick_worker_async() -> None:
+    def run() -> None:
+        try:
+            from app.services.decision_research_worker import process_pending_decision_research
+            process_pending_decision_research(limit=10)
+        except Exception:
+            return
+
+    threading.Thread(target=run, name="optime-decision-evidence-worker", daemon=True).start()
+
+
 def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_context: Dict[str, Any]) -> Dict[str, Any]:
     db = SessionLocal()
     gaps: List[Dict[str, Any]] = []
@@ -143,6 +155,8 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
                 elif _queue(db, row, dimension, unknown):
                     queued += 1
         db.commit()
+        if queued > 0:
+            _kick_worker_async()
         if gaps and queued == 0 and researched_unknown == len(gaps):
             finality = "PROVISIONAL_DIRECT_VERIFICATION_REQUIRED"
             status = "PUBLIC_RESEARCH_EXHAUSTED_MATERIAL_UNKNOWN_REMAINS"
