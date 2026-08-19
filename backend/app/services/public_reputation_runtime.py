@@ -39,22 +39,33 @@ def _snapshot() -> Dict[str, Any]:
     return json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
 
 
+def _row_identity_names(row: Dict[str, Any]) -> set[str]:
+    names = {_norm(row.get("facility_name") or row.get("name"))}
+    names.update(_norm(value) for value in row.get("aliases") or [])
+    provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
+    names.add(_norm(provider.get("community_name")))
+    names.update(_norm(value) for value in provider.get("aliases") or [])
+    life_plan = row.get("life_plan_primary_evidence") if isinstance(row.get("life_plan_primary_evidence"), dict) else {}
+    names.add(_norm(life_plan.get("community_name")))
+    return {value for value in names if value}
+
+
 def get_public_reputation(row: Dict[str, Any]) -> Dict[str, Any]:
     """Return governed reputation evidence only on deterministic identity match.
 
     Reputation is enrichment only. It cannot establish identity, care capability,
     licensing, or MUST eligibility. Missing evidence remains UNKNOWN.
     """
-    name = _norm(row.get("facility_name") or row.get("name"))
+    row_names = _row_identity_names(row)
     address = _norm_addr(row.get("address") or row.get("facility_address"))
     city = _norm(row.get("city"))
-    if not name or not address:
+    if not row_names or not address:
         return {"rating": "UNKNOWN", "review_count": "UNKNOWN", "source": "UNKNOWN", "identity_verified": False}
 
     for record in _snapshot().get("records") or []:
         aliases = {_norm(record.get("facility_name"))}
         aliases.update(_norm(value) for value in record.get("aliases") or [])
-        if name not in aliases:
+        if not row_names.intersection(aliases):
             continue
         if address != _norm_addr(record.get("address")):
             continue
