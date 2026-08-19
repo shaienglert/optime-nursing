@@ -12,6 +12,7 @@ on:
       - 'backend/app/services/patient_decision_engine.py'
       - 'backend/app/services/patient_decision_engine/**'
       - 'backend/app/services/patient_decision_engine_runtime/**'
+      - 'backend/tests/test_main_decision_runtime_contract.py'
       - 'backend/tests/test_nevada_production_runtime.py'
       - 'backend/tests/test_patient_decision_engine_import_resolution.py'
       - 'backend/tests/test_human_intelligence_runtime_integration.py'
@@ -38,7 +39,8 @@ jobs:
             backend.tests.test_facility_parameter_service \
             backend.tests.test_nevada_production_runtime \
             backend.tests.test_patient_decision_engine_import_resolution \
-            backend.tests.test_human_intelligence_runtime_integration
+            backend.tests.test_human_intelligence_runtime_integration \
+            backend.tests.test_main_decision_runtime_contract
       - name: Run real son and self personas through decision engine
         run: |
           python - <<'PY'
