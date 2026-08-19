@@ -134,6 +134,45 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         self_ids = [row["canonical_facility_id"] for row in self_search["results"]]
         self.assertEqual(son_ids, self_ids)
 
+    def test_explicit_las_vegas_location_is_preserved_in_profile_and_explanation(self) -> None:
+        result = run_patient_decision_engine(
+            {
+                "relationship": "Dad",
+                "ageGroup": "80-84",
+                "assistanceLevel": "Needs assistance with bathing and dressing",
+                "memoryStatus": "No",
+            },
+            "My father lives in Las Vegas and needs help with bathing and medication. No dementia.",
+            limit=5,
+        )
+        profile = result["patient_needs_profile"]
+        self.assertEqual(profile["location_city"], "LAS VEGAS")
+        self.assertEqual(profile["natural_language_mapping"]["location_city"], "LAS VEGAS")
+        self.assertTrue(all(row["city"].upper() == "LAS VEGAS" for row in result["results"]))
+        self.assertTrue(
+            all("LAS VEGAS" in row["explanation"]["location_note"].upper() for row in result["results"])
+        )
+
+    def test_governed_nevada_ranking_replaces_stale_legacy_tie_metadata(self) -> None:
+        result = run_patient_decision_engine(
+            {
+                "relationship": "Dad",
+                "ageGroup": "80-84",
+                "assistanceLevel": "Needs assistance with bathing and dressing",
+                "memoryStatus": "No",
+                "budget": 6500,
+            },
+            "My father is 84, lives in Las Vegas, is mentally alert and needs help with bathing, dressing and medication. No dementia.",
+            limit=5,
+        )
+        rows = result["results"]
+        self.assertEqual([row["rank_position"] for row in rows], [1, 2, 3, 4, 5])
+        self.assertEqual([row["rank_display"] for row in rows], ["#1", "#2", "#3", "#4", "#5"])
+        self.assertTrue(all(row["rank_tie_status"] == "UNIQUE_RANK" for row in rows))
+        self.assertTrue(all(row["tied_with"] == [] for row in rows))
+        self.assertEqual(rows[0]["tie_break_explanation_vs_next"]["deciding_dimension"], "regulatory_history")
+        self.assertNotEqual(rows[0]["regulatory_history"], rows[1]["regulatory_history"])
+
 
 if __name__ == "__main__":
     unittest.main()
