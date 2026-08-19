@@ -117,8 +117,6 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     city = str(row.get("city") or "").strip().upper()
     state = str(row.get("state") or "").strip().upper()
     canonical_type = _upper(row.get("canonical_type"))
-    setting = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
-    setting_status = _upper(setting.get("status"))
     person = row.get("human_person_fit") if isinstance(row.get("human_person_fit"), dict) else {}
     size = person.get("community_size") if isinstance(person.get("community_size"), dict) else {}
     agent_payloads = _agent_payloads(row)
@@ -139,10 +137,16 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 must_pass.append(key)
         elif key == "ADL_SUPPORT_AVAILABLE":
-            if setting_status == "INSUFFICIENT_SETTING" and not any(p.get("outside_care_allowed_verified") is True for p in payloads):
-                hard_fail.append(key)
-            elif canonical_type == "ASSISTED_LIVING_RFG" or any(p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True for p in payloads):
+            if canonical_type == "ASSISTED_LIVING_RFG" or any(
+                p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True
+                for p in payloads
+            ):
                 must_pass.append(key)
+            elif any(
+                p.get("adl_support_verified") is False and p.get("outside_care_allowed_verified") is False
+                for p in payloads
+            ):
+                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "REHAB_PATH_AVAILABLE":
@@ -153,6 +157,13 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 for p in payloads
             ):
                 must_pass.append(key)
+            elif any(
+                p.get("rehab_verified") is False
+                and p.get("pt_ot_verified") is False
+                and p.get("pt_ot_external_path_verified") is False
+                for p in payloads
+            ):
+                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "COUPLE_CORESIDENCE":
@@ -174,6 +185,13 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 for p in payloads
             ):
                 must_pass.append(key)
+            elif any(
+                p.get("outside_care_allowed_verified") is False
+                and p.get("continuum_of_care_verified") is False
+                and p.get("same_apartment_transition_verified") is False
+                for p in payloads
+            ):
+                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         else:
