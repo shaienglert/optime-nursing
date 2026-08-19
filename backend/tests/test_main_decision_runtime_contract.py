@@ -43,9 +43,9 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         decision = importlib.import_module("app.services.patient_decision_engine")
         profile = decision.build_patient_needs_profile(self._questionnaire(), self._query())
         serialized = main.PatientNeedsProfileOut.model_validate(profile).model_dump()
-        self.assertIn("decision_intelligence", serialized)
         intelligence = serialized["decision_intelligence"]
-        self.assertEqual(intelligence["version"], "decision-intelligence-runtime-v3")
+        self.assertEqual(intelligence["version"], "decision-intelligence-runtime-v3.1")
+        self.assertIn("client_intent", intelligence)
         self.assertEqual(len(intelligence["success_factor_policy"]["factors"]), 16)
         self.assertEqual(
             [q["question_key"] for q in intelligence["adaptive_questions"]],
@@ -55,36 +55,37 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
     def test_decision_context_and_success_factor_trace_survive_fastapi_response_model(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
-        result = decision.run_patient_decision_engine(
-            questionnaire_state=self._questionnaire(),
-            natural_language_query=self._query(),
-            limit=5,
-        )
+        result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
         serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()
-        self.assertIn("decision_intelligence", serialized)
-        self.assertIn("recommendation_audit_trace", serialized)
         patient_decision = serialized["patient_needs_profile"]["decision_intelligence"]
         policy_decision = serialized["care_setting_policy"]["decision_intelligence"]
         top_decision = serialized["decision_intelligence"]
 
-        self.assertEqual(patient_decision["version"], "decision-intelligence-runtime-v3")
-        self.assertEqual(policy_decision["version"], "decision-intelligence-runtime-v3")
-        self.assertEqual(top_decision["version"], "decision-intelligence-runtime-v3")
+        for ctx in (patient_decision, policy_decision, top_decision):
+            self.assertEqual(ctx["version"], "decision-intelligence-runtime-v3.1")
+            self.assertIn("client_intent", ctx)
+        self.assertEqual(
+            top_decision["ranking_order"],
+            ["CLIENT_INTENT", "MUST_GATE", "NICE_TO_HAVE", "GOVERNMENT_REGULATORY_DATA", "PUBLIC_REPUTATION", "RELEVANT_EVIDENCE_COMPLETENESS"],
+        )
         self.assertEqual(len(patient_decision["success_factor_policy"]["factors"]), 16)
         human = patient_decision["human_intelligence"]
         self.assertEqual(human["decision_readiness"], "NEEDS_CLARIFICATION")
         self.assertEqual(human["signals"]["recent_bereavement"]["value"], "YES")
-        question_keys = [row["question_key"] for row in human["adaptive_questions"]]
-        self.assertEqual(question_keys, ["community_size_preference", "social_interaction_need_after_loss", "move_participation"])
+        self.assertEqual(
+            [row["question_key"] for row in human["adaptive_questions"]],
+            ["community_size_preference", "social_interaction_need_after_loss", "move_participation"],
+        )
 
         self.assertTrue(serialized["results"])
         first = serialized["results"][0]
+        self.assertIn("client_intent_fit", first)
+        self.assertIn(first["client_intent_fit"]["hard_gate"], {"PASS", "PENDING_VERIFICATION"})
         self.assertEqual(len(first["success_factor_trace"]["factors"]), 16)
         self.assertIn("success_factor_summary", first["explanation"])
-        self.assertIn("facility_size_as_independent_quality_factor", first["success_factor_trace"]["research_only_not_ranked"])
-        self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3")
+        self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3.1")
 
-    def test_couple_spine_rehab_chooses_strategy_before_facility(self) -> None:
+    def test_couple_spine_rehab_chooses_strategy_and_must_gate_before_facility(self) -> None:
         decision = importlib.import_module("app.services.patient_decision_engine")
         state = {
             "relationship": "Dad",
@@ -100,25 +101,28 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         result = decision.run_patient_decision_engine(state, self._couple_rehab_query(), limit=5)
         intelligence = result["decision_intelligence"]
         strategy = intelligence["living_strategy"]
+        intent = intelligence["client_intent"]
         self.assertEqual(strategy["household"]["type"], "COUPLE")
         self.assertTrue(strategy["signals"]["spine_or_back_surgery"])
         self.assertTrue(strategy["signals"]["expected_recovery"])
         self.assertEqual(strategy["signals"]["temporary_support_duration_months"], 3)
-        ids = [row["strategy_id"] for row in strategy["strategy_candidates"]]
-        self.assertIn("INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE", ids)
-        self.assertIn("POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING", ids)
-        self.assertIn("LIFE_PLAN_CCRC", ids)
-        self.assertIn("ASSISTED_LIVING", ids)
+        strategy_ids = [row["strategy_id"] for row in strategy["strategy_candidates"]]
+        self.assertIn("INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE", strategy_ids)
+        self.assertIn("POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING", strategy_ids)
+        self.assertIn("LIFE_PLAN_CCRC", strategy_ids)
+        self.assertIn("ASSISTED_LIVING", strategy_ids)
+        must_keys = {row["key"] for row in intent["must_haves"]}
+        self.assertTrue({"LAS_VEGAS", "COUPLE_CORESIDENCE", "ADL_SUPPORT_AVAILABLE", "REHAB_PATH_AVAILABLE", "RECOVERY_TRANSITION_COMPATIBLE"}.issubset(must_keys))
+        nice_keys = {row["key"] for row in intent["nice_to_haves"]}
+        self.assertIn("RICH_CULTURE_AND_ACTIVITIES", nice_keys)
         question_keys = [row["question_key"] for row in intelligence["human_intelligence"]["adaptive_questions"]]
-        self.assertIn("medicare_status", question_keys)
-        self.assertIn("move_timing_vs_rehab", question_keys)
-        self.assertIn("monthly_budget", question_keys)
-        self.assertIn("ccrc_entrance_fee_tolerance", question_keys)
-        self.assertNotEqual(intelligence["decision_finality"], "FINAL")
+        for required in ("medicare_status", "move_timing_vs_rehab", "monthly_budget", "ccrc_entrance_fee_tolerance"):
+            self.assertIn(required, question_keys)
+        self.assertTrue(intelligence["decision_finality"].startswith("PROVISIONAL_"))
         need_ids = {row["parameter_id"] for row in result["patient_needs_profile"]["needs"]}
-        self.assertIn("pt", need_ids)
-        self.assertIn("ot", need_ids)
-        self.assertIn("adl_support", need_ids)
+        self.assertTrue({"pt", "ot", "adl_support"}.issubset(need_ids))
+        self.assertGreaterEqual(result["must_gate_survivor_count"], len(result["results"]))
+        self.assertTrue(all((row["client_intent_fit"]["hard_gate"] != "FAIL") for row in result["results"]))
 
 
 if __name__ == "__main__":
