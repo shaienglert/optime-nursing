@@ -148,6 +148,10 @@ def attach_provider_housing_evidence(rows: list[Dict[str, Any]]) -> None:
                     aliases.append(alias)
             if aliases:
                 row["aliases"] = aliases
+            community_name = str((evidence.get("provider_housing_evidence") or {}).get("community_name") or "").strip()
+            if community_name:
+                row.setdefault("licensed_facility_name", row.get("facility_name") or row.get("name") or "UNKNOWN")
+                row["facility_name"] = community_name
         if evidence.get("life_plan_primary_evidence"):
             row["life_plan_primary_evidence"] = evidence["life_plan_primary_evidence"]
 
