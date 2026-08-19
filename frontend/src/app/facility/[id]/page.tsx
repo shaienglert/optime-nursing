@@ -1,3 +1,4 @@
+import { CanonicalFacilityProfileClient } from "@/components/facility/canonical-facility-profile-client";
 import { FacilityProfileClient } from "@/components/facility/facility-profile-client";
 
 type FacilityPageProps = {
@@ -14,5 +15,17 @@ export default async function FacilityPage({ params, searchParams }: FacilityPag
   const resolved = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const backHref = firstValue(resolvedSearchParams.back) || firstValue(resolvedSearchParams.returnTo) || "/results";
+  const canonicalFacilityId = firstValue(resolvedSearchParams.canonical)?.trim();
+
+  if (String(resolved.id || "") === "canonical" && canonicalFacilityId) {
+    return (
+      <CanonicalFacilityProfileClient
+        canonicalFacilityId={canonicalFacilityId}
+        backHref={backHref}
+        backLabel="Back to results"
+      />
+    );
+  }
+
   return <FacilityProfileClient facilityId={String(resolved.id || "")} backHref={backHref} backLabel="Back to results" />;
 }

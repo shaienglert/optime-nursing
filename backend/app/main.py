@@ -96,6 +96,7 @@ from app.services.facility_parameter_service import (
 )
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 from app.services.patient_decision_engine import (
+    _regulatory_index,
     build_patient_comparison_context,
     build_patient_needs_profile,
     run_patient_decision_engine,
@@ -1527,6 +1528,22 @@ async def get_canonical_facility_parameter_table(
         raise HTTPException(status_code=404, detail="Canonical facility not found") from exc
 
 
+@app.get("/canonical-facilities/{canonical_id}/regulatory-history")
+async def get_canonical_facility_regulatory_history(canonical_id: str):
+    canonical_index = get_canonical_facility_index()
+    facility = canonical_index.get(canonical_id)
+    if not facility:
+        raise HTTPException(status_code=404, detail="Canonical facility not found")
+
+    history = _regulatory_index().get(canonical_id)
+    return {
+        "canonical_facility_id": canonical_id,
+        "facility_name": facility.get("name") or facility.get("facility_name") or facility.get("community_name"),
+        "source": "Nevada HCQC / ALiS" if history else None,
+        "regulatory_history": history,
+    }
+
+
 @app.post("/canonical-facilities/parameter-comparison", response_model=FacilityParameterComparisonOut)
 async def post_canonical_facility_parameter_comparison(payload: FacilityParameterComparisonIn):
     try:
@@ -1571,7 +1588,12 @@ async def post_patient_decision_recommendations(payload: PatientDecisionEngineRe
     for result in response.get("results", []):
         source_identity_ids = result.get("source_identity_ids") or {}
         cms_ccn = str(source_identity_ids.get("cms_ccn") or "")
-        result["facility_profile_id"] = ccn_to_facility_id.get(cms_ccn)
+        legacy_profile_id = ccn_to_facility_id.get(cms_ccn)
+        result["facility_profile_id"] = (
+            legacy_profile_id
+            if legacy_profile_id is not None
+            else ("canonical" if result.get("canonical_facility_id") else None)
+        )
 
     duration_ms = round((time.perf_counter() - started) * 1000, 2)
     logger.info(
