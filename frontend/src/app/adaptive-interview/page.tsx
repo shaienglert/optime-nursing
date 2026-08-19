@@ -74,13 +74,7 @@ export default function AdaptiveInterviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [nextUrl, setNextUrl] = useState("/results");
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const requested = params.get("next");
-    if (requested?.startsWith("/results")) setNextUrl(requested);
-  }, []);
-
-  const refresh = async (questionnaireState: QuestionnaireState) => {
+  const refresh = async (questionnaireState: QuestionnaireState, destination = nextUrl) => {
     setLoading(true);
     setError(null);
     try {
@@ -91,7 +85,7 @@ export default function AdaptiveInterviewPage() {
       setProfile(response);
       const context = getDecisionContext(response);
       if (context.decision_readiness === "READY" || (context.adaptive_questions || []).length === 0) {
-        router.replace(nextUrl);
+        router.replace(destination);
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to continue the decision interview.");
@@ -101,8 +95,12 @@ export default function AdaptiveInterviewPage() {
   };
 
   useEffect(() => {
-    void refresh(state);
-    // This intentionally runs once on entry. Subsequent refreshes are driven by explicit answers.
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get("next");
+    const destination = requested?.startsWith("/results") ? requested : "/results";
+    setNextUrl(destination);
+    void refresh(state, destination);
+    // Entry evaluation is intentionally one-shot. Later evaluations follow explicit answers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -116,7 +114,7 @@ export default function AdaptiveInterviewPage() {
       const nextState = applyAdaptiveAnswer(state, question.question_key, answer);
       setState(nextState);
       void persistAdaptiveQuestionSignal({
-        resident_key: `session-${Date.now()}`,
+        resident_key: "decision-interview-session",
         question_key: question.question_key,
         answer,
         signal_type: "decision-interview",
