@@ -330,6 +330,7 @@ class PatientDecisionEngineOut(BaseModel):
     result_count: int
     total_candidates_scored: int
     availability_policy: str
+    care_setting_policy: Dict[str, Any] = Field(default_factory=dict)
 
 
 class PatientNeedsProfileOut(BaseModel):
