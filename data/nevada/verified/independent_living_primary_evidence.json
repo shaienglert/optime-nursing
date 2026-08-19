@@ -1,6 +1,7 @@
 {
   "schema_version": "nevada-independent-living-evidence-v1.0.0",
   "policy": {
+    "market_scope": "Las Vegas Valley / Clark County, including Las Vegas, North Las Vegas and Henderson",
     "confirmation_rule": "Confirm only when a primary operator/provider/property source explicitly identifies the property as senior apartments, 55+ senior housing, independent senior rental housing, or equivalent non-care senior residential housing. A senior token in a business name is insufficient.",
     "false_positive_rule": "Reject an Independent Living classification when a primary source explicitly identifies the business/address as a non-residential service such as adult day care.",
     "unknown_rule": "If exact-property primary evidence is insufficient or ambiguous, preserve UNKNOWN.",
