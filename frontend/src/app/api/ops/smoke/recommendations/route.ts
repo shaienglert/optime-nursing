@@ -18,11 +18,11 @@ const BASE_SON_84 = {
   distanceFromFamily: "Balanced location",
 };
 const BASE_QUERY = "My father is 84, recently widowed, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing, meals and medication. No dementia.";
-const answeredState = (communitySizePreference: string) => ({
+const answeredState = (communitySizePreference: string, socialInteractionNeed = "Neither") => ({
   ...BASE_SON_84,
   humanIntelligenceV2: {
     personalityProfile: { communitySizePreference },
-    familyProfile: { socialInteractionNeed: "Neither" },
+    familyProfile: { socialInteractionNeed },
     transitionRiskProfile: { attitudeTowardMove: "Cautious but open" },
   },
 });
@@ -36,6 +36,7 @@ const PERSONAS = {
   },
   son84_large_neutral: { questionnaire_state: answeredState("Large community"), natural_language_query: BASE_QUERY, limit: 5 },
   son84_small_neutral: { questionnaire_state: answeredState("Small community"), natural_language_query: BASE_QUERY, limit: 5 },
+  son84_large_social: { questionnaire_state: answeredState("Large community", "Helpful daily social contact"), natural_language_query: BASE_QUERY, limit: 5 },
 } as const;
 
 type PersonaKey = keyof typeof PERSONAS;
@@ -52,6 +53,8 @@ type DecisionIntelligence = {
   human_intelligence?: { decision_readiness?: string; adaptive_questions?: Array<{ question_key?: string }> };
   person_fit_rank_effect?: string;
   success_factor_policy?: { factors?: unknown[] };
+  agent_evidence_bridge?: { status?: string; tasks_queued?: number; decision_finality?: string; material_gaps?: unknown[] };
+  decision_finality?: string;
 };
 type RecommendationPayload = {
   patient_needs_profile?: { location_city?: string | null; decision_intelligence?: DecisionIntelligence };
@@ -87,6 +90,9 @@ export async function GET(request: NextRequest) {
         decision_readiness: intelligence?.human_intelligence?.decision_readiness ?? null,
         adaptive_question_keys: (intelligence?.human_intelligence?.adaptive_questions || []).map((q) => q.question_key),
         person_fit_rank_effect: intelligence?.person_fit_rank_effect ?? null,
+        agent_bridge_status: intelligence?.agent_evidence_bridge?.status ?? null,
+        agent_tasks_queued: intelligence?.agent_evidence_bridge?.tasks_queued ?? null,
+        decision_finality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
         success_factor_count: intelligence?.success_factor_policy?.factors?.length ?? null,
         result_count: payload.result_count ?? null,
         total_candidates_scored: payload.total_candidates_scored ?? null,
