@@ -20,7 +20,6 @@ from app.services.human_intelligence_runtime_verified import (
     person_fit_sort_key,
 )
 
-
 _SERVICES_DIR = Path(__file__).resolve().parent.parent
 _GOVERNED_DIR = _SERVICES_DIR / "patient_decision_engine"
 _GOVERNED_INIT = _GOVERNED_DIR / "__init__.py"
@@ -38,8 +37,33 @@ sys.modules[_GOVERNED_PRIVATE_NAME] = _governed
 _spec.loader.exec_module(_governed)
 
 _regulatory_index = _governed._regulatory_index
-build_patient_needs_profile = _governed.build_patient_needs_profile
 build_patient_comparison_context = _governed.build_patient_comparison_context
+
+
+def build_patient_needs_profile(
+    questionnaire_state: Dict[str, Any], natural_language_query: str = ""
+) -> Dict[str, Any]:
+    """Build governed needs plus pre-ranking Human Intelligence interview state.
+
+    This is the canonical pre-recommendation bridge. It lets the client ask the
+    next evidence-safe Human Intelligence question before ranking facilities.
+    Missing person-fit facts remain UNKNOWN; no frontend heuristic is required.
+    """
+    profile = _governed.build_patient_needs_profile(
+        questionnaire_state, natural_language_query
+    )
+    human_context = build_human_intelligence_context(
+        questionnaire_state=questionnaire_state,
+        natural_language_query=natural_language_query,
+    )
+    profile["decision_intelligence"] = {
+        "version": "decision-intelligence-runtime-v1",
+        "human_intelligence": human_context,
+        "decision_readiness": human_context.get("decision_readiness"),
+        "adaptive_questions": human_context.get("adaptive_questions") or [],
+        "production_principle": "ask for missing material person-fit facts; never infer them from bereavement, living-alone duration, or demographics",
+    }
+    return profile
 
 
 _CARE_SETTING_ORDER = {
@@ -130,10 +154,6 @@ def run_patient_decision_engine(
     }
     core["decision_intelligence"] = decision_intelligence
 
-    # FastAPI's historical response model does not yet declare the new top-level
-    # field. Carry the same governed context through two existing dictionary fields
-    # so it survives response-model serialization and reaches clients today. These
-    # are compatibility transports, not alternate decision engines.
     patient_profile = core.get("patient_needs_profile")
     if isinstance(patient_profile, dict):
         patient_profile["decision_intelligence"] = decision_intelligence
