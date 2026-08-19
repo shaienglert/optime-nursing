@@ -58,6 +58,7 @@ def get_provider_housing_evidence(row: Dict[str, Any]) -> Dict[str, Any]:
         "housing_modalities": [],
         "provider_housing_evidence": None,
         "life_plan_primary_evidence": None,
+        "campus_group_id": None,
     }
 
     for record in _provider_records():
@@ -80,6 +81,7 @@ def get_provider_housing_evidence(row: Dict[str, Any]) -> Dict[str, Any]:
         ids = {str(value) for value in record.get("canonical_facility_ids") or []}
         if canonical_id and canonical_id in ids:
             result["matched"] = True
+            result["campus_group_id"] = record.get("campus_group_id") or None
             modalities = list(result.get("housing_modalities") or [])
             for modality in record.get("modalities") or []:
                 if modality not in modalities:
@@ -109,6 +111,8 @@ def attach_provider_housing_evidence(rows: list[Dict[str, Any]]) -> None:
                 modalities.append(modality)
         if modalities:
             row["housing_modalities"] = modalities
+        if evidence.get("campus_group_id"):
+            row["campus_group_id"] = evidence["campus_group_id"]
         if evidence.get("provider_housing_evidence"):
             row["provider_housing_evidence"] = evidence["provider_housing_evidence"]
         if evidence.get("life_plan_primary_evidence"):
