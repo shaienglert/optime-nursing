@@ -12,6 +12,8 @@ on:
       - 'backend/app/services/human_intelligence_runtime_verified.py'
       - 'backend/app/services/success_factor_runtime.py'
       - 'backend/app/services/decision_governance_runtime.py'
+      - 'backend/app/services/decision_agent_bridge.py'
+      - 'backend/app/services/decision_research_worker.py'
       - 'backend/app/services/patient_decision_engine.py'
       - 'backend/app/services/patient_decision_engine/**'
       - 'backend/app/services/patient_decision_engine_runtime/**'
@@ -24,6 +26,7 @@ on:
       - 'backend/tests/test_adaptive_interview_roundtrip.py'
       - 'backend/tests/test_success_factor_runtime.py'
       - 'backend/tests/test_decision_governance_runtime.py'
+      - 'backend/tests/test_decision_agent_bridge.py'
       - 'frontend/src/app/adaptive-interview/**'
       - 'frontend/src/app/api/ops/smoke/recommendations/**'
       - 'database/las_vegas_person_fit_summary_v1.b64'
@@ -58,6 +61,7 @@ jobs:
             backend.tests.test_adaptive_interview_roundtrip \
             backend.tests.test_success_factor_runtime \
             backend.tests.test_decision_governance_runtime \
+            backend.tests.test_decision_agent_bridge \
             backend.tests.test_main_decision_runtime_contract
       - name: Run real son and self personas through integrated decision engine
         run: |
@@ -117,6 +121,21 @@ jobs:
                   assert len(row['success_factor_trace']['factors']) == 16, f'{key}: per-facility factor trace incomplete'
               output[key] = {'decision_readiness': human['decision_readiness'], 'adaptive_questions': question_keys, 'top5': [row.get('facility_name') for row in result['results']]}
 
+          plain_query = (
+              'My father is 84 and lives in Las Vegas. He is mentally alert and mobile, has no dementia, '
+              'and needs help with bathing, dressing, meals and medication.'
+          )
+          plain = run_patient_decision_engine(base, plain_query, limit=5)
+          plain_human = plain['decision_intelligence']['human_intelligence']
+          plain_questions = [q['question_key'] for q in plain_human['adaptive_questions']]
+          assert plain_human['decision_readiness'] == 'NEEDS_CLARIFICATION', 'plain assisted-living case skipped clarification'
+          assert plain_questions == ['community_size_preference', 'social_interaction_preference'], f'plain case wrong NBQ sequence {plain_questions}'
+          assert plain['decision_intelligence']['decision_finality'] == 'PROVISIONAL_PENDING_RESIDENT_CLARIFICATION'
+          agent_bridge = plain['decision_intelligence'].get('agent_evidence_bridge') or {}
+          assert agent_bridge.get('market') == 'las-vegas', f'agent bridge not market scoped: {agent_bridge}'
+          assert agent_bridge.get('market_scoped') is True, f'agent bridge market scope missing: {agent_bridge}'
+          output['plain_assisted_living'] = {'decision_readiness': plain_human['decision_readiness'], 'adaptive_questions': plain_questions, 'agent_bridge_status': agent_bridge.get('status')}
+
           def answered(size):
               state = deepcopy(base)
               state['humanIntelligenceV2'] = {
@@ -137,9 +156,6 @@ jobs:
           small_ids = [r['canonical_facility_id'] for r in small['results']]
           assert large_ids != small_ids, 'Explicit environment preference does not change Top-5'
           assert all(r['human_person_fit']['community_size']['not_a_quality_factor'] for r in large['results'] + small['results'])
-          output['answered_variants'] = {
-              'large_top5': [r['facility_name'] for r in large['results']],
-              'small_top5': [r['facility_name'] for r in small['results']],
-          }
+          output['answered_variants'] = {'large_top5': [r['facility_name'] for r in large['results']], 'small_top5': [r['facility_name'] for r in small['results']]}
           print('NEVADA_PERSONA_E2E=' + json.dumps(output, indent=2))
           PY
