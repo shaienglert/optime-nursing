@@ -1,0 +1,85 @@
+{
+  "schema_version": "nevada-public-reputation-snapshot-v1.0.0",
+  "observed_at": "2026-08-19",
+  "policy": {
+    "role": "REPUTATION_ENRICHMENT_ONLY",
+    "identity_rule": "Apply only on exact normalized facility name or governed alias plus exact street address. Never use reputation data to establish facility identity, licensing, care capability, or MUST eligibility.",
+    "ranking_rule": "Public rating and review count are considered only after MUST gate, explicit NICE-TO-HAVE fit, and government/regulatory evidence.",
+    "unknown_rule": "Missing rating or review count remains UNKNOWN and is not treated as zero or negative evidence.",
+    "source": "PUBLIC_LOCAL_BUSINESS_INDEX"
+  },
+  "records": [
+    {
+      "facility_name": "Las Ventanas at Summerlin",
+      "aliases": ["Las Ventanas at Summerlin"],
+      "address": "10401 W Charleston Blvd",
+      "city": "Las Vegas",
+      "rating": 2.8,
+      "review_count": 30,
+      "source_entity_id": "GnpyRyJUF4d5-dX1axdiwA"
+    },
+    {
+      "facility_name": "Revel Vegas",
+      "aliases": ["Revel Vegas"],
+      "address": "4940 S Conquistador St",
+      "city": "Las Vegas",
+      "rating": 3.2,
+      "review_count": 6,
+      "source_entity_id": "RurPKFZlpgZ2_CQeT0bdSw"
+    },
+    {
+      "facility_name": "Atria Seville",
+      "aliases": ["Atria Seville"],
+      "address": "2000 N Rampart Blvd",
+      "city": "Las Vegas",
+      "rating": 3.7,
+      "review_count": 20,
+      "source_entity_id": "J7AGy9-lPf8yZqqschAp2g"
+    },
+    {
+      "facility_name": "Oakmont of the Lakes",
+      "aliases": ["Oakmont of the Lakes"],
+      "address": "3250 S Fort Apache Rd",
+      "city": "Las Vegas",
+      "rating": 3.5,
+      "review_count": 13,
+      "source_entity_id": "Vk9FRpLhyECygc2nEIFhgg"
+    },
+    {
+      "facility_name": "Heritage Springs Senior Living",
+      "aliases": ["Heritage Springs Senior Living", "Heritage Springs Assisted Living & Memory Care"],
+      "address": "8720 W Flamingo Rd",
+      "city": "Las Vegas",
+      "rating": 2.3,
+      "review_count": 6,
+      "source_entity_id": "5Dvssu9Zi_s40kcohVkM2w"
+    },
+    {
+      "facility_name": "Desert View Senior Living",
+      "aliases": ["Desert View Senior Living"],
+      "address": "3890 N Buffalo Dr",
+      "city": "Las Vegas",
+      "rating": 3.5,
+      "review_count": 13,
+      "source_entity_id": "kKMsxwQ_8qdd1PVnXLMYSQ"
+    },
+    {
+      "facility_name": "Oakey Assisted Living",
+      "aliases": ["Oakey Assisted Living"],
+      "address": "3900 W Oakey Blvd",
+      "city": "Las Vegas",
+      "rating": 4.3,
+      "review_count": 46,
+      "source_entity_id": "ChIJp8IXPVnByIARBidoVyzIPfI"
+    },
+    {
+      "facility_name": "Legacy House of Southern Hills",
+      "aliases": ["Legacy House of Southern Hills"],
+      "address": "9750 W Sunset Rd",
+      "city": "Las Vegas",
+      "rating": 3.1,
+      "review_count": 17,
+      "source_entity_id": "CxgGM4_7yRYPgf3RGcgcmw"
+    }
+  ]
+}
