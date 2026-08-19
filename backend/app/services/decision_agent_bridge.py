@@ -124,7 +124,7 @@ def _kick_worker_async() -> None:
     def run() -> None:
         try:
             from app.services.decision_research_worker import process_pending_decision_research
-            process_pending_decision_research(limit=10)
+            process_pending_decision_research(limit=60)
         except Exception:
             return
 
