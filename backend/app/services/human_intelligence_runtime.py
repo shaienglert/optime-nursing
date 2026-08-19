@@ -70,6 +70,10 @@ def _explicit_low(value: Any) -> bool:
     return _contains_any(value, ("low", "not important", "rare", "minimal", "no", "none"))
 
 
+def _explicit_neutral(value: Any) -> bool:
+    return _contains_any(value, ("neither", "neutral", "about the same", "no strong preference"))
+
+
 def _community_size_preference(questionnaire: Dict[str, Any]) -> Dict[str, Any]:
     raw = _nested(questionnaire, "humanIntelligenceV2", "personalityProfile", "communitySizePreference")
     normalized = _norm(raw)
@@ -144,6 +148,9 @@ def _social_transition_priority(questionnaire: Dict[str, Any], natural_language_
     for value, source in explicit:
         if _explicit_low(value):
             return {"value": "LOW", "source": source, "confidence": 1.0}
+    for value, source in explicit:
+        if _explicit_neutral(value):
+            return {"value": "NEUTRAL", "source": source, "confidence": 1.0}
 
     bereavement = _recent_bereavement(questionnaire, natural_language_query)
     if bereavement["value"] == "YES":
