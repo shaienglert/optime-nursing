@@ -22,7 +22,7 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         self.env.stop()
         refresh_runtime_cache("provider_housing_test_teardown")
 
-    def test_las_ventanas_provider_evidence_attaches_without_snf_lifestyle_duplication(self) -> None:
+    def test_las_ventanas_campus_collapses_to_one_residential_recommendation(self) -> None:
         index = get_canonical_facility_index()
         candidates = [
             dict(row, canonical_facility_id=canonical_id)
@@ -31,23 +31,20 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         ]
         self.assertEqual(len(candidates), 2)
         attach_provider_housing_evidence(candidates)
-        by_type = {str(row.get("canonical_type")): row for row in candidates}
-        assisted = by_type["ASSISTED_LIVING_RFG"]
-        snf = by_type["SKILLED_NURSING"]
-
-        self.assertIn("INDEPENDENT_LIVING", assisted.get("housing_modalities") or [])
-        self.assertIn("LIFE_PLAN_CCRC", assisted.get("housing_modalities") or [])
-        evidence = (assisted.get("provider_housing_evidence") or {}).get("evidence") or {}
+        self.assertEqual(len(candidates), 1)
+        row = candidates[0]
+        self.assertEqual(row.get("canonical_type"), "ASSISTED_LIVING_RFG")
+        self.assertEqual(row.get("facility_name"), "Las Ventanas at Summerlin")
+        self.assertIn("INDEPENDENT_LIVING", row.get("housing_modalities") or [])
+        self.assertIn("LIFE_PLAN_CCRC", row.get("housing_modalities") or [])
+        evidence = (row.get("provider_housing_evidence") or {}).get("evidence") or {}
         self.assertTrue(evidence.get("couple_coresidence_verified"))
         self.assertTrue(evidence.get("outside_care_allowed_verified"))
         self.assertTrue(evidence.get("rehab_verified"))
         self.assertTrue(evidence.get("social_engagement_verified"))
-        self.assertEqual(assisted.get("facility_name"), "Las Ventanas at Summerlin")
-        self.assertTrue(assisted.get("licensed_facility_name"))
-
-        self.assertIn("LIFE_PLAN_CCRC", snf.get("housing_modalities") or [])
-        self.assertIsNone(snf.get("provider_housing_evidence"))
-        self.assertTrue(snf.get("life_plan_primary_evidence"))
+        self.assertTrue(row.get("life_plan_primary_evidence"))
+        component_types = {item.get("canonical_type") for item in row.get("campus_components") or []}
+        self.assertEqual(component_types, {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"})
 
     def test_provider_identity_can_resolve_exact_address_with_governed_market(self) -> None:
         row = {
@@ -60,6 +57,19 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         evidence = get_provider_housing_evidence(row)
         self.assertTrue(evidence["matched"])
         self.assertEqual((evidence.get("provider_housing_evidence") or {}).get("community_name"), "Atria Seville")
+
+    def test_provider_alias_can_resolve_same_market_with_compatible_identity(self) -> None:
+        row = {
+            "facility_name": "MorningStar at The Canyons",
+            "address": "490 South Hualapai Way",
+            "city": "Las Vegas",
+            "state": "NV",
+            "zip": "89145",
+            "canonical_type": "ASSISTED_LIVING_RFG",
+        }
+        evidence = get_provider_housing_evidence(row)
+        self.assertTrue(evidence["matched"])
+        self.assertEqual((evidence.get("provider_housing_evidence") or {}).get("community_name"), "MorningStar Senior Living at The Canyons")
 
     def test_independent_living_unknown_adl_is_not_hard_failed(self) -> None:
         state = {
@@ -120,8 +130,9 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         row = dict(index["NV-LIC-4000-AGC-31"], canonical_facility_id="NV-LIC-4000-AGC-31")
         row["matched_needs"] = []
         row["unknown_critical_needs"] = []
-        attach_provider_housing_evidence([row])
-        fit = evaluate_candidate_intent(row, intent)
+        rows = [row]
+        attach_provider_housing_evidence(rows)
+        fit = evaluate_candidate_intent(rows[0], intent)
 
         self.assertEqual(fit["hard_gate"], "PASS")
         for key in ("LAS_VEGAS", "COUPLE_CORESIDENCE", "ADL_SUPPORT_AVAILABLE", "REHAB_PATH_AVAILABLE", "RECOVERY_TRANSITION_COMPATIBLE", "NO_FORCED_MEMORY_PLACEMENT"):
