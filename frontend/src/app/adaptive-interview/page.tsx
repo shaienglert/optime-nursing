@@ -44,7 +44,7 @@ function applyAdaptiveAnswer(state: QuestionnaireState, questionKey: string, ans
     next.humanIntelligenceV2.personalityProfile.communitySizePreference = answer;
     return next;
   }
-  if (questionKey === "social_interaction_need_after_loss") {
+  if (questionKey === "social_interaction_need_after_loss" || questionKey === "social_interaction_preference") {
     next.humanIntelligenceV2.familyProfile.socialInteractionNeed = answer;
     return next;
   }
@@ -58,6 +58,7 @@ function applyAdaptiveAnswer(state: QuestionnaireState, questionKey: string, ans
 function fallbackOptions(questionKey: string): string[] {
   if (questionKey === "community_size_preference") return ["Small community", "Medium community", "Large community", "No preference"];
   if (questionKey === "social_interaction_need_after_loss") return ["Helpful", "Overwhelming", "Neither", "Not sure"];
+  if (questionKey === "social_interaction_preference") return ["Very important", "Somewhat important", "Not important", "No preference", "Not sure"];
   if (questionKey === "move_participation") return ["Positive and involved", "Cautious but open", "Reluctant or feels pushed", "Not sure"];
   return [];
 }
