@@ -8,7 +8,6 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
     def test_main_imports_integrated_decision_runtime_contract(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
-
         self.assertTrue(hasattr(decision, "_regulatory_index"))
         self.assertTrue(callable(decision._regulatory_index))
         self.assertTrue(callable(decision.build_patient_needs_profile))
@@ -16,7 +15,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertTrue(callable(decision.run_patient_decision_engine))
         self.assertIsNotNone(main.app)
 
-    def test_human_decision_context_survives_fastapi_response_model(self) -> None:
+    def test_decision_context_and_success_factor_trace_survive_fastapi_response_model(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
         result = decision.run_patient_decision_engine(
@@ -34,19 +33,24 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             ),
             limit=5,
         )
-
         serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()
         patient_decision = serialized["patient_needs_profile"]["decision_intelligence"]
         policy_decision = serialized["care_setting_policy"]["decision_intelligence"]
 
-        self.assertEqual(patient_decision["version"], "decision-intelligence-runtime-v1")
-        self.assertEqual(policy_decision["version"], "decision-intelligence-runtime-v1")
+        self.assertEqual(patient_decision["version"], "decision-intelligence-runtime-v2")
+        self.assertEqual(policy_decision["version"], "decision-intelligence-runtime-v2")
+        self.assertEqual(len(patient_decision["success_factor_policy"]["factors"]), 16)
         human = patient_decision["human_intelligence"]
         self.assertEqual(human["decision_readiness"], "NEEDS_CLARIFICATION")
         self.assertEqual(human["signals"]["recent_bereavement"]["value"], "YES")
-        question_keys = {row["question_key"] for row in human["adaptive_questions"]}
-        self.assertIn("community_size_preference", question_keys)
-        self.assertIn("social_interaction_need_after_loss", question_keys)
+        question_keys = [row["question_key"] for row in human["adaptive_questions"]]
+        self.assertEqual(question_keys, ["community_size_preference", "social_interaction_need_after_loss", "move_participation"])
+
+        self.assertTrue(serialized["results"])
+        first = serialized["results"][0]
+        self.assertEqual(len(first["success_factor_trace"]["factors"]), 16)
+        self.assertIn("success_factor_summary", first["explanation"])
+        self.assertIn("facility_size_as_independent_quality_factor", first["success_factor_trace"]["research_only_not_ranked"])
 
 
 if __name__ == "__main__":
