@@ -12,6 +12,7 @@ from app.services.decision_agent_bridge import attach_agent_evidence_and_queue_g
 from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
 from app.services.human_intelligence_runtime_verified import attach_human_person_fit, build_human_intelligence_context, has_explicit_person_fit_preference, person_fit_sort_key
 from app.services.living_strategy_runtime import build_living_strategy_context
+from app.services.provider_housing_runtime import attach_provider_housing_evidence
 from app.services.success_factor_runtime import build_success_factor_trace, summarize_trace
 
 _SERVICES_DIR = Path(__file__).resolve().parent.parent
@@ -154,20 +155,54 @@ def _reassign_rank_metadata(rows: List[Dict[str, Any]]) -> None:
         }
 
 
+def _row_modalities(row: Dict[str, Any]) -> set[str]:
+    modalities = {str(row.get("canonical_type") or "UNKNOWN").upper()}
+    modalities.update(str(value or "UNKNOWN").upper() for value in row.get("housing_modalities") or [])
+    return modalities
+
+
 def _strategy_universe_status(rows: List[Dict[str, Any]], strategy: Dict[str, Any]) -> Dict[str, Any]:
     strategy_ids = {str(item.get("strategy_id") or "") for item in strategy.get("strategy_candidates") or [] if int(item.get("rank_hint") or 99) <= 2}
     types = {str(row.get("canonical_type") or "UNKNOWN").upper() for row in rows}
+    modalities = set(types)
+    for row in rows:
+        modalities.update(_row_modalities(row))
     needs_il = bool(strategy_ids & {"INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE", "POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING", "LIFE_PLAN_CCRC"})
-    has_il = "INDEPENDENT_LIVING" in types
-    has_ccrc = any("CCRC" in t or "LIFE_PLAN" in t for t in types)
+    has_il = "INDEPENDENT_LIVING" in modalities
+    has_ccrc = any("CCRC" in value or "LIFE_PLAN" in value for value in modalities)
     complete = not needs_il or has_il or has_ccrc
     return {
         "status": "SUFFICIENT_FOR_LEADING_STRATEGIES" if complete else "INCOMPLETE_FOR_LEADING_STRATEGIES",
         "leading_strategy_ids": sorted(strategy_ids),
         "canonical_types_present": sorted(types),
+        "housing_modalities_present": sorted(modalities),
         "missing_classes": [item for item, missing in (("INDEPENDENT_LIVING", needs_il and not has_il), ("LIFE_PLAN_CCRC", "LIFE_PLAN_CCRC" in strategy_ids and not has_ccrc)) if missing],
         "rule": "Do not present a facility ranking as final when the canonical universe cannot represent a leading living strategy.",
     }
+
+
+def _strategy_research_pool(rows: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+    base_count = max(20, int(limit or 50))
+    selected: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def add(row: Dict[str, Any]) -> None:
+        canonical_id = str(row.get("canonical_facility_id") or row.get("canonical_id") or "")
+        key = canonical_id or f"ROW-{id(row)}"
+        if key in seen:
+            return
+        seen.add(key)
+        selected.append(row)
+
+    for row in rows[:base_count]:
+        add(row)
+
+    for row in rows:
+        modalities = _row_modalities(row)
+        if modalities & {"INDEPENDENT_LIVING", "LIFE_PLAN_CCRC"}:
+            add(row)
+
+    return selected[: max(base_count, 60)]
 
 
 def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50) -> Dict[str, Any]:
@@ -183,6 +218,7 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     patient_profile["client_intent"] = client_intent
 
     rows = list(core.get("results") or [])
+    attach_provider_housing_evidence(rows)
     attach_human_person_fit(rows, human_context)
     attach_client_intent_fit(rows, client_intent)
 
@@ -191,8 +227,8 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     rows = [row for _, row in indexed_pre_agent]
 
     non_failed = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")]
-    research_pool_size = min(len(non_failed), max(20, int(limit or 50)))
-    agent_bridge = attach_agent_evidence_and_queue_gaps(non_failed[:research_pool_size], human_context)
+    research_pool = _strategy_research_pool(non_failed, int(limit or 50))
+    agent_bridge = attach_agent_evidence_and_queue_gaps(research_pool, human_context)
 
     # Re-evaluate MUST and NICE after agent evidence is attached, then rank survivors.
     attach_client_intent_fit(rows, client_intent)
