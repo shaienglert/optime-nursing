@@ -7,6 +7,31 @@
   },
   "records": [
     {
+      "record_key": "LAS_VENTANAS_SUMMERLIN",
+      "community_name": "Las Ventanas at Summerlin",
+      "aliases": ["Las Ventanas at Summerlin"],
+      "address": "10401 W Charleston Blvd",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89135",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "LIFE_PLAN_CCRC", "ASSISTED_LIVING", "SKILLED_NURSING", "MEMORY_SUPPORT"],
+      "primary_source_url": "https://www.humangood.org/las-ventanas-at-summerlin/senior-living-options/independent-living",
+      "evidence": {
+        "independent_living_verified": true,
+        "adl_support_verified": true,
+        "social_engagement_verified": true,
+        "transportation_verified": true,
+        "dining_verified": true,
+        "outside_care_allowed_verified": true,
+        "continuum_of_care_verified": true,
+        "rehab_verified": true,
+        "pt_ot_verified": true,
+        "couple_coresidence_verified": true
+      },
+      "evidence_summary": "HumanGood identifies Las Ventanas as a Life Plan Community with independent residences, extensive cultural/social/educational programming, transportation and dining; higher levels of care and short-stay rehabilitation are on the same campus, care can be added while living independently, and its FAQ explicitly states that if a resident or partner's health changes, a care plan is available on campus so the couple need not move away or be separated."
+    },
+    {
       "record_key": "REVEL_VEGAS",
       "community_name": "Revel Vegas",
       "aliases": ["Revel Vegas"],
