@@ -2,9 +2,10 @@ from __future__ import annotations
 
 """Integrated production decision runtime.
 
-This layer composes governed care/regulatory matching, Human Intelligence, and
-the approved Resident–Senior Living Success Factors decision policy. It does not
-import the historical frontend ranking engine because that engine contains
+This layer composes governed care/regulatory matching, Human Intelligence, the
+approved Resident–Senior Living Success Factors decision policy, and governed
+Knowledge Fabric / outcome-learning audit context. It does not import the
+historical frontend ranking engine because that engine contains
 heuristic/synthetic facility inference that is not allowed in production.
 """
 
@@ -13,6 +14,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
+from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
 from app.services.human_intelligence_runtime_verified import (
     attach_human_person_fit,
     build_human_intelligence_context,
@@ -192,6 +194,8 @@ def run_patient_decision_engine(
             "success_factor_influence_classes_no_unvalidated_numeric_weights",
             "facility_size_not_independent_quality",
             "regulatory_evidence_governed_tie_break",
+            "knowledge_fabric_requires_recommendation_eligibility_and_verification_gate",
+            "outcomes_are_validation_only_without_governed_weight_change",
         ],
         "evidence_references": [
             "Nevada HCQC / ALiS",
@@ -203,7 +207,10 @@ def run_patient_decision_engine(
         "recommendations": audit_rows,
     }
 
-    return core
+    return attach_governed_knowledge_learning_and_audit(
+        core=core,
+        questionnaire_state=questionnaire_state,
+    )
 
 
 __all__ = [
