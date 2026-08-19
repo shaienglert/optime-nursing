@@ -1882,7 +1882,8 @@ export default function Home() {
       // non-blocking by design; recommendation flow should continue even if backend persistence is unavailable
     });
 
-    router.push(`/results?${params.toString()}`);
+    const resultsUrl = `/results?${params.toString()}`;
+    router.push(`/adaptive-interview?next=${encodeURIComponent(resultsUrl)}`);
   };
 
   return (
