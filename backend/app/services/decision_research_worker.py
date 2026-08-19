@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import threading
 from datetime import datetime, timezone
@@ -17,7 +18,9 @@ from app.services.facility_parameter_service import get_canonical_facility_index
 
 _TIMEOUT = 12
 _RUN_LOCK = threading.Lock()
+_LOG = logging.getLogger(__name__)
 _SKIP_DOMAINS = ("aplaceformom.com", "caring.com", "seniorly.com", "yelp.com", "facebook.com", "instagram.com", "linkedin.com", "youtube.com", "google.com", "mapquest.com")
+_REGULATORY_DOMAINS = ("nvdpbh.aithent.com", "myhealthfacilitylicense.nv.gov", "dpbh.nv.gov", "health.nv.gov")
 _SOCIAL_TERMS = ("activities", "activity calendar", "social events", "daily events", "engagement", "outings", "clubs", "fitness", "art studio", "movie theater", "cinema", "games", "live music", "community events", "life enrichment")
 _MEDICATION_TERMS = ("medication management", "medication assistance", "medication reminders", "medication administration", "manage medications", "medication support")
 _TRANSPORT_TERMS = ("transportation", "scheduled transportation", "transport service")
@@ -38,6 +41,19 @@ def _facility_tokens(facility_name: str) -> List[str]:
     return [t for t in _norm(facility_name).split() if len(t) >= 4 and t not in stop][:5]
 
 
+def _search_result_urls(query: str) -> List[tuple[str, str]]:
+    search_url = f"https://html.duckduckgo.com/html/?q={requests.utils.quote(query)}"
+    body, status = _fetch(search_url)
+    if status != 200:
+        return []
+    matches = re.findall(r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>', body, flags=re.IGNORECASE | re.DOTALL)
+    out: List[tuple[str, str]] = []
+    for link, anchor in matches:
+        url = unquote(parse_qs(urlparse(link).query).get("uddg", [link])[0])
+        out.append((url, unescape(re.sub(r"<[^>]+>", " ", anchor))))
+    return out
+
+
 def _candidate_official_url(facility_name: str, city: str, canonical_id: str) -> Optional[str]:
     canonical = get_canonical_facility_index().get(canonical_id) or {}
     for key in ("website", "official_website"):
@@ -45,21 +61,35 @@ def _candidate_official_url(facility_name: str, city: str, canonical_id: str) ->
         if value.startswith("http"):
             return value
     query = f"{facility_name} {city or 'Las Vegas'} NV assisted living official"
-    search_url = f"https://html.duckduckgo.com/html/?q={requests.utils.quote(query)}"
     try:
-        body, status = _fetch(search_url)
+        matches = _search_result_urls(query)
     except requests.RequestException:
         return None
-    if status != 200:
-        return None
-    matches = re.findall(r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>', body, flags=re.IGNORECASE | re.DOTALL)
     name_tokens = _facility_tokens(facility_name)
-    for link, anchor in matches:
-        url = unquote(parse_qs(urlparse(link).query).get("uddg", [link])[0])
+    for url, anchor in matches:
         domain = urlparse(url).netloc.lower()
         if not domain or any(domain.endswith(skip) for skip in _SKIP_DOMAINS):
             continue
-        haystack = _norm(url + " " + unescape(re.sub(r"<[^>]+>", " ", anchor)))
+        haystack = _norm(url + " " + anchor)
+        required = 1 if len(name_tokens) <= 1 else 2
+        if name_tokens and sum(1 for token in name_tokens if token in haystack) < required:
+            continue
+        return url
+    return None
+
+
+def _candidate_regulatory_url(facility_name: str, city: str) -> Optional[str]:
+    query = f'"{facility_name}" {city or "Las Vegas"} Nevada HCQC inspection license'
+    try:
+        matches = _search_result_urls(query)
+    except requests.RequestException:
+        return None
+    name_tokens = _facility_tokens(facility_name)
+    for url, anchor in matches:
+        domain = urlparse(url).netloc.lower()
+        if not any(domain == allowed or domain.endswith("." + allowed) for allowed in _REGULATORY_DOMAINS):
+            continue
+        haystack = _norm(url + " " + anchor)
         required = 1 if len(name_tokens) <= 1 else 2
         if name_tokens and sum(1 for token in name_tokens if token in haystack) < required:
             continue
@@ -94,8 +124,13 @@ def _persist_record(db, *, agent_key: str, canonical_id: str, facility_name: str
         return
     verified = [key for key, value in payload.items() if key.endswith("_verified") and value is True]
     summary = f"Las Vegas decision evidence checked for {facility_name}: {', '.join(verified) if verified else 'no requested public claim verified'}"
-    source = "OFFICIAL_PROVIDER_WEBSITE" if payload.get("official_identity_verified") is True else "PUBLIC_RESEARCH_UNVERIFIED_IDENTITY"
-    db.add(AgentKnowledgeRecord(agent_key=agent_key, record_type="las_vegas_decision_evidence", entity_key=canonical_id, summary=summary, payload_json=encoded, confidence=0.82 if verified else 0.65, source=source))
+    if payload.get("regulatory_source_verified") is True:
+        source = "NEVADA_HCQC_ALIS"
+    elif payload.get("official_identity_verified") is True:
+        source = "OFFICIAL_PROVIDER_WEBSITE"
+    else:
+        source = "PUBLIC_RESEARCH_UNVERIFIED_IDENTITY"
+    db.add(AgentKnowledgeRecord(agent_key=agent_key, record_type="las_vegas_decision_evidence", entity_key=canonical_id, summary=summary, payload_json=encoded, confidence=0.9 if payload.get("regulatory_source_verified") is True else (0.82 if verified else 0.65), source=source))
 
 
 def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
@@ -103,9 +138,26 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
     canonical_id = str(payload.get("canonical_facility_id") or "")
     facility_name = str(payload.get("facility_name") or canonical_id)
     city = str(payload.get("city") or "LAS VEGAS")
+    dimension = str(payload.get("dimension") or "")
     requested = [str(x) for x in payload.get("requested_parameters") or []]
-    source_url = _candidate_official_url(facility_name, city, canonical_id)
-    research: Dict[str, Any] = {"market": "las-vegas", "canonical_facility_id": canonical_id, "facility_name": facility_name, "requested_parameters": requested, "research_completed": True, "source_url": source_url, "observed_at": datetime.now(timezone.utc).isoformat(), "official_identity_verified": False, "social_engagement_verified": False, "medication_support_verified": False, "transportation_verified": False, "dining_verified": False}
+    source_url = _candidate_regulatory_url(facility_name, city) if dimension == "facility_quality_safety" else _candidate_official_url(facility_name, city, canonical_id)
+    research: Dict[str, Any] = {
+        "market": "las-vegas",
+        "canonical_facility_id": canonical_id,
+        "facility_name": facility_name,
+        "dimension": dimension,
+        "requested_parameters": requested,
+        "research_completed": True,
+        "source_url": source_url,
+        "observed_at": datetime.now(timezone.utc).isoformat(),
+        "official_identity_verified": False,
+        "regulatory_source_verified": False,
+        "regulatory_parameters_verified": [],
+        "social_engagement_verified": False,
+        "medication_support_verified": False,
+        "transportation_verified": False,
+        "dining_verified": False,
+    }
     if source_url:
         try:
             body, status = _fetch(source_url)
@@ -113,12 +165,16 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
             if status == 200:
                 text = _strip_html(body)
                 identity_ok = _identity_matches(text, facility_name, city)
-                research["official_identity_verified"] = identity_ok
-                if identity_ok:
-                    research["social_engagement_verified"] = _contains_any(text, _SOCIAL_TERMS)
-                    research["medication_support_verified"] = _contains_any(text, _MEDICATION_TERMS)
-                    research["transportation_verified"] = _contains_any(text, _TRANSPORT_TERMS)
-                    research["dining_verified"] = _contains_any(text, _DINING_TERMS)
+                domain = urlparse(source_url).netloc.lower()
+                if dimension == "facility_quality_safety":
+                    research["regulatory_source_verified"] = bool(identity_ok and any(domain == allowed or domain.endswith("." + allowed) for allowed in _REGULATORY_DOMAINS))
+                else:
+                    research["official_identity_verified"] = identity_ok
+                    if identity_ok:
+                        research["social_engagement_verified"] = _contains_any(text, _SOCIAL_TERMS)
+                        research["medication_support_verified"] = _contains_any(text, _MEDICATION_TERMS)
+                        research["transportation_verified"] = _contains_any(text, _TRANSPORT_TERMS)
+                        research["dining_verified"] = _contains_any(text, _DINING_TERMS)
         except requests.RequestException as exc:
             research["research_error"] = exc.__class__.__name__
     _persist_record(db, agent_key=str(item.agent_key or "provider_intelligence"), canonical_id=canonical_id, facility_name=facility_name, source_url=source_url or "", payload=research)
@@ -146,15 +202,17 @@ def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
                 result = _process_item(db, item)
                 item.status = "DONE"
                 item.finished_at = datetime.now(timezone.utc)
-                item.error_message = None if any(result.get(k) is True for k in ("social_engagement_verified", "medication_support_verified", "transportation_verified", "dining_verified")) else "RESEARCH_COMPLETED_NO_REQUESTED_PUBLIC_CLAIM_VERIFIED"
+                positive = any(result.get(k) is True for k in ("social_engagement_verified", "medication_support_verified", "transportation_verified", "dining_verified", "regulatory_source_verified"))
+                item.error_message = None if positive else "RESEARCH_COMPLETED_NO_REQUESTED_PUBLIC_CLAIM_VERIFIED"
                 succeeded += 1
             except Exception as exc:
+                _LOG.exception("decision evidence item failed id=%s facility=%s", item.id, payload.get("facility_name") if isinstance(payload, dict) else None)
                 if int(item.attempts or 0) >= int(item.max_attempts or 3):
                     item.status = "FAILED"
                     item.finished_at = datetime.now(timezone.utc)
                 else:
                     item.status = "PENDING"
-                item.error_message = exc.__class__.__name__
+                item.error_message = f"{exc.__class__.__name__}: {str(exc)[:300]}"
                 failed += 1
             db.commit()
         run.status = "SUCCESS" if failed == 0 else ("PARTIAL" if succeeded else "FAILED")
@@ -172,6 +230,9 @@ def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
             worker.errors = int(worker.errors or 0) + failed
         db.commit()
         return {"status": run.status, "processed": processed, "succeeded": succeeded, "failed": failed, "remaining": remaining, "market": "las-vegas"}
+    except Exception:
+        _LOG.exception("decision evidence worker run failed")
+        raise
     finally:
         db.close()
         _RUN_LOCK.release()
