@@ -45,13 +45,20 @@ _CARE_SETTING_ORDER = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INS
 _ELIGIBILITY_ORDER = {"ELIGIBLE": 0, "POTENTIALLY_ELIGIBLE": 1, "INSUFFICIENT_EVIDENCE": 2, "INELIGIBLE": 3}
 
 
-def _stable_person_fit_key(row: Dict[str, Any], original_index: int) -> tuple[Any, ...]:
+def _stable_pre_agent_fit_key(row: Dict[str, Any], original_index: int) -> tuple[Any, ...]:
     setting = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
     return (
         _CARE_SETTING_ORDER.get(str(setting.get("status") or "POSSIBLE_FIT"), 1),
         _ELIGIBILITY_ORDER.get(str(row.get("eligibility_status") or "INSUFFICIENT_EVIDENCE"), 2),
         -float(row.get("patient_match_score") or 0.0),
         *person_fit_sort_key(row),
+        original_index,
+    )
+
+
+def _stable_person_fit_key(row: Dict[str, Any], original_index: int) -> tuple[Any, ...]:
+    return (
+        *_stable_pre_agent_fit_key(row, original_index)[:-1],
         *social_evidence_sort_key(row),
         original_index,
     )
@@ -95,11 +102,20 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
     rows = list(core.get("results") or [])
     attach_human_person_fit(rows, human_context)
-    research_pool_size = min(len(rows), max(20, int(limit or 50)))
-    agent_bridge = attach_agent_evidence_and_queue_gaps(rows[:research_pool_size], human_context)
 
     explicit_person_fit = has_explicit_person_fit_preference(human_context)
     explicit_social_fit = _social_priority_is_explicit_high(human_context)
+
+    # Agents must research the candidates that are actually competitive for this resident,
+    # not the pre-person-fit order produced by the governed core.
+    if explicit_person_fit or explicit_social_fit:
+        indexed_pre_agent = list(enumerate(rows))
+        indexed_pre_agent.sort(key=lambda pair: _stable_pre_agent_fit_key(pair[1], pair[0]))
+        rows = [row for _, row in indexed_pre_agent]
+
+    research_pool_size = min(len(rows), max(20, int(limit or 50)))
+    agent_bridge = attach_agent_evidence_and_queue_gaps(rows[:research_pool_size], human_context)
+
     if explicit_person_fit or explicit_social_fit:
         indexed = list(enumerate(rows))
         indexed.sort(key=lambda pair: _stable_person_fit_key(pair[1], pair[0]))
@@ -149,7 +165,7 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     core["recommendation_audit_trace"] = {
         "model_version": "decision-intelligence-runtime-v2",
         "facts_used": {"patient_needs": [item.get("parameter_id") for item in patient_profile.get("needs") or []], "human_signals": human_context.get("signals") or {}},
-        "decision_rules_applied": ["care_setting_fit_before_person_fit", "unknown_is_not_mismatch", "resident_material_unknown_triggers_next_best_question", "facility_material_unknown_triggers_market_agent_research", "agent_evidence_must_match_active_market", "explicit_preferences_before_inference", "success_factor_influence_classes_no_unvalidated_numeric_weights", "facility_size_not_independent_quality", "regulatory_evidence_governed_tie_break", "knowledge_fabric_requires_recommendation_eligibility_and_verification_gate", "outcomes_are_validation_only_without_governed_weight_change"],
+        "decision_rules_applied": ["care_setting_fit_before_person_fit", "unknown_is_not_mismatch", "resident_material_unknown_triggers_next_best_question", "facility_material_unknown_triggers_market_agent_research", "agent_evidence_must_match_active_market", "research_pool_follows_resident_relevant_pre_agent_rank", "explicit_preferences_before_inference", "success_factor_influence_classes_no_unvalidated_numeric_weights", "facility_size_not_independent_quality", "regulatory_evidence_governed_tie_break", "knowledge_fabric_requires_recommendation_eligibility_and_verification_gate", "outcomes_are_validation_only_without_governed_weight_change"],
         "evidence_references": ["Nevada HCQC / ALiS", "market-scoped official provider evidence", "CMS when applicable", "reports/RESIDENT_SENIOR_LIVING_SUCCESS_FACTORS_CANON_V1.md", "reports/RECOMMENDATION_INFLUENCE_MODEL_V1.md", "reports/RECOMMENDATION_REQUIRED_DATA_AND_NBQ_V1.md"],
         "agent_evidence_bridge": agent_bridge,
         "recommendations": audit_rows,
