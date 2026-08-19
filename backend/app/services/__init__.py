@@ -2,15 +2,16 @@ from __future__ import annotations
 
 """Service package import governance.
 
-There are historically two filesystem entries named ``patient_decision_engine``:
-``patient_decision_engine.py`` (legacy core) and ``patient_decision_engine/``
-(the governed production facade). Different Python import environments can
-resolve that collision differently. Production must always import the governed
-package while the facade itself may still load the legacy core explicitly by
-file path.
+There are historically multiple decision-engine implementations in the repo:
+``patient_decision_engine.py`` (legacy core), ``patient_decision_engine/``
+(governed care/regulatory facade), and the integrated production runtime that
+adds evidence-governed Human Intelligence. Production must always resolve the
+public ``app.services.patient_decision_engine`` name to the integrated runtime.
 
-This finder is deliberately scoped to that single fully-qualified module name;
-all other ``app.services`` imports use Python's normal resolution.
+The integrated runtime explicitly loads the governed facade, which in turn may
+load the legacy scorer by file path. This finder is deliberately scoped to one
+fully-qualified module name; all other ``app.services`` imports use normal
+Python resolution.
 """
 
 import importlib.abc
@@ -22,12 +23,12 @@ from typing import Optional
 
 
 _GOVERNED_FULLNAME = f"{__name__}.patient_decision_engine"
-_GOVERNED_DIR = Path(__file__).resolve().parent / "patient_decision_engine"
-_GOVERNED_INIT = _GOVERNED_DIR / "__init__.py"
+_RUNTIME_DIR = Path(__file__).resolve().parent / "patient_decision_engine_runtime"
+_RUNTIME_INIT = _RUNTIME_DIR / "__init__.py"
 
 
 class _GovernedDecisionEngineFinder(importlib.abc.MetaPathFinder):
-    """Resolve the production decision-engine name to the governed package."""
+    """Resolve the public production decision-engine name to the integrated runtime."""
 
     def find_spec(
         self,
@@ -39,8 +40,8 @@ class _GovernedDecisionEngineFinder(importlib.abc.MetaPathFinder):
             return None
         return importlib.util.spec_from_file_location(
             fullname,
-            _GOVERNED_INIT,
-            submodule_search_locations=[str(_GOVERNED_DIR)],
+            _RUNTIME_INIT,
+            submodule_search_locations=[str(_RUNTIME_DIR)],
         )
 
 
