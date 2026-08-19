@@ -37,6 +37,10 @@ _governed = importlib.util.module_from_spec(_spec)
 sys.modules[_GOVERNED_PRIVATE_NAME] = _governed
 _spec.loader.exec_module(_governed)
 
+# Preserve the public contract consumed by app.main while routing recommendation
+# execution through this integrated runtime. These are delegated to the governed
+# evidence layer; no duplicate regulatory implementation is introduced here.
+_regulatory_index = _governed._regulatory_index
 build_patient_needs_profile = _governed.build_patient_needs_profile
 build_patient_comparison_context = _governed.build_patient_comparison_context
 
@@ -96,9 +100,6 @@ def run_patient_decision_engine(
     natural_language_query: str = "",
     limit: int = 50,
 ) -> Dict[str, Any]:
-    # Ask the governed engine for the whole canonical market so Human Intelligence
-    # can affect selection before truncation. Care-setting and evidence governance
-    # remain the primary gates.
     core = _governed.run_patient_decision_engine(
         questionnaire_state=questionnaire_state,
         natural_language_query=natural_language_query,
@@ -130,9 +131,6 @@ def run_patient_decision_engine(
         "production_principle": "care/regulatory eligibility first; evidence-backed person fit before regulatory tie-break when explicitly supplied",
     }
 
-    # Put the new evidence inside the existing explanation object as well. This
-    # keeps it visible even to older API contracts while dedicated response fields
-    # are rolled forward.
     readiness = human_context.get("decision_readiness")
     questions = human_context.get("adaptive_questions") or []
     for row in selected:
@@ -145,6 +143,7 @@ def run_patient_decision_engine(
 
 
 __all__ = [
+    "_regulatory_index",
     "build_patient_needs_profile",
     "build_patient_comparison_context",
     "run_patient_decision_engine",
