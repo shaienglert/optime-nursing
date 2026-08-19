@@ -21,10 +21,15 @@ _RUN_LOCK = threading.Lock()
 _LOG = logging.getLogger(__name__)
 _SKIP_DOMAINS = ("aplaceformom.com", "caring.com", "seniorly.com", "yelp.com", "facebook.com", "instagram.com", "linkedin.com", "youtube.com", "google.com", "mapquest.com")
 _REGULATORY_DOMAINS = ("nvdpbh.aithent.com", "myhealthfacilitylicense.nv.gov", "dpbh.nv.gov", "health.nv.gov")
-_SOCIAL_TERMS = ("activities", "activity calendar", "social events", "daily events", "engagement", "outings", "clubs", "fitness", "art studio", "movie theater", "cinema", "games", "live music", "community events", "life enrichment")
+_SOCIAL_TERMS = ("activities", "activity calendar", "social events", "daily events", "engagement", "outings", "clubs", "fitness", "art studio", "movie theater", "cinema", "games", "live music", "community events", "life enrichment", "classes", "lectures")
 _MEDICATION_TERMS = ("medication management", "medication assistance", "medication reminders", "medication administration", "manage medications", "medication support")
+_ADL_TERMS = ("bathing", "dressing", "activities of daily living", "personal care", "assistance with daily living")
 _TRANSPORT_TERMS = ("transportation", "scheduled transportation", "transport service")
 _DINING_TERMS = ("restaurant-style dining", "restaurant style dining", "all-day dining", "dining room", "chef")
+_REHAB_TERMS = ("rehabilitation", "physical therapy", "occupational therapy", "therapy services", "short-term rehab", "short term rehab", "post-acute rehabilitation")
+_COUPLE_TERMS = ("second person", "second occupant", "double occupancy", "couples", "spouse", "two residents", "additional occupant")
+_OUTSIDE_CARE_TERMS = ("outside caregiver", "private caregiver", "private duty", "home care agency", "third-party care", "third party care", "outside care")
+_CONTINUUM_TERMS = ("continuum of care", "life plan community", "independent living", "assisted living", "skilled nursing", "higher level of care", "levels of care")
 
 
 def _norm(value: Any) -> str:
@@ -60,7 +65,7 @@ def _candidate_official_url(facility_name: str, city: str, canonical_id: str) ->
         value = str(canonical.get(key) or "").strip()
         if value.startswith("http"):
             return value
-    query = f"{facility_name} {city or 'Las Vegas'} NV assisted living official"
+    query = f"{facility_name} {city or 'Las Vegas'} NV senior living official"
     try:
         matches = _search_result_urls(query)
     except requests.RequestException:
@@ -155,8 +160,17 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
         "regulatory_parameters_verified": [],
         "social_engagement_verified": False,
         "medication_support_verified": False,
+        "adl_support_verified": False,
         "transportation_verified": False,
         "dining_verified": False,
+        "rehab_verified": False,
+        "pt_ot_verified": False,
+        "couple_coresidence_verified": False,
+        "outside_care_allowed_verified": False,
+        "continuum_of_care_verified": False,
+        "public_rating": "UNKNOWN",
+        "public_review_count": "UNKNOWN",
+        "public_reputation_source": "UNKNOWN",
     }
     if source_url:
         try:
@@ -173,8 +187,14 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
                     if identity_ok:
                         research["social_engagement_verified"] = _contains_any(text, _SOCIAL_TERMS)
                         research["medication_support_verified"] = _contains_any(text, _MEDICATION_TERMS)
+                        research["adl_support_verified"] = _contains_any(text, _ADL_TERMS)
                         research["transportation_verified"] = _contains_any(text, _TRANSPORT_TERMS)
                         research["dining_verified"] = _contains_any(text, _DINING_TERMS)
+                        research["rehab_verified"] = _contains_any(text, _REHAB_TERMS)
+                        research["pt_ot_verified"] = _contains_any(text, ("physical therapy", "occupational therapy"))
+                        research["couple_coresidence_verified"] = _contains_any(text, _COUPLE_TERMS)
+                        research["outside_care_allowed_verified"] = _contains_any(text, _OUTSIDE_CARE_TERMS)
+                        research["continuum_of_care_verified"] = _contains_any(text, _CONTINUUM_TERMS)
         except requests.RequestException as exc:
             research["research_error"] = exc.__class__.__name__
     _persist_record(db, agent_key=str(item.agent_key or "provider_intelligence"), canonical_id=canonical_id, facility_name=facility_name, source_url=source_url or "", payload=research)
@@ -202,7 +222,7 @@ def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
                 result = _process_item(db, item)
                 item.status = "DONE"
                 item.finished_at = datetime.now(timezone.utc)
-                positive = any(result.get(k) is True for k in ("social_engagement_verified", "medication_support_verified", "transportation_verified", "dining_verified", "regulatory_source_verified"))
+                positive = any(result.get(k) is True for k in ("social_engagement_verified", "medication_support_verified", "adl_support_verified", "transportation_verified", "dining_verified", "rehab_verified", "pt_ot_verified", "couple_coresidence_verified", "outside_care_allowed_verified", "continuum_of_care_verified", "regulatory_source_verified"))
                 item.error_message = None if positive else "RESEARCH_COMPLETED_NO_REQUESTED_PUBLIC_CLAIM_VERIFIED"
                 succeeded += 1
             except Exception as exc:
