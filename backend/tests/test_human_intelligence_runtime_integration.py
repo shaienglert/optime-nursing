@@ -60,6 +60,9 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         self.assertTrue(
             any(item["question_key"] == "community_size_preference" for item in human["adaptive_questions"])
         )
+        self.assertTrue(
+            any(item["question_key"] == "social_interaction_need_after_loss" for item in human["adaptive_questions"])
+        )
         self.assertEqual(5, result["result_count"])
         self.assertTrue(all("human_person_fit" in row for row in result["results"]))
         self.assertTrue(
@@ -77,8 +80,15 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         )
 
         intelligence = result["decision_intelligence"]
+        human = intelligence["human_intelligence"]
         self.assertEqual("ACTIVE", intelligence["person_fit_rank_effect"])
-        self.assertEqual("READY", intelligence["human_intelligence"]["decision_readiness"])
+        self.assertEqual("NEEDS_CLARIFICATION", human["decision_readiness"])
+        self.assertFalse(
+            any(item["question_key"] == "community_size_preference" for item in human["adaptive_questions"])
+        )
+        self.assertTrue(
+            any(item["question_key"] == "social_interaction_need_after_loss" for item in human["adaptive_questions"])
+        )
         top = result["results"][0]
         size = top["human_person_fit"]["community_size"]
         self.assertEqual("LARGE_COMMUNITY", size["community_size_band"])
