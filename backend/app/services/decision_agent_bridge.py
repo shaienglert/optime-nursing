@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import threading
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
@@ -10,6 +11,15 @@ from app.models.agent_execution import AgentKnowledgeRecord, AgentQueueItem, Age
 from app.services.facility_parameter_service import get_facility_parameter_table
 
 QUEUE_TYPE = "DECISION_EVIDENCE_RESEARCH"
+_LOG = logging.getLogger(__name__)
+_QUALITY_SAFETY_PARAMETERS = (
+    "inspection_rating",
+    "deficiency_count",
+    "deficiency_severity",
+    "complaint_related_findings",
+    "penalties_fines",
+    "sanctions_final_orders",
+)
 
 
 def _upper(value: Any) -> str:
@@ -20,7 +30,10 @@ def _material_dimensions(human_context: Dict[str, Any]) -> Dict[str, tuple[str, 
     signals = human_context.get("signals") if isinstance(human_context.get("signals"), dict) else {}
     social = signals.get("social_transition_priority") if isinstance(signals.get("social_transition_priority"), dict) else {}
     independence = signals.get("independence_priority") if isinstance(signals.get("independence_priority"), dict) else {}
-    out: Dict[str, tuple[str, ...]] = {"care_support": ("medication_support", "adl_support")}
+    out: Dict[str, tuple[str, ...]] = {
+        "care_support": ("medication_support", "adl_support"),
+        "facility_quality_safety": _QUALITY_SAFETY_PARAMETERS,
+    }
     if _upper(social.get("value")) == "HIGH":
         out["social_engagement"] = ("activities", "transportation")
     if _upper(independence.get("value")) == "HIGH":
@@ -76,6 +89,10 @@ def _resolve_with_agent_evidence(unknown: List[str], dimension: str, evidence: L
         elif dimension == "autonomy_choice":
             if payload.get("transportation_verified") is True:
                 unresolved.discard("transportation")
+        elif dimension == "facility_quality_safety":
+            verified_parameters = payload.get("regulatory_parameters_verified") if isinstance(payload.get("regulatory_parameters_verified"), list) else []
+            for parameter_id in verified_parameters:
+                unresolved.discard(str(parameter_id))
     return sorted(unresolved)
 
 
@@ -84,7 +101,11 @@ def _ensure_worker(db, agent_key: str) -> None:
     if row is not None:
         row.queue_type = QUEUE_TYPE
         return
-    names = {"activities_intelligence": "Activities Intelligence Agent", "provider_intelligence": "Provider Intelligence Agent"}
+    names = {
+        "activities_intelligence": "Activities Intelligence Agent",
+        "provider_intelligence": "Provider Intelligence Agent",
+        "regulatory_intelligence": "Nevada Regulatory Intelligence Agent",
+    }
     db.add(AgentWorker(agent_key=agent_key, name=names[agent_key], mission="Fill material Las Vegas facility evidence gaps for governed recommendations.", data_sources='["official provider websites","Nevada HCQC / ALiS"]', queue_type=QUEUE_TYPE, status="IDLE", coverage=0.0))
 
 
@@ -102,7 +123,12 @@ def _recent_completed_item(db, canonical_id: str, dimension: str, hours: int = 2
 
 
 def _queue(db, row: Dict[str, Any], dimension: str, unknown: List[str]) -> bool:
-    agent_key = "activities_intelligence" if dimension == "social_engagement" else "provider_intelligence"
+    if dimension == "social_engagement":
+        agent_key = "activities_intelligence"
+    elif dimension == "facility_quality_safety":
+        agent_key = "regulatory_intelligence"
+    else:
+        agent_key = "provider_intelligence"
     _ensure_worker(db, agent_key)
     canonical_id = str(row.get("canonical_facility_id") or "")
     pending = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.agent_key == agent_key, AgentQueueItem.status.in_(["PENDING", "RUNNING"])).all()
@@ -124,9 +150,10 @@ def _kick_worker_async() -> None:
     def run() -> None:
         try:
             from app.services.decision_research_worker import process_pending_decision_research
-            process_pending_decision_research(limit=60)
+            result = process_pending_decision_research(limit=60)
+            _LOG.info("decision evidence worker result=%s", result)
         except Exception:
-            return
+            _LOG.exception("decision evidence worker crashed")
 
     threading.Thread(target=run, name="optime-decision-evidence-worker", daemon=True).start()
 
@@ -169,6 +196,7 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
         return {"status": status, "market": "las-vegas", "market_scoped": True, "material_gaps": gaps, "tasks_queued": queued, "researched_unknown_count": researched_unknown, "decision_finality": finality, "policy": "resident unknown -> ask; facility unknown -> agent research; unknown is not mismatch"}
     except Exception as exc:
         db.rollback()
+        _LOG.exception("agent evidence bridge unavailable")
         return {"status": "AGENT_BRIDGE_UNAVAILABLE", "market": "las-vegas", "market_scoped": True, "reason": exc.__class__.__name__, "tasks_queued": 0, "material_gaps": [], "decision_finality": "PROVISIONAL_AGENT_BRIDGE_UNAVAILABLE"}
     finally:
         db.close()
