@@ -46,7 +46,7 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         human = intelligence["human_intelligence"]
         self.assertEqual("YES", human["signals"]["recent_bereavement"]["value"])
         self.assertEqual("NEEDS_CLARIFICATION", human["decision_readiness"])
-        self.assertEqual("WAITING_FOR_EXPLICIT_PREFERENCE_OR_EVIDENCE", intelligence["person_fit_rank_effect"])
+        self.assertEqual("ACTIVE_MUST_GATE_OBJECTIVE_EVIDENCE", intelligence["person_fit_rank_effect"])
         self.assertEqual(
             [q["question_key"] for q in human["adaptive_questions"]],
             ["community_size_preference", "social_interaction_need_after_loss", "move_participation"],
@@ -54,6 +54,7 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         self.assertEqual(5, result["result_count"])
         self.assertTrue(all("human_person_fit" in row for row in result["results"]))
         self.assertTrue(all(row["explanation"].get("decision_readiness") == "NEEDS_CLARIFICATION" for row in result["results"]))
+        self.assertTrue(all(row["client_intent_fit"]["hard_gate"] != "FAIL" for row in result["results"]))
 
     def test_explicit_large_community_preference_affects_rank(self):
         result = run_patient_decision_engine(
