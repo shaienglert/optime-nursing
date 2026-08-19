@@ -103,10 +103,10 @@
       "business_license_number": "A07-01948",
       "expected_business_name": "MONSIGNOR C T SHALLOW SENIOR",
       "expected_address": "561 N Mojave Rd",
-      "classification": "UNKNOWN",
-      "canonical_type": "UNKNOWN",
-      "primary_source_url": "UNKNOWN",
-      "evidence_summary": "No exact-property primary source has been verified strongly enough to classify this business-license candidate.",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://monsignor.nevadahand.org/",
+      "evidence_summary": "Nevada HAND explicitly identifies Monsignor C.T. Shallow at 561 N. Mojave Road, Las Vegas, NV 89101 as 62+ Senior Apartments.",
       "care_services_inferred": false
     },
     {
@@ -123,10 +123,10 @@
       "business_license_number": "G67-07776",
       "expected_business_name": "East Sahara Senior Housing Limited Partnership",
       "expected_address": "978 E Sahara Ave",
-      "classification": "UNKNOWN",
-      "canonical_type": "UNKNOWN",
-      "primary_source_url": "UNKNOWN",
-      "evidence_summary": "Ownership/business records were found, but no exact-property primary operator/provider source was verified strongly enough to classify the property.",
+      "classification": "CONFIRMED_PRIMARY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "primary_source_url": "https://cicnv.org/programs/",
+      "evidence_summary": "City Impact Center identifies its Senior Living Center at 978 E Sahara Ave, Las Vegas, NV 89104 as a 64-unit low-income senior living complex.",
       "care_services_inferred": false
     },
     {
