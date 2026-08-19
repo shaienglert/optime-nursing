@@ -62,11 +62,12 @@ def get_provider_housing_evidence(row: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     for record in _provider_records():
+        governed_ids = {str(value) for value in record.get("canonical_facility_ids") or []}
         aliases = {_norm(record.get("community_name"))}
         aliases.update(_norm(value) for value in record.get("aliases") or [])
-        if not name or name not in aliases:
-            continue
-        if not address or address != _norm_addr(record.get("address")):
+        id_match = bool(canonical_id and canonical_id in governed_ids)
+        identity_match = bool(name and name in aliases and address and address == _norm_addr(record.get("address")))
+        if not (id_match or identity_match):
             continue
         result["matched"] = True
         result["housing_modalities"] = list(record.get("housing_modalities") or [])
