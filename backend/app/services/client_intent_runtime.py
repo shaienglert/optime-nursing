@@ -11,7 +11,8 @@ Decision order:
    and relevant evidence completeness.
 
 No arbitrary numeric quality weights are introduced here; ordering is lexicographic
-and auditable.
+and auditable. Numeric values are used only where an explicit user-preference fit
+already has a governed score (for example community-environment congruence).
 """
 
 from typing import Any, Dict, List
@@ -74,7 +75,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
 
     return {
-        "version": "client-intent-runtime-v1",
+        "version": "client-intent-runtime-v1.1",
         "must_haves": must,
         "nice_to_haves": nice,
         "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
@@ -88,6 +89,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     must_pass: List[str] = []
     nice_match: List[str] = []
     nice_unknown: List[str] = []
+    nice_fit_scores: Dict[str, float] = {}
 
     city = str(row.get("city") or "").strip().upper()
     state = str(row.get("state") or "").strip().upper()
@@ -113,7 +115,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         elif key == "ADL_SUPPORT_AVAILABLE":
             if setting_status == "INSUFFICIENT_SETTING":
                 hard_fail.append(key)
-            elif canonical_type == "ASSISTED_LIVING_RFG" or any(p.get("medication_support_verified") is True for p in payloads):
+            elif canonical_type == "ASSISTED_LIVING_RFG" or any(p.get("adl_support_verified") is True for p in payloads):
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
@@ -142,22 +144,30 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         if key == "RICH_CULTURE_AND_ACTIVITIES":
             if any(p.get("social_engagement_verified") is True for p in payloads):
                 nice_match.append(key)
+                nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
         elif key == "COMMUNITY_ENVIRONMENT_MATCH":
-            fit = size.get("fit_score")
-            if isinstance(fit, (int, float)) and fit > 0:
-                nice_match.append(key)
+            value = size.get("fit_score")
+            if isinstance(value, (int, float)):
+                score = float(value)
+                nice_fit_scores[key] = score
+                if score > 0:
+                    nice_match.append(key)
+                else:
+                    nice_unknown.append(key)
             else:
                 nice_unknown.append(key)
         elif key == "TRANSPORTATION_AND_OUTINGS":
             if any(p.get("transportation_verified") is True for p in payloads):
                 nice_match.append(key)
+                nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
         elif key == "DINING_EXPERIENCE":
             if any(p.get("dining_verified") is True for p in payloads):
                 nice_match.append(key)
+                nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
 
@@ -181,6 +191,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "must_fail": hard_fail,
         "nice_match": nice_match,
         "nice_unknown": nice_unknown,
+        "nice_fit_scores": nice_fit_scores,
         "public_reputation": {
             "rating": web_rating if web_rating is not None else "UNKNOWN",
             "review_count": web_review_count if web_review_count is not None else "UNKNOWN",
@@ -195,6 +206,9 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     hard_gate = str(fit.get("hard_gate") or "PENDING_VERIFICATION")
     gate_order = {"PASS": 0, "PENDING_VERIFICATION": 1, "FAIL": 2}.get(hard_gate, 1)
     nice_matches = len(fit.get("nice_match") or [])
+    nice_scores = fit.get("nice_fit_scores") if isinstance(fit.get("nice_fit_scores"), dict) else {}
+    community_fit = nice_scores.get("COMMUNITY_ENVIRONMENT_MATCH")
+    community_fit_known = isinstance(community_fit, (int, float))
 
     history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}
     disciplinary = _upper(history.get("disciplinary_action"))
@@ -212,6 +226,8 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     return (
         gate_order,
         -nice_matches,
+        0 if community_fit_known else 1,
+        -float(community_fit) if community_fit_known else 0.0,
         disciplinary_order,
         grade_order,
         int(counts.get("D") or 0),
