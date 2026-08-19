@@ -1,0 +1,126 @@
+{
+  "schema_version": "nevada-provider-housing-primary-evidence-v1.0.0",
+  "policy": {
+    "rule": "Provider/operator primary evidence may establish unlicensed senior-housing identity or campus modalities, but never overrides Nevada care-facility licensing truth. Standalone provider-only records are appended only for senior housing that is not represented by a Nevada care license.",
+    "unknown_rule": "If provider identity, address or modality is ambiguous, preserve UNKNOWN.",
+    "source_role": "PRIMARY_OPERATOR_OR_PROVIDER_EVIDENCE"
+  },
+  "records": [
+    {
+      "record_key": "LAS_VENTANAS_SUMMERLIN",
+      "community_name": "Las Ventanas at Summerlin",
+      "aliases": ["Las Ventanas at Summerlin"],
+      "canonical_facility_ids": ["NV-LIC-4000-AGC-31", "NV-LIC-4529-SNF-31"],
+      "address": "10401 W Charleston Blvd",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89135",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "LIFE_PLAN_CCRC", "ASSISTED_LIVING", "SKILLED_NURSING", "MEMORY_SUPPORT"],
+      "primary_source_url": "https://www.humangood.org/las-ventanas-at-summerlin/senior-living-options/independent-living",
+      "evidence": {
+        "independent_living_verified": true,
+        "adl_support_verified": true,
+        "social_engagement_verified": true,
+        "transportation_verified": true,
+        "dining_verified": true,
+        "outside_care_allowed_verified": true,
+        "continuum_of_care_verified": true,
+        "rehab_verified": true,
+        "pt_ot_verified": true,
+        "couple_coresidence_verified": true
+      },
+      "evidence_summary": "HumanGood identifies Las Ventanas as a Life Plan Community with independent residences, extensive cultural/social/educational programming, transportation and dining; higher levels of care and short-stay rehabilitation are on the same campus, care can be added while living independently, and its FAQ explicitly states that if a resident or partner's health changes, a care plan is available on campus so the couple need not move away or be separated."
+    },
+    {
+      "record_key": "REVEL_VEGAS",
+      "community_name": "Revel Vegas",
+      "aliases": ["Revel Vegas"],
+      "address": "4940 S Conquistador St",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89148",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-REVEL-VEGAS",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING"],
+      "primary_source_url": "https://revelcommunities.com/communities/vegas/",
+      "evidence": {
+        "independent_living_verified": true,
+        "social_engagement_verified": true,
+        "transportation_verified": true,
+        "dining_verified": true,
+        "housekeeping_verified": true,
+        "couple_unit_possible": "UNKNOWN",
+        "outside_care_allowed_verified": "UNKNOWN",
+        "rehab_verified": "UNKNOWN"
+      },
+      "evidence_summary": "Revel identifies the exact Las Vegas property as an independent living community for active 55+ seniors with apartment homes, programming/events, dining, transportation, housekeeping and concierge services. No care or rehabilitation service is inferred."
+    },
+    {
+      "record_key": "ATRIA_SEVILLE",
+      "community_name": "Atria Seville",
+      "aliases": ["Atria Seville"],
+      "address": "2000 N Rampart Blvd",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89128",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING"],
+      "primary_source_url": "https://www.atriaseniorliving.com/retirement-communities/atria-seville-las-vegas-nv",
+      "evidence": {
+        "independent_living_verified": true,
+        "adl_support_verified": true,
+        "social_engagement_verified": true,
+        "transportation_verified": true,
+        "dining_verified": true,
+        "pt_ot_external_path_verified": true,
+        "continuum_of_care_verified": true
+      },
+      "evidence_summary": "Atria identifies Atria Seville at 2000 N Rampart Blvd as independent and assisted living, with daily events, transportation, dining, ADL support, and access to third-party physical and occupational therapy."
+    },
+    {
+      "record_key": "MORNINGSTAR_CANYONS",
+      "community_name": "MorningStar Senior Living at The Canyons",
+      "aliases": ["MorningStar Senior Living at The Canyons", "MorningStar at The Canyons"],
+      "address": "490 S Hualapai Way",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89145",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING", "MEMORY_CARE"],
+      "primary_source_url": "https://www.morningstarseniorliving.com/communities/senior-living-las-vegas-the-canyons/",
+      "evidence": {
+        "independent_living_verified": true,
+        "adl_support_verified": true,
+        "social_engagement_verified": true,
+        "continuum_of_care_verified": true,
+        "rehab_verified": "UNKNOWN"
+      },
+      "evidence_summary": "MorningStar identifies The Canyons as a multi-level community with independent living, assisted living and memory care. Rehabilitation is not inferred without separate evidence."
+    },
+    {
+      "record_key": "THE_GRAND_SOUTHERN_HILLS",
+      "community_name": "The Grand at Southern Hills",
+      "aliases": ["The Grand at Southern Hills", "San Martin Senior Living"],
+      "address": "8374 W Capovilla Ave",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89113",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING", "MEMORY_CARE"],
+      "primary_source_url": "https://stellarliving.com/communities/the-grand-at-southern-hills-senior-assisted-living-las-vegas-nv/",
+      "evidence": {
+        "independent_living_verified": true,
+        "adl_support_verified": true,
+        "social_engagement_verified": true,
+        "transportation_verified": true,
+        "dining_verified": true,
+        "continuum_of_care_verified": true,
+        "same_apartment_transition_verified": true,
+        "month_to_month_verified": true
+      },
+      "evidence_summary": "Stellar identifies The Grand at Southern Hills at 8374 W Capovilla Ave as independent living, assisted living and memory care, with dozens of weekly activities and the ability to add assisted-living support without changing apartments."
+    }
+  ]
+}
