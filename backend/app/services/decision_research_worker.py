@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 from datetime import datetime, timezone
 from html import unescape
 from typing import Any, Dict, List, Optional
@@ -15,6 +16,7 @@ from app.services.decision_agent_bridge import QUEUE_TYPE
 from app.services.facility_parameter_service import get_canonical_facility_index
 
 _TIMEOUT = 12
+_RUN_LOCK = threading.Lock()
 _SKIP_DOMAINS = ("aplaceformom.com", "caring.com", "seniorly.com", "yelp.com", "facebook.com", "instagram.com", "linkedin.com", "youtube.com", "google.com", "mapquest.com")
 _SOCIAL_TERMS = ("activities", "activity calendar", "social events", "daily events", "engagement", "outings", "clubs", "fitness", "art studio", "movie theater", "cinema", "games", "live music", "community events", "life enrichment")
 _MEDICATION_TERMS = ("medication management", "medication assistance", "medication reminders", "medication administration", "manage medications", "medication support")
@@ -124,6 +126,8 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
 
 
 def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
+    if not _RUN_LOCK.acquire(blocking=False):
+        return {"status": "ALREADY_RUNNING", "processed": 0, "succeeded": 0, "failed": 0, "remaining": None, "market": "las-vegas"}
     db = SessionLocal()
     processed = succeeded = failed = 0
     run = AgentJobRun(agent_key="decision_evidence_research", status="RUNNING")
@@ -170,6 +174,7 @@ def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
         return {"status": run.status, "processed": processed, "succeeded": succeeded, "failed": failed, "remaining": remaining, "market": "las-vegas"}
     finally:
         db.close()
+        _RUN_LOCK.release()
 
 
 if __name__ == "__main__":
