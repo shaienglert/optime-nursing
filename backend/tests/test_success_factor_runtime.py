@@ -56,7 +56,8 @@ class SuccessFactorRuntimeTests(unittest.TestCase):
             natural_language_query="My father is 84, recently widowed, mobile and mentally alert in Las Vegas and needs ADL help.",
             limit=2,
         )
-        self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v2")
+        self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v3")
+        self.assertIn("living_strategy", result["decision_intelligence"])
         self.assertIn("success_factor_policy", result["decision_intelligence"])
         self.assertIn("recommendation_audit_trace", result)
         self.assertEqual(len(result["results"]), 2)
@@ -64,6 +65,7 @@ class SuccessFactorRuntimeTests(unittest.TestCase):
             self.assertEqual(len(row["success_factor_trace"]["factors"]), 16)
             self.assertIn("success_factor_summary", row["explanation"])
         rules = result["recommendation_audit_trace"]["decision_rules_applied"]
+        self.assertIn("living_strategy_before_facility_ranking", rules)
         self.assertIn("facility_size_not_independent_quality", rules)
         self.assertIn("success_factor_influence_classes_no_unvalidated_numeric_weights", rules)
 
