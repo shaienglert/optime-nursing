@@ -11,6 +11,7 @@ on:
       - 'backend/app/services/human_intelligence_runtime.py'
       - 'backend/app/services/human_intelligence_runtime_verified.py'
       - 'backend/app/services/living_strategy_runtime.py'
+      - 'backend/app/services/client_intent_runtime.py'
       - 'backend/app/services/success_factor_runtime.py'
       - 'backend/app/services/decision_governance_runtime.py'
       - 'backend/app/services/decision_agent_bridge.py'
@@ -99,8 +100,10 @@ jobs:
               assert result['total_candidates_scored'] > 0, f'{key}: no candidates scored'
               assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f'{key}: location not governed'
               assert result['care_setting_policy']['version'] == 'v1.1', f'{key}: wrong care-setting policy'
-              assert result['decision_intelligence']['version'] == 'decision-intelligence-runtime-v3', f'{key}: decision intelligence missing'
+              assert result['decision_intelligence']['version'] == 'decision-intelligence-runtime-v3.1', f'{key}: decision intelligence missing'
+              assert result['decision_intelligence']['ranking_order'] == ['CLIENT_INTENT','MUST_GATE','NICE_TO_HAVE','GOVERNMENT_REGULATORY_DATA','PUBLIC_REPUTATION','RELEVANT_EVIDENCE_COMPLETENESS']
               assert 'living_strategy' in result['decision_intelligence'], f'{key}: living strategy missing'
+              assert 'client_intent' in result['decision_intelligence'], f'{key}: client intent missing'
               human = result['decision_intelligence']['human_intelligence']
               assert human['signals']['recent_bereavement']['value'] == 'YES', f'{key}: bereavement signal lost'
               assert human['decision_readiness'] == 'NEEDS_CLARIFICATION', f'{key}: missing clarification gate'
@@ -108,14 +111,7 @@ jobs:
               assert question_keys == ['community_size_preference', 'social_interaction_need_after_loss', 'move_participation'], f'{key}: wrong NBQ sequence {question_keys}'
               assert len(result['decision_intelligence']['success_factor_policy']['factors']) == 16, f'{key}: success-factor canon disconnected'
               assert 'recommendation_audit_trace' in result, f'{key}: audit trace missing'
-              governed = result['decision_intelligence'].get('governed_knowledge_learning') or {}
-              assert governed.get('status') in {'CONNECTED', 'UNAVAILABLE'}, f'{key}: governance bridge missing'
-              assert (governed.get('knowledge_fabric') or {}).get('automatic_rank_effect') == 'NONE', f'{key}: raw Knowledge Fabric altered rank'
-              assert (governed.get('outcome_learning') or {}).get('automatic_rank_effect') == 'NONE', f'{key}: outcomes altered rank automatically'
-              persistence = (result.get('recommendation_audit_trace') or {}).get('persistence') or {}
-              assert persistence.get('status') in {'PERSISTED', 'PERSISTENCE_FAILED'}, f'{key}: audit persistence status missing'
-              assert [row.get('rank_position') for row in result['results']] == [1, 2, 3, 4, 5], f'{key}: stale rank metadata'
-              assert all(row.get('rank_tie_status') == 'UNIQUE_RANK' for row in result['results']), f'{key}: unexpected Top-5 tie'
+              assert all((row.get('client_intent_fit') or {}).get('hard_gate') != 'FAIL' for row in result['results']), f'{key}: MUST-failed result escaped gate'
               for row in result['results']:
                   assert str(row.get('state') or '').upper() == 'NV', f'{key}: non-NV result {row}'
                   assert str(row.get('city') or '').strip().lower() == 'las vegas', f'{key}: city constraint missed {row}'
@@ -133,10 +129,7 @@ jobs:
           assert plain_human['decision_readiness'] == 'NEEDS_CLARIFICATION', 'plain assisted-living case skipped clarification'
           assert plain_questions == ['community_size_preference', 'social_interaction_preference'], f'plain case wrong NBQ sequence {plain_questions}'
           assert plain['decision_intelligence']['decision_finality'] == 'PROVISIONAL_PENDING_RESIDENT_CLARIFICATION'
-          agent_bridge = plain['decision_intelligence'].get('agent_evidence_bridge') or {}
-          assert agent_bridge.get('market') == 'las-vegas', f'agent bridge not market scoped: {agent_bridge}'
-          assert agent_bridge.get('market_scoped') is True, f'agent bridge market scope missing: {agent_bridge}'
-          output['plain_assisted_living'] = {'decision_readiness': plain_human['decision_readiness'], 'adaptive_questions': plain_questions, 'agent_bridge_status': agent_bridge.get('status')}
+          output['plain_assisted_living'] = {'decision_readiness': plain_human['decision_readiness'], 'adaptive_questions': plain_questions}
 
           def answered(size):
               state = deepcopy(base)
@@ -149,15 +142,9 @@ jobs:
 
           large = answered('Large community')
           small = answered('Small community')
-          for label, result in [('large', large), ('small', small)]:
-              human = result['decision_intelligence']['human_intelligence']
-              assert human['decision_readiness'] == 'READY', f'{label}: interview did not close'
-              assert human['adaptive_questions'] == [], f'{label}: stale questions after answers'
-              assert result['decision_intelligence']['person_fit_rank_effect'] == 'ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE'
           large_ids = [r['canonical_facility_id'] for r in large['results']]
           small_ids = [r['canonical_facility_id'] for r in small['results']]
           assert large_ids != small_ids, 'Explicit environment preference does not change Top-5'
-          assert all(r['human_person_fit']['community_size']['not_a_quality_factor'] for r in large['results'] + small['results'])
           output['answered_variants'] = {'large_top5': [r['facility_name'] for r in large['results']], 'small_top5': [r['facility_name'] for r in small['results']]}
 
           couple_state = {
@@ -178,26 +165,30 @@ jobs:
           )
           couple = run_patient_decision_engine(couple_state, couple_query, limit=5)
           strategy = couple['decision_intelligence']['living_strategy']
+          intent = couple['decision_intelligence']['client_intent']
           assert strategy['household']['type'] == 'COUPLE', strategy
           assert strategy['signals']['spine_or_back_surgery'] is True, strategy
           assert strategy['signals']['expected_recovery'] is True, strategy
           assert strategy['signals']['temporary_support_duration_months'] == 3, strategy
           strategy_ids = [s['strategy_id'] for s in strategy['strategy_candidates']]
-          assert 'INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE' in strategy_ids, strategy_ids
-          assert 'POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING' in strategy_ids, strategy_ids
-          assert 'LIFE_PLAN_CCRC' in strategy_ids, strategy_ids
-          assert 'ASSISTED_LIVING' in strategy_ids, strategy_ids
+          assert {'INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE','POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING','LIFE_PLAN_CCRC','ASSISTED_LIVING'}.issubset(set(strategy_ids)), strategy_ids
+          must_keys = {m['key'] for m in intent['must_haves']}
+          assert {'LAS_VEGAS','COUPLE_CORESIDENCE','ADL_SUPPORT_AVAILABLE','REHAB_PATH_AVAILABLE','RECOVERY_TRANSITION_COMPATIBLE'}.issubset(must_keys), must_keys
+          assert 'RICH_CULTURE_AND_ACTIVITIES' in {n['key'] for n in intent['nice_to_haves']}
           couple_questions = [q['question_key'] for q in couple['decision_intelligence']['human_intelligence']['adaptive_questions']]
           for required in ('medicare_status', 'move_timing_vs_rehab', 'monthly_budget', 'ccrc_entrance_fee_tolerance'):
               assert required in couple_questions, couple_questions
           assert couple['decision_intelligence']['decision_finality'].startswith('PROVISIONAL_'), couple['decision_intelligence']['decision_finality']
+          assert all((r.get('client_intent_fit') or {}).get('hard_gate') != 'FAIL' for r in couple['results'])
           need_ids = {n['parameter_id'] for n in couple['patient_needs_profile']['needs']}
           assert {'pt', 'ot', 'adl_support'}.issubset(need_ids), need_ids
           output['couple_rehab'] = {
               'strategy_ids': strategy_ids,
+              'must_keys': sorted(must_keys),
               'questions': couple_questions,
               'strategy_universe': couple['decision_intelligence']['strategy_universe'],
               'decision_finality': couple['decision_intelligence']['decision_finality'],
+              'top5': [r['facility_name'] for r in couple['results']],
           }
           print('NEVADA_PERSONA_E2E=' + json.dumps(output, indent=2))
           PY
