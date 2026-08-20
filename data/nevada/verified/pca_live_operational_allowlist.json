@@ -1,5 +1,5 @@
 {
-  "schema_version": "nevada-pca-live-operational-allowlist-v1.0.0",
+  "schema_version": "nevada-pca-live-operational-allowlist-v1.1.0",
   "snapshot_date": "2026-08-20",
   "source_authority": "Nevada HCQC / ALiS live extraction",
   "las_vegas_valley_active_license_count": 363,
@@ -12,6 +12,9 @@
     "9990-PCS-6",
     "11851-PCS-1",
     "12116-PCS-0",
-    "12003-PCS-1"
+    "12003-PCS-1",
+    "11765-PCS-0",
+    "11783-PCS-1",
+    "11826-PCS-1"
   ]
 }
