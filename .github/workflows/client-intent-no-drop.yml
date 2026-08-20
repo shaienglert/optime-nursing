@@ -1,0 +1,36 @@
+name: Client Intent No-Drop Gate
+
+on:
+  pull_request:
+    paths:
+      - 'backend/app/services/client_statement_accounting.py'
+      - 'backend/app/services/human_intelligence_runtime.py'
+      - 'backend/app/services/human_intelligence_runtime_verified.py'
+      - 'backend/app/services/client_intent_runtime.py'
+      - 'backend/tests/test_client_statement_accounting.py'
+      - 'backend/tests/test_adaptive_interview_roundtrip.py'
+      - '.github/workflows/client-intent-no-drop.yml'
+  workflow_dispatch:
+
+jobs:
+  no-silent-drop:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend runtime dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Run client-intent no-drop and adaptive interview tests
+        run: |
+          python -m unittest \
+            backend.tests.test_client_statement_accounting \
+            backend.tests.test_adaptive_interview_roundtrip \
+            backend.tests.test_human_intelligence_runtime_integration \
+            backend.tests.test_main_decision_runtime_contract
