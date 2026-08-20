@@ -8,6 +8,7 @@ on:
       - 'scripts/sanitize_nevada_pca_operational_research.py'
       - 'scripts/build_nevada_pca_operational_research_queue.py'
       - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
+      - 'scripts/materialize_nevada_pca_valley_registry.py'
       - 'backend/tests/test_pca_operational_research_worker.py'
       - '.github/workflows/nevada-pca-operational-research.yml'
   workflow_dispatch:
@@ -31,6 +32,22 @@ jobs:
         run: python -m pytest backend/tests/test_pca_operational_research_worker.py -q
       - name: Rebuild live Nevada PCA universe
         run: python scripts/extract_nevada_hcqc_personal_care_agencies.py
+      - name: Materialize complete Las Vegas Valley PCA registry
+        run: python scripts/materialize_nevada_pca_valley_registry.py
+      - name: Gate canonical PCA registry
+        run: |
+          python - <<'PY'
+          import csv, json, pathlib
+          j=json.loads(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json').read_text())
+          rows=list(csv.DictReader(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv').open()))
+          assert j['record_count'] == 363, j
+          assert len(rows) == 363, len(rows)
+          assert len({r['agency_id'] for r in rows}) == 363
+          assert j['cities'] == {'LAS VEGAS':302,'HENDERSON':34,'NORTH LAS VEGAS':27}, j
+          assert all(r['source_authority']=='Nevada HCQC / ALiS' for r in rows)
+          assert all(r['operational_evidence_status']=='LICENSE_VERIFIED_OPERATIONAL_UNKNOWN' for r in rows)
+          print(json.dumps({'registry_records':363,'cities':j['cities']}, indent=2))
+          PY
       - name: Build remaining operational research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
       - name: Research first 20 unverified agencies from primary sources
@@ -53,8 +70,7 @@ jobs:
           for row in r['records']:
               if row.get('identity_verified') is not True:
                   continue
-              url=str(row.get('primary_source_url') or '')
-              domain=urlparse(url).netloc.lower()
+              domain=urlparse(str(row.get('primary_source_url') or '')).netloc.lower()
               assert domain and not any(domain==d or domain.endswith('.'+d) for d in blocked), row
           print(json.dumps({
             'queue': q['research_task_count'],
@@ -63,11 +79,13 @@ jobs:
             'candidate_rejected_not_primary': r.get('candidate_rejected_not_primary',0),
           }, indent=2))
           PY
-      - name: Upload operational research evidence
+      - name: Upload PCA registry and operational research evidence
         uses: actions/upload-artifact@v4
         with:
-          name: nevada-pca-operational-research
+          name: nevada-pca-registry-and-operational-research
           path: |
+            data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json
+            data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv
             reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
             reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json
             reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json
