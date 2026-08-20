@@ -17,7 +17,8 @@ def test_safe_promotion_keeps_absent_negative_signals_unknown():
         "workers_comp_verified": False,
         "languages": ["Spanish"],
     }
-    promoted = _safe_row(row)
+    promoted = _safe_row(row, "PRIMARY_SOURCE_EXACT_PHONE")
+    assert promoted["identity_basis"] == "PRIMARY_SOURCE_EXACT_PHONE"
     assert promoted["bathing_assistance"] is True
     assert promoted["dressing_assistance"] == UNKNOWN
     assert promoted["transfer_assistance"] == UNKNOWN
