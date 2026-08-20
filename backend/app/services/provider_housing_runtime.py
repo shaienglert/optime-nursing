@@ -9,6 +9,7 @@ from typing import Any, Dict
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PROVIDER_PATH = REPO_ROOT / "data" / "nevada" / "verified" / "provider_housing_primary_evidence.json"
+PROVIDER_CONTINUUM_PATH = REPO_ROOT / "data" / "nevada" / "verified" / "provider_housing_continuum_expansion_v1.json"
 LIFE_PLAN_PATH = REPO_ROOT / "data" / "nevada" / "verified" / "life_plan_primary_evidence.json"
 
 
@@ -49,7 +50,9 @@ def _read(path: Path) -> Dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def _provider_records() -> list[Dict[str, Any]]:
-    return list(_read(PROVIDER_PATH).get("records") or [])
+    records = list(_read(PROVIDER_PATH).get("records") or [])
+    records.extend(_read(PROVIDER_CONTINUUM_PATH).get("records") or [])
+    return records
 
 
 @lru_cache(maxsize=1)
