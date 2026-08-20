@@ -5,8 +5,10 @@ on:
     paths:
       - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
       - 'scripts/build_nevada_pca_operational_research_queue.py'
+      - 'scripts/check_nevada_pca_candidates_against_live_registry.py'
       - 'backend/app/services/personal_care_agency_runtime.py'
       - 'backend/tests/test_personal_care_agency_runtime.py'
+      - 'data/nevada/staging/pca_operational_candidates.json'
       - 'data/nevada/verified/personal_care_agency_evidence_schema.json'
       - 'data/nevada/verified/personal_care_agency_operational_evidence.json'
       - 'data/nevada/verified/pca_live_operational_allowlist.json'
@@ -50,6 +52,22 @@ jobs:
           assert all(r['county'] == 'Clark' for r in valley), 'Valley rows must normalize to Clark County'
           assert all(r['city'] in {'LAS VEGAS','NORTH LAS VEGAS','HENDERSON'} for r in valley), 'Valley city normalization regressed'
           print(json.dumps(report, indent=2))
+          PY
+      - name: Match new primary-source candidates against live ALiS registry
+        run: python scripts/check_nevada_pca_candidates_against_live_registry.py
+      - name: Gate candidate matching integrity
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          r=json.loads(pathlib.Path('reports/NEVADA_PCA_CANDIDATE_LIVE_MATCH.json').read_text())
+          assert r['live_valley_registry_count']==363, r
+          assert r['candidate_count']>0, r
+          assert r['promotable_count'] + r['not_promotable_count'] == r['candidate_count'], r
+          for row in r['results']:
+              if row['status']=='PROMOTABLE':
+                  assert row.get('live_license_number') not in {None,'','UNKNOWN'}, row
+                  assert row['match_method'] in {'EXACT_LIVE_LICENSE','EXACT_PHONE','EXACT_ADDRESS_CITY','EXACT_PHONE_AND_ADDRESS'}, row
+          print(json.dumps(r, indent=2))
           PY
       - name: Build operational enrichment research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
@@ -99,4 +117,5 @@ jobs:
           path: |
             data/nevada/raw/hcqc_personal_care_agencies.csv
             reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
+            reports/NEVADA_PCA_CANDIDATE_LIVE_MATCH.json
             reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json
