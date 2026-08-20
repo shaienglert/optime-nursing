@@ -45,9 +45,18 @@ jobs:
           assert len(rows) == 363, len(rows)
           assert len({r['agency_id'] for r in rows}) == 363
           assert j['cities'] == {'LAS VEGAS':302,'HENDERSON':34,'NORTH LAS VEGAS':27}, j
+          assert j['operationally_verified_count'] == 6, j
+          assert j['operationally_unknown_count'] == 357, j
           assert all(r['source_authority']=='Nevada HCQC / ALiS' for r in rows)
-          assert all(r['operational_evidence_status']=='LICENSE_VERIFIED_OPERATIONAL_UNKNOWN' for r in rows)
-          print(json.dumps({'registry_records':363,'cities':j['cities']}, indent=2))
+          verified=[r for r in rows if r['operational_evidence_status']=='PRIMARY_SOURCE_OPERATIONAL_VERIFIED']
+          unknown=[r for r in rows if r['operational_evidence_status']=='LICENSE_VERIFIED_OPERATIONAL_UNKNOWN']
+          assert len(verified)==6, len(verified)
+          assert len(unknown)==357, len(unknown)
+          assert all(r['official_website'] not in {'','UNKNOWN'} for r in verified)
+          homewatch=next(r for r in verified if r['agency_id']=='NV-PCA-11759-PCS-1')
+          assert homewatch['minimum_billable_hours']=='0', homewatch
+          assert homewatch['minimum_hours_policy']=='NO_MINIMUM_HOURS', homewatch
+          print(json.dumps({'registry_records':363,'verified':6,'unknown':357,'cities':j['cities']}, indent=2))
           PY
       - name: Build remaining operational research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
