@@ -1,0 +1,23 @@
+{
+  "schema_version": "nevada-pca-live-operational-allowlist-v1.2.0",
+  "snapshot_date": "2026-08-20",
+  "source_authority": "Nevada HCQC / ALiS live extraction",
+  "las_vegas_valley_active_license_count": 363,
+  "policy": "Only licenses present in the live Las Vegas Valley HCQC/ALiS universe and backed by identity-verified primary provider evidence may be surfaced as operationally verified PCA candidates.",
+  "license_numbers": [
+    "9703-PCS-7",
+    "5291-PCS-19",
+    "5698-PCS-18",
+    "11759-PCS-1",
+    "9990-PCS-6",
+    "11851-PCS-1",
+    "12116-PCS-0",
+    "12003-PCS-1",
+    "11765-PCS-0",
+    "11783-PCS-1",
+    "11826-PCS-1",
+    "7602-PCS-15",
+    "10330-PCS-5",
+    "7836-PCS-13"
+  ]
+}

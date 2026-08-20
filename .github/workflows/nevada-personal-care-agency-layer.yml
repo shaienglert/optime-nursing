@@ -5,10 +5,14 @@ on:
     paths:
       - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
       - 'scripts/build_nevada_pca_operational_research_queue.py'
+      - 'scripts/check_nevada_pca_candidates_against_live_registry.py'
       - 'backend/app/services/personal_care_agency_runtime.py'
       - 'backend/tests/test_personal_care_agency_runtime.py'
+      - 'data/nevada/staging/pca_operational_candidates.json'
       - 'data/nevada/verified/personal_care_agency_evidence_schema.json'
       - 'data/nevada/verified/personal_care_agency_operational_evidence.json'
+      - 'data/nevada/verified/pca_operational_live_promotions.json'
+      - 'data/nevada/verified/pca_live_operational_allowlist.json'
       - '.github/workflows/nevada-personal-care-agency-layer.yml'
   workflow_dispatch:
 
@@ -50,18 +54,68 @@ jobs:
           assert all(r['city'] in {'LAS VEGAS','NORTH LAS VEGAS','HENDERSON'} for r in valley), 'Valley city normalization regressed'
           print(json.dumps(report, indent=2))
           PY
-      - name: Build operational enrichment research queue
-        run: python scripts/build_nevada_pca_operational_research_queue.py
-      - name: Gate PCA research queue accounting
+      - name: Match new primary-source candidates against live ALiS registry
+        run: python scripts/check_nevada_pca_candidates_against_live_registry.py
+      - name: Gate candidate matching integrity
         run: |
           python - <<'PY'
           import json, pathlib
+          r=json.loads(pathlib.Path('reports/NEVADA_PCA_CANDIDATE_LIVE_MATCH.json').read_text())
+          assert r['live_valley_registry_count']==363, r
+          assert r['candidate_count']>0, r
+          assert r['promotable_count'] + r['not_promotable_count'] == r['candidate_count'], r
+          for row in r['results']:
+              if row['status']=='PROMOTABLE':
+                  assert row.get('live_license_number') not in {None,'','UNKNOWN'}, row
+                  assert row['match_method'] in {'EXACT_LIVE_LICENSE','EXACT_PHONE','EXACT_ADDRESS_CITY','EXACT_PHONE_AND_ADDRESS'}, row
+          print(json.dumps(r, indent=2))
+          PY
+      - name: Build operational enrichment research queue
+        run: python scripts/build_nevada_pca_operational_research_queue.py
+      - name: Gate PCA research queue accounting and production allowlist
+        run: |
+          python - <<'PY'
+          import csv, json, pathlib
           q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
+          sources=[
+              pathlib.Path('data/nevada/verified/personal_care_agency_operational_evidence.json'),
+              pathlib.Path('data/nevada/verified/pca_operational_live_promotions.json'),
+          ]
+          allowlist=json.loads(pathlib.Path('data/nevada/verified/pca_live_operational_allowlist.json').read_text())
+          rows=list(csv.DictReader(pathlib.Path('data/nevada/raw/hcqc_personal_care_agencies.csv').open()))
+          live={
+              str(r.get('license_number') or '').strip()
+              for r in rows
+              if r.get('license_status','').upper()=='ACTIVE'
+              and r.get('is_las_vegas_valley')=='True'
+              and str(r.get('license_number') or '').strip()
+          }
+          evidence_ids=set()
+          for source in sources:
+              evidence=json.loads(source.read_text())
+              evidence_ids.update(
+                  str(r.get('license_number') or '').strip()
+                  for r in evidence.get('records', [])
+                  if r.get('identity_verified') is True and str(r.get('license_number') or '').strip()
+              )
+          governed=evidence_ids & live
+          stale=evidence_ids-live
+          allowed={str(v).strip() for v in allowlist.get('license_numbers',[]) if str(v).strip()}
+          assert len(live)==363, len(live)
+          assert allowed==governed, {'allowlist_missing':sorted(governed-allowed),'allowlist_extra':sorted(allowed-governed)}
           assert q['licensed_valley_input_count'] == 363, q
-          assert q['already_operationally_verified_count'] == 3, q
-          assert q['research_task_count'] == 360, q
-          assert len(q['tasks']) == 360, q
-          print(json.dumps({k:q[k] for k in ('licensed_valley_input_count','already_operationally_verified_count','research_task_count')}, indent=2))
+          assert q['already_operationally_verified_count'] == len(governed), q
+          assert q['stale_or_out_of_scope_verified_count'] == len(stale), q
+          assert set(q['stale_or_out_of_scope_verified_licenses']) == stale, q
+          assert q['research_task_count'] == 363-len(governed), q
+          assert len(q['tasks']) == 363-len(governed), q
+          assert q['research_task_count'] + q['already_operationally_verified_count'] == 363, q
+          print(json.dumps({
+              'licensed_valley_input_count':363,
+              'governed_operationally_verified':len(governed),
+              'stale_or_out_of_scope_evidence':len(stale),
+              'research_task_count':q['research_task_count'],
+          }, indent=2))
           PY
       - name: Upload PCA evidence and research queue
         uses: actions/upload-artifact@v4
@@ -70,4 +124,5 @@ jobs:
           path: |
             data/nevada/raw/hcqc_personal_care_agencies.csv
             reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
+            reports/NEVADA_PCA_CANDIDATE_LIVE_MATCH.json
             reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json

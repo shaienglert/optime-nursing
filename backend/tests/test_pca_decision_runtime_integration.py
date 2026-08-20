@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from app.services.facility_parameter_service import refresh_runtime_cache
 from app.services.patient_decision_engine import run_patient_decision_engine
+from app.services.personal_care_agency_runtime import load_personal_care_agency_evidence
 
 
 class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
@@ -13,10 +14,12 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         self.env = patch.dict(os.environ, {"OPTIME_CANONICAL_MARKET": "las-vegas"}, clear=False)
         self.env.start()
         refresh_runtime_cache("pca_decision_integration_setup")
+        load_personal_care_agency_evidence.cache_clear()
 
     def tearDown(self) -> None:
         self.env.stop()
         refresh_runtime_cache("pca_decision_integration_teardown")
+        load_personal_care_agency_evidence.cache_clear()
 
     def test_post_spine_recovery_il_strategy_surfaces_governed_pca_candidates(self) -> None:
         state = {
@@ -37,8 +40,9 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         )
         result = run_patient_decision_engine(state, query, limit=10)
         layer = result["decision_intelligence"]["care_partner_layer"]
+        evidence = load_personal_care_agency_evidence()
         self.assertEqual(layer["licensed_valley_universe_count"], 363)
-        self.assertEqual(layer["operationally_verified_count"], 3)
+        self.assertEqual(layer["operationally_verified_count"], len(evidence["records"]))
         self.assertEqual(layer["status"], "CANDIDATES_PENDING_OPERATIONAL_VERIFICATION")
         self.assertIn("BATHING_ASSISTANCE", layer["requirements"]["required_services"])
         self.assertIn("DRESSING_ASSISTANCE", layer["requirements"]["required_services"])
@@ -48,8 +52,19 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         self.assertIn("RIGHT AT HOME LAS VEGAS", names)
         self.assertIn("COMFORT KEEPERS", names)
         self.assertEqual(result["care_partner_options"], options)
-        self.assertTrue(all(row["minimum_billable_hours"] == "UNKNOWN" for row in options))
         self.assertTrue(all(row["hourly_rate"] == "UNKNOWN" for row in options))
+
+        evidence_by_id = {row["agency_id"]: row for row in evidence["records"]}
+        self.assertEqual(evidence_by_id["NV-PCA-11759-PCS-1"]["minimum_billable_hours"], 0)
+        self.assertEqual(evidence_by_id["NV-PCA-7836-PCS-13"]["minimum_billable_hours"], 4)
+        self.assertEqual(evidence_by_id["NV-PCA-7836-PCS-13"]["minimum_hours_policy"], "FOUR_HOURS_PER_DAY")
+
+        homewatch = next((row for row in options if row["agency_id"] == "NV-PCA-11759-PCS-1"), None)
+        if homewatch is not None:
+            self.assertEqual(homewatch["minimum_billable_hours"], 0)
+        amada = next((row for row in options if row["agency_id"] == "NV-PCA-7836-PCS-13"), None)
+        if amada is not None:
+            self.assertEqual(amada["minimum_billable_hours"], 4)
 
     def test_non_il_strategy_does_not_inject_pca_candidates(self) -> None:
         state = {
