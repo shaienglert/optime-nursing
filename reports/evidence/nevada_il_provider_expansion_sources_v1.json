@@ -1,0 +1,41 @@
+{
+  "as_of": "2026-08-20",
+  "records": [
+    {
+      "canonical_id": "NV-PROVIDER-IL-VISTA-PARK",
+      "primary_source_url": "https://rlcommunities.com/communities/nevada/vista-park-retirement/",
+      "verified_claims": ["independent_living", "outside_care_allowed", "dining", "transportation", "housekeeping", "month_to_month"]
+    },
+    {
+      "canonical_id": "NV-PROVIDER-IL-COUNTRY-CLUB-MEADOWS",
+      "primary_source_url": "https://www.countryclubatthemeadows.com/",
+      "verified_claims": ["55_plus_active_adult_apartments", "planned_social_activities"]
+    },
+    {
+      "canonical_id": "NV-PROVIDER-IL-COUNTRY-CLUB-VALLEY-VIEW",
+      "primary_source_url": "https://www.countryclubatvalleyview.com/",
+      "verified_claims": ["55_plus_apartments", "planned_social_activities"]
+    },
+    {
+      "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-PEBBLE",
+      "primary_source_url": "https://destinationspebblenew.prospectportal.com/",
+      "verified_claims": ["55_plus_active_adult_apartments", "maintenance_free_living", "activities"]
+    },
+    {
+      "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-PUEBLO",
+      "primary_source_url": "https://liveoverture.com/communities/destinations-pueblo/",
+      "verified_claims": ["55_plus_senior_apartments", "maintenance_free_living", "activities", "optional_concierge"]
+    },
+    {
+      "canonical_id": "NV-PROVIDER-IL-CAREFREE-WILLOWS",
+      "primary_source_url": "https://www.carefreeseniors.com/the-willows-summerlin-las-vegas/",
+      "verified_claims": ["senior_apartments", "active_retirement_lifestyle", "activities"]
+    },
+    {
+      "canonical_id": "NV-PROVIDER-IL-ALBUM-UNION-VILLAGE",
+      "primary_source_url": "https://myalbumunionvillagenew.prospectportal.com/contact/",
+      "verified_claims": ["55_plus_active_adult_apartments", "maintenance_free_living"]
+    }
+  ],
+  "exclusion_rule": "Do not automatically classify ownership/master-planned active-adult communities such as Sun City, Del Webb or Trilogy as Independent Living facilities."
+}
