@@ -1,0 +1,78 @@
+name: Nevada PCA Full Operational Sweep
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/run_nevada_pca_full_operational_sweep.py'
+      - '.github/workflows/nevada-pca-full-operational-sweep.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 2,5'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nevada-pca-full-operational-sweep
+  cancel-in-progress: false
+
+jobs:
+  full-pca-operational-sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      PYTHONPATH: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tooling
+        run: python -m pip install --disable-pip-version-check requests pytest
+      - name: Rebuild live Nevada PCA universe
+        run: python scripts/extract_nevada_hcqc_personal_care_agencies.py
+      - name: Build governed remaining research queue
+        run: python scripts/build_nevada_pca_operational_research_queue.py
+      - name: Run full operational research sweep
+        run: python scripts/run_nevada_pca_full_operational_sweep.py --chunk-size 25 --throttle 0.05
+      - name: Gate full-sweep completeness and integrity
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from urllib.parse import urlparse
+          q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
+          r=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_FULL_SWEEP.json').read_text())
+          assert q['licensed_valley_input_count'] == 363, q
+          assert r['attempted'] == q['research_task_count'], (r, q)
+          assert r['already_operationally_verified_count'] == q['already_operationally_verified_count'], (r, q)
+          assert r['coverage_after_verified_staging'] + r['remaining_after_verified_staging'] == 363, r
+          blocked=('cms.gov','medicare.gov','dpbh.nv.gov','nvdpbh.aithent.com','health.nv.gov','myhealthfacilitylicense.nv.gov','aplaceformom.com','caring.com','seniorly.com','yelp.com','facebook.com','instagram.com','linkedin.com','bbb.org','yellowpages.com')
+          ids=set()
+          for row in r['records']:
+              aid=str(row.get('agency_id') or '')
+              assert aid and aid not in ids, aid
+              ids.add(aid)
+              if row.get('identity_verified') is True:
+                  domain=urlparse(str(row.get('primary_source_url') or '')).netloc.lower()
+                  assert domain and not any(domain==d or domain.endswith('.'+d) for d in blocked), row
+          assert len(ids) == r['attempted'], (len(ids), r['attempted'])
+          print(json.dumps({
+            'licensed_valley': q['licensed_valley_input_count'],
+            'already_verified': q['already_operationally_verified_count'],
+            'full_sweep_attempted': r['attempted'],
+            'new_identity_verified_staging': r['identity_verified'],
+            'coverage_after_staging': r['coverage_after_verified_staging'],
+            'remaining_after_staging': r['remaining_after_verified_staging'],
+          }, indent=2))
+          PY
+      - name: Upload complete PCA research package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nevada-pca-full-operational-sweep
+          retention-days: 90
+          path: |
+            data/nevada/raw/hcqc_personal_care_agencies.csv
+            reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
+            reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json
+            reports/NEVADA_PCA_OPERATIONAL_FULL_SWEEP.json
