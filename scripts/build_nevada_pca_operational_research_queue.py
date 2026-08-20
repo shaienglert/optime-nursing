@@ -44,7 +44,21 @@ def _load_verified(path: Path) -> set[str]:
     }
 
 
+def _live_valley_license_set(rows: list[dict[str, str]]) -> set[str]:
+    return {
+        str(row.get("license_number") or "").strip()
+        for row in rows
+        if str(row.get("license_status") or "").upper() == "ACTIVE"
+        and str(row.get("is_las_vegas_valley") or "").lower() == "true"
+        and str(row.get("license_number") or "").strip()
+    }
+
+
 def build(rows: list[dict[str, str]], verified_licenses: set[str]) -> dict:
+    live_valley_licenses = _live_valley_license_set(rows)
+    governed_verified_licenses = verified_licenses & live_valley_licenses
+    stale_or_out_of_scope_verified = sorted(verified_licenses - live_valley_licenses)
+
     tasks = []
     for row in rows:
         if str(row.get("license_status") or "").upper() != "ACTIVE":
@@ -52,7 +66,7 @@ def build(rows: list[dict[str, str]], verified_licenses: set[str]) -> dict:
         if str(row.get("is_las_vegas_valley") or "").lower() != "true":
             continue
         license_number = str(row.get("license_number") or "").strip()
-        if not license_number or license_number in verified_licenses:
+        if not license_number or license_number in governed_verified_licenses:
             continue
         agency_name = str(row.get("agency_name") or "UNKNOWN").strip()
         city = str(row.get("city") or "UNKNOWN").strip()
@@ -78,14 +92,12 @@ def build(rows: list[dict[str, str]], verified_licenses: set[str]) -> dict:
         })
     tasks.sort(key=lambda row: (row["city"], row["agency_name"], row["license_number"]))
     return {
-        "schema_version": "nevada-pca-operational-research-queue-v1.0.0",
+        "schema_version": "nevada-pca-operational-research-queue-v1.1.0",
         "queue_type": "PCA_OPERATIONAL_RESEARCH",
-        "licensed_valley_input_count": sum(
-            1 for row in rows
-            if str(row.get("license_status") or "").upper() == "ACTIVE"
-            and str(row.get("is_las_vegas_valley") or "").lower() == "true"
-        ),
-        "already_operationally_verified_count": len(verified_licenses),
+        "licensed_valley_input_count": len(live_valley_licenses),
+        "already_operationally_verified_count": len(governed_verified_licenses),
+        "stale_or_out_of_scope_verified_count": len(stale_or_out_of_scope_verified),
+        "stale_or_out_of_scope_verified_licenses": stale_or_out_of_scope_verified,
         "research_task_count": len(tasks),
         "tasks": tasks,
     }
@@ -105,7 +117,12 @@ def main() -> int:
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({key: payload[key] for key in ("licensed_valley_input_count", "already_operationally_verified_count", "research_task_count")}, indent=2))
+    print(json.dumps({key: payload[key] for key in (
+        "licensed_valley_input_count",
+        "already_operationally_verified_count",
+        "stale_or_out_of_scope_verified_count",
+        "research_task_count",
+    )}, indent=2))
     if payload["licensed_valley_input_count"] <= 0:
         raise SystemExit("No live Las Vegas Valley PCA input records")
     if payload["research_task_count"] + payload["already_operationally_verified_count"] != payload["licensed_valley_input_count"]:
