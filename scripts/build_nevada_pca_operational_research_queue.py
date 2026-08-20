@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 
 
+LIVE_PROMOTIONS = Path("data/nevada/verified/pca_operational_live_promotions.json")
+
 RESEARCH_FIELDS = [
     "primary_source_url",
     "serves_las_vegas_valley",
@@ -34,14 +36,18 @@ RELATIONSHIP_FIELDS = [
 
 
 def _load_verified(path: Path) -> set[str]:
-    if not path.is_file():
-        return set()
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    return {
-        str(row.get("license_number") or "").strip()
-        for row in payload.get("records") or []
-        if row.get("identity_verified") is True
-    }
+    verified: set[str] = set()
+    for source in (path, LIVE_PROMOTIONS):
+        if not source.is_file():
+            continue
+        payload = json.loads(source.read_text(encoding="utf-8"))
+        verified.update(
+            str(row.get("license_number") or "").strip()
+            for row in payload.get("records") or []
+            if row.get("identity_verified") is True
+            and str(row.get("license_number") or "").strip()
+        )
+    return verified
 
 
 def _live_valley_license_set(rows: list[dict[str, str]]) -> set[str]:
@@ -92,7 +98,7 @@ def build(rows: list[dict[str, str]], verified_licenses: set[str]) -> dict:
         })
     tasks.sort(key=lambda row: (row["city"], row["agency_name"], row["license_number"]))
     return {
-        "schema_version": "nevada-pca-operational-research-queue-v1.1.0",
+        "schema_version": "nevada-pca-operational-research-queue-v1.2.0",
         "queue_type": "PCA_OPERATIONAL_RESEARCH",
         "licensed_valley_input_count": len(live_valley_licenses),
         "already_operationally_verified_count": len(governed_verified_licenses),
