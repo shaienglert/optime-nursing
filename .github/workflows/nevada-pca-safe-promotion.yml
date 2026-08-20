@@ -1,0 +1,42 @@
+name: Nevada PCA Safe Promotion
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/promote_nevada_pca_full_sweep_safe.py'
+      - 'scripts/enrich_nevada_pca_operational_primary_sources_v3.py'
+      - 'backend/tests/test_pca_safe_auto_promotion.py'
+      - 'backend/tests/test_pca_operational_research_v3.py'
+      - 'data/nevada/verified/personal_care_agency_evidence_schema.json'
+      - '.github/workflows/nevada-pca-safe-promotion.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  safe-promotion-semantics:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend:.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tooling
+        run: python -m pip install --disable-pip-version-check pytest requests
+      - name: Run safe-promotion and V3 extraction tests
+        run: python -m pytest backend/tests/test_pca_safe_auto_promotion.py backend/tests/test_pca_operational_research_v3.py -q
+      - name: Gate evidence schema UNKNOWN policy
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path('data/nevada/verified/personal_care_agency_evidence_schema.json').read_text())
+          assert p['schema_version']=='nevada-personal-care-agency-evidence-v1.1.0', p
+          assert 'negative_signal_rule' in p['policy'], p
+          t=p['record_template']
+          for key in ('minimum_weekly_hours','backup_caregiver_available','registered_nurse_oversight','long_term_care_insurance_verified','va_benefit_support_verified','medicaid_service_verified','private_pay_verified'):
+              assert key in t, key
+          print(json.dumps({'schema_version':p['schema_version'],'extended_fields_verified':True}, indent=2))
+          PY
