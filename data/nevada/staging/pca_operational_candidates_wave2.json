@@ -1,0 +1,31 @@
+{
+  "schema_version": "nevada-pca-operational-candidates-v1.0.0",
+  "snapshot_date": "2026-08-20",
+  "policy": "Primary-provider candidates only; production promotion requires a strong live Nevada HCQC/ALiS Valley identity match.",
+  "records": [
+    {
+      "agency_name": "AMADA SENIOR CARE LAS VEGAS",
+      "license_number": "UNKNOWN",
+      "address": "4175 S Riley St Suite 203",
+      "city": "LAS VEGAS",
+      "zip": "89147",
+      "phone": "702-998-3996",
+      "primary_source_url": "https://www.amadaseniorcare.com/las-vegas-senior-care/in-home-care/",
+      "bathing_assistance": true,
+      "dressing_assistance": true,
+      "transfer_assistance": true,
+      "medication_reminders": true,
+      "meal_preparation": true,
+      "light_housekeeping": true,
+      "post_surgical_care": true,
+      "employment_model": "EMPLOYEES",
+      "liability_insurance_verified": true,
+      "bonded_verified": true,
+      "availability_status": "PHONES_ANSWERED_24_7",
+      "minimum_billable_hours": 4,
+      "minimum_hours_policy": "FOUR_HOURS_PER_DAY",
+      "hourly_rate": "UNKNOWN",
+      "evidence_summary": "Amada Las Vegas primary site identifies 4175 S Riley St Suite 203 and 702-998-3996. It explicitly lists bathing, dressing, walking/ambulation, meals, medication reminders, housekeeping and post-discharge/post-surgical support. Critically, its published Las Vegas in-home-care page states all home care is billed hourly with a minimum of four hours per day. It also states caregivers are bonded and insured employees."
+    }
+  ]
+}
