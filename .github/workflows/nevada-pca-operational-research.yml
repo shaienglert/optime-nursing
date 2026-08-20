@@ -1,0 +1,103 @@
+name: Nevada PCA Operational Research
+
+on:
+  pull_request:
+    paths:
+      - 'data/nevada/verified/personal_care_agency_operational_evidence.json'
+      - 'scripts/enrich_nevada_pca_operational_primary_sources.py'
+      - 'scripts/enrich_nevada_pca_operational_primary_sources_v2.py'
+      - 'scripts/sanitize_nevada_pca_operational_research.py'
+      - 'scripts/build_nevada_pca_operational_research_queue.py'
+      - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
+      - 'scripts/materialize_nevada_pca_valley_registry.py'
+      - 'backend/tests/test_pca_operational_research_worker.py'
+      - '.github/workflows/nevada-pca-operational-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research-pca-operational:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install research/test tooling
+        run: python -m pip install --disable-pip-version-check pytest requests
+      - name: Run deterministic operational research tests
+        run: python -m pytest backend/tests/test_pca_operational_research_worker.py -q
+      - name: Rebuild live Nevada PCA universe
+        run: python scripts/extract_nevada_hcqc_personal_care_agencies.py
+      - name: Materialize complete Las Vegas Valley PCA registry
+        run: python scripts/materialize_nevada_pca_valley_registry.py
+      - name: Gate canonical PCA registry
+        run: |
+          python - <<'PY'
+          import csv, json, pathlib
+          j=json.loads(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json').read_text())
+          rows=list(csv.DictReader(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv').open()))
+          assert j['record_count'] == 363, j
+          assert len(rows) == 363, len(rows)
+          assert len({r['agency_id'] for r in rows}) == 363
+          assert j['cities'] == {'LAS VEGAS':302,'HENDERSON':34,'NORTH LAS VEGAS':27}, j
+          assert j['operationally_verified_count'] == 6, j
+          assert j['operationally_unknown_count'] == 357, j
+          assert all(r['source_authority']=='Nevada HCQC / ALiS' for r in rows)
+          verified=[r for r in rows if r['operational_evidence_status']=='PRIMARY_SOURCE_OPERATIONAL_VERIFIED']
+          unknown=[r for r in rows if r['operational_evidence_status']=='LICENSE_VERIFIED_OPERATIONAL_UNKNOWN']
+          assert len(verified)==6, len(verified)
+          assert len(unknown)==357, len(unknown)
+          assert all(r['official_website'] not in {'','UNKNOWN'} for r in verified)
+          homewatch=next(r for r in verified if r['agency_id']=='NV-PCA-11759-PCS-1')
+          assert homewatch['minimum_billable_hours']=='0', homewatch
+          assert homewatch['minimum_hours_policy']=='NO_MINIMUM_HOURS', homewatch
+          print(json.dumps({'registry_records':363,'verified':6,'unknown':357,'cities':j['cities']}, indent=2))
+          PY
+      - name: Build remaining operational research queue
+        run: python scripts/build_nevada_pca_operational_research_queue.py
+      - name: Research first 20 unverified agencies from primary sources
+        run: python scripts/enrich_nevada_pca_operational_primary_sources_v2.py --limit 20 --throttle 0.05
+      - name: Sanitize primary-source research
+        run: python scripts/sanitize_nevada_pca_operational_research.py
+      - name: Gate research accounting and primary-source integrity
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from urllib.parse import urlparse
+          q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
+          r=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json').read_text())
+          assert q['licensed_valley_input_count'] == 363, q
+          assert q['already_operationally_verified_count'] == 6, q
+          assert q['research_task_count'] == 357, q
+          assert q['research_task_count'] + q['already_operationally_verified_count'] == 363, q
+          assert r['attempted'] == 20, r
+          assert len(r['records']) == 20, r
+          blocked=('cms.gov','medicare.gov','dpbh.nv.gov','nvdpbh.aithent.com','health.nv.gov','myhealthfacilitylicense.nv.gov','aplaceformom.com','caring.com','seniorly.com','yelp.com','facebook.com','linkedin.com','bbb.org')
+          for row in r['records']:
+              if row.get('identity_verified') is not True:
+                  continue
+              domain=urlparse(str(row.get('primary_source_url') or '')).netloc.lower()
+              assert domain and not any(domain==d or domain.endswith('.'+d) for d in blocked), row
+          print(json.dumps({
+            'queue': q['research_task_count'],
+            'already_verified': q['already_operationally_verified_count'],
+            'attempted': r['attempted'],
+            'identity_verified_after_sanitize': r['identity_verified'],
+            'candidate_rejected_not_primary': r.get('candidate_rejected_not_primary',0),
+          }, indent=2))
+          PY
+      - name: Upload PCA registry and operational research evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: nevada-pca-registry-and-operational-research
+          path: |
+            data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json
+            data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv
+            reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
+            reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json
+            reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json
