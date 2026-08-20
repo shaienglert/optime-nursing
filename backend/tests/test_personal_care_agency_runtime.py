@@ -90,8 +90,8 @@ def test_runtime_only_loads_primary_evidence_that_is_on_live_hcqc_allowlist():
     load_personal_care_agency_evidence.cache_clear()
     payload = load_personal_care_agency_evidence()
     licenses = {row["license_number"] for row in payload["records"]}
-    assert payload["operationally_verified_count"] == 8
-    assert payload["live_operational_allowlist_count"] == 8
+    assert payload["operationally_verified_count"] == 11
+    assert payload["live_operational_allowlist_count"] == 11
     assert licenses == {
         "9703-PCS-7",
         "5291-PCS-19",
@@ -101,5 +101,8 @@ def test_runtime_only_loads_primary_evidence_that_is_on_live_hcqc_allowlist():
         "11851-PCS-1",
         "12116-PCS-0",
         "12003-PCS-1",
+        "11765-PCS-0",
+        "11783-PCS-1",
+        "11826-PCS-1",
     }
-    assert not ({"8716-PCS-0", "8472-PCS-0", "11554-PCS-0"} & licenses)
+    assert not ({"8716-PCS-0", "8472-PCS-0", "11554-PCS-0", "9599-PCS-3"} & licenses)
