@@ -1,5 +1,5 @@
 {
-  "schema_version": "nevada-pca-operational-candidates-v1.0.0",
+  "schema_version": "nevada-pca-operational-candidates-v1.1.0",
   "snapshot_date": "2026-08-20",
   "policy": "These are primary-provider operational candidates only. They are not production verified until matched to the live Nevada HCQC/ALiS Las Vegas Valley PCA registry by exact license or strong contact identity.",
   "records": [
@@ -85,6 +85,66 @@
       "minimum_billable_hours": "UNKNOWN",
       "hourly_rate": "UNKNOWN",
       "evidence_summary": "Primary Henderson site identifies 2560 Anthem Village Drive Ste 110, 702-551-5505 and service coverage including Henderson, Boulder City and Las Vegas. It states caregivers are screened, trained and insured."
+    },
+    {
+      "agency_name": "BRIGHTSTAR CARE OF LAS VEGAS WEST",
+      "license_number": "UNKNOWN",
+      "address": "4775 S Durango Dr Suite 200",
+      "city": "LAS VEGAS",
+      "zip": "89147",
+      "phone": "702-982-2273",
+      "primary_source_url": "https://www.brightstarcare.com/locations/las-vegas-w/",
+      "bathing_assistance": true,
+      "dressing_assistance": true,
+      "transfer_assistance": true,
+      "medication_reminders": true,
+      "meal_preparation": true,
+      "light_housekeeping": true,
+      "post_surgical_care": true,
+      "availability_status": "24_7_SERVICE_AVAILABLE",
+      "registered_nurse_oversight": true,
+      "minimum_billable_hours": "UNKNOWN",
+      "hourly_rate": "UNKNOWN",
+      "evidence_summary": "BrightStar Care Las Vegas primary/local sources identify 4775 S Durango Dr Suite 200 and 702-982-2273. BrightStar personal-care materials list bathing, dressing/grooming, mobility, hygiene, meals, housekeeping, medication reminders and outpatient pre/post-op support, with nurse-guided care and 24/7 local availability."
+    },
+    {
+      "agency_name": "NEVADA SENIOR SERVICES IN-HOME SERVICES",
+      "license_number": "UNKNOWN",
+      "address": "901 N Jones Blvd",
+      "city": "LAS VEGAS",
+      "zip": "89108",
+      "phone": "702-333-1599",
+      "primary_source_url": "https://www.nevadaseniorservices.org/in-home-services",
+      "bathing_assistance": true,
+      "dressing_assistance": true,
+      "transfer_assistance": true,
+      "medication_reminders": true,
+      "meal_preparation": true,
+      "light_housekeeping": true,
+      "languages": ["English", "Spanish_possible_staffing_signal_only"],
+      "minimum_billable_hours": "UNKNOWN",
+      "hourly_rate": "UNKNOWN",
+      "evidence_summary": "Nevada Senior Services primary site identifies its In-Home Services program at 901 N Jones Blvd with 702-333-1599. The PCS page explicitly lists bathing, dressing, grooming, toileting, mobility/safe transfers, meals, housekeeping, laundry and medication reminders. A careers page lists In-Home PCA work across Las Vegas, North Las Vegas and Henderson; Spanish is only a hiring preference signal, not verified client-language availability."
+    },
+    {
+      "agency_name": "FREEDOMCARE NEVADA",
+      "license_number": "UNKNOWN",
+      "address": "4245 S Grand Canyon Dr Suite 216",
+      "city": "LAS VEGAS",
+      "zip": "89147",
+      "phone": "602-834-9150",
+      "primary_source_url": "https://freedomcare.com/pcs-home-care-agency-las-vegas-nv/",
+      "bathing_assistance": true,
+      "dressing_assistance": true,
+      "transfer_assistance": true,
+      "medication_reminders": "UNKNOWN",
+      "meal_preparation": true,
+      "light_housekeeping": true,
+      "service_area": "STATEWIDE_NEVADA",
+      "payer_model": "NEVADA_MEDICAID_FAMILY_CAREGIVER_FOCUSED",
+      "minimum_billable_hours": "UNKNOWN",
+      "hourly_rate": "UNKNOWN",
+      "evidence_summary": "FreedomCare Nevada primary site identifies 4245 S Grand Canyon Dr Suite 216 and 602-834-9150, states it is a licensed PCS provider serving Nevada, and lists bathing/dressing/grooming, toileting, transferring, mobility, housekeeping, laundry, shopping and meal preparation. The offering is strongly Medicaid/family-caregiver oriented and should not be assumed to fit private-pay short visits."
     }
   ]
 }
