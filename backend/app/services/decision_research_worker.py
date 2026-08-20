@@ -15,6 +15,8 @@ from app.database import SessionLocal
 from app.models.agent_execution import AgentJobRun, AgentKnowledgeRecord, AgentQueueItem, AgentWorker
 from app.services.decision_agent_bridge import QUEUE_TYPE
 from app.services.facility_parameter_service import get_canonical_facility_index
+from app.services.provider_housing_runtime import get_provider_housing_evidence
+from app.services.public_reputation_runtime import get_public_reputation
 
 _TIMEOUT = 12
 _RUN_LOCK = threading.Lock()
@@ -122,6 +124,57 @@ def _identity_matches(text: str, facility_name: str, city: str) -> bool:
     return bool(name_match and location_match)
 
 
+def _verified_registry_overlay(canonical_id: str) -> Dict[str, Any]:
+    canonical = dict(get_canonical_facility_index().get(canonical_id) or {})
+    if not canonical:
+        return {}
+    canonical.setdefault("canonical_facility_id", canonical_id)
+    provider = get_provider_housing_evidence(canonical)
+    if provider.get("provider_housing_evidence"):
+        canonical["provider_housing_evidence"] = provider["provider_housing_evidence"]
+        canonical["aliases"] = provider.get("provider_aliases") or canonical.get("aliases") or []
+        p = provider["provider_housing_evidence"]
+        for key in ("address", "city", "state", "zip"):
+            value = p.get(key)
+            if value and str(value).upper() != "UNKNOWN":
+                canonical[key] = value
+    if provider.get("life_plan_primary_evidence"):
+        canonical["life_plan_primary_evidence"] = provider["life_plan_primary_evidence"]
+    reputation = get_public_reputation(canonical)
+    return {"provider": provider, "reputation": reputation}
+
+
+def _apply_verified_registry_evidence(research: Dict[str, Any], canonical_id: str, dimension: str) -> None:
+    overlay = _verified_registry_overlay(canonical_id)
+    provider = overlay.get("provider") if isinstance(overlay.get("provider"), dict) else {}
+    provider_record = provider.get("provider_housing_evidence") if isinstance(provider.get("provider_housing_evidence"), dict) else {}
+    evidence = provider_record.get("evidence") if isinstance(provider_record.get("evidence"), dict) else {}
+    if evidence:
+        research["official_identity_verified"] = True
+        source_url = str(provider_record.get("source_url") or "").strip()
+        if source_url and source_url.upper() != "UNKNOWN":
+            research["source_url"] = source_url
+        research["social_engagement_verified"] = evidence.get("social_engagement_verified") is True
+        research["medication_support_verified"] = evidence.get("medication_support_verified") is True
+        research["adl_support_verified"] = evidence.get("adl_support_verified") is True
+        research["transportation_verified"] = evidence.get("transportation_verified") is True
+        research["dining_verified"] = evidence.get("dining_verified") is True
+        research["rehab_verified"] = evidence.get("rehab_verified") is True
+        research["pt_ot_verified"] = evidence.get("pt_ot_verified") is True or evidence.get("pt_ot_external_path_verified") is True
+        research["couple_coresidence_verified"] = evidence.get("couple_coresidence_verified") is True or evidence.get("couple_unit_possible") is True
+        research["outside_care_allowed_verified"] = evidence.get("outside_care_allowed_verified") is True
+        research["continuum_of_care_verified"] = evidence.get("continuum_of_care_verified") is True
+        research["verified_registry_used"] = True
+    reputation = overlay.get("reputation") if isinstance(overlay.get("reputation"), dict) else {}
+    if reputation.get("identity_verified") is True:
+        research["public_rating"] = reputation.get("rating", "UNKNOWN")
+        research["public_review_count"] = reputation.get("review_count", "UNKNOWN")
+        research["public_reputation_source"] = reputation.get("source", "UNKNOWN")
+        research["public_reputation_identity_verified"] = True
+    else:
+        research["public_reputation_identity_verified"] = False
+
+
 def _persist_record(db, *, agent_key: str, canonical_id: str, facility_name: str, source_url: str, payload: Dict[str, Any]) -> None:
     latest = db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.agent_key == agent_key, AgentKnowledgeRecord.entity_key == canonical_id, AgentKnowledgeRecord.record_type == "las_vegas_decision_evidence").order_by(AgentKnowledgeRecord.id.desc()).first()
     encoded = json.dumps(payload, sort_keys=True)
@@ -147,32 +200,20 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
     requested = [str(x) for x in payload.get("requested_parameters") or []]
     source_url = _candidate_regulatory_url(facility_name, city) if dimension == "facility_quality_safety" else _candidate_official_url(facility_name, city, canonical_id)
     research: Dict[str, Any] = {
-        "market": "las-vegas",
-        "canonical_facility_id": canonical_id,
-        "facility_name": facility_name,
-        "dimension": dimension,
-        "requested_parameters": requested,
-        "research_completed": True,
-        "source_url": source_url,
-        "observed_at": datetime.now(timezone.utc).isoformat(),
-        "official_identity_verified": False,
-        "regulatory_source_verified": False,
-        "regulatory_parameters_verified": [],
-        "social_engagement_verified": False,
-        "medication_support_verified": False,
-        "adl_support_verified": False,
-        "transportation_verified": False,
-        "dining_verified": False,
-        "rehab_verified": False,
-        "pt_ot_verified": False,
-        "couple_coresidence_verified": False,
-        "outside_care_allowed_verified": False,
-        "continuum_of_care_verified": False,
-        "public_rating": "UNKNOWN",
-        "public_review_count": "UNKNOWN",
-        "public_reputation_source": "UNKNOWN",
+        "market": "las-vegas", "canonical_facility_id": canonical_id, "facility_name": facility_name,
+        "dimension": dimension, "requested_parameters": requested, "research_completed": True,
+        "source_url": source_url, "observed_at": datetime.now(timezone.utc).isoformat(),
+        "official_identity_verified": False, "regulatory_source_verified": False, "regulatory_parameters_verified": [],
+        "social_engagement_verified": False, "medication_support_verified": False, "adl_support_verified": False,
+        "transportation_verified": False, "dining_verified": False, "rehab_verified": False, "pt_ot_verified": False,
+        "couple_coresidence_verified": False, "outside_care_allowed_verified": False, "continuum_of_care_verified": False,
+        "public_rating": "UNKNOWN", "public_review_count": "UNKNOWN", "public_reputation_source": "UNKNOWN",
     }
-    if source_url:
+    if dimension != "facility_quality_safety":
+        _apply_verified_registry_evidence(research, canonical_id, dimension)
+        if research.get("source_url"):
+            source_url = str(research["source_url"])
+    if source_url and not research.get("verified_registry_used"):
         try:
             body, status = _fetch(source_url)
             research["http_status"] = status
@@ -201,61 +242,70 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
     return research
 
 
+def _reconcile_worker_delivery_metrics(db, remaining: int) -> None:
+    workers = db.query(AgentWorker).filter(AgentWorker.queue_type == QUEUE_TYPE).all()
+    for worker in workers:
+        key = str(worker.agent_key or "")
+        total = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.agent_key == key).count()
+        done = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.agent_key == key, AgentQueueItem.status == "DONE").count()
+        failed = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.agent_key == key, AgentQueueItem.status == "FAILED").count()
+        knowledge = db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.agent_key == key, AgentKnowledgeRecord.record_type == "las_vegas_decision_evidence").count()
+        useful = db.query(AgentKnowledgeRecord).filter(
+            AgentKnowledgeRecord.agent_key == key,
+            AgentKnowledgeRecord.record_type == "las_vegas_decision_evidence",
+            AgentKnowledgeRecord.source.in_(["OFFICIAL_PROVIDER_WEBSITE", "NEVADA_HCQC_ALIS"]),
+        ).count()
+        delivery_coverage = round((useful / knowledge) * 100.0, 2) if knowledge else 0.0
+        worker.last_run = datetime.now(timezone.utc)
+        worker.items_processed = done + failed
+        worker.items_added = done
+        worker.errors = failed
+        worker.knowledge_records = knowledge
+        worker.coverage = delivery_coverage
+        pending_for_worker = total - done - failed
+        if pending_for_worker > 0 or remaining > 0:
+            worker.status = "QUEUED"
+            worker.last_error = None
+        elif done > 0 and useful == 0:
+            worker.status = "DEGRADED"
+            worker.last_error = "FIELD_DELIVERY_ZERO: tasks completed but no governed evidence reached decision fields"
+        else:
+            worker.status = "IDLE"
+            worker.last_error = None
+
+
 def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
     if not _RUN_LOCK.acquire(blocking=False):
         return {"status": "ALREADY_RUNNING", "processed": 0, "succeeded": 0, "failed": 0, "remaining": None, "market": "las-vegas"}
     db = SessionLocal()
     processed = succeeded = failed = 0
     run = AgentJobRun(agent_key="decision_evidence_research", status="RUNNING")
-    db.add(run)
-    db.commit()
-    db.refresh(run)
+    db.add(run); db.commit(); db.refresh(run)
     try:
         items: List[AgentQueueItem] = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").order_by(AgentQueueItem.created_at.asc()).limit(max(1, int(limit))).all()
         for item in items:
-            item.status = "RUNNING"
-            item.started_at = datetime.now(timezone.utc)
-            item.attempts = int(item.attempts or 0) + 1
-            db.commit()
-            processed += 1
+            item.status = "RUNNING"; item.started_at = datetime.now(timezone.utc); item.attempts = int(item.attempts or 0) + 1; db.commit(); processed += 1
             try:
                 result = _process_item(db, item)
-                item.status = "DONE"
-                item.finished_at = datetime.now(timezone.utc)
-                positive = any(result.get(k) is True for k in ("social_engagement_verified", "medication_support_verified", "adl_support_verified", "transportation_verified", "dining_verified", "rehab_verified", "pt_ot_verified", "couple_coresidence_verified", "outside_care_allowed_verified", "continuum_of_care_verified", "regulatory_source_verified"))
-                item.error_message = None if positive else "RESEARCH_COMPLETED_NO_REQUESTED_PUBLIC_CLAIM_VERIFIED"
-                succeeded += 1
+                item.status = "DONE"; item.finished_at = datetime.now(timezone.utc)
+                positive = any(result.get(k) is True for k in ("social_engagement_verified", "medication_support_verified", "adl_support_verified", "transportation_verified", "dining_verified", "rehab_verified", "pt_ot_verified", "couple_coresidence_verified", "outside_care_allowed_verified", "continuum_of_care_verified", "regulatory_source_verified", "public_reputation_identity_verified"))
+                item.error_message = None if positive else "RESEARCH_COMPLETED_NO_REQUESTED_PUBLIC_CLAIM_VERIFIED"; succeeded += 1
             except Exception as exc:
                 _LOG.exception("decision evidence item failed id=%s", item.id)
-                if int(item.attempts or 0) >= int(item.max_attempts or 3):
-                    item.status = "FAILED"
-                    item.finished_at = datetime.now(timezone.utc)
-                else:
-                    item.status = "PENDING"
-                item.error_message = f"{exc.__class__.__name__}: {str(exc)[:300]}"
-                failed += 1
+                if int(item.attempts or 0) >= int(item.max_attempts or 3): item.status = "FAILED"; item.finished_at = datetime.now(timezone.utc)
+                else: item.status = "PENDING"
+                item.error_message = f"{exc.__class__.__name__}: {str(exc)[:300]}"; failed += 1
             db.commit()
         run.status = "SUCCESS" if failed == 0 else ("PARTIAL" if succeeded else "FAILED")
-        run.finished_at = datetime.now(timezone.utc)
-        run.items_processed = processed
-        run.items_added = succeeded
-        run.errors = failed
-        workers = db.query(AgentWorker).filter(AgentWorker.queue_type == QUEUE_TYPE).all()
+        run.finished_at = datetime.now(timezone.utc); run.items_processed = processed; run.items_added = succeeded; run.errors = failed
         remaining = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").count()
-        for worker in workers:
-            worker.last_run = datetime.now(timezone.utc)
-            worker.status = "IDLE" if remaining == 0 else "QUEUED"
-            worker.items_processed = int(worker.items_processed or 0) + processed
-            worker.items_added = int(worker.items_added or 0) + succeeded
-            worker.errors = int(worker.errors or 0) + failed
+        _reconcile_worker_delivery_metrics(db, remaining)
         db.commit()
         return {"status": run.status, "processed": processed, "succeeded": succeeded, "failed": failed, "remaining": remaining, "market": "las-vegas"}
     except Exception:
-        _LOG.exception("decision evidence worker run failed")
-        raise
+        _LOG.exception("decision evidence worker run failed"); raise
     finally:
-        db.close()
-        _RUN_LOCK.release()
+        db.close(); _RUN_LOCK.release()
 
 
 if __name__ == "__main__":
