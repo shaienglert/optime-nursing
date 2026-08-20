@@ -27,7 +27,7 @@ def _run_chunk(index: int, *, chunk_size: int, queue_path: str, throttle: float,
     tmp = tmp_dir / f'chunk_{index:03d}.json'
     cmd = [
         sys.executable,
-        'scripts/enrich_nevada_pca_operational_primary_sources_v2.py',
+        'scripts/enrich_nevada_pca_operational_primary_sources_v4.py',
         '--queue', queue_path,
         '--output', str(tmp),
         '--offset', str(offset),
@@ -91,7 +91,7 @@ def main() -> int:
 
     verified = [r for r in sanitized if r.get('identity_verified') is True]
     payload = {
-        'schema_version': 'nevada-pca-operational-full-sweep-v1.1.0',
+        'schema_version': 'nevada-pca-operational-full-sweep-v1.2.0',
         'licensed_valley_input_count': queue.get('licensed_valley_input_count'),
         'already_operationally_verified_count': queue.get('already_operationally_verified_count'),
         'research_task_count': len(tasks),
