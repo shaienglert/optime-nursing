@@ -15,6 +15,7 @@ from typing import Any, Dict, Iterable, List
 UNKNOWN = "UNKNOWN"
 REPO_ROOT = Path(__file__).resolve().parents[3]
 OPERATIONAL_EVIDENCE_PATH = REPO_ROOT / "data" / "nevada" / "verified" / "personal_care_agency_operational_evidence.json"
+LIVE_OPERATIONAL_ALLOWLIST_PATH = REPO_ROOT / "data" / "nevada" / "verified" / "pca_live_operational_allowlist.json"
 
 REQUIRED_PCA_FIELDS = (
     "license_status",
@@ -40,6 +41,17 @@ def _known(value: Any) -> bool:
     return value not in (None, "", UNKNOWN, [], {})
 
 
+def _load_live_operational_allowlist() -> set[str]:
+    if not LIVE_OPERATIONAL_ALLOWLIST_PATH.is_file():
+        return set()
+    payload = json.loads(LIVE_OPERATIONAL_ALLOWLIST_PATH.read_text(encoding="utf-8"))
+    return {
+        str(value).strip()
+        for value in payload.get("license_numbers") or []
+        if str(value).strip()
+    }
+
+
 @lru_cache(maxsize=1)
 def load_personal_care_agency_evidence() -> Dict[str, Any]:
     if not OPERATIONAL_EVIDENCE_PATH.is_file():
@@ -50,10 +62,22 @@ def load_personal_care_agency_evidence() -> Dict[str, Any]:
             "policy": {"unknown_rule": "No operational evidence file is available."},
         }
     payload = json.loads(OPERATIONAL_EVIDENCE_PATH.read_text(encoding="utf-8"))
-    records = [row for row in payload.get("records") or [] if row.get("identity_verified") is True]
+    live_allowlist = _load_live_operational_allowlist()
+    records = [
+        row
+        for row in payload.get("records") or []
+        if row.get("identity_verified") is True
+        and str(row.get("license_number") or "").strip() in live_allowlist
+    ]
     payload = dict(payload)
     payload["records"] = records
     payload["operationally_verified_count"] = len(records)
+    payload["live_operational_allowlist_count"] = len(live_allowlist)
+    payload["governance"] = {
+        "operational_evidence_required": True,
+        "live_hcqc_allowlist_required": True,
+        "rule": "A PCA is surfaced only when primary-provider identity evidence and the current HCQC/ALiS live-license allowlist agree.",
+    }
     return payload
 
 
