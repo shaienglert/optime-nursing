@@ -38,7 +38,7 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         result = run_patient_decision_engine(state, query, limit=10)
         layer = result["decision_intelligence"]["care_partner_layer"]
         self.assertEqual(layer["licensed_valley_universe_count"], 363)
-        self.assertEqual(layer["operationally_verified_count"], 3)
+        self.assertEqual(layer["operationally_verified_count"], 6)
         self.assertEqual(layer["status"], "CANDIDATES_PENDING_OPERATIONAL_VERIFICATION")
         self.assertIn("BATHING_ASSISTANCE", layer["requirements"]["required_services"])
         self.assertIn("DRESSING_ASSISTANCE", layer["requirements"]["required_services"])
