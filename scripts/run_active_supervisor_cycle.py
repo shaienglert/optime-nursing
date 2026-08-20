@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +14,44 @@ if str(BACKEND_ROOT) not in sys.path:
 from app.database import SessionLocal
 from app.models.agent_execution import SupervisorIncidentLog
 from app.services.chief_ai_supervisor import run_active_operations_supervisor_cycle
+
+HEARTBEAT_TYPE = "SUPERVISOR_HEARTBEAT"
+
+
+def _persist_shared_heartbeat(db, *, market: str, mode: str, result: dict) -> None:
+    row = (
+        db.query(SupervisorIncidentLog)
+        .filter(SupervisorIncidentLog.incident_type == HEARTBEAT_TYPE)
+        .order_by(SupervisorIncidentLog.id.desc())
+        .first()
+    )
+    details = {
+        "market": market,
+        "mode": mode,
+        "status": "ALIVE",
+        "registry_audit": result.get("registry_audit") or {},
+        "quarantined_agents": result.get("quarantined_agents") or [],
+    }
+    now = datetime.now(timezone.utc)
+    if row is None:
+        row = SupervisorIncidentLog(
+            incident_type=HEARTBEAT_TYPE,
+            severity="INFO",
+            status="RESOLVED",
+            domain="operations_supervisor_watchdog",
+            summary="Chief AI Supervisor shared heartbeat.",
+            details_json=json.dumps(details, sort_keys=True, default=str),
+            created_at=now,
+        )
+        db.add(row)
+    else:
+        row.severity = "INFO"
+        row.status = "RESOLVED"
+        row.domain = "operations_supervisor_watchdog"
+        row.summary = "Chief AI Supervisor shared heartbeat."
+        row.details_json = json.dumps(details, sort_keys=True, default=str)
+        row.created_at = now
+    db.commit()
 
 
 def _ensure_quarantine_alerts(db, quarantined_agents: list[str]) -> None:
@@ -71,6 +110,7 @@ def main() -> int:
         result = run_active_operations_supervisor_cycle(db, mode=mode, active_market=market)
         quarantined_agents = [str(item) for item in (result.get("quarantined_agents") or [])]
         _ensure_quarantine_alerts(db, quarantined_agents)
+        _persist_shared_heartbeat(db, market=market, mode=mode, result=result)
         critical_open = _open_critical_incidents(db)
     finally:
         db.close()
@@ -79,6 +119,7 @@ def main() -> int:
         "runner": "CHIEF_AI_SUPERVISOR",
         "market": market,
         "mode": mode,
+        "shared_heartbeat": "PERSISTED",
         "critical_open_incidents": critical_open,
         "quarantined_agents": quarantined_agents,
         "registry_audit": result.get("registry_audit") or {},
@@ -87,9 +128,6 @@ def main() -> int:
         "remediation_attempts": result.get("remediation_attempts") or [],
     }
     print(json.dumps(payload, indent=2, ensure_ascii=False, default=str))
-
-    # A non-zero exit is intentional: Render records a failed supervisor run and emits
-    # its own service failure notification while the canonical incident remains in DB.
     return 2 if critical_open > 0 else 0
 
 
