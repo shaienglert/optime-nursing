@@ -1,0 +1,28 @@
+name: Nevada IL Provider Wave 2
+
+on:
+  pull_request:
+    paths:
+      - 'data/nevada/verified/provider_housing_primary_evidence.json'
+      - 'backend/tests/test_nevada_il_provider_wave2.py'
+      - '.github/workflows/nevada-il-provider-wave2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-il-wave2:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test tooling
+        run: python -m pip install --disable-pip-version-check pytest
+      - name: Run deterministic IL wave 2 tests
+        run: python -m pytest backend/tests/test_nevada_il_provider_wave2.py -q
