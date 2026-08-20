@@ -123,14 +123,10 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
 
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     decision["combined_care_solution"] = summary
-    ranking_order = list(decision.get("ranking_order") or [])
-    if "COMBINED_CARE_MUST_COVERAGE" not in ranking_order:
-        try:
-            must_index = ranking_order.index("MUST_GATE") + 1
-        except ValueError:
-            must_index = 1
-        ranking_order.insert(must_index, "COMBINED_CARE_MUST_COVERAGE")
-    decision["ranking_order"] = ranking_order
+    must_gate = decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}
+    must_gate["combined_care_delivery_enforced"] = True
+    must_gate["combined_care_rule"] = "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE; a verified agency match covering required services is required."
+    decision["must_gate"] = must_gate
     decision["combined_solution_principle"] = (
         "Rank the complete solution: housing environment and care delivery are separate. "
         "A preferred intimate/independent setting stays viable when outside care is permitted, "
