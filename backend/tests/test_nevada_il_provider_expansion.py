@@ -4,10 +4,12 @@ import json
 from pathlib import Path
 
 from app.services.canonical_universe import _apply_verified_housing_overlays
+from app.services.provider_housing_runtime import get_provider_housing_evidence
 
 
 ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE = ROOT / "data" / "nevada" / "verified" / "provider_housing_primary_evidence.json"
+CONTINUUM = ROOT / "data" / "nevada" / "verified" / "provider_housing_continuum_expansion_v1.json"
 
 EXPECTED_PROVIDER_IL_IDS = {
     "NV-PROVIDER-IL-VISTA-PARK",
@@ -19,9 +21,21 @@ EXPECTED_PROVIDER_IL_IDS = {
     "NV-PROVIDER-IL-ALBUM-UNION-VILLAGE",
 }
 
+EXPECTED_CONTINUUM_IDS = {
+    "NV-LIC-11861-AGC-1",
+    "NV-LIC-9131-AGC-7",
+    "NV-LIC-10355-AGC-4",
+    "NV-LIC-12307-AGC-0",
+}
+
 
 def _provider_rows() -> list[dict]:
     payload = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    return list(payload.get("records") or [])
+
+
+def _continuum_rows() -> list[dict]:
+    payload = json.loads(CONTINUUM.read_text(encoding="utf-8"))
     return list(payload.get("records") or [])
 
 
@@ -57,3 +71,33 @@ def test_runtime_overlay_marks_provider_only_il_as_unregulated_senior_housing_no
         assert row["state"] == "NV"
         assert row["is_las_vegas_valley"] is True
         assert "INDEPENDENT_LIVING" in row.get("housing_modalities", [])
+
+
+def test_existing_rfg_continuum_rows_add_il_without_duplicate_or_memory_regulatory_inference():
+    rows = _continuum_rows()
+    governed_ids = {str(cid) for row in rows for cid in row.get("canonical_facility_ids") or []}
+    assert governed_ids == EXPECTED_CONTINUUM_IDS
+    for row in rows:
+        assert row["append_as_canonical"] is False
+        assert "INDEPENDENT_LIVING" in row["housing_modalities"]
+        assert "ASSISTED_LIVING" in row["housing_modalities"]
+        assert "MEMORY_CARE" not in row["housing_modalities"]
+        assert str(row["primary_source_url"]).startswith("https://")
+        assert row["evidence"]["independent_living_verified"] is True
+
+
+def test_continuum_provider_evidence_resolves_by_canonical_id_and_keeps_mc_out_of_modalities():
+    for row in _continuum_rows():
+        canonical_id = row["canonical_facility_ids"][0]
+        evidence = get_provider_housing_evidence({
+            "canonical_facility_id": canonical_id,
+            "canonical_type": "ASSISTED_LIVING_RFG",
+            "facility_name": row["community_name"],
+            "address": row["address"],
+            "city": row["city"],
+            "state": "NV",
+            "zip": row["zip"],
+        })
+        assert evidence["matched"] is True
+        assert "INDEPENDENT_LIVING" in evidence["housing_modalities"]
+        assert "MEMORY_CARE" not in evidence["housing_modalities"]
