@@ -4,9 +4,11 @@ on:
   pull_request:
     paths:
       - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
+      - 'scripts/build_nevada_pca_operational_research_queue.py'
       - 'backend/app/services/personal_care_agency_runtime.py'
       - 'backend/tests/test_personal_care_agency_runtime.py'
       - 'data/nevada/verified/personal_care_agency_evidence_schema.json'
+      - 'data/nevada/verified/personal_care_agency_operational_evidence.json'
       - '.github/workflows/nevada-personal-care-agency-layer.yml'
   workflow_dispatch:
 
@@ -48,10 +50,24 @@ jobs:
           assert all(r['city'] in {'LAS VEGAS','NORTH LAS VEGAS','HENDERSON'} for r in valley), 'Valley city normalization regressed'
           print(json.dumps(report, indent=2))
           PY
-      - name: Upload PCA evidence
+      - name: Build operational enrichment research queue
+        run: python scripts/build_nevada_pca_operational_research_queue.py
+      - name: Gate PCA research queue accounting
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
+          assert q['licensed_valley_input_count'] == 363, q
+          assert q['already_operationally_verified_count'] == 3, q
+          assert q['research_task_count'] == 360, q
+          assert len(q['tasks']) == 360, q
+          print(json.dumps({k:q[k] for k in ('licensed_valley_input_count','already_operationally_verified_count','research_task_count')}, indent=2))
+          PY
+      - name: Upload PCA evidence and research queue
         uses: actions/upload-artifact@v4
         with:
           name: nevada-personal-care-agencies
           path: |
             data/nevada/raw/hcqc_personal_care_agencies.csv
             reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
+            reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json
