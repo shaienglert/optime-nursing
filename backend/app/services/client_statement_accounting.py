@@ -14,9 +14,10 @@ from typing import Any, Dict, List
 
 KNOWN_CONCEPTS = {
     "AGE": ("age ", "years old", "בן ", "בת "),
+    "FAMILY_RELATION": ("my father", "my mother", "my dad", "my mom", "myself", "אבא", "אמא", "אבי", "אמי"),
     "LOCATION": ("las vegas", "henderson", "summerlin", "לאס וגאס", "הנדרסון"),
     "HOUSEHOLD": ("couple", "married", "husband", "wife", "זוג", "נשוי", "בעל", "אשה", "אישה"),
-    "MOBILITY": ("walker", "wheelchair", "walk ", "walking", "meters", "metres", "הליכון", "כיסא גלגלים", "כסא גלגלים", "מטר"),
+    "MOBILITY": ("walker", "wheelchair", "walk ", "walking", "meters", "metres", "mobile", "הליכון", "כיסא גלגלים", "כסא גלגלים", "מטר", "נייד"),
     "INDEPENDENCE": ("independent", "independently", "עצמאי", "עצמאית", "עצמאיים"),
     "ADL_SUPPORT": ("bathing", "dressing", "toilet", "transfer", "רחצה", "מקלחת", "לבוש", "להתלבש", "העברה"),
     "MEDICATION": ("medication", "medicine", "תרופות", "תרופה"),
@@ -47,7 +48,12 @@ def split_user_statements(text: str) -> List[str]:
 
 def concepts_for_statement(statement: str) -> List[str]:
     value = _norm(statement)
-    return [name for name, tokens in KNOWN_CONCEPTS.items() if any(token in value for token in tokens)]
+    concepts = [name for name, tokens in KNOWN_CONCEPTS.items() if any(token in value for token in tokens)]
+    # Age phrasing is structurally recognizable even when it does not contain the
+    # literal word "age" (e.g. "My father is 84" / "I am 80").
+    if re.search(r"\b(?:i am|he is|she is|father is|mother is|dad is|mom is)\s+(?:[5-9]\d|1\d\d)\b", value):
+        concepts.append("AGE")
+    return list(dict.fromkeys(concepts))
 
 
 def account_user_input(text: str) -> Dict[str, Any]:
