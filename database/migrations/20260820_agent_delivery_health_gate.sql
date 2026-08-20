@@ -10,11 +10,15 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
   active_market text;
+  old_market text := '';
   has_recent_delivery boolean;
 BEGIN
+  IF TG_OP = 'UPDATE' THEN
+    old_market := COALESCE(OLD.report_json::jsonb #>> '{active_market_delivery,market}', '');
+  END IF;
   active_market := COALESCE(
     NEW.report_json::jsonb #>> '{active_market_delivery,market}',
-    OLD.report_json::jsonb #>> '{active_market_delivery,market}',
+    NULLIF(old_market, ''),
     ''
   );
 
@@ -37,8 +41,9 @@ BEGIN
       NEW.last_refreshed_at := now();
       NEW.verified_until := now() + make_interval(secs => GREATEST(COALESCE(NEW.ttl_seconds, 3600), 300));
       NEW.next_refresh_at := TIMESTAMPTZ '2099-01-01 00:00:00+00';
-      IF NEW.report_json::jsonb #>> '{active_market_delivery,market}' IS NULL
-         AND OLD.report_json::jsonb #>> '{active_market_delivery,market}' = 'las-vegas' THEN
+      IF TG_OP = 'UPDATE'
+         AND NEW.report_json::jsonb #>> '{active_market_delivery,market}' IS NULL
+         AND old_market = 'las-vegas' THEN
         -- A legacy refresh attempted to replace the active-market payload. Preserve it.
         NEW.report_json := OLD.report_json;
         NEW.knowledge_count := OLD.knowledge_count;
