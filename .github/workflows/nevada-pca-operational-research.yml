@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'data/nevada/verified/personal_care_agency_operational_evidence.json'
+      - 'data/nevada/verified/pca_operational_live_promotions.json'
       - 'data/nevada/verified/pca_live_operational_allowlist.json'
       - 'scripts/enrich_nevada_pca_operational_primary_sources.py'
       - 'scripts/enrich_nevada_pca_operational_primary_sources_v2.py'
@@ -42,13 +43,19 @@ jobs:
           import csv, json, pathlib
           j=json.loads(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json').read_text())
           rows=list(csv.DictReader(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv').open()))
-          evidence=json.loads(pathlib.Path('data/nevada/verified/personal_care_agency_operational_evidence.json').read_text())
+          sources=[
+              pathlib.Path('data/nevada/verified/personal_care_agency_operational_evidence.json'),
+              pathlib.Path('data/nevada/verified/pca_operational_live_promotions.json'),
+          ]
           allowlist=json.loads(pathlib.Path('data/nevada/verified/pca_live_operational_allowlist.json').read_text())
-          evidence_ids={
-              str(r.get('license_number') or '').strip()
-              for r in evidence.get('records', [])
-              if r.get('identity_verified') is True and str(r.get('license_number') or '').strip()
-          }
+          evidence_ids=set()
+          for source in sources:
+              evidence=json.loads(source.read_text())
+              evidence_ids.update(
+                  str(r.get('license_number') or '').strip()
+                  for r in evidence.get('records', [])
+                  if r.get('identity_verified') is True and str(r.get('license_number') or '').strip()
+              )
           live_ids={r['license_number'] for r in rows}
           governed=evidence_ids & live_ids
           stale=evidence_ids-live_ids
