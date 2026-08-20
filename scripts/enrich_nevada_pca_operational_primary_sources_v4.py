@@ -20,21 +20,11 @@ from enrich_nevada_pca_operational_primary_sources_v2 import (
 )
 
 GENERIC_BLOCKED = (
-    "cms.gov",
-    "medicare.gov",
-    "dpbh.nv.gov",
-    "nvdpbh.aithent.com",
-    "health.nv.gov",
-    "myhealthfacilitylicense.nv.gov",
-    "aplaceformom.com",
-    "caring.com",
-    "seniorly.com",
-    "yelp.com",
-    "facebook.com",
-    "instagram.com",
-    "linkedin.com",
-    "bbb.org",
-    "yellowpages.com",
+    "cms.gov", "medicare.gov", "dpbh.nv.gov", "nvdpbh.aithent.com", "health.nv.gov",
+    "myhealthfacilitylicense.nv.gov", "aplaceformom.com", "caring.com", "seniorly.com",
+    "yelp.com", "facebook.com", "instagram.com", "linkedin.com", "bbb.org", "yellowpages.com",
+    "mapquest.com", "chamberofcommerce.com", "hcaoa.org", "npino.org", "npi-number-one.com",
+    "npidb.org", "healthcare4ppl.com",
 )
 
 
@@ -66,8 +56,6 @@ def _query_variants(task: dict[str, Any]) -> list[tuple[str, str]]:
 def discover_candidates_v4(task: dict[str, Any]) -> list[dict[str, str]]:
     candidates: list[dict[str, str]] = []
     seen: set[str] = set()
-
-    # Regulator detail links are only discovery hints; generic regulator/CMS links are blocked.
     for url, title in hcqc_external_links(task):
         if not _allowed_candidate(url) or _domain_blocked(url) or url in seen:
             continue
@@ -83,7 +71,6 @@ def discover_candidates_v4(task: dict[str, Any]) -> list[dict[str, str]]:
             if len(candidates) >= 15:
                 return candidates
 
-    # DDG remains a fallback, but exact identity is still required by verify_candidate.
     name = str(task.get("agency_name") or "").strip()
     city = str(task.get("city") or "").strip()
     for url, title in duckduckgo_lite_urls(f'"{name}" "{city}" Nevada home care'):
@@ -121,7 +108,7 @@ def research_task_v4(task: dict[str, Any], throttle: float) -> dict[str, Any]:
         if verified:
             base.update(verified)
             base["research_status"] = "PRIMARY_SOURCE_VERIFIED"
-            base["policy"] = "Discovery may use exact phone/address/license searches, but promotion requires primary-source identity verification. Missing operational facts remain UNKNOWN."
+            base["policy"] = "Discovery may use exact phone/address/license searches, but promotion requires primary-source identity verification. Third-party directories/associations/NPI mirrors are excluded. Missing operational facts remain UNKNOWN."
             return base
     base["research_status"] = "SOURCE_NOT_FOUND" if not candidates else "CANDIDATES_NOT_IDENTITY_VERIFIED"
     return base
@@ -140,14 +127,14 @@ def main() -> int:
     selected = tasks[max(0, args.offset): max(0, args.offset) + max(0, args.limit)]
     records = [research_task_v4(task, max(0.0, args.throttle)) for task in selected]
     payload = {
-        "schema_version": "nevada-pca-operational-primary-research-v4.0.0",
+        "schema_version": "nevada-pca-operational-primary-research-v4.1.0",
         "queue_task_count": len(tasks),
         "attempted": len(selected),
         "identity_verified": sum(r.get("identity_verified") is True for r in records),
         "source_not_found": sum(r.get("research_status") == "SOURCE_NOT_FOUND" for r in records),
         "candidates_not_identity_verified": sum(r.get("research_status") == "CANDIDATES_NOT_IDENTITY_VERIFIED" for r in records),
         "records": records,
-        "policy": "Staging evidence only. Exact phone/address/license discovery is allowed, but production promotion still requires strong primary-source identity and live HCQC/ALiS license gating.",
+        "policy": "Staging evidence only. Exact phone/address/license discovery is allowed, but production promotion still requires strong agency/operator primary-source identity and live HCQC/ALiS license gating.",
     }
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
