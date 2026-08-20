@@ -11,6 +11,7 @@ on:
       - 'data/nevada/staging/pca_operational_candidates.json'
       - 'data/nevada/verified/personal_care_agency_evidence_schema.json'
       - 'data/nevada/verified/personal_care_agency_operational_evidence.json'
+      - 'data/nevada/verified/pca_operational_live_promotions.json'
       - 'data/nevada/verified/pca_live_operational_allowlist.json'
       - '.github/workflows/nevada-personal-care-agency-layer.yml'
   workflow_dispatch:
@@ -76,7 +77,10 @@ jobs:
           python - <<'PY'
           import csv, json, pathlib
           q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
-          evidence=json.loads(pathlib.Path('data/nevada/verified/personal_care_agency_operational_evidence.json').read_text())
+          sources=[
+              pathlib.Path('data/nevada/verified/personal_care_agency_operational_evidence.json'),
+              pathlib.Path('data/nevada/verified/pca_operational_live_promotions.json'),
+          ]
           allowlist=json.loads(pathlib.Path('data/nevada/verified/pca_live_operational_allowlist.json').read_text())
           rows=list(csv.DictReader(pathlib.Path('data/nevada/raw/hcqc_personal_care_agencies.csv').open()))
           live={
@@ -86,11 +90,14 @@ jobs:
               and r.get('is_las_vegas_valley')=='True'
               and str(r.get('license_number') or '').strip()
           }
-          evidence_ids={
-              str(r.get('license_number') or '').strip()
-              for r in evidence.get('records', [])
-              if r.get('identity_verified') is True and str(r.get('license_number') or '').strip()
-          }
+          evidence_ids=set()
+          for source in sources:
+              evidence=json.loads(source.read_text())
+              evidence_ids.update(
+                  str(r.get('license_number') or '').strip()
+                  for r in evidence.get('records', [])
+                  if r.get('identity_verified') is True and str(r.get('license_number') or '').strip()
+              )
           governed=evidence_ids & live
           stale=evidence_ids-live
           allowed={str(v).strip() for v in allowlist.get('license_numbers',[]) if str(v).strip()}
