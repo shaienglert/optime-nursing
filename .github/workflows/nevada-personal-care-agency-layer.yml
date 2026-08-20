@@ -1,0 +1,57 @@
+name: Nevada Personal Care Agency Layer
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
+      - 'backend/app/services/personal_care_agency_runtime.py'
+      - 'backend/tests/test_personal_care_agency_runtime.py'
+      - 'data/nevada/verified/personal_care_agency_evidence_schema.json'
+      - '.github/workflows/nevada-personal-care-agency-layer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-pca-layer:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test tooling
+        run: python -m pip install --disable-pip-version-check pytest
+      - name: Run deterministic PCA semantics tests
+        run: python -m pytest backend/tests/test_personal_care_agency_runtime.py -q
+      - name: Extract live Nevada HCQC Personal Care Agencies
+        run: python scripts/extract_nevada_hcqc_personal_care_agencies.py
+      - name: Gate live PCA evidence
+        run: |
+          python - <<'PY'
+          import csv, json, pathlib
+          report = json.loads(pathlib.Path('reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json').read_text())
+          assert report['records'] > 0, report
+          assert report['active_records'] > 0, report
+          assert report['clark_county_records'] > 0, report
+          assert report['las_vegas_valley_records'] > 0, report
+          assert report['credential_label'] == 'AGENCY TO PROVIDE PERSONAL CARE SERVICES IN THE HOME', report
+          rows = list(csv.DictReader(pathlib.Path('data/nevada/raw/hcqc_personal_care_agencies.csv').open()))
+          assert rows and all(r['source_authority'] == 'Nevada HCQC / ALiS' for r in rows)
+          assert all(r['minimum_billable_hours'] == 'UNKNOWN' for r in rows), 'licensure must not invent commercial terms'
+          valley = [r for r in rows if r['is_las_vegas_valley'] == 'True']
+          assert len(valley) == report['las_vegas_valley_records'], (len(valley), report)
+          assert all(r['county'] == 'Clark' for r in valley), 'Valley rows must normalize to Clark County'
+          assert all(r['city'] in {'LAS VEGAS','NORTH LAS VEGAS','HENDERSON'} for r in valley), 'Valley city normalization regressed'
+          print(json.dumps(report, indent=2))
+          PY
+      - name: Upload PCA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: nevada-personal-care-agencies
+          path: |
+            data/nevada/raw/hcqc_personal_care_agencies.csv
+            reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
