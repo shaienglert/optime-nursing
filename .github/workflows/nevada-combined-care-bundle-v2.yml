@@ -1,0 +1,49 @@
+name: Nevada Combined Care Bundle V2
+
+on:
+  pull_request:
+    paths:
+      - 'data/nevada/verified/facility_service_delivery_primary_evidence.json'
+      - 'backend/app/services/facility_service_delivery_runtime.py'
+      - 'backend/app/services/combined_care_solution_runtime.py'
+      - 'backend/tests/test_facility_service_delivery_bundle.py'
+      - 'backend/tests/test_combined_care_integration.py'
+      - '.github/workflows/nevada-combined-care-bundle-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  combined-care-bundle:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements.txt pytest
+      - name: Run combined care bundle tests
+        run: python -m pytest backend/tests/test_facility_service_delivery_bundle.py backend/tests/test_combined_care_integration.py backend/tests/test_combined_care_solution_runtime.py -q
+      - name: Gate evidence semantics
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path('data/nevada/verified/facility_service_delivery_primary_evidence.json').read_text())
+          assert p['schema_version']=='nevada-facility-service-delivery-primary-evidence-v1.0.0'
+          by={r['record_key']:r for r in p['records']}
+          vista=by['VISTA_PARK_SERVICE_DELIVERY']
+          assert vista['meal_delivery']['meals_per_day']==3
+          assert vista['meal_delivery']['meal_plan_included'] is True
+          assert vista['personal_care_delivery']['outside_care_allowed'] is True
+          revel=by['REVEL_VEGAS_SERVICE_DELIVERY']
+          assert revel['meal_delivery']['meals_per_day']=='UNKNOWN'
+          assert revel['personal_care_delivery']['outside_care_allowed']=='UNKNOWN'
+          lv=by['LAS_VENTANAS_SERVICE_DELIVERY']
+          assert lv['meal_delivery']['meals_per_day']=='UNKNOWN'
+          print({'records':len(p['records']),'vista_three_meals':True,'unknown_preserved':True})
+          PY
