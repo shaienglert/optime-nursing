@@ -18,7 +18,7 @@ jobs:
   safe-promotion-semantics:
     runs-on: ubuntu-latest
     env:
-      PYTHONPATH: backend:.
+      PYTHONPATH: backend:.:scripts
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
