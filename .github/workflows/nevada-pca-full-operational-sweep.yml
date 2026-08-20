@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - 'scripts/run_nevada_pca_full_operational_sweep.py'
+      - 'scripts/enrich_nevada_pca_operational_primary_sources_v4.py'
       - '.github/workflows/nevada-pca-full-operational-sweep.yml'
   pull_request:
     paths:
       - 'scripts/run_nevada_pca_full_operational_sweep.py'
+      - 'scripts/enrich_nevada_pca_operational_primary_sources_v4.py'
       - '.github/workflows/nevada-pca-full-operational-sweep.yml'
   workflow_dispatch:
   schedule:
