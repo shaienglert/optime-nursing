@@ -7,6 +7,8 @@ from pathlib import Path
 
 RAW = Path('data/nevada/raw/hcqc_personal_care_agencies.csv')
 VERIFIED = Path('data/nevada/verified/personal_care_agency_operational_evidence.json')
+LIVE_PROMOTIONS = Path('data/nevada/verified/pca_operational_live_promotions.json')
+LIVE_ALLOWLIST = Path('data/nevada/verified/pca_live_operational_allowlist.json')
 OUT_JSON = Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json')
 OUT_CSV = Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv')
 
@@ -20,21 +22,31 @@ OPERATIONAL_FIELDS = [
     'medication_reminders','meal_preparation','light_housekeeping','post_surgical_care',
     'minimum_visit_minutes','minimum_billable_hours','minimum_hours_policy','hourly_rate','employment_model',
     'liability_insurance_verified','bonded_verified','workers_comp_verified','background_check_verified',
-    'fixed_caregiver_possible','supervision_frequency','languages','availability_status',
+    'fixed_caregiver_possible','backup_caregiver_available','supervision_frequency','languages','availability_status',
     'in_facility_care_available','va_community_care_provider_verified','typical_placement_speed',
     'evidence_summary','operational_evidence_status',
 ]
 
 
+def _allowlist() -> set[str]:
+    if not LIVE_ALLOWLIST.is_file():
+        return set()
+    payload = json.loads(LIVE_ALLOWLIST.read_text(encoding='utf-8'))
+    return {str(value).strip() for value in payload.get('license_numbers') or [] if str(value).strip()}
+
+
 def _verified_by_license() -> dict[str, dict]:
-    if not VERIFIED.is_file():
-        return {}
-    payload = json.loads(VERIFIED.read_text(encoding='utf-8'))
-    return {
-        str(row.get('license_number') or '').strip(): row
-        for row in payload.get('records') or []
-        if row.get('identity_verified') is True and str(row.get('license_number') or '').strip()
-    }
+    allowed = _allowlist()
+    verified: dict[str, dict] = {}
+    for source in (VERIFIED, LIVE_PROMOTIONS):
+        if not source.is_file():
+            continue
+        payload = json.loads(source.read_text(encoding='utf-8'))
+        for row in payload.get('records') or []:
+            license_number = str(row.get('license_number') or '').strip()
+            if row.get('identity_verified') is True and license_number and license_number in allowed:
+                verified[license_number] = row
+    return verified
 
 
 def build() -> dict:
@@ -66,9 +78,10 @@ def build() -> dict:
     ids = [row['agency_id'] for row in records]
     assert len(records) == len(set(ids)), 'agency_id must be unique'
     verified_count = sum(row['operational_evidence_status'] == 'PRIMARY_SOURCE_OPERATIONAL_VERIFIED' for row in records)
+    assert verified_count == len(verified), (verified_count, len(verified))
 
     payload = {
-        'schema_version': 'optime-nevada-pca-registry-v1.1.0',
+        'schema_version': 'optime-nevada-pca-registry-v1.2.0',
         'source_authority': 'Nevada HCQC / ALiS',
         'credential_type': 'AGENCY TO PROVIDE PERSONAL CARE SERVICES IN THE HOME',
         'record_count': len(records),
@@ -81,7 +94,7 @@ def build() -> dict:
         },
         'policy': {
             'license_truth': 'HCQC/ALiS is authoritative for license identity and status.',
-            'operational_truth': 'Only identity-verified primary provider evidence may populate operational fields; all other operational facts remain UNKNOWN.',
+            'operational_truth': 'Only identity-verified primary provider evidence that is also on the live HCQC allowlist may populate operational fields; all other operational facts remain UNKNOWN.',
             'bundle_rule': 'A PCA may be bundled with an Independent Living community only when outside-care permission or a facility-agency relationship is verified.',
         },
         'records': records,
