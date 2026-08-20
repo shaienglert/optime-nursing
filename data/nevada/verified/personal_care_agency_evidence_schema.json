@@ -1,0 +1,54 @@
+{
+  "schema_version": "nevada-personal-care-agency-evidence-v1.0.0",
+  "authority": {
+    "license_source": "Nevada HCQC / ALiS",
+    "license_type": "Agency to Provide Personal Care Services in the Home",
+    "regulatory_scope": "Non-medical personal care / ADL support in the client's home"
+  },
+  "policy": {
+    "license_truth": "License identity, status, expiration and disciplinary evidence come from HCQC/ALiS only.",
+    "operational_truth": "Minimum hours, pricing, caregiver continuity, W-2/1099 model, insurance, service area, languages, availability and community partnerships require separate direct evidence.",
+    "unknown_rule": "Missing operational evidence remains UNKNOWN. It is never inferred from licensure or marketing category.",
+    "facility_link_rule": "A relationship between an Independent Living community and a PCA is stored only when the community or agency directly verifies preferred/on-site/required access. Otherwise outside-care compatibility and agency relationship remain UNKNOWN."
+  },
+  "record_template": {
+    "agency_id": "NV-PCA-<LICENSE_NUMBER>",
+    "agency_name": "UNKNOWN",
+    "license_number": "UNKNOWN",
+    "license_status": "UNKNOWN",
+    "license_expiration": "UNKNOWN",
+    "disciplinary_action": "UNKNOWN",
+    "address": "UNKNOWN",
+    "city": "UNKNOWN",
+    "state": "NV",
+    "zip": "UNKNOWN",
+    "phone": "UNKNOWN",
+    "serves_las_vegas_valley": "UNKNOWN",
+    "bathing_assistance": "UNKNOWN",
+    "dressing_assistance": "UNKNOWN",
+    "transfer_assistance": "UNKNOWN",
+    "meal_assistance": "UNKNOWN",
+    "medication_reminders": "UNKNOWN",
+    "minimum_visit_minutes": "UNKNOWN",
+    "minimum_billable_hours": "UNKNOWN",
+    "hourly_rate": "UNKNOWN",
+    "employment_model": "UNKNOWN",
+    "liability_insurance_verified": "UNKNOWN",
+    "workers_comp_verified": "UNKNOWN",
+    "background_check_verified": "UNKNOWN",
+    "fixed_caregiver_possible": "UNKNOWN",
+    "supervision_frequency": "UNKNOWN",
+    "languages": [],
+    "availability_status": "UNKNOWN",
+    "facility_relationships": [],
+    "source_records": []
+  },
+  "facility_relationship_types": [
+    "ON_SITE_AGENCY",
+    "PREFERRED_AGENCY",
+    "REQUIRED_AGENCY",
+    "OUTSIDE_AGENCY_ALLOWED",
+    "OUTSIDE_AGENCY_NOT_ALLOWED",
+    "UNKNOWN"
+  ]
+}
