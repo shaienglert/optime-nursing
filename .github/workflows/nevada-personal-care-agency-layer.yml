@@ -36,10 +36,16 @@ jobs:
           report = json.loads(pathlib.Path('reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json').read_text())
           assert report['records'] > 0, report
           assert report['active_records'] > 0, report
+          assert report['clark_county_records'] > 0, report
+          assert report['las_vegas_valley_records'] > 0, report
           assert report['credential_label'] == 'AGENCY TO PROVIDE PERSONAL CARE SERVICES IN THE HOME', report
           rows = list(csv.DictReader(pathlib.Path('data/nevada/raw/hcqc_personal_care_agencies.csv').open()))
           assert rows and all(r['source_authority'] == 'Nevada HCQC / ALiS' for r in rows)
           assert all(r['minimum_billable_hours'] == 'UNKNOWN' for r in rows), 'licensure must not invent commercial terms'
+          valley = [r for r in rows if r['is_las_vegas_valley'] == 'True']
+          assert len(valley) == report['las_vegas_valley_records'], (len(valley), report)
+          assert all(r['county'] == 'Clark' for r in valley), 'Valley rows must normalize to Clark County'
+          assert all(r['city'] in {'LAS VEGAS','NORTH LAS VEGAS','HENDERSON'} for r in valley), 'Valley city normalization regressed'
           print(json.dumps(report, indent=2))
           PY
       - name: Upload PCA evidence
