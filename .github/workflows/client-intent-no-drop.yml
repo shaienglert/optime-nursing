@@ -7,8 +7,11 @@ on:
       - 'backend/app/services/human_intelligence_runtime.py'
       - 'backend/app/services/human_intelligence_runtime_verified.py'
       - 'backend/app/services/client_intent_runtime.py'
+      - 'backend/app/services/semantic_intent_ai.py'
+      - 'backend/app/services/learning_center_advisor.py'
       - 'backend/tests/test_client_statement_accounting.py'
       - 'backend/tests/test_adaptive_interview_roundtrip.py'
+      - 'backend/tests/test_semantic_ai_learning_center_contract.py'
       - '.github/workflows/client-intent-no-drop.yml'
   workflow_dispatch:
 
@@ -27,10 +30,11 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Install backend runtime dependencies
         run: python -m pip install -r backend/requirements.txt
-      - name: Run client-intent no-drop and adaptive interview tests
+      - name: Run client-intent no-drop, AI-learning-center, and adaptive interview tests
         run: |
           python -m unittest \
             backend.tests.test_client_statement_accounting \
+            backend.tests.test_semantic_ai_learning_center_contract \
             backend.tests.test_adaptive_interview_roundtrip \
             backend.tests.test_human_intelligence_runtime_integration \
             backend.tests.test_main_decision_runtime_contract
