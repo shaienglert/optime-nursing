@@ -9,8 +9,12 @@ from typing import Any
 
 import requests
 
-from enrich_nevada_pca_operational_primary_sources import UNKNOWN, fetch, same_domain_links, strip_html
-from enrich_nevada_pca_operational_primary_sources_v2 import discover_candidates, identity_matches
+try:
+    from scripts.enrich_nevada_pca_operational_primary_sources import UNKNOWN, extract_operational_facts, fetch, same_domain_links, strip_html
+    from scripts.enrich_nevada_pca_operational_primary_sources_v2 import discover_candidates, identity_matches
+except ModuleNotFoundError:
+    from enrich_nevada_pca_operational_primary_sources import UNKNOWN, extract_operational_facts, fetch, same_domain_links, strip_html
+    from enrich_nevada_pca_operational_primary_sources_v2 import discover_candidates, identity_matches
 
 
 def _contains(text: str, *terms: str) -> bool:
@@ -91,8 +95,6 @@ def verify_candidate_v3(candidate: dict[str, str], task: dict[str, Any], throttl
     if not identity:
         return None
 
-    # Reuse the governed V2 extraction, then add only explicit positive extended facts.
-    from enrich_nevada_pca_operational_primary_sources import extract_operational_facts
     combined = " ".join(page_texts)
     facts = extract_operational_facts(combined)
     facts.update(extract_extended_positive_facts(combined))
