@@ -25,5 +25,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install test tooling
+        run: python -m pip install --disable-pip-version-check pytest
       - name: Run deterministic provider IL expansion tests
         run: python -m pytest backend/tests/test_nevada_il_provider_expansion.py -q
