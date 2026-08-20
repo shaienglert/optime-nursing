@@ -1,0 +1,101 @@
+{
+  "schema_version": "nevada-provider-housing-continuum-expansion-v1.0.0",
+  "policy": {
+    "rule": "Primary provider evidence may add Independent Living and service/lifestyle modalities to an existing Nevada licensed facility identity, but never changes the regulatory license type or confirms Memory Care without HCQC evidence.",
+    "memory_care_rule": "Provider marketing that mentions memory care is not regulatory Memory Care confirmation. HCQC/ALiS endorsement evidence remains authoritative.",
+    "source_role": "PRIMARY_OPERATOR_OR_PROVIDER_EVIDENCE"
+  },
+  "records": [
+    {
+      "record_key": "ACACIA_SPRINGS_CONTINUUM",
+      "community_name": "Acacia Springs",
+      "aliases": ["Acacia Springs"],
+      "canonical_facility_ids": ["NV-LIC-11861-AGC-1"],
+      "address": "8630 W Nevso Dr",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89147",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING"],
+      "primary_source_url": "https://www.acaciasprings.com/",
+      "evidence": {
+        "independent_living_verified": true,
+        "assisted_living_provider_claim_verified": true,
+        "social_engagement_verified": true,
+        "transportation_verified": true,
+        "dining_verified": true,
+        "housekeeping_verified": true,
+        "respite_verified": true
+      },
+      "evidence_summary": "Acacia Springs' primary site explicitly offers Independent Living and Assisted Living in Las Vegas; its Independent Living page verifies apartment residences, housekeeping/maintenance, dining, social programming and transportation. Regulatory Assisted Living identity remains the existing HCQC RFG license."
+    },
+    {
+      "record_key": "AVAMERE_CHEYENNE_CONTINUUM",
+      "community_name": "Avamere at Cheyenne",
+      "aliases": ["Avamere at Cheyenne"],
+      "canonical_facility_ids": ["NV-LIC-9131-AGC-7"],
+      "address": "6031 W Cheyenne Ave",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89108",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING"],
+      "primary_source_url": "https://avamereatcheyenne.com/",
+      "evidence": {
+        "independent_living_verified": true,
+        "assisted_living_provider_claim_verified": true,
+        "respite_verified": true,
+        "pricing_public_verified": true,
+        "social_engagement_verified": true
+      },
+      "evidence_summary": "Avamere at Cheyenne's primary site explicitly lists Independent Living, Assisted Living and Respite Care and publishes separate Independent Living and Assisted Living apartment pricing. Regulatory Assisted Living identity remains the existing HCQC RFG license."
+    },
+    {
+      "record_key": "MERRILL_GREEN_VALLEY_CONTINUUM",
+      "community_name": "Merrill Gardens at Green Valley Ranch",
+      "aliases": ["Merrill Gardens at Green Valley Ranch"],
+      "canonical_facility_ids": ["NV-LIC-10355-AGC-4"],
+      "address": "1935 Paseo Verde Pkwy",
+      "city": "Henderson",
+      "state": "NV",
+      "zip": "89012",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING"],
+      "primary_source_url": "https://www.merrillgardens.com/senior-living/nv/henderson/merrill-gardens-at-green-valley-ranch/",
+      "evidence": {
+        "independent_living_verified": true,
+        "assisted_living_provider_claim_verified": true,
+        "social_engagement_verified": true,
+        "dining_verified": true,
+        "housekeeping_verified": true,
+        "transportation_verified": true,
+        "provider_license_number_displayed": "10355"
+      },
+      "evidence_summary": "Merrill Gardens' primary Henderson site explicitly offers Independent Living and Assisted Living. The Assisted Living page displays License #10355, matching the existing Nevada canonical RFG identity."
+    },
+    {
+      "record_key": "MORNINGSTAR_WESTGATE_CONTINUUM",
+      "community_name": "MorningStar at Westgate",
+      "aliases": ["MorningStar at Westgate", "MorningStar Senior Living at Westgate", "Truewood by Merrill Henderson"],
+      "canonical_facility_ids": ["NV-LIC-12307-AGC-0"],
+      "address": "2910 W Horizon Ridge Pkwy",
+      "city": "Henderson",
+      "state": "NV",
+      "zip": "89052",
+      "append_as_canonical": false,
+      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING"],
+      "provider_marketed_memory_care": true,
+      "primary_source_url": "https://www.morningstarseniorliving.com/communities/senior-living-henderson-westgate/",
+      "evidence": {
+        "independent_living_verified": true,
+        "assisted_living_provider_claim_verified": true,
+        "provider_memory_care_marketing_verified": true,
+        "social_engagement_verified": true,
+        "dining_verified": true,
+        "transportation_verified": true,
+        "easy_transition_to_assisted_living_verified": true
+      },
+      "evidence_summary": "MorningStar's current primary site identifies the 2910 W Horizon Ridge property as MorningStar at Westgate and explicitly offers Independent Living, Assisted Living and Memory Care. Only Independent Living/Assisted Living are added as housing modalities here; Memory Care regulatory classification remains controlled by HCQC endorsement evidence."
+    }
+  ]
+}
