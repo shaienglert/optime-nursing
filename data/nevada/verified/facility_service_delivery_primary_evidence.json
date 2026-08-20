@@ -1,0 +1,120 @@
+{
+  "schema_version": "nevada-facility-service-delivery-primary-evidence-v1.0.0",
+  "policy": {
+    "source_role": "PRIMARY_OPERATOR_OR_PROVIDER_EVIDENCE",
+    "meal_rule": "Meal count, credits, inclusion and delivery are populated only when the facility/operator primary source states them. Dining availability alone never implies three meals per day.",
+    "care_rule": "In-house personal care, outside-care permission and partner/required agency relationships are separate facts. Outside-care permission never implies a verified agency relationship.",
+    "unknown_rule": "Missing service-delivery facts remain UNKNOWN."
+  },
+  "records": [
+    {
+      "record_key": "VISTA_PARK_SERVICE_DELIVERY",
+      "community_name": "Vista Park Retirement Community",
+      "aliases": ["Vista Park", "Vista Park Retirement Community"],
+      "canonical_facility_ids": ["NV-PROVIDER-IL-VISTA-PARK"],
+      "address": "4190 W Farm Rd",
+      "city": "North Las Vegas",
+      "state": "NV",
+      "zip": "89084",
+      "primary_source_url": "https://rlcommunities.com/communities/nevada/vista-park-retirement/",
+      "meal_delivery": {
+        "dining_available": true,
+        "meals_per_day": 3,
+        "meal_plan_model": "ALL_INCLUSIVE_IN_MONTHLY_RENT",
+        "meal_plan_included": true,
+        "meal_delivery_to_apartment": true,
+        "between_meal_food_available": true,
+        "evidence_status": "PRIMARY_SOURCE_VERIFIED"
+      },
+      "personal_care_delivery": {
+        "care_delivery_model": "EXTERNAL_AGENCY_ALLOWED",
+        "personal_care_in_house": false,
+        "outside_care_allowed": true,
+        "partner_agency_name": "UNKNOWN",
+        "partner_agency_license_id": "UNKNOWN",
+        "agency_relationship_type": "OUTSIDE_AGENCY_ALLOWED",
+        "evidence_status": "PRIMARY_SOURCE_VERIFIED"
+      },
+      "support_services": {
+        "housekeeping_included": true,
+        "transportation_included": true,
+        "emergency_alert_system": true,
+        "concierge_24_7": true
+      },
+      "evidence_summary": "RLC identifies Vista Park as all-inclusive independent living. Its Freedom Dining program provides three meals each day, a 24-hour pantry and meal delivery, all within the monthly rent. RLC also states residents may contract with reputable third-party in-home healthcare providers when additional care is needed."
+    },
+    {
+      "record_key": "LAS_VENTANAS_SERVICE_DELIVERY",
+      "community_name": "Las Ventanas at Summerlin",
+      "aliases": ["Las Ventanas at Summerlin", "Las Ventanas"],
+      "canonical_facility_ids": ["NV-LIC-4000-AGC-31", "NV-LIC-4529-SNF-31"],
+      "address": "10401 W Charleston Blvd",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89135",
+      "primary_source_url": "https://www.humangood.org/las-ventanas-at-summerlin/senior-living-options/independent-living",
+      "meal_delivery": {
+        "dining_available": true,
+        "meals_per_day": "UNKNOWN",
+        "meal_plan_model": "FLEXIBLE_DINING_POINTS",
+        "meal_plan_included": "UNKNOWN",
+        "meal_delivery_to_apartment": "UNKNOWN",
+        "between_meal_food_available": "UNKNOWN",
+        "evidence_status": "PRIMARY_SOURCE_PARTIAL"
+      },
+      "personal_care_delivery": {
+        "care_delivery_model": "MIXED_CONTINUUM",
+        "personal_care_in_house": "UNKNOWN",
+        "outside_care_allowed": true,
+        "partner_agency_name": "UNKNOWN",
+        "partner_agency_license_id": "UNKNOWN",
+        "agency_relationship_type": "OUTSIDE_AGENCY_ALLOWED_OR_COMMUNITY_CARE_IF_OFFERED",
+        "continuum_on_campus": true,
+        "evidence_status": "PRIMARY_SOURCE_VERIFIED"
+      },
+      "support_services": {
+        "housekeeping_included": true,
+        "transportation_included": true,
+        "emergency_alert_system": true,
+        "concierge_24_7": "UNKNOWN"
+      },
+      "evidence_summary": "HumanGood describes independent living with chef-prepared dining through flexible dining points and a Life Plan continuum. Independent residents may arrange additional care while remaining in their residence; the exact meals-per-day count is not stated on the primary page and remains UNKNOWN."
+    },
+    {
+      "record_key": "REVEL_VEGAS_SERVICE_DELIVERY",
+      "community_name": "Revel Vegas",
+      "aliases": ["Revel Vegas"],
+      "canonical_facility_ids": ["NV-PROVIDER-IL-REVEL-VEGAS"],
+      "address": "4940 S Conquistador St",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89148",
+      "primary_source_url": "https://revelcommunities.com/communities/vegas/",
+      "meal_delivery": {
+        "dining_available": true,
+        "meals_per_day": "UNKNOWN",
+        "meal_plan_model": "MONTHLY_DINING_CREDITS",
+        "meal_plan_included": true,
+        "meal_delivery_to_apartment": true,
+        "between_meal_food_available": "UNKNOWN",
+        "evidence_status": "PRIMARY_SOURCE_VERIFIED"
+      },
+      "personal_care_delivery": {
+        "care_delivery_model": "UNKNOWN",
+        "personal_care_in_house": "UNKNOWN",
+        "outside_care_allowed": "UNKNOWN",
+        "partner_agency_name": "UNKNOWN",
+        "partner_agency_license_id": "UNKNOWN",
+        "agency_relationship_type": "UNKNOWN",
+        "evidence_status": "UNKNOWN"
+      },
+      "support_services": {
+        "housekeeping_included": true,
+        "transportation_included": true,
+        "emergency_alert_system": "UNKNOWN",
+        "concierge_24_7": true
+      },
+      "evidence_summary": "Revel Vegas states resident membership includes monthly dining credits, chef-prepared dining, weekly housekeeping, transportation and a 24-hour concierge. It does not state a fixed meals-per-day entitlement or an outside personal-care pathway on the cited primary page, so those fields remain UNKNOWN."
+    }
+  ]
+}
