@@ -17,8 +17,26 @@ def _norm_phone(value: str) -> str:
 
 
 def _load_candidates(path: Path) -> list[dict]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    return list(payload.get("records") or [])
+    paths = [path]
+    if path.name == "pca_operational_candidates.json":
+        paths.extend(sorted(path.parent.glob("pca_operational_candidates_wave*.json")))
+    records: list[dict] = []
+    seen: set[tuple[str, str, str]] = set()
+    for source in paths:
+        if not source.is_file():
+            continue
+        payload = json.loads(source.read_text(encoding="utf-8"))
+        for row in payload.get("records") or []:
+            key = (
+                str(row.get("agency_name") or "").strip().upper(),
+                str(row.get("license_number") or "").strip().upper(),
+                str(row.get("primary_source_url") or "").strip(),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            records.append(row)
+    return records
 
 
 def _live_valley_rows(path: Path) -> list[dict[str, str]]:
@@ -101,7 +119,7 @@ def main() -> int:
         results.append(result)
 
     payload = {
-        "schema_version": "nevada-pca-candidate-live-match-v1.0.0",
+        "schema_version": "nevada-pca-candidate-live-match-v1.1.0",
         "live_valley_registry_count": len(live_rows),
         "candidate_count": len(candidates),
         "promotable_count": sum(r["status"] == "PROMOTABLE" for r in results),
