@@ -1,0 +1,31 @@
+name: Nevada IL Provider Expansion
+
+on:
+  pull_request:
+    paths:
+      - 'data/nevada/verified/provider_housing_primary_evidence.json'
+      - 'data/nevada/verified/provider_housing_continuum_expansion_v1.json'
+      - 'backend/app/services/canonical_universe.py'
+      - 'backend/app/services/provider_housing_runtime.py'
+      - 'backend/tests/test_nevada_il_provider_expansion.py'
+      - '.github/workflows/nevada-il-provider-expansion.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-provider-il-expansion:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test tooling
+        run: python -m pip install --disable-pip-version-check pytest
+      - name: Run deterministic provider IL expansion tests
+        run: python -m pytest backend/tests/test_nevada_il_provider_expansion.py -q
