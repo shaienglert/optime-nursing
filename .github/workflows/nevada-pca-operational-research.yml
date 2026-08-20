@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/enrich_nevada_pca_operational_primary_sources.py'
+      - 'scripts/enrich_nevada_pca_operational_primary_sources_v2.py'
       - 'scripts/build_nevada_pca_operational_research_queue.py'
       - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
       - 'backend/tests/test_pca_operational_research_worker.py'
@@ -32,7 +33,7 @@ jobs:
       - name: Build remaining operational research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
       - name: Research first 20 unverified agencies from primary sources
-        run: python scripts/enrich_nevada_pca_operational_primary_sources.py --limit 20 --throttle 0.05
+        run: python scripts/enrich_nevada_pca_operational_primary_sources_v2.py --limit 20 --throttle 0.05
       - name: Gate research accounting
         run: |
           python - <<'PY'
@@ -44,11 +45,14 @@ jobs:
           assert q['research_task_count'] == 360, q
           assert r['attempted'] == 20, r
           assert len(r['records']) == 20, r
+          assert r['schema_version'] == 'nevada-pca-operational-primary-research-v2.0.0', r
           print(json.dumps({
             'queue': q['research_task_count'],
             'attempted': r['attempted'],
             'identity_verified': r['identity_verified'],
             'source_not_found': r['source_not_found'],
+            'candidates_not_identity_verified': r['candidates_not_identity_verified'],
+            'discovery_methods': r['discovery_methods'],
           }, indent=2))
           PY
       - name: Upload operational research evidence
