@@ -8,7 +8,10 @@ from typing import Any
 
 import requests
 
-from enrich_nevada_pca_operational_primary_sources import fetch, norm, strip_html
+try:
+    from scripts.enrich_nevada_pca_operational_primary_sources import fetch, norm, strip_html
+except ModuleNotFoundError:
+    from enrich_nevada_pca_operational_primary_sources import fetch, norm, strip_html
 
 UNKNOWN = "UNKNOWN"
 
