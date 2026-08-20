@@ -20,6 +20,7 @@ from functools import lru_cache
 from typing import Any, Dict, List
 
 from app.services import human_intelligence_runtime as _base
+from app.services.client_statement_accounting import apply_no_drop_contract
 
 has_explicit_person_fit_preference = _base.has_explicit_person_fit_preference
 person_fit_sort_key = _base.person_fit_sort_key
@@ -115,7 +116,8 @@ def _append_material_unknown_questions(
 
 def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
     context = _base.build_human_intelligence_context(questionnaire_state, natural_language_query)
-    return _append_material_unknown_questions(context, questionnaire_state, natural_language_query)
+    context = _append_material_unknown_questions(context, questionnaire_state, natural_language_query)
+    return apply_no_drop_contract(context, natural_language_query, _base._question)
 
 
 @lru_cache(maxsize=1)
