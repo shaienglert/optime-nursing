@@ -15,6 +15,7 @@ from app.models.agent_execution import SupervisorIncidentLog
 
 HEARTBEAT_TYPE = "SUPERVISOR_HEARTBEAT"
 MISSED_TYPE = "SUPERVISOR_MISSED_CYCLE_WATCHDOG"
+MIN_LATE_SECONDS = 480  # supervisor runs every 5m; allow one delayed tick before CRITICAL
 
 
 def _utc(dt):
@@ -26,12 +27,12 @@ def _utc(dt):
 
 
 def main() -> int:
-    max_lateness = 480
+    max_lateness = MIN_LATE_SECONDS
     if len(sys.argv) > 1:
         try:
-            max_lateness = max(60, int(sys.argv[1]))
+            max_lateness = max(MIN_LATE_SECONDS, int(sys.argv[1]))
         except ValueError:
-            max_lateness = 480
+            max_lateness = MIN_LATE_SECONDS
 
     db = SessionLocal()
     try:
