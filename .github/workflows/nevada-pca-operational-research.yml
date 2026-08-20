@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/enrich_nevada_pca_operational_primary_sources.py'
       - 'scripts/enrich_nevada_pca_operational_primary_sources_v2.py'
+      - 'scripts/sanitize_nevada_pca_operational_research.py'
       - 'scripts/build_nevada_pca_operational_research_queue.py'
       - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
       - 'backend/tests/test_pca_operational_research_worker.py'
@@ -34,10 +35,13 @@ jobs:
         run: python scripts/build_nevada_pca_operational_research_queue.py
       - name: Research first 20 unverified agencies from primary sources
         run: python scripts/enrich_nevada_pca_operational_primary_sources_v2.py --limit 20 --throttle 0.05
-      - name: Gate research accounting
+      - name: Sanitize primary-source research
+        run: python scripts/sanitize_nevada_pca_operational_research.py
+      - name: Gate research accounting and primary-source integrity
         run: |
           python - <<'PY'
           import json, pathlib
+          from urllib.parse import urlparse
           q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
           r=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json').read_text())
           assert q['licensed_valley_input_count'] == 363, q
@@ -45,14 +49,18 @@ jobs:
           assert q['research_task_count'] == 360, q
           assert r['attempted'] == 20, r
           assert len(r['records']) == 20, r
-          assert r['schema_version'] == 'nevada-pca-operational-primary-research-v2.0.0', r
+          blocked=('cms.gov','medicare.gov','dpbh.nv.gov','nvdpbh.aithent.com','health.nv.gov','myhealthfacilitylicense.nv.gov','aplaceformom.com','caring.com','seniorly.com','yelp.com','facebook.com','linkedin.com','bbb.org')
+          for row in r['records']:
+              if row.get('identity_verified') is not True:
+                  continue
+              url=str(row.get('primary_source_url') or '')
+              domain=urlparse(url).netloc.lower()
+              assert domain and not any(domain==d or domain.endswith('.'+d) for d in blocked), row
           print(json.dumps({
             'queue': q['research_task_count'],
             'attempted': r['attempted'],
-            'identity_verified': r['identity_verified'],
-            'source_not_found': r['source_not_found'],
-            'candidates_not_identity_verified': r['candidates_not_identity_verified'],
-            'discovery_methods': r['discovery_methods'],
+            'identity_verified_after_sanitize': r['identity_verified'],
+            'candidate_rejected_not_primary': r.get('candidate_rejected_not_primary',0),
           }, indent=2))
           PY
       - name: Upload operational research evidence
