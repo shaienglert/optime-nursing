@@ -61,6 +61,22 @@ const PERSONAS = {
 } as const;
 
 type PersonaKey = keyof typeof PERSONAS;
+type MutableState = Record<string, any>;
+type SimulationAnswer = { value: string; source: "EXPLICIT_PERSONA_FIXTURE" };
+
+const SIMULATION_ANSWERS: Partial<Record<PersonaKey, Record<string, SimulationAnswer>>> = {
+  son84: {
+    community_size_preference: { value: "Large community", source: "EXPLICIT_PERSONA_FIXTURE" },
+    social_interaction_need_after_loss: { value: "Helpful daily social contact", source: "EXPLICIT_PERSONA_FIXTURE" },
+    move_participation: { value: "Cautious but open", source: "EXPLICIT_PERSONA_FIXTURE" },
+  },
+  self84: {
+    community_size_preference: { value: "Large community", source: "EXPLICIT_PERSONA_FIXTURE" },
+    social_interaction_need_after_loss: { value: "Helpful daily social contact", source: "EXPLICIT_PERSONA_FIXTURE" },
+    move_participation: { value: "Cautious but open", source: "EXPLICIT_PERSONA_FIXTURE" },
+  },
+};
+
 type Recommendation = {
   canonical_facility_id?: string; facility_name?: string; city?: string; state?: string;
   rank_position?: number; rank_display?: string; rank_tie_status?: string; tied_with?: string[];
@@ -93,61 +109,111 @@ type RecommendationPayload = {
   decision_intelligence?: DecisionIntelligence;
 };
 
-export async function GET(request: NextRequest) {
-  const persona = (request.nextUrl.searchParams.get("persona") || "son84") as PersonaKey;
-  const compact = request.nextUrl.searchParams.get("compact") === "1";
-  if (!(persona in PERSONAS)) {
-    return NextResponse.json({ error: "Unsupported smoke persona", supported: Object.keys(PERSONAS) }, { status: 400, headers: { "Cache-Control": "no-store" } });
-  }
+const intelligenceOf = (payload: RecommendationPayload) => payload.decision_intelligence || payload.patient_needs_profile?.decision_intelligence || payload.care_setting_policy?.decision_intelligence;
+
+async function callDecisionEngine(payload: { questionnaire_state: MutableState; natural_language_query: string; limit: number }): Promise<RecommendationPayload> {
   const response = await fetch(`${BACKEND_BASE}/decision-engine/recommendations`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(PERSONAS[persona]), cache: "no-store",
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), cache: "no-store",
   });
   const raw = await response.text();
   let body: RecommendationPayload | { raw: string };
   try { body = raw ? JSON.parse(raw) : {}; } catch { body = { raw }; }
-  if (!response.ok) {
-    return NextResponse.json({ error: "Production decision engine smoke request failed", backend_status: response.status, backend_body: body }, { status: 502, headers: { "Cache-Control": "no-store" } });
+  if (!response.ok) throw new Error(`Decision engine ${response.status}: ${raw.slice(0, 300)}`);
+  return body as RecommendationPayload;
+}
+
+function applySimulationAnswer(state: MutableState, questionKey: string, value: string): MutableState {
+  const next = structuredClone(state);
+  next.humanIntelligenceV2 ||= {};
+  if (questionKey === "community_size_preference") {
+    next.humanIntelligenceV2.personalityProfile ||= {};
+    next.humanIntelligenceV2.personalityProfile.communitySizePreference = value;
+  } else if (questionKey === "social_interaction_need_after_loss") {
+    next.humanIntelligenceV2.familyProfile ||= {};
+    next.humanIntelligenceV2.familyProfile.socialInteractionNeed = value;
+  } else if (questionKey === "move_participation") {
+    next.humanIntelligenceV2.transitionRiskProfile ||= {};
+    next.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove = value;
+  } else {
+    next.simulationUnknownAnswers ||= {};
+    next.simulationUnknownAnswers[questionKey] = "UNKNOWN";
   }
-  if (compact) {
-    const payload = body as RecommendationPayload;
-    const intelligence = payload.decision_intelligence || payload.patient_needs_profile?.decision_intelligence || payload.care_setting_policy?.decision_intelligence;
-    return NextResponse.json({
-      smoke: true, persona, generated_at: new Date().toISOString(), backend: BACKEND_BASE,
-      fingerprint: {
-        decision_intelligence_version: intelligence?.version ?? null,
-        care_setting_policy_version: payload.care_setting_policy?.version ?? null,
-        location_city: payload.patient_needs_profile?.location_city ?? null,
-        decision_readiness: intelligence?.human_intelligence?.decision_readiness ?? null,
-        adaptive_question_keys: (intelligence?.human_intelligence?.adaptive_questions || []).map((q) => q.question_key),
-        person_fit_rank_effect: intelligence?.person_fit_rank_effect ?? null,
-        agent_bridge_status: intelligence?.agent_evidence_bridge?.status ?? null,
-        agent_tasks_queued: intelligence?.agent_evidence_bridge?.tasks_queued ?? null,
-        decision_finality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
-        ranking_order: intelligence?.ranking_order ?? null,
-        strategy_universe_status: intelligence?.strategy_universe?.status ?? null,
-        must_gate: intelligence?.must_gate ?? null,
-        success_factor_count: intelligence?.success_factor_policy?.factors?.length ?? null,
-        result_count: payload.result_count ?? null,
-        total_candidates_scored: payload.total_candidates_scored ?? null,
-        top5: (payload.results || []).slice(0, 5).map((row) => ({
-          id: row.canonical_facility_id ?? null, name: row.facility_name ?? null, city: row.city ?? null, state: row.state ?? null,
-          rank_position: row.rank_position ?? null, rank_display: row.rank_display ?? null, rank_tie_status: row.rank_tie_status ?? null,
-          tied_with_count: row.tied_with?.length ?? 0, patient_match_score: row.patient_match_score ?? null,
-          care_setting_fit: row.care_setting_fit?.status ?? null, community_size: row.human_person_fit?.community_size ?? null,
-          must_gate: row.client_intent_fit?.hard_gate ?? null,
-          must_pass: row.client_intent_fit?.must_pass ?? [],
-          must_unknown: row.client_intent_fit?.must_unknown ?? [],
-          must_fail: row.client_intent_fit?.must_fail ?? [],
-          nice_match: row.client_intent_fit?.nice_match ?? [],
-          nice_unknown: row.client_intent_fit?.nice_unknown ?? [],
-          public_reputation: row.client_intent_fit?.public_reputation ?? null,
-          evidence_known: row.client_intent_fit?.relevant_evidence_known_count ?? null,
-          evidence_unknown: row.client_intent_fit?.relevant_evidence_unknown_count ?? null,
-          success_factor_count: row.success_factor_trace?.factors?.length ?? null,
-          next_deciding_dimension: row.tie_break_explanation_vs_next?.deciding_dimension ?? null,
-        })),
-      },
-    }, { headers: { "Cache-Control": "no-store" } });
+  return next;
+}
+
+async function runConversation(persona: PersonaKey) {
+  const base = PERSONAS[persona] as { questionnaire_state: MutableState; natural_language_query: string; limit: number };
+  const answers = SIMULATION_ANSWERS[persona] || {};
+  let state = structuredClone(base.questionnaire_state);
+  const turns: Array<{ turn: number; question_key: string; answer: string; source: string }> = [];
+  let payload = await callDecisionEngine({ ...base, questionnaire_state: state });
+  const seen = new Set<string>();
+
+  for (let turn = 1; turn <= 8; turn += 1) {
+    const intelligence = intelligenceOf(payload);
+    const questions = intelligence?.human_intelligence?.adaptive_questions || [];
+    if (intelligence?.human_intelligence?.decision_readiness === "READY" || questions.length === 0) break;
+    const questionKey = String(questions[0]?.question_key || "");
+    if (!questionKey || seen.has(questionKey)) break;
+    seen.add(questionKey);
+    const fixture = answers[questionKey];
+    const answer = fixture?.value ?? "UNKNOWN";
+    const source = fixture?.source ?? "PERSONA_FACT_NOT_DEFINED";
+    turns.push({ turn, question_key: questionKey, answer, source });
+    if (!fixture) break;
+    state = applySimulationAnswer(state, questionKey, answer);
+    payload = await callDecisionEngine({ ...base, questionnaire_state: state });
   }
-  return NextResponse.json({ smoke: true, persona, generated_at: new Date().toISOString(), result: body }, { headers: { "Cache-Control": "no-store" } });
+  return { payload, turns, final_state: state };
+}
+
+function fingerprint(payload: RecommendationPayload) {
+  const intelligence = intelligenceOf(payload);
+  return {
+    decision_intelligence_version: intelligence?.version ?? null,
+    care_setting_policy_version: payload.care_setting_policy?.version ?? null,
+    location_city: payload.patient_needs_profile?.location_city ?? null,
+    decision_readiness: intelligence?.human_intelligence?.decision_readiness ?? null,
+    adaptive_question_keys: (intelligence?.human_intelligence?.adaptive_questions || []).map((q) => q.question_key),
+    person_fit_rank_effect: intelligence?.person_fit_rank_effect ?? null,
+    agent_bridge_status: intelligence?.agent_evidence_bridge?.status ?? null,
+    agent_tasks_queued: intelligence?.agent_evidence_bridge?.tasks_queued ?? null,
+    decision_finality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
+    ranking_order: intelligence?.ranking_order ?? null,
+    strategy_universe_status: intelligence?.strategy_universe?.status ?? null,
+    must_gate: intelligence?.must_gate ?? null,
+    success_factor_count: intelligence?.success_factor_policy?.factors?.length ?? null,
+    result_count: payload.result_count ?? null,
+    total_candidates_scored: payload.total_candidates_scored ?? null,
+    top5: (payload.results || []).slice(0, 5).map((row) => ({
+      id: row.canonical_facility_id ?? null, name: row.facility_name ?? null, city: row.city ?? null, state: row.state ?? null,
+      rank_position: row.rank_position ?? null, rank_display: row.rank_display ?? null, rank_tie_status: row.rank_tie_status ?? null,
+      tied_with_count: row.tied_with?.length ?? 0, patient_match_score: row.patient_match_score ?? null,
+      care_setting_fit: row.care_setting_fit?.status ?? null, community_size: row.human_person_fit?.community_size ?? null,
+      must_gate: row.client_intent_fit?.hard_gate ?? null, must_pass: row.client_intent_fit?.must_pass ?? [], must_unknown: row.client_intent_fit?.must_unknown ?? [], must_fail: row.client_intent_fit?.must_fail ?? [],
+      nice_match: row.client_intent_fit?.nice_match ?? [], nice_unknown: row.client_intent_fit?.nice_unknown ?? [], public_reputation: row.client_intent_fit?.public_reputation ?? null,
+      evidence_known: row.client_intent_fit?.relevant_evidence_known_count ?? null, evidence_unknown: row.client_intent_fit?.relevant_evidence_unknown_count ?? null,
+      success_factor_count: row.success_factor_trace?.factors?.length ?? null, next_deciding_dimension: row.tie_break_explanation_vs_next?.deciding_dimension ?? null,
+    })),
+  };
+}
+
+export async function GET(request: NextRequest) {
+  const persona = (request.nextUrl.searchParams.get("persona") || "son84") as PersonaKey;
+  const compact = request.nextUrl.searchParams.get("compact") === "1";
+  const dialogue = request.nextUrl.searchParams.get("dialogue") === "1";
+  if (!(persona in PERSONAS)) return NextResponse.json({ error: "Unsupported smoke persona", supported: Object.keys(PERSONAS) }, { status: 400, headers: { "Cache-Control": "no-store" } });
+
+  try {
+    if (dialogue) {
+      const run = await runConversation(persona);
+      return NextResponse.json({ smoke: true, dialogue: true, persona, generated_at: new Date().toISOString(), backend: BACKEND_BASE, turns: run.turns, fingerprint: fingerprint(run.payload), final_state: compact ? undefined : run.final_state }, { headers: { "Cache-Control": "no-store" } });
+    }
+    const base = PERSONAS[persona] as { questionnaire_state: MutableState; natural_language_query: string; limit: number };
+    const payload = await callDecisionEngine(base);
+    if (compact) return NextResponse.json({ smoke: true, persona, generated_at: new Date().toISOString(), backend: BACKEND_BASE, fingerprint: fingerprint(payload) }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ smoke: true, persona, generated_at: new Date().toISOString(), result: payload }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    return NextResponse.json({ error: "Production decision engine smoke request failed", detail: error instanceof Error ? error.message : String(error) }, { status: 502, headers: { "Cache-Control": "no-store" } });
+  }
 }
