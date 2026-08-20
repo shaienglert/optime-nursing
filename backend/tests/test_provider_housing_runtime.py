@@ -22,6 +22,30 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         self.env.stop()
         refresh_runtime_cache("provider_housing_test_teardown")
 
+    def test_verified_provider_only_il_expansion_reaches_runtime_without_fake_care_license(self) -> None:
+        index = get_canonical_facility_index()
+        expected = {
+            "NV-PROVIDER-IL-VISTA-PARK",
+            "NV-PROVIDER-IL-COUNTRY-CLUB-MEADOWS",
+            "NV-PROVIDER-IL-COUNTRY-CLUB-VALLEY-VIEW",
+            "NV-PROVIDER-IL-DESTINATIONS-PEBBLE",
+            "NV-PROVIDER-IL-DESTINATIONS-PUEBLO",
+            "NV-PROVIDER-IL-CAREFREE-WILLOWS",
+            "NV-PROVIDER-IL-ALBUM-UNION-VILLAGE",
+        }
+        self.assertTrue(expected.issubset(index.keys()), expected - set(index))
+        for canonical_id in expected:
+            row = index[canonical_id]
+            self.assertEqual(row.get("canonical_type"), "INDEPENDENT_LIVING")
+            self.assertEqual(row.get("license_status"), "UNREGULATED_SENIOR_HOUSING_PROVIDER_VERIFIED")
+            self.assertEqual(row.get("source_truth_scope"), "PRIMARY_PROVIDER_IDENTITY_NO_CARE_LICENSE_INFERRED")
+            self.assertIn("INDEPENDENT_LIVING", row.get("housing_modalities") or [])
+        vista = index["NV-PROVIDER-IL-VISTA-PARK"]
+        evidence = (vista.get("provider_housing_evidence") or {}).get("evidence") or {}
+        self.assertTrue(evidence.get("outside_care_allowed_verified"))
+        self.assertNotIn("ASSISTED_LIVING", vista.get("housing_modalities") or [])
+        self.assertNotIn("MEMORY_CARE", vista.get("housing_modalities") or [])
+
     def test_las_ventanas_campus_collapses_to_one_residential_recommendation(self) -> None:
         index = get_canonical_facility_index()
         candidates = [
