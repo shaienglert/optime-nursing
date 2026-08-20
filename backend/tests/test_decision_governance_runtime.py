@@ -15,6 +15,9 @@ class _Query:
     def all(self):
         return list(self.rows)
 
+    def first(self):
+        return self.rows[0] if self.rows else None
+
 
 class _DB:
     def __init__(self, knowledge=None, outcomes=None):
@@ -106,11 +109,24 @@ def test_outcomes_are_observational_only_and_never_auto_weight():
     assert payload["status"] == "OBSERVATIONAL_NOT_CAUSAL"
 
 
-def test_audit_persistence_writes_one_record_per_recommendation(monkeypatch):
+def test_audit_persistence_writes_agent_delivery_trace_per_recommendation(monkeypatch):
     db = _DB()
     monkeypatch.setattr(runtime, "SessionLocal", lambda: db)
+    monkeypatch.setattr(
+        runtime,
+        "_usage_decisions",
+        lambda core, row, context: {
+            "resident_needs": {
+                "decision": "USED",
+                "verification": "VERIFIED",
+                "confidence": 1.0,
+                "reason": "resident needs used",
+            }
+        },
+    )
     core = {
-        "decision_intelligence": {"version": "decision-intelligence-runtime-v2"},
+        "decision_intelligence": {"version": "decision-intelligence-runtime-v3.1"},
+        "patient_needs_profile": {"needs": [{"parameter_id": "adl_support"}]},
         "recommendation_audit_trace": {
             "facts_used": {"patient_needs": ["adl"], "human_signals": {}},
             "decision_rules_applied": ["unknown_is_not_mismatch"],
@@ -133,7 +149,7 @@ def test_audit_persistence_writes_one_record_per_recommendation(monkeypatch):
             },
         ],
     }
-    context = {"knowledge_fabric": {"objects": [_knowledge()]}}
+    context = {"knowledge_fabric": {"objects": [_knowledge()]}, "outcome_learning": {"sample_size": 0}}
     result = runtime.persist_recommendation_verification_audits(
         core=core,
         questionnaire_state={"resident_key": "test-resident"},
@@ -141,8 +157,52 @@ def test_audit_persistence_writes_one_record_per_recommendation(monkeypatch):
     )
     assert result["status"] == "PERSISTED"
     assert result["records_written"] == 2
-    assert len(db.added) == 2
+    assert result["agent_usage_records_written"] == 2
+    assert result["agent_trace_summary"]["resident_needs"]["used"] == 2
+    assert len(db.added) == 4
     assert db.committed is True
+
+
+def test_every_agent_has_explicit_delivery_decision(monkeypatch):
+    monkeypatch.setattr(
+        runtime,
+        "_regulatory_delivery",
+        lambda row: {
+            "applicable": True,
+            "verified": [],
+            "unknown": list(runtime._REGULATORY_PARAMETERS),
+            "identity_source": "Nevada HCQC / ALiS",
+        },
+    )
+    core = {
+        "patient_needs_profile": {
+            "needs": [
+                {"parameter_id": "adl_support"},
+                {"parameter_id": "pt"},
+                {"parameter_id": "activities"},
+            ]
+        },
+        "decision_intelligence": {"agent_evidence_bridge": {"status": "MATERIAL_EVIDENCE_AVAILABLE"}},
+    }
+    row = {
+        "canonical_facility_id": "NV-LIC-4000-AGC-31",
+        "client_intent_fit": {
+            "nice_match": ["RICH_CULTURE_AND_ACTIVITIES"],
+            "nice_unknown": [],
+            "public_reputation": {"identity_verified": True, "rating": 2.8, "review_count": 30},
+        },
+        "agent_person_fit_evidence": [
+            {"agent_key": "provider_intelligence", "confidence": 0.82},
+            {"agent_key": "activities_intelligence", "confidence": 0.82},
+        ],
+    }
+    context = {"knowledge_fabric": {"eligible_count": 0}, "outcome_learning": {"sample_size": 0}}
+    decisions = runtime._usage_decisions(core, row, context)
+    assert set(decisions) == set(runtime._ACTIVE_MARKET_AGENTS) | {runtime._REGULATORY_AGENT}
+    assert all(item["decision"] in {"USED", "NOT_APPLICABLE"} for item in decisions.values())
+    assert decisions["regulatory_intelligence"]["decision"] == "USED"
+    assert decisions["regulatory_intelligence"]["verification"] == "UNKNOWN_PRESERVED"
+    assert decisions["outcome_learning"]["decision"] == "NOT_APPLICABLE"
 
 
 def test_attach_surfaces_connection_status_without_changing_rank(monkeypatch):
@@ -158,10 +218,16 @@ def test_attach_surfaces_connection_status_without_changing_rank(monkeypatch):
     monkeypatch.setattr(
         runtime,
         "persist_recommendation_verification_audits",
-        lambda **kwargs: {"status": "PERSISTED", "records_written": 1, "run_id": "r1"},
+        lambda **kwargs: {
+            "status": "PERSISTED",
+            "records_written": 1,
+            "agent_usage_records_written": 12,
+            "agent_trace_summary": {"resident_needs": {"traces": 1, "used": 1, "not_applicable": 0}},
+            "run_id": "r1",
+        },
     )
     core = {
-        "decision_intelligence": {"version": "decision-intelligence-runtime-v2"},
+        "decision_intelligence": {"version": "decision-intelligence-runtime-v3.1"},
         "recommendation_audit_trace": {},
         "results": [{"canonical_facility_id": "NV-1", "rank_position": 1}],
     }
@@ -171,3 +237,4 @@ def test_attach_surfaces_connection_status_without_changing_rank(monkeypatch):
     assert governed["knowledge_fabric"]["automatic_rank_effect"] == "NONE"
     assert governed["outcome_learning"]["automatic_rank_effect"] == "NONE"
     assert out["recommendation_audit_trace"]["persistence"]["status"] == "PERSISTED"
+    assert out["recommendation_audit_trace"]["agent_delivery"]["usage_records_written"] == 12
