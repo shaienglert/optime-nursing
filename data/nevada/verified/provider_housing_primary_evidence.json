@@ -1,5 +1,5 @@
 {
-  "schema_version": "nevada-provider-housing-primary-evidence-v1.0.0",
+  "schema_version": "nevada-provider-housing-primary-evidence-v1.1.0",
   "policy": {
     "rule": "Provider/operator primary evidence may establish unlicensed senior-housing identity or campus modalities, but never overrides Nevada care-facility licensing truth. Standalone provider-only records are appended only for senior housing that is not represented by a Nevada care license.",
     "unknown_rule": "If provider identity, address or modality is ambiguous, preserve UNKNOWN.",
@@ -121,6 +121,164 @@
         "month_to_month_verified": true
       },
       "evidence_summary": "Stellar identifies The Grand at Southern Hills at 8374 W Capovilla Ave as independent living, assisted living and memory care, with dozens of weekly activities and the ability to add assisted-living support without changing apartments."
+    },
+    {
+      "record_key": "VISTA_PARK_RETIREMENT",
+      "community_name": "Vista Park Retirement Community",
+      "aliases": ["Vista Park", "Vista Park Retirement Community"],
+      "address": "4190 W Farm Rd",
+      "city": "North Las Vegas",
+      "state": "NV",
+      "zip": "89084",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-VISTA-PARK",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING"],
+      "primary_source_url": "https://rlcommunities.com/communities/nevada/vista-park-retirement/",
+      "evidence": {
+        "independent_living_verified": true,
+        "social_engagement_verified": true,
+        "transportation_verified": true,
+        "dining_verified": true,
+        "housekeeping_verified": true,
+        "outside_care_allowed_verified": true,
+        "month_to_month_verified": true,
+        "emergency_alert_verified": true
+      },
+      "evidence_summary": "Resort Lifestyle Communities identifies Vista Park at 4190 W Farm Rd as an all-inclusive independent senior living community with dining, housekeeping, transportation, activities and month-to-month rent. Its primary site explicitly states that residents may contract with third-party in-home health providers while remaining in their apartment."
+    },
+    {
+      "record_key": "COUNTRY_CLUB_MEADOWS",
+      "community_name": "Country Club at The Meadows",
+      "aliases": ["Country Club at The Meadows", "Country Club at the Meadows"],
+      "address": "300 Promenade Blvd",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89107",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-COUNTRY-CLUB-MEADOWS",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "primary_source_url": "https://www.countryclubatthemeadows.com/",
+      "evidence": {
+        "independent_living_verified": true,
+        "active_adult_55_plus_verified": true,
+        "social_engagement_verified": true,
+        "activities_director_verified": true,
+        "care_services_verified": "UNKNOWN"
+      },
+      "evidence_summary": "The primary property site identifies Country Club at The Meadows at 300 Promenade Boulevard as a 55+ active-adult apartment community with one- and two-bedroom residences, a full-time activities director and organized social events. No care services are inferred."
+    },
+    {
+      "record_key": "COUNTRY_CLUB_VALLEY_VIEW",
+      "community_name": "Country Club at Valley View",
+      "aliases": ["Country Club at Valley View"],
+      "address": "1400 S Valley View Blvd",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89102",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-COUNTRY-CLUB-VALLEY-VIEW",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "primary_source_url": "https://www.countryclubatvalleyview.com/",
+      "evidence": {
+        "independent_living_verified": true,
+        "active_adult_55_plus_verified": true,
+        "social_engagement_verified": true,
+        "activities_director_verified": true,
+        "care_services_verified": "UNKNOWN"
+      },
+      "evidence_summary": "The primary property site identifies Country Club at Valley View at 1400 S Valley View Blvd as a 55+ apartment community with one- and two-bedroom residences, a full-time activities director and planned activities. No care services are inferred."
+    },
+    {
+      "record_key": "DESTINATIONS_PEBBLE",
+      "community_name": "Destinations Pebble",
+      "aliases": ["Destinations Pebble", "Destinations Pebble 55+ Active Adult Apartment Homes"],
+      "address": "1450 Pebble Rd",
+      "city": "Paradise",
+      "state": "NV",
+      "zip": "89123",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-PEBBLE",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "primary_source_url": "https://destinationspebblenew.prospectportal.com/",
+      "evidence": {
+        "independent_living_verified": true,
+        "active_adult_55_plus_verified": true,
+        "social_engagement_verified": true,
+        "maintenance_free_living_verified": true,
+        "care_services_verified": "UNKNOWN"
+      },
+      "evidence_summary": "The primary property site identifies Destinations Pebble at 1450 Pebble Rd as a 55+ gated active-adult apartment community with resort-style amenities, organized activities and maintenance-free living. No care services are inferred."
+    },
+    {
+      "record_key": "DESTINATIONS_PUEBLO",
+      "community_name": "Destinations Pueblo",
+      "aliases": ["Destinations Pueblo"],
+      "address": "8600 Scholar Ln",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89128",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-PUEBLO",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "primary_source_url": "https://liveoverture.com/communities/destinations-pueblo/",
+      "evidence": {
+        "independent_living_verified": true,
+        "active_adult_55_plus_verified": true,
+        "social_engagement_verified": true,
+        "maintenance_free_living_verified": true,
+        "optional_concierge_verified": true,
+        "care_services_verified": "UNKNOWN"
+      },
+      "evidence_summary": "The primary property site identifies Destinations Pueblo at 8600 Scholar Ln as 55+ senior apartment living in Las Vegas with maintenance-free residences, activities, classes, amenities and optional concierge services. No care services are inferred."
+    },
+    {
+      "record_key": "CAREFREE_WILLOWS",
+      "community_name": "Carefree Senior Living at The Willows",
+      "aliases": ["Carefree Senior Living at The Willows", "The Willows"],
+      "address": "3250 S Town Center Dr",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89135",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-CAREFREE-WILLOWS",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "primary_source_url": "https://www.carefreeseniors.com/the-willows-summerlin-las-vegas/",
+      "evidence": {
+        "independent_living_verified": true,
+        "active_senior_apartments_verified": true,
+        "social_engagement_verified": true,
+        "activities_program_verified": true,
+        "care_services_verified": "UNKNOWN"
+      },
+      "evidence_summary": "Carefree's primary site identifies The Willows at 3250 Town Center Drive as a Las Vegas senior apartment community focused on an active retirement lifestyle, with organized activities and community amenities. No care services are inferred."
+    },
+    {
+      "record_key": "ALBUM_UNION_VILLAGE",
+      "community_name": "Album Union Village",
+      "aliases": ["Album Union Village", "Album Union Village 55+ Active Adult Apartment Homes"],
+      "address": "1100 Wellness Place",
+      "city": "Henderson",
+      "state": "NV",
+      "zip": "89011",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-ALBUM-UNION-VILLAGE",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "primary_source_url": "https://myalbumunionvillagenew.prospectportal.com/contact/",
+      "evidence": {
+        "independent_living_verified": true,
+        "active_adult_55_plus_verified": true,
+        "social_engagement_verified": true,
+        "maintenance_free_living_verified": true,
+        "care_services_verified": "UNKNOWN"
+      },
+      "evidence_summary": "The primary property site identifies Album Union Village at 1100 Wellness Place, Henderson, as 55+ active-adult apartment homes. Greystar describes the property as a maintenance-free active-adult apartment community with resident amenities. No care services are inferred."
     }
   ]
 }
