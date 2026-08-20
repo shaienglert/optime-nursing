@@ -23,6 +23,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install test tooling
+        run: python -m pip install --disable-pip-version-check pytest
       - name: Run deterministic PCA semantics tests
         run: python -m pytest backend/tests/test_personal_care_agency_runtime.py -q
       - name: Extract live Nevada HCQC Personal Care Agencies
