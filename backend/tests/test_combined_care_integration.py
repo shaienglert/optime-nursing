@@ -74,9 +74,10 @@ def test_permission_without_verified_agency_downgrades_false_pass_to_pending():
     assert row["client_intent_fit"]["hard_gate"] == "PENDING_VERIFICATION"
     assert "ADL_SUPPORT_AVAILABLE" in row["client_intent_fit"]["must_unknown"]
     assert "ADL_SUPPORT_AVAILABLE" not in row["client_intent_fit"]["must_pass"]
+    assert result["decision_intelligence"]["must_gate"]["combined_care_delivery_enforced"] is True
 
 
-def test_verified_agency_closes_combined_adl_must():
+def test_verified_agency_closes_combined_adl_must_without_changing_rank_contract():
     result = services._apply_combined_care_layer(
         _base_result("PASS"),
         {},
@@ -87,4 +88,10 @@ def test_verified_agency_closes_combined_adl_must():
     assert row["combined_care_solution"]["delivery_model"] == "FACILITY_PLUS_EXTERNAL_AGENCY"
     assert row["client_intent_fit"]["hard_gate"] == "PASS"
     assert "ADL_SUPPORT_AVAILABLE" in row["client_intent_fit"]["must_pass"]
-    assert result["decision_intelligence"]["ranking_order"][2] == "COMBINED_CARE_MUST_COVERAGE"
+    assert result["decision_intelligence"]["ranking_order"] == [
+        "CLIENT_INTENT",
+        "MUST_GATE",
+        "NICE_TO_HAVE",
+        "GOVERNMENT_REGULATORY_DATA",
+    ]
+    assert result["decision_intelligence"]["combined_care_solution"]["version"] == "combined-care-solution-v1"
