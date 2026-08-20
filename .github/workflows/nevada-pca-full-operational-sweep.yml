@@ -6,11 +6,13 @@ on:
     paths:
       - 'scripts/run_nevada_pca_full_operational_sweep.py'
       - 'scripts/enrich_nevada_pca_operational_primary_sources_v4.py'
+      - 'scripts/materialize_nevada_pca_valley_registry.py'
       - '.github/workflows/nevada-pca-full-operational-sweep.yml'
   pull_request:
     paths:
       - 'scripts/run_nevada_pca_full_operational_sweep.py'
       - 'scripts/enrich_nevada_pca_operational_primary_sources_v4.py'
+      - 'scripts/materialize_nevada_pca_valley_registry.py'
       - '.github/workflows/nevada-pca-full-operational-sweep.yml'
   workflow_dispatch:
   schedule:
@@ -38,6 +40,21 @@ jobs:
         run: python -m pip install --disable-pip-version-check requests pytest
       - name: Rebuild live Nevada PCA universe
         run: python scripts/extract_nevada_hcqc_personal_care_agencies.py
+      - name: Materialize complete canonical Valley PCA registry
+        run: python scripts/materialize_nevada_pca_valley_registry.py
+      - name: Gate complete canonical registry
+        run: |
+          python - <<'PY'
+          import csv, json, pathlib
+          j=json.loads(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json').read_text())
+          rows=list(csv.DictReader(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv').open()))
+          assert j['record_count']==363, j
+          assert len(rows)==363, len(rows)
+          assert len({r['agency_id'] for r in rows})==363
+          assert j['cities']=={'LAS VEGAS':302,'HENDERSON':34,'NORTH LAS VEGAS':27}, j
+          assert all(r['source_authority']=='Nevada HCQC / ALiS' for r in rows)
+          print(json.dumps({'canonical_registry_records':363,'cities':j['cities'],'verified':j.get('operationally_verified_count'),'unknown':j.get('operationally_unknown_count')}, indent=2))
+          PY
       - name: Build governed remaining research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
       - name: Run full operational research sweep
@@ -72,13 +89,15 @@ jobs:
             'remaining_after_staging': r['remaining_after_verified_staging'],
           }, indent=2))
           PY
-      - name: Upload complete PCA research package
+      - name: Upload complete PCA database and research package
         uses: actions/upload-artifact@v4
         with:
           name: nevada-pca-full-operational-sweep
           retention-days: 90
           path: |
             data/nevada/raw/hcqc_personal_care_agencies.csv
+            data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json
+            data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv
             reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
             reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json
             reports/NEVADA_PCA_OPERATIONAL_FULL_SWEEP.json
