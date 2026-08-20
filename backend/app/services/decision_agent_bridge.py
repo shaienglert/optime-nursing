@@ -23,6 +23,7 @@ _QUALITY_SAFETY_PARAMETERS = (
     "sanctions_final_orders",
 )
 _AGENT_TABLES = {"agent_knowledge_records", "agent_queue_items", "agent_workers"}
+_TRUSTED_POSITIVE_SOURCES = {"OFFICIAL_PROVIDER_WEBSITE", "NEVADA_HCQC_ALIS", "GOVERNMENT_REGULATORY_SOURCE"}
 
 
 def _upper(value: Any) -> str:
@@ -42,39 +43,25 @@ def _material_dimensions(human_context: Dict[str, Any]) -> Dict[str, tuple[str, 
     strategy = human_context.get("living_strategy") if isinstance(human_context.get("living_strategy"), dict) else {}
     strategy_signals = strategy.get("signals") if isinstance(strategy.get("signals"), dict) else {}
     household = strategy.get("household") if isinstance(strategy.get("household"), dict) else {}
-
-    out: Dict[str, tuple[str, ...]] = {
-        "care_support": ("medication_support", "adl_support"),
-        "facility_quality_safety": _QUALITY_SAFETY_PARAMETERS,
-    }
+    out: Dict[str, tuple[str, ...]] = {"care_support": ("medication_support", "adl_support"), "facility_quality_safety": _QUALITY_SAFETY_PARAMETERS}
     if _upper(social.get("value")) == "HIGH" or bool(strategy_signals.get("high_social_culture_priority")):
         out["social_engagement"] = ("activities", "transportation")
-    if _upper(independence.get("value")) == "HIGH":
-        out["autonomy_choice"] = ("transportation", "private_shared_rooms")
-    if bool(strategy_signals.get("rehabilitation_need_detected")):
-        out["rehab_path"] = ("pt", "ot", "rehabilitation")
-    if str(household.get("type") or "") == "COUPLE":
-        out["couple_coresidence"] = ("couple_occupancy", "second_person_policy")
-    if bool(strategy_signals.get("expected_recovery")):
-        out["recovery_transition"] = ("outside_care_allowed", "continuum_of_care")
+    if _upper(independence.get("value")) == "HIGH": out["autonomy_choice"] = ("transportation", "private_shared_rooms")
+    if bool(strategy_signals.get("rehabilitation_need_detected")): out["rehab_path"] = ("pt", "ot", "rehabilitation")
+    if str(household.get("type") or "") == "COUPLE": out["couple_coresidence"] = ("couple_occupancy", "second_person_policy")
+    if bool(strategy_signals.get("expected_recovery")): out["recovery_transition"] = ("outside_care_allowed", "continuum_of_care")
     return out
 
 
 def _unknown_parameters(canonical_id: str, parameter_ids: tuple[str, ...]) -> List[str]:
-    try:
-        table = get_facility_parameter_table(canonical_id, priority_parameter_ids=list(parameter_ids), include_evidence_records=False)
-    except KeyError:
-        return list(parameter_ids)
-    requested = set(parameter_ids)
-    found = set()
-    unknown: List[str] = []
+    try: table = get_facility_parameter_table(canonical_id, priority_parameter_ids=list(parameter_ids), include_evidence_records=False)
+    except KeyError: return list(parameter_ids)
+    requested, found, unknown = set(parameter_ids), set(), []
     for row in table.get("rows") or []:
         pid = str(row.get("parameter_id") or "")
-        if pid not in requested:
-            continue
+        if pid not in requested: continue
         found.add(pid)
-        if row.get("raw_value") in (None, "", "UNKNOWN") or str(row.get("source") or "") in {"", "Not verified"}:
-            unknown.append(pid)
+        if row.get("raw_value") in (None, "", "UNKNOWN") or str(row.get("source") or "") in {"", "Not verified"}: unknown.append(pid)
     unknown.extend(sorted(requested - found))
     return sorted(set(unknown))
 
@@ -83,89 +70,69 @@ def _market_evidence(db, canonical_id: str) -> List[Dict[str, Any]]:
     rows = db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.entity_key == canonical_id).order_by(AgentKnowledgeRecord.id.desc()).all()
     out: List[Dict[str, Any]] = []
     for row in rows:
-        try:
-            payload = json.loads(row.payload_json or "{}")
-        except json.JSONDecodeError:
-            payload = {}
-        if str(payload.get("market") or "").lower() not in {"las-vegas", "las vegas", "nevada"}:
-            continue
+        try: payload = json.loads(row.payload_json or "{}")
+        except json.JSONDecodeError: payload = {}
+        if str(payload.get("market") or "").lower() not in {"las-vegas", "las vegas", "nevada"}: continue
         out.append({"agent_key": row.agent_key, "summary": row.summary, "confidence": float(row.confidence or 0.0), "source": row.source, "payload": payload, "created_at": row.created_at.isoformat() if row.created_at else None})
     return out
 
 
+def _governed_evidence(evidence: List[Dict[str, Any]], dimension: str) -> List[Dict[str, Any]]:
+    relevant = [item for item in evidence if str((item.get("payload") or {}).get("dimension") or dimension) == dimension]
+    if not relevant: return []
+    # Records arrive newest-first. A completed newer research result that verified no public claim
+    # supersedes stale positive assertions for this dimension. Positive assertions are usable only
+    # from governed source classes and with verified identity.
+    newest = relevant[0]
+    newest_payload = newest.get("payload") if isinstance(newest.get("payload"), dict) else {}
+    if newest_payload.get("research_completed") is True and newest_payload.get("official_identity_verified") is False:
+        return []
+    governed: List[Dict[str, Any]] = []
+    for item in relevant:
+        payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+        source = _upper(item.get("source"))
+        if source not in _TRUSTED_POSITIVE_SOURCES: continue
+        if source == "OFFICIAL_PROVIDER_WEBSITE" and payload.get("official_identity_verified") is not True: continue
+        governed.append(item)
+    return governed
+
+
 def _resolve_with_agent_evidence(unknown: List[str], dimension: str, evidence: List[Dict[str, Any]]) -> List[str]:
     unresolved = set(unknown)
-    for item in evidence:
+    for item in _governed_evidence(evidence, dimension):
         payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
         if dimension == "social_engagement":
-            if payload.get("social_engagement_verified") is True:
-                unresolved.discard("activities")
-            if payload.get("transportation_verified") is True:
-                unresolved.discard("transportation")
+            if payload.get("social_engagement_verified") is True: unresolved.discard("activities")
+            if payload.get("transportation_verified") is True: unresolved.discard("transportation")
         elif dimension == "care_support":
-            if payload.get("medication_support_verified") is True:
-                unresolved.discard("medication_support")
-            if payload.get("adl_support_verified") is True:
-                unresolved.discard("adl_support")
+            if payload.get("medication_support_verified") is True: unresolved.discard("medication_support")
+            if payload.get("adl_support_verified") is True: unresolved.discard("adl_support")
         elif dimension == "autonomy_choice":
-            if payload.get("transportation_verified") is True:
-                unresolved.discard("transportation")
+            if payload.get("transportation_verified") is True: unresolved.discard("transportation")
         elif dimension == "facility_quality_safety":
-            verified_parameters = payload.get("regulatory_parameters_verified") if isinstance(payload.get("regulatory_parameters_verified"), list) else []
-            for parameter_id in verified_parameters:
-                unresolved.discard(str(parameter_id))
-        elif dimension == "rehab_path":
-            if payload.get("rehab_verified") is True or payload.get("pt_ot_verified") is True:
-                unresolved.difference_update({"pt", "ot", "rehabilitation"})
-        elif dimension == "couple_coresidence":
-            if payload.get("couple_coresidence_verified") is True:
-                unresolved.difference_update({"couple_occupancy", "second_person_policy"})
+            for parameter_id in payload.get("regulatory_parameters_verified") if isinstance(payload.get("regulatory_parameters_verified"), list) else []: unresolved.discard(str(parameter_id))
+        elif dimension == "rehab_path" and (payload.get("rehab_verified") is True or payload.get("pt_ot_verified") is True): unresolved.difference_update({"pt", "ot", "rehabilitation"})
+        elif dimension == "couple_coresidence" and payload.get("couple_coresidence_verified") is True: unresolved.difference_update({"couple_occupancy", "second_person_policy"})
         elif dimension == "recovery_transition":
-            if payload.get("outside_care_allowed_verified") is True:
-                unresolved.discard("outside_care_allowed")
-            if payload.get("continuum_of_care_verified") is True:
-                unresolved.discard("continuum_of_care")
+            if payload.get("outside_care_allowed_verified") is True: unresolved.discard("outside_care_allowed")
+            if payload.get("continuum_of_care_verified") is True: unresolved.discard("continuum_of_care")
     return sorted(unresolved)
 
 
 def _worker_values(agent_key: str) -> Dict[str, Any]:
-    names = {
-        "activities_intelligence": "Activities Intelligence Agent",
-        "provider_intelligence": "Provider Intelligence Agent",
-        "regulatory_intelligence": "Nevada Regulatory Intelligence Agent",
-    }
-    return {
-        "agent_key": agent_key,
-        "name": names[agent_key],
-        "mission": "Fill material Las Vegas facility evidence gaps for governed recommendations.",
-        "data_sources": '["official provider websites","Nevada HCQC / ALiS"]',
-        "queue_type": QUEUE_TYPE,
-        "status": "IDLE",
-        "coverage": 0.0,
-    }
+    names = {"activities_intelligence": "Activities Intelligence Agent", "provider_intelligence": "Provider Intelligence Agent", "regulatory_intelligence": "Nevada Regulatory Intelligence Agent"}
+    return {"agent_key": agent_key, "name": names[agent_key], "mission": "Fill material Las Vegas facility evidence gaps for governed recommendations.", "data_sources": '["official provider websites","Nevada HCQC / ALiS"]', "queue_type": QUEUE_TYPE, "status": "IDLE", "coverage": 0.0}
 
 
 def _ensure_worker(db, agent_key: str) -> None:
-    values = _worker_values(agent_key)
-    bind = db.get_bind()
+    values = _worker_values(agent_key); bind = db.get_bind()
     if bind.dialect.name == "postgresql":
         from sqlalchemy.dialects.postgresql import insert as pg_insert
-
-        stmt = pg_insert(AgentWorker).values(**values).on_conflict_do_update(
-            index_elements=["agent_key"],
-            set_={"queue_type": QUEUE_TYPE},
-        )
-        db.execute(stmt)
-        return
-
+        db.execute(pg_insert(AgentWorker).values(**values).on_conflict_do_update(index_elements=["agent_key"], set_={"queue_type": QUEUE_TYPE})); return
     for pending in tuple(db.new):
-        if isinstance(pending, AgentWorker) and pending.agent_key == agent_key:
-            pending.queue_type = QUEUE_TYPE
-            return
+        if isinstance(pending, AgentWorker) and pending.agent_key == agent_key: pending.queue_type = QUEUE_TYPE; return
     row = db.query(AgentWorker).filter(AgentWorker.agent_key == agent_key).first()
-    if row is not None:
-        row.queue_type = QUEUE_TYPE
-        return
+    if row is not None: row.queue_type = QUEUE_TYPE; return
     db.add(AgentWorker(**values))
 
 
@@ -173,37 +140,23 @@ def _recent_completed_item(db, canonical_id: str, dimension: str, hours: int = 2
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     items = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "DONE", AgentQueueItem.finished_at >= cutoff).all()
     for item in items:
-        try:
-            payload = json.loads(item.payload_json or "{}")
-        except json.JSONDecodeError:
-            continue
-        if payload.get("canonical_facility_id") == canonical_id and payload.get("dimension") == dimension:
-            return True
+        try: payload = json.loads(item.payload_json or "{}")
+        except json.JSONDecodeError: continue
+        if payload.get("canonical_facility_id") == canonical_id and payload.get("dimension") == dimension: return True
     return False
 
 
 def _queue(db, row: Dict[str, Any], dimension: str, unknown: List[str]) -> bool:
-    if dimension == "social_engagement":
-        agent_key = "activities_intelligence"
-    elif dimension == "facility_quality_safety":
-        agent_key = "regulatory_intelligence"
-    else:
-        agent_key = "provider_intelligence"
-    _ensure_worker(db, agent_key)
-    canonical_id = str(row.get("canonical_facility_id") or "")
+    agent_key = "activities_intelligence" if dimension == "social_engagement" else "regulatory_intelligence" if dimension == "facility_quality_safety" else "provider_intelligence"
+    _ensure_worker(db, agent_key); canonical_id = str(row.get("canonical_facility_id") or "")
     pending = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.agent_key == agent_key, AgentQueueItem.status.in_(["PENDING", "RUNNING"])).all()
     for item in pending:
-        try:
-            payload = json.loads(item.payload_json or "{}")
-        except json.JSONDecodeError:
-            continue
-        if payload.get("canonical_facility_id") == canonical_id and payload.get("dimension") == dimension:
-            return False
-    if _recent_completed_item(db, canonical_id, dimension):
-        return False
+        try: payload = json.loads(item.payload_json or "{}")
+        except json.JSONDecodeError: continue
+        if payload.get("canonical_facility_id") == canonical_id and payload.get("dimension") == dimension: return False
+    if _recent_completed_item(db, canonical_id, dimension): return False
     payload = {"market": "las-vegas", "canonical_facility_id": canonical_id, "facility_name": row.get("facility_name"), "city": row.get("city") or "LAS VEGAS", "state": "NV", "dimension": dimension, "requested_parameters": unknown, "requested_at": datetime.now(timezone.utc).isoformat()}
-    db.add(AgentQueueItem(queue_type=QUEUE_TYPE, agent_key=agent_key, payload_json=json.dumps(payload, sort_keys=True), status="PENDING", max_attempts=3))
-    return True
+    db.add(AgentQueueItem(queue_type=QUEUE_TYPE, agent_key=agent_key, payload_json=json.dumps(payload, sort_keys=True), status="PENDING", max_attempts=3)); return True
 
 
 def _kick_worker_async() -> None:
@@ -211,82 +164,44 @@ def _kick_worker_async() -> None:
         try:
             from app.services.decision_research_worker import process_pending_decision_research
             while True:
-                result = process_pending_decision_research(limit=60)
-                _LOG.info("decision evidence worker result=%s", result)
-                if result.get("status") == "ALREADY_RUNNING" or not int(result.get("remaining") or 0):
-                    break
-        except Exception:
-            _LOG.exception("decision evidence worker crashed")
-
+                result = process_pending_decision_research(limit=60); _LOG.info("decision evidence worker result=%s", result)
+                if result.get("status") == "ALREADY_RUNNING" or not int(result.get("remaining") or 0): break
+        except Exception: _LOG.exception("decision evidence worker crashed")
     threading.Thread(target=run, name="optime-decision-evidence-worker", daemon=True).start()
 
 
 def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_context: Dict[str, Any]) -> Dict[str, Any]:
-    db = SessionLocal()
-    gaps: List[Dict[str, Any]] = []
-    queued = 0
-    researched_unknown = 0
+    db = SessionLocal(); gaps: List[Dict[str, Any]] = []; queued = researched_unknown = 0
     try:
         bind = db.get_bind()
         if not _agent_schema_available(db):
-            if bind.dialect.name == "sqlite":
-                return {
-                    "status": "LOCAL_AGENT_SCHEMA_NOT_INITIALIZED",
-                    "market": "las-vegas",
-                    "market_scoped": True,
-                    "material_gaps": [],
-                    "tasks_queued": 0,
-                    "pending_backlog": 0,
-                    "researched_unknown_count": 0,
-                    "decision_finality": "PROVISIONAL_LOCAL_AGENT_SCHEMA_NOT_INITIALIZED",
-                    "policy": "Local/test SQLite may omit agent persistence tables; production PostgreSQL must contain them.",
-                }
+            if bind.dialect.name == "sqlite": return {"status": "LOCAL_AGENT_SCHEMA_NOT_INITIALIZED", "market": "las-vegas", "market_scoped": True, "material_gaps": [], "tasks_queued": 0, "pending_backlog": 0, "researched_unknown_count": 0, "decision_finality": "PROVISIONAL_LOCAL_AGENT_SCHEMA_NOT_INITIALIZED", "policy": "Local/test SQLite may omit agent persistence tables; production PostgreSQL must contain them."}
             raise RuntimeError("Production agent persistence schema is incomplete")
-
         dimensions = _material_dimensions(human_context)
         for row in rows:
             cid = str(row.get("canonical_facility_id") or "")
-            if not cid:
-                continue
-            evidence = _market_evidence(db, cid)
-            row["agent_person_fit_evidence"] = evidence
+            if not cid: continue
+            evidence = _market_evidence(db, cid); row["agent_person_fit_evidence"] = evidence
             for dimension, parameters in dimensions.items():
                 unknown = _resolve_with_agent_evidence(_unknown_parameters(cid, parameters), dimension, evidence)
-                if not unknown:
-                    continue
+                if not unknown: continue
                 was_researched = _recent_completed_item(db, cid, dimension)
                 gaps.append({"canonical_facility_id": cid, "facility_name": row.get("facility_name"), "dimension": dimension, "unknown_parameters": unknown, "research_completed_no_public_evidence": was_researched})
-                if was_researched:
-                    researched_unknown += 1
-                elif _queue(db, row, dimension, unknown):
-                    queued += 1
-        db.commit()
-        pending_backlog = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").count()
-        if queued > 0 or pending_backlog > 0:
-            _kick_worker_async()
-        if gaps and queued == 0 and researched_unknown == len(gaps):
-            finality = "PROVISIONAL_DIRECT_VERIFICATION_REQUIRED"
-            status = "PUBLIC_RESEARCH_EXHAUSTED_MATERIAL_UNKNOWN_REMAINS"
-        elif gaps:
-            finality = "PROVISIONAL_PENDING_AGENT_EVIDENCE"
-            status = "RESEARCH_REQUIRED"
-        else:
-            finality = "EVIDENCE_COMPLETE_FOR_MATERIAL_DIMENSIONS"
-            status = "MATERIAL_EVIDENCE_AVAILABLE"
+                if was_researched: researched_unknown += 1
+                elif _queue(db, row, dimension, unknown): queued += 1
+        db.commit(); pending_backlog = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").count()
+        if queued > 0 or pending_backlog > 0: _kick_worker_async()
+        if gaps and queued == 0 and researched_unknown == len(gaps): finality, status = "PROVISIONAL_DIRECT_VERIFICATION_REQUIRED", "PUBLIC_RESEARCH_EXHAUSTED_MATERIAL_UNKNOWN_REMAINS"
+        elif gaps: finality, status = "PROVISIONAL_PENDING_AGENT_EVIDENCE", "RESEARCH_REQUIRED"
+        else: finality, status = "EVIDENCE_COMPLETE_FOR_MATERIAL_DIMENSIONS", "MATERIAL_EVIDENCE_AVAILABLE"
         return {"status": status, "market": "las-vegas", "market_scoped": True, "material_gaps": gaps, "tasks_queued": queued, "pending_backlog": pending_backlog, "researched_unknown_count": researched_unknown, "decision_finality": finality, "policy": "client intent first; resident unknown -> ask; facility MUST unknown -> agent research; unknown is not mismatch"}
     except Exception as exc:
-        db.rollback()
-        _LOG.exception("agent evidence bridge unavailable")
+        db.rollback(); _LOG.exception("agent evidence bridge unavailable")
         return {"status": "AGENT_BRIDGE_UNAVAILABLE", "market": "las-vegas", "market_scoped": True, "reason": exc.__class__.__name__, "tasks_queued": 0, "material_gaps": [], "decision_finality": "PROVISIONAL_AGENT_BRIDGE_UNAVAILABLE"}
-    finally:
-        db.close()
+    finally: db.close()
 
 
 def social_evidence_sort_key(row: Dict[str, Any]) -> tuple[int, float]:
     evidence = row.get("agent_person_fit_evidence") if isinstance(row.get("agent_person_fit_evidence"), list) else []
-    scores = []
-    for item in evidence:
-        payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
-        if payload.get("social_engagement_verified") is True:
-            scores.append(float(item.get("confidence") or 0.0))
+    scores = [float(item.get("confidence") or 0.0) for item in _governed_evidence(evidence, "social_engagement") if (item.get("payload") or {}).get("social_engagement_verified") is True]
     return (0, -max(scores)) if scores else (1, 0.0)
