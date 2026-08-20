@@ -10,7 +10,9 @@ label is the governed identity.
 import argparse
 import csv
 import json
+import time
 from pathlib import Path
+from urllib.error import HTTPError
 
 from extract_nevada_hcqc_alis import (
     BUSINESS_UNIT,
@@ -52,6 +54,48 @@ def _hff_postback(opener, parser: PageParser, target: str, argument: str, licens
     return parse_page(raw)
 
 
+def _hff_postback_retry(
+    opener,
+    parser: PageParser,
+    target: str,
+    argument: str,
+    license_type: str,
+    business_value: str,
+    retries: int = 4,
+) -> PageParser:
+    last_error: HTTPError | None = None
+    for attempt in range(retries):
+        try:
+            return _hff_postback(opener, parser, target, argument, license_type, business_value)
+        except HTTPError as exc:
+            last_error = exc
+            if exc.code < 500 or attempt + 1 >= retries:
+                raise
+            time.sleep(0.5 * (attempt + 1))
+    assert last_error is not None
+    raise last_error
+
+
+def _next_pager_argument(parser: PageParser, next_page: int) -> str | None:
+    """Return only a pager argument that ALiS actually exposes on this page.
+
+    Some ALiS result sets return HTTP 500 when a caller posts Page$N beyond the
+    final GridView page. We therefore follow the server-rendered pager instead
+    of guessing that every next page exists.
+    """
+    exact = f"Page${next_page}"
+    next_token = "Page$Next"
+    for anchor in parser.anchors:
+        blob = " ".join(str(anchor.get(key) or "") for key in ("href", "onclick"))
+        if GRID_TARGET not in blob:
+            continue
+        if exact in blob:
+            return exact
+        if next_token in blob:
+            return next_token
+    return None
+
+
 def discover_pca_code(opener) -> tuple[str, str, str, PageParser]:
     raw, _ = request(opener, HFF_SEARCH_URL)
     parser = parse_page(raw)
@@ -78,12 +122,13 @@ def discover_pca_code(opener) -> tuple[str, str, str, PageParser]:
 def collect() -> tuple[list[dict[str, str]], dict[str, object]]:
     opener = build_opener(HTTPCookieProcessor(CookieJar()))
     code, label, business_value, parser = discover_pca_code(opener)
-    parser = _hff_postback(opener, parser, LICENSE_TYPE, "", code, business_value)
-    parser = _hff_postback(opener, parser, SEARCH_TARGET, "", code, business_value)
+    parser = _hff_postback_retry(opener, parser, LICENSE_TYPE, "", code, business_value)
+    parser = _hff_postback_retry(opener, parser, SEARCH_TARGET, "", code, business_value)
 
     rows: list[dict[str, str]] = []
     seen: set[str] = set()
     page = 1
+    page_new_record_counts: list[int] = []
     while page <= 500:
         table = result_table(parser)
         if not table:
@@ -132,10 +177,16 @@ def collect() -> tuple[list[dict[str, str]], dict[str, object]]:
                 "availability_status": "UNKNOWN",
             })
             added += 1
+        page_new_record_counts.append(added)
         if not data_rows or added == 0:
             break
-        page += 1
-        parser = _hff_postback(opener, parser, GRID_TARGET, f"Page${page}", code, business_value)
+
+        next_page = page + 1
+        pager_argument = _next_pager_argument(parser, next_page)
+        if pager_argument is None:
+            break
+        parser = _hff_postback_retry(opener, parser, GRID_TARGET, pager_argument, code, business_value)
+        page = next_page
 
     report = {
         "credential_label": label,
@@ -144,6 +195,8 @@ def collect() -> tuple[list[dict[str, str]], dict[str, object]]:
         "records": len(rows),
         "active_records": sum(1 for r in rows if str(r["license_status"]).lower() == "active"),
         "las_vegas_address_records": sum(1 for r in rows if str(r.get("city") or "").upper() in {"LAS VEGAS", "NORTH LAS VEGAS", "HENDERSON"}),
+        "pages_collected": len(page_new_record_counts),
+        "page_new_record_counts": page_new_record_counts,
         "policy": "HCQC/ALiS establishes license identity/status only. Service area, pricing, minimum hours, employment model, languages, availability and facility partnerships remain UNKNOWN until separately verified.",
     }
     return rows, report
