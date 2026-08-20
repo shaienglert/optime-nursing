@@ -3,6 +3,7 @@ name: Nevada PCA Operational Research
 on:
   pull_request:
     paths:
+      - 'data/nevada/verified/personal_care_agency_operational_evidence.json'
       - 'scripts/enrich_nevada_pca_operational_primary_sources.py'
       - 'scripts/enrich_nevada_pca_operational_primary_sources_v2.py'
       - 'scripts/sanitize_nevada_pca_operational_research.py'
@@ -62,8 +63,9 @@ jobs:
           q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
           r=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json').read_text())
           assert q['licensed_valley_input_count'] == 363, q
-          assert q['already_operationally_verified_count'] == 3, q
-          assert q['research_task_count'] == 360, q
+          assert q['already_operationally_verified_count'] == 6, q
+          assert q['research_task_count'] == 357, q
+          assert q['research_task_count'] + q['already_operationally_verified_count'] == 363, q
           assert r['attempted'] == 20, r
           assert len(r['records']) == 20, r
           blocked=('cms.gov','medicare.gov','dpbh.nv.gov','nvdpbh.aithent.com','health.nv.gov','myhealthfacilitylicense.nv.gov','aplaceformom.com','caring.com','seniorly.com','yelp.com','facebook.com','linkedin.com','bbb.org')
@@ -74,6 +76,7 @@ jobs:
               assert domain and not any(domain==d or domain.endswith('.'+d) for d in blocked), row
           print(json.dumps({
             'queue': q['research_task_count'],
+            'already_verified': q['already_operationally_verified_count'],
             'attempted': r['attempted'],
             'identity_verified_after_sanitize': r['identity_verified'],
             'candidate_rejected_not_primary': r.get('candidate_rejected_not_primary',0),
