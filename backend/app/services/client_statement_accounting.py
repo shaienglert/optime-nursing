@@ -19,7 +19,7 @@ KNOWN_CONCEPTS = {
     "HOUSEHOLD": ("couple", "married", "husband", "wife", "זוג", "נשוי", "בעל", "אשה", "אישה"),
     "MOBILITY": ("walker", "wheelchair", "walk ", "walking", "meters", "metres", "mobile", "הליכון", "כיסא גלגלים", "כסא גלגלים", "מטר", "נייד"),
     "INDEPENDENCE": ("independent", "independently", "עצמאי", "עצמאית", "עצמאיים"),
-    "ADL_SUPPORT": ("bathing", "dressing", "toilet", "transfer", "רחצה", "מקלחת", "לבוש", "להתלבש", "העברה"),
+    "ADL_SUPPORT": ("bathing", "dressing", "toilet", "transfer", "daily help", "daily assistance", "needs help", "needs assistance", "רחצה", "מקלחת", "לבוש", "להתלבש", "העברה", "עזרה יומית", "סיוע יומי"),
     "MEDICATION": ("medication", "medicine", "תרופות", "תרופה"),
     "DINING": ("food", "dining", "restaurant", "meal", "אוכל", "ארוחות", "מסעד"),
     "ACTIVITIES": ("activities", "classes", "culture", "social", "חוגים", "פעילויות", "תרבות", "חברה"),
@@ -49,8 +49,6 @@ def split_user_statements(text: str) -> List[str]:
 def concepts_for_statement(statement: str) -> List[str]:
     value = _norm(statement)
     concepts = [name for name, tokens in KNOWN_CONCEPTS.items() if any(token in value for token in tokens)]
-    # Age phrasing is structurally recognizable even when it does not contain the
-    # literal word "age" (e.g. "My father is 84" / "I am 80").
     if re.search(r"\b(?:i am|he is|she is|father is|mother is|dad is|mom is)\s+(?:[5-9]\d|1\d\d)\b", value):
         concepts.append("AGE")
     return list(dict.fromkeys(concepts))
