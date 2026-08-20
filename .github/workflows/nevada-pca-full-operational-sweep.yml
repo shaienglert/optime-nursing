@@ -19,7 +19,7 @@ permissions:
 
 concurrency:
   group: nevada-pca-full-operational-sweep-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   full-pca-operational-sweep:
@@ -39,7 +39,7 @@ jobs:
       - name: Build governed remaining research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
       - name: Run full operational research sweep
-        run: python scripts/run_nevada_pca_full_operational_sweep.py --chunk-size 25 --throttle 0.05
+        run: python scripts/run_nevada_pca_full_operational_sweep.py --chunk-size 25 --workers 4 --throttle 0.05
       - name: Gate full-sweep completeness and integrity
         run: |
           python - <<'PY'
