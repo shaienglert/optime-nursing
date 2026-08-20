@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'data/nevada/verified/personal_care_agency_operational_evidence.json'
+      - 'data/nevada/verified/pca_live_operational_allowlist.json'
       - 'scripts/enrich_nevada_pca_operational_primary_sources.py'
       - 'scripts/enrich_nevada_pca_operational_primary_sources_v2.py'
       - 'scripts/sanitize_nevada_pca_operational_research.py'
@@ -35,18 +36,23 @@ jobs:
         run: python scripts/extract_nevada_hcqc_personal_care_agencies.py
       - name: Materialize complete Las Vegas Valley PCA registry
         run: python scripts/materialize_nevada_pca_valley_registry.py
-      - name: Gate canonical PCA registry
+      - name: Gate canonical PCA registry against live operational allowlist
         run: |
           python - <<'PY'
           import csv, json, pathlib
           j=json.loads(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.json').read_text())
           rows=list(csv.DictReader(pathlib.Path('data/nevada/canonical/nevada_las_vegas_valley_personal_care_agencies.csv').open()))
           evidence=json.loads(pathlib.Path('data/nevada/verified/personal_care_agency_operational_evidence.json').read_text())
-          expected={
+          allowlist=json.loads(pathlib.Path('data/nevada/verified/pca_live_operational_allowlist.json').read_text())
+          evidence_ids={
               str(r.get('license_number') or '').strip()
               for r in evidence.get('records', [])
               if r.get('identity_verified') is True and str(r.get('license_number') or '').strip()
           }
+          live_ids={r['license_number'] for r in rows}
+          governed=evidence_ids & live_ids
+          stale=evidence_ids-live_ids
+          allowed={str(v).strip() for v in allowlist.get('license_numbers',[]) if str(v).strip()}
           assert j['record_count'] == 363, j
           assert len(rows) == 363, len(rows)
           assert len({r['agency_id'] for r in rows}) == 363
@@ -54,17 +60,18 @@ jobs:
           verified=[r for r in rows if r['operational_evidence_status']=='PRIMARY_SOURCE_OPERATIONAL_VERIFIED']
           unknown=[r for r in rows if r['operational_evidence_status']=='LICENSE_VERIFIED_OPERATIONAL_UNKNOWN']
           verified_licenses={r['license_number'] for r in verified}
-          assert verified_licenses == expected, {'missing_from_live_registry': sorted(expected-verified_licenses), 'unexpected_verified': sorted(verified_licenses-expected)}
-          assert j['operationally_verified_count'] == len(expected), j
-          assert j['operationally_unknown_count'] == 363-len(expected), j
-          assert len(verified)==len(expected), len(verified)
-          assert len(unknown)==363-len(expected), len(unknown)
+          assert verified_licenses == governed, {'missing_from_live_registry': sorted(governed-verified_licenses), 'unexpected_verified': sorted(verified_licenses-governed)}
+          assert allowed == governed, {'allowlist_missing':sorted(governed-allowed),'allowlist_extra':sorted(allowed-governed)}
+          assert j['operationally_verified_count'] == len(governed), j
+          assert j['operationally_unknown_count'] == 363-len(governed), j
+          assert len(verified)==len(governed), len(verified)
+          assert len(unknown)==363-len(governed), len(unknown)
           assert all(r['source_authority']=='Nevada HCQC / ALiS' for r in rows)
           assert all(r['official_website'] not in {'','UNKNOWN'} for r in verified)
           homewatch=next(r for r in verified if r['agency_id']=='NV-PCA-11759-PCS-1')
           assert homewatch['minimum_billable_hours']=='0', homewatch
           assert homewatch['minimum_hours_policy']=='NO_MINIMUM_HOURS', homewatch
-          print(json.dumps({'registry_records':363,'verified':len(expected),'unknown':363-len(expected),'cities':j['cities']}, indent=2))
+          print(json.dumps({'registry_records':363,'verified':len(governed),'unknown':363-len(governed),'stale_evidence':len(stale),'cities':j['cities']}, indent=2))
           PY
       - name: Build remaining operational research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
@@ -79,15 +86,7 @@ jobs:
           from urllib.parse import urlparse
           q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
           r=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json').read_text())
-          evidence=json.loads(pathlib.Path('data/nevada/verified/personal_care_agency_operational_evidence.json').read_text())
-          expected={
-              str(row.get('license_number') or '').strip()
-              for row in evidence.get('records', [])
-              if row.get('identity_verified') is True and str(row.get('license_number') or '').strip()
-          }
           assert q['licensed_valley_input_count'] == 363, q
-          assert q['already_operationally_verified_count'] == len(expected), q
-          assert q['research_task_count'] == 363-len(expected), q
           assert q['research_task_count'] + q['already_operationally_verified_count'] == 363, q
           assert r['attempted'] == 20, r
           assert len(r['records']) == 20, r
@@ -100,6 +99,7 @@ jobs:
           print(json.dumps({
             'queue': q['research_task_count'],
             'already_verified': q['already_operationally_verified_count'],
+            'stale_or_out_of_scope_verified': q.get('stale_or_out_of_scope_verified_count',0),
             'attempted': r['attempted'],
             'identity_verified_after_sanitize': r['identity_verified'],
             'candidate_rejected_not_primary': r.get('candidate_rejected_not_primary',0),
