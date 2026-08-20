@@ -1,5 +1,5 @@
 {
-  "schema_version": "nevada-provider-housing-primary-evidence-v1.1.0",
+  "schema_version": "nevada-provider-housing-primary-evidence-v1.2.0",
   "policy": {
     "rule": "Provider/operator primary evidence may establish unlicensed senior-housing identity or campus modalities, but never overrides Nevada care-facility licensing truth. Standalone provider-only records are appended only for senior housing that is not represented by a Nevada care license.",
     "unknown_rule": "If provider identity, address or modality is ambiguous, preserve UNKNOWN.",
@@ -279,6 +279,54 @@
         "care_services_verified": "UNKNOWN"
       },
       "evidence_summary": "The primary property site identifies Album Union Village at 1100 Wellness Place, Henderson, as 55+ active-adult apartment homes. Greystar describes the property as a maintenance-free active-adult apartment community with resident amenities. No care services are inferred."
+    },
+    {
+      "record_key": "DESTINATIONS_SPRING_VALLEY",
+      "community_name": "Destinations Spring Valley",
+      "aliases": ["Destinations Spring Valley", "Destinations Spring Valley 55+ Active Adult Apartment Homes"],
+      "address": "3925 S Jones Blvd",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89103",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-SPRING-VALLEY",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "primary_source_url": "https://liveoverture.com/communities/destinations-spring-valley/",
+      "evidence": {
+        "independent_living_verified": true,
+        "active_adult_55_plus_verified": true,
+        "social_engagement_verified": true,
+        "maintenance_free_living_verified": true,
+        "optional_concierge_verified": true,
+        "care_services_verified": "UNKNOWN"
+      },
+      "evidence_summary": "The primary property site identifies Destinations Spring Valley at 3925 S Jones Blvd as a 55+ active-adult apartment community with maintenance-free residences, social programming, classes, amenities and optional concierge services. No personal-care service is inferred."
+    },
+    {
+      "record_key": "DESTINATIONS_ALEXANDER",
+      "community_name": "Destinations Alexander",
+      "aliases": ["Destinations Alexander"],
+      "address": "3949 W Alexander Rd",
+      "city": "North Las Vegas",
+      "state": "NV",
+      "zip": "89032",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-ALEXANDER",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "primary_source_url": "https://liveoverture.com/communities/destinations-alexander/",
+      "evidence": {
+        "independent_living_verified": true,
+        "active_adult_55_plus_verified": true,
+        "social_engagement_verified": true,
+        "maintenance_free_living_verified": true,
+        "optional_concierge_verified": true,
+        "home_health_referrals_verified": true,
+        "outside_care_allowed_verified": "UNKNOWN",
+        "care_services_verified": "UNKNOWN"
+      },
+      "evidence_summary": "The primary property site identifies Destinations Alexander at 3949 W Alexander Rd as a 55+ active-adult apartment community with maintenance-free living, social programming, concierge-style services and home-health referrals. A referral is not treated as personal care supplied by the community and does not prove that outside care is permitted without further evidence."
     }
   ]
 }
