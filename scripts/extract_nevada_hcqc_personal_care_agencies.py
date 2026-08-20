@@ -14,21 +14,21 @@ from pathlib import Path
 
 from extract_nevada_hcqc_alis import (
     BUSINESS_UNIT,
+    GRID_TARGET,
     LICENSE_TYPE,
     SEARCH_TARGET,
-    SEARCH_URL,
     PageParser,
     build_opener,
     CookieJar,
     HTTPCookieProcessor,
     detail_urls,
     parse_page,
-    postback,
     request,
     result_table,
     split_nv_address,
 )
 
+HFF_SEARCH_URL = "https://nvdpbh.aithent.com/Protected/LIC/LicenseeSearch.aspx?Program=HFF&PubliSearch=Y&returnURL=~%2FLogin.aspx%3FTI%3D0"
 PCA_LABEL = "AGENCY TO PROVIDE PERSONAL CARE SERVICES IN THE HOME"
 HEALTH_FACILITIES_VALUES = ("HFF", "HHF")
 
@@ -42,38 +42,44 @@ def _find_option(parser: PageParser, needle: str) -> tuple[str, str] | None:
     return None
 
 
-def discover_pca_code(opener) -> tuple[str, str, PageParser]:
-    raw, _ = request(opener, SEARCH_URL.replace("Program=HHF", "Program=HFF"))
+def _hff_postback(opener, parser: PageParser, target: str, argument: str, license_type: str, business_value: str) -> PageParser:
+    payload = dict(parser.hidden)
+    payload["__EVENTTARGET"] = target
+    payload["__EVENTARGUMENT"] = argument
+    payload[BUSINESS_UNIT] = business_value
+    payload[LICENSE_TYPE] = license_type
+    raw, _ = request(opener, HFF_SEARCH_URL, payload)
+    return parse_page(raw)
+
+
+def discover_pca_code(opener) -> tuple[str, str, str, PageParser]:
+    raw, _ = request(opener, HFF_SEARCH_URL)
     parser = parse_page(raw)
     found = _find_option(parser, PCA_LABEL)
     if found:
-        return found[0], found[1], parser
+        return found[0], found[1], "HFF", parser
 
-    # ALiS may populate credential types only after the Health Facilities
-    # business unit is selected. Try the known public business-unit values,
-    # but never guess the credential code itself.
+    # ALiS often populates credential types only after the business unit is
+    # selected. Try the public Health Facilities values, but never guess the
+    # PCA credential code itself.
     for business_value in HEALTH_FACILITIES_VALUES:
         payload = dict(parser.hidden)
         payload["__EVENTTARGET"] = BUSINESS_UNIT
         payload["__EVENTARGUMENT"] = ""
         payload[BUSINESS_UNIT] = business_value
-        raw, _ = request(opener, SEARCH_URL.replace("Program=HHF", "Program=HFF"), payload)
+        raw, _ = request(opener, HFF_SEARCH_URL, payload)
         candidate = parse_page(raw)
         found = _find_option(candidate, PCA_LABEL)
         if found:
-            return found[0], found[1], candidate
+            return found[0], found[1], business_value, candidate
     raise RuntimeError(f"ALiS credential option not found by governed label: {PCA_LABEL}")
 
 
 def collect() -> tuple[list[dict[str, str]], dict[str, object]]:
     opener = build_opener(HTTPCookieProcessor(CookieJar()))
-    code, label, parser = discover_pca_code(opener)
-
-    # Reuse the same postback mechanics as the facility extractor. The helper
-    # hard-codes the Health Facilities business unit; only the discovered PCA
-    # credential code is supplied here.
-    parser, _ = postback(opener, parser, LICENSE_TYPE, "", code)
-    parser, _ = postback(opener, parser, SEARCH_TARGET, "", code)
+    code, label, business_value, parser = discover_pca_code(opener)
+    parser = _hff_postback(opener, parser, LICENSE_TYPE, "", code, business_value)
+    parser = _hff_postback(opener, parser, SEARCH_TARGET, "", code, business_value)
 
     rows: list[dict[str, str]] = []
     seen: set[str] = set()
@@ -94,6 +100,7 @@ def collect() -> tuple[list[dict[str, str]], dict[str, object]]:
             seen.add(credential)
             address = split_nv_address(row[6])
             rows.append({
+                "agency_id": f"NV-PCA-{credential}",
                 "agency_name": row[0] or "UNKNOWN",
                 "credential_type": row[1] or label,
                 "license_number": credential,
@@ -106,23 +113,38 @@ def collect() -> tuple[list[dict[str, str]], dict[str, object]]:
                 "administrator": row[9] or "UNKNOWN",
                 "administrator_role": row[10] or "UNKNOWN",
                 "detail_url": links[idx] if idx < len(links) else "UNKNOWN",
-                "source_url": SEARCH_URL.replace("Program=HHF", "Program=HFF"),
+                "source_url": HFF_SEARCH_URL,
                 "source_authority": "Nevada HCQC / ALiS",
                 "service_class": "NON_MEDICAL_PERSONAL_CARE_ADL",
+                "serves_las_vegas_valley": "UNKNOWN",
+                "bathing_assistance": "UNKNOWN",
+                "dressing_assistance": "UNKNOWN",
+                "transfer_assistance": "UNKNOWN",
+                "minimum_visit_minutes": "UNKNOWN",
+                "minimum_billable_hours": "UNKNOWN",
+                "hourly_rate": "UNKNOWN",
+                "employment_model": "UNKNOWN",
+                "liability_insurance_verified": "UNKNOWN",
+                "workers_comp_verified": "UNKNOWN",
+                "background_check_verified": "UNKNOWN",
+                "fixed_caregiver_possible": "UNKNOWN",
+                "languages": "[]",
+                "availability_status": "UNKNOWN",
             })
             added += 1
         if not data_rows or added == 0:
             break
         page += 1
-        parser, _ = postback(opener, parser, "ctl00$ContentPlaceHolder1$ucLicenseeSearchResult$ResultsGrid", f"Page${page}", code)
+        parser = _hff_postback(opener, parser, GRID_TARGET, f"Page${page}", code, business_value)
 
     report = {
         "credential_label": label,
         "credential_code_discovered": code,
+        "business_unit_value": business_value,
         "records": len(rows),
         "active_records": sum(1 for r in rows if str(r["license_status"]).lower() == "active"),
-        "clark_county_records": sum(1 for r in rows if str(r.get("city") or "").upper() in {"LAS VEGAS", "NORTH LAS VEGAS", "HENDERSON"}),
-        "policy": "HCQC/ALiS establishes license identity/status only. Pricing, minimum hours, employment model, languages, availability and facility partnerships remain UNKNOWN until separately verified.",
+        "las_vegas_address_records": sum(1 for r in rows if str(r.get("city") or "").upper() in {"LAS VEGAS", "NORTH LAS VEGAS", "HENDERSON"}),
+        "policy": "HCQC/ALiS establishes license identity/status only. Service area, pricing, minimum hours, employment model, languages, availability and facility partnerships remain UNKNOWN until separately verified.",
     }
     return rows, report
 
