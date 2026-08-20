@@ -5,6 +5,7 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import requests
 
@@ -14,6 +15,13 @@ except ModuleNotFoundError:
     from enrich_nevada_pca_operational_primary_sources import fetch, norm, strip_html
 
 UNKNOWN = "UNKNOWN"
+BLOCKED_NON_PRIMARY_DOMAINS = (
+    "cms.gov", "medicare.gov", "dpbh.nv.gov", "nvdpbh.aithent.com", "health.nv.gov",
+    "myhealthfacilitylicense.nv.gov", "aplaceformom.com", "caring.com", "seniorly.com",
+    "yelp.com", "facebook.com", "instagram.com", "linkedin.com", "bbb.org",
+    "yellowpages.com", "mapquest.com", "chamberofcommerce.com", "hcaoa.org",
+    "npino.org", "npi-number-one.com", "npidb.org", "healthcare4ppl.com",
+)
 
 POSITIVE_ONLY_FIELDS = (
     "bathing_assistance",
@@ -43,14 +51,19 @@ def _digits(value: Any) -> str:
     return re.sub(r"\D+", "", str(value or ""))
 
 
+def _blocked_non_primary(url: str) -> bool:
+    domain = urlparse(str(url or "")).netloc.lower().split(":", 1)[0]
+    return not domain or any(domain == d or domain.endswith("." + d) for d in BLOCKED_NON_PRIMARY_DOMAINS)
+
+
 def _strong_identity_basis(row: dict[str, Any]) -> str | None:
     urls = []
     primary = str(row.get("primary_source_url") or "").strip()
-    if primary.startswith("http"):
+    if primary.startswith("http") and not _blocked_non_primary(primary):
         urls.append(primary)
     for value in row.get("source_pages") or []:
         text = str(value or "").strip()
-        if text.startswith("http") and text not in urls:
+        if text.startswith("http") and text not in urls and not _blocked_non_primary(text):
             urls.append(text)
     if not urls:
         return None
@@ -101,7 +114,7 @@ def _safe_row(row: dict[str, Any], identity_basis: str) -> dict[str, Any]:
         "zip": row.get("zip") or UNKNOWN,
         "phone": row.get("phone") or UNKNOWN,
         "primary_source_url": row.get("primary_source_url") or UNKNOWN,
-        "source_pages": row.get("source_pages") or [],
+        "source_pages": [u for u in (row.get("source_pages") or []) if not _blocked_non_primary(str(u))],
         "identity_verified": True,
         "identity_basis": identity_basis,
         "serves_las_vegas_valley": True,
@@ -109,7 +122,7 @@ def _safe_row(row: dict[str, Any], identity_basis: str) -> dict[str, Any]:
         "hourly_rate_for_requested_schedule": UNKNOWN,
         "languages": row.get("languages") if isinstance(row.get("languages"), list) else [],
         "published_hourly_rate_candidates": row.get("published_hourly_rate_candidates") if isinstance(row.get("published_hourly_rate_candidates"), list) else [],
-        "evidence_summary": "Automatically staged from the complete PCA primary-source sweep after re-verifying strong identity by exact phone, strong address+city, or license root. Negative/absent website signals are never promoted as NO; they remain UNKNOWN.",
+        "evidence_summary": "Automatically staged from the complete PCA primary-source sweep after re-verifying strong identity by exact phone, strong address+city, or license root. Third-party directories/regulators are excluded. Negative/absent website signals are never promoted as NO; they remain UNKNOWN.",
     }
     for field in POSITIVE_ONLY_FIELDS:
         promoted[field] = True if row.get(field) is True else UNKNOWN
@@ -140,6 +153,9 @@ def main() -> int:
         license_number = str(row.get("license_number") or "").strip()
         if row.get("identity_verified") is not True or not license_number or license_number in existing_licenses:
             continue
+        if _blocked_non_primary(str(row.get("primary_source_url") or "")):
+            rejected_weak_identity.append(license_number)
+            continue
         basis = _strong_identity_basis(row)
         if not basis:
             rejected_weak_identity.append(license_number)
@@ -147,13 +163,13 @@ def main() -> int:
         records.append(_safe_row(row, basis))
 
     payload = {
-        "schema_version": "nevada-pca-safe-auto-promotions-v1.1.0",
+        "schema_version": "nevada-pca-safe-auto-promotions-v1.2.0",
         "source": "NEVADA_PCA_OPERATIONAL_FULL_SWEEP",
         "candidate_count": len(records),
         "rejected_weak_identity_count": len(rejected_weak_identity),
         "rejected_weak_identity_licenses": sorted(rejected_weak_identity),
         "policy": {
-            "identity": "Auto-promotion requires a second strong identity check against the primary source: exact phone, strong address+city, or license root. Name+city alone is never sufficient.",
+            "identity": "Auto-promotion requires a second strong identity check against the agency/operator primary source: exact phone, strong address+city, or license root. Name+city alone is never sufficient. Third-party directories, associations, NPI mirrors and regulators are blocked.",
             "negative_signal": "Website absence never becomes a negative fact; False/absent service and compliance fields remain UNKNOWN.",
             "pricing": "Published hourly examples remain contextual candidates and never become the requested-schedule hourly rate automatically.",
             "production": "These records remain staging until merged through the live HCQC/ALiS allowlist gate.",
