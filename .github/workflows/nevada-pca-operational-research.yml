@@ -1,0 +1,61 @@
+name: Nevada PCA Operational Research
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/enrich_nevada_pca_operational_primary_sources.py'
+      - 'scripts/build_nevada_pca_operational_research_queue.py'
+      - 'scripts/extract_nevada_hcqc_personal_care_agencies.py'
+      - 'backend/tests/test_pca_operational_research_worker.py'
+      - '.github/workflows/nevada-pca-operational-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research-pca-operational:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install research/test tooling
+        run: python -m pip install --disable-pip-version-check pytest requests
+      - name: Run deterministic operational research tests
+        run: python -m pytest backend/tests/test_pca_operational_research_worker.py -q
+      - name: Rebuild live Nevada PCA universe
+        run: python scripts/extract_nevada_hcqc_personal_care_agencies.py
+      - name: Build remaining operational research queue
+        run: python scripts/build_nevada_pca_operational_research_queue.py
+      - name: Research first 20 unverified agencies from primary sources
+        run: python scripts/enrich_nevada_pca_operational_primary_sources.py --limit 20 --throttle 0.05
+      - name: Gate research accounting
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          q=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json').read_text())
+          r=json.loads(pathlib.Path('reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json').read_text())
+          assert q['licensed_valley_input_count'] == 363, q
+          assert q['already_operationally_verified_count'] == 3, q
+          assert q['research_task_count'] == 360, q
+          assert r['attempted'] == 20, r
+          assert len(r['records']) == 20, r
+          print(json.dumps({
+            'queue': q['research_task_count'],
+            'attempted': r['attempted'],
+            'identity_verified': r['identity_verified'],
+            'source_not_found': r['source_not_found'],
+          }, indent=2))
+          PY
+      - name: Upload operational research evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: nevada-pca-operational-research
+          path: |
+            reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
+            reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json
+            reports/NEVADA_PCA_OPERATIONAL_PRIMARY_RESEARCH.json
