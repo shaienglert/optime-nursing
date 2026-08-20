@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.services.personal_care_agency_runtime import (
     build_care_agency_requirements,
     evaluate_personal_care_agency,
+    load_personal_care_agency_evidence,
     rank_compatible_agencies,
 )
 
@@ -83,3 +84,22 @@ def test_failed_license_never_ranks():
     }
     ranked = rank_compatible_agencies([bad, good], requirements())
     assert [row["agency_name"] for row in ranked] == ["Good"]
+
+
+def test_runtime_only_loads_primary_evidence_that_is_on_live_hcqc_allowlist():
+    load_personal_care_agency_evidence.cache_clear()
+    payload = load_personal_care_agency_evidence()
+    licenses = {row["license_number"] for row in payload["records"]}
+    assert payload["operationally_verified_count"] == 8
+    assert payload["live_operational_allowlist_count"] == 8
+    assert licenses == {
+        "9703-PCS-7",
+        "5291-PCS-19",
+        "5698-PCS-18",
+        "11759-PCS-1",
+        "9990-PCS-6",
+        "11851-PCS-1",
+        "12116-PCS-0",
+        "12003-PCS-1",
+    }
+    assert not ({"8716-PCS-0", "8472-PCS-0", "11554-PCS-0"} & licenses)
