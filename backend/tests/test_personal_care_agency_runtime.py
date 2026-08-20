@@ -79,16 +79,8 @@ def test_verified_short_visit_agency_can_pass():
 
 
 def test_failed_license_never_ranks():
-    good = {
-        "agency_name": "Good",
-        "license_status": "Active",
-        "serves_las_vegas_valley": True,
-    }
-    bad = {
-        "agency_name": "Bad",
-        "license_status": "Expired",
-        "serves_las_vegas_valley": True,
-    }
+    good = {"agency_name": "Good", "license_status": "Active", "serves_las_vegas_valley": True}
+    bad = {"agency_name": "Bad", "license_status": "Expired", "serves_las_vegas_valley": True}
     ranked = rank_compatible_agencies([bad, good], requirements())
     assert [row["agency_name"] for row in ranked] == ["Good"]
 
@@ -99,9 +91,14 @@ def test_runtime_only_loads_primary_evidence_that_is_on_live_hcqc_allowlist():
     licenses = {row["license_number"] for row in payload["records"]}
     allowlist = json.loads(ALLOWLIST_PATH.read_text(encoding="utf-8"))
     expected = {str(v).strip() for v in allowlist.get("license_numbers") or [] if str(v).strip()}
-    assert len(expected) == 14
+
+    # The verified count must evolve with governed evidence; never hard-code a historical snapshot count.
+    assert expected
     assert payload["operationally_verified_count"] == len(expected)
     assert payload["live_operational_allowlist_count"] == len(expected)
     assert licenses == expected
+
+    # Previously verified licenses must remain governed, and stale suffixes / rejected candidates must stay out.
     assert {"7602-PCS-15", "10330-PCS-5", "7836-PCS-13"} <= licenses
+    assert {"5524-PCS-19", "8472-PCS-10", "11554-PCS-2"} <= licenses
     assert not ({"8716-PCS-0", "8472-PCS-0", "11554-PCS-0", "9599-PCS-3"} & licenses)
