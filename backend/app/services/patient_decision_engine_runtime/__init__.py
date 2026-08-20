@@ -12,6 +12,7 @@ from app.services.decision_agent_bridge import attach_agent_evidence_and_queue_g
 from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
 from app.services.human_intelligence_runtime_verified import attach_human_person_fit, build_human_intelligence_context, has_explicit_person_fit_preference, person_fit_sort_key
 from app.services.living_strategy_runtime import build_living_strategy_context
+from app.services.personal_care_agency_runtime import build_care_agency_requirements, build_verified_care_partner_context
 from app.services.provider_housing_runtime import attach_provider_housing_evidence
 from app.services.success_factor_runtime import build_success_factor_trace, summarize_trace
 
@@ -205,6 +206,68 @@ def _strategy_research_pool(rows: List[Dict[str, Any]], limit: int) -> List[Dict
     return selected[: max(base_count, 60)]
 
 
+def _care_partner_layer(strategy: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
+    strategy_ids = {str(item.get("strategy_id") or "") for item in strategy.get("strategy_candidates") or []}
+    if "INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE" not in strategy_ids:
+        return {
+            "status": "NOT_APPLICABLE",
+            "licensed_valley_universe_count": 363,
+            "operationally_verified_count": 3,
+            "candidate_options": [],
+            "rule": "The PCA layer activates only when Independent Living plus temporary personal care is a governed strategy candidate.",
+        }
+
+    query = str(natural_language_query or "").lower()
+    assistance = str(questionnaire_state.get("assistanceLevel") or "").lower()
+    combined = f"{query} {assistance}"
+    bathing = any(token in combined for token in ("bath", "shower"))
+    dressing = any(token in combined for token in ("dress", "socks", "shoes"))
+    transfer = any(token in combined for token in ("transfer", "mobility", "walker", "wheelchair"))
+    signals = strategy.get("signals") if isinstance(strategy.get("signals"), dict) else {}
+    if signals.get("adl_support_needed") and not any((bathing, dressing, transfer)):
+        bathing = True
+        dressing = True
+
+    preferred_languages: List[str] = []
+    hi = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
+    language_profile = hi.get("languageProfile") if isinstance(hi.get("languageProfile"), dict) else {}
+    preferred_language = str(language_profile.get("preferredSpokenLanguage") or "").strip()
+    if preferred_language:
+        preferred_languages.append(preferred_language)
+
+    requirements = build_care_agency_requirements(
+        temporary_adl_support=True,
+        bathing=bathing,
+        dressing=dressing,
+        transfer=transfer,
+        preferred_languages=preferred_languages,
+    )
+    return build_verified_care_partner_context(requirements, limit=10)
+
+
+def _attach_facility_care_partner_access(rows: List[Dict[str, Any]], care_partner_layer: Dict[str, Any]) -> None:
+    if care_partner_layer.get("status") == "NOT_APPLICABLE":
+        return
+    for row in rows:
+        if "INDEPENDENT_LIVING" not in _row_modalities(row):
+            continue
+        evidence = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
+        facts = evidence.get("evidence") if isinstance(evidence.get("evidence"), dict) else {}
+        outside = facts.get("outside_care_allowed_verified", "UNKNOWN")
+        if outside is True:
+            access = "OUTSIDE_AGENCY_PATH_VERIFIED"
+        elif outside is False:
+            access = "OUTSIDE_AGENCY_NOT_ALLOWED"
+        else:
+            access = "FACILITY_AGENCY_ACCESS_UNKNOWN"
+        row["care_partner_access"] = {
+            "status": access,
+            "outside_care_allowed_verified": outside,
+            "candidate_agency_count": len(care_partner_layer.get("candidate_options") or []) if outside is True else 0,
+            "rule": "Agency candidates are not attached to a facility unless the facility/provider evidence permits an outside care path; preferred/on-site/required agency relationships require separate evidence.",
+        }
+
+
 def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50) -> Dict[str, Any]:
     strategy = build_living_strategy_context(questionnaire_state, natural_language_query)
     core = _governed.run_patient_decision_engine(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=max(10000, int(limit or 50)))
@@ -230,7 +293,6 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     research_pool = _strategy_research_pool(non_failed, int(limit or 50))
     agent_bridge = attach_agent_evidence_and_queue_gaps(research_pool, human_context)
 
-    # Re-evaluate MUST and NICE after agent evidence is attached, then rank survivors.
     attach_client_intent_fit(rows, client_intent)
     survivors = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")]
     rejected = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") == "FAIL")]
@@ -240,11 +302,14 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     _reassign_rank_metadata(rows)
 
     universe_status = _strategy_universe_status(rows, strategy)
+    care_partner_layer = _care_partner_layer(strategy, questionnaire_state, natural_language_query)
+    _attach_facility_care_partner_access(rows, care_partner_layer)
     selected = rows[: max(0, int(limit or 0))]
     core["results"] = selected
     core["result_count"] = len(selected)
     core["must_gate_rejected_count"] = len(rejected)
     core["must_gate_survivor_count"] = len(survivors)
+    core["care_partner_options"] = care_partner_layer.get("candidate_options") or []
     presearch_policy = build_success_factor_trace(questionnaire_state, patient_profile)
     readiness = str(human_context.get("decision_readiness") or "UNKNOWN")
     selected_must_unknown = sum(len((row.get("client_intent_fit") or {}).get("must_unknown") or []) for row in selected)
@@ -263,6 +328,7 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
         "living_strategy": strategy,
         "client_intent": client_intent,
         "strategy_universe": universe_status,
+        "care_partner_layer": care_partner_layer,
         "success_factor_policy": presearch_policy,
         "person_fit_rank_effect": _rank_effect(has_explicit_person_fit_preference(human_context), _social_priority_is_explicit_high(human_context)),
         "agent_evidence_bridge": agent_bridge,
@@ -293,19 +359,21 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
         explanation["client_intent"] = client_intent
         explanation["client_intent_fit"] = row.get("client_intent_fit")
         explanation["strategy_universe"] = universe_status
+        explanation["care_partner_access"] = row.get("care_partner_access") or {"status": "NOT_APPLICABLE"}
         explanation["human_person_fit"] = row.get("human_person_fit")
         explanation["agent_person_fit_evidence"] = row.get("agent_person_fit_evidence") or []
         explanation["success_factor_summary"] = trace_summary
-        audit_rows.append({"canonical_facility_id": row.get("canonical_facility_id"), "rank_position": row.get("rank_position"), "eligibility_status": row.get("eligibility_status"), "care_setting_fit": (row.get("care_setting_fit") or {}).get("status"), "client_intent_fit": row.get("client_intent_fit") or {}, "matched_needs": [item.get("parameter_id") for item in row.get("matched_needs") or []], "unknown_critical_needs": [item.get("parameter_id") for item in row.get("unknown_critical_needs") or []], "success_factors_known_both_sides": trace_summary.get("known_on_both_sides") or [], "success_factors_facility_unknown": trace_summary.get("facility_evidence_unknown") or [], "agent_market_evidence_count": len(row.get("agent_person_fit_evidence") or [])})
+        audit_rows.append({"canonical_facility_id": row.get("canonical_facility_id"), "rank_position": row.get("rank_position"), "eligibility_status": row.get("eligibility_status"), "care_setting_fit": (row.get("care_setting_fit") or {}).get("status"), "client_intent_fit": row.get("client_intent_fit") or {}, "care_partner_access": row.get("care_partner_access") or {}, "matched_needs": [item.get("parameter_id") for item in row.get("matched_needs") or []], "unknown_critical_needs": [item.get("parameter_id") for item in row.get("unknown_critical_needs") or []], "success_factors_known_both_sides": trace_summary.get("known_on_both_sides") or [], "success_factors_facility_unknown": trace_summary.get("facility_evidence_unknown") or [], "agent_market_evidence_count": len(row.get("agent_person_fit_evidence") or [])})
 
     core["recommendation_audit_trace"] = {
         "model_version": "decision-intelligence-runtime-v3.1",
-        "facts_used": {"patient_needs": [item.get("parameter_id") for item in patient_profile.get("needs") or []], "human_signals": human_context.get("signals") or {}, "living_strategy_signals": strategy.get("signals") or {}, "household": strategy.get("household") or {}, "client_intent": client_intent},
-        "decision_rules_applied": ["client_intent_first", "verified_must_mismatch_rejected", "material_must_unknown_requires_verification", "nice_to_have_orders_survivors", "government_regulatory_after_fit", "public_reputation_after_regulatory", "evidence_completeness_after_reputation", "living_strategy_before_facility_ranking", "least_restrictive_safe_strategy", "temporary_recovery_separate_from_long_term_residence", "couple_members_keep_separate_care_profiles", "unknown_is_not_mismatch", "resident_material_unknown_triggers_next_best_question", "facility_material_unknown_triggers_market_agent_research", "agent_evidence_must_match_active_market", "success_factor_influence_classes_no_unvalidated_numeric_weights", "facility_size_not_independent_quality", "knowledge_fabric_requires_recommendation_eligibility_and_verification_gate", "outcomes_are_validation_only_without_governed_weight_change"],
-        "evidence_references": ["Nevada HCQC / ALiS", "market-scoped official provider evidence", "CMS when applicable", "public reputation only when source/identity/review count are verifiable", "reports/RESIDENT_SENIOR_LIVING_SUCCESS_FACTORS_CANON_V1.md", "reports/RECOMMENDATION_INFLUENCE_MODEL_V1.md", "reports/RECOMMENDATION_REQUIRED_DATA_AND_NBQ_V1.md"],
+        "facts_used": {"patient_needs": [item.get("parameter_id") for item in patient_profile.get("needs") or []], "human_signals": human_context.get("signals") or {}, "living_strategy_signals": strategy.get("signals") or {}, "household": strategy.get("household") or {}, "client_intent": client_intent, "care_partner_layer": care_partner_layer},
+        "decision_rules_applied": ["client_intent_first", "verified_must_mismatch_rejected", "material_must_unknown_requires_verification", "nice_to_have_orders_survivors", "government_regulatory_after_fit", "public_reputation_after_regulatory", "evidence_completeness_after_reputation", "living_strategy_before_facility_ranking", "least_restrictive_safe_strategy", "temporary_recovery_separate_from_long_term_residence", "independent_living_temporary_care_uses_separate_licensed_pca_layer", "facility_agency_access_requires_provider_evidence", "pca_operational_unknowns_keep_care_partner_provisional", "couple_members_keep_separate_care_profiles", "unknown_is_not_mismatch", "resident_material_unknown_triggers_next_best_question", "facility_material_unknown_triggers_market_agent_research", "agent_evidence_must_match_active_market", "success_factor_influence_classes_no_unvalidated_numeric_weights", "facility_size_not_independent_quality", "knowledge_fabric_requires_recommendation_eligibility_and_verification_gate", "outcomes_are_validation_only_without_governed_weight_change"],
+        "evidence_references": ["Nevada HCQC / ALiS", "Nevada PCA operational primary-source evidence", "market-scoped official provider evidence", "CMS when applicable", "public reputation only when source/identity/review count are verifiable", "reports/RESIDENT_SENIOR_LIVING_SUCCESS_FACTORS_CANON_V1.md", "reports/RECOMMENDATION_INFLUENCE_MODEL_V1.md", "reports/RECOMMENDATION_REQUIRED_DATA_AND_NBQ_V1.md"],
         "living_strategy": strategy,
         "client_intent": client_intent,
         "strategy_universe": universe_status,
+        "care_partner_layer": care_partner_layer,
         "agent_evidence_bridge": agent_bridge,
         "recommendations": audit_rows,
     }

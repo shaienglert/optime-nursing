@@ -7,9 +7,14 @@ from Nevada HCQC/ALiS; operational facts are separate evidence fields and remain
 UNKNOWN until verified.
 """
 
+import json
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
 UNKNOWN = "UNKNOWN"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+OPERATIONAL_EVIDENCE_PATH = REPO_ROOT / "data" / "nevada" / "verified" / "personal_care_agency_operational_evidence.json"
 
 REQUIRED_PCA_FIELDS = (
     "license_status",
@@ -33,6 +38,23 @@ REQUIRED_PCA_FIELDS = (
 
 def _known(value: Any) -> bool:
     return value not in (None, "", UNKNOWN, [], {})
+
+
+@lru_cache(maxsize=1)
+def load_personal_care_agency_evidence() -> Dict[str, Any]:
+    if not OPERATIONAL_EVIDENCE_PATH.is_file():
+        return {
+            "schema_version": "UNKNOWN",
+            "source_snapshot": {},
+            "records": [],
+            "policy": {"unknown_rule": "No operational evidence file is available."},
+        }
+    payload = json.loads(OPERATIONAL_EVIDENCE_PATH.read_text(encoding="utf-8"))
+    records = [row for row in payload.get("records") or [] if row.get("identity_verified") is True]
+    payload = dict(payload)
+    payload["records"] = records
+    payload["operationally_verified_count"] = len(records)
+    return payload
 
 
 def build_care_agency_requirements(*, temporary_adl_support: bool, bathing: bool, dressing: bool, transfer: bool, preferred_languages: Iterable[str] | None = None) -> Dict[str, Any]:
@@ -89,11 +111,19 @@ def evaluate_personal_care_agency(agency: Dict[str, Any], requirements: Dict[str
         else:
             match.append(required)
 
-    # These are decision-relevant but not legal-license facts. Missing evidence
-    # never becomes a negative assertion.
     for field in ("minimum_billable_hours", "employment_model", "liability_insurance_verified", "workers_comp_verified", "background_check_verified", "fixed_caregiver_possible", "availability_status"):
         if not _known(agency.get(field)):
             unknown.append(field.upper())
+
+    preferred_languages = [str(v).strip().lower() for v in requirements.get("preferred_languages") or [] if str(v).strip()]
+    if preferred_languages:
+        available_languages = [str(v).strip().lower() for v in agency.get("languages") or [] if str(v).strip()]
+        if not available_languages:
+            unknown.append("PREFERRED_LANGUAGE")
+        elif any(language in available_languages for language in preferred_languages):
+            match.append("PREFERRED_LANGUAGE")
+        else:
+            hard_fail.append("PREFERRED_LANGUAGE_NOT_AVAILABLE")
 
     return {
         "agency_id": agency.get("agency_id") or agency.get("license_number") or UNKNOWN,
@@ -121,4 +151,48 @@ def rank_compatible_agencies(agencies: Iterable[Dict[str, Any]], requirements: D
     return evaluated
 
 
-__all__ = ["build_care_agency_requirements", "evaluate_personal_care_agency", "rank_compatible_agencies"]
+def build_verified_care_partner_context(requirements: Dict[str, Any], *, limit: int = 10) -> Dict[str, Any]:
+    payload = load_personal_care_agency_evidence()
+    ranked = rank_compatible_agencies(payload.get("records") or [], requirements)
+    snapshot = payload.get("source_snapshot") if isinstance(payload.get("source_snapshot"), dict) else {}
+    options = []
+    for row in ranked[: max(0, int(limit))]:
+        options.append({
+            "agency_id": row.get("agency_id") or UNKNOWN,
+            "agency_name": row.get("agency_name") or UNKNOWN,
+            "license_number": row.get("license_number") or UNKNOWN,
+            "license_status": row.get("license_status") or UNKNOWN,
+            "address": row.get("address") or UNKNOWN,
+            "city": row.get("city") or UNKNOWN,
+            "zip": row.get("zip") or UNKNOWN,
+            "phone": row.get("phone") or UNKNOWN,
+            "primary_source_url": row.get("primary_source_url") or UNKNOWN,
+            "bathing_assistance": row.get("bathing_assistance", UNKNOWN),
+            "dressing_assistance": row.get("dressing_assistance", UNKNOWN),
+            "transfer_assistance": row.get("transfer_assistance", UNKNOWN),
+            "minimum_visit_minutes": row.get("minimum_visit_minutes", UNKNOWN),
+            "minimum_billable_hours": row.get("minimum_billable_hours", UNKNOWN),
+            "hourly_rate": row.get("hourly_rate", UNKNOWN),
+            "fixed_caregiver_possible": row.get("fixed_caregiver_possible", UNKNOWN),
+            "languages": row.get("languages") or [],
+            "availability_status": row.get("availability_status", UNKNOWN),
+            "care_agency_fit": row.get("care_agency_fit") or {},
+        })
+    return {
+        "status": "CANDIDATES_PENDING_OPERATIONAL_VERIFICATION" if options else "RESEARCH_REQUIRED",
+        "requirements": requirements,
+        "licensed_valley_universe_count": snapshot.get("las_vegas_valley_records", UNKNOWN),
+        "operationally_verified_count": payload.get("operationally_verified_count", 0),
+        "candidate_options": options,
+        "decision_rule": "A licensed agency is not treated as fully suitable until visit minimums, short-visit economics, availability and any facility-specific access restrictions are verified.",
+        "unknown_rule": "Missing operational evidence remains UNKNOWN and keeps the care-partner recommendation provisional.",
+    }
+
+
+__all__ = [
+    "build_care_agency_requirements",
+    "build_verified_care_partner_context",
+    "evaluate_personal_care_agency",
+    "load_personal_care_agency_evidence",
+    "rank_compatible_agencies",
+]
