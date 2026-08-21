@@ -5,7 +5,8 @@ from __future__ import annotations
 The model is the interpreter, not the authority. It must consume the Learning Center
 advice and return a structured semantic packet. Domain rules then validate the packet.
 No meaningful client statement may disappear; unresolved client meaning becomes a
-question. Facility-specific unknowns become downstream research, never invented facts.
+question only when it is decision-critical. Facility-specific unknowns become
+downstream research, never invented facts.
 """
 
 import json
@@ -23,7 +24,9 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Separate explicit facts from inferences.",
     "Never convert an inference into a fact without confirmation or evidence.",
     "Classify decision relevance as MUST, NICE, CONTEXT, or UNKNOWN.",
-    "If material information owned by the client is unknown or ambiguous, ASK the client instead of delegating it to facility research.",
+    "Only client-owned information that is MUST or otherwise decision-critical may block READY and generate the next clarification question.",
+    "NICE or CONTEXT ambiguity must remain UNKNOWN/AMBIGUOUS without blocking READY unless the client explicitly elevates it to a requirement.",
+    "If material decision-critical information owned by the client is unknown or ambiguous, ASK the client instead of delegating it to facility research.",
     "Facility-specific facts such as availability, price, unit route distance, meal delivery, dietary safety, current activities, or service capability may remain RESEARCH_REQUIRED after client intent is understood.",
     "decision_readiness means CLIENT-INTENT readiness. READY is allowed when no material client clarification remains, even if downstream facility evidence still requires research.",
     "If domain or facility evidence is missing, request research and consult the Learning Center.",
@@ -51,7 +54,7 @@ def _required_output_schema() -> Dict[str, Any]:
 def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_advice: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "role": "OPTIME_NURSING_EXPERT_SEMANTIC_INTERPRETER",
-        "mission": "Understand the resident/family request at senior-living expert level before matching. Distinguish client clarification from downstream facility research.",
+        "mission": "Understand the resident/family request at senior-living expert level before matching. Distinguish decision-critical client clarification from downstream facility research and non-blocking NICE/CONTEXT ambiguity.",
         "rules": SEMANTIC_AI_SYSTEM_RULES,
         "response_constraints": {
             "style": "compact JSON; no repeated explanation",
@@ -63,6 +66,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             "research_requests_max": 8,
             "statement_rule": "Every meaningful user/questionnaire statement must be accounted for exactly once; semantically linked fragments may be grouped, but nothing material may be dropped.",
             "field_length_rule": "Keep meaning, implication, clarification_question and research_task concise; usually one sentence each.",
+            "question_priority_rule": "Ask only one highest-information unresolved MUST/decision-critical client question. Do not ask NICE/CONTEXT questions merely to improve ranking.",
         },
         "questionnaire_state": questionnaire_state,
         "user_text": user_text,
@@ -165,8 +169,30 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         if statement.get("status") == "RESEARCH_REQUIRED" and not str(statement.get("research_task") or "").strip():
             raise RuntimeError(f"SEMANTIC_AI_RESEARCH_WITHOUT_TASK:{idx}")
 
-    pending_question = any(s.get("status") == "ASKED" for s in statements)
+    # Guardian policy: the model may propose a question, but NICE/CONTEXT ambiguity
+    # is not allowed to block recommendation readiness. Preserve the ambiguity and
+    # remove the blocking question rather than inventing an answer.
+    nonblocking_asked = [
+        s for s in statements
+        if s.get("status") == "ASKED" and s.get("importance") in {"NICE", "CONTEXT"}
+    ]
+    for statement in nonblocking_asked:
+        statement["status"] = "USED"
+        statement["clarification_question"] = None
+    blocking_asked = [s for s in statements if s.get("status") == "ASKED"]
+    pending_question = bool(blocking_asked)
     pending_research = any(s.get("status") == "RESEARCH_REQUIRED" for s in statements)
+
+    if not pending_question and nonblocking_asked:
+        result["next_question"] = None
+        if str(result.get("decision_readiness") or "") == "NEEDS_CLARIFICATION":
+            result["decision_readiness"] = "READY"
+        result["readiness_normalization"] = {
+            "from": "NEEDS_CLARIFICATION",
+            "to": "READY",
+            "reason": "ONLY_NICE_OR_CONTEXT_AMBIGUITY_REMAINED",
+        }
+
     readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION")
     if readiness == "READY" and pending_question:
         raise RuntimeError("SEMANTIC_AI_READY_WITH_UNRESOLVED_CLIENT_INPUT")
@@ -186,6 +212,7 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         "unknown_is_not_default": True,
         "no_silent_drop": True,
         "client_intent_ready_allows_downstream_facility_research": True,
+        "nice_context_unknowns_do_not_block_ready": True,
         "rules_applied": SEMANTIC_AI_SYSTEM_RULES,
     }
     return result
