@@ -4,8 +4,8 @@ from __future__ import annotations
 
 The model is the interpreter, not the authority. It must consume the Learning Center
 advice and return a structured semantic packet. Domain rules then validate the packet.
-No meaningful client statement may disappear; unresolved meaning becomes a question
-or research task, never an inferred fact.
+No meaningful client statement may disappear; unresolved client meaning becomes a
+question. Facility-specific unknowns become downstream research, never invented facts.
 """
 
 import json
@@ -23,8 +23,10 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Separate explicit facts from inferences.",
     "Never convert an inference into a fact without confirmation or evidence.",
     "Classify decision relevance as MUST, NICE, CONTEXT, or UNKNOWN.",
-    "If a material preference is unknown, ask the client instead of guessing.",
-    "If domain knowledge is missing, request research and consult the Learning Center.",
+    "If material information owned by the client is unknown or ambiguous, ASK the client instead of delegating it to facility research.",
+    "Facility-specific facts such as availability, price, unit route distance, meal delivery, dietary safety, current activities, or service capability may remain RESEARCH_REQUIRED after client intent is understood.",
+    "decision_readiness means CLIENT-INTENT readiness. READY is allowed when no material client clarification remains, even if downstream facility evidence still requires research.",
+    "If domain or facility evidence is missing, request research and consult the Learning Center.",
     "UNKNOWN must remain UNKNOWN until resolved.",
     "Do not invent facility capabilities, prices, availability, reputation, or regulatory facts.",
     "Prefer one high-information clarification at a time.",
@@ -48,7 +50,7 @@ def _required_output_schema() -> Dict[str, Any]:
 def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_advice: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "role": "OPTIME_NURSING_EXPERT_SEMANTIC_INTERPRETER",
-        "mission": "Understand the resident/family request at senior-living expert level before matching.",
+        "mission": "Understand the resident/family request at senior-living expert level before matching. Distinguish client clarification from downstream facility research.",
         "rules": SEMANTIC_AI_SYSTEM_RULES,
         "questionnaire_state": questionnaire_state,
         "user_text": user_text,
@@ -75,25 +77,16 @@ def _request_with_retry(url: str, headers: Dict[str, str], request_json: Dict[st
     max_attempts = max(1, min(3, int(os.getenv("OPTIME_SEMANTIC_AI_MAX_ATTEMPTS", "2"))))
     backoff_seconds = max(0.0, float(os.getenv("OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS", "1")))
     last_error: Optional[Exception] = None
-
     for attempt in range(1, max_attempts + 1):
         try:
-            return requests.post(
-                url,
-                headers=headers,
-                json=request_json,
-                timeout=(10.0, timeout_seconds),
-            )
+            return requests.post(url, headers=headers, json=request_json, timeout=(10.0, timeout_seconds))
         except (requests.Timeout, requests.ConnectionError) as exc:
             last_error = exc
             if attempt >= max_attempts:
                 break
             if backoff_seconds:
                 time.sleep(backoff_seconds * attempt)
-
-    raise RuntimeError(
-        f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={max_attempts}:timeout={timeout_seconds}:{last_error}"
-    )
+    raise RuntimeError(f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={max_attempts}:timeout={timeout_seconds}:{last_error}")
 
 
 def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -102,11 +95,9 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     api_key = os.getenv("OPTIME_SEMANTIC_AI_API_KEY", "").strip()
     if not url or not model:
         raise RuntimeError("SEMANTIC_AI_NOT_CONFIGURED")
-
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
-
     uses_responses_api = "/responses" in url.lower()
     if uses_responses_api:
         request_json = {
@@ -126,7 +117,6 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
         }
-
     response = _request_with_retry(url, headers, request_json)
     if not response.ok:
         raise RuntimeError(f"SEMANTIC_AI_HTTP_{response.status_code}:{response.text[:500]}")
@@ -134,8 +124,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     if uses_responses_api:
         return _extract_responses_output(body)
     if isinstance(body, dict) and "choices" in body:
-        content = body["choices"][0]["message"]["content"]
-        return json.loads(content)
+        return json.loads(body["choices"][0]["message"]["content"])
     if isinstance(body, dict) and "output" in body and isinstance(body["output"], dict):
         return body["output"]
     if isinstance(body, dict):
@@ -163,13 +152,33 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
             raise RuntimeError(f"SEMANTIC_AI_ASKED_WITHOUT_QUESTION:{idx}")
         if statement.get("status") == "RESEARCH_REQUIRED" and not str(statement.get("research_task") or "").strip():
             raise RuntimeError(f"SEMANTIC_AI_RESEARCH_WITHOUT_TASK:{idx}")
+
     pending_question = any(s.get("status") == "ASKED" for s in statements)
     pending_research = any(s.get("status") == "RESEARCH_REQUIRED" for s in statements)
-    if result.get("decision_readiness") == "READY" and (pending_question or pending_research):
-        raise RuntimeError("SEMANTIC_AI_READY_WITH_UNRESOLVED_INPUT")
+    readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION")
+    if readiness == "READY" and pending_question:
+        raise RuntimeError("SEMANTIC_AI_READY_WITH_UNRESOLVED_CLIENT_INPUT")
+    # Facility research is downstream evidence work, not a reason to deadlock the client interview.
+    # When the AI has no remaining client question, normalize NEEDS_RESEARCH to READY while preserving
+    # all research requests and RESEARCH_REQUIRED statement traces for the Guardian/research layer.
+    if readiness == "NEEDS_RESEARCH" and not pending_question:
+        result["decision_readiness"] = "READY"
+        result["readiness_normalization"] = {
+            "from": "NEEDS_RESEARCH",
+            "to": "READY",
+            "reason": "CLIENT_INTENT_COMPLETE_FACILITY_RESEARCH_DEFERRED",
+            "pending_facility_research": pending_research,
+        }
     result["statement_coverage_percent"] = 100.0
     result["dropped_statement_count"] = 0
-    result["governance"] = {"ai_based": True, "learning_center_consulted": True, "unknown_is_not_default": True, "no_silent_drop": True, "rules_applied": SEMANTIC_AI_SYSTEM_RULES}
+    result["governance"] = {
+        "ai_based": True,
+        "learning_center_consulted": True,
+        "unknown_is_not_default": True,
+        "no_silent_drop": True,
+        "client_intent_ready_allows_downstream_facility_research": True,
+        "rules_applied": SEMANTIC_AI_SYSTEM_RULES,
+    }
     return result
 
 
