@@ -13,6 +13,7 @@ if str(SCRIPTS_DIR) not in sys.path:
 from enrich_nevada_pca_operational_primary_sources import UNKNOWN
 from enrich_nevada_pca_operational_primary_sources_v2 import (
     _allowed_candidate,
+    _candidate_matches_search_identity,
     bing_result_urls,
     duckduckgo_lite_urls,
     hcqc_external_links,
@@ -26,6 +27,9 @@ GENERIC_BLOCKED = (
     "mapquest.com", "chamberofcommerce.com", "hcaoa.org", "npino.org", "npi-number-one.com",
     "npidb.org", "healthcare4ppl.com",
 )
+MAX_CANDIDATES = 24
+MAX_PER_SEARCH_VARIANT = 4
+MAX_DUCKDUCKGO_CANDIDATES = 6
 
 
 def _domain_blocked(url: str) -> bool:
@@ -53,32 +57,84 @@ def _query_variants(task: dict[str, Any]) -> list[tuple[str, str]]:
     return variants
 
 
+def _add_candidate(
+    candidates: list[dict[str, str]],
+    seen: set[str],
+    *,
+    url: str,
+    title: str,
+    method: str,
+    task: dict[str, Any],
+    require_search_identity_hint: bool,
+) -> bool:
+    if not _allowed_candidate(url) or _domain_blocked(url) or url in seen:
+        return False
+    if require_search_identity_hint and not _candidate_matches_search_identity(url, title, task):
+        return False
+    seen.add(url)
+    candidates.append({"url": url, "title": title, "discovery_method": method})
+    return True
+
+
 def discover_candidates_v4(task: dict[str, Any]) -> list[dict[str, str]]:
+    """Return a diverse set of plausible primary-source URLs.
+
+    The previous implementation could fill the entire global candidate budget from the
+    first exact-phone query. That meant every task had 15 candidates while later,
+    higher-value address/license/name queries were never examined. We now cap each
+    search variant independently and require a name/location identity hint in search
+    result metadata before spending a fetch on it. Final identity is still verified
+    against the provider website itself by verify_candidate_v3.
+    """
     candidates: list[dict[str, str]] = []
     seen: set[str] = set()
+
     for url, title in hcqc_external_links(task):
-        if not _allowed_candidate(url) or _domain_blocked(url) or url in seen:
-            continue
-        seen.add(url)
-        candidates.append({"url": url, "title": title, "discovery_method": "HCQC_EXTERNAL_LINK"})
+        _add_candidate(
+            candidates,
+            seen,
+            url=url,
+            title=title,
+            method="HCQC_EXTERNAL_LINK",
+            task=task,
+            require_search_identity_hint=False,
+        )
+        if len(candidates) >= MAX_CANDIDATES:
+            return candidates
 
     for query, method in _query_variants(task):
+        accepted_for_variant = 0
         for url, title in bing_result_urls(query):
-            if not _allowed_candidate(url) or _domain_blocked(url) or url in seen:
-                continue
-            seen.add(url)
-            candidates.append({"url": url, "title": title, "discovery_method": method})
-            if len(candidates) >= 15:
-                return candidates
+            if _add_candidate(
+                candidates,
+                seen,
+                url=url,
+                title=title,
+                method=method,
+                task=task,
+                require_search_identity_hint=True,
+            ):
+                accepted_for_variant += 1
+            if accepted_for_variant >= MAX_PER_SEARCH_VARIANT or len(candidates) >= MAX_CANDIDATES:
+                break
+        if len(candidates) >= MAX_CANDIDATES:
+            return candidates
 
     name = str(task.get("agency_name") or "").strip()
     city = str(task.get("city") or "").strip()
+    accepted_ddg = 0
     for url, title in duckduckgo_lite_urls(f'"{name}" "{city}" Nevada home care'):
-        if not _allowed_candidate(url) or _domain_blocked(url) or url in seen:
-            continue
-        seen.add(url)
-        candidates.append({"url": url, "title": title, "discovery_method": "DUCKDUCKGO_NAME_CITY"})
-        if len(candidates) >= 15:
+        if _add_candidate(
+            candidates,
+            seen,
+            url=url,
+            title=title,
+            method="DUCKDUCKGO_NAME_CITY",
+            task=task,
+            require_search_identity_hint=True,
+        ):
+            accepted_ddg += 1
+        if accepted_ddg >= MAX_DUCKDUCKGO_CANDIDATES or len(candidates) >= MAX_CANDIDATES:
             break
     return candidates
 
@@ -108,7 +164,7 @@ def research_task_v4(task: dict[str, Any], throttle: float) -> dict[str, Any]:
         if verified:
             base.update(verified)
             base["research_status"] = "PRIMARY_SOURCE_VERIFIED"
-            base["policy"] = "Discovery may use exact phone/address/license searches, but promotion requires primary-source identity verification. Third-party directories/associations/NPI mirrors are excluded. V3 extended operational facts are positive-only; missing facts remain UNKNOWN."
+            base["policy"] = "Discovery uses diversified exact phone/address/license/name searches with metadata identity hints. Final promotion still requires primary-source identity verification. Third-party directories/associations/NPI mirrors are excluded. V3 extended operational facts are positive-only; missing facts remain UNKNOWN."
             return base
     base["research_status"] = "SOURCE_NOT_FOUND" if not candidates else "CANDIDATES_NOT_IDENTITY_VERIFIED"
     return base
@@ -127,14 +183,14 @@ def main() -> int:
     selected = tasks[max(0, args.offset): max(0, args.offset) + max(0, args.limit)]
     records = [research_task_v4(task, max(0.0, args.throttle)) for task in selected]
     payload = {
-        "schema_version": "nevada-pca-operational-primary-research-v4.2.0",
+        "schema_version": "nevada-pca-operational-primary-research-v4.3.0",
         "queue_task_count": len(tasks),
         "attempted": len(selected),
         "identity_verified": sum(r.get("identity_verified") is True for r in records),
         "source_not_found": sum(r.get("research_status") == "SOURCE_NOT_FOUND" for r in records),
         "candidates_not_identity_verified": sum(r.get("research_status") == "CANDIDATES_NOT_IDENTITY_VERIFIED" for r in records),
         "records": records,
-        "policy": "Staging evidence only. Exact phone/address/license discovery is allowed, but production promotion still requires strong agency/operator primary-source identity and live HCQC/ALiS license gating. V3 extended operational facts are positive-only and non-findings remain UNKNOWN.",
+        "policy": "Staging evidence only. Discovery is diversified across exact phone/address/license/name queries and filters search results by identity hints before provider-page verification. Production promotion still requires strong agency/operator primary-source identity and live HCQC/ALiS license gating. V3 extended operational facts are positive-only and non-findings remain UNKNOWN.",
     }
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
