@@ -42,6 +42,8 @@ class ThreePersonaSemanticDecisionBenchmark(unittest.TestCase):
         context = self._run(query, result)
         semantic = context["semantic_ai"]
         self.assertEqual("CONSULTED_AND_VALIDATED", semantic["status"])
+        self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
+        self.assertEqual([], context["adaptive_questions"])
         statements = semantic["result"]["statements"]
         mapped = {p for s in statements for p in s["mapped_parameters"]}
         self.assertTrue({"dining.quality", "lifestyle.activities", "environment.landscaping", "lifestyle.outings", "care.future_continuum"}.issubset(mapped))
@@ -66,7 +68,8 @@ class ThreePersonaSemanticDecisionBenchmark(unittest.TestCase):
         }
         context = self._run(query, result)
         self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
-        self.assertEqual("semantic_ai_high_information_question", context["adaptive_questions"][0]["question_key"])
+        self.assertEqual(1, len(context["adaptive_questions"]))
+        self.assertTrue(context["adaptive_questions"][0]["question_key"].startswith("semantic_ai_high_information_question:"))
         self.assertIn("short walking distances", context["adaptive_questions"][0]["question"].lower())
 
     def test_widow_gluten_allergy_and_no_cooking_become_safety_and_meal_requirements(self) -> None:
@@ -97,6 +100,7 @@ class ThreePersonaSemanticDecisionBenchmark(unittest.TestCase):
         self.assertEqual("MUST", allergy["importance"])
         self.assertEqual("MUST", no_cook["importance"])
         self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
+        self.assertEqual(1, len(context["adaptive_questions"]))
         self.assertIn("cross-contact", context["adaptive_questions"][0]["question"])
 
 
