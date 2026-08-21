@@ -28,6 +28,23 @@ def _norm(value: Any) -> str:
     return str(value or "").strip().lower()
 
 
+def _semantic_question_key(question: str) -> str:
+    normalized = " ".join(str(question or "").strip().lower().split())
+    digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
+    return f"semantic_ai_high_information_question:{digest}"
+
+
+def _answered_adaptive_keys(questionnaire_state: Dict[str, Any]) -> set[str]:
+    hi = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
+    scoring = hi.get("scoringEngine") if isinstance(hi.get("scoringEngine"), dict) else {}
+    signals = scoring.get("adaptiveSignals") if isinstance(scoring.get("adaptiveSignals"), list) else []
+    return {
+        str(row.get("questionKey") or "")
+        for row in signals
+        if isinstance(row, dict) and str(row.get("questionKey") or "").strip()
+    }
+
+
 def _assisted_living_profile_is_material(questionnaire_state: Dict[str, Any], natural_language_query: str) -> bool:
     assistance = _norm(questionnaire_state.get("assistanceLevel"))
     memory = _norm(questionnaire_state.get("memoryStatus"))
@@ -78,8 +95,11 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         if result.get("decision_readiness") in {"NEEDS_CLARIFICATION", "NEEDS_RESEARCH"}:
             context["decision_readiness"] = result["decision_readiness"]
         next_question = str(result.get("next_question") or "").strip()
-        if next_question and not _question_exists(context, "semantic_ai_high_information_question"):
-            context.setdefault("adaptive_questions", []).insert(0, _base._question("semantic_ai_high_information_question", next_question, "AI semantic interpretation identified this as the highest-information unresolved issue after consulting the Learning Center.", ["client_intent_completeness", "preference_congruence"], []))
+        if next_question:
+            question_key = _semantic_question_key(next_question)
+            answered_keys = _answered_adaptive_keys(questionnaire_state)
+            if question_key not in answered_keys and not _question_exists(context, question_key):
+                context.setdefault("adaptive_questions", []).insert(0, _base._question(question_key, next_question, "AI semantic interpretation identified this as the highest-information unresolved issue after consulting the Learning Center.", ["client_intent_completeness", "preference_congruence"], []))
     except Exception as exc:
         context["semantic_ai"] = {"enabled": True, "required": required, "status": "FAILED", "error": str(exc)}
         if required:
@@ -117,7 +137,8 @@ def attach_human_person_fit(rows: List[Dict[str, Any]], human_context: Dict[str,
         canonical_id = str(row.get("canonical_facility_id") or "")
         evidence = index.get(canonical_id) or {}
         beds = evidence.get("total_bed_count")
-        if not isinstance(beds, int): beds = None
+        if not isinstance(beds, int):
+            beds = None
         band = _base._community_size_band(beds)
         fit = _base._size_fit(preference, band)
         row["human_person_fit"] = {
