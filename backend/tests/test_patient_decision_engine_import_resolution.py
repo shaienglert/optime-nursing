@@ -24,23 +24,29 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         module_file = Path(module.__file__).as_posix()
         self.assertTrue(module_file.endswith("/app/services/patient_decision_engine_runtime/__init__.py"), module_file)
 
-    def test_public_import_exposes_nevada_governed_behavior(self) -> None:
+    def test_public_import_exposes_nevada_governed_behavior_after_ai_ready(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
-        result = module.run_patient_decision_engine(
-            {
-                "relationship": "Dad",
-                "ageGroup": "80-84",
-                "assistanceLevel": "Needs assistance with bathing and dressing",
-                "memoryStatus": "No",
-                "budget": 6500,
-                "distanceFromFamily": "Balanced location",
-            },
-            "My father is 84, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing, meals and medication. No dementia.",
-            limit=5,
-        )
+        ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ):
+            result = module.run_patient_decision_engine(
+                {
+                    "relationship": "Dad",
+                    "ageGroup": "80-84",
+                    "assistanceLevel": "Needs assistance with bathing and dressing",
+                    "memoryStatus": "No",
+                    "budget": 6500,
+                    "distanceFromFamily": "Balanced location",
+                },
+                "My father is 84, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing, meals and medication. No dementia.",
+                limit=5,
+            )
         self.assertEqual(result["patient_needs_profile"]["location_city"], "LAS VEGAS")
         self.assertEqual(result["care_setting_policy"]["version"], "v1.1")
         self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v3.1")
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertEqual("SEMANTIC_AI", result["decision_intelligence"]["interview_owner"])
         self.assertIn("living_strategy", result["decision_intelligence"])
         self.assertIn("client_intent", result["decision_intelligence"])
         self.assertIn("must_gate", result["decision_intelligence"])
