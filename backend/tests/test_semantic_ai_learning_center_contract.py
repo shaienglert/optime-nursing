@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from app.services.semantic_intent_ai import interpret_client_intent_with_ai
+import requests
+
+from app.services.semantic_intent_ai import _request_with_retry, interpret_client_intent_with_ai
 from app.services.human_intelligence_runtime_verified import build_human_intelligence_context
 
 
@@ -104,6 +106,38 @@ class SemanticAiLearningCenterContractTests(unittest.TestCase):
         with patch("app.services.semantic_intent_ai.build_learning_center_advice", return_value=learning):
             with self.assertRaisesRegex(RuntimeError, "READY_WITH_UNRESOLVED"):
                 interpret_client_intent_with_ai(user_text="unknown preference", questionnaire_state={}, transport=lambda _: bad)
+
+    def test_transport_retries_timeout_before_failing_closed(self) -> None:
+        response = Mock()
+        response.ok = True
+        with patch.dict(
+            os.environ,
+            {
+                "OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS": "45",
+                "OPTIME_SEMANTIC_AI_MAX_ATTEMPTS": "2",
+                "OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS": "0",
+            },
+            clear=False,
+        ):
+            with patch("app.services.semantic_intent_ai.requests.post", side_effect=[requests.Timeout("first"), response]) as post:
+                actual = _request_with_retry("https://example.invalid/responses", {"Content-Type": "application/json"}, {"model": "test"})
+        self.assertIs(response, actual)
+        self.assertEqual(2, post.call_count)
+        self.assertEqual((10.0, 45.0), post.call_args.kwargs["timeout"])
+
+    def test_transport_exhaustion_is_explicit(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS": "45",
+                "OPTIME_SEMANTIC_AI_MAX_ATTEMPTS": "2",
+                "OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS": "0",
+            },
+            clear=False,
+        ):
+            with patch("app.services.semantic_intent_ai.requests.post", side_effect=requests.Timeout("still slow")):
+                with self.assertRaisesRegex(RuntimeError, "SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts=2:timeout=45.0"):
+                    _request_with_retry("https://example.invalid/responses", {"Content-Type": "application/json"}, {"model": "test"})
 
 
 if __name__ == "__main__":
