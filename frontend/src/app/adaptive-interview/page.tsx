@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
@@ -66,10 +66,12 @@ function fallbackOptions(questionKey: string): string[] {
 export default function AdaptiveInterviewPage() {
   const router = useRouter();
   const { state, setState } = useQuestionnaire();
-  const [profile, setProfile] = useState<NeedsProfileWithDecisionIntelligence | null>(null);
+  const [question, setQuestion] = useState<AdaptiveQuestion | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nextUrl, setNextUrl] = useState("/results");
+  const answeredQuestionKeys = useRef<Set<string>>(new Set());
 
   const refresh = async (questionnaireState: QuestionnaireState, destination = nextUrl) => {
     setLoading(true);
@@ -79,9 +81,18 @@ export default function AdaptiveInterviewPage() {
         questionnaire_state: questionnaireState as unknown as Record<string, unknown>,
         natural_language_query: questionnaireState.notes || "",
       })) as NeedsProfileWithDecisionIntelligence;
-      setProfile(response);
       const context = getDecisionContext(response);
-      if (context.decision_readiness === "READY" || (context.adaptive_questions || []).length === 0) router.replace(destination);
+      const unansweredQuestions = (context.adaptive_questions || []).filter(
+        (candidate) => !answeredQuestionKeys.current.has(candidate.question_key),
+      );
+
+      if (context.decision_readiness === "READY" || unansweredQuestions.length === 0) {
+        setQuestion(null);
+        router.replace(destination);
+        return;
+      }
+
+      setQuestion(unansweredQuestions[0]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to continue the decision interview.");
     } finally {
@@ -99,18 +110,20 @@ export default function AdaptiveInterviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const context = useMemo(() => (profile ? getDecisionContext(profile) : {}), [profile]);
-  const question = context.adaptive_questions?.[0] || null;
   const options = question ? (question.answer_options?.length ? question.answer_options : fallbackOptions(question.question_key)) : [];
 
   const answerQuestion = async (answer: string) => {
-    if (!question) return;
+    if (!question || submitting) return;
+    setSubmitting(true);
+    setError(null);
     try {
-      const nextState = applyAdaptiveAnswer(state, question.question_key, answer);
+      const answeredKey = question.question_key;
+      const nextState = applyAdaptiveAnswer(state, answeredKey, answer);
+      answeredQuestionKeys.current.add(answeredKey);
       setState(nextState);
       void persistAdaptiveQuestionSignal({
         resident_key: "decision-interview-session",
-        question_key: question.question_key,
+        question_key: answeredKey,
         answer,
         signal_type: "decision-interview",
         signal_json: JSON.stringify({ decision_dimensions: question.decision_dimensions || [], policy_reference: question.policy_reference || null }),
@@ -121,6 +134,8 @@ export default function AdaptiveInterviewPage() {
       await refresh(nextState);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save this answer.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -142,7 +157,13 @@ export default function AdaptiveInterviewPage() {
             </div>
             <div className="mt-6 grid gap-3">
               {options.map((option) => (
-                <button key={option} type="button" onClick={() => void answerQuestion(option)} className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left font-medium text-slate-900 transition hover:border-emerald-400 hover:bg-emerald-50">
+                <button
+                  key={option}
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => void answerQuestion(option)}
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left font-medium text-slate-900 transition hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   {option}
                 </button>
               ))}
