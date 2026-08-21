@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -12,43 +12,25 @@ const BACKEND_BASE = (
 const scenarios = [
   {
     id: "NURSING-1-WALKER-100M",
-    questionnaire_state: {
-      relationship: "Myself",
-      ageGroup: "80-84",
-      assistanceLevel: "Mostly independent",
-      memoryStatus: "No",
-      budget: 8000,
-      distanceFromFamily: "Balanced location",
-    },
-    natural_language_query:
-      "I am 80 and looking for senior living in Las Vegas. I am mentally sharp and otherwise independent, but I use a walker and can walk only about 100 meters at a time. I do not want to use a wheelchair. I want to be able to reach dining, activities and the main services without long internal walks. I also enjoy movies, music and social activities.",
+    questionnaire_state: { relationship: "Myself", ageGroup: "80-84", assistanceLevel: "Mostly independent", memoryStatus: "No", budget: 8000, distanceFromFamily: "Balanced location" },
+    natural_language_query: "I am 80 and looking for senior living in Las Vegas. I am mentally sharp and otherwise independent, but I use a walker and can walk only about 100 meters at a time. I do not want to use a wheelchair. I want to be able to reach dining, activities and the main services without long internal walks. I also enjoy movies, music and social activities.",
     limit: 5,
   },
   {
     id: "NURSING-2-GLUTEN-WIDOW",
-    questionnaire_state: {
-      relationship: "Myself",
-      ageGroup: "75-79",
-      assistanceLevel: "Independent",
-      memoryStatus: "No",
-      budget: 10000,
-      distanceFromFamily: "Balanced location",
-    },
-    natural_language_query:
-      "I am a 76-year-old widow looking for senior living in Las Vegas. I am independent and do not have dementia. I do not cook, so I need all daily meals provided. I have a medically important gluten allergy and need safe gluten-free food with cross-contact controls. I prefer a high-quality comfortable community, enjoy company, card games, classes and organized activities, and I do not want to feel isolated.",
+    questionnaire_state: { relationship: "Myself", ageGroup: "75-79", assistanceLevel: "Independent", memoryStatus: "No", budget: 10000, distanceFromFamily: "Balanced location" },
+    natural_language_query: "I am a 76-year-old widow looking for senior living in Las Vegas. I am independent and do not have dementia. I do not cook, so I need all daily meals provided. I have a medically important gluten allergy and need safe gluten-free food with cross-contact controls. I prefer a high-quality comfortable community, enjoy company, card games, classes and organized activities, and I do not want to feel isolated.",
     limit: 5,
   },
 ] as const;
 
-async function callDecisionEngine(scenario: (typeof scenarios)[number]) {
+type Scenario = (typeof scenarios)[number];
+
+async function callDecisionEngine(scenario: Scenario) {
   const response = await fetch(`${BACKEND_BASE}/decision-engine/recommendations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      questionnaire_state: scenario.questionnaire_state,
-      natural_language_query: scenario.natural_language_query,
-      limit: scenario.limit,
-    }),
+    body: JSON.stringify({ questionnaire_state: scenario.questionnaire_state, natural_language_query: scenario.natural_language_query, limit: scenario.limit }),
     cache: "no-store",
   });
   const raw = await response.text();
@@ -57,17 +39,11 @@ async function callDecisionEngine(scenario: (typeof scenarios)[number]) {
 }
 
 function summarize(payload: any) {
-  const intelligence = payload?.decision_intelligence
-    || payload?.patient_needs_profile?.decision_intelligence
-    || payload?.care_setting_policy?.decision_intelligence
-    || {};
+  const intelligence = payload?.decision_intelligence || payload?.patient_needs_profile?.decision_intelligence || payload?.care_setting_policy?.decision_intelligence || {};
   const human = intelligence?.human_intelligence || {};
   return {
     decisionReadiness: human?.decision_readiness ?? null,
-    adaptiveQuestions: (human?.adaptive_questions || []).map((q: any) => ({
-      questionKey: q?.question_key ?? null,
-      question: q?.question ?? q?.prompt ?? null,
-    })),
+    adaptiveQuestions: (human?.adaptive_questions || []).map((q: any) => ({ questionKey: q?.question_key ?? null, question: q?.question ?? q?.prompt ?? null })),
     semanticAI: human?.semantic_ai ?? intelligence?.semantic_ai ?? null,
     personFitRankEffect: intelligence?.person_fit_rank_effect ?? null,
     decisionFinality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
@@ -88,17 +64,20 @@ function summarize(payload: any) {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const requestedId = request.nextUrl.searchParams.get("id");
+    const selected = requestedId ? scenarios.filter((scenario) => scenario.id === requestedId) : scenarios;
+    if (requestedId && selected.length === 0) {
+      return NextResponse.json({ status: "FAIL", error: "UNKNOWN_SCENARIO", supported: scenarios.map((scenario) => scenario.id) }, { status: 400 });
+    }
+
     const rows = [];
-    for (const scenario of scenarios) {
+    for (const scenario of selected) {
       const payload = await callDecisionEngine(scenario);
       rows.push({
         id: scenario.id,
-        input: {
-          questionnaire_state: scenario.questionnaire_state,
-          natural_language_query: scenario.natural_language_query,
-        },
+        input: { questionnaire_state: scenario.questionnaire_state, natural_language_query: scenario.natural_language_query },
         output: summarize(payload),
       });
     }
@@ -109,9 +88,6 @@ export async function GET() {
       rows,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    return NextResponse.json({
-      status: "FAIL",
-      detail: error instanceof Error ? error.message : String(error),
-    }, { status: 502, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ status: "FAIL", detail: error instanceof Error ? error.message : String(error) }, { status: 502, headers: { "Cache-Control": "no-store" } });
   }
 }
