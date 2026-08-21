@@ -2,18 +2,10 @@ from __future__ import annotations
 
 """Service package import governance.
 
-There are historically multiple decision-engine implementations in the repo:
-``patient_decision_engine.py`` (legacy core), ``patient_decision_engine/``
-(governed care/regulatory facade), and the integrated production runtime that
-adds evidence-governed Human Intelligence. Production must always resolve the
-public ``app.services.patient_decision_engine`` name to the integrated runtime.
-
-The loader also applies the governed Combined Care Solution layer after the
-integrated runtime finishes. This keeps housing fit separate from care delivery.
-
-The interview gate is authoritative: Semantic AI manages the interview under
-OPTIME Guardian/Learning Center constraints. Facility recommendation execution is
-not allowed until the governed interview returns READY.
+Production resolves the public patient-decision-engine name to the integrated runtime.
+Semantic AI owns interview sequencing; Guardian/rules constrain and validate. Client-
+intent READY permits facility matching/research to begin, while unresolved facility
+MUST evidence keeps recommendation finality provisional and never becomes a silent PASS.
 """
 
 import importlib.abc
@@ -40,26 +32,19 @@ def _agency_matches_for_row(row: dict[str, Any], result: dict[str, Any]) -> list
             continue
         fit = option.get("care_agency_fit") if isinstance(option.get("care_agency_fit"), dict) else {}
         hard_gate = str(fit.get("hard_gate") or "UNKNOWN").upper()
-        matches.append(
-            {
-                "canonical_agency_id": option.get("agency_id"),
-                "agency_name": option.get("agency_name"),
-                "verification_status": "VERIFIED" if hard_gate == "PASS" else "PARTIALLY_VERIFIED",
-                "service_area_match": "LAS_VEGAS_VALLEY_SERVICE" in (fit.get("matched") or []),
-                "can_cover_required_services": not any(
-                    str(reason).startswith("MISSING_") for reason in (fit.get("hard_fail_reasons") or [])
-                ),
-                "services": [
-                    item for item in (fit.get("matched") or [])
-                    if item in {"BATHING_ASSISTANCE", "DRESSING_ASSISTANCE", "TRANSFER_ASSISTANCE"}
-                ],
-                "minimum_hours": option.get("minimum_billable_hours", "UNKNOWN"),
-                "estimated_hourly_rate": option.get("hourly_rate", "UNKNOWN"),
-                "availability_status": option.get("availability_status", "UNKNOWN"),
-                "material_unknowns": fit.get("material_unknowns") or [],
-                "source": option.get("primary_source_url") or "Nevada PCA operational evidence",
-            }
-        )
+        matches.append({
+            "canonical_agency_id": option.get("agency_id"),
+            "agency_name": option.get("agency_name"),
+            "verification_status": "VERIFIED" if hard_gate == "PASS" else "PARTIALLY_VERIFIED",
+            "service_area_match": "LAS_VEGAS_VALLEY_SERVICE" in (fit.get("matched") or []),
+            "can_cover_required_services": not any(str(reason).startswith("MISSING_") for reason in (fit.get("hard_fail_reasons") or [])),
+            "services": [item for item in (fit.get("matched") or []) if item in {"BATHING_ASSISTANCE", "DRESSING_ASSISTANCE", "TRANSFER_ASSISTANCE"}],
+            "minimum_hours": option.get("minimum_billable_hours", "UNKNOWN"),
+            "estimated_hourly_rate": option.get("hourly_rate", "UNKNOWN"),
+            "availability_status": option.get("availability_status", "UNKNOWN"),
+            "material_unknowns": fit.get("material_unknowns") or [],
+            "source": option.get("primary_source_url") or "Nevada PCA operational evidence",
+        })
     return matches
 
 
@@ -68,22 +53,16 @@ def _reconcile_adl_must(row: dict[str, Any]) -> None:
     fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
     if not fit or "ADL_SUPPORT_AVAILABLE" not in set((fit.get("must_pass") or []) + (fit.get("must_unknown") or []) + (fit.get("must_fail") or [])):
         return
-
     passed = list(fit.get("must_pass") or [])
     unknown = list(fit.get("must_unknown") or [])
     failed = list(fit.get("must_fail") or [])
     for bucket in (passed, unknown, failed):
         while "ADL_SUPPORT_AVAILABLE" in bucket:
             bucket.remove("ADL_SUPPORT_AVAILABLE")
-
     coverage = str(solution.get("combined_must_coverage") or "PENDING_VERIFICATION")
-    if coverage == "PASS":
-        passed.append("ADL_SUPPORT_AVAILABLE")
-    elif coverage == "FAIL":
-        failed.append("ADL_SUPPORT_AVAILABLE")
-    else:
-        unknown.append("ADL_SUPPORT_AVAILABLE")
-
+    if coverage == "PASS": passed.append("ADL_SUPPORT_AVAILABLE")
+    elif coverage == "FAIL": failed.append("ADL_SUPPORT_AVAILABLE")
+    else: unknown.append("ADL_SUPPORT_AVAILABLE")
     fit["must_pass"] = passed
     fit["must_unknown"] = unknown
     fit["must_fail"] = failed
@@ -99,15 +78,12 @@ def _reconcile_adl_must(row: dict[str, Any]) -> None:
 def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict[str, Any], natural_language_query: str, limit: int) -> dict[str, Any]:
     from app.services.client_intent_runtime import intent_rank_key
     from app.services.combined_care_solution_runtime import attach_combined_care_solutions
-
     rows = list(result.get("results") or [])
     for row in rows:
         row["external_care_agency_matches"] = _agency_matches_for_row(row, result)
-
     summary = attach_combined_care_solutions(rows, questionnaire_state, natural_language_query)
     for row in rows:
         _reconcile_adl_must(row)
-
     indexed = list(enumerate(rows))
     indexed.sort(key=lambda pair: (*intent_rank_key(pair[1]), pair[0]))
     rows = [row for _, row in indexed]
@@ -117,30 +93,23 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
         row["rank_tie_status"] = "UNIQUE_RANK"
         row["tied_with"] = []
         row.setdefault("explanation", {})["combined_care_solution"] = row.get("combined_care_solution") or {}
-
     selected = rows[: max(0, int(limit or 0))]
     result["results"] = selected
     result["result_count"] = len(selected)
     result["combined_care_solution_policy"] = summary
-
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     decision["combined_care_solution"] = summary
     must_gate = decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}
     must_gate["combined_care_delivery_enforced"] = True
     must_gate["combined_care_rule"] = "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE; a verified agency match covering required services is required."
     decision["must_gate"] = must_gate
-    decision["combined_solution_principle"] = (
-        "Rank the complete solution: housing environment and care delivery are separate. "
-        "A preferred intimate/independent setting stays viable when outside care is permitted, "
-        "but the care MUST closes only after a verified agency match covers the required services."
-    )
+    decision["combined_solution_principle"] = "Rank the complete solution: housing environment and care delivery are separate. A preferred intimate/independent setting stays viable when outside care is permitted, but the care MUST closes only after a verified agency match covers the required services."
     result["decision_intelligence"] = decision
     return result
 
 
 def _decision_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
-    decision = profile.get("decision_intelligence") if isinstance(profile.get("decision_intelligence"), dict) else {}
-    return decision
+    return profile.get("decision_intelligence") if isinstance(profile.get("decision_intelligence"), dict) else {}
 
 
 def _readiness_from_decision(decision: dict[str, Any]) -> str:
@@ -162,10 +131,7 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
         "result_count": 0,
         "total_candidates_scored": 0,
         "availability_policy": "Recommendations are blocked until the governed AI interview is READY.",
-        "care_setting_policy": {
-            "status": "BLOCKED_PENDING_AI_INTERVIEW",
-            "decision_intelligence": decision,
-        },
+        "care_setting_policy": {"status": "BLOCKED_PENDING_AI_INTERVIEW", "decision_intelligence": decision},
         "decision_intelligence": {
             **decision,
             "decision_finality": "BLOCKED_PENDING_AI_INTERVIEW" if readiness != "NEEDS_RESEARCH" else "BLOCKED_PENDING_AI_RESEARCH",
@@ -193,35 +159,30 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             return
 
         def wrapped(questionnaire_state: dict[str, Any], natural_language_query: str = "", limit: int = 50):
-            # AI/Guardian interview runs before the recommendation engine. If it is
-            # not READY, do not rank, score, research, or expose facilities.
-            profile = profile_builder(
-                questionnaire_state=questionnaire_state,
-                natural_language_query=natural_language_query,
-            )
+            profile = profile_builder(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
             if isinstance(profile, dict):
                 readiness = _readiness_from_decision(_decision_from_profile(profile))
                 if readiness != "READY":
                     return _blocked_interview_result(profile, readiness)
 
-            result = original(
-                questionnaire_state=questionnaire_state,
-                natural_language_query=natural_language_query,
-                limit=limit,
-            )
+            result = original(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=limit)
             if not isinstance(result, dict):
                 return result
-
-            # Defense in depth: the full runtime consults AI again while assembling
-            # decision intelligence. A changed/non-READY result cannot leak ranking.
             decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
             readiness = _readiness_from_decision(decision)
             if readiness != "READY":
                 runtime_profile = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else profile
                 return _blocked_interview_result(runtime_profile or {}, readiness)
 
-            result.setdefault("decision_intelligence", {})["recommendation_execution_allowed"] = True
-            result["decision_intelligence"]["interview_owner"] = "SEMANTIC_AI"
+            # The interview is complete. Now preserve every facility-specific semantic MUST
+            # as a downstream evidence gate and queue evidence research. The AI never proves
+            # a facility capability; missing evidence remains UNKNOWN/PENDING_VERIFICATION.
+            from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
+            result = apply_semantic_facility_requirements(result, research_limit=max(20, int(limit or 50)))
+            decision = result.setdefault("decision_intelligence", {})
+            decision["interview_owner"] = "SEMANTIC_AI"
+            decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
+            decision.setdefault("recommendation_execution_allowed", True)
             return _apply_combined_care_layer(result, questionnaire_state, natural_language_query, limit)
 
         setattr(wrapped, "_combined_care_wrapped", True)
@@ -230,23 +191,11 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
 
 
 class _GovernedDecisionEngineFinder(importlib.abc.MetaPathFinder):
-    """Resolve the public production decision-engine name to the integrated runtime."""
-
-    def find_spec(
-        self,
-        fullname: str,
-        path: Optional[list[str]] = None,
-        target: Optional[ModuleType] = None,
-    ):
+    def find_spec(self, fullname: str, path: Optional[list[str]] = None, target: Optional[ModuleType] = None):
         if fullname != _GOVERNED_FULLNAME:
             return None
         loader = _IntegratedRuntimeLoader(fullname, str(_RUNTIME_INIT))
-        return importlib.util.spec_from_file_location(
-            fullname,
-            _RUNTIME_INIT,
-            loader=loader,
-            submodule_search_locations=[str(_RUNTIME_DIR)],
-        )
+        return importlib.util.spec_from_file_location(fullname, _RUNTIME_INIT, loader=loader, submodule_search_locations=[str(_RUNTIME_DIR)])
 
 
 if not any(isinstance(finder, _GovernedDecisionEngineFinder) for finder in sys.meta_path):
