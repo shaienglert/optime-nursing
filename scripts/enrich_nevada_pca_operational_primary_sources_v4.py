@@ -16,8 +16,8 @@ from enrich_nevada_pca_operational_primary_sources_v2 import (
     bing_result_urls,
     duckduckgo_lite_urls,
     hcqc_external_links,
-    verify_candidate,
 )
+from enrich_nevada_pca_operational_primary_sources_v3 import verify_candidate_v3
 
 GENERIC_BLOCKED = (
     "cms.gov", "medicare.gov", "dpbh.nv.gov", "nvdpbh.aithent.com", "health.nv.gov",
@@ -104,11 +104,11 @@ def research_task_v4(task: dict[str, Any], throttle: float) -> dict[str, Any]:
     base["candidate_count"] = len(candidates)
     base["candidate_discovery_methods"] = sorted({c["discovery_method"] for c in candidates})
     for candidate in candidates:
-        verified = verify_candidate(candidate, task, throttle)
+        verified = verify_candidate_v3(candidate, task, throttle)
         if verified:
             base.update(verified)
             base["research_status"] = "PRIMARY_SOURCE_VERIFIED"
-            base["policy"] = "Discovery may use exact phone/address/license searches, but promotion requires primary-source identity verification. Third-party directories/associations/NPI mirrors are excluded. Missing operational facts remain UNKNOWN."
+            base["policy"] = "Discovery may use exact phone/address/license searches, but promotion requires primary-source identity verification. Third-party directories/associations/NPI mirrors are excluded. V3 extended operational facts are positive-only; missing facts remain UNKNOWN."
             return base
     base["research_status"] = "SOURCE_NOT_FOUND" if not candidates else "CANDIDATES_NOT_IDENTITY_VERIFIED"
     return base
@@ -127,14 +127,14 @@ def main() -> int:
     selected = tasks[max(0, args.offset): max(0, args.offset) + max(0, args.limit)]
     records = [research_task_v4(task, max(0.0, args.throttle)) for task in selected]
     payload = {
-        "schema_version": "nevada-pca-operational-primary-research-v4.1.0",
+        "schema_version": "nevada-pca-operational-primary-research-v4.2.0",
         "queue_task_count": len(tasks),
         "attempted": len(selected),
         "identity_verified": sum(r.get("identity_verified") is True for r in records),
         "source_not_found": sum(r.get("research_status") == "SOURCE_NOT_FOUND" for r in records),
         "candidates_not_identity_verified": sum(r.get("research_status") == "CANDIDATES_NOT_IDENTITY_VERIFIED" for r in records),
         "records": records,
-        "policy": "Staging evidence only. Exact phone/address/license discovery is allowed, but production promotion still requires strong agency/operator primary-source identity and live HCQC/ALiS license gating.",
+        "policy": "Staging evidence only. Exact phone/address/license discovery is allowed, but production promotion still requires strong agency/operator primary-source identity and live HCQC/ALiS license gating. V3 extended operational facts are positive-only and non-findings remain UNKNOWN.",
     }
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
