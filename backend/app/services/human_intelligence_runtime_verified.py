@@ -19,6 +19,7 @@ from typing import Any, Dict, List
 
 from app.services import human_intelligence_runtime as _base
 from app.services.client_statement_accounting import account_user_input
+from app.services.living_strategy_runtime import build_living_strategy_context
 from app.services.semantic_intent_ai import interpret_client_intent_with_ai
 
 has_explicit_person_fit_preference = _base.has_explicit_person_fit_preference
@@ -46,13 +47,27 @@ def _question_exists(context: Dict[str, Any], key: str) -> bool:
     return any(str(row.get("question_key") or "") == key for row in context.get("adaptive_questions") or [])
 
 
-def _governed_context(base_context: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
+def _governed_context(
+    base_context: Dict[str, Any],
+    strategy_context: Dict[str, Any],
+    natural_language_query: str,
+) -> Dict[str, Any]:
     """Convert deterministic runtime output into Guardian evidence, never interview control."""
     accounting = account_user_input(natural_language_query)
     return {
         "signals": base_context.get("signals") or {},
         "transition_support": base_context.get("transition_support") or {},
         "principles": base_context.get("principles") or [],
+        "living_strategy_guardian": {
+            "signals": strategy_context.get("signals") or {},
+            "household": strategy_context.get("household") or {},
+            "strategy_candidates": strategy_context.get("strategy_candidates") or [],
+            "material_unknowns": strategy_context.get("material_unknowns") or [],
+            "clarification_candidates": strategy_context.get("guardian_clarification_candidates") or [],
+            "least_restrictive_safe_care_rule": bool(strategy_context.get("least_restrictive_safe_care_rule")),
+            "policy": strategy_context.get("policy"),
+            "rule": "These are Guardian constraints and candidate unknowns only. The AI decides whether and how to ask the next question.",
+        },
         "user_statement_accounting": accounting,
         "material_unknown_policy": {
             "unknown_is_not_default": True,
@@ -66,6 +81,7 @@ def _governed_context(base_context: Dict[str, Any], natural_language_query: str)
             "one_high_information_question_at_a_time": True,
             "hard_coded_question_generation_forbidden": True,
             "ready_requires_ai_and_guardian": True,
+            "strategy_rules_may_flag_unknowns_but_may_not_directly_ask": True,
         },
     }
 
@@ -78,9 +94,10 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
     # Deterministic rules never substitute for the interview AI. If AI is required but
     # unavailable, the interview blocks instead of falling back to scripted questions.
     if not enabled:
+        context["adaptive_questions"] = []
+        context["decision_readiness"] = "NEEDS_RESEARCH" if required else "NEEDS_CLARIFICATION"
         if required:
             context["semantic_ai"]["status"] = "REQUIRED_BUT_DISABLED"
-            context["decision_readiness"] = "NEEDS_RESEARCH"
         return context
 
     try:
@@ -89,6 +106,7 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             "signals": context.get("signals") or {},
             "transition_support": context.get("transition_support") or {},
             "principles": context.get("principles") or [],
+            "living_strategy_guardian": context.get("living_strategy_guardian") or {},
             "user_statement_accounting": context.get("user_statement_accounting") or {},
             "material_unknown_policy": context.get("material_unknown_policy") or {},
             "interview_policy": context.get("interview_policy") or {},
@@ -122,9 +140,7 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
                         [],
                     )
                 ]
-        elif readiness == "READY":
-            context["adaptive_questions"] = []
-        elif readiness == "NEEDS_RESEARCH":
+        elif readiness in {"READY", "NEEDS_RESEARCH"}:
             context["adaptive_questions"] = []
     except Exception as exc:
         context["semantic_ai"] = {
@@ -134,16 +150,16 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             "error": str(exc),
         }
         context["adaptive_questions"] = []
-        if required:
-            context["decision_readiness"] = "NEEDS_RESEARCH"
+        context["decision_readiness"] = "NEEDS_RESEARCH" if required else "NEEDS_CLARIFICATION"
     return context
 
 
 def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
-    # Base runtime is retained only for deterministic signals/Guardian evidence.
-    # Any hard-coded adaptive questions it produces are deliberately discarded.
+    # Deterministic runtimes are retained only for signals/Guardian evidence. Any
+    # hard-coded question lists they produce are deliberately discarded.
     base_context = _base.build_human_intelligence_context(questionnaire_state, natural_language_query)
-    context = _governed_context(base_context, natural_language_query)
+    strategy_context = build_living_strategy_context(questionnaire_state, natural_language_query)
+    context = _governed_context(base_context, strategy_context, natural_language_query)
     context["adaptive_questions"] = []
     context["decision_readiness"] = "NEEDS_CLARIFICATION"
     return _consult_semantic_ai(context, questionnaire_state, natural_language_query)
