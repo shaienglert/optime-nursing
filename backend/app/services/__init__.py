@@ -150,6 +150,26 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
     }
 
 
+def _suppress_unverified_recommendations(result: dict[str, Any]) -> dict[str, Any]:
+    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+    if decision.get("recommendation_execution_allowed") is True:
+        return result
+    candidate_count = len(result.get("results") or [])
+    decision["research_candidate_count"] = candidate_count
+    decision["recommendation_visibility"] = "BLOCKED_UNTIL_MUST_GATE_PASS"
+    decision["recommendation_visibility_rule"] = "Candidate identities and ranking are not exposed while any material MUST remains unresolved."
+    result["decision_intelligence"] = decision
+    result["results"] = []
+    result["result_count"] = 0
+    result["availability_policy"] = "Facility candidates are being researched; recommendations remain hidden until the governed MUST gate passes."
+    audit = result.get("recommendation_audit_trace") if isinstance(result.get("recommendation_audit_trace"), dict) else {}
+    audit["recommendation_execution_allowed"] = False
+    audit["blocked_before_recommendation_visibility"] = True
+    audit["recommendations"] = []
+    result["recommendation_audit_trace"] = audit
+    return result
+
+
 class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
     def exec_module(self, module: ModuleType) -> None:
         super().exec_module(module)
@@ -174,16 +194,14 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
                 runtime_profile = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else profile
                 return _blocked_interview_result(runtime_profile or {}, readiness)
 
-            # The interview is complete. Now preserve every facility-specific semantic MUST
-            # as a downstream evidence gate and queue evidence research. The AI never proves
-            # a facility capability; missing evidence remains UNKNOWN/PENDING_VERIFICATION.
             from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
             result = apply_semantic_facility_requirements(result, research_limit=max(20, int(limit or 50)))
             decision = result.setdefault("decision_intelligence", {})
             decision["interview_owner"] = "SEMANTIC_AI"
             decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
             decision.setdefault("recommendation_execution_allowed", True)
-            return _apply_combined_care_layer(result, questionnaire_state, natural_language_query, limit)
+            result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, limit)
+            return _suppress_unverified_recommendations(result)
 
         setattr(wrapped, "_combined_care_wrapped", True)
         setattr(wrapped, "_ai_interview_gate_wrapped", True)

@@ -30,6 +30,7 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "UNKNOWN must remain UNKNOWN until resolved.",
     "Do not invent facility capabilities, prices, availability, reputation, or regulatory facts.",
     "Prefer one high-information clarification at a time.",
+    "Return a compact decision packet: preserve 100% statement accounting but avoid repetition and long prose.",
 ]
 
 
@@ -52,6 +53,17 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
         "role": "OPTIME_NURSING_EXPERT_SEMANTIC_INTERPRETER",
         "mission": "Understand the resident/family request at senior-living expert level before matching. Distinguish client clarification from downstream facility research.",
         "rules": SEMANTIC_AI_SYSTEM_RULES,
+        "response_constraints": {
+            "style": "compact JSON; no repeated explanation",
+            "facts_max": 10,
+            "preferences_max": 8,
+            "constraints_max": 8,
+            "concerns_max": 6,
+            "implications_max": 6,
+            "research_requests_max": 8,
+            "statement_rule": "Every meaningful user/questionnaire statement must be accounted for exactly once; semantically linked fragments may be grouped, but nothing material may be dropped.",
+            "field_length_rule": "Keep meaning, implication, clarification_question and research_task concise; usually one sentence each.",
+        },
         "questionnaire_state": questionnaire_state,
         "user_text": user_text,
         "learning_center_advice": learning_advice,
@@ -103,7 +115,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         request_json = {
             "model": model,
             "input": [
-                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return JSON only."},
+                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only."},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
             "text": {"format": {"type": "json_object"}},
@@ -113,7 +125,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
             "model": model,
             "response_format": {"type": "json_object"},
             "messages": [
-                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return JSON only."},
+                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only."},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
         }
@@ -158,9 +170,6 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
     readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION")
     if readiness == "READY" and pending_question:
         raise RuntimeError("SEMANTIC_AI_READY_WITH_UNRESOLVED_CLIENT_INPUT")
-    # Facility research is downstream evidence work, not a reason to deadlock the client interview.
-    # When the AI has no remaining client question, normalize NEEDS_RESEARCH to READY while preserving
-    # all research requests and RESEARCH_REQUIRED statement traces for the Guardian/research layer.
     if readiness == "NEEDS_RESEARCH" and not pending_question:
         result["decision_readiness"] = "READY"
         result["readiness_normalization"] = {
