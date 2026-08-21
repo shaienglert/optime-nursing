@@ -83,6 +83,10 @@ function summarize(payload: any) {
     semanticAI: human?.semantic_ai ?? intelligence?.semantic_ai ?? null,
     decisionFinality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
     recommendationExecutionAllowed: intelligence?.recommendation_execution_allowed ?? null,
+    recommendationVisibility: intelligence?.recommendation_visibility ?? null,
+    researchCandidateCount: intelligence?.research_candidate_count ?? null,
+    semanticFacilityRequirements: intelligence?.semantic_facility_requirements ?? null,
+    agentEvidenceBridge: intelligence?.agent_evidence_bridge ?? null,
     resultCount: payload?.result_count ?? null,
     mustGate: intelligence?.must_gate ?? null,
     top5: (payload?.results || []).slice(0, 5).map((row: any) => ({
@@ -101,6 +105,7 @@ function scriptedAnswer(id: ScenarioId, question: string): string {
   const q = question.toLowerCase();
   if (id === "NURSING-1-WALKER-100M") {
     if (/bathing|dressing|toileting|bed|chair|medication/.test(q)) return "No. I manage bathing, dressing, toileting, transfers, and medications independently. I only use a walker for mobility.";
+    if (/independent living|assisted living|personal-care support/.test(q)) return "I am looking primarily for independent living with meals and activities. I do not want assisted living or personal-care support unless my needs change in the future.";
     if (/budget|8,?000|cost|monthly/.test(q)) return "My total budget is up to $8,000 per month, including housing, meals, and required recurring fees.";
     if (/100 meters|distance|how far|internal walk|route/.test(q)) return "Dining, activities, elevators, and essential services should be within about 100 meters from my unit, preferably with places to sit and rest.";
     if (/wheelchair/.test(q)) return "I strongly prefer to remain mobile with my walker and do not want routine wheelchair use unless medically necessary later.";
@@ -153,6 +158,7 @@ export async function GET(request: NextRequest) {
       assertions: {
         noRecommendationBeforeReady: output.decisionReadiness === "READY" || Number(output.resultCount || 0) === 0,
         recommendationExecutionOnlyIfReady: output.recommendationExecutionAllowed !== true || output.decisionReadiness === "READY",
+        noVisibleRecommendationsWhileExecutionBlocked: output.recommendationExecutionAllowed === true || (Number(output.resultCount || 0) === 0 && output.top5.length === 0),
       },
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
