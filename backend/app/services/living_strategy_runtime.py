@@ -3,15 +3,12 @@ from __future__ import annotations
 """Governed living-and-care strategy layer.
 
 This module decides *which type of solution* should be considered before ranking
-individual facilities. It deliberately separates:
+individual facilities. It deliberately separates current needs, recovery trajectory,
+household, lifestyle, and financing facts.
 
-1. current clinical / functional needs,
-2. expected recovery trajectory,
-3. household (single resident vs couple),
-4. resident lifestyle preferences,
-5. financing / insurance facts that can materially change the strategy.
-
-UNKNOWN remains UNKNOWN. A material unknown becomes a clarification question.
+IMPORTANT: this layer does not interview the user. It may identify material unknowns
+and proposed clarification candidates for the Guardian context, but Semantic AI owns
+the actual question selection and sequence. UNKNOWN remains UNKNOWN.
 """
 
 import re
@@ -46,6 +43,7 @@ def _question(key: str, text: str, why: str, options: List[str]) -> Dict[str, An
         "why_it_matters": why,
         "options": options,
         "source": "living_strategy_runtime_v1",
+        "role": "GUARDIAN_CLARIFICATION_CANDIDATE_ONLY",
     }
 
 
@@ -62,7 +60,6 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     query = _norm(natural_language_query)
     hi = _hi(questionnaire_state)
     transition = hi.get("transitionRiskProfile") if isinstance(hi.get("transitionRiskProfile"), dict) else {}
-    family = hi.get("familyProfile") if isinstance(hi.get("familyProfile"), dict) else {}
     finance = hi.get("financialProfile") if isinstance(hi.get("financialProfile"), dict) else {}
 
     couple = _contains(query, "couple", "husband", "wife", "spouse", "both of us", "both parents", "parents")
@@ -89,7 +86,6 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     move_timing = _norm(transition.get("moveTiming") or questionnaire_state.get("moveTiming"))
     budget = _first_known(questionnaire_state, "budget", "monthlyBudget")
     medicare = _norm(finance.get("medicareStatus") or questionnaire_state.get("medicareStatus"))
-    medicare_type = _norm(finance.get("medicareType") or questionnaire_state.get("medicareType"))
     entrance_fee = _norm(finance.get("entranceFeeTolerance") or questionnaire_state.get("entranceFeeTolerance"))
 
     household = {
@@ -174,48 +170,48 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             9,
         )
 
-    questions: List[Dict[str, Any]] = []
+    clarification_candidates: List[Dict[str, Any]] = []
     if (surgery or rehab) and not skilled_rehab_known:
-        questions.append(_question(
+        clarification_candidates.append(_question(
             "rehab_level_needed",
             "Does the surgeon or rehabilitation team say he needs skilled rehabilitation/physical or occupational therapy, or only help with daily tasks such as bathing and dressing?",
-            "This determines whether the next step is a post-acute rehab episode, home-health/therapy, or primarily residential personal-care support.",
+            "This can materially change the care strategy.",
             ["Skilled PT/OT or rehabilitation", "Only personal-care help", "Both", "Not sure"],
         ))
     if (surgery or rehab) and medicare in {"", "unknown", "not sure", "unsure"}:
-        questions.append(_question(
+        clarification_candidates.append(_question(
             "medicare_status",
             "Does he have Medicare, and if so is it Original Medicare or Medicare Advantage?",
-            "Coverage and network rules can materially change the cost and location of post-acute rehabilitation and home-health services.",
+            "Coverage and network rules can materially change post-acute rehabilitation and home-health options.",
             ["Original Medicare", "Medicare Advantage", "No Medicare", "Not sure"],
         ))
     if expected_recovery and not move_timing:
-        questions.append(_question(
+        clarification_candidates.append(_question(
             "move_timing_vs_rehab",
             "Do they want to move to the senior community during the recovery period, or finish most of the rehabilitation first and move afterward?",
-            "The best strategy can differ substantially between an immediate move and a move after functional recovery.",
+            "The strategy can differ between an immediate move and a move after functional recovery.",
             ["Move during recovery", "Finish rehabilitation first", "Flexible", "Not sure"],
         ))
     if budget in (None, "", 0):
-        questions.append(_question(
+        clarification_candidates.append(_question(
             "monthly_budget",
             "What monthly housing-and-care budget are they comfortable with?",
-            "Rental Independent Living plus temporary care, Assisted Living, and Life Plan communities have very different cost structures.",
+            "Different living-and-care strategies have materially different cost structures.",
             ["Under $5,000", "$5,000-$8,000", "$8,000-$12,000", "Above $12,000", "Not sure"],
         ))
     if couple and entrance_fee in {"", "unknown", "not sure", "unsure"}:
-        questions.append(_question(
+        clarification_candidates.append(_question(
             "ccrc_entrance_fee_tolerance",
             "Would they consider a Life Plan/CCRC that may require a substantial one-time entrance fee in exchange for a continuum of care?",
-            "This determines whether CCRC/Life Plan communities should compete with monthly-rental options.",
+            "This determines whether Life Plan communities should compete with monthly-rental options.",
             ["Yes", "No", "Depends on amount/terms", "Not sure"],
         ))
 
     strategy_candidates.sort(key=lambda row: (int(row.get("rank_hint") or 99), str(row.get("strategy_id") or "")))
-    unresolved = [q["question_key"] for q in questions]
+    unresolved = [q["question_key"] for q in clarification_candidates]
 
     return {
-        "version": "living-strategy-runtime-v1",
+        "version": "living-strategy-runtime-v1.1-ai-governed",
         "household": household,
         "signals": {
             "post_surgical": surgery,
@@ -229,11 +225,13 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "no_dementia": no_dementia,
         },
         "strategy_candidates": strategy_candidates,
-        "material_questions": questions,
+        "material_questions": [],
+        "guardian_clarification_candidates": clarification_candidates,
         "material_unknowns": unresolved,
-        "decision_readiness": "NEEDS_STRATEGY_CLARIFICATION" if questions else "STRATEGY_READY",
+        "decision_readiness": "NEEDS_STRATEGY_CLARIFICATION" if unresolved else "STRATEGY_READY",
         "least_restrictive_safe_care_rule": True,
-        "policy": "Choose the least-restrictive safe living-and-care strategy before ranking facilities; separate temporary recovery care from long-term residence; never convert a material unknown into a default.",
+        "interview_owner": "SEMANTIC_AI",
+        "policy": "Choose the least-restrictive safe living-and-care strategy before ranking facilities; separate temporary recovery care from long-term residence; never convert a material unknown into a default. Strategy rules may flag unknowns but may not directly ask the user questions.",
     }
 
 

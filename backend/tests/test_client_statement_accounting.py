@@ -15,7 +15,11 @@ class ClientStatementAccountingTests(unittest.TestCase):
         self.assertEqual(0, accounting["dropped_count"])
         self.assertTrue(all(row["status"] in {"USED", "ASKED", "RESEARCH_REQUIRED", "NOT_DECISION_RELEVANT"} for row in accounting["statements"]))
         self.assertTrue(any("pottery studio" in row["statement"].lower() for row in accounting["unresolved_parameters"]))
-        self.assertTrue(any(q["question_key"] == "unresolved_client_parameter" for q in context["adaptive_questions"]))
+        # No-drop identifies the unresolved fact but does not script a question.
+        # Semantic AI owns question selection under this Guardian constraint.
+        self.assertEqual([], context["adaptive_questions"])
+        self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
+        self.assertTrue(context["material_unknown_policy"]["no_silent_drop"])
         self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
 
     def test_unknown_parameter_is_not_silently_ignored(self) -> None:
@@ -23,8 +27,8 @@ class ClientStatementAccountingTests(unittest.TestCase):
         accounting = context["user_statement_accounting"]
         self.assertEqual(0, accounting["dropped_count"])
         self.assertEqual("ASKED", accounting["unresolved_parameters"][0]["status"])
-        question = next(q for q in context["adaptive_questions"] if q["question_key"] == "unresolved_client_parameter")
-        self.assertIn("do not want to ignore", question["question"])
+        self.assertEqual([], context["adaptive_questions"])
+        self.assertTrue(context["interview_policy"]["hard_coded_question_generation_forbidden"])
 
     def test_hebrew_unknown_parameter_is_preserved(self) -> None:
         context = build_human_intelligence_context({}, "חשוב לנו אוכל טוב, גינון מטופח, וסטודיו לקרמיקה עם תנור בערב")

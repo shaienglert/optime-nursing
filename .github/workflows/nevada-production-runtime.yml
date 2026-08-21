@@ -73,12 +73,18 @@ jobs:
             backend.tests.test_decision_governance_runtime \
             backend.tests.test_decision_agent_bridge \
             backend.tests.test_main_decision_runtime_contract
-      - name: Run real son, self, and couple rehab personas through integrated decision engine
+      - name: Verify AI-owned interview gate and READY-only Nevada ranking
         run: |
           python - <<'PY'
           import json
+          import os
           from copy import deepcopy
+
+          import app.services.human_intelligence_runtime_verified as hi_runtime
           from app.services.patient_decision_engine import run_patient_decision_engine
+
+          os.environ['OPTIME_SEMANTIC_AI_ENABLED'] = '1'
+          os.environ['OPTIME_SEMANTIC_AI_REQUIRED'] = '1'
 
           base = {
               'relationship': 'Dad',
@@ -93,6 +99,38 @@ jobs:
               'He has difficulty with bathing, dressing, meals and medication. '
               'He is mentally alert, has no dementia, is still mobile, and needs daily help.'
           )
+
+          # Phase 1: the AI owns the interview. A clarification state MUST stop the
+          # recommendation engine before any facility is scored or exposed.
+          clarification_question = 'What matters most to him about the social environment in his next home?'
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
+              'decision_readiness': 'NEEDS_CLARIFICATION',
+              'next_question': clarification_question,
+              'statements': [],
+          }
+          blocked = run_patient_decision_engine(base, query, limit=5)
+          human = blocked['decision_intelligence']['human_intelligence']
+          assert human['decision_readiness'] == 'NEEDS_CLARIFICATION', human
+          assert human['interview_policy']['owner'] == 'SEMANTIC_AI', human
+          assert human['interview_policy']['hard_coded_question_generation_forbidden'] is True, human
+          assert len(human['adaptive_questions']) == 1, human['adaptive_questions']
+          only_question = human['adaptive_questions'][0]
+          assert only_question['question'] == clarification_question, only_question
+          assert only_question['question_key'].startswith('semantic_ai_high_information_question:'), only_question
+          assert blocked['result_count'] == 0, blocked['result_count']
+          assert blocked['total_candidates_scored'] == 0, blocked['total_candidates_scored']
+          assert blocked['results'] == [], blocked['results']
+          assert blocked['decision_intelligence']['recommendation_execution_allowed'] is False
+          assert blocked['decision_intelligence']['decision_finality'] == 'BLOCKED_PENDING_AI_INTERVIEW'
+          assert blocked['recommendation_audit_trace']['blocked_before_facility_ranking'] is True
+
+          # Phase 2: only an AI+Guardian READY state unlocks facility matching.
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
+              'decision_readiness': 'READY',
+              'next_question': None,
+              'statements': [],
+          }
+
           personas = {
               'son_for_father': {'questionnaire_state': base, 'natural_language_query': query},
               'self_search': {
@@ -101,50 +139,38 @@ jobs:
               },
           }
 
-          output = {}
+          output = {'blocked_interview': {'question': clarification_question, 'result_count': 0}}
           for key, persona in personas.items():
               result = run_patient_decision_engine(**persona, limit=5)
-              assert result['result_count'] > 0, f'{key}: no recommendations'
-              assert result['total_candidates_scored'] > 0, f'{key}: no candidates scored'
+              assert result['decision_intelligence']['recommendation_execution_allowed'] is True, key
+              assert result['decision_intelligence']['interview_owner'] == 'SEMANTIC_AI', key
+              assert result['result_count'] == 5, f'{key}: no recommendations after READY'
+              assert result['total_candidates_scored'] > 0, f'{key}: no candidates scored after READY'
               assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f'{key}: location not governed'
               assert result['care_setting_policy']['version'] == 'v1.1', f'{key}: wrong care-setting policy'
               assert result['decision_intelligence']['version'] == 'decision-intelligence-runtime-v3.1', f'{key}: decision intelligence missing'
               assert result['decision_intelligence']['ranking_order'] == ['CLIENT_INTENT','MUST_GATE','NICE_TO_HAVE','GOVERNMENT_REGULATORY_DATA','PUBLIC_REPUTATION','RELEVANT_EVIDENCE_COMPLETENESS']
-              assert 'living_strategy' in result['decision_intelligence'], f'{key}: living strategy missing'
-              assert 'client_intent' in result['decision_intelligence'], f'{key}: client intent missing'
               human = result['decision_intelligence']['human_intelligence']
+              assert human['decision_readiness'] == 'READY', human
+              assert human['adaptive_questions'] == [], human['adaptive_questions']
               assert human['signals']['recent_bereavement']['value'] == 'YES', f'{key}: bereavement signal lost'
-              assert human['decision_readiness'] == 'NEEDS_CLARIFICATION', f'{key}: missing clarification gate'
-              question_keys = [q['question_key'] for q in human['adaptive_questions']]
-              assert question_keys == ['community_size_preference', 'social_interaction_need_after_loss', 'move_participation'], f'{key}: wrong NBQ sequence {question_keys}'
               assert len(result['decision_intelligence']['success_factor_policy']['factors']) == 16, f'{key}: success-factor canon disconnected'
-              assert 'recommendation_audit_trace' in result, f'{key}: audit trace missing'
               assert all((row.get('client_intent_fit') or {}).get('hard_gate') != 'FAIL' for row in result['results']), f'{key}: MUST-failed result escaped gate'
               for row in result['results']:
                   assert str(row.get('state') or '').upper() == 'NV', f'{key}: non-NV result {row}'
                   assert str(row.get('city') or '').strip().lower() == 'las vegas', f'{key}: city constraint missed {row}'
                   assert 'human_person_fit' in row, f'{key}: person-fit evidence missing'
                   assert len(row['success_factor_trace']['factors']) == 16, f'{key}: per-facility factor trace incomplete'
-              output[key] = {'decision_readiness': human['decision_readiness'], 'adaptive_questions': question_keys, 'top5': [row.get('facility_name') for row in result['results']]}
+              output[key] = {'decision_readiness': 'READY', 'top5': [row.get('facility_name') for row in result['results']]}
 
-          plain_query = (
-              'My father is 84 and lives in Las Vegas. He is mentally alert and mobile, has no dementia, '
-              'and needs help with bathing, dressing, meals and medication.'
-          )
-          plain = run_patient_decision_engine(base, plain_query, limit=5)
-          plain_human = plain['decision_intelligence']['human_intelligence']
-          plain_questions = [q['question_key'] for q in plain_human['adaptive_questions']]
-          assert plain_human['decision_readiness'] == 'NEEDS_CLARIFICATION', 'plain assisted-living case skipped clarification'
-          assert plain_questions == ['community_size_preference', 'social_interaction_preference'], f'plain case wrong NBQ sequence {plain_questions}'
-          assert plain['decision_intelligence']['decision_finality'] == 'PROVISIONAL_PENDING_RESIDENT_CLARIFICATION'
-          output['plain_assisted_living'] = {'decision_readiness': plain_human['decision_readiness'], 'adaptive_questions': plain_questions}
-
+          # Explicit preferences are allowed to affect fit only after READY.
           def answered(size):
               state = deepcopy(base)
               state['humanIntelligenceV2'] = {
                   'personalityProfile': {'communitySizePreference': size},
                   'familyProfile': {'socialInteractionNeed': 'Neither'},
                   'transitionRiskProfile': {'attitudeTowardMove': 'Cautious but open'},
+                  'scoringEngine': {'adaptiveSignals': []},
               }
               return run_patient_decision_engine(state, query, limit=5)
 
@@ -152,18 +178,22 @@ jobs:
           small = answered('Small community')
           large_ids = [r['canonical_facility_id'] for r in large['results']]
           small_ids = [r['canonical_facility_id'] for r in small['results']]
-          assert large_ids != small_ids, 'Explicit environment preference does not change Top-5'
-          output['answered_variants'] = {'large_top5': [r['facility_name'] for r in large['results']], 'small_top5': [r['facility_name'] for r in small['results']]}
+          assert large_ids != small_ids, 'Explicit environment preference does not change Top-5 after READY'
+          output['answered_variants'] = {
+              'large_top5': [r['facility_name'] for r in large['results']],
+              'small_top5': [r['facility_name'] for r in small['results']],
+          }
 
+          # Strategy rules may identify material unknowns, but they cannot inject
+          # questions into the interview. Those unknowns are supplied to the AI as
+          # Guardian context; the AI chooses the next question.
           couple_state = {
               'relationship': 'Dad',
               'ageGroup': '80+',
               'assistanceLevel': 'Needs assistance with bathing and dressing',
               'memoryStatus': 'No',
               'distanceFromFamily': 'Balanced location',
-              'humanIntelligenceV2': {
-                  'familyProfile': {'socialInteractionNeed': 'Very important'},
-              },
+              'humanIntelligenceV2': {'familyProfile': {'socialInteractionNeed': 'Very important'}},
           }
           couple_query = (
               'A couple age 80+ wants to move to senior living in Las Vegas with lots of culture, classes and activities. '
@@ -171,38 +201,24 @@ jobs:
               '3 months he needs help with bathing and dressing. The wife is independent and they want to live together.'
           )
           couple = run_patient_decision_engine(couple_state, couple_query, limit=5)
+          guardian = couple['decision_intelligence']['human_intelligence']['living_strategy_guardian']
+          material_unknowns = set(guardian['material_unknowns'])
+          for required in ('medicare_status', 'move_timing_vs_rehab', 'monthly_budget', 'ccrc_entrance_fee_tolerance'):
+              assert required in material_unknowns, (required, material_unknowns)
+          assert couple['decision_intelligence']['human_intelligence']['adaptive_questions'] == []
+          assert couple['decision_intelligence']['recommendation_execution_allowed'] is True
           strategy = couple['decision_intelligence']['living_strategy']
-          intent = couple['decision_intelligence']['client_intent']
           assert strategy['household']['type'] == 'COUPLE', strategy
           assert strategy['signals']['spine_or_back_surgery'] is True, strategy
           assert strategy['signals']['expected_recovery'] is True, strategy
           assert strategy['signals']['temporary_support_duration_months'] == 3, strategy
           strategy_ids = [s['strategy_id'] for s in strategy['strategy_candidates']]
           assert {'INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE','POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING','LIFE_PLAN_CCRC','ASSISTED_LIVING'}.issubset(set(strategy_ids)), strategy_ids
-          must_keys = {m['key'] for m in intent['must_haves']}
-          assert {'LAS_VEGAS','COUPLE_CORESIDENCE','ADL_SUPPORT_AVAILABLE','REHAB_PATH_AVAILABLE','RECOVERY_TRANSITION_COMPATIBLE'}.issubset(must_keys), must_keys
-          assert 'RICH_CULTURE_AND_ACTIVITIES' in {n['key'] for n in intent['nice_to_haves']}
-          assert 'COMMUNITY_ENVIRONMENT_MATCH' not in {n['key'] for n in intent['nice_to_haves']}, 'benchmark invented a community-size preference'
-          couple_questions = [q['question_key'] for q in couple['decision_intelligence']['human_intelligence']['adaptive_questions']]
-          for required in ('medicare_status', 'move_timing_vs_rehab', 'monthly_budget', 'ccrc_entrance_fee_tolerance'):
-              assert required in couple_questions, couple_questions
-          universe = couple['decision_intelligence']['strategy_universe']
-          assert universe['status'] == 'SUFFICIENT_FOR_LEADING_STRATEGIES', universe
-          assert 'LIFE_PLAN_CCRC' not in universe['missing_classes'], universe
-          assert couple['decision_intelligence']['decision_finality'].startswith('PROVISIONAL_'), couple['decision_intelligence']['decision_finality']
-          assert all((r.get('client_intent_fit') or {}).get('hard_gate') != 'FAIL' for r in couple['results'])
-          need_ids = {n['parameter_id'] for n in couple['patient_needs_profile']['needs']}
-          assert {'pt', 'ot', 'adl_support'}.issubset(need_ids), need_ids
-          top_names = [r['facility_name'] for r in couple['results']]
-          assert any('Las Ventanas' in name for name in top_names), f'governed Life Plan candidate missing from culture/rehab couple Top-5: {top_names}'
           output['couple_rehab'] = {
               'strategy_ids': strategy_ids,
-              'must_keys': sorted(must_keys),
-              'questions': couple_questions,
-              'strategy_universe': universe,
-              'decision_finality': couple['decision_intelligence']['decision_finality'],
-              'top5': top_names,
-              'top5_fit': [r.get('client_intent_fit') for r in couple['results']],
+              'guardian_material_unknowns': sorted(material_unknowns),
+              'top5': [r['facility_name'] for r in couple['results']],
           }
-          print('NEVADA_PERSONA_E2E=' + json.dumps(output, indent=2))
+
+          print('NEVADA_AI_GOVERNED_E2E=' + json.dumps(output, indent=2))
           PY

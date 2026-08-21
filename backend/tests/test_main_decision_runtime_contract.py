@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib
+import os
 import unittest
+from unittest.mock import patch
 
 
 class MainDecisionRuntimeContractTests(unittest.TestCase):
@@ -28,6 +30,12 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             "3 months he needs help with bathing and dressing. The wife is independent and they want to live together."
         )
 
+    def _ai(self, readiness: str, next_question: str | None = None):
+        return patch.multiple(
+            "app.services.human_intelligence_runtime_verified",
+            interpret_client_intent_with_ai=unittest.mock.DEFAULT,
+        )
+
     def test_main_imports_integrated_decision_runtime_contract(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
@@ -41,21 +49,49 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
     def test_pre_ranking_decision_intelligence_survives_patient_needs_response_model(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
-        profile = decision.build_patient_needs_profile(self._questionnaire(), self._query())
+        question = "What would make the move feel most comfortable for him?"
+        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []}
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ):
+            profile = decision.build_patient_needs_profile(self._questionnaire(), self._query())
         serialized = main.PatientNeedsProfileOut.model_validate(profile).model_dump()
         intelligence = serialized["decision_intelligence"]
         self.assertEqual(intelligence["version"], "decision-intelligence-runtime-v3.1")
         self.assertIn("client_intent", intelligence)
         self.assertEqual(len(intelligence["success_factor_policy"]["factors"]), 16)
-        self.assertEqual(
-            [q["question_key"] for q in intelligence["adaptive_questions"]],
-            ["community_size_preference", "social_interaction_need_after_loss", "move_participation"],
-        )
+        self.assertEqual("NEEDS_CLARIFICATION", intelligence["decision_readiness"])
+        self.assertEqual(1, len(intelligence["adaptive_questions"]))
+        self.assertTrue(intelligence["adaptive_questions"][0]["question_key"].startswith("semantic_ai_high_information_question:"))
+        self.assertEqual(question, intelligence["adaptive_questions"][0]["question"])
 
-    def test_decision_context_and_success_factor_trace_survive_fastapi_response_model(self) -> None:
+    def test_non_ready_interview_survives_fastapi_response_model_without_recommendations(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
-        result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
+        question = "Which part of the transition needs clarification first?"
+        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []}
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ):
+            result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
+        serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()
+        top_decision = serialized["decision_intelligence"]
+        self.assertEqual("BLOCKED_PENDING_AI_INTERVIEW", top_decision["decision_finality"])
+        self.assertFalse(top_decision["recommendation_execution_allowed"])
+        self.assertEqual("SEMANTIC_AI", top_decision["interview_owner"])
+        self.assertEqual([], serialized["results"])
+        self.assertEqual(0, serialized["result_count"])
+        self.assertEqual(0, serialized["total_candidates_scored"])
+        self.assertTrue(serialized["recommendation_audit_trace"]["blocked_before_facility_ranking"])
+
+    def test_ready_decision_context_and_success_factor_trace_survive_fastapi_response_model(self) -> None:
+        main = importlib.import_module("app.main")
+        decision = importlib.import_module("app.services.patient_decision_engine")
+        ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ):
+            result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
         serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()
         patient_decision = serialized["patient_needs_profile"]["decision_intelligence"]
         policy_decision = serialized["care_setting_policy"]["decision_intelligence"]
@@ -64,19 +100,16 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         for ctx in (patient_decision, policy_decision, top_decision):
             self.assertEqual(ctx["version"], "decision-intelligence-runtime-v3.1")
             self.assertIn("client_intent", ctx)
+        self.assertTrue(top_decision["recommendation_execution_allowed"])
         self.assertEqual(
             top_decision["ranking_order"],
             ["CLIENT_INTENT", "MUST_GATE", "NICE_TO_HAVE", "GOVERNMENT_REGULATORY_DATA", "PUBLIC_REPUTATION", "RELEVANT_EVIDENCE_COMPLETENESS"],
         )
         self.assertEqual(len(patient_decision["success_factor_policy"]["factors"]), 16)
         human = patient_decision["human_intelligence"]
-        self.assertEqual(human["decision_readiness"], "NEEDS_CLARIFICATION")
+        self.assertEqual(human["decision_readiness"], "READY")
         self.assertEqual(human["signals"]["recent_bereavement"]["value"], "YES")
-        self.assertEqual(
-            [row["question_key"] for row in human["adaptive_questions"]],
-            ["community_size_preference", "social_interaction_need_after_loss", "move_participation"],
-        )
-
+        self.assertEqual([], human["adaptive_questions"])
         self.assertTrue(serialized["results"])
         first = serialized["results"][0]
         self.assertIn("client_intent_fit", first)
@@ -85,7 +118,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertIn("success_factor_summary", first["explanation"])
         self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3.1")
 
-    def test_couple_spine_rehab_chooses_strategy_and_must_gate_before_facility(self) -> None:
+    def test_couple_spine_rehab_unknowns_are_guardian_inputs_not_scripted_questions(self) -> None:
         decision = importlib.import_module("app.services.patient_decision_engine")
         state = {
             "relationship": "Dad",
@@ -98,31 +131,22 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
                 "familyProfile": {"socialInteractionNeed": "Very important"},
             },
         }
-        result = decision.run_patient_decision_engine(state, self._couple_rehab_query(), limit=5)
-        intelligence = result["decision_intelligence"]
-        strategy = intelligence["living_strategy"]
-        intent = intelligence["client_intent"]
-        self.assertEqual(strategy["household"]["type"], "COUPLE")
-        self.assertTrue(strategy["signals"]["spine_or_back_surgery"])
-        self.assertTrue(strategy["signals"]["expected_recovery"])
-        self.assertEqual(strategy["signals"]["temporary_support_duration_months"], 3)
-        strategy_ids = [row["strategy_id"] for row in strategy["strategy_candidates"]]
-        self.assertIn("INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE", strategy_ids)
-        self.assertIn("POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING", strategy_ids)
-        self.assertIn("LIFE_PLAN_CCRC", strategy_ids)
-        self.assertIn("ASSISTED_LIVING", strategy_ids)
-        must_keys = {row["key"] for row in intent["must_haves"]}
-        self.assertTrue({"LAS_VEGAS", "COUPLE_CORESIDENCE", "ADL_SUPPORT_AVAILABLE", "REHAB_PATH_AVAILABLE", "RECOVERY_TRANSITION_COMPATIBLE"}.issubset(must_keys))
-        nice_keys = {row["key"] for row in intent["nice_to_haves"]}
-        self.assertIn("RICH_CULTURE_AND_ACTIVITIES", nice_keys)
-        question_keys = [row["question_key"] for row in intelligence["human_intelligence"]["adaptive_questions"]]
+        question = "Which unresolved care-strategy issue should we clarify first?"
+        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []}
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ):
+            profile = decision.build_patient_needs_profile(state, self._couple_rehab_query())
+            result = decision.run_patient_decision_engine(state, self._couple_rehab_query(), limit=5)
+        human = profile["decision_intelligence"]["human_intelligence"]
+        strategy_guardian = human["living_strategy_guardian"]
+        unknowns = set(strategy_guardian["material_unknowns"])
         for required in ("medicare_status", "move_timing_vs_rehab", "monthly_budget", "ccrc_entrance_fee_tolerance"):
-            self.assertIn(required, question_keys)
-        self.assertTrue(intelligence["decision_finality"].startswith("PROVISIONAL_"))
-        need_ids = {row["parameter_id"] for row in result["patient_needs_profile"]["needs"]}
-        self.assertTrue({"pt", "ot", "adl_support"}.issubset(need_ids))
-        self.assertGreaterEqual(result["must_gate_survivor_count"], len(result["results"]))
-        self.assertTrue(all((row["client_intent_fit"]["hard_gate"] != "FAIL") for row in result["results"]))
+            self.assertIn(required, unknowns)
+        self.assertEqual(1, len(human["adaptive_questions"]))
+        self.assertTrue(human["adaptive_questions"][0]["question_key"].startswith("semantic_ai_high_information_question:"))
+        self.assertEqual([], result["results"])
+        self.assertEqual("BLOCKED_PENDING_AI_INTERVIEW", result["decision_intelligence"]["decision_finality"])
 
 
 if __name__ == "__main__":

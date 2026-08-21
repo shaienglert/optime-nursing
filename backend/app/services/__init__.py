@@ -9,9 +9,11 @@ adds evidence-governed Human Intelligence. Production must always resolve the
 public ``app.services.patient_decision_engine`` name to the integrated runtime.
 
 The loader also applies the governed Combined Care Solution layer after the
-integrated runtime finishes. This keeps housing fit separate from care delivery:
-a facility that permits outside care is not treated as satisfying a care MUST
-until a verified agency match covers the required services.
+integrated runtime finishes. This keeps housing fit separate from care delivery.
+
+The interview gate is authoritative: Semantic AI manages the interview under
+OPTIME Guardian/Learning Center constraints. Facility recommendation execution is
+not allowed until the governed interview returns READY.
 """
 
 import importlib.abc
@@ -136,14 +138,72 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
     return result
 
 
+def _decision_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    decision = profile.get("decision_intelligence") if isinstance(profile.get("decision_intelligence"), dict) else {}
+    return decision
+
+
+def _readiness_from_decision(decision: dict[str, Any]) -> str:
+    direct = str(decision.get("decision_readiness") or "").upper()
+    if direct:
+        return direct
+    human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
+    return str(human.get("decision_readiness") or "UNKNOWN").upper()
+
+
+def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[str, Any]:
+    decision = _decision_from_profile(profile)
+    human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
+    questions = human.get("adaptive_questions") or decision.get("adaptive_questions") or []
+    semantic = human.get("semantic_ai") if isinstance(human.get("semantic_ai"), dict) else {}
+    return {
+        "patient_needs_profile": profile,
+        "results": [],
+        "result_count": 0,
+        "total_candidates_scored": 0,
+        "availability_policy": "Recommendations are blocked until the governed AI interview is READY.",
+        "care_setting_policy": {
+            "status": "BLOCKED_PENDING_AI_INTERVIEW",
+            "decision_intelligence": decision,
+        },
+        "decision_intelligence": {
+            **decision,
+            "decision_finality": "BLOCKED_PENDING_AI_INTERVIEW" if readiness != "NEEDS_RESEARCH" else "BLOCKED_PENDING_AI_RESEARCH",
+            "recommendation_execution_allowed": False,
+            "interview_owner": "SEMANTIC_AI",
+            "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
+        },
+        "recommendation_audit_trace": {
+            "recommendation_execution_allowed": False,
+            "blocked_before_facility_ranking": True,
+            "reason": readiness,
+            "adaptive_questions": questions,
+            "semantic_ai": semantic,
+            "rule": "No facility ranking or recommendation execution before governed Semantic AI + OPTIME Guardian return READY.",
+        },
+    }
+
+
 class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
     def exec_module(self, module: ModuleType) -> None:
         super().exec_module(module)
         original = getattr(module, "run_patient_decision_engine", None)
-        if not callable(original) or getattr(original, "_combined_care_wrapped", False):
+        profile_builder = getattr(module, "build_patient_needs_profile", None)
+        if not callable(original) or not callable(profile_builder) or getattr(original, "_combined_care_wrapped", False):
             return
 
         def wrapped(questionnaire_state: dict[str, Any], natural_language_query: str = "", limit: int = 50):
+            # AI/Guardian interview runs before the recommendation engine. If it is
+            # not READY, do not rank, score, research, or expose facilities.
+            profile = profile_builder(
+                questionnaire_state=questionnaire_state,
+                natural_language_query=natural_language_query,
+            )
+            if isinstance(profile, dict):
+                readiness = _readiness_from_decision(_decision_from_profile(profile))
+                if readiness != "READY":
+                    return _blocked_interview_result(profile, readiness)
+
             result = original(
                 questionnaire_state=questionnaire_state,
                 natural_language_query=natural_language_query,
@@ -151,9 +211,21 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             )
             if not isinstance(result, dict):
                 return result
+
+            # Defense in depth: the full runtime consults AI again while assembling
+            # decision intelligence. A changed/non-READY result cannot leak ranking.
+            decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+            readiness = _readiness_from_decision(decision)
+            if readiness != "READY":
+                runtime_profile = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else profile
+                return _blocked_interview_result(runtime_profile or {}, readiness)
+
+            result.setdefault("decision_intelligence", {})["recommendation_execution_allowed"] = True
+            result["decision_intelligence"]["interview_owner"] = "SEMANTIC_AI"
             return _apply_combined_care_layer(result, questionnaire_state, natural_language_query, limit)
 
         setattr(wrapped, "_combined_care_wrapped", True)
+        setattr(wrapped, "_ai_interview_gate_wrapped", True)
         module.run_patient_decision_engine = wrapped
 
 
