@@ -181,10 +181,25 @@ export default function HomePage() {
       };
       setState(nextQuestionnaire);
 
+      const params = new URLSearchParams();
+      params.set("notes", normalized);
+      if (nextQuestionnaire.relationship) params.set("relationship", nextQuestionnaire.relationship);
+      if (nextQuestionnaire.ageGroup) params.set("age", nextQuestionnaire.ageGroup);
+      if (nextQuestionnaire.assistanceLevel) params.set("care", nextQuestionnaire.assistanceLevel);
+      if (nextQuestionnaire.memoryStatus) params.set("memory", nextQuestionnaire.memoryStatus);
+      if (nextQuestionnaire.budget) params.set("budget", String(nextQuestionnaire.budget));
+      if (nextQuestionnaire.distanceFromFamily) params.set("distanceStrategy", nextQuestionnaire.distanceFromFamily);
+
+      const resultsUrl = `/results?${params.toString()}`;
+
+      // Do not hold the user's navigation hostage to recommendation generation.
+      // The governed adaptive interview owns the next-question decision and can
+      // continue while profile/recommendation warming runs in the background.
+      router.push(`/adaptive-interview?next=${encodeURIComponent(resultsUrl)}`);
+
       const canonicalQuestionnaire = nextQuestionnaire as Record<string, unknown>;
       const currentPatientCaseId = loadPatientCaseId();
-
-      const [, recommendations] = await Promise.all([
+      void Promise.allSettled([
         fetchPatientNeedsProfile({ questionnaire_state: canonicalQuestionnaire, natural_language_query: normalized }),
         fetchPatientDecisionRecommendations({
           patient_case_id: currentPatientCaseId,
@@ -192,21 +207,13 @@ export default function HomePage() {
           natural_language_query: normalized,
           limit: 50,
         }),
-      ]);
-
-      if (typeof recommendations.patient_case_id === "number") savePatientCaseId(recommendations.patient_case_id);
-
-      const params = new URLSearchParams();
-      params.set("notes", normalized);
-      if (state.relationship) params.set("relationship", state.relationship);
-      if (state.ageGroup) params.set("age", state.ageGroup);
-      if (state.assistanceLevel) params.set("care", state.assistanceLevel);
-      if (state.memoryStatus) params.set("memory", state.memoryStatus);
-      if (state.budget) params.set("budget", String(state.budget));
-      if (state.distanceFromFamily) params.set("distanceStrategy", state.distanceFromFamily);
-      router.push(`/results?${params.toString()}`);
+      ]).then(([, recommendationResult]) => {
+        if (recommendationResult.status === "fulfilled" && typeof recommendationResult.value.patient_case_id === "number") {
+          savePatientCaseId(recommendationResult.value.patient_case_id);
+        }
+      });
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "We could not complete the search right now. Please try again.");
+      setError(requestError instanceof Error ? requestError.message : "We could not continue right now. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -313,7 +320,7 @@ export default function HomePage() {
             <textarea id="family-case" value={query} onChange={(event) => setQuery(event.target.value)} rows={6} placeholder={EXAMPLE_QUERY} className="w-full resize-none border-0 border-b-2 border-[#a8beb6] bg-transparent px-0 py-5 text-xl leading-9 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#315f53] focus:ring-0" />
             {error && <p className="mt-4 text-sm text-[#8a4434]">{error}</p>}
             <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex items-center border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:opacity-60">
-              {isSubmitting ? "Understanding your needs..." : "See options that may fit"} <span className="ml-2">→</span>
+              {isSubmitting ? "Opening the AI interview..." : "See options that may fit"} <span className="ml-2">→</span>
             </button>
           </form>
         </div>
