@@ -10,6 +10,7 @@ or research task, never an inferred fact.
 
 import json
 import os
+import time
 from typing import Any, Callable, Dict, List, Optional
 
 import requests
@@ -69,6 +70,32 @@ def _extract_responses_output(body: Dict[str, Any]) -> Dict[str, Any]:
     raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
 
 
+def _request_with_retry(url: str, headers: Dict[str, str], request_json: Dict[str, Any]) -> requests.Response:
+    timeout_seconds = max(5.0, float(os.getenv("OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS", "45")))
+    max_attempts = max(1, min(3, int(os.getenv("OPTIME_SEMANTIC_AI_MAX_ATTEMPTS", "2"))))
+    backoff_seconds = max(0.0, float(os.getenv("OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS", "1")))
+    last_error: Optional[Exception] = None
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return requests.post(
+                url,
+                headers=headers,
+                json=request_json,
+                timeout=(10.0, timeout_seconds),
+            )
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            last_error = exc
+            if attempt >= max_attempts:
+                break
+            if backoff_seconds:
+                time.sleep(backoff_seconds * attempt)
+
+    raise RuntimeError(
+        f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={max_attempts}:timeout={timeout_seconds}:{last_error}"
+    )
+
+
 def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     url = os.getenv("OPTIME_SEMANTIC_AI_URL", "").strip()
     model = os.getenv("OPTIME_SEMANTIC_AI_MODEL", "").strip()
@@ -100,12 +127,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
             ],
         }
 
-    response = requests.post(
-        url,
-        headers=headers,
-        json=request_json,
-        timeout=float(os.getenv("OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS", "20")),
-    )
+    response = _request_with_retry(url, headers, request_json)
     if not response.ok:
         raise RuntimeError(f"SEMANTIC_AI_HTTP_{response.status_code}:{response.text[:500]}")
     body = response.json()
