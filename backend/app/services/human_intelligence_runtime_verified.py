@@ -2,10 +2,11 @@ from __future__ import annotations
 
 """Verified adapter for Human Intelligence person-fit evidence.
 
-The deterministic layer remains the guardrail. When semantic AI is enabled, every
-client request is also interpreted by an AI expert that must consult the OPTIME
-Nursing Learning Center and return a governed statement trace. AI output is advisory
-until it satisfies the no-drop/unknown rules; failures never become invented facts.
+The deterministic layer remains the guardrail. Semantic AI owns interview sequencing:
+rules expose signals, constraints, and UNKNOWN states, but do not ask hard-coded
+questions. The AI consults the OPTIME Nursing Learning Center and chooses the next
+highest-information question until it returns READY. AI output remains governed and
+cannot invent facility facts or silently resolve UNKNOWN values.
 """
 
 import base64
@@ -17,15 +18,11 @@ from functools import lru_cache
 from typing import Any, Dict, List
 
 from app.services import human_intelligence_runtime as _base
-from app.services.client_statement_accounting import apply_no_drop_contract
+from app.services.client_statement_accounting import account_user_input
 from app.services.semantic_intent_ai import interpret_client_intent_with_ai
 
 has_explicit_person_fit_preference = _base.has_explicit_person_fit_preference
 person_fit_sort_key = _base.person_fit_sort_key
-
-
-def _norm(value: Any) -> str:
-    return str(value or "").strip().lower()
 
 
 def _semantic_question_key(question: str) -> str:
@@ -45,72 +42,110 @@ def _answered_adaptive_keys(questionnaire_state: Dict[str, Any]) -> set[str]:
     }
 
 
-def _assisted_living_profile_is_material(questionnaire_state: Dict[str, Any], natural_language_query: str) -> bool:
-    assistance = _norm(questionnaire_state.get("assistanceLevel"))
-    memory = _norm(questionnaire_state.get("memoryStatus"))
-    query = _norm(natural_language_query)
-    assistance_tokens = ("bathing", "dressing", "meal", "medication", "daily help", "daily assistance", "needs assistance", "needs help")
-    assistance_known = any(token in assistance for token in assistance_tokens) or any(token in query for token in assistance_tokens)
-    no_dementia = memory in {"no", "none", "no dementia"} or "no dementia" in query or "without dementia" in query or "mentally alert" in query
-    return assistance_known and no_dementia
-
-
 def _question_exists(context: Dict[str, Any], key: str) -> bool:
     return any(str(row.get("question_key") or "") == key for row in context.get("adaptive_questions") or [])
 
 
-def _append_material_unknown_questions(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
-    if not _assisted_living_profile_is_material(questionnaire_state, natural_language_query):
-        return context
-    signals = context.get("signals") if isinstance(context.get("signals"), dict) else {}
-    community = signals.get("community_size_preference") if isinstance(signals.get("community_size_preference"), dict) else {}
-    social = signals.get("social_transition_priority") if isinstance(signals.get("social_transition_priority"), dict) else {}
-    questions = list(context.get("adaptive_questions") or [])
-    if str(community.get("value") or "UNKNOWN").upper() == "UNKNOWN" and not _question_exists(context, "community_size_preference"):
-        questions.append(_base._question("community_size_preference", "Would he prefer a small home-like setting, a medium-sized community, a larger senior community with more people and activities, or no preference?", "Community environment can materially change the ordering of otherwise appropriate Assisted Living options. We do not infer this preference from age, mobility, or diagnosis.", ["preference_congruence", "social_connection_engagement"], ["Small community", "Medium community", "Large community", "No preference"]))
-    hi = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
-    family = hi.get("familyProfile") if isinstance(hi.get("familyProfile"), dict) else {}
-    raw_social_answer = _norm(family.get("socialInteractionNeed"))
-    social_acknowledged_unknown = raw_social_answer in {"not sure", "unsure", "no preference"}
-    if str(social.get("value") or "UNKNOWN").upper() == "UNKNOWN" and not social_acknowledged_unknown and not _question_exists(context, "social_interaction_preference"):
-        questions.append(_base._question("social_interaction_preference", "How important is it that he have frequent opportunities each day to meet people and join activities?", "Social engagement is a material fit factor for Assisted Living. If it is unknown, we ask instead of assuming.", ["social_connection_engagement", "social_climate", "preference_congruence"], ["Very important", "Somewhat important", "Not important", "No preference", "Not sure"]))
-    context["adaptive_questions"] = questions
-    context["decision_readiness"] = "NEEDS_CLARIFICATION" if questions else "READY"
-    context["material_unknown_policy"] = {"rule": "ASK_IF_MATERIAL_TO_ELIGIBILITY_ORDERING_TRADEOFF_OR_TRANSITION", "assisted_living_profile_detected": True, "unknown_is_not_default": True}
-    return context
+def _governed_context(base_context: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
+    """Convert deterministic runtime output into Guardian evidence, never interview control."""
+    accounting = account_user_input(natural_language_query)
+    return {
+        "signals": base_context.get("signals") or {},
+        "transition_support": base_context.get("transition_support") or {},
+        "principles": base_context.get("principles") or [],
+        "user_statement_accounting": accounting,
+        "material_unknown_policy": {
+            "unknown_is_not_default": True,
+            "no_silent_drop": True,
+            "required_statement_coverage_percent": 100,
+            "rule": "ASK_OR_RESEARCH_IF_MATERIAL_TO_ELIGIBILITY_ORDERING_TRADEOFF_OR_TRANSITION",
+        },
+        "interview_policy": {
+            "owner": "SEMANTIC_AI",
+            "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
+            "one_high_information_question_at_a_time": True,
+            "hard_coded_question_generation_forbidden": True,
+            "ready_requires_ai_and_guardian": True,
+        },
+    }
 
 
 def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     required = os.getenv("OPTIME_SEMANTIC_AI_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
     context["semantic_ai"] = {"enabled": enabled, "required": required, "status": "DISABLED"}
-    if not enabled or not natural_language_query.strip():
-        if required and natural_language_query.strip():
+
+    # Deterministic rules never substitute for the interview AI. If AI is required but
+    # unavailable, the interview blocks instead of falling back to scripted questions.
+    if not enabled:
+        if required:
             context["semantic_ai"]["status"] = "REQUIRED_BUT_DISABLED"
             context["decision_readiness"] = "NEEDS_RESEARCH"
         return context
+
     try:
-        result = interpret_client_intent_with_ai(user_text=natural_language_query, questionnaire_state=questionnaire_state)
-        context["semantic_ai"] = {"enabled": True, "required": required, "status": "CONSULTED_AND_VALIDATED", "result": result}
-        if result.get("decision_readiness") in {"NEEDS_CLARIFICATION", "NEEDS_RESEARCH"}:
-            context["decision_readiness"] = result["decision_readiness"]
+        ai_state = dict(questionnaire_state)
+        ai_state["__optime_guardian_context"] = {
+            "signals": context.get("signals") or {},
+            "transition_support": context.get("transition_support") or {},
+            "principles": context.get("principles") or [],
+            "user_statement_accounting": context.get("user_statement_accounting") or {},
+            "material_unknown_policy": context.get("material_unknown_policy") or {},
+            "interview_policy": context.get("interview_policy") or {},
+        }
+        result = interpret_client_intent_with_ai(
+            user_text=natural_language_query,
+            questionnaire_state=ai_state,
+        )
+        context["semantic_ai"] = {
+            "enabled": True,
+            "required": required,
+            "status": "CONSULTED_AND_VALIDATED",
+            "result": result,
+        }
+
+        readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION")
+        context["decision_readiness"] = readiness
+        context["adaptive_questions"] = []
+
         next_question = str(result.get("next_question") or "").strip()
-        if next_question:
+        if readiness == "NEEDS_CLARIFICATION" and next_question:
             question_key = _semantic_question_key(next_question)
             answered_keys = _answered_adaptive_keys(questionnaire_state)
             if question_key not in answered_keys and not _question_exists(context, question_key):
-                context.setdefault("adaptive_questions", []).insert(0, _base._question(question_key, next_question, "AI semantic interpretation identified this as the highest-information unresolved issue after consulting the Learning Center.", ["client_intent_completeness", "preference_congruence"], []))
+                context["adaptive_questions"] = [
+                    _base._question(
+                        question_key,
+                        next_question,
+                        "Governed Semantic AI selected this as the highest-information unresolved issue after consulting the Learning Center and Guardian context.",
+                        ["client_intent_completeness", "preference_congruence"],
+                        [],
+                    )
+                ]
+        elif readiness == "READY":
+            context["adaptive_questions"] = []
+        elif readiness == "NEEDS_RESEARCH":
+            context["adaptive_questions"] = []
     except Exception as exc:
-        context["semantic_ai"] = {"enabled": True, "required": required, "status": "FAILED", "error": str(exc)}
+        context["semantic_ai"] = {
+            "enabled": True,
+            "required": required,
+            "status": "FAILED",
+            "error": str(exc),
+        }
+        context["adaptive_questions"] = []
         if required:
             context["decision_readiness"] = "NEEDS_RESEARCH"
     return context
 
 
 def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
-    context = _base.build_human_intelligence_context(questionnaire_state, natural_language_query)
-    context = _append_material_unknown_questions(context, questionnaire_state, natural_language_query)
-    context = apply_no_drop_contract(context, natural_language_query, _base._question)
+    # Base runtime is retained only for deterministic signals/Guardian evidence.
+    # Any hard-coded adaptive questions it produces are deliberately discarded.
+    base_context = _base.build_human_intelligence_context(questionnaire_state, natural_language_query)
+    context = _governed_context(base_context, natural_language_query)
+    context["adaptive_questions"] = []
+    context["decision_readiness"] = "NEEDS_CLARIFICATION"
     return _consult_semantic_ai(context, questionnaire_state, natural_language_query)
 
 
@@ -142,10 +177,30 @@ def attach_human_person_fit(rows: List[Dict[str, Any]], human_context: Dict[str,
         band = _base._community_size_band(beds)
         fit = _base._size_fit(preference, band)
         row["human_person_fit"] = {
-            "community_size": {"official_bed_count": beds if beds is not None else "UNKNOWN", "community_size_band": band, "preference": preference, "fit_score": fit if fit is not None else "UNKNOWN", "source": "Nevada HCQC / ALiS official detail" if beds is not None else "UNKNOWN", "evidence_class": "REGULATORY_VERIFIED" if beds is not None else "UNKNOWN", "policy_role": "EXPLICIT_PREFERENCE_CONGRUENCE_ONLY", "not_a_quality_factor": True},
-            "social_transition_fit": {"status": "UNKNOWN", "reason": "No verified Nevada facility social-climate/engagement outcome evidence is attached yet."},
-            "independence_fit": {"status": "UNKNOWN", "reason": "No verified Nevada facility autonomy/choice evidence is attached yet."},
+            "community_size": {
+                "official_bed_count": beds if beds is not None else "UNKNOWN",
+                "community_size_band": band,
+                "preference": preference,
+                "fit_score": fit if fit is not None else "UNKNOWN",
+                "source": "Nevada HCQC / ALiS official detail" if beds is not None else "UNKNOWN",
+                "evidence_class": "REGULATORY_VERIFIED" if beds is not None else "UNKNOWN",
+                "policy_role": "EXPLICIT_PREFERENCE_CONGRUENCE_ONLY",
+                "not_a_quality_factor": True,
+            },
+            "social_transition_fit": {
+                "status": "UNKNOWN",
+                "reason": "No verified Nevada facility social-climate/engagement outcome evidence is attached yet.",
+            },
+            "independence_fit": {
+                "status": "UNKNOWN",
+                "reason": "No verified Nevada facility autonomy/choice evidence is attached yet.",
+            },
         }
 
 
-__all__ = ["attach_human_person_fit", "build_human_intelligence_context", "has_explicit_person_fit_preference", "person_fit_sort_key"]
+__all__ = [
+    "attach_human_person_fit",
+    "build_human_intelligence_context",
+    "has_explicit_person_fit_preference",
+    "person_fit_sort_key",
+]
