@@ -92,8 +92,11 @@ async function answerAdaptiveUntilResults(page, label) {
 
 async function extractTopFacilities(page, label) {
   await page.waitForLoadState('domcontentloaded');
-  await page.getByText('Loading results...').waitFor({ state: 'hidden', timeout: 120000 }).catch(() => {});
-  await page.waitForTimeout(3000);
+  const loadingCommunities = page.getByText('Loading communities...');
+  if (await loadingCommunities.isVisible().catch(() => false)) {
+    await loadingCommunities.waitFor({ state: 'hidden', timeout: 150000 });
+  }
+  await page.waitForTimeout(1000);
   const body = await page.locator('body').innerText();
   const names = [...new Set((await page.locator('h3').allInnerTexts()).map(x => x.trim()).filter(Boolean))].slice(0, 5);
   console.log(`${label}_RESULTS=${JSON.stringify(names)}`);
