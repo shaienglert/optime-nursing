@@ -35,8 +35,30 @@ type AnswerHistoryEntry = {
   stateBefore: QuestionnaireState;
 };
 
+const HISTORY_STORAGE_KEY = "optime-nursing-decision-interview-history-v1";
+
 function cloneState(state: QuestionnaireState): QuestionnaireState {
   return JSON.parse(JSON.stringify(state)) as QuestionnaireState;
+}
+
+function loadHistory(): AnswerHistoryEntry[] {
+  try {
+    const raw = window.sessionStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(entries: AnswerHistoryEntry[]) {
+  try {
+    if (entries.length) window.sessionStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(entries));
+    else window.sessionStorage.removeItem(HISTORY_STORAGE_KEY);
+  } catch {
+    // Session history is an editing convenience; decision safety never depends on browser storage.
+  }
 }
 
 function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence): HumanDecisionContext {
@@ -52,9 +74,8 @@ function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuesti
   const next = cloneState(state);
   const questionKey = question.question_key;
 
-  // Production interview answers are stored through one generic governed contract.
-  // The browser never maps a question key to a domain-specific field and never chooses
-  // which question to ask. Semantic AI owns the interview; Guardian/runtime own policy.
+  // One generic governed answer contract. The browser does not map question keys to
+  // domain fields and does not choose the next question; Semantic AI owns the interview.
   const signals = next.humanIntelligenceV2.scoringEngine.adaptiveSignals || [];
   next.humanIntelligenceV2.scoringEngine.adaptiveSignals = [
     ...signals.filter((signal) => signal.questionKey !== questionKey),
@@ -81,15 +102,19 @@ export default function AdaptiveInterviewPage() {
   const [freeTextAnswer, setFreeTextAnswer] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nextUrl, setNextUrl] = useState("/results");
 
-  const syncAnsweredKeys = (entries: AnswerHistoryEntry[]) => {
+  const syncHistory = (entries: AnswerHistoryEntry[]) => {
+    setHistory(entries);
     answeredQuestionKeys.current = new Set(entries.map((entry) => entry.question.question_key));
+    saveHistory(entries);
   };
 
   const refresh = async (questionnaireState: QuestionnaireState, destination = nextUrl) => {
     setLoading(true);
+    setReviewing(false);
     setError(null);
     try {
       const response = (await fetchPatientNeedsProfile({
@@ -103,7 +128,7 @@ export default function AdaptiveInterviewPage() {
 
       if (context.decision_readiness === "READY" || unansweredQuestions.length === 0) {
         setQuestion(null);
-        router.replace(destination);
+        router.push(destination);
         return;
       }
 
@@ -117,18 +142,33 @@ export default function AdaptiveInterviewPage() {
   };
 
   useEffect(() => {
-    if (!initialStateRef.current) initialStateRef.current = cloneState(state);
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("next");
     const destination = requested?.startsWith("/results") ? requested : "/results";
+    const reviewMode = params.get("review") === "1";
     setNextUrl(destination);
+
+    const savedHistory = loadHistory();
+    if (savedHistory.length) {
+      syncHistory(savedHistory);
+      initialStateRef.current = cloneState(savedHistory[0].stateBefore);
+    } else if (!initialStateRef.current) {
+      initialStateRef.current = cloneState(state);
+    }
+
+    if (reviewMode && savedHistory.length) {
+      setReviewing(true);
+      setQuestion(null);
+      setLoading(false);
+      return;
+    }
+
     void refresh(state, destination);
     // Entry evaluation is intentionally one-shot. Later evaluations follow explicit answers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Options are supplied by the governed AI/runtime only. If no options are supplied,
-  // the UI accepts free text. There is no frontend question-key whitelist or fallback list.
+  // Options come from the governed AI/runtime only. Without answer_options, free text is used.
   const options = question?.answer_options || [];
 
   const answerQuestion = async (rawAnswer: string) => {
@@ -145,8 +185,7 @@ export default function AdaptiveInterviewPage() {
       const stateBefore = cloneState(state);
       const nextState = applyAdaptiveAnswer(state, question, answer);
       const nextHistory = [...history, { question, answer, stateBefore }];
-      setHistory(nextHistory);
-      syncAnsweredKeys(nextHistory);
+      syncHistory(nextHistory);
       setState(nextState);
       void persistAdaptiveQuestionSignal({
         resident_key: "decision-interview-session",
@@ -177,12 +216,12 @@ export default function AdaptiveInterviewPage() {
     const entry = history[index];
     if (!entry) return;
     const priorHistory = history.slice(0, index);
-    setHistory(priorHistory);
-    syncAnsweredKeys(priorHistory);
+    syncHistory(priorHistory);
     const restored = cloneState(entry.stateBefore);
     setState(restored);
     setQuestion(entry.question);
     setFreeTextAnswer(entry.answer);
+    setReviewing(false);
     setError(null);
   };
 
@@ -199,10 +238,10 @@ export default function AdaptiveInterviewPage() {
     if (submitting || loading) return;
     const initial = initialStateRef.current;
     if (initial) setState(cloneState(initial));
-    setHistory([]);
-    syncAnsweredKeys([]);
+    syncHistory([]);
     setQuestion(null);
     setFreeTextAnswer("");
+    setReviewing(false);
     setError(null);
     if (initial) void refresh(cloneState(initial));
   };
@@ -231,6 +270,16 @@ export default function AdaptiveInterviewPage() {
 
         {loading ? <div className="mt-10 rounded-2xl bg-slate-50 p-6 text-slate-700">Checking what still matters for this decision...</div> : null}
         {error ? <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-800">{error}</div> : null}
+
+        {!loading && reviewing && !question ? (
+          <div className="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-6">
+            <p className="font-medium text-slate-950">Choose Edit beside any answer above to change it. OPTIME will re-run the governed AI interview and recalculate the decision from that point.</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button type="button" onClick={() => router.push(nextUrl)} className="rounded-2xl bg-emerald-700 px-5 py-3 font-semibold text-white">Return to results</button>
+              <button type="button" onClick={startOver} className="rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700">Start over</button>
+            </div>
+          </div>
+        ) : null}
 
         {!loading && question ? (
           <div className="mt-10">
