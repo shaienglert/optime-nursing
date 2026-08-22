@@ -27,15 +27,11 @@ async function openHydrated(page) {
 
 async function waitOutLoading(page) {
   const loading = page.getByText('Checking what still matters for this decision...');
-  if (await loading.isVisible().catch(() => false)) {
-    await loading.waitFor({ state: 'hidden', timeout: 105000 });
-  }
+  if (await loading.isVisible().catch(() => false)) await loading.waitFor({ state: 'hidden', timeout: 105000 });
   const retry = page.getByRole('button', { name: 'Retry' });
   if (await retry.isVisible().catch(() => false)) {
     await retry.click();
-    if (await loading.isVisible().catch(() => false)) {
-      await loading.waitFor({ state: 'hidden', timeout: 105000 });
-    }
+    if (await loading.isVisible().catch(() => false)) await loading.waitFor({ state: 'hidden', timeout: 105000 });
   }
 }
 
@@ -46,18 +42,13 @@ async function answerAdaptiveUntilResults(page, label) {
     await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 20000 });
     await waitOutLoading(page);
     if (page.url().includes('/results')) break;
-
     const errorBox = page.locator('.border-rose-200');
-    if (await errorBox.isVisible().catch(() => false)) {
-      throw new Error(`${label} adaptive interview error: ${await errorBox.innerText()}`);
-    }
-
+    if (await errorBox.isVisible().catch(() => false)) throw new Error(`${label} adaptive interview error: ${await errorBox.innerText()}`);
     const question = page.locator('p.text-xl').last();
     await expect(question).toBeVisible({ timeout: 15000 });
     const qText = (await question.innerText()).trim();
     const answer = answerFor(qText);
     transcript.push({ question: qText, answer });
-
     const textarea = page.getByPlaceholder('Answer in your own words');
     if (await textarea.isVisible().catch(() => false)) {
       await textarea.fill(answer);
@@ -74,19 +65,21 @@ async function answerAdaptiveUntilResults(page, label) {
     await page.waitForTimeout(700);
   }
   await expect(page).toHaveURL(/\/results/, { timeout: 120000 });
+  console.log(`${label}_TRANSCRIPT=${JSON.stringify(transcript)}`);
   return transcript;
 }
 
 async function extractTopFacilities(page, label) {
   await page.waitForLoadState('domcontentloaded');
   const loadingCommunities = page.getByText('Loading communities...');
-  if (await loadingCommunities.isVisible().catch(() => false)) {
-    await loadingCommunities.waitFor({ state: 'hidden', timeout: 150000 });
-  }
+  if (await loadingCommunities.isVisible().catch(() => false)) await loadingCommunities.waitFor({ state: 'hidden', timeout: 150000 });
   await page.waitForTimeout(1200);
   const names = [...new Set((await page.locator('h3').allInnerTexts()).map(x => x.trim()).filter(Boolean))].slice(0, 5);
   console.log(`${label}_RESULTS=${JSON.stringify(names)}`);
-  if (names.length === 0) throw new Error(`${label}: results page rendered no facility recommendations`);
+  if (names.length === 0) {
+    console.log(`${label}_RESULTS_TEXT=${JSON.stringify((await page.locator('body').innerText()).slice(0, 12000))}`);
+    throw new Error(`${label}: results page rendered no facility recommendations`);
+  }
   return names;
 }
 
@@ -119,13 +112,9 @@ test('live production: structured and free-text journeys produce identical top f
   const context1 = await browser.newContext();
   const first = await structuredJourney(await context1.newPage());
   await context1.close();
-
   const context2 = await browser.newContext();
   const second = await freeTextJourney(await context2.newPage());
   await context2.close();
-
-  console.log(`STRUCTURED_TRANSCRIPT=${JSON.stringify(first.transcript)}`);
-  console.log(`FREETEXT_TRANSCRIPT=${JSON.stringify(second.transcript)}`);
   console.log(`CLIENT_TEXT=${CLIENT_TEXT}`);
   expect(second.results).toEqual(first.results);
 });
