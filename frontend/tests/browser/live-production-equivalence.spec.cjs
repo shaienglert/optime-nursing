@@ -26,7 +26,7 @@ function watchDecisionResponses(page, label) {
       const body = await response.json();
       const d = body?.decision_intelligence || body?.patient_needs_profile?.decision_intelligence || body?.care_setting_policy?.decision_intelligence || {};
       const h = d?.human_intelligence || {};
-      console.log(`${label}_API=${JSON.stringify({url,status:response.status(),result_count:body?.result_count,decision_readiness:d?.decision_readiness||h?.decision_readiness,decision_finality:d?.decision_finality,recommendation_execution_allowed:d?.recommendation_execution_allowed,recommendation_visibility:d?.recommendation_visibility,semantic_requirements:d?.semantic_facility_requirements,must_gate:d?.must_gate,adaptive_questions:(d?.adaptive_questions||h?.adaptive_questions||[]).map(x=>x?.question)})}`);
+      console.log(`${label}_API=${JSON.stringify({url,status:response.status(),result_count:body?.result_count,decision_readiness:d?.decision_readiness||h?.decision_readiness,decision_finality:d?.decision_finality,recommendation_execution_allowed:d?.recommendation_execution_allowed,recommendation_visibility:d?.recommendation_visibility,semantic_ai:h?.semantic_ai||d?.semantic_ai,semantic_requirements:d?.semantic_facility_requirements,must_gate:d?.must_gate,adaptive_questions:(d?.adaptive_questions||h?.adaptive_questions||[]).map(x=>x?.question)})}`);
     } catch {}
   });
 }
