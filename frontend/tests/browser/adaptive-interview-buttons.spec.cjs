@@ -41,7 +41,7 @@ const emptyDecisionResponse = {
   tie_break_decisions: [],
 };
 
-test('adaptive interview supports Continue, Back, Edit, results review and Start over', async ({ page }) => {
+async function mockGovernedBackend(page) {
   await page.route('**/api/backend/**', async (route) => {
     const url = route.request().url();
     if (url.includes('/decision-engine/patient-needs-profile')) {
@@ -54,7 +54,10 @@ test('adaptive interview supports Continue, Back, Edit, results review and Start
     }
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(emptyDecisionResponse) });
   });
+}
 
+test('adaptive interview supports Continue, Back, Edit, results review and Start over', async ({ page }) => {
+  await mockGovernedBackend(page);
   await page.goto('http://127.0.0.1:3000/adaptive-interview');
   await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
   await page.getByRole('button', { name: 'Yes' }).click();
@@ -78,36 +81,25 @@ test('adaptive interview supports Continue, Back, Edit, results review and Start
   await expect(page.getByRole('button', { name: 'Edit' })).toHaveCount(0);
 });
 
-test('intake family-member selection must not navigate or jump backward', async ({ page }) => {
+test('homepage starter goes to governed AI and never renders legacy family-count intake', async ({ page }) => {
+  await mockGovernedBackend(page);
+  await page.goto('http://127.0.0.1:3000/');
+
+  await page.getByRole('button', { name: 'my mother', exact: true }).click();
+  await page.getByRole('button', { name: '80–84', exact: true }).click();
+  await page.getByRole('button', { name: 'fully independent', exact: true }).click();
+  await page.getByRole('button', { name: /Next/ }).click();
+  await page.getByRole('button', { name: 'no memory concerns', exact: true }).click();
+
+  await expect(page).toHaveURL(/\/adaptive-interview/);
+  await expect(page.getByText('How many family members are actively involved?')).toHaveCount(0);
+  await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
+});
+
+test('legacy intake URL is a compatibility redirect to governed AI', async ({ page }) => {
+  await mockGovernedBackend(page);
   await page.goto('http://127.0.0.1:3000/intake');
-  const familyQuestion = page.getByText('How many family members are actively involved?');
-  await expect(familyQuestion).toHaveCount(1);
-
-  const initial = await familyQuestion.evaluate((el) => ({
-    display: getComputedStyle(el).display,
-    visibility: getComputedStyle(el).visibility,
-    rectTop: el.getBoundingClientRect().top,
-    rectHeight: el.getBoundingClientRect().height,
-  }));
-  console.log('FAMILY_INITIAL_DOM', JSON.stringify(initial));
-
-  await familyQuestion.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
-  await page.waitForTimeout(100);
-  const familyBlock = familyQuestion.locator('xpath=..');
-  const option = familyBlock.getByRole('button', { name: '2', exact: true });
-  const before = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
-  const beforeRect = await familyQuestion.evaluate((el) => el.getBoundingClientRect().top);
-
-  await option.evaluate((el) => el.click());
-  await page.waitForTimeout(300);
-
-  const after = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
-  const afterRect = await familyQuestion.evaluate((el) => el.getBoundingClientRect().top);
-  const selectedClass = await option.getAttribute('class');
-  console.log('FAMILY_MEMBER_SELECTION_TRACE', JSON.stringify({ before, after, beforeRect, afterRect, selectedClass }));
-
-  expect(after.url).toBe('/intake');
-  expect(Math.abs(afterRect - beforeRect)).toBeLessThan(120);
-  expect(Math.abs(after.y - before.y)).toBeLessThan(120);
-  expect(selectedClass || '').toContain('bg-[#7f9f88]');
+  await expect(page).toHaveURL(/\/adaptive-interview/);
+  await expect(page.getByText('How many family members are actively involved?')).toHaveCount(0);
+  await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
 });
