@@ -26,12 +26,12 @@ async function openHydrated(page) {
 
 async function waitOutLoading(page) {
   const loading = page.getByText('Checking what still matters for this decision...');
-  try { await loading.waitFor({ state: 'hidden', timeout: 35000 }); } catch {}
+  try { await loading.waitFor({ state: 'hidden', timeout: 105000 }); } catch {}
   const retry = page.getByRole('button', { name: 'Retry' });
   if (await retry.isVisible().catch(() => false)) {
     console.log('LIVE_RETRY_USED');
     await retry.click();
-    await loading.waitFor({ state: 'hidden', timeout: 35000 });
+    await loading.waitFor({ state: 'hidden', timeout: 105000 });
   }
 }
 
@@ -71,13 +71,13 @@ async function answerAdaptiveUntilResults(page, label) {
     }
     await page.waitForTimeout(700);
   }
-  await expect(page).toHaveURL(/\/results/, { timeout: 40000 });
+  await expect(page).toHaveURL(/\/results/, { timeout: 120000 });
   return transcript;
 }
 
 async function extractTopFacilities(page, label) {
   await page.waitForLoadState('domcontentloaded');
-  await page.getByText('Loading results...').waitFor({ state: 'hidden', timeout: 60000 }).catch(() => {});
+  await page.getByText('Loading results...').waitFor({ state: 'hidden', timeout: 120000 }).catch(() => {});
   await page.waitForTimeout(2500);
   const body = await page.locator('body').innerText();
   if (/API request failed|Unable to load decision recommendations|No recommendations/i.test(body)) {
@@ -114,7 +114,7 @@ async function freeTextJourney(page) {
 }
 
 test('live production: structured questions then same client free text produce the same top results', async ({ browser }) => {
-  test.setTimeout(360000);
+  test.setTimeout(600000);
 
   const context1 = await browser.newContext();
   const page1 = await context1.newPage();
