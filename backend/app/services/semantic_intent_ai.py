@@ -216,7 +216,17 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
 
     readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION")
     if readiness == "READY" and pending_question:
-        raise RuntimeError("SEMANTIC_AI_READY_WITH_UNRESOLVED_CLIENT_INPUT")
+        # The model supplied a real blocking clarification but mislabeled the packet READY.
+        # Preserve the question and fail closed at the readiness layer instead of discarding
+        # the entire AI turn. This keeps the AI as interview owner while Guardian prevents
+        # premature matching.
+        result["decision_readiness"] = "NEEDS_CLARIFICATION"
+        result["readiness_normalization"] = {
+            "from": "READY",
+            "to": "NEEDS_CLARIFICATION",
+            "reason": "BLOCKING_AI_QUESTION_PRESENT",
+        }
+        readiness = "NEEDS_CLARIFICATION"
     if readiness == "NEEDS_RESEARCH" and not pending_question:
         result["decision_readiness"] = "READY"
         result["readiness_normalization"] = {
