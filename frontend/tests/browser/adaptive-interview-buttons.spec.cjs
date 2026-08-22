@@ -82,3 +82,22 @@ test('adaptive interview supports Continue, Back, Edit, results review and Start
   await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit' })).toHaveCount(0);
 });
+
+test('intake family-member selection must not navigate or jump backward', async ({ page }) => {
+  await page.goto('http://127.0.0.1:3000/intake');
+  const familyQuestion = page.getByText('How many family members are actively involved?');
+  await familyQuestion.scrollIntoViewIfNeeded();
+  await expect(familyQuestion).toBeVisible();
+
+  const before = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+  const familyBlock = familyQuestion.locator('xpath=..');
+  await familyBlock.getByRole('button', { name: '2', exact: true }).click();
+  await page.waitForTimeout(250);
+  const after = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+
+  console.log('FAMILY_MEMBER_SELECTION_TRACE', JSON.stringify({ before, after }));
+  expect(after.url).toBe('/intake');
+  expect(after.y).toBeGreaterThanOrEqual(before.y - 120);
+  await expect(familyBlock.getByRole('button', { name: '2', exact: true })).toHaveClass(/bg-\[#2f7f6d\]|bg-emerald|text-white/);
+  await expect(page.getByText('Religion or faith importance')).toBeVisible();
+});
