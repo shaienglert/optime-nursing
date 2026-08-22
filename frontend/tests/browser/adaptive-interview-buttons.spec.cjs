@@ -32,11 +32,7 @@ function profileFor(signals) {
 }
 
 const emptyDecisionResponse = {
-  patient_needs_profile: {
-    needs: [],
-    need_tags: [],
-    priority_parameter_ids: [],
-  },
+  patient_needs_profile: { needs: [], need_tags: [], priority_parameter_ids: [] },
   results: [],
   tie_break_decisions: [],
 };
@@ -84,13 +80,11 @@ test('adaptive interview supports Continue, Back, Edit, results review and Start
 test('homepage starter goes to governed AI and never renders legacy family-count intake', async ({ page }) => {
   await mockGovernedBackend(page);
   await page.goto('http://127.0.0.1:3000/');
-
   await page.getByRole('button', { name: 'my mother', exact: true }).click();
   await page.getByRole('button', { name: '80–84', exact: true }).click();
   await page.getByRole('button', { name: 'fully independent', exact: true }).click();
   await page.getByRole('button', { name: 'Next →', exact: true }).click();
   await page.getByRole('button', { name: 'no memory concerns', exact: true }).click();
-
   await expect(page).toHaveURL(/\/adaptive-interview/);
   await expect(page.getByText('How many family members are actively involved?')).toHaveCount(0);
   await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
@@ -102,4 +96,20 @@ test('legacy intake URL is a compatibility redirect to governed AI', async ({ pa
   await expect(page).toHaveURL(/\/adaptive-interview/);
   await expect(page.getByText('How many family members are actively involved?')).toHaveCount(0);
   await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
+});
+
+test('a stalled backend becomes an actionable Retry screen instead of an infinite spinner', async ({ page }) => {
+  test.setTimeout(45000);
+  await page.route('**/api/backend/**', async (route) => {
+    if (route.request().url().includes('/decision-engine/patient-needs-profile')) {
+      await new Promise(() => {});
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+  });
+  await page.goto('http://127.0.0.1:3000/adaptive-interview');
+  await expect(page.getByText('Checking what still matters for this decision...')).toBeVisible();
+  await expect(page.getByText('The decision interview is taking too long to respond. Please retry.')).toBeVisible({ timeout: 35000 });
+  await expect(page.getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Back to start', exact: true })).toBeVisible();
 });
