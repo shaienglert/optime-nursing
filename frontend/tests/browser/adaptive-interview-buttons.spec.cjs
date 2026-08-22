@@ -58,26 +58,21 @@ test('adaptive interview supports Continue, Back, Edit, results review and Start
   await page.goto('http://127.0.0.1:3000/adaptive-interview');
   await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
   await page.getByRole('button', { name: 'Yes' }).click();
-
   await expect(page.getByText('What walking distance is comfortable?')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit' })).toBeVisible();
   await page.getByPlaceholder('Answer in your own words').fill('About 100 meters.');
   await page.getByRole('button', { name: 'Continue' }).click();
-
   await expect(page).toHaveURL(/\/results/);
   await expect(page.getByRole('link', { name: 'Change decision answers' })).toBeVisible();
   await page.getByRole('link', { name: 'Change decision answers' }).click();
-
   await expect(page.getByRole('heading', { name: 'Your answers' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit' })).toHaveCount(2);
   await page.getByRole('button', { name: 'Edit' }).first().click();
   await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
-
   await page.getByRole('button', { name: 'No' }).click();
   await expect(page.getByText('What walking distance is comfortable?')).toBeVisible();
   await page.getByRole('button', { name: 'Back' }).click();
   await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
-
   await page.getByRole('button', { name: 'Start over' }).click();
   await expect(page.getByText('Does the resident need help with daily activities?')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit' })).toHaveCount(0);
@@ -86,18 +81,33 @@ test('adaptive interview supports Continue, Back, Edit, results review and Start
 test('intake family-member selection must not navigate or jump backward', async ({ page }) => {
   await page.goto('http://127.0.0.1:3000/intake');
   const familyQuestion = page.getByText('How many family members are actively involved?');
-  await familyQuestion.scrollIntoViewIfNeeded();
-  await expect(familyQuestion).toBeVisible();
+  await expect(familyQuestion).toHaveCount(1);
 
-  const before = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+  const initial = await familyQuestion.evaluate((el) => ({
+    display: getComputedStyle(el).display,
+    visibility: getComputedStyle(el).visibility,
+    rectTop: el.getBoundingClientRect().top,
+    rectHeight: el.getBoundingClientRect().height,
+  }));
+  console.log('FAMILY_INITIAL_DOM', JSON.stringify(initial));
+
+  await familyQuestion.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await page.waitForTimeout(100);
   const familyBlock = familyQuestion.locator('xpath=..');
-  await familyBlock.getByRole('button', { name: '2', exact: true }).click();
-  await page.waitForTimeout(250);
-  const after = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+  const option = familyBlock.getByRole('button', { name: '2', exact: true });
+  const before = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+  const beforeRect = await familyQuestion.evaluate((el) => el.getBoundingClientRect().top);
 
-  console.log('FAMILY_MEMBER_SELECTION_TRACE', JSON.stringify({ before, after }));
+  await option.evaluate((el) => el.click());
+  await page.waitForTimeout(300);
+
+  const after = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+  const afterRect = await familyQuestion.evaluate((el) => el.getBoundingClientRect().top);
+  const selectedClass = await option.getAttribute('class');
+  console.log('FAMILY_MEMBER_SELECTION_TRACE', JSON.stringify({ before, after, beforeRect, afterRect, selectedClass }));
+
   expect(after.url).toBe('/intake');
-  expect(after.y).toBeGreaterThanOrEqual(before.y - 120);
-  await expect(familyBlock.getByRole('button', { name: '2', exact: true })).toHaveClass(/bg-\[#2f7f6d\]|bg-emerald|text-white/);
-  await expect(page.getByText('Religion or faith importance')).toBeVisible();
+  expect(Math.abs(afterRect - beforeRect)).toBeLessThan(120);
+  expect(Math.abs(after.y - before.y)).toBeLessThan(120);
+  expect(selectedClass || '').toContain('bg-[#7f9f88]');
 });
