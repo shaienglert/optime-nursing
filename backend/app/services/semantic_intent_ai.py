@@ -11,6 +11,7 @@ downstream research, never invented facts.
 
 import json
 import os
+import re
 import time
 from typing import Any, Callable, Dict, List, Optional
 
@@ -264,13 +265,94 @@ def _repair_live_readiness_mismatch(result: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, bool]:
+    text = str(user_text or "").lower()
+    signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
+    signal_text = " ".join(
+        f"{str(item.get('impactExplanation') or '')} {str(item.get('answer') or '')}"
+        for item in signals
+        if isinstance(item, dict)
+    ).lower()
+    combined = f"{text} {signal_text}"
+
+    explicit_location = any(str(questionnaire_state.get(key) or "").strip() for key in ("locationCity", "city", "referenceLocationValue"))
+    text_location = bool(re.search(r"\b(las vegas|north las vegas|henderson|nevada)\b", combined))
+
+    raw_budget = questionnaire_state.get("budget")
+    numeric_budget = isinstance(raw_budget, (int, float)) and float(raw_budget) > 0 and float(raw_budget) != 7000
+    text_budget = bool(re.search(r"(?:budget|monthly|per month|afford|cost)[^\n]{0,50}\$?\s*\d{3,6}|\$\s*\d{3,6}", combined))
+    explicit_no_limit = bool(re.search(r"\b(no budget limit|no monthly limit|do not want to set a budget|don't want to set a budget)\b", combined))
+
+    return {
+        "market_location": explicit_location or text_location,
+        "monthly_affordability": numeric_budget or text_budget or explicit_no_limit,
+    }
+
+
+def _has_blocking_question(result: Dict[str, Any]) -> bool:
+    statements = result.get("statements") if isinstance(result.get("statements"), list) else []
+    return any(
+        isinstance(statement, dict)
+        and statement.get("status") == "ASKED"
+        and statement.get("importance") in {"MUST", "UNKNOWN"}
+        and str(statement.get("clarification_question") or result.get("next_question") or "").strip()
+        for statement in statements
+    )
+
+
+def _repair_missing_minimum_dimensions_with_ai(
+    *,
+    result: Dict[str, Any],
+    payload: Dict[str, Any],
+    user_text: str,
+    questionnaire_state: Dict[str, Any],
+    transport: Callable[[Dict[str, Any]], Dict[str, Any]],
+) -> Dict[str, Any]:
+    status = _minimum_dimension_status(user_text, questionnaire_state)
+    missing = [key for key, known in status.items() if not known]
+    readiness = str(result.get("decision_readiness") or "").upper()
+    if not missing or _has_blocking_question(result) or readiness not in {"READY", "NEEDS_RESEARCH"}:
+        return result
+
+    repair_payload = dict(payload)
+    repair_payload["readiness_repair"] = {
+        "required": True,
+        "missing_client_owned_dimensions": missing,
+        "prior_packet": result,
+        "instruction": (
+            "The prior packet attempted to finish client-intent readiness while required client-owned dimensions are still missing. "
+            "Do not invent them and do not send them to facility research. Return a corrected compact packet with NEEDS_CLARIFICATION, "
+            "exactly one highest-information AI-authored next_question for one missing dimension, and exactly one ASKED statement carrying that exact question."
+        ),
+    }
+    repaired = transport(repair_payload)
+    repaired = _repair_live_readiness_mismatch(repaired)
+    repaired = _validate_result(repaired)
+    if str(repaired.get("decision_readiness") or "").upper() == "READY" or not _has_blocking_question(repaired):
+        raise RuntimeError(f"SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS:{','.join(missing)}")
+    repaired["minimum_dimension_repair"] = {
+        "applied": True,
+        "missing_dimensions": missing,
+        "ai_authored_question": str(repaired.get("next_question") or ""),
+    }
+    return repaired
+
+
 def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Optional[Dict[str, Any]] = None, transport: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None) -> Dict[str, Any]:
     questionnaire_state = questionnaire_state or {}
     learning_advice = build_learning_center_advice(user_text=user_text)
     payload = _build_prompt(user_text, questionnaire_state, learning_advice)
-    result = (transport or _default_transport)(payload)
+    active_transport = transport or _default_transport
+    result = active_transport(payload)
     if transport is None:
         result = _repair_live_readiness_mismatch(result)
+        result = _repair_missing_minimum_dimensions_with_ai(
+            result=result,
+            payload=payload,
+            user_text=user_text,
+            questionnaire_state=questionnaire_state,
+            transport=active_transport,
+        )
     result = _validate_result(result)
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
