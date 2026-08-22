@@ -285,11 +285,6 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
     if not current:
         return False
     salient = {"mobility", "cognitive", "location", "budget"}
-
-    free_text_terms = _question_terms(user_text)
-    if current & free_text_terms & salient:
-        return True
-
     for entry in _adaptive_answer_summary(questionnaire_state):
         prior = _question_terms(f"{entry.get('question', '')} {entry.get('answer', '')}")
         if not prior:
