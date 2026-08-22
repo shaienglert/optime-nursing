@@ -36,6 +36,7 @@ type AnswerHistoryEntry = {
 };
 
 const HISTORY_STORAGE_KEY = "optime-nursing-decision-interview-history-v1";
+const UI_REQUEST_TIMEOUT_MS = 30000;
 
 function cloneState(state: QuestionnaireState): QuestionnaireState {
   return JSON.parse(JSON.stringify(state)) as QuestionnaireState;
@@ -57,7 +58,7 @@ function saveHistory(entries: AnswerHistoryEntry[]) {
     if (entries.length) window.sessionStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(entries));
     else window.sessionStorage.removeItem(HISTORY_STORAGE_KEY);
   } catch {
-    // Session history is an editing convenience; decision safety never depends on browser storage.
+    // Editing convenience only; decision safety never depends on browser storage.
   }
 }
 
@@ -70,12 +71,23 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence): Huma
   };
 }
 
+async function withUiTimeout<T>(promise: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("The decision interview is taking too long to respond. Please retry.")), UI_REQUEST_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
   const next = cloneState(state);
   const questionKey = question.question_key;
-
-  // One generic governed answer contract. The browser does not map question keys to
-  // domain fields and does not choose the next question; Semantic AI owns the interview.
   const signals = next.humanIntelligenceV2.scoringEngine.adaptiveSignals || [];
   next.humanIntelligenceV2.scoringEngine.adaptiveSignals = [
     ...signals.filter((signal) => signal.questionKey !== questionKey),
@@ -97,6 +109,7 @@ export default function AdaptiveInterviewPage() {
   const { state, setState } = useQuestionnaire();
   const initialStateRef = useRef<QuestionnaireState | null>(null);
   const answeredQuestionKeys = useRef<Set<string>>(new Set());
+  const lastRequestedStateRef = useRef<QuestionnaireState | null>(null);
   const [history, setHistory] = useState<AnswerHistoryEntry[]>([]);
   const [question, setQuestion] = useState<AdaptiveQuestion | null>(null);
   const [freeTextAnswer, setFreeTextAnswer] = useState("");
@@ -113,14 +126,15 @@ export default function AdaptiveInterviewPage() {
   };
 
   const refresh = async (questionnaireState: QuestionnaireState, destination = nextUrl) => {
+    lastRequestedStateRef.current = cloneState(questionnaireState);
     setLoading(true);
     setReviewing(false);
     setError(null);
     try {
-      const response = (await fetchPatientNeedsProfile({
+      const response = (await withUiTimeout(fetchPatientNeedsProfile({
         questionnaire_state: questionnaireState as unknown as Record<string, unknown>,
         natural_language_query: questionnaireState.notes || "",
-      })) as NeedsProfileWithDecisionIntelligence;
+      }))) as NeedsProfileWithDecisionIntelligence;
       const context = getDecisionContext(response);
       const unansweredQuestions = (context.adaptive_questions || []).filter(
         (candidate) => !answeredQuestionKeys.current.has(candidate.question_key),
@@ -135,6 +149,7 @@ export default function AdaptiveInterviewPage() {
       setFreeTextAnswer("");
       setQuestion(unansweredQuestions[0]);
     } catch (cause) {
+      setQuestion(null);
       setError(cause instanceof Error ? cause.message : "Unable to continue the decision interview.");
     } finally {
       setLoading(false);
@@ -164,11 +179,9 @@ export default function AdaptiveInterviewPage() {
     }
 
     void refresh(state, destination);
-    // Entry evaluation is intentionally one-shot. Later evaluations follow explicit answers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Options come from the governed AI/runtime only. Without answer_options, free text is used.
   const options = question?.answer_options || [];
 
   const answerQuestion = async (rawAnswer: string) => {
@@ -246,6 +259,11 @@ export default function AdaptiveInterviewPage() {
     if (initial) void refresh(cloneState(initial));
   };
 
+  const retry = () => {
+    if (loading || submitting) return;
+    void refresh(lastRequestedStateRef.current ? cloneState(lastRequestedStateRef.current) : cloneState(state));
+  };
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#e8f4ef_0%,#f8fbfc_42%,#ffffff_78%)] px-6 py-12 sm:px-10">
       <section className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
@@ -269,7 +287,15 @@ export default function AdaptiveInterviewPage() {
         ) : null}
 
         {loading ? <div className="mt-10 rounded-2xl bg-slate-50 p-6 text-slate-700">Checking what still matters for this decision...</div> : null}
-        {error ? <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-800">{error}</div> : null}
+        {!loading && error ? (
+          <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-800">
+            <p>{error}</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button type="button" onClick={retry} className="rounded-2xl bg-emerald-700 px-5 py-3 font-semibold text-white">Retry</button>
+              <button type="button" onClick={() => router.push("/")} className="rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700">Back to start</button>
+            </div>
+          </div>
+        ) : null}
 
         {!loading && reviewing && !question ? (
           <div className="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-6">
@@ -281,7 +307,7 @@ export default function AdaptiveInterviewPage() {
           </div>
         ) : null}
 
-        {!loading && question ? (
+        {!loading && !error && question ? (
           <div className="mt-10">
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-6">
               <p className="text-xl font-medium leading-8 text-slate-950">{question.question}</p>
@@ -291,18 +317,14 @@ export default function AdaptiveInterviewPage() {
             {options.length > 0 ? (
               <div className="mt-6 grid gap-3">
                 {options.map((option) => (
-                  <button key={option} type="button" disabled={submitting} onClick={() => void answerQuestion(option)} className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left font-medium text-slate-900 transition hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60">
-                    {option}
-                  </button>
+                  <button key={option} type="button" disabled={submitting} onClick={() => void answerQuestion(option)} className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left font-medium text-slate-900 transition hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60">{option}</button>
                 ))}
               </div>
             ) : (
               <form className="mt-6" onSubmit={(event) => { event.preventDefault(); void answerQuestion(freeTextAnswer); }}>
                 <label htmlFor="adaptive-answer" className="text-sm font-medium text-slate-700">Your answer</label>
                 <textarea id="adaptive-answer" value={freeTextAnswer} onChange={(event) => setFreeTextAnswer(event.target.value)} disabled={submitting} rows={4} className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-400 disabled:opacity-60" placeholder="Answer in your own words" />
-                <button type="submit" disabled={submitting || !freeTextAnswer.trim()} className="mt-4 rounded-2xl bg-emerald-700 px-5 py-3 font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">
-                  {submitting ? "Understanding your answer..." : "Continue"}
-                </button>
+                <button type="submit" disabled={submitting || !freeTextAnswer.trim()} className="mt-4 rounded-2xl bg-emerald-700 px-5 py-3 font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? "Understanding your answer..." : "Continue"}</button>
               </form>
             )}
 
