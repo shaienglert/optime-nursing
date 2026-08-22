@@ -28,7 +28,7 @@ jobs:
           if [ -f scripts/apply_freetext_equivalence_fix.py ]; then
             python -m pip install -q pytest
             python scripts/apply_freetext_equivalence_fix.py
-            python -m pytest -q backend/tests/test_free_text_structured_equivalence.py
+            PYTHONPATH=backend python -m pytest -q backend/tests/test_free_text_structured_equivalence.py
             rm -f .github/workflows/one-shot-freetext-equivalence-fix.yml
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
