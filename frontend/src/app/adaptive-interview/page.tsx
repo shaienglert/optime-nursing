@@ -36,13 +36,31 @@ type AnswerHistoryEntry = {
 };
 
 const HISTORY_STORAGE_KEY = "optime-nursing-decision-interview-history-v1";
-// Render Free can need well over a minute to wake from hibernation. Production must
-// keep the first governed request alive long enough to receive the real response;
-// local/CI keeps the shorter timeout so stalled-backend regressions remain fast.
 const UI_REQUEST_TIMEOUT_MS = process.env.NODE_ENV === "production" ? 90000 : 30000;
 
 function cloneState(state: QuestionnaireState): QuestionnaireState {
   return JSON.parse(JSON.stringify(state)) as QuestionnaireState;
+}
+
+function parseMonthlyBudget(text: string): number | null {
+  if (!/(budget|monthly|per month|month|afford|cost)/i.test(text)) return null;
+  const candidates = [...text.matchAll(/\$?\s*([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{4,6})/g)]
+    .map((match) => Number(match[1].replace(/,/g, "")))
+    .filter((value) => Number.isFinite(value) && value >= 500 && value <= 100000);
+  return candidates.length ? Math.max(...candidates) : null;
+}
+
+function normalizeInterviewState(state: QuestionnaireState): QuestionnaireState {
+  const next = cloneState(state);
+  const budgetFromNotes = parseMonthlyBudget(next.notes || "");
+  if (budgetFromNotes !== null) {
+    next.budget = budgetFromNotes;
+  } else if (next.budget === 7000) {
+    // 7000 was the retired intake form's implicit default, not user evidence.
+    // The AI must ask for affordability rather than treating that legacy value as fact.
+    next.budget = 0;
+  }
+  return next;
 }
 
 function loadHistory(): AnswerHistoryEntry[] {
@@ -89,9 +107,12 @@ async function withUiTimeout<T>(promise: Promise<T>): Promise<T> {
 }
 
 function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
-  const next = cloneState(state);
+  const next = normalizeInterviewState(state);
   const questionKey = question.question_key;
+  const questionText = question.question.trim();
+  const questionAndDimensions = `${questionText} ${(question.decision_dimensions || []).join(" ")}`;
   const signals = next.humanIntelligenceV2.scoringEngine.adaptiveSignals || [];
+
   next.humanIntelligenceV2.scoringEngine.adaptiveSignals = [
     ...signals.filter((signal) => signal.questionKey !== questionKey),
     {
@@ -99,11 +120,24 @@ function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuesti
       answer,
       signalType: "decision-interview",
       weights: { informationGain: question.information_gain === "HIGH" ? 1 : 0 },
-      impactExplanation: question.reason || "Explicit answer to a governed adaptive AI question.",
+      impactExplanation: `Question: ${questionText} | ${question.reason || "Explicit answer to a governed adaptive AI question."}`,
       infoGain: question.information_gain === "HIGH" ? 1 : 0,
     },
   ];
-  next.humanIntelligenceV2.scoringEngine.additionalQuestionAsked = question.question;
+
+  // Canonical state mirrors explicit answers selected by the AI interview. These are
+  // persistence mappings only; they never choose which question to ask.
+  if (/(where|location|city|area|market|geograph)/i.test(questionAndDimensions) && answer.toLowerCase() !== "not sure") {
+    next.referenceLocationValue = answer;
+    next.referenceLocationType = next.referenceLocationType || "preferred search area";
+    next.locationImportant = next.locationImportant || "Yes";
+  }
+  const budget = parseMonthlyBudget(`${questionText} ${answer}`);
+  if (/(budget|monthly|afford|cost)/i.test(questionAndDimensions) && budget !== null) {
+    next.budget = budget;
+  }
+
+  next.humanIntelligenceV2.scoringEngine.additionalQuestionAsked = questionText;
   return next;
 }
 
@@ -128,7 +162,8 @@ export default function AdaptiveInterviewPage() {
     saveHistory(entries);
   };
 
-  const refresh = async (questionnaireState: QuestionnaireState, destination = nextUrl) => {
+  const refresh = async (rawQuestionnaireState: QuestionnaireState, destination = nextUrl) => {
+    const questionnaireState = normalizeInterviewState(rawQuestionnaireState);
     lastRequestedStateRef.current = cloneState(questionnaireState);
     setLoading(true);
     setReviewing(false);
@@ -143,9 +178,15 @@ export default function AdaptiveInterviewPage() {
         (candidate) => !answeredQuestionKeys.current.has(candidate.question_key),
       );
 
-      if (context.decision_readiness === "READY" || unansweredQuestions.length === 0) {
+      if (context.decision_readiness === "READY") {
         setQuestion(null);
         router.push(destination);
+        return;
+      }
+
+      if (unansweredQuestions.length === 0) {
+        setQuestion(null);
+        setError("The decision interview still needs information but did not return a usable next question. Please retry.");
         return;
       }
 
@@ -166,12 +207,15 @@ export default function AdaptiveInterviewPage() {
     const reviewMode = params.get("review") === "1";
     setNextUrl(destination);
 
+    const normalizedState = normalizeInterviewState(state);
+    if (normalizedState.budget !== state.budget) setState(normalizedState);
+
     const savedHistory = loadHistory();
     if (savedHistory.length) {
       syncHistory(savedHistory);
-      initialStateRef.current = cloneState(savedHistory[0].stateBefore);
+      initialStateRef.current = normalizeInterviewState(savedHistory[0].stateBefore);
     } else if (!initialStateRef.current) {
-      initialStateRef.current = cloneState(state);
+      initialStateRef.current = cloneState(normalizedState);
     }
 
     if (reviewMode && savedHistory.length) {
@@ -181,7 +225,7 @@ export default function AdaptiveInterviewPage() {
       return;
     }
 
-    void refresh(state, destination);
+    void refresh(normalizedState, destination);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -216,7 +260,7 @@ export default function AdaptiveInterviewPage() {
           knowledge_state: answer.toLowerCase() === "not sure" ? "UNKNOWN" : "KNOWN",
         }),
         weights_json: JSON.stringify({ information_gain: question.information_gain || "UNKNOWN" }),
-        impact_explanation: question.reason || "Explicit answer used by governed Human Intelligence runtime.",
+        impact_explanation: `Question: ${question.question} | ${question.reason || "Explicit answer used by governed Human Intelligence runtime."}`,
         info_gain_score: question.information_gain === "HIGH" ? 1 : 0,
       }).catch(() => undefined);
       await refresh(nextState);
@@ -233,7 +277,7 @@ export default function AdaptiveInterviewPage() {
     if (!entry) return;
     const priorHistory = history.slice(0, index);
     syncHistory(priorHistory);
-    const restored = cloneState(entry.stateBefore);
+    const restored = normalizeInterviewState(entry.stateBefore);
     setState(restored);
     setQuestion(entry.question);
     setFreeTextAnswer(entry.answer);
