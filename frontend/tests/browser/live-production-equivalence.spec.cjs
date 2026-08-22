@@ -17,6 +17,13 @@ function answerFor(question) {
   return 'No additional requirement. She is fully independent and has no special support need in this area.';
 }
 
+async function openHydrated(page) {
+  await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
+  await expect(page.getByRole('button', { name: 'my mother', exact: true })).toBeVisible({ timeout: 10000 });
+  await page.waitForTimeout(1200);
+}
+
 async function waitOutLoading(page) {
   const loading = page.getByText('Checking what still matters for this decision...');
   try { await loading.waitFor({ state: 'hidden', timeout: 35000 }); } catch {}
@@ -62,7 +69,7 @@ async function answerAdaptiveUntilResults(page, label) {
       if (!target) throw new Error(`${label}: no answer control for question: ${qText}`);
       await page.getByRole('button', { name: target.trim(), exact: true }).click();
     }
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(700);
   }
   await expect(page).toHaveURL(/\/results/, { timeout: 40000 });
   return transcript;
@@ -71,7 +78,7 @@ async function answerAdaptiveUntilResults(page, label) {
 async function extractTopFacilities(page, label) {
   await page.waitForLoadState('domcontentloaded');
   await page.getByText('Loading results...').waitFor({ state: 'hidden', timeout: 60000 }).catch(() => {});
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(2500);
   const body = await page.locator('body').innerText();
   if (/API request failed|Unable to load decision recommendations|No recommendations/i.test(body)) {
     throw new Error(`${label} results failure: ${body.slice(0, 1200)}`);
@@ -83,20 +90,25 @@ async function extractTopFacilities(page, label) {
 }
 
 async function structuredJourney(page) {
-  await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await openHydrated(page);
   await page.getByRole('button', { name: 'my mother', exact: true }).click();
+  await expect(page.getByRole('heading', { name: /How old is your mother\?/ })).toBeVisible({ timeout: 10000 });
   await page.getByRole('button', { name: '80–84', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'What kind of help is needed today?' })).toBeVisible({ timeout: 10000 });
   await page.getByRole('button', { name: 'fully independent', exact: true }).click();
   await page.getByRole('button', { name: 'Next →', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Are there any memory concerns?' })).toBeVisible({ timeout: 10000 });
   await page.getByRole('button', { name: 'no memory concerns', exact: true }).click();
+  await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 15000 });
   const transcript = await answerAdaptiveUntilResults(page, 'STRUCTURED');
   return { transcript, results: await extractTopFacilities(page, 'STRUCTURED') };
 }
 
 async function freeTextJourney(page) {
-  await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await openHydrated(page);
   await page.getByLabel('Describe your family situation').fill(CLIENT_TEXT);
   await page.getByRole('button', { name: /See options that may fit/ }).click();
+  await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 15000 });
   const transcript = await answerAdaptiveUntilResults(page, 'FREETEXT');
   return { transcript, results: await extractTopFacilities(page, 'FREETEXT') };
 }
