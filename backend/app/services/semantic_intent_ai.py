@@ -169,20 +169,12 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
     allowed_importance = {"MUST", "NICE", "CONTEXT", "UNKNOWN"}
     allowed_knowledge = {"KNOWN", "UNKNOWN", "AMBIGUOUS"}
 
-    asked_without_question = [
-        statement for statement in statements
-        if isinstance(statement, dict)
-        and statement.get("status") == "ASKED"
-        and not str(statement.get("clarification_question") or "").strip()
-    ]
+    asked_without_question = [statement for statement in statements if isinstance(statement, dict) and statement.get("status") == "ASKED" and not str(statement.get("clarification_question") or "").strip()]
     next_question = str(result.get("next_question") or "").strip()
     asked_statements = [statement for statement in statements if isinstance(statement, dict) and statement.get("status") == "ASKED"]
     if len(asked_without_question) == 1 and len(asked_statements) == 1 and next_question:
         asked_without_question[0]["clarification_question"] = next_question
-        result["question_trace_normalization"] = {
-            "applied": True,
-            "reason": "SINGLE_ASKED_STATEMENT_USED_TOP_LEVEL_NEXT_QUESTION",
-        }
+        result["question_trace_normalization"] = {"applied": True, "reason": "SINGLE_ASKED_STATEMENT_USED_TOP_LEVEL_NEXT_QUESTION"}
 
     for idx, statement in enumerate(statements):
         if not isinstance(statement, dict) or not str(statement.get("raw_text") or "").strip():
@@ -277,6 +269,20 @@ def _question_terms(text: str) -> set[str]:
     return {aliases.get(token, token) for token in tokens if token not in stop and len(token) > 2}
 
 
+def _explicit_user_text_answered_dimensions(user_text: str) -> set[str]:
+    text = str(user_text or "").lower()
+    answered: set[str] = set()
+    if re.search(r"\b(no mobility limitation(?:s)?|walks? independently|independent with [^.]{0,100}transfers?|uses? (?:a )?(?:walker|wheelchair|cane)|needs? (?:a )?(?:walker|wheelchair|cane))\b", text):
+        answered.add("mobility")
+    if re.search(r"\b(no memory concern(?:s)?|no cognitive support|no dementia|cognitively intact|memory concern(?:s)?|dementia|alzheimer)\b", text):
+        answered.add("cognitive")
+    if re.search(r"\b(las vegas|north las vegas|henderson|nevada|miami|dallas|houston|austin)\b", text):
+        answered.add("location")
+    if re.search(r"(?:budget|monthly|per month|afford|cost)[^\n]{0,60}\$?\s*[0-9]{3,6}|\$\s*[0-9]{3,6}", text):
+        answered.add("budget")
+    return answered
+
+
 def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_state: Dict[str, Any], user_text: str = "") -> bool:
     next_question = str(result.get("next_question") or "").strip()
     if not next_question:
@@ -285,11 +291,8 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
     if not current:
         return False
     salient = {"mobility", "cognitive", "location", "budget"}
-
-    free_text_terms = _question_terms(user_text)
-    if current & free_text_terms & salient:
+    if current & _explicit_user_text_answered_dimensions(user_text) & salient:
         return True
-
     for entry in _adaptive_answer_summary(questionnaire_state):
         prior = _question_terms(f"{entry.get('question', '')} {entry.get('answer', '')}")
         if not prior:
@@ -307,15 +310,12 @@ def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any
     signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
     signal_text = " ".join(f"{str(item.get('impactExplanation') or '')} {str(item.get('answer') or '')}" for item in signals if isinstance(item, dict)).lower()
     combined = f"{text} {signal_text}"
-
     explicit_location = any(str(questionnaire_state.get(key) or "").strip() for key in ("locationCity", "city", "referenceLocationValue"))
     text_location = bool(re.search(r"\b(las vegas|north las vegas|henderson|nevada)\b", combined))
-
     raw_budget = questionnaire_state.get("budget")
     numeric_budget = isinstance(raw_budget, (int, float)) and float(raw_budget) > 0 and float(raw_budget) != 7000
     text_budget = bool(re.search(r"(?:budget|monthly|per month|afford|cost)[^\n]{0,50}\$?\s*\d{3,6}|\$\s*\d{3,6}", combined))
     explicit_no_limit = bool(re.search(r"\b(no budget limit|no monthly limit|do not want to set a budget|don't want to set a budget)\b", combined))
-
     return {"market_location": explicit_location or text_location, "monthly_affordability": numeric_budget or text_budget or explicit_no_limit}
 
 
@@ -330,7 +330,6 @@ def _repair_missing_minimum_dimensions_with_ai(*, result: Dict[str, Any], payloa
     readiness = str(result.get("decision_readiness") or "").upper()
     if not missing or _has_blocking_question(result) or readiness not in {"READY", "NEEDS_RESEARCH"}:
         return result
-
     repair_payload = dict(payload)
     repair_payload["readiness_repair"] = {
         "required": True,
@@ -350,7 +349,6 @@ def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: D
     repeated_question = readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(result, questionnaire_state, user_text)
     if not missing_question and not repeated_question:
         return result
-
     repair_payload = dict(payload)
     repair_payload["clarification_contract_repair"] = {
         "required": True,
