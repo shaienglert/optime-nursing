@@ -1,4 +1,8 @@
-from app.services.semantic_intent_ai import interpret_client_intent_with_ai
+from app.services.semantic_intent_ai import (
+    _explicit_user_text_answered_dimensions,
+    _question_reasks_answered_dimension,
+    interpret_client_intent_with_ai,
+)
 
 
 def _packet(question: str, readiness: str = "NEEDS_CLARIFICATION"):
@@ -74,3 +78,16 @@ def test_explicit_free_text_mobility_answer_is_not_reasked(monkeypatch):
     assert result["decision_readiness"] == "READY"
     assert result["next_question"] is None
     assert any("clarification_contract_repair" in call for call in calls)
+
+
+def test_dimension_label_without_answer_does_not_suppress_question():
+    text = "Location and mobility still need to be discussed."
+    assert _explicit_user_text_answered_dimensions(text) == set()
+    packet = _packet("What city or area should I search in?")
+    assert _question_reasks_answered_dimension(packet, {}, text) is False
+
+
+def test_explicit_location_and_budget_are_recognized_as_answers():
+    text = "Please search in Las Vegas. Her monthly budget is $8,000."
+    answered = _explicit_user_text_answered_dimensions(text)
+    assert {"location", "budget"}.issubset(answered)
