@@ -29,6 +29,7 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "NICE or CONTEXT ambiguity must remain UNKNOWN/AMBIGUOUS without blocking READY unless the client explicitly elevates it to a requirement.",
     "If material decision-critical information owned by the client is unknown or ambiguous, ASK the client instead of delegating it to facility research.",
     "Treat prior adaptiveSignals with explicit client answers as client evidence. Never re-ask a dimension that those answers already resolve, even with different wording.",
+    "Treat explicit free-text client statements as client evidence too. Never ask a dimension again when the user's original text already answers it clearly.",
     "The target market/location is a minimum client-owned decision dimension. Absence is UNKNOWN and READY is forbidden until the client has supplied enough location information to select the search market.",
     "The affordability envelope/budget is a minimum client-owned decision dimension. Absence is UNKNOWN and READY is forbidden until the client has supplied a usable monthly budget or explicitly declined to set one.",
     "Facility-specific facts such as availability, price, unit route distance, meal delivery, dietary safety, current activities, or service capability may remain RESEARCH_REQUIRED after client intent is understood.",
@@ -73,6 +74,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             "question_priority_rule": "Ask only one highest-information unresolved MUST/decision-critical client question. Do not ask NICE/CONTEXT questions merely to improve ranking.",
             "asked_statement_rule": "If any statement has status ASKED, copy the exact next_question into that statement's clarification_question. There may be at most one ASKED statement per turn.",
             "adaptive_answer_rule": "Prior adaptiveSignals are part of the client record. If an adaptive signal contains an explicit answer, treat that dimension as answered and do not ask it again using a paraphrase.",
+            "free_text_answer_rule": "Explicit statements in user_text are also part of the client record. Do not ask again about a dimension already answered there, including explicit negative statements such as no mobility limitation or no memory concerns.",
             "minimum_readiness_dimensions": {
                 "market_location": "Must be KNOWN from user_text, questionnaire_state, or prior adaptiveSignals before READY. If missing, ask the client.",
                 "monthly_affordability": "Must be KNOWN from user_text, questionnaire_state, or prior adaptiveSignals before READY. A client may explicitly say they have no budget limit or do not want to set one; silence is not a value.",
@@ -196,10 +198,7 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         if statement.get("status") == "RESEARCH_REQUIRED" and not str(statement.get("research_task") or "").strip():
             raise RuntimeError(f"SEMANTIC_AI_RESEARCH_WITHOUT_TASK:{idx}")
 
-    nonblocking_asked = [
-        s for s in statements
-        if s.get("status") == "ASKED" and s.get("importance") in {"NICE", "CONTEXT"}
-    ]
+    nonblocking_asked = [s for s in statements if s.get("status") == "ASKED" and s.get("importance") in {"NICE", "CONTEXT"}]
     for statement in nonblocking_asked:
         statement["status"] = "USED"
         statement["clarification_question"] = None
@@ -211,11 +210,7 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         result["next_question"] = None
         if str(result.get("decision_readiness") or "") == "NEEDS_CLARIFICATION":
             result["decision_readiness"] = "READY"
-        result["readiness_normalization"] = {
-            "from": "NEEDS_CLARIFICATION",
-            "to": "READY",
-            "reason": "ONLY_NICE_OR_CONTEXT_AMBIGUITY_REMAINED",
-        }
+        result["readiness_normalization"] = {"from": "NEEDS_CLARIFICATION", "to": "READY", "reason": "ONLY_NICE_OR_CONTEXT_AMBIGUITY_REMAINED"}
 
     readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION")
     if readiness == "READY" and pending_question:
@@ -224,12 +219,7 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         raise RuntimeError("SEMANTIC_AI_CLARIFICATION_WITHOUT_BLOCKING_QUESTION")
     if readiness == "NEEDS_RESEARCH" and not pending_question:
         result["decision_readiness"] = "READY"
-        result["readiness_normalization"] = {
-            "from": "NEEDS_RESEARCH",
-            "to": "READY",
-            "reason": "CLIENT_INTENT_COMPLETE_FACILITY_RESEARCH_DEFERRED",
-            "pending_facility_research": pending_research,
-        }
+        result["readiness_normalization"] = {"from": "NEEDS_RESEARCH", "to": "READY", "reason": "CLIENT_INTENT_COMPLETE_FACILITY_RESEARCH_DEFERRED", "pending_facility_research": pending_research}
     result["statement_coverage_percent"] = 100.0
     result["dropped_statement_count"] = 0
     result["governance"] = {
@@ -240,6 +230,7 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         "client_intent_ready_allows_downstream_facility_research": True,
         "nice_context_unknowns_do_not_block_ready": True,
         "prior_adaptive_answers_are_client_evidence": True,
+        "explicit_free_text_answers_are_client_evidence": True,
         "minimum_client_dimensions_required": ["market_location", "monthly_affordability"],
         "rules_applied": SEMANTIC_AI_SYSTEM_RULES,
     }
@@ -250,23 +241,12 @@ def _repair_live_readiness_mismatch(result: Dict[str, Any]) -> Dict[str, Any]:
     if str(result.get("decision_readiness") or "").upper() != "READY":
         return result
     statements = result.get("statements") if isinstance(result.get("statements"), list) else []
-    blocking = [
-        statement for statement in statements
-        if isinstance(statement, dict)
-        and statement.get("status") == "ASKED"
-        and statement.get("importance") in {"MUST", "UNKNOWN"}
-        and str(statement.get("clarification_question") or result.get("next_question") or "").strip()
-    ]
+    blocking = [statement for statement in statements if isinstance(statement, dict) and statement.get("status") == "ASKED" and statement.get("importance") in {"MUST", "UNKNOWN"} and str(statement.get("clarification_question") or result.get("next_question") or "").strip()]
     if len(blocking) != 1:
         return result
     result = dict(result)
     result["decision_readiness"] = "NEEDS_CLARIFICATION"
-    result["live_packet_repair"] = {
-        "applied": True,
-        "from": "READY",
-        "to": "NEEDS_CLARIFICATION",
-        "reason": "MODEL_RETURNED_BLOCKING_AI_QUESTION_WITH_READY_LABEL",
-    }
+    result["live_packet_repair"] = {"applied": True, "from": "READY", "to": "NEEDS_CLARIFICATION", "reason": "MODEL_RETURNED_BLOCKING_AI_QUESTION_WITH_READY_LABEL"}
     return result
 
 
@@ -289,27 +269,33 @@ def _question_terms(text: str) -> set[str]:
     tokens = re.findall(r"[a-z0-9]+", str(text or "").lower())
     stop = {"a", "an", "and", "any", "are", "can", "do", "does", "for", "has", "have", "how", "i", "in", "is", "of", "or", "she", "he", "the", "they", "to", "use", "uses", "what", "whether", "with", "you", "your"}
     aliases = {
-        "walk": "mobility", "walking": "mobility", "walker": "mobility", "wheelchair": "mobility", "cane": "mobility", "stairs": "mobility", "standing": "mobility",
-        "memory": "cognitive", "dementia": "cognitive", "alzheimer": "cognitive",
+        "walk": "mobility", "walking": "mobility", "walker": "mobility", "wheelchair": "mobility", "cane": "mobility", "stairs": "mobility", "standing": "mobility", "transfer": "mobility", "transfers": "mobility",
+        "memory": "cognitive", "dementia": "cognitive", "alzheimer": "cognitive", "cognition": "cognitive",
         "city": "location", "metro": "location", "area": "location", "geography": "location",
         "monthly": "budget", "afford": "budget", "cost": "budget", "price": "budget",
     }
     return {aliases.get(token, token) for token in tokens if token not in stop and len(token) > 2}
 
 
-def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_state: Dict[str, Any]) -> bool:
+def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_state: Dict[str, Any], user_text: str = "") -> bool:
     next_question = str(result.get("next_question") or "").strip()
     if not next_question:
         return False
     current = _question_terms(next_question)
     if not current:
         return False
+    salient = {"mobility", "cognitive", "location", "budget"}
+
+    free_text_terms = _question_terms(user_text)
+    if current & free_text_terms & salient:
+        return True
+
     for entry in _adaptive_answer_summary(questionnaire_state):
         prior = _question_terms(f"{entry.get('question', '')} {entry.get('answer', '')}")
         if not prior:
             continue
         overlap = current & prior
-        if overlap and ("mobility" in overlap or "cognitive" in overlap or "location" in overlap or "budget" in overlap):
+        if overlap & salient:
             return True
         if len(overlap) >= 2 and len(overlap) / max(1, min(len(current), len(prior))) >= 0.5:
             return True
@@ -319,11 +305,7 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
 def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, bool]:
     text = str(user_text or "").lower()
     signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
-    signal_text = " ".join(
-        f"{str(item.get('impactExplanation') or '')} {str(item.get('answer') or '')}"
-        for item in signals
-        if isinstance(item, dict)
-    ).lower()
+    signal_text = " ".join(f"{str(item.get('impactExplanation') or '')} {str(item.get('answer') or '')}" for item in signals if isinstance(item, dict)).lower()
     combined = f"{text} {signal_text}"
 
     explicit_location = any(str(questionnaire_state.get(key) or "").strip() for key in ("locationCity", "city", "referenceLocationValue"))
@@ -334,31 +316,15 @@ def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any
     text_budget = bool(re.search(r"(?:budget|monthly|per month|afford|cost)[^\n]{0,50}\$?\s*\d{3,6}|\$\s*\d{3,6}", combined))
     explicit_no_limit = bool(re.search(r"\b(no budget limit|no monthly limit|do not want to set a budget|don't want to set a budget)\b", combined))
 
-    return {
-        "market_location": explicit_location or text_location,
-        "monthly_affordability": numeric_budget or text_budget or explicit_no_limit,
-    }
+    return {"market_location": explicit_location or text_location, "monthly_affordability": numeric_budget or text_budget or explicit_no_limit}
 
 
 def _has_blocking_question(result: Dict[str, Any]) -> bool:
     statements = result.get("statements") if isinstance(result.get("statements"), list) else []
-    return any(
-        isinstance(statement, dict)
-        and statement.get("status") == "ASKED"
-        and statement.get("importance") in {"MUST", "UNKNOWN"}
-        and str(statement.get("clarification_question") or result.get("next_question") or "").strip()
-        for statement in statements
-    )
+    return any(isinstance(statement, dict) and statement.get("status") == "ASKED" and statement.get("importance") in {"MUST", "UNKNOWN"} and str(statement.get("clarification_question") or result.get("next_question") or "").strip() for statement in statements)
 
 
-def _repair_missing_minimum_dimensions_with_ai(
-    *,
-    result: Dict[str, Any],
-    payload: Dict[str, Any],
-    user_text: str,
-    questionnaire_state: Dict[str, Any],
-    transport: Callable[[Dict[str, Any]], Dict[str, Any]],
-) -> Dict[str, Any]:
+def _repair_missing_minimum_dimensions_with_ai(*, result: Dict[str, Any], payload: Dict[str, Any], user_text: str, questionnaire_state: Dict[str, Any], transport: Callable[[Dict[str, Any]], Dict[str, Any]]) -> Dict[str, Any]:
     status = _minimum_dimension_status(user_text, questionnaire_state)
     missing = [key for key, known in status.items() if not known]
     readiness = str(result.get("decision_readiness") or "").upper()
@@ -370,35 +336,18 @@ def _repair_missing_minimum_dimensions_with_ai(
         "required": True,
         "missing_client_owned_dimensions": missing,
         "prior_packet": result,
-        "instruction": (
-            "The prior packet attempted to finish client-intent readiness while required client-owned dimensions are still missing. "
-            "Do not invent them and do not send them to facility research. Return a corrected compact packet with NEEDS_CLARIFICATION, "
-            "exactly one highest-information AI-authored next_question for one missing dimension, and exactly one ASKED statement carrying that exact question."
-        ),
+        "instruction": "The prior packet attempted to finish client-intent readiness while required client-owned dimensions are still missing. Do not invent them and do not send them to facility research. Return a corrected compact packet with NEEDS_CLARIFICATION, exactly one highest-information AI-authored next_question for one missing dimension, and exactly one ASKED statement carrying that exact question.",
     }
     repaired = transport(repair_payload)
     repaired = _repair_live_readiness_mismatch(repaired)
-    # Do not validate here. The model may have produced a repairable clarification
-    # contract (for example a missing or repeated question). The generic AI
-    # self-repair pass must run before the final Guardian validation.
-    repaired["minimum_dimension_repair"] = {
-        "applied": True,
-        "missing_dimensions": missing,
-        "ai_authored_question": str(repaired.get("next_question") or ""),
-    }
+    repaired["minimum_dimension_repair"] = {"applied": True, "missing_dimensions": missing, "ai_authored_question": str(repaired.get("next_question") or "")}
     return repaired
 
 
-def _repair_clarification_contract_with_ai(
-    *,
-    result: Dict[str, Any],
-    payload: Dict[str, Any],
-    questionnaire_state: Dict[str, Any],
-    transport: Callable[[Dict[str, Any]], Dict[str, Any]],
-) -> Dict[str, Any]:
+def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: Dict[str, Any], user_text: str, questionnaire_state: Dict[str, Any], transport: Callable[[Dict[str, Any]], Dict[str, Any]]) -> Dict[str, Any]:
     readiness = str(result.get("decision_readiness") or "").upper()
     missing_question = readiness == "NEEDS_CLARIFICATION" and not _has_blocking_question(result)
-    repeated_question = readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(result, questionnaire_state)
+    repeated_question = readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(result, questionnaire_state, user_text)
     if not missing_question and not repeated_question:
         return result
 
@@ -406,25 +355,19 @@ def _repair_clarification_contract_with_ai(
     repair_payload["clarification_contract_repair"] = {
         "required": True,
         "prior_packet": result,
+        "original_user_text": user_text,
         "prior_explicit_adaptive_answers": _adaptive_answer_summary(questionnaire_state),
         "failure": "REASKED_ANSWERED_DIMENSION" if repeated_question else "NEEDS_CLARIFICATION_WITHOUT_USABLE_BLOCKING_QUESTION",
-        "instruction": (
-            "Repair the packet without inventing facts. Prior explicit adaptive answers are binding client evidence and must not be asked again in different wording. "
-            "If a different material client-owned unknown remains, return NEEDS_CLARIFICATION with exactly one new highest-information AI-authored question and one matching ASKED statement. "
-            "If no material client-owned clarification remains, return READY. Facility-specific unknowns may remain RESEARCH_REQUIRED and must not block client-intent READY."
-        ),
+        "instruction": "Repair the packet without inventing facts. Explicit statements in original_user_text and prior explicit adaptive answers are binding client evidence and must not be asked again in different wording. If a different material client-owned unknown remains, return NEEDS_CLARIFICATION with exactly one new highest-information AI-authored question and one matching ASKED statement. If no material client-owned clarification remains, return READY. Facility-specific unknowns may remain RESEARCH_REQUIRED and must not block client-intent READY.",
     }
     repaired = transport(repair_payload)
     repaired = _repair_live_readiness_mismatch(repaired)
     if str(repaired.get("decision_readiness") or "").upper() == "NEEDS_CLARIFICATION":
         if not _has_blocking_question(repaired):
             raise RuntimeError("SEMANTIC_AI_REPAIR_CLARIFICATION_WITHOUT_QUESTION")
-        if _question_reasks_answered_dimension(repaired, questionnaire_state):
+        if _question_reasks_answered_dimension(repaired, questionnaire_state, user_text):
             raise RuntimeError("SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION")
-    repaired["clarification_contract_repair"] = {
-        "applied": True,
-        "reason": "REASKED_ANSWERED_DIMENSION" if repeated_question else "MISSING_BLOCKING_QUESTION",
-    }
+    repaired["clarification_contract_repair"] = {"applied": True, "reason": "REASKED_ANSWERED_DIMENSION" if repeated_question else "MISSING_BLOCKING_QUESTION"}
     return repaired
 
 
@@ -436,29 +379,9 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     result = active_transport(payload)
     if transport is None:
         result = _repair_live_readiness_mismatch(result)
-        # First repair malformed/repeated clarification packets from the initial AI pass.
-        result = _repair_clarification_contract_with_ai(
-            result=result,
-            payload=payload,
-            questionnaire_state=questionnaire_state,
-            transport=active_transport,
-        )
-        # Then enforce minimum client-owned dimensions. This repair is AI-authored too.
-        result = _repair_missing_minimum_dimensions_with_ai(
-            result=result,
-            payload=payload,
-            user_text=user_text,
-            questionnaire_state=questionnaire_state,
-            transport=active_transport,
-        )
-        # A minimum-dimension repair can itself need contract repair; give the AI one
-        # governed opportunity before the final validator fails closed.
-        result = _repair_clarification_contract_with_ai(
-            result=result,
-            payload=payload,
-            questionnaire_state=questionnaire_state,
-            transport=active_transport,
-        )
+        result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
+        result = _repair_missing_minimum_dimensions_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
+        result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
         missing = [key for key, known in _minimum_dimension_status(user_text, questionnaire_state).items() if not known]
         readiness = str(result.get("decision_readiness") or "").upper()
         if missing and (readiness == "READY" or (readiness == "NEEDS_CLARIFICATION" and not _has_blocking_question(result))):
