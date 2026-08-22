@@ -27,6 +27,8 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Only client-owned information that is MUST or otherwise decision-critical may block READY and generate the next clarification question.",
     "NICE or CONTEXT ambiguity must remain UNKNOWN/AMBIGUOUS without blocking READY unless the client explicitly elevates it to a requirement.",
     "If material decision-critical information owned by the client is unknown or ambiguous, ASK the client instead of delegating it to facility research.",
+    "The target market/location is a minimum client-owned decision dimension. Absence is UNKNOWN and READY is forbidden until the client has supplied enough location information to select the search market.",
+    "The affordability envelope/budget is a minimum client-owned decision dimension. Absence is UNKNOWN and READY is forbidden until the client has supplied a usable monthly budget or explicitly declined to set one.",
     "Facility-specific facts such as availability, price, unit route distance, meal delivery, dietary safety, current activities, or service capability may remain RESEARCH_REQUIRED after client intent is understood.",
     "decision_readiness means CLIENT-INTENT readiness. READY is allowed when no material client clarification remains, even if downstream facility evidence still requires research.",
     "If domain or facility evidence is missing, request research and consult the Learning Center.",
@@ -68,6 +70,11 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             "field_length_rule": "Keep meaning, implication, clarification_question and research_task concise; usually one sentence each.",
             "question_priority_rule": "Ask only one highest-information unresolved MUST/decision-critical client question. Do not ask NICE/CONTEXT questions merely to improve ranking.",
             "asked_statement_rule": "If any statement has status ASKED, copy the exact next_question into that statement's clarification_question. There may be at most one ASKED statement per turn.",
+            "minimum_readiness_dimensions": {
+                "market_location": "Must be KNOWN from user_text, questionnaire_state, or prior adaptiveSignals before READY. If missing, ask the client.",
+                "monthly_affordability": "Must be KNOWN from user_text, questionnaire_state, or prior adaptiveSignals before READY. A client may explicitly say they have no budget limit or do not want to set one; silence is not a value.",
+                "absence_policy": "Do not treat omitted client-owned information as satisfied, defaulted, inferred, or research-required. Missing minimum dimensions require NEEDS_CLARIFICATION.",
+            },
         },
         "questionnaire_state": questionnaire_state,
         "user_text": user_text,
@@ -227,6 +234,7 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         "no_silent_drop": True,
         "client_intent_ready_allows_downstream_facility_research": True,
         "nice_context_unknowns_do_not_block_ready": True,
+        "minimum_client_dimensions_required": ["market_location", "monthly_affordability"],
         "rules_applied": SEMANTIC_AI_SYSTEM_RULES,
     }
     return result
