@@ -88,7 +88,7 @@ test('homepage starter goes to governed AI and never renders legacy family-count
   await page.getByRole('button', { name: 'my mother', exact: true }).click();
   await page.getByRole('button', { name: '80–84', exact: true }).click();
   await page.getByRole('button', { name: 'fully independent', exact: true }).click();
-  await page.getByRole('button', { name: /Next/ }).click();
+  await page.getByRole('button', { name: 'Next →', exact: true }).click();
   await page.getByRole('button', { name: 'no memory concerns', exact: true }).click();
 
   await expect(page).toHaveURL(/\/adaptive-interview/);
