@@ -328,7 +328,7 @@ def _repair_missing_minimum_dimensions_with_ai(*, result: Dict[str, Any], payloa
     status = _minimum_dimension_status(user_text, questionnaire_state)
     missing = [key for key, known in status.items() if not known]
     readiness = str(result.get("decision_readiness") or "").upper()
-    if not missing or _has_blocking_question(result) or readiness not in {"READY", "NEEDS_RESEARCH"}:
+    if not missing or _has_blocking_question(result) or readiness not in {"READY", "NEEDS_RESEARCH", "NEEDS_CLARIFICATION"}:
         return result
     repair_payload = dict(payload)
     repair_payload["readiness_repair"] = {
@@ -343,7 +343,7 @@ def _repair_missing_minimum_dimensions_with_ai(*, result: Dict[str, Any], payloa
     return repaired
 
 
-def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: Dict[str, Any], user_text: str, questionnaire_state: Dict[str, Any], transport: Callable[[Dict[str, Any]], Dict[str, Any]]) -> Dict[str, Any]:
+def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: Dict[str, Any], user_text: str, questionnaire_state: Dict[str, Any], transport: Callable[[Dict[str, Any]], Dict[str, Any]], strict: bool = True) -> Dict[str, Any]:
     readiness = str(result.get("decision_readiness") or "").upper()
     missing_question = readiness == "NEEDS_CLARIFICATION" and not _has_blocking_question(result)
     repeated_question = readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(result, questionnaire_state, user_text)
@@ -361,11 +361,20 @@ def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: D
     repaired = transport(repair_payload)
     repaired = _repair_live_readiness_mismatch(repaired)
     if str(repaired.get("decision_readiness") or "").upper() == "NEEDS_CLARIFICATION":
-        if not _has_blocking_question(repaired):
+        unusable = not _has_blocking_question(repaired)
+        repeated_after_repair = _question_reasks_answered_dimension(repaired, questionnaire_state, user_text)
+        if strict and unusable:
             raise RuntimeError("SEMANTIC_AI_REPAIR_CLARIFICATION_WITHOUT_QUESTION")
-        if _question_reasks_answered_dimension(repaired, questionnaire_state, user_text):
+        if strict and repeated_after_repair:
             raise RuntimeError("SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION")
-    repaired["clarification_contract_repair"] = {"applied": True, "reason": "REASKED_ANSWERED_DIMENSION" if repeated_question else "MISSING_BLOCKING_QUESTION"}
+        if unusable or repeated_after_repair:
+            repaired["clarification_contract_repair"] = {
+                "applied": True,
+                "reason": "FIRST_PASS_REPAIR_DEFERRED_TO_MINIMUM_DIMENSION_GUARD",
+                "strict": False,
+            }
+            return repaired
+    repaired["clarification_contract_repair"] = {"applied": True, "reason": "REASKED_ANSWERED_DIMENSION" if repeated_question else "MISSING_BLOCKING_QUESTION", "strict": strict}
     return repaired
 
 
@@ -377,9 +386,9 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     result = active_transport(payload)
     if transport is None:
         result = _repair_live_readiness_mismatch(result)
-        result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
+        result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=False)
         result = _repair_missing_minimum_dimensions_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
-        result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
+        result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=True)
         missing = [key for key, known in _minimum_dimension_status(user_text, questionnaire_state).items() if not known]
         readiness = str(result.get("decision_readiness") or "").upper()
         if missing and (readiness == "READY" or (readiness == "NEEDS_CLARIFICATION" and not _has_blocking_question(result))):
