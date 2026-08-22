@@ -378,9 +378,9 @@ def _repair_missing_minimum_dimensions_with_ai(
     }
     repaired = transport(repair_payload)
     repaired = _repair_live_readiness_mismatch(repaired)
-    repaired = _validate_result(repaired)
-    if str(repaired.get("decision_readiness") or "").upper() == "READY" or not _has_blocking_question(repaired):
-        raise RuntimeError(f"SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS:{','.join(missing)}")
+    # Do not validate here. The model may have produced a repairable clarification
+    # contract (for example a missing or repeated question). The generic AI
+    # self-repair pass must run before the final Guardian validation.
     repaired["minimum_dimension_repair"] = {
         "applied": True,
         "missing_dimensions": missing,
@@ -436,6 +436,14 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     result = active_transport(payload)
     if transport is None:
         result = _repair_live_readiness_mismatch(result)
+        # First repair malformed/repeated clarification packets from the initial AI pass.
+        result = _repair_clarification_contract_with_ai(
+            result=result,
+            payload=payload,
+            questionnaire_state=questionnaire_state,
+            transport=active_transport,
+        )
+        # Then enforce minimum client-owned dimensions. This repair is AI-authored too.
         result = _repair_missing_minimum_dimensions_with_ai(
             result=result,
             payload=payload,
@@ -443,12 +451,18 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             questionnaire_state=questionnaire_state,
             transport=active_transport,
         )
+        # A minimum-dimension repair can itself need contract repair; give the AI one
+        # governed opportunity before the final validator fails closed.
         result = _repair_clarification_contract_with_ai(
             result=result,
             payload=payload,
             questionnaire_state=questionnaire_state,
             transport=active_transport,
         )
+        missing = [key for key, known in _minimum_dimension_status(user_text, questionnaire_state).items() if not known]
+        readiness = str(result.get("decision_readiness") or "").upper()
+        if missing and (readiness == "READY" or (readiness == "NEEDS_CLARIFICATION" and not _has_blocking_question(result))):
+            raise RuntimeError(f"SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS:{','.join(missing)}")
     result = _validate_result(result)
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
