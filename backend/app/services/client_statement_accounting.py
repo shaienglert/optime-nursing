@@ -26,6 +26,7 @@ KNOWN_CONCEPTS = {
     "OUTINGS": ("outings", "trips", "transportation", "טיולים", "הסעות", "יציאות"),
     "OUTDOOR_ENVIRONMENT": ("garden", "gardens", "gardening", "landscap", "grounds", "גינון", "גינה", "גינות", "מטופח"),
     "MEMORY": ("dementia", "memory", "cognitive", "mentally alert", "דמנציה", "זיכרון", "צלול"),
+    "MEDICAL_SUPPORT": ("medical", "nursing need", "nursing support", "clinical support"),
     "BEREAVEMENT": ("widow", "widowed", "bereavement", "spouse died", "אלמן", "אלמנה", "התאלמן", "התאלמנה"),
     "REHAB": ("rehab", "rehabilitation", "physical therapy", "occupational therapy", "שיקום", "פיזיותרפ"),
     "BUDGET": ("budget", "price", "cost", "$", "תקציב", "מחיר", "עלות"),
@@ -42,8 +43,9 @@ def split_user_statements(text: str) -> List[str]:
     raw = str(text or "").strip()
     if not raw:
         return []
-    parts = re.split(r"(?:[\n;.!?]+|\s*,\s*|\s+and\s+|\s+but\s+|\s+also\s+|\s+אבל\s+|\s+וגם\s+)", raw, flags=re.IGNORECASE)
-    return [part.strip(" -–—:\t") for part in parts if part.strip(" -–—:\t")]
+    protected = re.sub(r"(?<=\d),(?=\d{3}\b)", "<NUM_COMMA>", raw)
+    parts = re.split(r"(?:[\n;.!?]+|\s*,\s*|\s+and\s+|\s+but\s+|\s+also\s+|\s+אבל\s+|\s+וגם\s+)", protected, flags=re.IGNORECASE)
+    return [part.replace("<NUM_COMMA>", ",").strip(" -–—:\t") for part in parts if part.strip(" -–—:\t")]
 
 
 def concepts_for_statement(statement: str) -> List[str]:
