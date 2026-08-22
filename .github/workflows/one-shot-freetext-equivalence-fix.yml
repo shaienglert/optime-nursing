@@ -1,0 +1,197 @@
+name: One-shot free-text equivalence fix
+
+on:
+  push:
+    branches: [fix/nursing-free-text-equivalence]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/nursing-free-text-equivalence
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply guarded parser fixes and regression tests
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # 1) Make legacy free-text need extraction negation-safe and token-safe.
+          p = Path('backend/app/services/patient_decision_engine.py')
+          s = p.read_text()
+          if 'import os\n' in s and 'import re\n' not in s:
+              s = s.replace('import os\n', 'import os\nimport re\n', 1)
+          start = s.index('def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[str, Any]:')
+          end = s.index('\ndef build_patient_needs_profile(', start)
+          replacement = r'''def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[str, Any]:
+              normalized = _normalize(text)
+              extraction_meta = {
+                  "text": text,
+                  "recognized_tokens": [],
+                  "unrecognized_segments": [],
+              }
+
+              def present(token: str) -> bool:
+                  token = token.lower()
+                  if token in {"pt", "ot"}:
+                      return re.search(rf"\b{re.escape(token)}\b", normalized) is not None
+                  return token in normalized
+
+              explicit_independence = any(phrase in normalized for phrase in (
+                  "fully independent", "completely independent", "independent with bathing",
+                  "independent with dressing", "independent with toileting", "independent with transfers",
+              ))
+              no_adl_support = explicit_independence or any(phrase in normalized for phrase in (
+                  "no adl support", "no help with daily activities", "does not need help with daily activities",
+                  "doesn't need help with daily activities", "no personal care support",
+              ))
+              no_medication_support = (
+                  (explicit_independence and present("medication"))
+                  or any(phrase in normalized for phrase in (
+                      "no medication support", "no medication assistance", "does not need medication support",
+                      "doesn't need medication support",
+                  ))
+              )
+              no_transfer_support = explicit_independence or any(phrase in normalized for phrase in (
+                  "no mobility limitation", "no mobility limitations", "walks independently",
+                  "no transfer assistance", "does not need transfer assistance",
+              ))
+              no_memory_support = any(phrase in normalized for phrase in (
+                  "no dementia", "without dementia", "mentally alert", "cognitively intact",
+                  "no memory concerns", "no memory concern", "does not need cognitive support",
+                  "doesn't need cognitive support", "no cognitive support",
+              ))
+              no_clinical_support = any(phrase in normalized for phrase in (
+                  "no special medical or nursing needs", "no medical or nursing needs",
+                  "does not need nursing support", "doesn't need nursing support",
+              ))
+
+              keyword_rules = [
+                  (["stroke", "neurolog"], ("post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")),
+                  (["24/7 nursing", "24x7 nursing", "round the clock nursing", "skilled nursing"], ("nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "natural_language", 0.98, "24/7 nursing required")),
+                  (["physical therapy", "pt"], ("pt", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Physical therapy support")),
+                  (["occupational therapy", "ot"], ("ot", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Occupational therapy support")),
+                  (["speech therapy", "speech"], ("speech_therapy", "HIGH", "YES", ["YES", "UNKNOWN"], "SERVICE", "natural_language", 0.9, "Speech therapy support")),
+                  (["transfer", "mobility", "lift"], ("transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.9, "Transfer assistance support")),
+                  (["bathing", "dressing", "adl"], ("adl_support", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.9, "ADL support")),
+                  (["medication"], ("medication_support", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.92, "Medication management support")),
+                  (["dementia", "alzheimer", "memory care"], ("memory_care", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Memory care capability")),
+                  (["no dementia", "mentally alert", "no memory concerns", "no cognitive support"], ("memory_care", "PREFERENCE", "NO", ["NO", "UNKNOWN"], "PROGRAM", "natural_language", 0.85, "No dementia-focused unit specifically required")),
+              ]
+
+              suppressed_positive = {
+                  "adl_support": no_adl_support,
+                  "medication_support": no_medication_support,
+                  "transfer_assistance": no_transfer_support,
+                  "memory_care": no_memory_support,
+                  "nursing_24_7": no_clinical_support,
+                  "skilled_nursing_capabilities": no_clinical_support,
+              }
+
+              for keywords, need_tuple in keyword_rules:
+                  parameter_id, _, desired_value, *_ = need_tuple
+                  if desired_value == "YES" and suppressed_positive.get(parameter_id, False):
+                      continue
+                  if any(present(keyword) for keyword in keywords):
+                      _add_need(needs_by_id, *need_tuple)
+                      if parameter_id == "nursing_24_7" and not no_clinical_support:
+                          _add_need(
+                              needs_by_id,
+                              "skilled_nursing_capabilities",
+                              "REQUIRED",
+                              "YES",
+                              ["YES"],
+                              "FACILITY",
+                              "natural_language",
+                              0.95,
+                              "Skilled nursing capability required",
+                          )
+                      extraction_meta["recognized_tokens"].append(keywords[0])
+
+              location_city = None
+              for city in ["north las vegas", "las vegas", "henderson", "miami", "hialeah", "doral", "aventura", "homestead", "coral gables", "north miami"]:
+                  if city in normalized:
+                      location_city = city.upper()
+                      extraction_meta["recognized_tokens"].append(city)
+                      break
+
+              return {
+                  "extraction": extraction_meta,
+                  "location_city": location_city,
+              }
+          '''
+          replacement = '\n'.join(line[12:] if line.startswith('            ') else line for line in replacement.splitlines())
+          s = s[:start] + replacement + s[end:]
+          p.write_text(s)
+
+          # 2) Living-strategy rules must not invert explicit independence/negation.
+          p = Path('backend/app/services/living_strategy_runtime.py')
+          s = p.read_text()
+          old = '''    no_dementia = _contains(query, "no dementia", "without dementia", "mentally alert", "cognitively intact") or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia"}\n'''
+          new = '''    no_dementia = _contains(query, "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern", "does not need cognitive support", "doesn't need cognitive support", "no cognitive support") or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}\n'''
+          if old not in s: raise SystemExit('living strategy no_dementia anchor missing')
+          s = s.replace(old, new, 1)
+          old = '''    adl = _contains(query, "bathing", "dressing", "shower", "toileting", "adl", "personal care") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance")\n    medication = _contains(query, "medication", "medications", "medicine")\n'''
+          new = '''    explicit_independence = _contains(query, "fully independent", "completely independent", "independent with bathing", "independent with dressing", "independent with toileting", "independent with transfers") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "fully independent", "independent")\n    no_adl_support = explicit_independence or _contains(query, "no adl support", "no help with daily activities", "does not need help with daily activities", "doesn't need help with daily activities", "no personal care support")\n    no_medication_support = (explicit_independence and _contains(query, "medication", "medications", "medicine")) or _contains(query, "no medication support", "no medication assistance", "does not need medication support", "doesn't need medication support")\n    adl = (not no_adl_support) and (_contains(query, "bathing", "dressing", "shower", "toileting", "adl", "personal care") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance"))\n    medication = (not no_medication_support) and _contains(query, "medication", "medications", "medicine")\n'''
+          if old not in s: raise SystemExit('living strategy ADL anchor missing')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          # 3) Preserve commas inside numeric values and recognize explicit medical context.
+          p = Path('backend/app/services/client_statement_accounting.py')
+          s = p.read_text()
+          anchor = '    "MEMORY": ("dementia", "memory", "cognitive", "mentally alert", "דמנציה", "זיכרון", "צלול"),\n'
+          if anchor not in s: raise SystemExit('statement concept anchor missing')
+          s = s.replace(anchor, anchor + '    "MEDICAL_SUPPORT": ("medical", "nursing need", "nursing support", "clinical support"),\n', 1)
+          old = '''    parts = re.split(r"(?:[\\n;.!?]+|\\s*,\\s*|\\s+and\\s+|\\s+but\\s+|\\s+also\\s+|\\s+אבל\\s+|\\s+וגם\\s+)", raw, flags=re.IGNORECASE)\n    return [part.strip(" -–—:\\t") for part in parts if part.strip(" -–—:\\t")]\n'''
+          new = '''    protected = re.sub(r"(?<=\\d),(?=\\d{3}\\b)", "<NUM_COMMA>", raw)\n    parts = re.split(r"(?:[\\n;.!?]+|\\s*,\\s*|\\s+and\\s+|\\s+but\\s+|\\s+also\\s+|\\s+אבל\\s+|\\s+וגם\\s+)", protected, flags=re.IGNORECASE)\n    return [part.replace("<NUM_COMMA>", ",").strip(" -–—:\\t") for part in parts if part.strip(" -–—:\\t")]\n'''
+          if old not in s: raise SystemExit('statement splitter anchor missing')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          # 4) Regression test exact live-browser persona.
+          t = Path('backend/tests/test_free_text_structured_equivalence.py')
+          t.write_text(r'''from app.services.patient_decision_engine import build_patient_needs_profile
+          from app.services.living_strategy_runtime import build_living_strategy_context
+          from app.services.client_statement_accounting import split_user_statements
+
+          CLIENT_TEXT = "My mother is 82 and is looking for senior living in Las Vegas. She is fully independent with bathing, dressing, toileting, transfers, medications, decision-making and memory. She has no memory concerns, does not need cognitive support, has no mobility limitation, and has no special medical or nursing needs. Her total monthly budget is up to $8,000."
+
+          def test_independence_negations_do_not_become_positive_care_needs():
+              profile = build_patient_needs_profile({}, CLIENT_TEXT)
+              needs = {row["parameter_id"]: row for row in profile["needs"]}
+              for forbidden in ("adl_support", "medication_support", "transfer_assistance", "ot", "memory_care"):
+                  assert not (forbidden in needs and needs[forbidden].get("desired_value") == "YES"), (forbidden, needs.get(forbidden))
+              assert profile["location_city"] == "LAS VEGAS"
+
+          def test_living_strategy_respects_explicit_independence_and_memory_negation():
+              strategy = build_living_strategy_context({}, CLIENT_TEXT)
+              assert strategy["signals"]["adl_support_needed"] is False
+              assert strategy["signals"]["medication_support_needed"] is False
+              assert strategy["signals"]["no_dementia"] is True
+
+          def test_currency_thousands_separator_is_not_split_into_fake_statement():
+              statements = split_user_statements(CLIENT_TEXT)
+              assert any("$8,000" in statement for statement in statements)
+              assert "000" not in statements
+          '''.replace('\n          ', '\n').lstrip())
+
+          # Remove this one-shot workflow before committing the actual fix.
+          Path('.github/workflows/one-shot-freetext-equivalence-fix.yml').unlink()
+          PY
+          python -m pytest -q backend/tests/test_free_text_structured_equivalence.py
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "fix(nursing): preserve free-text negation semantics"
+          git push origin HEAD:fix/nursing-free-text-equivalence
