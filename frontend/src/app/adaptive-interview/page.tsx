@@ -36,7 +36,10 @@ type AnswerHistoryEntry = {
 };
 
 const HISTORY_STORAGE_KEY = "optime-nursing-decision-interview-history-v1";
-const UI_REQUEST_TIMEOUT_MS = 30000;
+// Render Free can need well over a minute to wake from hibernation. Production must
+// keep the first governed request alive long enough to receive the real response;
+// local/CI keeps the shorter timeout so stalled-backend regressions remain fast.
+const UI_REQUEST_TIMEOUT_MS = process.env.NODE_ENV === "production" ? 90000 : 30000;
 
 function cloneState(state: QuestionnaireState): QuestionnaireState {
   return JSON.parse(JSON.stringify(state)) as QuestionnaireState;
