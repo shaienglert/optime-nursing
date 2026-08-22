@@ -26,6 +26,7 @@ jobs:
           git fetch origin fix/nursing-free-text-equivalence
           git checkout -B fix/nursing-free-text-equivalence origin/fix/nursing-free-text-equivalence
           if [ -f scripts/apply_freetext_equivalence_fix.py ]; then
+            python -m pip install -q pytest
             python scripts/apply_freetext_equivalence_fix.py
             python -m pytest -q backend/tests/test_free_text_structured_equivalence.py
             rm -f .github/workflows/one-shot-freetext-equivalence-fix.yml
