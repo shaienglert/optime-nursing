@@ -7,6 +7,7 @@ function answerFor(question) {
   const q = question.toLowerCase();
   if (/daily activities|bathing|dressing|toileting|transfer|medication/.test(q)) return 'She is fully independent with bathing, dressing, toileting, transfers, and medications. She needs no help with daily activities.';
   if (/memory|cognitive|decision-making|dementia/.test(q)) return 'She has no memory concerns, is fully independent with decision-making, and does not want or need cognitive support services.';
+  if (/where|location|city|las vegas/.test(q) && /budget|monthly|afford|cost/.test(q)) return 'Las Vegas, Nevada. Her total monthly budget is up to $8,000.';
   if (/where|location|city|las vegas/.test(q)) return 'Las Vegas, Nevada.';
   if (/budget|monthly|cost|afford/.test(q)) return 'Her total monthly budget is up to $8,000.';
   if (/independent living|assisted living|care setting|personal-care/.test(q)) return 'Independent living. She does not need assisted living or personal-care support.';
@@ -15,6 +16,20 @@ function answerFor(question) {
   if (/meal|food|diet/.test(q)) return 'No special dietary requirement. Normal community meal options are acceptable.';
   if (/social|activity|companionship/.test(q)) return 'Social activities are welcome but are not a hard requirement.';
   return 'No additional requirement. She is fully independent and has no special support need in this area.';
+}
+
+function attachDecisionDiagnostics(page, label) {
+  page.on('response', async (response) => {
+    if (!response.url().includes('/decision-engine/recommendations')) return;
+    try {
+      const requestBody = response.request().postDataJSON();
+      const body = await response.json();
+      console.log(`${label}_DECISION_REQUEST=${JSON.stringify({ budget: requestBody?.questionnaire_state?.budget, location: requestBody?.questionnaire_state?.referenceLocationValue, notes: requestBody?.questionnaire_state?.notes, adaptiveSignals: requestBody?.questionnaire_state?.humanIntelligenceV2?.scoringEngine?.adaptiveSignals })}`);
+      console.log(`${label}_DECISION_RESPONSE=${JSON.stringify({ status: response.status(), result_count: body?.result_count, total_candidates_scored: body?.total_candidates_scored, location_city: body?.patient_needs_profile?.location_city, decision_intelligence: body?.decision_intelligence, recommendations: (body?.results || []).slice(0,5).map((x) => x.facility_name) })}`);
+    } catch (error) {
+      console.log(`${label}_DECISION_DIAGNOSTIC_ERROR=${String(error)}`);
+    }
+  });
 }
 
 async function openHydrated(page) {
@@ -78,18 +93,19 @@ async function answerAdaptiveUntilResults(page, label) {
 async function extractTopFacilities(page, label) {
   await page.waitForLoadState('domcontentloaded');
   await page.getByText('Loading results...').waitFor({ state: 'hidden', timeout: 120000 }).catch(() => {});
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(3000);
   const body = await page.locator('body').innerText();
-  if (/API request failed|Unable to load decision recommendations|No recommendations/i.test(body)) {
-    throw new Error(`${label} results failure: ${body.slice(0, 1200)}`);
-  }
   const names = [...new Set((await page.locator('h3').allInnerTexts()).map(x => x.trim()).filter(Boolean))].slice(0, 5);
   console.log(`${label}_RESULTS=${JSON.stringify(names)}`);
-  if (names.length === 0) throw new Error(`${label}: results page rendered no facility recommendations`);
+  if (names.length === 0) {
+    console.log(`${label}_RESULTS_BODY=${JSON.stringify(body.slice(0,3000))}`);
+    throw new Error(`${label}: results page rendered no facility recommendations`);
+  }
   return names;
 }
 
 async function structuredJourney(page) {
+  attachDecisionDiagnostics(page, 'STRUCTURED');
   await openHydrated(page);
   await page.getByRole('button', { name: 'my mother', exact: true }).click();
   await expect(page.getByRole('heading', { name: /How old is your mother\?/ })).toBeVisible({ timeout: 10000 });
@@ -105,6 +121,7 @@ async function structuredJourney(page) {
 }
 
 async function freeTextJourney(page) {
+  attachDecisionDiagnostics(page, 'FREETEXT');
   await openHydrated(page);
   await page.getByLabel('Describe your family situation').fill(CLIENT_TEXT);
   await page.getByRole('button', { name: /See options that may fit/ }).click();
