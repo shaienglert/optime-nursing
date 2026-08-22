@@ -240,11 +240,37 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+def _repair_live_readiness_mismatch(result: Dict[str, Any]) -> Dict[str, Any]:
+    if str(result.get("decision_readiness") or "").upper() != "READY":
+        return result
+    statements = result.get("statements") if isinstance(result.get("statements"), list) else []
+    blocking = [
+        statement for statement in statements
+        if isinstance(statement, dict)
+        and statement.get("status") == "ASKED"
+        and statement.get("importance") in {"MUST", "UNKNOWN"}
+        and str(statement.get("clarification_question") or result.get("next_question") or "").strip()
+    ]
+    if len(blocking) != 1:
+        return result
+    result = dict(result)
+    result["decision_readiness"] = "NEEDS_CLARIFICATION"
+    result["live_packet_repair"] = {
+        "applied": True,
+        "from": "READY",
+        "to": "NEEDS_CLARIFICATION",
+        "reason": "MODEL_RETURNED_BLOCKING_AI_QUESTION_WITH_READY_LABEL",
+    }
+    return result
+
+
 def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Optional[Dict[str, Any]] = None, transport: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None) -> Dict[str, Any]:
     questionnaire_state = questionnaire_state or {}
     learning_advice = build_learning_center_advice(user_text=user_text)
     payload = _build_prompt(user_text, questionnaire_state, learning_advice)
     result = (transport or _default_transport)(payload)
+    if transport is None:
+        result = _repair_live_readiness_mismatch(result)
     result = _validate_result(result)
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
