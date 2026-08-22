@@ -67,6 +67,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             "statement_rule": "Every meaningful user/questionnaire statement must be accounted for exactly once; semantically linked fragments may be grouped, but nothing material may be dropped.",
             "field_length_rule": "Keep meaning, implication, clarification_question and research_task concise; usually one sentence each.",
             "question_priority_rule": "Ask only one highest-information unresolved MUST/decision-critical client question. Do not ask NICE/CONTEXT questions merely to improve ranking.",
+            "asked_statement_rule": "If any statement has status ASKED, copy the exact next_question into that statement's clarification_question. There may be at most one ASKED statement per turn.",
         },
         "questionnaire_state": questionnaire_state,
         "user_text": user_text,
@@ -155,6 +156,22 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
     allowed_status = {"USED", "ASKED", "RESEARCH_REQUIRED", "NOT_DECISION_RELEVANT"}
     allowed_importance = {"MUST", "NICE", "CONTEXT", "UNKNOWN"}
     allowed_knowledge = {"KNOWN", "UNKNOWN", "AMBIGUOUS"}
+
+    asked_without_question = [
+        statement for statement in statements
+        if isinstance(statement, dict)
+        and statement.get("status") == "ASKED"
+        and not str(statement.get("clarification_question") or "").strip()
+    ]
+    next_question = str(result.get("next_question") or "").strip()
+    asked_statements = [statement for statement in statements if isinstance(statement, dict) and statement.get("status") == "ASKED"]
+    if len(asked_without_question) == 1 and len(asked_statements) == 1 and next_question:
+        asked_without_question[0]["clarification_question"] = next_question
+        result["question_trace_normalization"] = {
+            "applied": True,
+            "reason": "SINGLE_ASKED_STATEMENT_USED_TOP_LEVEL_NEXT_QUESTION",
+        }
+
     for idx, statement in enumerate(statements):
         if not isinstance(statement, dict) or not str(statement.get("raw_text") or "").strip():
             raise RuntimeError(f"SEMANTIC_AI_INVALID_STATEMENT:{idx}")
@@ -169,9 +186,6 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         if statement.get("status") == "RESEARCH_REQUIRED" and not str(statement.get("research_task") or "").strip():
             raise RuntimeError(f"SEMANTIC_AI_RESEARCH_WITHOUT_TASK:{idx}")
 
-    # Guardian policy: the model may propose a question, but NICE/CONTEXT ambiguity
-    # is not allowed to block recommendation readiness. Preserve the ambiguity and
-    # remove the blocking question rather than inventing an answer.
     nonblocking_asked = [
         s for s in statements
         if s.get("status") == "ASKED" and s.get("importance") in {"NICE", "CONTEXT"}
