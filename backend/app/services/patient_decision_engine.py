@@ -5,6 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from functools import cmp_to_key
 import os
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.services.facility_parameter_service import (
@@ -268,13 +269,35 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedIte
 
 def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[str, Any]:
     normalized = _normalize(text)
-    extraction_meta = {
-        "text": text,
-        "recognized_tokens": [],
-        "unrecognized_segments": [],
-    }
+    extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
 
-    has_explicit_no_dementia = any(token in normalized for token in ["no dementia", "mentally alert"])
+    def present(token: str) -> bool:
+        token = token.lower()
+        if token in {"pt", "ot"}:
+            return re.search(rf"\b{re.escape(token)}\b", normalized) is not None
+        return token in normalized
+
+    explicit_independence = any(phrase in normalized for phrase in (
+        "fully independent", "completely independent", "independent with bathing",
+        "independent with dressing", "independent with toileting", "independent with transfers",
+    ))
+    no_adl_support = explicit_independence or any(phrase in normalized for phrase in (
+        "no adl support", "no help with daily activities", "does not need help with daily activities",
+        "doesn't need help with daily activities", "no personal care support",
+    ))
+    no_medication_support = ((explicit_independence and present("medication")) or any(phrase in normalized for phrase in (
+        "no medication support", "no medication assistance", "does not need medication support", "doesn't need medication support",
+    )))
+    no_transfer_support = explicit_independence or any(phrase in normalized for phrase in (
+        "no mobility limitation", "no mobility limitations", "walks independently", "no transfer assistance", "does not need transfer assistance",
+    ))
+    no_memory_support = any(phrase in normalized for phrase in (
+        "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern",
+        "does not need cognitive support", "doesn't need cognitive support", "no cognitive support",
+    ))
+    no_clinical_support = any(phrase in normalized for phrase in (
+        "no special medical or nursing needs", "no medical or nursing needs", "does not need nursing support", "doesn't need nursing support",
+    ))
 
     keyword_rules = [
         (["stroke", "neurolog"], ("post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")),
@@ -286,40 +309,33 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
         (["bathing", "dressing", "adl"], ("adl_support", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.9, "ADL support")),
         (["medication"], ("medication_support", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.92, "Medication management support")),
         (["dementia", "alzheimer", "memory care"], ("memory_care", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Memory care capability")),
-        (["no dementia", "mentally alert"], ("memory_care", "PREFERENCE", "NO", ["NO", "UNKNOWN"], "PROGRAM", "natural_language", 0.85, "No dementia-focused unit specifically required")),
+        (["no dementia", "mentally alert", "no memory concerns", "no cognitive support"], ("memory_care", "PREFERENCE", "NO", ["NO", "UNKNOWN"], "PROGRAM", "natural_language", 0.85, "No dementia-focused unit specifically required")),
     ]
-
+    suppressed_positive = {
+        "adl_support": no_adl_support,
+        "medication_support": no_medication_support,
+        "transfer_assistance": no_transfer_support,
+        "memory_care": no_memory_support,
+        "nursing_24_7": no_clinical_support,
+    }
     for keywords, need_tuple in keyword_rules:
-        if need_tuple[0] == "memory_care" and need_tuple[2] == "YES" and has_explicit_no_dementia:
+        parameter_id = need_tuple[0]
+        desired_value = need_tuple[2]
+        if desired_value == "YES" and suppressed_positive.get(parameter_id, False):
             continue
-        if any(keyword in normalized for keyword in keywords):
+        if any(present(keyword) for keyword in keywords):
             _add_need(needs_by_id, *need_tuple)
-            if need_tuple[0] == "nursing_24_7":
-                _add_need(
-                    needs_by_id,
-                    "skilled_nursing_capabilities",
-                    "REQUIRED",
-                    "YES",
-                    ["YES"],
-                    "FACILITY",
-                    "natural_language",
-                    0.95,
-                    "Skilled nursing capability required",
-                )
+            if parameter_id == "nursing_24_7" and not no_clinical_support:
+                _add_need(needs_by_id, "skilled_nursing_capabilities", "REQUIRED", "YES", ["YES"], "FACILITY", "natural_language", 0.95, "Skilled nursing capability required")
             extraction_meta["recognized_tokens"].append(keywords[0])
 
     location_city = None
-    for city in ["miami", "hialeah", "doral", "aventura", "homestead", "coral gables", "north miami"]:
+    for city in ["north las vegas", "las vegas", "henderson", "miami", "hialeah", "doral", "aventura", "homestead", "coral gables", "north miami"]:
         if city in normalized:
             location_city = city.upper()
             extraction_meta["recognized_tokens"].append(city)
             break
-
-    return {
-        "extraction": extraction_meta,
-        "location_city": location_city,
-    }
-
+    return {"extraction": extraction_meta, "location_city": location_city}
 
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
     needs_by_id: Dict[str, NeedItem] = {}

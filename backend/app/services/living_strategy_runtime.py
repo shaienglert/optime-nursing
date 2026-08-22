@@ -66,7 +66,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     if _norm(questionnaire_state.get("relationship")) in {"wife", "husband", "spouse"}:
         couple = True
 
-    no_dementia = _contains(query, "no dementia", "without dementia", "mentally alert", "cognitively intact") or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia"}
+    no_dementia = _contains(query, "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern", "does not need cognitive support", "doesn't need cognitive support", "no cognitive support") or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
 
     surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")
     spine_or_back = _contains(query, "spine", "spinal", "back surgery", "back operation")
@@ -76,8 +76,11 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     if duration is not None and duration <= 6:
         expected_recovery = True
 
-    adl = _contains(query, "bathing", "dressing", "shower", "toileting", "adl", "personal care") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance")
-    medication = _contains(query, "medication", "medications", "medicine")
+    explicit_independence = _contains(query, "fully independent", "completely independent", "independent with bathing", "independent with dressing", "independent with toileting", "independent with transfers") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "fully independent", "independent")
+    no_adl_support = explicit_independence or _contains(query, "no adl support", "no help with daily activities", "does not need help with daily activities", "doesn't need help with daily activities", "no personal care support")
+    no_medication_support = (explicit_independence and _contains(query, "medication", "medications", "medicine")) or _contains(query, "no medication support", "no medication assistance", "does not need medication support", "doesn't need medication support")
+    adl = (not no_adl_support) and (_contains(query, "bathing", "dressing", "shower", "toileting", "adl", "personal care") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance"))
+    medication = (not no_medication_support) and _contains(query, "medication", "medications", "medicine")
     high_social = _contains(query, "culture", "cultural", "classes", "activities", "social", "clubs", "lectures", "music", "art", "events")
 
     raw_rehab_need = _norm(transition.get("postHospitalRehabNeed"))
