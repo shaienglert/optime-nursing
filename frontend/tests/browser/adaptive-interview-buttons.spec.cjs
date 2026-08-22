@@ -31,6 +31,16 @@ function profileFor(signals) {
   return { decision_intelligence: { decision_readiness: 'READY', adaptive_questions: [] } };
 }
 
+const emptyDecisionResponse = {
+  patient_needs_profile: {
+    needs: [],
+    need_tags: [],
+    priority_parameter_ids: [],
+  },
+  results: [],
+  tie_break_decisions: [],
+};
+
 test('adaptive interview supports Continue, Back, Edit, results review and Start over', async ({ page }) => {
   await page.route('**/api/backend/**', async (route) => {
     const url = route.request().url();
@@ -42,7 +52,7 @@ test('adaptive interview supports Continue, Back, Edit, results review and Start
     if (url.includes('/human-intelligence/adaptive-response')) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
     }
-    return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(emptyDecisionResponse) });
   });
 
   await page.goto('http://127.0.0.1:3000/adaptive-interview');
