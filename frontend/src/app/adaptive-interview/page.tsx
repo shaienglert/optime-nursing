@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
+import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
 
 type AdaptiveQuestion = {
   question_key: string;
@@ -34,12 +35,6 @@ type AnswerHistoryEntry = {
   question: AdaptiveQuestion;
   answer: string;
   stateBefore: QuestionnaireState;
-};
-
-type ExtendedQuestionnaireState = QuestionnaireState & {
-  medicareStatus?: string;
-  moveTiming?: string;
-  entranceFeeTolerance?: string;
 };
 
 const HISTORY_STORAGE_KEY = "optime-nursing-decision-interview-history-v1";
@@ -111,43 +106,8 @@ async function withUiTimeout<T>(promise: Promise<T>): Promise<T> {
   }
 }
 
-function canonicalizeTargetFact(next: ExtendedQuestionnaireState, targetFactKey: string, answer: string) {
-  const normalized = answer.trim().toLowerCase();
-  switch (targetFactKey) {
-    case "community_size_preference":
-      next.humanIntelligenceV2.personalityProfile.communitySizePreference = answer;
-      break;
-    case "social_interaction_need_after_loss":
-      next.humanIntelligenceV2.familyProfile.socialInteractionNeed = answer;
-      break;
-    case "move_participation":
-      next.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove = answer;
-      break;
-    case "rehab_level_needed":
-      if (normalized.includes("only personal") || normalized === "no") {
-        next.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed = "No";
-      } else if (normalized.includes("skilled") || normalized.includes("physical") || normalized.includes("occupational") || normalized === "yes" || normalized === "both") {
-        next.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed = "Required";
-      } else {
-        next.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed = answer;
-      }
-      break;
-    case "medicare_status":
-      next.medicareStatus = answer;
-      break;
-    case "move_timing_vs_rehab":
-      next.moveTiming = answer;
-      break;
-    case "ccrc_entrance_fee_tolerance":
-      next.entranceFeeTolerance = answer;
-      break;
-    default:
-      break;
-  }
-}
-
 function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
-  const next = normalizeInterviewState(state) as ExtendedQuestionnaireState;
+  let next = normalizeInterviewState(state);
   const questionKey = question.question_key;
   const questionText = question.question.trim();
   const targetFactKey = String(question.target_fact_key || "").trim();
@@ -167,7 +127,7 @@ function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuesti
     },
   ];
 
-  if (targetFactKey) canonicalizeTargetFact(next, targetFactKey, answer);
+  if (targetFactKey) next = canonicalizeAdaptiveFact(next, targetFactKey, answer);
 
   if (/(where|location|city|area|market|geograph)/i.test(questionAndDimensions) && answer.toLowerCase() !== "not sure") {
     next.referenceLocationValue = answer;
@@ -175,8 +135,8 @@ function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuesti
     next.locationImportant = next.locationImportant || "Yes";
   }
   const budget = parseMonthlyBudget(`${questionText} ${answer}`);
-  if (targetFactKey === "monthly_budget" || /(budget|monthly|afford|cost)/i.test(questionAndDimensions)) {
-    if (budget !== null) next.budget = budget;
+  if (/(budget|monthly|afford|cost)/i.test(questionAndDimensions) && budget !== null) {
+    next.budget = budget;
   }
 
   next.humanIntelligenceV2.scoringEngine.additionalQuestionAsked = questionText;
