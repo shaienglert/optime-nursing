@@ -17,6 +17,8 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             "distanceFromFamily": "Balanced location",
             "humanIntelligenceV2": {
                 "personalityProfile": {"communitySizePreference": "No preference"},
+                "familyProfile": {"socialInteractionNeed": "Neither"},
+                "transitionRiskProfile": {"attitudeTowardMove": "Cautious but open"},
             },
         }
 
@@ -148,6 +150,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             self.assertIn(required, unknowns)
         self.assertEqual(1, len(human["adaptive_questions"]))
         self.assertTrue(human["adaptive_questions"][0]["question_key"].startswith("semantic_ai_high_information_question:"))
+        self.assertTrue(human["adaptive_questions"][0].get("target_fact_key"))
         self.assertEqual([], result["results"])
         self.assertEqual("BLOCKED_PENDING_AI_INTERVIEW", result["decision_intelligence"]["decision_finality"])
 
