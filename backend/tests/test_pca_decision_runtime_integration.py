@@ -22,6 +22,10 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         load_personal_care_agency_evidence.cache_clear()
 
     def _run_ready(self, state: dict, query: str, limit: int) -> dict:
+        # PCA tests start after interview completion; resolve any rank-sensitive
+        # environment preference explicitly instead of bypassing the Guardian.
+        hi = state.setdefault("humanIntelligenceV2", {})
+        hi.setdefault("personalityProfile", {}).setdefault("communitySizePreference", "No preference")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
         with patch.dict(
             os.environ,
