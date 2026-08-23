@@ -136,3 +136,63 @@ def test_golden_skilled_nursing_client_does_not_surface_residential_only_setting
     ]
     assert all((row.get("care_setting_fit") or {}).get("status") == "PRIMARY_FIT" for row in rows)
     assert all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in rows)
+
+
+def test_golden_90yo_recent_widow_social_music_case_blocks_then_ranks_after_preference_resolution():
+    query = (
+        "My mother is 90. Her husband died two months ago and she does not want to remain alone at home. "
+        "She needs help with showering, dressing and medication management, but otherwise functions independently. "
+        "She loves classical music and being around people. We are looking for an appropriate place in the Las Vegas Valley. "
+        "Her monthly budget is $8,000. She has no dementia or memory concerns."
+    )
+    base = {
+        "relationship": "My mother",
+        "ageGroup": "90+",
+        "assistanceLevel": "Needs assistance with bathing and dressing",
+        "memoryStatus": "No",
+        "budget": 8000,
+        "locationCity": "Las Vegas",
+    }
+    question = "Would she prefer a larger active community with many people and activities, a smaller intimate setting, or does she have no preference?"
+    ai_answers = iter([
+        {"decision_readiness": "READY", "next_question": None, "statements": []},
+        {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []},
+    ])
+    with patch.dict(
+        os.environ,
+        {"OPTIME_CANONICAL_MARKET": "las-vegas", "OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"},
+        clear=False,
+    ), patch(
+        "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
+        side_effect=lambda **kwargs: next(ai_answers),
+    ):
+        refresh_runtime_cache("golden_90yo_widow_initial")
+        blocked = run_patient_decision_engine(base, query, limit=5)
+    human = blocked["decision_intelligence"]["human_intelligence"]
+    assert blocked["result_count"] == 0
+    assert blocked["results"] == []
+    assert blocked["decision_intelligence"]["recommendation_execution_allowed"] is False
+    assert human["decision_readiness"] == "NEEDS_CLARIFICATION"
+    assert human["readiness_guardian"]["veto_applied"] is True
+    assert human["adaptive_questions"][0]["question"] == question
+
+    variants = {}
+    for preference in ("Large community", "Small community", "No preference"):
+        state = dict(base)
+        state["humanIntelligenceV2"] = {
+            "personalityProfile": {"communitySizePreference": preference},
+            "familyProfile": {"socialInteractionNeed": "Very important"},
+            "transitionRiskProfile": {"attitudeTowardMove": "Wants to move; does not want to remain alone"},
+            "scoringEngine": {"adaptiveSignals": []},
+        }
+        result = _run_ready(state, query, limit=5)
+        rows = result.get("results") or []
+        assert len(rows) == 5, result
+        assert all(row.get("canonical_type") == "ASSISTED_LIVING_RFG" for row in rows)
+        assert all((row.get("care_setting_fit") or {}).get("status") == "PRIMARY_FIT" for row in rows)
+        assert all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in rows)
+        variants[preference] = [row.get("facility_name") for row in rows]
+
+    assert variants["Large community"] != variants["Small community"]
+    print("GOLDEN_90YO_WIDOW_INITIAL_QUESTION=", question)
+    print("GOLDEN_90YO_WIDOW_TOP5_VARIANTS=", variants)
