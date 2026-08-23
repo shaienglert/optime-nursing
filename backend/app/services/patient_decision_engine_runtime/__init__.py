@@ -163,22 +163,52 @@ def _row_modalities(row: Dict[str, Any]) -> set[str]:
 
 
 def _strategy_universe_status(rows: List[Dict[str, Any]], strategy: Dict[str, Any]) -> Dict[str, Any]:
-    strategy_ids = {str(item.get("strategy_id") or "") for item in strategy.get("strategy_candidates") or [] if int(item.get("rank_hint") or 99) <= 2}
+    leading = [
+        item for item in (strategy.get("strategy_candidates") or [])
+        if int(item.get("rank_hint") or 99) <= 2
+    ]
+    strategy_ids = {str(item.get("strategy_id") or "") for item in leading}
+    rank_one_ids = {
+        str(item.get("strategy_id") or "")
+        for item in leading
+        if int(item.get("rank_hint") or 99) == 1
+    }
     types = {str(row.get("canonical_type") or "UNKNOWN").upper() for row in rows}
     modalities = set(types)
     for row in rows:
         modalities.update(_row_modalities(row))
-    needs_il = bool(strategy_ids & {"INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE", "POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING", "LIFE_PLAN_CCRC"})
+
     has_il = "INDEPENDENT_LIVING" in modalities
     has_ccrc = any("CCRC" in value or "LIFE_PLAN" in value for value in modalities)
-    complete = not needs_il or has_il or has_ccrc
+    has_assisted = "ASSISTED_LIVING_RFG" in modalities or "ASSISTED_LIVING" in modalities
+    has_skilled = "SKILLED_NURSING" in modalities
+    has_primary_fit = any(
+        str((row.get("care_setting_fit") or {}).get("status") or "").upper() == "PRIMARY_FIT"
+        for row in rows
+    )
+
+    requirements = {
+        "INDEPENDENT_LIVING": has_il,
+        "INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE": has_il,
+        "POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING": has_il and has_skilled,
+        "ASSISTED_LIVING": has_assisted or has_primary_fit,
+        "MEMORY_CARE": has_primary_fit,
+        "SHORT_STAY_SKILLED_NURSING_REHAB": has_skilled,
+        "LIFE_PLAN_CCRC": has_ccrc,
+        "LIFE_PLAN_CCRC_WITH_MEMORY_CONTINUUM": has_ccrc and has_primary_fit,
+    }
+    evaluated_rank_one = {sid: requirements[sid] for sid in rank_one_ids if sid in requirements}
+    complete = all(evaluated_rank_one.values()) if evaluated_rank_one else has_primary_fit
+    missing_classes = sorted(sid for sid, present in evaluated_rank_one.items() if not present)
+
     return {
         "status": "SUFFICIENT_FOR_LEADING_STRATEGIES" if complete else "INCOMPLETE_FOR_LEADING_STRATEGIES",
         "leading_strategy_ids": sorted(strategy_ids),
+        "rank_one_strategy_ids": sorted(rank_one_ids),
         "canonical_types_present": sorted(types),
         "housing_modalities_present": sorted(modalities),
-        "missing_classes": [item for item, missing in (("INDEPENDENT_LIVING", needs_il and not has_il), ("LIFE_PLAN_CCRC", "LIFE_PLAN_CCRC" in strategy_ids and not has_ccrc)) if missing],
-        "rule": "Do not present a facility ranking as final when the canonical universe cannot represent a leading living strategy.",
+        "missing_classes": missing_classes,
+        "rule": "Do not present a facility ranking as final when the non-rejected canonical universe cannot represent every rank-1 living strategy.",
     }
 
 
@@ -298,13 +328,13 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     rejected = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") == "FAIL")]
     indexed_final = list(enumerate(survivors))
     indexed_final.sort(key=lambda pair: _stable_final_intent_key(pair[1], pair[0]))
-    rows = [row for _, row in indexed_final] + rejected
-    _reassign_rank_metadata(rows)
+    ranked_survivors = [row for _, row in indexed_final]
+    _reassign_rank_metadata(ranked_survivors)
 
-    universe_status = _strategy_universe_status(rows, strategy)
+    universe_status = _strategy_universe_status(ranked_survivors, strategy)
     care_partner_layer = _care_partner_layer(strategy, questionnaire_state, natural_language_query)
-    _attach_facility_care_partner_access(rows, care_partner_layer)
-    selected = rows[: max(0, int(limit or 0))]
+    _attach_facility_care_partner_access(ranked_survivors, care_partner_layer)
+    selected = ranked_survivors[: max(0, int(limit or 0))]
     core["results"] = selected
     core["result_count"] = len(selected)
     core["must_gate_rejected_count"] = len(rejected)
