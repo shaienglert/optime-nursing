@@ -15,6 +15,9 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             "memoryStatus": "No",
             "budget": 6500,
             "distanceFromFamily": "Balanced location",
+            "humanIntelligenceV2": {
+                "personalityProfile": {"communitySizePreference": "No preference"},
+            },
         }
 
     def _query(self) -> str:
