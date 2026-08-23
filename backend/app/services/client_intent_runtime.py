@@ -297,8 +297,17 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     rating_known = isinstance(rating, (int, float))
     reviews_known = isinstance(reviews, int)
 
+    care_setting = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
+    modalities = {_upper(row.get("canonical_type"))}
+    modalities.update(_upper(value) for value in row.get("housing_modalities") or [])
+    if "INDEPENDENT_LIVING" in modalities or "LIFE_PLAN_CCRC" in modalities:
+        setting_order = 0
+    else:
+        setting_order = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INSUFFICIENT_SETTING": 3}.get(_upper(care_setting.get("status")), 1)
+
     return (
         gate_order,
+        setting_order,
         -nice_matches,
         0 if community_fit_known else 1,
         -float(community_fit) if community_fit_known else 0.0,
