@@ -47,6 +47,30 @@ def _question_exists(context: Dict[str, Any], key: str) -> bool:
     return any(str(row.get("question_key") or "") == key for row in context.get("adaptive_questions") or [])
 
 
+def _rank_sensitive_unknowns(base_context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Return only deterministic evidence that an unresolved answer can change ordering.
+
+    Rules are allowed to identify the unresolved decision dimension, but never to choose
+    or emit the user-facing question. Semantic AI remains responsible for wording and
+    sequencing. This Guardian list exists only to veto a premature READY.
+    """
+    unresolved: List[Dict[str, Any]] = []
+    for row in base_context.get("adaptive_questions") or []:
+        if not isinstance(row, dict):
+            continue
+        dimensions = [str(value) for value in row.get("decision_dimensions") or []]
+        information_gain = str(row.get("information_gain") or "").upper()
+        if information_gain != "HIGH" or "preference_congruence" not in dimensions:
+            continue
+        unresolved.append({
+            "question_key": str(row.get("question_key") or "UNKNOWN"),
+            "decision_dimensions": dimensions,
+            "information_gain": information_gain,
+            "reason": str(row.get("reason") or "Unresolved preference can materially change candidate ordering."),
+        })
+    return unresolved
+
+
 def _governed_context(
     base_context: Dict[str, Any],
     strategy_context: Dict[str, Any],
@@ -54,6 +78,7 @@ def _governed_context(
 ) -> Dict[str, Any]:
     """Convert deterministic runtime output into Guardian evidence, never interview control."""
     accounting = account_user_input(natural_language_query)
+    rank_sensitive_unknowns = _rank_sensitive_unknowns(base_context)
     return {
         "signals": base_context.get("signals") or {},
         "transition_support": base_context.get("transition_support") or {},
@@ -67,6 +92,11 @@ def _governed_context(
             "least_restrictive_safe_care_rule": bool(strategy_context.get("least_restrictive_safe_care_rule")),
             "policy": strategy_context.get("policy"),
             "rule": "These are Guardian constraints and candidate unknowns only. The AI decides whether and how to ask the next question.",
+        },
+        "readiness_guardian": {
+            "rank_sensitive_unknowns": rank_sensitive_unknowns,
+            "ready_veto_active": bool(rank_sensitive_unknowns),
+            "rule": "READY is forbidden while an unresolved HIGH-information client fact is known to be capable of materially changing candidate ordering. Guardian identifies the decision dimension; Semantic AI chooses the next question.",
         },
         "user_statement_accounting": accounting,
         "material_unknown_policy": {
@@ -86,6 +116,33 @@ def _governed_context(
     }
 
 
+def _call_semantic_ai(
+    context: Dict[str, Any],
+    questionnaire_state: Dict[str, Any],
+    natural_language_query: str,
+    *,
+    readiness_veto: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    ai_state = dict(questionnaire_state)
+    guardian_context = {
+        "signals": context.get("signals") or {},
+        "transition_support": context.get("transition_support") or {},
+        "principles": context.get("principles") or [],
+        "living_strategy_guardian": context.get("living_strategy_guardian") or {},
+        "readiness_guardian": context.get("readiness_guardian") or {},
+        "user_statement_accounting": context.get("user_statement_accounting") or {},
+        "material_unknown_policy": context.get("material_unknown_policy") or {},
+        "interview_policy": context.get("interview_policy") or {},
+    }
+    if readiness_veto:
+        guardian_context["readiness_veto"] = readiness_veto
+    ai_state["__optime_guardian_context"] = guardian_context
+    return interpret_client_intent_with_ai(
+        user_text=natural_language_query,
+        questionnaire_state=ai_state,
+    )
+
+
 def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     required = os.getenv("OPTIME_SEMANTIC_AI_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
@@ -101,28 +158,42 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         return context
 
     try:
-        ai_state = dict(questionnaire_state)
-        ai_state["__optime_guardian_context"] = {
-            "signals": context.get("signals") or {},
-            "transition_support": context.get("transition_support") or {},
-            "principles": context.get("principles") or [],
-            "living_strategy_guardian": context.get("living_strategy_guardian") or {},
-            "user_statement_accounting": context.get("user_statement_accounting") or {},
-            "material_unknown_policy": context.get("material_unknown_policy") or {},
-            "interview_policy": context.get("interview_policy") or {},
-        }
-        result = interpret_client_intent_with_ai(
-            user_text=natural_language_query,
-            questionnaire_state=ai_state,
-        )
+        result = _call_semantic_ai(context, questionnaire_state, natural_language_query)
+        readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION").upper()
+
+        rank_sensitive_unknowns = list(((context.get("readiness_guardian") or {}).get("rank_sensitive_unknowns") or []))
+        guardian_veto = readiness == "READY" and bool(rank_sensitive_unknowns)
+        if guardian_veto:
+            veto_packet = {
+                "reason": "AI_READY_REJECTED_RANK_SENSITIVE_UNKNOWN",
+                "unresolved": rank_sensitive_unknowns,
+                "instruction": "Choose exactly one next client question that resolves the highest-impact unresolved decision dimension. Do not return READY until the dimension is resolved or explicitly acknowledged as no preference/not sure.",
+            }
+            second_result = _call_semantic_ai(
+                context,
+                questionnaire_state,
+                natural_language_query,
+                readiness_veto=veto_packet,
+            )
+            second_readiness = str(second_result.get("decision_readiness") or "NEEDS_CLARIFICATION").upper()
+            second_question = str(second_result.get("next_question") or "").strip()
+            if second_readiness == "NEEDS_CLARIFICATION" and second_question:
+                result = second_result
+                readiness = second_readiness
+                context["readiness_guardian"]["veto_applied"] = True
+                context["readiness_guardian"]["veto_resolution"] = "RETURNED_TO_SEMANTIC_AI_FOR_NEXT_BEST_QUESTION"
+            else:
+                result = second_result
+                readiness = "NEEDS_RESEARCH"
+                context["readiness_guardian"]["veto_applied"] = True
+                context["readiness_guardian"]["veto_resolution"] = "AI_DID_NOT_RESOLVE_GUARDIAN_VETO"
+
         context["semantic_ai"] = {
             "enabled": True,
             "required": required,
-            "status": "CONSULTED_AND_VALIDATED",
+            "status": "CONSULTED_AND_VALIDATED" if readiness != "NEEDS_RESEARCH" else ("GUARDIAN_BLOCKED_READY" if guardian_veto else "CONSULTED_AND_VALIDATED"),
             "result": result,
         }
-
-        readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION")
         context["decision_readiness"] = readiness
         context["adaptive_questions"] = []
 
