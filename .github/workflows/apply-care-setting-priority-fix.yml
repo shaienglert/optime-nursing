@@ -1,0 +1,40 @@
+name: Apply Care Setting Priority Fix
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: "!contains(github.event.head_commit.message, 'fix(nursing): preserve care-setting fit in final ranking')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch final ranking and regression test
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('backend/app/services/client_intent_runtime.py')
+          s=p.read_text()
+          anchor='''    reviews_known = isinstance(reviews, int)\n\n    return (\n        gate_order,\n        -nice_matches,'''
+          replacement='''    reviews_known = isinstance(reviews, int)\n\n    care_setting = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}\n    care_status = _upper(care_setting.get("status"))\n    modalities = {_upper(row.get("canonical_type"))}\n    modalities.update(_upper(value) for value in row.get("housing_modalities") or [])\n    if care_status == "POSSIBLE_FIT" and ("INDEPENDENT_LIVING" in modalities or "LIFE_PLAN_CCRC" in modalities):\n        setting_order = 0\n    else:\n        setting_order = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INSUFFICIENT_SETTING": 3}.get(care_status, 1)\n\n    return (\n        gate_order,\n        setting_order,\n        -nice_matches,'''
+          if anchor not in s:
+              raise SystemExit('ranking anchor missing')
+          p.write_text(s.replace(anchor,replacement,1))
+
+          t=Path('backend/tests/test_independent_profile_care_setting_priority.py')
+          t.write_text('''from app.services.client_intent_runtime import intent_rank_key\n\n\ndef _row(name: str, canonical_type: str, modalities=None, care_status="POSSIBLE_FIT"):\n    return {\n        "facility_name": name,\n        "canonical_type": canonical_type,\n        "housing_modalities": modalities or [],\n        "care_setting_fit": {"status": care_status},\n        "client_intent_fit": {\n            "hard_gate": "PASS",\n            "nice_match": [],\n            "nice_fit_scores": {},\n            "public_reputation": {},\n            "relevant_evidence_known_count": 0,\n            "relevant_evidence_unknown_count": 0,\n        },\n        "regulatory_history": {},\n    }\n\n\ndef test_independent_living_ranks_above_small_rfg_for_independent_client():\n    il = _row("Revel Vegas", "INDEPENDENT_LIVING", ["INDEPENDENT_LIVING"], "PRIMARY_FIT")\n    rfg = _row("Small Group Home", "ASSISTED_LIVING_RFG", [], "POSSIBLE_FIT")\n    assert intent_rank_key(il) < intent_rank_key(rfg)\n\n\ndef test_verified_il_modality_promotes_hybrid_rfg_product_fit():\n    hybrid = _row("Las Ventanas at Summerlin", "ASSISTED_LIVING_RFG", ["INDEPENDENT_LIVING", "LIFE_PLAN_CCRC"], "POSSIBLE_FIT")\n    rfg = _row("Small Group Home", "ASSISTED_LIVING_RFG", [], "POSSIBLE_FIT")\n    assert intent_rank_key(hybrid) < intent_rank_key(rfg)\n\n\ndef test_il_modality_does_not_override_insufficient_setting_for_care_needs():\n    unsafe_il = _row("Independent Living Only", "INDEPENDENT_LIVING", ["INDEPENDENT_LIVING"], "INSUFFICIENT_SETTING")\n    assisted = _row("Appropriate Assisted Living", "ASSISTED_LIVING_RFG", [], "PRIMARY_FIT")\n    assert intent_rank_key(assisted) < intent_rank_key(unsafe_il)\n''')
+          PY
+      - name: Run regression test
+        run: |
+          cd backend
+          python -m pytest tests/test_independent_profile_care_setting_priority.py -q
+      - name: Commit fix
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add backend/app/services/client_intent_runtime.py backend/tests/test_independent_profile_care_setting_priority.py
+          git commit -m 'fix(nursing): preserve care-setting fit in final ranking'
+          git push origin HEAD:main
