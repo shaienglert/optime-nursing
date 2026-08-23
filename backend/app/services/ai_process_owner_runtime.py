@@ -162,11 +162,14 @@ def _prompt(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural
     }
 
 
-def _validate(packet: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
-    expected_phase = _phase(result)
+def _validate(packet: Dict[str, Any], result: Dict[str, Any], questionnaire_state: Dict[str, Any]) -> Dict[str, Any]:
+    expected_phase = _phase(result, questionnaire_state)
     phase = str(packet.get("process_phase") or "").upper()
     if phase not in _ALLOWED_PHASES:
         raise RuntimeError(f"AI_PROCESS_OWNER_INVALID_PHASE:{phase}")
+    if phase != expected_phase:
+        raise RuntimeError(f"AI_PROCESS_OWNER_PHASE_MISMATCH:{phase}!={expected_phase}")
+
     action_packet = packet.get("next_best_action") if isinstance(packet.get("next_best_action"), dict) else {}
     action = str(action_packet.get("action") or "").upper()
     if action not in _ALLOWED_ACTIONS:
@@ -183,6 +186,8 @@ def _validate(packet: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
         raise RuntimeError("AI_PROCESS_OWNER_RESEARCH_PHASE_CANNOT_RECOMMEND")
     if expected_phase == "CLARIFICATION" and action != "ASK_CLIENT":
         raise RuntimeError("AI_PROCESS_OWNER_CLARIFICATION_MUST_ASK_CLIENT")
+    if expected_phase == "FOLLOW_UP" and action != "FOLLOW_UP":
+        raise RuntimeError("AI_PROCESS_OWNER_FOLLOW_UP_PHASE_MUST_CONTINUE")
 
     allowed_ids = {str(row.get("canonical_facility_id") or "") for row in result.get("results") or [] if row.get("canonical_facility_id")}
     referenced: set[str] = set()
@@ -223,7 +228,11 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
         return result
 
     try:
-        packet = _validate(_default_transport(_prompt(result, questionnaire_state, natural_language_query)), result)
+        packet = _validate(
+            _default_transport(_prompt(result, questionnaire_state, natural_language_query)),
+            result,
+            questionnaire_state,
+        )
         decision["process_owner"] = {
             "owner": "SEMANTIC_AI_PROCESS_OWNER",
             "status": "ACTIVE",
