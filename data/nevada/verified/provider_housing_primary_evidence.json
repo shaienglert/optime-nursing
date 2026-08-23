@@ -9,14 +9,25 @@
     {
       "record_key": "LAS_VENTANAS_SUMMERLIN",
       "community_name": "Las Ventanas at Summerlin",
-      "aliases": ["Las Ventanas at Summerlin"],
-      "canonical_facility_ids": ["NV-LIC-4000-AGC-31", "NV-LIC-4529-SNF-31"],
+      "aliases": [
+        "Las Ventanas at Summerlin"
+      ],
+      "canonical_facility_ids": [
+        "NV-LIC-4000-AGC-31",
+        "NV-LIC-4529-SNF-31"
+      ],
       "address": "10401 W Charleston Blvd",
       "city": "Las Vegas",
       "state": "NV",
       "zip": "89135",
       "append_as_canonical": false,
-      "housing_modalities": ["INDEPENDENT_LIVING", "LIFE_PLAN_CCRC", "ASSISTED_LIVING", "SKILLED_NURSING", "MEMORY_SUPPORT"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "LIFE_PLAN_CCRC",
+        "ASSISTED_LIVING",
+        "SKILLED_NURSING",
+        "MEMORY_SUPPORT"
+      ],
       "primary_source_url": "https://www.humangood.org/las-ventanas-at-summerlin/senior-living-options/independent-living",
       "evidence": {
         "independent_living_verified": true,
@@ -35,7 +46,9 @@
     {
       "record_key": "REVEL_VEGAS",
       "community_name": "Revel Vegas",
-      "aliases": ["Revel Vegas"],
+      "aliases": [
+        "Revel Vegas"
+      ],
       "address": "4940 S Conquistador St",
       "city": "Las Vegas",
       "state": "NV",
@@ -43,7 +56,9 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-REVEL-VEGAS",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING"
+      ],
       "primary_source_url": "https://revelcommunities.com/communities/vegas/",
       "evidence": {
         "independent_living_verified": true,
@@ -60,13 +75,18 @@
     {
       "record_key": "ATRIA_SEVILLE",
       "community_name": "Atria Seville",
-      "aliases": ["Atria Seville"],
+      "aliases": [
+        "Atria Seville"
+      ],
       "address": "2000 N Rampart Blvd",
       "city": "Las Vegas",
       "state": "NV",
       "zip": "89128",
       "append_as_canonical": false,
-      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ASSISTED_LIVING"
+      ],
       "primary_source_url": "https://www.atriaseniorliving.com/retirement-communities/atria-seville-las-vegas-nv",
       "evidence": {
         "independent_living_verified": true,
@@ -82,13 +102,20 @@
     {
       "record_key": "MORNINGSTAR_CANYONS",
       "community_name": "MorningStar Senior Living at The Canyons",
-      "aliases": ["MorningStar Senior Living at The Canyons", "MorningStar at The Canyons"],
+      "aliases": [
+        "MorningStar Senior Living at The Canyons",
+        "MorningStar at The Canyons"
+      ],
       "address": "490 S Hualapai Way",
       "city": "Las Vegas",
       "state": "NV",
       "zip": "89145",
       "append_as_canonical": false,
-      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING", "MEMORY_CARE"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ASSISTED_LIVING",
+        "MEMORY_CARE"
+      ],
       "primary_source_url": "https://www.morningstarseniorliving.com/communities/senior-living-las-vegas-the-canyons/",
       "evidence": {
         "independent_living_verified": true,
@@ -102,13 +129,20 @@
     {
       "record_key": "THE_GRAND_SOUTHERN_HILLS",
       "community_name": "The Grand at Southern Hills",
-      "aliases": ["The Grand at Southern Hills", "San Martin Senior Living"],
+      "aliases": [
+        "The Grand at Southern Hills",
+        "San Martin Senior Living"
+      ],
       "address": "8374 W Capovilla Ave",
       "city": "Las Vegas",
       "state": "NV",
       "zip": "89113",
       "append_as_canonical": false,
-      "housing_modalities": ["INDEPENDENT_LIVING", "ASSISTED_LIVING", "MEMORY_CARE"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ASSISTED_LIVING",
+        "MEMORY_CARE"
+      ],
       "primary_source_url": "https://stellarliving.com/communities/the-grand-at-southern-hills-senior-assisted-living-las-vegas-nv/",
       "evidence": {
         "independent_living_verified": true,
@@ -125,7 +159,10 @@
     {
       "record_key": "VISTA_PARK_RETIREMENT",
       "community_name": "Vista Park Retirement Community",
-      "aliases": ["Vista Park", "Vista Park Retirement Community"],
+      "aliases": [
+        "Vista Park",
+        "Vista Park Retirement Community"
+      ],
       "address": "4190 W Farm Rd",
       "city": "North Las Vegas",
       "state": "NV",
@@ -133,7 +170,9 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-VISTA-PARK",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING"
+      ],
       "primary_source_url": "https://rlcommunities.com/communities/nevada/vista-park-retirement/",
       "evidence": {
         "independent_living_verified": true,
@@ -150,7 +189,10 @@
     {
       "record_key": "COUNTRY_CLUB_MEADOWS",
       "community_name": "Country Club at The Meadows",
-      "aliases": ["Country Club at The Meadows", "Country Club at the Meadows"],
+      "aliases": [
+        "Country Club at The Meadows",
+        "Country Club at the Meadows"
+      ],
       "address": "300 Promenade Blvd",
       "city": "Las Vegas",
       "state": "NV",
@@ -158,7 +200,10 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-COUNTRY-CLUB-MEADOWS",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ACTIVE_ADULT_55_PLUS_APARTMENTS"
+      ],
       "primary_source_url": "https://www.countryclubatthemeadows.com/",
       "evidence": {
         "independent_living_verified": true,
@@ -172,7 +217,9 @@
     {
       "record_key": "COUNTRY_CLUB_VALLEY_VIEW",
       "community_name": "Country Club at Valley View",
-      "aliases": ["Country Club at Valley View"],
+      "aliases": [
+        "Country Club at Valley View"
+      ],
       "address": "1400 S Valley View Blvd",
       "city": "Las Vegas",
       "state": "NV",
@@ -180,7 +227,10 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-COUNTRY-CLUB-VALLEY-VIEW",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ACTIVE_ADULT_55_PLUS_APARTMENTS"
+      ],
       "primary_source_url": "https://www.countryclubatvalleyview.com/",
       "evidence": {
         "independent_living_verified": true,
@@ -194,7 +244,10 @@
     {
       "record_key": "DESTINATIONS_PEBBLE",
       "community_name": "Destinations Pebble",
-      "aliases": ["Destinations Pebble", "Destinations Pebble 55+ Active Adult Apartment Homes"],
+      "aliases": [
+        "Destinations Pebble",
+        "Destinations Pebble 55+ Active Adult Apartment Homes"
+      ],
       "address": "1450 Pebble Rd",
       "city": "Paradise",
       "state": "NV",
@@ -202,7 +255,10 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-PEBBLE",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ACTIVE_ADULT_55_PLUS_APARTMENTS"
+      ],
       "primary_source_url": "https://destinationspebblenew.prospectportal.com/",
       "evidence": {
         "independent_living_verified": true,
@@ -216,7 +272,9 @@
     {
       "record_key": "DESTINATIONS_PUEBLO",
       "community_name": "Destinations Pueblo",
-      "aliases": ["Destinations Pueblo"],
+      "aliases": [
+        "Destinations Pueblo"
+      ],
       "address": "8600 Scholar Ln",
       "city": "Las Vegas",
       "state": "NV",
@@ -224,7 +282,10 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-PUEBLO",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ACTIVE_ADULT_55_PLUS_APARTMENTS"
+      ],
       "primary_source_url": "https://liveoverture.com/communities/destinations-pueblo/",
       "evidence": {
         "independent_living_verified": true,
@@ -239,7 +300,10 @@
     {
       "record_key": "CAREFREE_WILLOWS",
       "community_name": "Carefree Senior Living at The Willows",
-      "aliases": ["Carefree Senior Living at The Willows", "The Willows"],
+      "aliases": [
+        "Carefree Senior Living at The Willows",
+        "The Willows"
+      ],
       "address": "3250 S Town Center Dr",
       "city": "Las Vegas",
       "state": "NV",
@@ -247,7 +311,10 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-CAREFREE-WILLOWS",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ACTIVE_ADULT_55_PLUS_APARTMENTS"
+      ],
       "primary_source_url": "https://www.carefreeseniors.com/the-willows-summerlin-las-vegas/",
       "evidence": {
         "independent_living_verified": true,
@@ -261,7 +328,10 @@
     {
       "record_key": "ALBUM_UNION_VILLAGE",
       "community_name": "Album Union Village",
-      "aliases": ["Album Union Village", "Album Union Village 55+ Active Adult Apartment Homes"],
+      "aliases": [
+        "Album Union Village",
+        "Album Union Village 55+ Active Adult Apartment Homes"
+      ],
       "address": "1100 Wellness Place",
       "city": "Henderson",
       "state": "NV",
@@ -269,7 +339,10 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-ALBUM-UNION-VILLAGE",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ACTIVE_ADULT_55_PLUS_APARTMENTS"
+      ],
       "primary_source_url": "https://myalbumunionvillagenew.prospectportal.com/contact/",
       "evidence": {
         "independent_living_verified": true,
@@ -283,7 +356,10 @@
     {
       "record_key": "DESTINATIONS_SPRING_VALLEY",
       "community_name": "Destinations Spring Valley",
-      "aliases": ["Destinations Spring Valley", "Destinations Spring Valley 55+ Active Adult Apartment Homes"],
+      "aliases": [
+        "Destinations Spring Valley",
+        "Destinations Spring Valley 55+ Active Adult Apartment Homes"
+      ],
       "address": "3925 S Jones Blvd",
       "city": "Las Vegas",
       "state": "NV",
@@ -291,7 +367,10 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-SPRING-VALLEY",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ACTIVE_ADULT_55_PLUS_APARTMENTS"
+      ],
       "primary_source_url": "https://liveoverture.com/communities/destinations-spring-valley/",
       "evidence": {
         "independent_living_verified": true,
@@ -306,7 +385,9 @@
     {
       "record_key": "DESTINATIONS_ALEXANDER",
       "community_name": "Destinations Alexander",
-      "aliases": ["Destinations Alexander"],
+      "aliases": [
+        "Destinations Alexander"
+      ],
       "address": "3949 W Alexander Rd",
       "city": "North Las Vegas",
       "state": "NV",
@@ -314,7 +395,10 @@
       "append_as_canonical": true,
       "canonical_id": "NV-PROVIDER-IL-DESTINATIONS-ALEXANDER",
       "canonical_type": "INDEPENDENT_LIVING",
-      "housing_modalities": ["INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS_APARTMENTS"],
+      "housing_modalities": [
+        "INDEPENDENT_LIVING",
+        "ACTIVE_ADULT_55_PLUS_APARTMENTS"
+      ],
       "primary_source_url": "https://liveoverture.com/communities/destinations-alexander/",
       "evidence": {
         "independent_living_verified": true,
@@ -327,6 +411,39 @@
         "care_services_verified": "UNKNOWN"
       },
       "evidence_summary": "The primary property site identifies Destinations Alexander at 3949 W Alexander Rd as a 55+ active-adult apartment community with maintenance-free living, social programming, concierge-style services and home-health referrals. A referral is not treated as personal care supplied by the community and does not prove that outside care is permitted without further evidence."
+    },
+    {
+      "record_key": "RED_ROCK_POINTE_RETIREMENT",
+      "community_name": "Red Rock Pointe Retirement Community",
+      "aliases": [
+        "Red Rock Pointe",
+        "Red Rock Pointe Retirement",
+        "Red Rock Pointe Retirement Community"
+      ],
+      "address": "4445 S Grand Canyon Dr",
+      "city": "Las Vegas",
+      "state": "NV",
+      "zip": "89147",
+      "append_as_canonical": true,
+      "canonical_id": "NV-PROVIDER-IL-RED-ROCK-POINTE",
+      "canonical_type": "INDEPENDENT_LIVING",
+      "housing_modalities": [
+        "INDEPENDENT_LIVING"
+      ],
+      "primary_source_url": "https://rlcommunities.com/communities/nevada/red-rock-pointe-retirement/",
+      "evidence": {
+        "independent_living_verified": true,
+        "social_engagement_verified": true,
+        "transportation_verified": true,
+        "dining_verified": true,
+        "housekeeping_verified": true,
+        "outside_care_allowed_verified": true,
+        "month_to_month_verified": true,
+        "emergency_alert_verified": true,
+        "three_meals_daily_verified": true,
+        "no_buy_in_fee_verified": true
+      },
+      "evidence_summary": "Resort Lifestyle Communities identifies Red Rock Pointe at 4445 S Grand Canyon Drive as an all-inclusive independent senior living community with three daily meals, housekeeping, scheduled transportation, daily social programming, emergency alert service, month-to-month rent with no buy-in fee, and the option to contract with third-party in-home healthcare providers if future support is needed."
     }
   ]
 }

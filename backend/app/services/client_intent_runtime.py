@@ -66,8 +66,13 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         nice.append({"key": key, "reason": reason})
 
     city = str(questionnaire_state.get("locationCity") or questionnaire_state.get("city") or "").strip().upper()
-    if "las vegas" in query or city == "LAS VEGAS":
-        add_must("LAS_VEGAS", "The requested market is Las Vegas.", "canonical city/state")
+    las_vegas_requested = "las vegas" in query or city == "LAS VEGAS"
+    city_limits_only = any(token in query for token in ("las vegas city limits", "city limits only", "within las vegas city", "only in las vegas city"))
+    if las_vegas_requested:
+        if city_limits_only:
+            add_must("LAS_VEGAS_CITY_LIMITS", "The client explicitly restricted the search to Las Vegas city limits.", "canonical city/state")
+        else:
+            add_must("LAS_VEGAS", "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.", "canonical Las Vegas Valley market geography")
 
     if household.get("type") == "COUPLE":
         add_must("COUPLE_CORESIDENCE", "The couple wants to live together; a solution that cannot house both partners is not acceptable.", "unit/occupancy policy")
@@ -127,6 +132,15 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     for must in intent.get("must_haves") or []:
         key = str(must.get("key") or "")
         if key == "LAS_VEGAS":
+            las_vegas_valley_cities = {
+                "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
+                "SPRING VALLEY", "ENTERPRISE", "WINCHESTER", "SUNRISE MANOR",
+            }
+            if state == "NV" and city in las_vegas_valley_cities:
+                must_pass.append(key)
+            else:
+                hard_fail.append(key)
+        elif key == "LAS_VEGAS_CITY_LIMITS":
             if state == "NV" and city == "LAS VEGAS":
                 must_pass.append(key)
             else:
@@ -285,11 +299,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     community_fit_known = isinstance(community_fit, (int, float))
 
     history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}
-    disciplinary = _upper(history.get("disciplinary_action"))
-    disciplinary_order = 0 if disciplinary == "N" else (2 if disciplinary == "Y" else 1)
-    counts = history.get("grade_counts") if isinstance(history.get("grade_counts"), dict) else {}
-    latest_grade = _upper(history.get("latest_known_grade"))
-    grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "UNKNOWN": 4}.get(latest_grade, 4)
 
     reputation = fit.get("public_reputation") if isinstance(fit.get("public_reputation"), dict) else {}
     rating = reputation.get("rating")
@@ -305,6 +314,26 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         setting_order = 0
     else:
         setting_order = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INSUFFICIENT_SETTING": 3}.get(care_status, 1)
+
+    # Nevada does not license standalone Independent Living as an RFG. When an
+    # Independent Living product is the care-setting fit being compared, an RFG A/B
+    # grade on a hybrid campus is not positive evidence about its IL product and must
+    # not outrank a standalone IL community merely because the latter has no RFG grade.
+    # Adverse regulatory evidence (disciplinary action or C/D) remains a penalty.
+    independent_capable = care_status in {"PRIMARY_FIT", "POSSIBLE_FIT"} and (
+        "INDEPENDENT_LIVING" in modalities or "LIFE_PLAN_CCRC" in modalities
+    )
+    disciplinary = _upper(history.get("disciplinary_action"))
+    latest_grade = _upper(history.get("latest_known_grade"))
+    raw_counts = history.get("grade_counts") if isinstance(history.get("grade_counts"), dict) else {}
+    if independent_capable:
+        disciplinary_order = 2 if disciplinary == "Y" else 0
+        grade_order = {"C": 2, "D": 3}.get(latest_grade, 0)
+        counts = {"C": int(raw_counts.get("C") or 0), "D": int(raw_counts.get("D") or 0)}
+    else:
+        disciplinary_order = 0 if disciplinary == "N" else (2 if disciplinary == "Y" else 1)
+        counts = raw_counts
+        grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "UNKNOWN": 4}.get(latest_grade, 4)
 
     return (
         gate_order,
