@@ -32,6 +32,11 @@ on:
       - 'backend/tests/test_success_factor_runtime.py'
       - 'backend/tests/test_decision_governance_runtime.py'
       - 'backend/tests/test_decision_agent_bridge.py'
+      - 'backend/tests/test_decision_quality_market_and_regulatory.py'
+      - 'backend/tests/test_decision_quality_strategy_families.py'
+      - 'backend/tests/test_decision_quality_topn_causality.py'
+      - 'backend/tests/test_decision_quality_topn_gates.py'
+      - 'backend/tests/test_golden_topn_decision_quality.py'
       - 'data/nevada/verified/independent_living_primary_evidence.json'
       - 'data/nevada/verified/provider_housing_primary_evidence.json'
       - 'data/nevada/verified/life_plan_primary_evidence.json'
@@ -59,7 +64,7 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Install backend runtime dependencies
         run: python -m pip install -r backend/requirements.txt
-      - name: Run deterministic Nevada runtime tests
+      - name: Run deterministic Nevada runtime and golden decision-quality tests
         run: |
           python -m unittest \
             backend.tests.test_database_runtime \
@@ -72,7 +77,12 @@ jobs:
             backend.tests.test_success_factor_runtime \
             backend.tests.test_decision_governance_runtime \
             backend.tests.test_decision_agent_bridge \
-            backend.tests.test_main_decision_runtime_contract
+            backend.tests.test_main_decision_runtime_contract \
+            backend.tests.test_decision_quality_market_and_regulatory \
+            backend.tests.test_decision_quality_strategy_families \
+            backend.tests.test_decision_quality_topn_causality \
+            backend.tests.test_decision_quality_topn_gates \
+            backend.tests.test_golden_topn_decision_quality
       - name: Verify AI-owned interview gate and READY-only Nevada ranking
         run: |
           python - <<'PY'
@@ -100,8 +110,6 @@ jobs:
               'He is mentally alert, has no dementia, is still mobile, and needs daily help.'
           )
 
-          # Phase 1: the AI owns the interview. A clarification state MUST stop the
-          # recommendation engine before any facility is scored or exposed.
           clarification_question = 'What matters most to him about the social environment in his next home?'
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'NEEDS_CLARIFICATION',
@@ -124,7 +132,6 @@ jobs:
           assert blocked['decision_intelligence']['decision_finality'] == 'BLOCKED_PENDING_AI_INTERVIEW'
           assert blocked['recommendation_audit_trace']['blocked_before_facility_ranking'] is True
 
-          # Phase 2: only an AI+Guardian READY state unlocks facility matching.
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'READY',
               'next_question': None,
@@ -163,7 +170,6 @@ jobs:
                   assert len(row['success_factor_trace']['factors']) == 16, f'{key}: per-facility factor trace incomplete'
               output[key] = {'decision_readiness': 'READY', 'top5': [row.get('facility_name') for row in result['results']]}
 
-          # Explicit preferences are allowed to affect fit only after READY.
           def answered(size):
               state = deepcopy(base)
               state['humanIntelligenceV2'] = {
@@ -184,9 +190,6 @@ jobs:
               'small_top5': [r['facility_name'] for r in small['results']],
           }
 
-          # Strategy rules may identify material unknowns, but they cannot inject
-          # questions into the interview. Those unknowns are supplied to the AI as
-          # Guardian context; the AI chooses the next question.
           couple_state = {
               'relationship': 'Dad',
               'ageGroup': '80+',
