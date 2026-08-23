@@ -14,6 +14,7 @@ type AdaptiveQuestion = {
   information_gain?: string;
   answer_options?: string[];
   policy_reference?: string;
+  target_fact_key?: string;
 };
 
 type HumanDecisionContext = {
@@ -33,6 +34,12 @@ type AnswerHistoryEntry = {
   question: AdaptiveQuestion;
   answer: string;
   stateBefore: QuestionnaireState;
+};
+
+type ExtendedQuestionnaireState = QuestionnaireState & {
+  medicareStatus?: string;
+  moveTiming?: string;
+  entranceFeeTolerance?: string;
 };
 
 const HISTORY_STORAGE_KEY = "optime-nursing-decision-interview-history-v1";
@@ -56,8 +63,6 @@ function normalizeInterviewState(state: QuestionnaireState): QuestionnaireState 
   if (budgetFromNotes !== null) {
     next.budget = budgetFromNotes;
   } else if (next.budget === 7000) {
-    // 7000 was the retired intake form's implicit default, not user evidence.
-    // The AI must ask for affordability rather than treating that legacy value as fact.
     next.budget = 0;
   }
   return next;
@@ -106,12 +111,49 @@ async function withUiTimeout<T>(promise: Promise<T>): Promise<T> {
   }
 }
 
+function canonicalizeTargetFact(next: ExtendedQuestionnaireState, targetFactKey: string, answer: string) {
+  const normalized = answer.trim().toLowerCase();
+  switch (targetFactKey) {
+    case "community_size_preference":
+      next.humanIntelligenceV2.personalityProfile.communitySizePreference = answer;
+      break;
+    case "social_interaction_need_after_loss":
+      next.humanIntelligenceV2.familyProfile.socialInteractionNeed = answer;
+      break;
+    case "move_participation":
+      next.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove = answer;
+      break;
+    case "rehab_level_needed":
+      if (normalized.includes("only personal") || normalized === "no") {
+        next.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed = "No";
+      } else if (normalized.includes("skilled") || normalized.includes("physical") || normalized.includes("occupational") || normalized === "yes" || normalized === "both") {
+        next.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed = "Required";
+      } else {
+        next.humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed = answer;
+      }
+      break;
+    case "medicare_status":
+      next.medicareStatus = answer;
+      break;
+    case "move_timing_vs_rehab":
+      next.moveTiming = answer;
+      break;
+    case "ccrc_entrance_fee_tolerance":
+      next.entranceFeeTolerance = answer;
+      break;
+    default:
+      break;
+  }
+}
+
 function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
-  const next = normalizeInterviewState(state);
+  const next = normalizeInterviewState(state) as ExtendedQuestionnaireState;
   const questionKey = question.question_key;
   const questionText = question.question.trim();
+  const targetFactKey = String(question.target_fact_key || "").trim();
   const questionAndDimensions = `${questionText} ${(question.decision_dimensions || []).join(" ")}`;
   const signals = next.humanIntelligenceV2.scoringEngine.adaptiveSignals || [];
+  const targetFactTrace = targetFactKey ? ` | Target fact: ${targetFactKey}` : "";
 
   next.humanIntelligenceV2.scoringEngine.adaptiveSignals = [
     ...signals.filter((signal) => signal.questionKey !== questionKey),
@@ -120,21 +162,21 @@ function applyAdaptiveAnswer(state: QuestionnaireState, question: AdaptiveQuesti
       answer,
       signalType: "decision-interview",
       weights: { informationGain: question.information_gain === "HIGH" ? 1 : 0 },
-      impactExplanation: `Question: ${questionText} | ${question.reason || "Explicit answer to a governed adaptive AI question."}`,
+      impactExplanation: `Question: ${questionText}${targetFactTrace} | ${question.reason || "Explicit answer to a governed adaptive AI question."}`,
       infoGain: question.information_gain === "HIGH" ? 1 : 0,
     },
   ];
 
-  // Canonical state mirrors explicit answers selected by the AI interview. These are
-  // persistence mappings only; they never choose which question to ask.
+  if (targetFactKey) canonicalizeTargetFact(next, targetFactKey, answer);
+
   if (/(where|location|city|area|market|geograph)/i.test(questionAndDimensions) && answer.toLowerCase() !== "not sure") {
     next.referenceLocationValue = answer;
     next.referenceLocationType = next.referenceLocationType || "preferred search area";
     next.locationImportant = next.locationImportant || "Yes";
   }
   const budget = parseMonthlyBudget(`${questionText} ${answer}`);
-  if (/(budget|monthly|afford|cost)/i.test(questionAndDimensions) && budget !== null) {
-    next.budget = budget;
+  if (targetFactKey === "monthly_budget" || /(budget|monthly|afford|cost)/i.test(questionAndDimensions)) {
+    if (budget !== null) next.budget = budget;
   }
 
   next.humanIntelligenceV2.scoringEngine.additionalQuestionAsked = questionText;
@@ -254,13 +296,14 @@ export default function AdaptiveInterviewPage() {
         signal_type: "decision-interview",
         signal_json: JSON.stringify({
           question: question.question,
+          target_fact_key: question.target_fact_key || null,
           decision_dimensions: question.decision_dimensions || [],
           policy_reference: question.policy_reference || null,
           explicit_answer: true,
           knowledge_state: answer.toLowerCase() === "not sure" ? "UNKNOWN" : "KNOWN",
         }),
         weights_json: JSON.stringify({ information_gain: question.information_gain || "UNKNOWN" }),
-        impact_explanation: `Question: ${question.question} | ${question.reason || "Explicit answer used by governed Human Intelligence runtime."}`,
+        impact_explanation: `Question: ${question.question}${question.target_fact_key ? ` | Target fact: ${question.target_fact_key}` : ""} | ${question.reason || "Explicit answer used by governed Human Intelligence runtime."}`,
         info_gain_score: question.information_gain === "HIGH" ? 1 : 0,
       }).catch(() => undefined);
       await refresh(nextState);
