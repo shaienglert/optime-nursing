@@ -27,6 +27,10 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         refresh_runtime_cache("test_teardown")
 
     def _run_ready(self, questionnaire: dict, query: str, limit: int = 5) -> dict:
+        # Tests using this helper exercise post-interview ranking. Explicitly resolve the
+        # rank-sensitive environment preference so Guardian is entitled to accept READY.
+        hi = questionnaire.setdefault("humanIntelligenceV2", {})
+        hi.setdefault("personalityProfile", {}).setdefault("communitySizePreference", "No preference")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
