@@ -95,6 +95,43 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
         self.assertTrue(owner["governance"]["candidate_identity_closed_world"])
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
 
+    def test_process_owner_continues_to_follow_up_after_compare_return(self):
+        questionnaire_state = {
+            "aiProcessContinuity": {
+                "phase": "FOLLOW_UP",
+                "lastEvent": "COMPARE_RETURNED",
+                "shortlistFacilityIds": ["FAC-1", "FAC-2"],
+                "comparedFacilityIds": ["FAC-1", "FAC-2"],
+                "updatedAt": "2026-08-23T10:00:00Z",
+            }
+        }
+        ai_packet = {
+            "process_phase": "FOLLOW_UP",
+            "process_summary": "The client has compared both finalists.",
+            "conclusions": [
+                {"conclusion": "The remaining choice is between primary fit and continuum flexibility.", "evidence_facility_ids": ["FAC-1", "FAC-2"]}
+            ],
+            "proposed_solutions": [
+                {"solution": "Resolve the final trade-off before committing.", "facility_ids": ["FAC-1", "FAC-2"], "why": "Both finalists passed MUST gates.", "verification_needed": []}
+            ],
+            "next_best_action": {
+                "action": "FOLLOW_UP",
+                "reason": "The comparison is complete; continue from the client's shortlist rather than restarting discovery.",
+                "question": "Which trade-off matters more after seeing them side by side?",
+                "research_tasks": [],
+            },
+            "follow_up_plan": ["Record the client's final preference and verify any remaining provider-specific unknowns."],
+        }
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_PROCESS_OWNER_REQUIRED": "1"}, clear=False), patch(
+            "app.services.ai_process_owner_runtime._default_transport", return_value=ai_packet
+        ):
+            result = attach_ai_process_owner(self._result(), questionnaire_state, "Continue my decision")
+        owner = result["decision_intelligence"]["process_owner"]
+        self.assertEqual(owner["process_phase"], "FOLLOW_UP")
+        self.assertEqual(owner["next_best_action"]["action"], "FOLLOW_UP")
+        self.assertEqual(owner["prior_process_state"]["lastEvent"], "COMPARE_RETURNED")
+        self.assertEqual(owner["prior_process_state"]["shortlistFacilityIds"], ["FAC-1", "FAC-2"])
+
     def test_process_owner_rejects_invented_facility_identity(self):
         ai_packet = {
             "process_phase": "RECOMMEND",
