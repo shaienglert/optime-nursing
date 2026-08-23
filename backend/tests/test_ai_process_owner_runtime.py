@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import os
 import unittest
 from unittest.mock import patch
@@ -22,6 +23,7 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
                         "hard_gate": "PASS",
                         "must_pass": ["LAS_VEGAS"],
                         "must_unknown": [],
+                        "must_fail": [],
                         "nice_match": ["COMMUNITY_ENVIRONMENT_MATCH"],
                         "public_reputation": {},
                     },
@@ -40,6 +42,7 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
                         "hard_gate": "PASS",
                         "must_pass": ["LAS_VEGAS"],
                         "must_unknown": [],
+                        "must_fail": [],
                         "nice_match": [],
                         "public_reputation": {},
                     },
@@ -65,9 +68,9 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
             },
         }
 
-    def test_process_owner_uses_only_governed_candidates_and_selects_next_action(self):
-        ai_packet = {
-            "process_phase": "COMPARE",
+    def _packet(self, *, phase="COMPARE", action="PRESENT_RECOMMENDATION"):
+        return {
+            "process_phase": phase,
             "process_summary": "Two governed options remain.",
             "conclusions": [
                 {"conclusion": "Facility One is the stronger care-setting fit.", "evidence_facility_ids": ["FAC-1"]}
@@ -76,15 +79,17 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
                 {"solution": "Present Facility One as the leading option.", "facility_ids": ["FAC-1"], "why": "Primary fit and MUST pass.", "verification_needed": []}
             ],
             "next_best_action": {
-                "action": "PRESENT_RECOMMENDATION",
-                "reason": "Client intent and governed evidence are sufficient.",
+                "action": action,
+                "reason": "Client intent and governed evidence determine the next step.",
                 "question": None,
                 "research_tasks": [],
             },
             "follow_up_plan": ["Confirm client reaction and revisit if priorities change."],
         }
+
+    def test_process_owner_uses_only_governed_candidates_and_selects_next_action(self):
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_PROCESS_OWNER_REQUIRED": "1"}, clear=False), patch(
-            "app.services.ai_process_owner_runtime._default_transport", return_value=ai_packet
+            "app.services.ai_process_owner_runtime._default_transport", return_value=self._packet()
         ):
             result = attach_ai_process_owner(self._result(), {}, "Find the best option")
         owner = result["decision_intelligence"]["process_owner"]
@@ -93,6 +98,7 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
         self.assertEqual(owner["process_phase"], "COMPARE")
         self.assertEqual(owner["next_best_action"]["action"], "PRESENT_RECOMMENDATION")
         self.assertTrue(owner["governance"]["candidate_identity_closed_world"])
+        self.assertEqual(owner["governance"]["expected_phase"], "COMPARE")
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
 
     def test_process_owner_continues_to_follow_up_after_compare_return(self):
@@ -127,22 +133,19 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
         ):
             result = attach_ai_process_owner(self._result(), questionnaire_state, "Continue my decision")
         owner = result["decision_intelligence"]["process_owner"]
+        self.assertEqual(owner["status"], "ACTIVE")
         self.assertEqual(owner["process_phase"], "FOLLOW_UP")
+        self.assertEqual(owner["governance"]["expected_phase"], "FOLLOW_UP")
         self.assertEqual(owner["next_best_action"]["action"], "FOLLOW_UP")
         self.assertEqual(owner["prior_process_state"]["lastEvent"], "COMPARE_RETURNED")
         self.assertEqual(owner["prior_process_state"]["shortlistFacilityIds"], ["FAC-1", "FAC-2"])
 
     def test_process_owner_rejects_invented_facility_identity(self):
-        ai_packet = {
-            "process_phase": "RECOMMEND",
-            "process_summary": "Invented option.",
-            "conclusions": [],
-            "proposed_solutions": [
-                {"solution": "Use another facility.", "facility_ids": ["FAKE-999"], "why": "Unsupported", "verification_needed": []}
-            ],
-            "next_best_action": {"action": "PRESENT_RECOMMENDATION", "reason": "Unsupported", "question": None, "research_tasks": []},
-            "follow_up_plan": [],
-        }
+        ai_packet = self._packet()
+        ai_packet["process_summary"] = "Invented option."
+        ai_packet["proposed_solutions"] = [
+            {"solution": "Use another facility.", "facility_ids": ["FAKE-999"], "why": "Unsupported", "verification_needed": []}
+        ]
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_PROCESS_OWNER_REQUIRED": "1"}, clear=False), patch(
             "app.services.ai_process_owner_runtime._default_transport", return_value=ai_packet
         ):
@@ -150,6 +153,21 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
         owner = result["decision_intelligence"]["process_owner"]
         self.assertEqual(owner["status"], "FAILED")
         self.assertIn("UNGOVERNED_FACILITY_IDS", owner["error"])
+        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
+
+    def test_process_owner_rejects_final_recommendation_when_decision_is_provisional_or_must_unknown(self):
+        provisional = copy.deepcopy(self._result())
+        provisional["decision_intelligence"]["decision_finality"] = "PROVISIONAL_PENDING_PROVIDER_VERIFICATION"
+        provisional["decision_intelligence"]["must_gate"]["selected_must_unknown_count"] = 1
+        provisional["results"][0]["client_intent_fit"]["must_unknown"] = ["CURRENT_PRICE"]
+        ai_packet = self._packet(phase="RESEARCH", action="PRESENT_RECOMMENDATION")
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_PROCESS_OWNER_REQUIRED": "1"}, clear=False), patch(
+            "app.services.ai_process_owner_runtime._default_transport", return_value=ai_packet
+        ):
+            result = attach_ai_process_owner(provisional, {}, "Find the best option")
+        owner = result["decision_intelligence"]["process_owner"]
+        self.assertEqual(owner["status"], "FAILED")
+        self.assertIn("PREMATURE_RECOMMENDATION", owner["error"])
         self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
 
     def test_required_process_owner_failure_blocks_recommendation(self):
