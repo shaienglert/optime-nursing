@@ -28,8 +28,8 @@ jobs:
         if: steps.state.outputs.done == '0'
         working-directory: backend
         run: |
-          pip install -q -r requirements.txt
-          pytest -q tests/test_decision_quality_market_and_regulatory.py tests/test_independent_profile_care_setting_priority.py tests/test_golden_independent_strategy.py
+          pip install -q -r requirements.txt pytest
+          python -m pytest -q tests/test_decision_quality_market_and_regulatory.py tests/test_independent_profile_care_setting_priority.py tests/test_golden_independent_strategy.py
       - name: Commit patch
         if: steps.state.outputs.done == '0'
         run: |
