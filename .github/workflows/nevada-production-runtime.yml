@@ -132,21 +132,51 @@ jobs:
           assert blocked['decision_intelligence']['decision_finality'] == 'BLOCKED_PENDING_AI_INTERVIEW'
           assert blocked['recommendation_audit_trace']['blocked_before_facility_ranking'] is True
 
+          # Regression: if Semantic AI prematurely says READY while a HIGH information-gain
+          # client preference can flip Top-N, Guardian must veto READY and return control to AI.
+          premature_answers = iter([
+              {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
+              {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': clarification_question, 'statements': []},
+          ])
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: next(premature_answers)
+          vetoed = run_patient_decision_engine(base, query, limit=5)
+          veto_human = vetoed['decision_intelligence']['human_intelligence']
+          assert veto_human['decision_readiness'] == 'NEEDS_CLARIFICATION', veto_human
+          assert veto_human['readiness_guardian']['veto_applied'] is True, veto_human['readiness_guardian']
+          assert veto_human['readiness_guardian']['veto_resolution'] == 'RETURNED_TO_SEMANTIC_AI_FOR_NEXT_BEST_QUESTION'
+          assert veto_human['readiness_guardian']['rank_sensitive_unknowns'], veto_human['readiness_guardian']
+          assert vetoed['results'] == [] and vetoed['result_count'] == 0
+          assert vetoed['decision_intelligence']['recommendation_execution_allowed'] is False
+
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'READY',
               'next_question': None,
               'statements': [],
           }
 
+          base_ready = deepcopy(base)
+          base_ready['humanIntelligenceV2'] = {
+              'personalityProfile': {'communitySizePreference': 'Large community'},
+              'familyProfile': {'socialInteractionNeed': 'Neither'},
+              'transitionRiskProfile': {'attitudeTowardMove': 'Cautious but open'},
+              'scoringEngine': {'adaptiveSignals': []},
+          }
           personas = {
-              'son_for_father': {'questionnaire_state': base, 'natural_language_query': query},
+              'son_for_father': {'questionnaire_state': base_ready, 'natural_language_query': query},
               'self_search': {
-                  'questionnaire_state': {**base, 'relationship': 'Myself'},
+                  'questionnaire_state': {**base_ready, 'relationship': 'Myself'},
                   'natural_language_query': query.replace('My father is', 'I am').replace('He has', 'I have').replace('He is', 'I am').replace('needs daily help', 'need daily help'),
               },
           }
 
-          output = {'blocked_interview': {'question': clarification_question, 'result_count': 0}}
+          output = {
+              'blocked_interview': {'question': clarification_question, 'result_count': 0},
+              'premature_ready_veto': {
+                  'decision_readiness': veto_human['decision_readiness'],
+                  'veto_resolution': veto_human['readiness_guardian']['veto_resolution'],
+                  'result_count': vetoed['result_count'],
+              },
+          }
           for key, persona in personas.items():
               result = run_patient_decision_engine(**persona, limit=5)
               assert result['decision_intelligence']['recommendation_execution_allowed'] is True, key
@@ -196,7 +226,10 @@ jobs:
               'assistanceLevel': 'Needs assistance with bathing and dressing',
               'memoryStatus': 'No',
               'distanceFromFamily': 'Balanced location',
-              'humanIntelligenceV2': {'familyProfile': {'socialInteractionNeed': 'Very important'}},
+              'humanIntelligenceV2': {
+                  'familyProfile': {'socialInteractionNeed': 'Very important'},
+                  'personalityProfile': {'communitySizePreference': 'No preference'},
+              },
           }
           couple_query = (
               'A couple age 80+ wants to move to senior living in Las Vegas with lots of culture, classes and activities. '
