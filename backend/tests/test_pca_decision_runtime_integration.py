@@ -21,6 +21,20 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         refresh_runtime_cache("pca_decision_integration_teardown")
         load_personal_care_agency_evidence.cache_clear()
 
+    def _run_ready(self, state: dict, query: str, limit: int) -> dict:
+        ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        with patch.dict(
+            os.environ,
+            {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"},
+            clear=False,
+        ), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
+            return_value=ai_result,
+        ):
+            result = run_patient_decision_engine(state, query, limit=limit)
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
+        return result
+
     def test_post_spine_recovery_il_strategy_surfaces_governed_pca_candidates(self) -> None:
         state = {
             "relationship": "Wife",
@@ -38,7 +52,7 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
             "with getting into the shower, bathing, dressing, socks and shoes. I am independent and "
             "we want to live together."
         )
-        result = run_patient_decision_engine(state, query, limit=10)
+        result = self._run_ready(state, query, limit=10)
         layer = result["decision_intelligence"]["care_partner_layer"]
         evidence = load_personal_care_agency_evidence()
         self.assertEqual(layer["licensed_valley_universe_count"], 363)
@@ -73,7 +87,7 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
             "assistanceLevel": "Needs 24/7 skilled nursing",
             "memoryStatus": "No",
         }
-        result = run_patient_decision_engine(
+        result = self._run_ready(
             state,
             "My father needs 24/7 skilled nursing in Las Vegas and is not looking for independent living.",
             limit=5,
