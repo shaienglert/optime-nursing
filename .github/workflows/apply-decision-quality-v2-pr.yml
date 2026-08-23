@@ -23,7 +23,9 @@ jobs:
           if [ -f backend/tests/test_decision_quality_market_and_regulatory.py ]; then echo "done=1" >> "$GITHUB_OUTPUT"; else echo "done=0" >> "$GITHUB_OUTPUT"; fi
       - name: Apply patch
         if: steps.state.outputs.done == '0'
-        run: python scripts/apply_decision_quality_v2.py
+        run: |
+          python scripts/apply_decision_quality_v2.py
+          python scripts/apply_decision_quality_v2_followup.py
       - name: Run focused tests
         if: steps.state.outputs.done == '0'
         working-directory: backend
