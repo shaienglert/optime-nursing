@@ -1,0 +1,40 @@
+name: Apply Decision Quality V2 PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'fix/nursing-decision-quality-v2'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/nursing-decision-quality-v2
+          fetch-depth: 0
+      - name: Skip if applied
+        id: state
+        run: |
+          if [ -f backend/tests/test_decision_quality_market_and_regulatory.py ]; then echo "done=1" >> "$GITHUB_OUTPUT"; else echo "done=0" >> "$GITHUB_OUTPUT"; fi
+      - name: Apply patch
+        if: steps.state.outputs.done == '0'
+        run: python scripts/apply_decision_quality_v2.py
+      - name: Run focused tests
+        if: steps.state.outputs.done == '0'
+        working-directory: backend
+        run: |
+          pip install -q -r requirements.txt
+          pytest -q tests/test_decision_quality_market_and_regulatory.py tests/test_independent_profile_care_setting_priority.py tests/test_golden_independent_strategy.py
+      - name: Commit patch
+        if: steps.state.outputs.done == '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- backend/app/services/client_intent_runtime.py data/nevada/verified/provider_housing_primary_evidence.json backend/tests/test_decision_quality_market_and_regulatory.py
+          git commit -m "fix(nursing): improve Las Vegas independent-living decision quality"
+          git push origin HEAD:fix/nursing-decision-quality-v2
