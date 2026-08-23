@@ -151,7 +151,7 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
             **decision,
             "decision_finality": "BLOCKED_PENDING_AI_INTERVIEW" if readiness != "NEEDS_RESEARCH" else "BLOCKED_PENDING_AI_RESEARCH",
             "recommendation_execution_allowed": False,
-            "interview_owner": "SEMANTIC_AI_PROCESS_OWNER",
+            "interview_owner": "SEMANTIC_AI",
             "process_owner": process_owner,
             "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
         },
@@ -216,7 +216,7 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
 
             result = apply_semantic_facility_requirements(result, research_limit=max(20, int(limit or 50)))
             decision = result.setdefault("decision_intelligence", {})
-            decision["interview_owner"] = "SEMANTIC_AI_PROCESS_OWNER"
+            decision["interview_owner"] = "SEMANTIC_AI"
             decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
             decision.setdefault("recommendation_execution_allowed", True)
             result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, limit)
