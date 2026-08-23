@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import json
 import os
 import unittest
 from unittest.mock import patch
 
+from app.services.ai_process_owner_runtime import _phase, attach_ai_process_owner
 from app.services.facility_parameter_service import get_canonical_facility_index
 from app.services.human_intelligence_runtime_verified import build_human_intelligence_context
 from app.services.patient_decision_engine import run_patient_decision_engine
 
 
 class GoldenMother90FullLifecycleTests(unittest.TestCase):
-    """Golden regression for a complete client-owned clarification -> READY -> ranking journey."""
+    """Golden regression for clarification -> READY -> ranking -> AI process-owner next action."""
 
     def _base_state(self) -> dict:
         return {
@@ -106,6 +108,53 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         self.assertEqual([row["rank_position"] for row in result["results"]], [1, 2, 3, 4, 5])
         self.assertEqual(decision["human_intelligence"]["decision_readiness"], "READY")
         self.assertEqual(decision["human_intelligence"]["adaptive_questions"], [])
+
+        expected_phase = _phase(result, answered)
+        action_by_phase = {
+            "CLARIFICATION": "ASK_CLIENT",
+            "RESEARCH": "RESEARCH_FACILITY_FACTS",
+            "COMPARE": "COMPARE_OPTIONS",
+            "RECOMMEND": "PRESENT_RECOMMENDATION",
+            "FOLLOW_UP": "FOLLOW_UP",
+            "DISCOVERY": "ASK_CLIENT",
+        }
+        expected_action = action_by_phase[expected_phase]
+        top_ids = [row["canonical_facility_id"] for row in result["results"]]
+        process_packet = {
+            "process_phase": expected_phase,
+            "process_summary": "Continue the governed mother-90 decision from the current evidence state.",
+            "conclusions": [{"conclusion": "The ranked options satisfy the governed care-setting gate.", "evidence_facility_ids": top_ids[:2]}],
+            "proposed_solutions": [{"solution": "Advance the leading governed options without inventing missing provider facts.", "facility_ids": top_ids[:2], "why": "They passed the current MUST gate.", "verification_needed": []}],
+            "next_best_action": {"action": expected_action, "reason": "Advance the next governed decision step.", "question": None, "research_tasks": []},
+            "follow_up_plan": ["Preserve client answers and continue from this decision state."],
+        }
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_PROCESS_OWNER_REQUIRED": "1"}, clear=False), patch(
+            "app.services.ai_process_owner_runtime._default_transport", return_value=process_packet
+        ):
+            owned = attach_ai_process_owner(result, answered, self._query())
+        owner = owned["decision_intelligence"]["process_owner"]
+        self.assertEqual(owner["status"], "ACTIVE")
+        self.assertEqual(owner["process_phase"], expected_phase)
+        self.assertEqual(owner["next_best_action"]["action"], expected_action)
+
+        print("MOTHER90_GOLDEN=" + json.dumps({
+            "first_question": question,
+            "answered_budget": 8000,
+            "decision_readiness": decision["human_intelligence"]["decision_readiness"],
+            "result_count": result["result_count"],
+            "top5": [
+                {
+                    "rank": row["rank_position"],
+                    "facility_name": row.get("facility_name"),
+                    "city": row.get("city"),
+                    "canonical_type": row.get("canonical_type"),
+                    "hard_gate": (row.get("client_intent_fit") or {}).get("hard_gate"),
+                }
+                for row in result["results"]
+            ],
+            "process_phase": owner["process_phase"],
+            "next_best_action": owner["next_best_action"]["action"],
+        }, indent=2))
 
 
 if __name__ == "__main__":
