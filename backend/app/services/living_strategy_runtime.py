@@ -122,6 +122,37 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "rank_hint": rank_hint,
         })
 
+    # A resident who is explicitly independent and has no detected ADL, medication,
+    # cognitive, rehab, or post-acute need already has enough client-owned evidence
+    # to establish the least-restrictive primary strategy. This is a strategy fact,
+    # not a scripted interview question: Semantic AI still owns any remaining
+    # preference/financial clarification and the Guardian still validates READY.
+    independent_long_term_pattern = (
+        explicit_independence
+        and no_adl_support
+        and not adl
+        and not medication
+        and no_dementia
+        and not surgery
+        and not rehab
+        and not skilled_rehab_known
+    )
+    if independent_long_term_pattern:
+        add_strategy(
+            "INDEPENDENT_LIVING",
+            "LEADING",
+            "The resident is explicitly fully independent, cognitively intact, and has no current care, rehabilitation, or nursing need. Independent Living is the least-restrictive primary residential strategy; higher-care settings should not outrank it merely because they have richer regulatory data.",
+            ["INDEPENDENT_LIVING"],
+            1,
+        )
+        add_strategy(
+            "LIFE_PLAN_CCRC",
+            "STRONG_OPTION",
+            "A Life Plan/CCRC may be considered as a future-care planning option while the resident is still independent, subject to entrance-fee tolerance, contract terms, financial review, and medical underwriting where applicable.",
+            ["INDEPENDENT_LIVING", "CONTINUUM_OF_CARE"],
+            2,
+        )
+
     transient_support_pattern = adl and no_dementia and expected_recovery
     if transient_support_pattern:
         add_strategy(
@@ -214,7 +245,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     unresolved = [q["question_key"] for q in clarification_candidates]
 
     return {
-        "version": "living-strategy-runtime-v1.1-ai-governed",
+        "version": "living-strategy-runtime-v1.2-ai-governed",
         "household": household,
         "signals": {
             "post_surgical": surgery,
@@ -226,6 +257,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "medication_support_needed": medication,
             "high_social_culture_priority": high_social,
             "no_dementia": no_dementia,
+            "explicit_independence": explicit_independence,
         },
         "strategy_candidates": strategy_candidates,
         "material_questions": [],
