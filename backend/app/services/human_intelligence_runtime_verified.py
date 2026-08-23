@@ -32,41 +32,74 @@ def _semantic_question_key(question: str) -> str:
     return f"semantic_ai_high_information_question:{digest}"
 
 
-def _answered_adaptive_keys(questionnaire_state: Dict[str, Any]) -> set[str]:
+def _adaptive_signals(questionnaire_state: Dict[str, Any]) -> List[Dict[str, Any]]:
     hi = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
     scoring = hi.get("scoringEngine") if isinstance(hi.get("scoringEngine"), dict) else {}
     signals = scoring.get("adaptiveSignals") if isinstance(scoring.get("adaptiveSignals"), list) else []
+    return [row for row in signals if isinstance(row, dict)]
+
+
+def _answered_adaptive_keys(questionnaire_state: Dict[str, Any]) -> set[str]:
     return {
         str(row.get("questionKey") or "")
-        for row in signals
-        if isinstance(row, dict) and str(row.get("questionKey") or "").strip()
+        for row in _adaptive_signals(questionnaire_state)
+        if str(row.get("questionKey") or "").strip()
     }
+
+
+def _answered_fact_keys(questionnaire_state: Dict[str, Any]) -> set[str]:
+    keys: set[str] = set()
+    for row in _adaptive_signals(questionnaire_state):
+        fact_key = str(row.get("targetFactKey") or row.get("target_fact_key") or "").strip()
+        answer = str(row.get("answer") or "").strip()
+        if fact_key and answer:
+            keys.add(fact_key)
+    return keys
 
 
 def _question_exists(context: Dict[str, Any], key: str) -> bool:
     return any(str(row.get("question_key") or "") == key for row in context.get("adaptive_questions") or [])
 
 
-def _rank_sensitive_unknowns(base_context: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Return only deterministic evidence that an unresolved answer can change ordering.
-
-    Rules are allowed to identify the unresolved decision dimension, but never to choose
-    or emit the user-facing question. Semantic AI remains responsible for wording and
-    sequencing. This Guardian list exists only to veto a premature READY.
-    """
+def _base_client_blockers(base_context: Dict[str, Any], answered_fact_keys: set[str]) -> List[Dict[str, Any]]:
     unresolved: List[Dict[str, Any]] = []
     for row in base_context.get("adaptive_questions") or []:
         if not isinstance(row, dict):
             continue
-        dimensions = [str(value) for value in row.get("decision_dimensions") or []]
+        fact_key = str(row.get("question_key") or "UNKNOWN")
+        if fact_key in answered_fact_keys:
+            continue
         information_gain = str(row.get("information_gain") or "").upper()
-        if information_gain != "HIGH" or "preference_congruence" not in dimensions:
+        if information_gain != "HIGH":
             continue
         unresolved.append({
-            "question_key": str(row.get("question_key") or "UNKNOWN"),
-            "decision_dimensions": dimensions,
+            "fact_key": fact_key,
+            "decision_dimensions": [str(value) for value in row.get("decision_dimensions") or []],
             "information_gain": information_gain,
-            "reason": str(row.get("reason") or "Unresolved preference can materially change candidate ordering."),
+            "reason": str(row.get("reason") or "Unresolved client fact can materially change the decision or transition plan."),
+            "answer_options": [str(value) for value in row.get("answer_options") or []],
+            "owner": "CLIENT",
+            "source": "HUMAN_INTELLIGENCE_GUARDIAN",
+        })
+    return unresolved
+
+
+def _strategy_client_blockers(strategy_context: Dict[str, Any], answered_fact_keys: set[str]) -> List[Dict[str, Any]]:
+    unresolved: List[Dict[str, Any]] = []
+    for row in strategy_context.get("guardian_clarification_candidates") or []:
+        if not isinstance(row, dict):
+            continue
+        fact_key = str(row.get("question_key") or "UNKNOWN")
+        if fact_key in answered_fact_keys:
+            continue
+        unresolved.append({
+            "fact_key": fact_key,
+            "decision_dimensions": ["living_strategy", fact_key],
+            "information_gain": "HIGH",
+            "reason": str(row.get("why_it_matters") or "Unresolved client fact can materially change the living-and-care strategy."),
+            "answer_options": [str(value) for value in row.get("options") or []],
+            "owner": "CLIENT",
+            "source": "LIVING_STRATEGY_GUARDIAN",
         })
     return unresolved
 
@@ -75,10 +108,23 @@ def _governed_context(
     base_context: Dict[str, Any],
     strategy_context: Dict[str, Any],
     natural_language_query: str,
+    questionnaire_state: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Convert deterministic runtime output into Guardian evidence, never interview control."""
     accounting = account_user_input(natural_language_query)
-    rank_sensitive_unknowns = _rank_sensitive_unknowns(base_context)
+    answered_fact_keys = _answered_fact_keys(questionnaire_state)
+    blockers = _base_client_blockers(base_context, answered_fact_keys) + _strategy_client_blockers(strategy_context, answered_fact_keys)
+    material_unknowns = [str(value) for value in strategy_context.get("material_unknowns") or []]
+    sanitized_strategy_unknowns = [
+        {
+            "fact_key": item["fact_key"],
+            "reason": item["reason"],
+            "answer_options": item["answer_options"],
+            "owner": item["owner"],
+        }
+        for item in blockers
+        if item.get("source") == "LIVING_STRATEGY_GUARDIAN"
+    ]
     return {
         "signals": base_context.get("signals") or {},
         "transition_support": base_context.get("transition_support") or {},
@@ -87,23 +133,24 @@ def _governed_context(
             "signals": strategy_context.get("signals") or {},
             "household": strategy_context.get("household") or {},
             "strategy_candidates": strategy_context.get("strategy_candidates") or [],
-            "material_unknowns": strategy_context.get("material_unknowns") or [],
-            "clarification_candidates": strategy_context.get("guardian_clarification_candidates") or [],
+            "material_unknowns": material_unknowns,
+            "client_owned_unknowns": sanitized_strategy_unknowns,
             "least_restrictive_safe_care_rule": bool(strategy_context.get("least_restrictive_safe_care_rule")),
             "policy": strategy_context.get("policy"),
-            "rule": "These are Guardian constraints and candidate unknowns only. The AI decides whether and how to ask the next question.",
+            "rule": "Rules expose facts, constraints and unresolved dimensions only. They never supply user-facing question wording; Semantic AI owns the next question.",
         },
         "readiness_guardian": {
-            "rank_sensitive_unknowns": rank_sensitive_unknowns,
-            "ready_veto_active": bool(rank_sensitive_unknowns),
-            "rule": "READY is forbidden while an unresolved HIGH-information client fact is known to be capable of materially changing candidate ordering. Guardian identifies the decision dimension; Semantic AI chooses the next question.",
+            "client_owned_blockers": blockers,
+            "acknowledged_fact_keys": sorted(answered_fact_keys),
+            "ready_veto_active": bool(blockers),
+            "rule": "READY is forbidden while a material client-owned fact remains unresolved. Guardian identifies fact keys and decision impact; Semantic AI chooses wording and sequence. Explicit adaptive answers, including acknowledged unknowns, resolve the interview blocker without fabricating a value.",
         },
         "user_statement_accounting": accounting,
         "material_unknown_policy": {
             "unknown_is_not_default": True,
             "no_silent_drop": True,
             "required_statement_coverage_percent": 100,
-            "rule": "ASK_OR_RESEARCH_IF_MATERIAL_TO_ELIGIBILITY_ORDERING_TRADEOFF_OR_TRANSITION",
+            "rule": "CLIENT_OWNED_UNKNOWN=>ASK; PROVIDER_OWNED_UNKNOWN=>RESEARCH; MUST_FAIL=>BLOCK; UNKNOWN_NEVER_BECOMES_DEFAULT",
         },
         "interview_policy": {
             "owner": "SEMANTIC_AI",
@@ -148,8 +195,6 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
     required = os.getenv("OPTIME_SEMANTIC_AI_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
     context["semantic_ai"] = {"enabled": enabled, "required": required, "status": "DISABLED"}
 
-    # Deterministic rules never substitute for the interview AI. If AI is required but
-    # unavailable, the interview blocks instead of falling back to scripted questions.
     if not enabled:
         context["adaptive_questions"] = []
         context["decision_readiness"] = "NEEDS_RESEARCH" if required else "NEEDS_CLARIFICATION"
@@ -161,13 +206,16 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         result = _call_semantic_ai(context, questionnaire_state, natural_language_query)
         readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION").upper()
 
-        rank_sensitive_unknowns = list(((context.get("readiness_guardian") or {}).get("rank_sensitive_unknowns") or []))
-        guardian_veto = readiness == "READY" and bool(rank_sensitive_unknowns)
+        blockers = list(((context.get("readiness_guardian") or {}).get("client_owned_blockers") or []))
+        guardian_veto = readiness == "READY" and bool(blockers)
+        selected_blocker: Dict[str, Any] | None = None
         if guardian_veto:
+            selected_blocker = blockers[0]
             veto_packet = {
-                "reason": "AI_READY_REJECTED_RANK_SENSITIVE_UNKNOWN",
-                "unresolved": rank_sensitive_unknowns,
-                "instruction": "Choose exactly one next client question that resolves the highest-impact unresolved decision dimension. Do not return READY until the dimension is resolved or explicitly acknowledged as no preference/not sure.",
+                "reason": "AI_READY_REJECTED_MATERIAL_CLIENT_UNKNOWN",
+                "unresolved": blockers,
+                "highest_priority_fact_key": selected_blocker.get("fact_key"),
+                "instruction": "Ask exactly one concise question that resolves the highest-priority client-owned fact key. Do not copy deterministic wording because none is supplied. Do not return READY until the fact is answered or explicitly acknowledged as unknown/not sure.",
             }
             second_result = _call_semantic_ai(
                 context,
@@ -182,6 +230,7 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
                 readiness = second_readiness
                 context["readiness_guardian"]["veto_applied"] = True
                 context["readiness_guardian"]["veto_resolution"] = "RETURNED_TO_SEMANTIC_AI_FOR_NEXT_BEST_QUESTION"
+                context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
             else:
                 result = second_result
                 readiness = "NEEDS_RESEARCH"
@@ -202,15 +251,17 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             question_key = _semantic_question_key(next_question)
             answered_keys = _answered_adaptive_keys(questionnaire_state)
             if question_key not in answered_keys and not _question_exists(context, question_key):
-                context["adaptive_questions"] = [
-                    _base._question(
-                        question_key,
-                        next_question,
-                        "Governed Semantic AI selected this as the highest-information unresolved issue after consulting the Learning Center and Guardian context.",
-                        ["client_intent_completeness", "preference_congruence"],
-                        [],
-                    )
-                ]
+                target = selected_blocker or (blockers[0] if blockers else {})
+                question = _base._question(
+                    question_key,
+                    next_question,
+                    "Governed Semantic AI selected this as the highest-information unresolved issue after consulting the Learning Center and Guardian context.",
+                    [str(value) for value in target.get("decision_dimensions") or ["client_intent_completeness"]],
+                    [str(value) for value in target.get("answer_options") or []],
+                )
+                question["target_fact_key"] = str(target.get("fact_key") or "semantic_ai_unstructured_fact")
+                question["question_owner"] = "SEMANTIC_AI"
+                context["adaptive_questions"] = [question]
         elif readiness in {"READY", "NEEDS_RESEARCH"}:
             context["adaptive_questions"] = []
     except Exception as exc:
@@ -226,11 +277,9 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
 
 
 def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
-    # Deterministic runtimes are retained only for signals/Guardian evidence. Any
-    # hard-coded question lists they produce are deliberately discarded.
     base_context = _base.build_human_intelligence_context(questionnaire_state, natural_language_query)
     strategy_context = build_living_strategy_context(questionnaire_state, natural_language_query)
-    context = _governed_context(base_context, strategy_context, natural_language_query)
+    context = _governed_context(base_context, strategy_context, natural_language_query, questionnaire_state)
     context["adaptive_questions"] = []
     context["decision_readiness"] = "NEEDS_CLARIFICATION"
     return _consult_semantic_ai(context, questionnaire_state, natural_language_query)
