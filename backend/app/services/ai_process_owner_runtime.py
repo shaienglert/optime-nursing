@@ -35,6 +35,7 @@ def _candidate_packet(result: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "hard_gate": fit.get("hard_gate"),
                 "must_pass": fit.get("must_pass") or [],
                 "must_unknown": fit.get("must_unknown") or [],
+                "must_fail": fit.get("must_fail") or [],
                 "nice_match": fit.get("nice_match") or [],
             },
             "combined_care_solution": row.get("combined_care_solution") or {},
@@ -50,6 +51,32 @@ def _continuity_state(questionnaire_state: Dict[str, Any]) -> Dict[str, Any]:
     return state if isinstance(state, dict) else {}
 
 
+def _decision_has_material_unknowns(result: Dict[str, Any]) -> bool:
+    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+    must_gate = decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}
+    if int(must_gate.get("selected_must_unknown_count") or 0) > 0:
+        return True
+    for row in result.get("results") or []:
+        fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+        if fit.get("must_unknown"):
+            return True
+    return False
+
+
+def _decision_has_must_fail(result: Dict[str, Any]) -> bool:
+    for row in result.get("results") or []:
+        fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+        if str(fit.get("hard_gate") or "").upper() == "FAIL" or fit.get("must_fail"):
+            return True
+    return False
+
+
+def _decision_is_final(result: Dict[str, Any]) -> bool:
+    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+    finality = str(decision.get("decision_finality") or "UNKNOWN").upper()
+    return finality == "FINAL"
+
+
 def _phase(result: Dict[str, Any], questionnaire_state: Dict[str, Any] | None = None) -> str:
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
@@ -60,6 +87,8 @@ def _phase(result: Dict[str, Any], questionnaire_state: Dict[str, Any] | None = 
         return "RESEARCH"
     if decision.get("recommendation_execution_allowed") is not True:
         return "RESEARCH"
+    if _decision_has_must_fail(result):
+        return "RESEARCH"
 
     continuity = _continuity_state(questionnaire_state or {})
     continuity_phase = str(continuity.get("phase") or "").upper()
@@ -68,12 +97,11 @@ def _phase(result: Dict[str, Any], questionnaire_state: Dict[str, Any] | None = 
         return "FOLLOW_UP"
     if last_event in {"SHORTLIST_UPDATED", "COMPARE_OPENED"} or continuity_phase == "COMPARE":
         return "COMPARE"
+
+    if _decision_has_material_unknowns(result) or not _decision_is_final(result):
+        return "RESEARCH"
     if continuity_phase == "RECOMMEND":
         return "RECOMMEND"
-
-    finality = str(decision.get("decision_finality") or "UNKNOWN").upper()
-    if "PENDING" in finality or "PROVISIONAL" in finality or "INCOMPLETE" in finality:
-        return "RESEARCH"
     if len(result.get("results") or []) > 1:
         return "COMPARE"
     return "RECOMMEND"
@@ -119,6 +147,8 @@ def _prompt(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural
             "care_partner_layer": decision.get("care_partner_layer") or {},
             "must_gate": decision.get("must_gate") or {},
             "ranking_order": decision.get("ranking_order") or [],
+            "material_unknowns_present": _decision_has_material_unknowns(result),
+            "must_fail_present": _decision_has_must_fail(result),
         },
         "governed_candidates": _candidate_packet(result),
         "required_output": {
@@ -133,6 +163,7 @@ def _prompt(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural
 
 
 def _validate(packet: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
+    expected_phase = _phase(result)
     phase = str(packet.get("process_phase") or "").upper()
     if phase not in _ALLOWED_PHASES:
         raise RuntimeError(f"AI_PROCESS_OWNER_INVALID_PHASE:{phase}")
@@ -140,6 +171,19 @@ def _validate(packet: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
     action = str(action_packet.get("action") or "").upper()
     if action not in _ALLOWED_ACTIONS:
         raise RuntimeError(f"AI_PROCESS_OWNER_INVALID_ACTION:{action}")
+
+    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+    if decision.get("recommendation_execution_allowed") is not True and action in {"COMPARE_OPTIONS", "PRESENT_RECOMMENDATION"}:
+        raise RuntimeError("AI_PROCESS_OWNER_ACTION_BEFORE_EXECUTION_ALLOWED")
+    if _decision_has_must_fail(result) and action in {"COMPARE_OPTIONS", "PRESENT_RECOMMENDATION"}:
+        raise RuntimeError("AI_PROCESS_OWNER_ACTION_WITH_MUST_FAIL")
+    if (_decision_has_material_unknowns(result) or not _decision_is_final(result)) and action == "PRESENT_RECOMMENDATION":
+        raise RuntimeError("AI_PROCESS_OWNER_PREMATURE_RECOMMENDATION")
+    if expected_phase == "RESEARCH" and action == "PRESENT_RECOMMENDATION":
+        raise RuntimeError("AI_PROCESS_OWNER_RESEARCH_PHASE_CANNOT_RECOMMEND")
+    if expected_phase == "CLARIFICATION" and action != "ASK_CLIENT":
+        raise RuntimeError("AI_PROCESS_OWNER_CLARIFICATION_MUST_ASK_CLIENT")
+
     allowed_ids = {str(row.get("canonical_facility_id") or "") for row in result.get("results") or [] if row.get("canonical_facility_id")}
     referenced: set[str] = set()
     for item in packet.get("conclusions") or []:
@@ -157,6 +201,8 @@ def _validate(packet: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
         "candidate_identity_closed_world": True,
         "unknown_is_not_default": True,
         "validated_facility_reference_count": len(referenced),
+        "expected_phase": expected_phase,
+        "action_safety_validated": True,
     }
     return packet
 
