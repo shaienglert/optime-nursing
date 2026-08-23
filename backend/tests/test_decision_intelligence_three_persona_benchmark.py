@@ -8,10 +8,10 @@ from app.services.human_intelligence_runtime_verified import build_human_intelli
 
 
 class ThreePersonaSemanticDecisionBenchmark(unittest.TestCase):
-    def _run(self, query: str, ai_result: dict) -> dict:
+    def _run(self, query: str, ai_result: dict, state: dict | None = None) -> dict:
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False):
             with patch("app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result):
-                return build_human_intelligence_context({}, query)
+                return build_human_intelligence_context(state or {}, query)
 
     def test_independent_couple_preserves_food_gardens_activities_outings_and_future_care(self) -> None:
         query = (
@@ -39,7 +39,10 @@ class ThreePersonaSemanticDecisionBenchmark(unittest.TestCase):
             "dropped_statement_count": 0,
             "governance": {"ai_based": True, "learning_center_consulted": True},
         }
-        context = self._run(query, result)
+        context = self._run(query, result, {
+            "budget": 8000,
+            "entranceFeeTolerance": "No",
+        })
         semantic = context["semantic_ai"]
         self.assertEqual("CONSULTED_AND_VALIDATED", semantic["status"])
         self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
