@@ -15,22 +15,8 @@ from typing import Any, Dict, List
 from app.services.semantic_intent_ai import _default_transport
 
 
-_ALLOWED_PHASES = {
-    "DISCOVERY",
-    "CLARIFICATION",
-    "RESEARCH",
-    "COMPARE",
-    "RECOMMEND",
-    "FOLLOW_UP",
-}
-_ALLOWED_ACTIONS = {
-    "ASK_CLIENT",
-    "RESEARCH_FACILITY_FACTS",
-    "COMPARE_OPTIONS",
-    "PRESENT_RECOMMENDATION",
-    "VERIFY_BEFORE_DECISION",
-    "FOLLOW_UP",
-}
+_ALLOWED_PHASES = {"DISCOVERY", "CLARIFICATION", "RESEARCH", "COMPARE", "RECOMMEND", "FOLLOW_UP"}
+_ALLOWED_ACTIONS = {"ASK_CLIENT", "RESEARCH_FACILITY_FACTS", "COMPARE_OPTIONS", "PRESENT_RECOMMENDATION", "VERIFY_BEFORE_DECISION", "FOLLOW_UP"}
 
 
 def _candidate_packet(result: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -158,7 +144,7 @@ def _validate(packet: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
 def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
     decision = result.setdefault("decision_intelligence", {})
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
-    required = os.getenv("OPTIME_SEMANTIC_AI_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
+    required = os.getenv("OPTIME_AI_PROCESS_OWNER_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
     if not enabled:
         decision["process_owner"] = {
             "owner": "SEMANTIC_AI_PROCESS_OWNER",
