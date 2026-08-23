@@ -4,6 +4,7 @@ import os
 import unittest
 from unittest.mock import patch
 
+from app.services.facility_parameter_service import get_canonical_facility_index
 from app.services.human_intelligence_runtime_verified import build_human_intelligence_context
 from app.services.patient_decision_engine import run_patient_decision_engine
 
@@ -96,7 +97,10 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         self.assertEqual(result["result_count"], 5)
         self.assertGreater(result["total_candidates_scored"], 0)
         self.assertTrue(all(str(row.get("state") or "").upper() == "NV" for row in result["results"]))
-        self.assertTrue(all(row.get("is_las_vegas_valley") is True for row in result["results"]))
+        canonical_index = get_canonical_facility_index()
+        for row in result["results"]:
+            canonical = canonical_index[row["canonical_facility_id"]]
+            self.assertIs(canonical.get("is_las_vegas_valley"), True)
         self.assertTrue(all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in result["results"]))
         self.assertTrue(all(row.get("canonical_type") == "ASSISTED_LIVING_RFG" for row in result["results"]))
         self.assertEqual([row["rank_position"] for row in result["results"]], [1, 2, 3, 4, 5])
