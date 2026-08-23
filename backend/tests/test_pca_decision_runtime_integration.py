@@ -22,10 +22,13 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         load_personal_care_agency_evidence.cache_clear()
 
     def _run_ready(self, state: dict, query: str, limit: int) -> dict:
-        # PCA tests start after interview completion; resolve any rank-sensitive
-        # environment preference explicitly instead of bypassing the Guardian.
+        # PCA tests begin after the client interview. Neutral Human Intelligence
+        # preferences may be acknowledged here; strategy-specific facts must be
+        # explicit in each fixture and are never fabricated by this helper.
         hi = state.setdefault("humanIntelligenceV2", {})
         hi.setdefault("personalityProfile", {}).setdefault("communitySizePreference", "No preference")
+        hi.setdefault("familyProfile", {}).setdefault("socialInteractionNeed", "Neither")
+        hi.setdefault("transitionRiskProfile", {}).setdefault("attitudeTowardMove", "Cautious but open")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
         with patch.dict(
             os.environ,
@@ -46,15 +49,24 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
             "assistanceLevel": "Needs assistance with bathing and dressing",
             "memoryStatus": "No",
             "distanceFromFamily": "Balanced location",
+            "budget": 8000,
+            "medicareStatus": "Original Medicare",
+            "moveTiming": "Move during recovery",
+            "entranceFeeTolerance": "No",
             "humanIntelligenceV2": {
                 "familyProfile": {"socialInteractionNeed": "Very important"},
+                "transitionRiskProfile": {
+                    "attitudeTowardMove": "Wants to move",
+                    "postHospitalRehabNeed": "No",
+                },
             },
         }
         query = (
             "My husband and I are both over 80 and want independent senior living in Las Vegas. "
             "He had spinal surgery and is expected to recover, but for about 3 months he needs help "
             "with getting into the shower, bathing, dressing, socks and shoes. I am independent and "
-            "we want to live together."
+            "we want to live together. The clinical team says he needs personal-care help rather than skilled rehabilitation. "
+            "We can spend up to $8,000 per month, have Original Medicare, want to move during recovery, and do not want a CCRC entrance fee."
         )
         result = self._run_ready(state, query, limit=10)
         layer = result["decision_intelligence"]["care_partner_layer"]
@@ -91,9 +103,6 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
                 self.assertIn("DRESSING_ASSISTANCE", unknowns)
 
         self.assertTrue(all(row["hourly_rate"] == "UNKNOWN" for row in options))
-
-        # Brand names are not acceptance criteria. A live, identity-verified provider
-        # may rank outside Top-N when more operational facts remain UNKNOWN.
         self.assertIn("9703-PCS-7", live_evidence_by_license)
         self.assertEqual(live_evidence_by_license["9703-PCS-7"]["agency_name"], "RIGHT AT HOME LAS VEGAS")
 
@@ -115,10 +124,11 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
             "ageGroup": "80+",
             "assistanceLevel": "Needs 24/7 skilled nursing",
             "memoryStatus": "No",
+            "budget": 12000,
         }
         result = self._run_ready(
             state,
-            "My father needs 24/7 skilled nursing in Las Vegas and is not looking for independent living.",
+            "My father needs 24/7 skilled nursing in Las Vegas and is not looking for independent living. His monthly budget is $12,000.",
             limit=5,
         )
         layer = result["decision_intelligence"]["care_partner_layer"]
