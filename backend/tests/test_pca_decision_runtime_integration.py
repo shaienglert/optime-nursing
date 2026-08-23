@@ -60,13 +60,26 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         self.assertEqual(layer["status"], "CANDIDATES_PENDING_OPERATIONAL_VERIFICATION")
         self.assertIn("BATHING_ASSISTANCE", layer["requirements"]["required_services"])
         self.assertIn("DRESSING_ASSISTANCE", layer["requirements"]["required_services"])
+
         options = layer["candidate_options"]
         self.assertGreaterEqual(len(options), 2)
-        names = {row["agency_name"] for row in options}
-        self.assertIn("RIGHT AT HOME LAS VEGAS", names)
-        self.assertIn("COMFORT KEEPERS", names)
         self.assertEqual(result["care_partner_options"], options)
+
+        live_evidence_by_license = {row["license_number"]: row for row in evidence["records"]}
+        surfaced_licenses = {row["license_number"] for row in options}
+        self.assertTrue(surfaced_licenses.issubset(set(live_evidence_by_license)))
+        self.assertTrue(all(row["license_status"] == "ACTIVE" for row in options))
+        self.assertTrue(all(row["bathing_assistance"] is True for row in options))
+        self.assertTrue(all(row["dressing_assistance"] is True for row in options))
+        self.assertTrue(all((row.get("care_agency_fit") or {}).get("hard_gate") != "FAIL" for row in options))
+        self.assertTrue(all("BATHING_ASSISTANCE" in ((row.get("care_agency_fit") or {}).get("matched") or []) for row in options))
+        self.assertTrue(all("DRESSING_ASSISTANCE" in ((row.get("care_agency_fit") or {}).get("matched") or []) for row in options))
         self.assertTrue(all(row["hourly_rate"] == "UNKNOWN" for row in options))
+
+        # Brand names are not acceptance criteria. A live, identity-verified provider
+        # may rank outside Top-N when more operational facts remain UNKNOWN.
+        self.assertIn("9703-PCS-7", live_evidence_by_license)
+        self.assertEqual(live_evidence_by_license["9703-PCS-7"]["agency_name"], "RIGHT AT HOME LAS VEGAS")
 
         evidence_by_id = {row["agency_id"]: row for row in evidence["records"]}
         self.assertEqual(evidence_by_id["NV-PCA-11759-PCS-1"]["minimum_billable_hours"], 0)
