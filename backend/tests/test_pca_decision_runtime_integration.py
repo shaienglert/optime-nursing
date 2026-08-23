@@ -69,11 +69,23 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         surfaced_licenses = {row["license_number"] for row in options}
         self.assertTrue(surfaced_licenses.issubset(set(live_evidence_by_license)))
         self.assertTrue(all(row["license_status"] == "ACTIVE" for row in options))
-        self.assertTrue(all(row["bathing_assistance"] is True for row in options))
-        self.assertTrue(all(row["dressing_assistance"] is True for row in options))
+        self.assertTrue(all(row["bathing_assistance"] is not False for row in options))
+        self.assertTrue(all(row["dressing_assistance"] is not False for row in options))
         self.assertTrue(all((row.get("care_agency_fit") or {}).get("hard_gate") != "FAIL" for row in options))
-        self.assertTrue(all("BATHING_ASSISTANCE" in ((row.get("care_agency_fit") or {}).get("matched") or []) for row in options))
-        self.assertTrue(all("DRESSING_ASSISTANCE" in ((row.get("care_agency_fit") or {}).get("matched") or []) for row in options))
+
+        for row in options:
+            fit = row.get("care_agency_fit") or {}
+            matched = set(fit.get("matched") or [])
+            unknowns = set(fit.get("material_unknowns") or [])
+            if row["bathing_assistance"] is True:
+                self.assertIn("BATHING_ASSISTANCE", matched)
+            else:
+                self.assertIn("BATHING_ASSISTANCE", unknowns)
+            if row["dressing_assistance"] is True:
+                self.assertIn("DRESSING_ASSISTANCE", matched)
+            else:
+                self.assertIn("DRESSING_ASSISTANCE", unknowns)
+
         self.assertTrue(all(row["hourly_rate"] == "UNKNOWN" for row in options))
 
         # Brand names are not acceptance criteria. A live, identity-verified provider
