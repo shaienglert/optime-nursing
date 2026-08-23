@@ -6,7 +6,7 @@ Decision order:
 1. Understand what the client actually wants.
 2. Reject only VERIFIED MUST mismatches. UNKNOWN never becomes a mismatch; a
    material MUST unknown keeps the decision provisional and should be researched/asked.
-3. Rank surviving candidates by explicit NICE-TO-HAVE fit.
+3. Rank surviving candidates by care-setting/product fit, then explicit NICE-TO-HAVE fit.
 4. Then use objective evidence: government/regulatory quality, public reputation,
    and relevant evidence completeness.
 
@@ -98,10 +98,10 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
 
     return {
-        "version": "client-intent-runtime-v1.2",
+        "version": "client-intent-runtime-v1.3",
         "must_haves": must,
         "nice_to_haves": nice,
-        "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
+        "rule": "Client intent first -> verified MUST gate -> care-setting/product fit -> NICE-TO-HAVE ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
         "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality.",
     }
 
@@ -279,6 +279,16 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
     hard_gate = str(fit.get("hard_gate") or "PENDING_VERIFICATION")
     gate_order = {"PASS": 0, "PENDING_VERIFICATION": 1, "FAIL": 2}.get(hard_gate, 1)
+
+    care_setting = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
+    care_status = _upper(care_setting.get("status"))
+    modalities = {_upper(row.get("canonical_type"))}
+    modalities.update(_upper(value) for value in row.get("housing_modalities") or [])
+    if care_status == "POSSIBLE_FIT" and ("INDEPENDENT_LIVING" in modalities or "LIFE_PLAN_CCRC" in modalities):
+        setting_order = 0
+    else:
+        setting_order = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INSUFFICIENT_SETTING": 3}.get(care_status, 1)
+
     nice_matches = len(fit.get("nice_match") or [])
     nice_scores = fit.get("nice_fit_scores") if isinstance(fit.get("nice_fit_scores"), dict) else {}
     community_fit = nice_scores.get("COMMUNITY_ENVIRONMENT_MATCH")
@@ -296,14 +306,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     reviews = reputation.get("review_count")
     rating_known = isinstance(rating, (int, float))
     reviews_known = isinstance(reviews, int)
-
-    care_setting = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
-    modalities = {_upper(row.get("canonical_type"))}
-    modalities.update(_upper(value) for value in row.get("housing_modalities") or [])
-    if "INDEPENDENT_LIVING" in modalities or "LIFE_PLAN_CCRC" in modalities:
-        setting_order = 0
-    else:
-        setting_order = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INSUFFICIENT_SETTING": 3}.get(_upper(care_setting.get("status")), 1)
 
     return (
         gate_order,
