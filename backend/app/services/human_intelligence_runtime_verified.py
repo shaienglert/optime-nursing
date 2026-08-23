@@ -14,6 +14,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 from functools import lru_cache
 from typing import Any, Dict, List
 
@@ -50,9 +51,16 @@ def _answered_adaptive_keys(questionnaire_state: Dict[str, Any]) -> set[str]:
 def _answered_fact_keys(questionnaire_state: Dict[str, Any]) -> set[str]:
     keys: set[str] = set()
     for row in _adaptive_signals(questionnaire_state):
-        fact_key = str(row.get("targetFactKey") or row.get("target_fact_key") or "").strip()
         answer = str(row.get("answer") or "").strip()
-        if fact_key and answer:
+        if not answer:
+            continue
+        fact_key = str(row.get("targetFactKey") or row.get("target_fact_key") or "").strip()
+        if not fact_key:
+            explanation = str(row.get("impactExplanation") or "")
+            match = re.search(r"Target fact:\s*([A-Za-z0-9_]+)", explanation)
+            if match:
+                fact_key = match.group(1)
+        if fact_key:
             keys.add(fact_key)
     return keys
 
@@ -110,7 +118,6 @@ def _governed_context(
     natural_language_query: str,
     questionnaire_state: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """Convert deterministic runtime output into Guardian evidence, never interview control."""
     accounting = account_user_input(natural_language_query)
     answered_fact_keys = _answered_fact_keys(questionnaire_state)
     blockers = _base_client_blockers(base_context, answered_fact_keys) + _strategy_client_blockers(strategy_context, answered_fact_keys)
