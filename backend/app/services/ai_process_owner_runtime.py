@@ -45,7 +45,12 @@ def _candidate_packet(result: Dict[str, Any]) -> List[Dict[str, Any]]:
     return packet
 
 
-def _phase(result: Dict[str, Any]) -> str:
+def _continuity_state(questionnaire_state: Dict[str, Any]) -> Dict[str, Any]:
+    state = questionnaire_state.get("aiProcessContinuity")
+    return state if isinstance(state, dict) else {}
+
+
+def _phase(result: Dict[str, Any], questionnaire_state: Dict[str, Any] | None = None) -> str:
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
     readiness = str(human.get("decision_readiness") or decision.get("decision_readiness") or "UNKNOWN").upper()
@@ -55,6 +60,17 @@ def _phase(result: Dict[str, Any]) -> str:
         return "RESEARCH"
     if decision.get("recommendation_execution_allowed") is not True:
         return "RESEARCH"
+
+    continuity = _continuity_state(questionnaire_state or {})
+    continuity_phase = str(continuity.get("phase") or "").upper()
+    last_event = str(continuity.get("lastEvent") or "").upper()
+    if last_event == "COMPARE_RETURNED" or continuity_phase == "FOLLOW_UP":
+        return "FOLLOW_UP"
+    if last_event in {"SHORTLIST_UPDATED", "COMPARE_OPENED"} or continuity_phase == "COMPARE":
+        return "COMPARE"
+    if continuity_phase == "RECOMMEND":
+        return "RECOMMEND"
+
     finality = str(decision.get("decision_finality") or "UNKNOWN").upper()
     if "PENDING" in finality or "PROVISIONAL" in finality or "INCOMPLETE" in finality:
         return "RESEARCH"
@@ -66,7 +82,8 @@ def _phase(result: Dict[str, Any]) -> str:
 def _prompt(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     patient = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else {}
-    phase = _phase(result)
+    continuity = _continuity_state(questionnaire_state)
+    phase = _phase(result, questionnaire_state)
     return {
         "role": "OPTIME_NURSING_AI_PROCESS_OWNER",
         "mission": "Own the resident/family decision process from understanding through recommendation and follow-up. Decide what should happen next, derive conclusions only from governed evidence, and propose practical solutions without inventing facts.",
@@ -82,10 +99,13 @@ def _prompt(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural
             "Choose exactly one next_best_action that advances the process most.",
             "If the client must answer something, ASK_CLIENT. If the missing fact belongs to a provider/facility, RESEARCH_FACILITY_FACTS.",
             "When evidence is sufficient, PRESENT_RECOMMENDATION and explain why it is preferable to alternatives.",
+            "Treat shortlist and comparison events as process evidence about what the client is considering; do not restart discovery when prior intent remains valid.",
+            "After the client returns from a comparison, continue in FOLLOW_UP: identify the remaining trade-off, verification task, or commitment step instead of replaying the original recommendation.",
             "Do not stop at a ranking: state conclusions, proposed solutions and the next step.",
         ],
         "original_user_request": natural_language_query,
         "questionnaire_state": questionnaire_state,
+        "prior_process_state": continuity,
         "patient_needs_profile": {
             "needs": patient.get("needs") or [],
             "location_city": patient.get("location_city"),
@@ -149,7 +169,8 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
         decision["process_owner"] = {
             "owner": "SEMANTIC_AI_PROCESS_OWNER",
             "status": "REQUIRED_BUT_DISABLED" if required else "DISABLED",
-            "phase": _phase(result),
+            "phase": _phase(result, questionnaire_state),
+            "prior_process_state": _continuity_state(questionnaire_state),
         }
         if required:
             decision["recommendation_execution_allowed"] = False
@@ -157,12 +178,18 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
 
     try:
         packet = _validate(_default_transport(_prompt(result, questionnaire_state, natural_language_query)), result)
-        decision["process_owner"] = {"owner": "SEMANTIC_AI_PROCESS_OWNER", "status": "ACTIVE", **packet}
+        decision["process_owner"] = {
+            "owner": "SEMANTIC_AI_PROCESS_OWNER",
+            "status": "ACTIVE",
+            "prior_process_state": _continuity_state(questionnaire_state),
+            **packet,
+        }
     except Exception as exc:
         decision["process_owner"] = {
             "owner": "SEMANTIC_AI_PROCESS_OWNER",
             "status": "FAILED",
-            "phase": _phase(result),
+            "phase": _phase(result, questionnaire_state),
+            "prior_process_state": _continuity_state(questionnaire_state),
             "error": str(exc),
         }
         if required:
