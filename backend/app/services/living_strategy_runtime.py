@@ -67,6 +67,10 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         couple = True
 
     no_dementia = _contains(query, "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern", "does not need cognitive support", "doesn't need cognitive support", "no cognitive support") or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
+    memory_care_needed = (
+        not no_dementia
+        and _contains(query, "dementia", "alzheimer", "memory care", "wandering", "cognitive decline", "cognitive impairment")
+    ) or _norm(questionnaire_state.get("memoryStatus")) in {"yes", "dementia", "memory care", "alzheimer", "alzheimers"}
 
     surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")
     spine_or_back = _contains(query, "spine", "spinal", "back surgery", "back operation")
@@ -99,9 +103,9 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     if couple:
         household["resident_profiles"] = [
             {
-                "role": "RECOVERING_PARTNER",
-                "current_needs": [item for item, present in (("ADL_SUPPORT", adl), ("MEDICATION_SUPPORT", medication), ("REHABILITATION", rehab or surgery)) if present],
-                "trajectory": "EXPECTED_IMPROVEMENT" if expected_recovery else "UNKNOWN",
+                "role": "HIGHER_NEED_PARTNER" if (adl or medication or memory_care_needed or rehab or surgery) else "PARTNER_A",
+                "current_needs": [item for item, present in (("ADL_SUPPORT", adl), ("MEDICATION_SUPPORT", medication), ("MEMORY_CARE", memory_care_needed), ("REHABILITATION", rehab or surgery)) if present],
+                "trajectory": "EXPECTED_IMPROVEMENT" if expected_recovery else "STABLE_OR_UNKNOWN",
                 "expected_support_duration_months": duration if duration is not None else "UNKNOWN",
             },
             {
@@ -114,6 +118,8 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     strategy_candidates: List[Dict[str, Any]] = []
 
     def add_strategy(strategy_id: str, status: str, rationale: str, required_capabilities: List[str], rank_hint: int) -> None:
+        if any(row.get("strategy_id") == strategy_id for row in strategy_candidates):
+            return
         strategy_candidates.append({
             "strategy_id": strategy_id,
             "status": status,
@@ -122,17 +128,13 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "rank_hint": rank_hint,
         })
 
-    # A resident who is explicitly independent and has no detected ADL, medication,
-    # cognitive, rehab, or post-acute need already has enough client-owned evidence
-    # to establish the least-restrictive primary strategy. This is a strategy fact,
-    # not a scripted interview question: Semantic AI still owns any remaining
-    # preference/financial clarification and the Guardian still validates READY.
     independent_long_term_pattern = (
         explicit_independence
         and no_adl_support
         and not adl
         and not medication
         and no_dementia
+        and not memory_care_needed
         and not surgery
         and not rehab
         and not skilled_rehab_known
@@ -153,12 +155,29 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             2,
         )
 
-    transient_support_pattern = adl and no_dementia and expected_recovery
+    if memory_care_needed:
+        add_strategy(
+            "MEMORY_CARE",
+            "LEADING",
+            "A stated dementia, Alzheimer’s, wandering, or material cognitive-impairment need requires a verified memory-care setting rather than ordinary Independent Living or generic Assisted Living.",
+            ["MEMORY_CARE_CONFIRMED", "SECURE_COGNITIVE_SUPPORT", "ADL_SUPPORT_IF_NEEDED"],
+            1,
+        )
+        if couple:
+            add_strategy(
+                "LIFE_PLAN_CCRC_WITH_MEMORY_CONTINUUM",
+                "STRONG_OPTION",
+                "For a couple with different care needs, a campus that can keep both partners nearby while providing verified memory care to the higher-need partner may preserve co-residence and continuity.",
+                ["COUPLE_CORESIDENCE", "INDEPENDENT_OR_ASSISTED_LIVING", "MEMORY_CARE_CONFIRMED", "CONTINUUM_OF_CARE"],
+                2,
+            )
+
+    transient_support_pattern = adl and no_dementia and not memory_care_needed and expected_recovery
     if transient_support_pattern:
         add_strategy(
             "INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE",
             "LEADING_CONDITIONAL",
-            "The care need appears temporary and primarily ADL-oriented. Independent Living plus temporary in-home/private-duty support may preserve the couple's preferred lifestyle if the building permits outside care and clinical rehab needs are covered separately.",
+            "The care need appears temporary and primarily ADL-oriented. Independent Living plus temporary in-home/private-duty support may preserve the preferred lifestyle if the building permits outside care and clinical rehab needs are covered separately.",
             ["INDEPENDENT_LIVING", "OUTSIDE_CARE_ALLOWED", "ACCESSIBLE_UNIT", "SOCIAL_PROGRAMMING"],
             1,
         )
@@ -166,11 +185,11 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         add_strategy(
             "POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING",
             "LEADING_CONDITIONAL",
-            "A post-operative spine recovery may require skilled PT/OT or short-stay rehabilitation before long-term residential placement. The rehab episode and the long-term living decision should not be conflated.",
+            "A post-operative recovery may require skilled PT/OT or short-stay rehabilitation before long-term residential placement. The rehab episode and the long-term living decision should not be conflated.",
             ["SKILLED_REHAB_OR_PT_OT", "DISCHARGE_PLAN", "INDEPENDENT_LIVING_AFTER_RECOVERY"],
             1,
         )
-    if couple and (high_social or expected_recovery):
+    if couple and (high_social or expected_recovery) and not memory_care_needed:
         add_strategy(
             "LIFE_PLAN_CCRC",
             "STRONG_OPTION",
@@ -178,19 +197,34 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             ["COUPLE_CORESIDENCE", "INDEPENDENT_LIVING", "ASSISTED_LIVING", "SKILLED_NURSING_OR_REHAB", "SOCIAL_PROGRAMMING"],
             2,
         )
-    if adl:
+    if adl and not memory_care_needed:
         add_strategy(
             "ASSISTED_LIVING",
-            "VALID_OPTION",
-            "Assisted Living directly supplies ADL support, but it should not automatically outrank lower-intensity strategies when the need is temporary and recovery is expected.",
+            "VALID_OPTION" if transient_support_pattern else "LEADING",
+            "Assisted Living directly supplies ADL support. It should lead for persistent non-skilled daily-care needs, but should not automatically outrank lower-intensity strategies when the need is temporary and recovery is expected.",
             ["ADL_SUPPORT", "MEDICATION_SUPPORT_IF_NEEDED", "SOCIAL_PROGRAMMING"],
             3 if transient_support_pattern else 1,
+        )
+    elif medication and not memory_care_needed and not skilled_rehab_known:
+        add_strategy(
+            "ASSISTED_LIVING",
+            "LEADING_CONDITIONAL",
+            "Medication-management support is a residential-care need that Independent Living alone does not establish. Assisted Living should lead unless a verified outside-care model safely covers the need.",
+            ["MEDICATION_SUPPORT", "ADL_SUPPORT_IF_NEEDED"],
+            1,
+        )
+        add_strategy(
+            "INDEPENDENT_LIVING_PLUS_OUTSIDE_CARE",
+            "ALTERNATIVE_CONDITIONAL",
+            "Independent Living may remain viable only where medication support can be safely supplied through a verified outside-care pathway.",
+            ["INDEPENDENT_LIVING", "OUTSIDE_CARE_ALLOWED", "MEDICATION_SUPPORT_EXTERNAL"],
+            2,
         )
     if skilled_rehab_known:
         add_strategy(
             "SHORT_STAY_SKILLED_NURSING_REHAB",
             "EPISODIC_OPTION",
-            "Short-stay skilled rehabilitation may be appropriate for the recovery episode if clinically indicated and covered, but it is not necessarily the couple's long-term residence.",
+            "Short-stay skilled rehabilitation may be appropriate for the recovery episode if clinically indicated and covered, but it is not necessarily the long-term residence.",
             ["SKILLED_NURSING", "PT", "OT", "DISCHARGE_PLANNING"],
             2,
         )
@@ -208,35 +242,35 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     if (surgery or rehab) and not skilled_rehab_known:
         clarification_candidates.append(_question(
             "rehab_level_needed",
-            "Does the surgeon or rehabilitation team say he needs skilled rehabilitation/physical or occupational therapy, or only help with daily tasks such as bathing and dressing?",
+            "Does the surgeon or rehabilitation team say the resident needs skilled rehabilitation/physical or occupational therapy, or only help with daily tasks such as bathing and dressing?",
             "This can materially change the care strategy.",
             ["Skilled PT/OT or rehabilitation", "Only personal-care help", "Both", "Not sure"],
         ))
     if (surgery or rehab) and medicare in {"", "unknown", "not sure", "unsure"}:
         clarification_candidates.append(_question(
             "medicare_status",
-            "Does he have Medicare, and if so is it Original Medicare or Medicare Advantage?",
+            "Does the resident have Medicare, and if so is it Original Medicare or Medicare Advantage?",
             "Coverage and network rules can materially change post-acute rehabilitation and home-health options.",
             ["Original Medicare", "Medicare Advantage", "No Medicare", "Not sure"],
         ))
     if expected_recovery and not move_timing:
         clarification_candidates.append(_question(
             "move_timing_vs_rehab",
-            "Do they want to move to the senior community during the recovery period, or finish most of the rehabilitation first and move afterward?",
+            "Should the move to senior living happen during recovery, or after most rehabilitation is complete?",
             "The strategy can differ between an immediate move and a move after functional recovery.",
             ["Move during recovery", "Finish rehabilitation first", "Flexible", "Not sure"],
         ))
     if budget in (None, "", 0):
         clarification_candidates.append(_question(
             "monthly_budget",
-            "What monthly housing-and-care budget are they comfortable with?",
+            "What monthly housing-and-care budget is comfortable?",
             "Different living-and-care strategies have materially different cost structures.",
             ["Under $5,000", "$5,000-$8,000", "$8,000-$12,000", "Above $12,000", "Not sure"],
         ))
     if couple and entrance_fee in {"", "unknown", "not sure", "unsure"}:
         clarification_candidates.append(_question(
             "ccrc_entrance_fee_tolerance",
-            "Would they consider a Life Plan/CCRC that may require a substantial one-time entrance fee in exchange for a continuum of care?",
+            "Would the couple consider a Life Plan/CCRC that may require a substantial one-time entrance fee in exchange for a continuum of care?",
             "This determines whether Life Plan communities should compete with monthly-rental options.",
             ["Yes", "No", "Depends on amount/terms", "Not sure"],
         ))
@@ -245,7 +279,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     unresolved = [q["question_key"] for q in clarification_candidates]
 
     return {
-        "version": "living-strategy-runtime-v1.2-ai-governed",
+        "version": "living-strategy-runtime-v1.3-decision-quality",
         "household": household,
         "signals": {
             "post_surgical": surgery,
@@ -255,6 +289,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "temporary_support_duration_months": duration if duration is not None else "UNKNOWN",
             "adl_support_needed": adl,
             "medication_support_needed": medication,
+            "memory_care_needed": memory_care_needed,
             "high_social_culture_priority": high_social,
             "no_dementia": no_dementia,
             "explicit_independence": explicit_independence,
