@@ -3,16 +3,18 @@ from __future__ import annotations
 """Final facility selection pipeline.
 
 1. Deterministic MUST gate, no AI discretion.
-2. Semantic AI ranking only among facilities with hard_gate=PASS.
-3. Deterministic NICE coverage reporting.
+2. Semantic AI owns an open-ended preference model and ranks only MUST_ELIGIBLE rows.
+3. Dynamic preference verification is evidence-closed-world: MATCH/MISMATCH requires
+   governed claims; missing evidence stays UNKNOWN.
 4. PENDING MUST candidates remain research candidates, never recommendations.
-5. Final facility facts can be verified and the same eligible set re-ranked later.
+5. Provider verification can add governed claims and trigger an AI rerank later.
 """
 
 from typing import Any, Dict, List
 
 from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates
 from app.services.client_intent_runtime import intent_rank_key
+from app.services.semantic_preference_runtime import build_dynamic_preference_model, verify_dynamic_preferences
 
 
 def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
@@ -47,6 +49,12 @@ def apply_must_ai_nice_pipeline(
             row["must_eligibility"] = "MUST_PENDING_VERIFICATION"
             pending.append(row)
 
+    # Open-ended semantic preference model: no code catalog of hobbies, cultures,
+    # languages, amenities, religions or lifestyle interests is required.
+    dynamic_preferences = build_dynamic_preference_model(human_context)
+    human_context["dynamic_preference_model"] = dynamic_preferences
+    decision["dynamic_preference_model"] = dynamic_preferences
+
     ranked, ai_status = rank_must_eligible_candidates(
         eligible,
         client_intent=client_intent,
@@ -54,7 +62,16 @@ def apply_must_ai_nice_pipeline(
         strategy=strategy,
         deterministic_fallback_key=_fallback_key,
     )
-    nice_summary = attach_nice_coverage(ranked, client_intent)
+
+    # Keep structured legacy NICE dimensions for audit/backward compatibility. They
+    # are not allowed to claim that all user-specific preferences are satisfied when
+    # a dynamic semantic preference model exists.
+    structured_nice_summary = attach_nice_coverage(ranked, client_intent)
+    for row in ranked:
+        row["structured_nice_to_have_coverage"] = dict(row.get("nice_to_have_coverage") or {})
+
+    selected = ranked[: max(0, int(limit or 0))]
+    dynamic_summary = verify_dynamic_preferences(selected, dynamic_preferences)
 
     for position, row in enumerate(ranked, start=1):
         row["rank_position"] = position
@@ -64,11 +81,14 @@ def apply_must_ai_nice_pipeline(
         row.setdefault("explanation", {})["selection_pipeline"] = {
             "stage_1": "MUST_ELIGIBLE_DETERMINISTIC",
             "stage_2": ai_status.get("status"),
-            "stage_3": (row.get("nice_to_have_coverage") or {}).get("status"),
+            "stage_3": (
+                "DYNAMIC_SEMANTIC_PREFERENCE_EVIDENCE"
+                if dynamic_preferences.get("preference_count")
+                else "STRUCTURED_NICE_COVERAGE"
+            ),
             "unknown_policy": "UNKNOWN_IS_INFORMATION_DEFICIT_NOT_NEGATIVE_EVIDENCE",
         }
 
-    selected = ranked[: max(0, int(limit or 0))]
     complete_selected = [row for row in selected if (row.get("nice_to_have_coverage") or {}).get("status") == "NICE_COMPLETE"]
 
     result["results"] = selected
@@ -85,12 +105,14 @@ def apply_must_ai_nice_pipeline(
         for row in pending
     ]
 
+    preference_count = int(dynamic_preferences.get("preference_count") or 0)
     decision["facility_selection_pipeline"] = {
-        "version": "must-ai-nice-v1",
+        "version": "must-ai-dynamic-preferences-v2",
         "order": [
             "DETERMINISTIC_MUST_GATE",
+            "SEMANTIC_AI_DYNAMIC_PREFERENCE_MODEL",
             "SEMANTIC_AI_RANK_MUST_ELIGIBLE",
-            "DETERMINISTIC_NICE_COVERAGE",
+            "EVIDENCE_CLOSED_WORLD_PREFERENCE_VERIFICATION",
             "PROVIDER_FACT_VERIFICATION",
             "AI_RERANK_AFTER_NEW_EVIDENCE",
         ],
@@ -98,17 +120,22 @@ def apply_must_ai_nice_pipeline(
         "must_pending_verification_count": len(pending),
         "must_rejected_count": len(rejected),
         "ai_ranking": ai_status,
-        "nice_to_have": nice_summary,
+        "dynamic_preferences": dynamic_summary,
+        "structured_nice_audit": structured_nice_summary,
         "top_nice_complete_count": len(complete_selected),
         "top_nice_complete_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_selected],
         "client_statement": (
-            f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and match every verified NICE-TO-HAVE. "
-            "This is the current ranking based on the evidence available now. We recommend verifying the remaining provider-specific facts directly with the facilities; those answers may change the ranking and make the recommendation more precise."
-            if complete_selected
-            else
-            "The displayed facilities pass every verified MUST requirement. Some NICE-TO-HAVE evidence is still incomplete, so this ranking is provisional and provider verification can materially improve it."
+            f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and have governed evidence matching every specific preference you expressed. "
+            "This ranking can still change when we verify missing provider facts directly with the facilities."
+            if preference_count and complete_selected
+            else (
+                "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
+                if preference_count
+                else
+                "The displayed facilities pass every verified MUST requirement. The current ranking is provisional and provider verification can materially improve it."
+            )
         ),
-        "rule": "AI never decides MUST eligibility. Only MUST_ELIGIBLE facilities are ranked for the client; MUST_PENDING_VERIFICATION stays in research and can enter a later rerank only after verification.",
+        "rule": "AI never decides MUST eligibility. Semantic AI may create arbitrary client preference dimensions without code changes, but MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
     }
     decision["must_gate"] = {
         **(decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}),
@@ -119,8 +146,9 @@ def apply_must_ai_nice_pipeline(
     }
     decision["ranking_order"] = [
         "DETERMINISTIC_MUST_GATE",
+        "SEMANTIC_AI_DYNAMIC_PREFERENCES",
         "SEMANTIC_AI_ALL_GOVERNED_EVIDENCE",
-        "NICE_COVERAGE_DISCLOSURE",
+        "EVIDENCE_GROUNDED_PREFERENCE_COVERAGE",
         "PROVIDER_VERIFICATION",
         "AI_RERANK",
     ]
