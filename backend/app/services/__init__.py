@@ -125,6 +125,21 @@ def _readiness_from_decision(decision: dict[str, Any]) -> str:
     return str(human.get("decision_readiness") or "UNKNOWN").upper()
 
 
+def _client_interview_blocked(readiness: str) -> bool:
+    """Only unresolved client intent blocks matching; facility research is downstream work."""
+    return readiness not in {"READY", "NEEDS_RESEARCH"}
+
+
+def _mark_client_ready_for_research(decision: dict[str, Any], readiness: str) -> None:
+    if readiness != "NEEDS_RESEARCH":
+        return
+    decision["client_decision_readiness"] = "READY"
+    decision["facility_research_state"] = "RESEARCH_REQUIRED"
+    decision["decision_finality"] = "PROVISIONAL_PENDING_FACILITY_RESEARCH"
+    decision["recommendation_execution_allowed"] = False
+    decision["readiness_separation_rule"] = "Client readiness and facility evidence readiness are separate. Facility research never reopens a completed client interview."
+
+
 def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[str, Any]:
     decision = _decision_from_profile(profile)
     human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
@@ -133,9 +148,9 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
     process_owner = {
         "owner": "SEMANTIC_AI_PROCESS_OWNER",
         "status": "ACTIVE" if semantic.get("status") == "CONSULTED_AND_VALIDATED" else semantic.get("status", "UNKNOWN"),
-        "process_phase": "CLARIFICATION" if readiness == "NEEDS_CLARIFICATION" else "RESEARCH",
+        "process_phase": "CLARIFICATION",
         "next_best_action": {
-            "action": "ASK_CLIENT" if readiness == "NEEDS_CLARIFICATION" else "RESEARCH_FACILITY_FACTS",
+            "action": "ASK_CLIENT",
             "question": (questions[0].get("question") if questions and isinstance(questions[0], dict) else None),
         },
         "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
@@ -145,11 +160,11 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
         "results": [],
         "result_count": 0,
         "total_candidates_scored": 0,
-        "availability_policy": "Recommendations are blocked until the governed AI interview is READY.",
+        "availability_policy": "Recommendations are blocked until the governed AI interview has enough client evidence to begin research.",
         "care_setting_policy": {"status": "BLOCKED_PENDING_AI_INTERVIEW", "decision_intelligence": decision},
         "decision_intelligence": {
             **decision,
-            "decision_finality": "BLOCKED_PENDING_AI_INTERVIEW" if readiness != "NEEDS_RESEARCH" else "BLOCKED_PENDING_AI_RESEARCH",
+            "decision_finality": "BLOCKED_PENDING_AI_INTERVIEW",
             "recommendation_execution_allowed": False,
             "interview_owner": "SEMANTIC_AI",
             "process_owner": process_owner,
@@ -162,7 +177,7 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
             "adaptive_questions": questions,
             "semantic_ai": semantic,
             "process_owner": process_owner,
-            "rule": "No facility ranking or recommendation execution before governed Semantic AI Process Owner + OPTIME Guardian return READY.",
+            "rule": "Only unresolved client intent may block facility matching. Facility research is downstream of a completed client interview.",
         },
     }
 
@@ -197,10 +212,13 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
 
         def wrapped(questionnaire_state: dict[str, Any], natural_language_query: str = "", limit: int = 50):
             profile = profile_builder(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+            profile_readiness = "UNKNOWN"
             if isinstance(profile, dict):
-                readiness = _readiness_from_decision(_decision_from_profile(profile))
-                if readiness != "READY":
-                    return _blocked_interview_result(profile, readiness)
+                profile_decision = _decision_from_profile(profile)
+                profile_readiness = _readiness_from_decision(profile_decision)
+                if _client_interview_blocked(profile_readiness):
+                    return _blocked_interview_result(profile, profile_readiness)
+                _mark_client_ready_for_research(profile_decision, profile_readiness)
 
             internal_limit = max(500, int(limit or 50))
             result = original(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=internal_limit)
@@ -208,9 +226,10 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
                 return result
             decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
             readiness = _readiness_from_decision(decision)
-            if readiness != "READY":
+            if _client_interview_blocked(readiness):
                 runtime_profile = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else profile
                 return _blocked_interview_result(runtime_profile or {}, readiness)
+            _mark_client_ready_for_research(decision, readiness)
 
             from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
             from app.services.ai_process_owner_runtime import attach_ai_process_owner
