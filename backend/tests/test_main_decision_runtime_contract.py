@@ -108,7 +108,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertTrue(top_decision["recommendation_execution_allowed"])
         self.assertEqual(
             top_decision["ranking_order"],
-            ["CLIENT_INTENT", "MUST_GATE", "NICE_TO_HAVE", "GOVERNMENT_REGULATORY_DATA", "PUBLIC_REPUTATION", "RELEVANT_EVIDENCE_COMPLETENESS"],
+            ["DETERMINISTIC_MUST_GATE", "SEMANTIC_AI_ALL_GOVERNED_EVIDENCE", "NICE_COVERAGE_DISCLOSURE", "PROVIDER_VERIFICATION", "AI_RERANK"],
         )
         self.assertEqual(len(patient_decision["success_factor_policy"]["factors"]), 16)
         human = patient_decision["human_intelligence"]
@@ -118,7 +118,9 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertTrue(serialized["results"])
         first = serialized["results"][0]
         self.assertIn("client_intent_fit", first)
-        self.assertIn(first["client_intent_fit"]["hard_gate"], {"PASS", "PENDING_VERIFICATION"})
+        self.assertEqual(first["client_intent_fit"]["hard_gate"], "PASS")
+        self.assertEqual(first["must_eligibility"], "MUST_ELIGIBLE")
+        self.assertIn("nice_to_have_coverage", first)
         self.assertEqual(len(first["success_factor_trace"]["factors"]), 16)
         self.assertIn("success_factor_summary", first["explanation"])
         self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3.1")
