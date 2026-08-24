@@ -22,6 +22,12 @@ _GOVERNED_FULLNAME = f"{__name__}.patient_decision_engine"
 _RUNTIME_DIR = Path(__file__).resolve().parent / "patient_decision_engine_runtime"
 _RUNTIME_INIT = _RUNTIME_DIR / "__init__.py"
 
+# Install cross-cutting semantic household governance before any service imports the
+# living-strategy builder. This prevents bereavement language from becoming a false
+# current-couple requirement anywhere in the runtime.
+from app.services.living_strategy_guard_patch import install_patch as _install_living_strategy_guard
+_install_living_strategy_guard()
+
 
 def _agency_matches_for_row(row: dict[str, Any], result: dict[str, Any]) -> list[dict[str, Any]]:
     access = row.get("care_partner_access") if isinstance(row.get("care_partner_access"), dict) else {}
@@ -235,7 +241,7 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             _mark_client_ready_for_research(decision, readiness)
 
             from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
-            from app.services.ai_process_owner_runtime import attach_ai_process_owner
+            from app.services.ai_process_owner_guard_patch import attach_ai_process_owner_guarded
             from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
 
             result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit))
@@ -245,7 +251,7 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             decision.setdefault("recommendation_execution_allowed", True)
             result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, internal_limit)
             result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
-            result = attach_ai_process_owner(result, questionnaire_state, natural_language_query)
+            result = attach_ai_process_owner_guarded(result, questionnaire_state, natural_language_query)
             return _suppress_unverified_recommendations(result)
 
         setattr(wrapped, "_combined_care_wrapped", True)
