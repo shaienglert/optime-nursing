@@ -21,6 +21,27 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         refresh_runtime_cache("pca_decision_integration_teardown")
         load_personal_care_agency_evidence.cache_clear()
 
+    def _run_ready(self, state: dict, query: str, limit: int) -> dict:
+        # PCA tests begin after the client interview. Neutral Human Intelligence
+        # preferences may be acknowledged here; strategy-specific facts must be
+        # explicit in each fixture and are never fabricated by this helper.
+        hi = state.setdefault("humanIntelligenceV2", {})
+        hi.setdefault("personalityProfile", {}).setdefault("communitySizePreference", "No preference")
+        hi.setdefault("familyProfile", {}).setdefault("socialInteractionNeed", "Neither")
+        hi.setdefault("transitionRiskProfile", {}).setdefault("attitudeTowardMove", "Cautious but open")
+        ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        with patch.dict(
+            os.environ,
+            {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"},
+            clear=False,
+        ), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
+            return_value=ai_result,
+        ):
+            result = run_patient_decision_engine(state, query, limit=limit)
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
+        return result
+
     def test_post_spine_recovery_il_strategy_surfaces_governed_pca_candidates(self) -> None:
         state = {
             "relationship": "Wife",
@@ -28,17 +49,26 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
             "assistanceLevel": "Needs assistance with bathing and dressing",
             "memoryStatus": "No",
             "distanceFromFamily": "Balanced location",
+            "budget": 8000,
+            "medicareStatus": "Original Medicare",
+            "moveTiming": "Move during recovery",
+            "entranceFeeTolerance": "No",
             "humanIntelligenceV2": {
                 "familyProfile": {"socialInteractionNeed": "Very important"},
+                "transitionRiskProfile": {
+                    "attitudeTowardMove": "Wants to move",
+                    "postHospitalRehabNeed": "No",
+                },
             },
         }
         query = (
             "My husband and I are both over 80 and want independent senior living in Las Vegas. "
             "He had spinal surgery and is expected to recover, but for about 3 months he needs help "
             "with getting into the shower, bathing, dressing, socks and shoes. I am independent and "
-            "we want to live together."
+            "we want to live together. The clinical team says he needs personal-care help rather than skilled rehabilitation. "
+            "We can spend up to $8,000 per month, have Original Medicare, want to move during recovery, and do not want a CCRC entrance fee."
         )
-        result = run_patient_decision_engine(state, query, limit=10)
+        result = self._run_ready(state, query, limit=10)
         layer = result["decision_intelligence"]["care_partner_layer"]
         evidence = load_personal_care_agency_evidence()
         self.assertEqual(layer["licensed_valley_universe_count"], 363)
@@ -46,13 +76,35 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         self.assertEqual(layer["status"], "CANDIDATES_PENDING_OPERATIONAL_VERIFICATION")
         self.assertIn("BATHING_ASSISTANCE", layer["requirements"]["required_services"])
         self.assertIn("DRESSING_ASSISTANCE", layer["requirements"]["required_services"])
+
         options = layer["candidate_options"]
         self.assertGreaterEqual(len(options), 2)
-        names = {row["agency_name"] for row in options}
-        self.assertIn("RIGHT AT HOME LAS VEGAS", names)
-        self.assertIn("COMFORT KEEPERS", names)
         self.assertEqual(result["care_partner_options"], options)
+
+        live_evidence_by_license = {row["license_number"]: row for row in evidence["records"]}
+        surfaced_licenses = {row["license_number"] for row in options}
+        self.assertTrue(surfaced_licenses.issubset(set(live_evidence_by_license)))
+        self.assertTrue(all(row["license_status"] == "ACTIVE" for row in options))
+        self.assertTrue(all(row["bathing_assistance"] is not False for row in options))
+        self.assertTrue(all(row["dressing_assistance"] is not False for row in options))
+        self.assertTrue(all((row.get("care_agency_fit") or {}).get("hard_gate") != "FAIL" for row in options))
+
+        for row in options:
+            fit = row.get("care_agency_fit") or {}
+            matched = set(fit.get("matched") or [])
+            unknowns = set(fit.get("material_unknowns") or [])
+            if row["bathing_assistance"] is True:
+                self.assertIn("BATHING_ASSISTANCE", matched)
+            else:
+                self.assertIn("BATHING_ASSISTANCE", unknowns)
+            if row["dressing_assistance"] is True:
+                self.assertIn("DRESSING_ASSISTANCE", matched)
+            else:
+                self.assertIn("DRESSING_ASSISTANCE", unknowns)
+
         self.assertTrue(all(row["hourly_rate"] == "UNKNOWN" for row in options))
+        self.assertIn("9703-PCS-7", live_evidence_by_license)
+        self.assertEqual(live_evidence_by_license["9703-PCS-7"]["agency_name"], "RIGHT AT HOME LAS VEGAS")
 
         evidence_by_id = {row["agency_id"]: row for row in evidence["records"]}
         self.assertEqual(evidence_by_id["NV-PCA-11759-PCS-1"]["minimum_billable_hours"], 0)
@@ -72,10 +124,11 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
             "ageGroup": "80+",
             "assistanceLevel": "Needs 24/7 skilled nursing",
             "memoryStatus": "No",
+            "budget": 12000,
         }
-        result = run_patient_decision_engine(
+        result = self._run_ready(
             state,
-            "My father needs 24/7 skilled nursing in Las Vegas and is not looking for independent living.",
+            "My father needs 24/7 skilled nursing in Las Vegas and is not looking for independent living. His monthly budget is $12,000.",
             limit=5,
         )
         layer = result["decision_intelligence"]["care_partner_layer"]

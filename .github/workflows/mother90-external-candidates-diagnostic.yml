@@ -1,0 +1,29 @@
+name: Mother 90 External Candidates Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - 'backend/tests/test_mother90_external_candidates_diagnostic.py'
+      - 'backend/app/services/patient_decision_engine.py'
+      - 'backend/app/services/patient_decision_engine_runtime/**'
+      - 'backend/app/services/client_intent_runtime.py'
+      - 'backend/app/services/facility_parameter_service.py'
+      - 'database/nevada_facility_universe_canonical.json'
+      - '.github/workflows/mother90-external-candidates-diagnostic.yml'
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install -r backend/requirements.txt
+      - run: python -m unittest backend.tests.test_mother90_external_candidates_diagnostic -v

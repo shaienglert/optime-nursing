@@ -63,11 +63,17 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         must.append({"key": key, "reason": reason, "verification": verification})
 
     def add_nice(key: str, reason: str) -> None:
-        nice.append({"key": key, "reason": reason})
+        if not any(str(item.get("key") or "") == key for item in nice):
+            nice.append({"key": key, "reason": reason})
 
     city = str(questionnaire_state.get("locationCity") or questionnaire_state.get("city") or "").strip().upper()
-    if "las vegas" in query or city == "LAS VEGAS":
-        add_must("LAS_VEGAS", "The requested market is Las Vegas.", "canonical city/state")
+    las_vegas_requested = "las vegas" in query or city == "LAS VEGAS"
+    city_limits_only = any(token in query for token in ("las vegas city limits", "city limits only", "within las vegas city", "only in las vegas city"))
+    if las_vegas_requested:
+        if city_limits_only:
+            add_must("LAS_VEGAS_CITY_LIMITS", "The client explicitly restricted the search to Las Vegas city limits.", "canonical city/state")
+        else:
+            add_must("LAS_VEGAS", "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.", "canonical Las Vegas Valley market geography")
 
     if household.get("type") == "COUPLE":
         add_must("COUPLE_CORESIDENCE", "The couple wants to live together; a solution that cannot house both partners is not acceptable.", "unit/occupancy policy")
@@ -86,6 +92,8 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
 
     if signals.get("high_social_culture_priority"):
         add_nice("RICH_CULTURE_AND_ACTIVITIES", "The clients explicitly want substantial culture, classes, events and social opportunities.")
+    if any(token in query for token in ("classical music", "classical concert", "classical concerts")):
+        add_nice("CLASSICAL_MUSIC_ACCESS", "The client explicitly values classical music; generic social programming is not sufficient evidence for this preference.")
 
     community = human_signals.get("community_size_preference") if isinstance(human_signals.get("community_size_preference"), dict) else {}
     community_value = _upper(community.get("value"))
@@ -98,11 +106,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
 
     return {
-        "version": "client-intent-runtime-v1.2",
+        "version": "client-intent-runtime-v1.3",
         "must_haves": must,
         "nice_to_haves": nice,
         "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
-        "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality.",
+        "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality. A specific NICE preference remains unresolved until evidence verifies that exact preference; a broader category cannot silently satisfy it.",
     }
 
 
@@ -127,6 +135,15 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     for must in intent.get("must_haves") or []:
         key = str(must.get("key") or "")
         if key == "LAS_VEGAS":
+            las_vegas_valley_cities = {
+                "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
+                "SPRING VALLEY", "ENTERPRISE", "WINCHESTER", "SUNRISE MANOR",
+            }
+            if state == "NV" and city in las_vegas_valley_cities:
+                must_pass.append(key)
+            else:
+                hard_fail.append(key)
+        elif key == "LAS_VEGAS_CITY_LIMITS":
             if state == "NV" and city == "LAS VEGAS":
                 must_pass.append(key)
             else:
@@ -205,6 +222,12 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
+        elif key == "CLASSICAL_MUSIC_ACCESS":
+            if any(p.get("classical_music_verified") is True for p in payloads):
+                nice_match.append(key)
+                nice_fit_scores[key] = 100.0
+            else:
+                nice_unknown.append(key)
         elif key == "COMMUNITY_ENVIRONMENT_MATCH":
             value = size.get("fit_score")
             if isinstance(value, (int, float)):
@@ -228,6 +251,8 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
+        else:
+            nice_unknown.append(key)
 
     reputation = get_public_reputation(row)
     web_rating = reputation.get("rating") if isinstance(reputation.get("rating"), (int, float)) else None
@@ -285,11 +310,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     community_fit_known = isinstance(community_fit, (int, float))
 
     history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}
-    disciplinary = _upper(history.get("disciplinary_action"))
-    disciplinary_order = 0 if disciplinary == "N" else (2 if disciplinary == "Y" else 1)
-    counts = history.get("grade_counts") if isinstance(history.get("grade_counts"), dict) else {}
-    latest_grade = _upper(history.get("latest_known_grade"))
-    grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "UNKNOWN": 4}.get(latest_grade, 4)
 
     reputation = fit.get("public_reputation") if isinstance(fit.get("public_reputation"), dict) else {}
     rating = reputation.get("rating")
@@ -305,6 +325,21 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         setting_order = 0
     else:
         setting_order = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INSUFFICIENT_SETTING": 3}.get(care_status, 1)
+
+    independent_capable = care_status in {"PRIMARY_FIT", "POSSIBLE_FIT"} and (
+        "INDEPENDENT_LIVING" in modalities or "LIFE_PLAN_CCRC" in modalities
+    )
+    disciplinary = _upper(history.get("disciplinary_action"))
+    latest_grade = _upper(history.get("latest_known_grade"))
+    raw_counts = history.get("grade_counts") if isinstance(history.get("grade_counts"), dict) else {}
+    if independent_capable:
+        disciplinary_order = 2 if disciplinary == "Y" else 0
+        grade_order = {"C": 2, "D": 3}.get(latest_grade, 0)
+        counts = {"C": int(raw_counts.get("C") or 0), "D": int(raw_counts.get("D") or 0)}
+    else:
+        disciplinary_order = 0 if disciplinary == "N" else (2 if disciplinary == "Y" else 1)
+        counts = raw_counts
+        grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "UNKNOWN": 4}.get(latest_grade, 4)
 
     return (
         gate_order,

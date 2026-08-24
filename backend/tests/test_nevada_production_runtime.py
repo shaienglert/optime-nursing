@@ -16,6 +16,18 @@ from app.services.patient_decision_engine import run_patient_decision_engine
 from app.services.public_reputation_runtime import get_public_reputation
 
 
+LAS_VEGAS_VALLEY_CITIES = {
+    "LAS VEGAS",
+    "HENDERSON",
+    "NORTH LAS VEGAS",
+    "PARADISE",
+    "SPRING VALLEY",
+    "ENTERPRISE",
+    "WINCHESTER",
+    "SUNRISE MANOR",
+}
+
+
 class NevadaProductionRuntimeTests(unittest.TestCase):
     def setUp(self) -> None:
         self.env = patch.dict(os.environ, {"OPTIME_CANONICAL_MARKET": "las-vegas"}, clear=False)
@@ -27,6 +39,13 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         refresh_runtime_cache("test_teardown")
 
     def _run_ready(self, questionnaire: dict, query: str, limit: int = 5) -> dict:
+        # This helper means the client-owned Human Intelligence interview is complete.
+        # It may neutralize optional person-fit dimensions, but it never fabricates
+        # strategy-specific facts such as budget, Medicare, rehab level, or move timing.
+        hi = questionnaire.setdefault("humanIntelligenceV2", {})
+        hi.setdefault("personalityProfile", {}).setdefault("communitySizePreference", "No preference")
+        hi.setdefault("familyProfile", {}).setdefault("socialInteractionNeed", "Neither")
+        hi.setdefault("transitionRiskProfile", {}).setdefault("attitudeTowardMove", "Cautious but open")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
@@ -126,16 +145,17 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         self_search = self._run_ready({**base, "relationship": "Myself"}, "I am 84, recently widowed, live in Las Vegas, am mentally alert and mobile, and need help with bathing, dressing, meals and medication. No dementia.")
         self.assertEqual([row["canonical_facility_id"] for row in son["results"]], [row["canonical_facility_id"] for row in self_search["results"]])
 
-    def test_explicit_las_vegas_location_is_preserved_after_ai_ready(self) -> None:
+    def test_explicit_las_vegas_market_is_preserved_as_valley_after_ai_ready(self) -> None:
         result = self._run_ready(
-            {"relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No"},
-            "My father lives in Las Vegas and needs help with bathing and medication. No dementia.",
+            {"relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 6500},
+            "My father lives in Las Vegas and needs help with bathing and medication. No dementia. His monthly budget is $6,500.",
         )
         profile = result["patient_needs_profile"]
         self.assertEqual(profile["location_city"], "LAS VEGAS")
         self.assertEqual(profile["natural_language_mapping"]["location_city"], "LAS VEGAS")
         self.assertEqual(5, len(result["results"]))
-        self.assertTrue(all(row["city"].upper() == "LAS VEGAS" for row in result["results"]))
+        self.assertTrue(all(str(row.get("state") or "").upper() == "NV" for row in result["results"]))
+        self.assertTrue(all(str(row.get("city") or "").upper() in LAS_VEGAS_VALLEY_CITIES for row in result["results"]))
 
     def test_governed_nevada_ranking_replaces_stale_legacy_tie_metadata_after_ai_ready(self) -> None:
         result = self._run_ready(

@@ -3,9 +3,10 @@ from __future__ import annotations
 """Service package import governance.
 
 Production resolves the public patient-decision-engine name to the integrated runtime.
-Semantic AI owns interview sequencing; Guardian/rules constrain and validate. Client-
-intent READY permits facility matching/research to begin, while unresolved facility
-MUST evidence keeps recommendation finality provisional and never becomes a silent PASS.
+Semantic AI owns the process from interview sequencing through governed recommendation
+synthesis and next action; Guardian/rules constrain and validate. Client-intent READY
+permits facility matching/research to begin, while unresolved facility MUST evidence
+keeps recommendation finality provisional and never becomes a silent PASS.
 """
 
 import importlib.abc
@@ -60,9 +61,12 @@ def _reconcile_adl_must(row: dict[str, Any]) -> None:
         while "ADL_SUPPORT_AVAILABLE" in bucket:
             bucket.remove("ADL_SUPPORT_AVAILABLE")
     coverage = str(solution.get("combined_must_coverage") or "PENDING_VERIFICATION")
-    if coverage == "PASS": passed.append("ADL_SUPPORT_AVAILABLE")
-    elif coverage == "FAIL": failed.append("ADL_SUPPORT_AVAILABLE")
-    else: unknown.append("ADL_SUPPORT_AVAILABLE")
+    if coverage == "PASS":
+        passed.append("ADL_SUPPORT_AVAILABLE")
+    elif coverage == "FAIL":
+        failed.append("ADL_SUPPORT_AVAILABLE")
+    else:
+        unknown.append("ADL_SUPPORT_AVAILABLE")
     fit["must_pass"] = passed
     fit["must_unknown"] = unknown
     fit["must_fail"] = failed
@@ -78,6 +82,7 @@ def _reconcile_adl_must(row: dict[str, Any]) -> None:
 def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict[str, Any], natural_language_query: str, limit: int) -> dict[str, Any]:
     from app.services.client_intent_runtime import intent_rank_key
     from app.services.combined_care_solution_runtime import attach_combined_care_solutions
+
     rows = list(result.get("results") or [])
     for row in rows:
         row["external_care_agency_matches"] = _agency_matches_for_row(row, result)
@@ -125,6 +130,16 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
     human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
     questions = human.get("adaptive_questions") or decision.get("adaptive_questions") or []
     semantic = human.get("semantic_ai") if isinstance(human.get("semantic_ai"), dict) else {}
+    process_owner = {
+        "owner": "SEMANTIC_AI_PROCESS_OWNER",
+        "status": "ACTIVE" if semantic.get("status") == "CONSULTED_AND_VALIDATED" else semantic.get("status", "UNKNOWN"),
+        "process_phase": "CLARIFICATION" if readiness == "NEEDS_CLARIFICATION" else "RESEARCH",
+        "next_best_action": {
+            "action": "ASK_CLIENT" if readiness == "NEEDS_CLARIFICATION" else "RESEARCH_FACILITY_FACTS",
+            "question": (questions[0].get("question") if questions and isinstance(questions[0], dict) else None),
+        },
+        "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
+    }
     return {
         "patient_needs_profile": profile,
         "results": [],
@@ -137,6 +152,7 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
             "decision_finality": "BLOCKED_PENDING_AI_INTERVIEW" if readiness != "NEEDS_RESEARCH" else "BLOCKED_PENDING_AI_RESEARCH",
             "recommendation_execution_allowed": False,
             "interview_owner": "SEMANTIC_AI",
+            "process_owner": process_owner,
             "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
         },
         "recommendation_audit_trace": {
@@ -145,7 +161,8 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
             "reason": readiness,
             "adaptive_questions": questions,
             "semantic_ai": semantic,
-            "rule": "No facility ranking or recommendation execution before governed Semantic AI + OPTIME Guardian return READY.",
+            "process_owner": process_owner,
+            "rule": "No facility ranking or recommendation execution before governed Semantic AI Process Owner + OPTIME Guardian return READY.",
         },
     }
 
@@ -185,7 +202,8 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
                 if readiness != "READY":
                     return _blocked_interview_result(profile, readiness)
 
-            result = original(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=limit)
+            internal_limit = max(500, int(limit or 50))
+            result = original(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=internal_limit)
             if not isinstance(result, dict):
                 return result
             decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
@@ -195,16 +213,23 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
                 return _blocked_interview_result(runtime_profile or {}, readiness)
 
             from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
-            result = apply_semantic_facility_requirements(result, research_limit=max(20, int(limit or 50)))
+            from app.services.ai_process_owner_runtime import attach_ai_process_owner
+            from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
+
+            result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit))
             decision = result.setdefault("decision_intelligence", {})
             decision["interview_owner"] = "SEMANTIC_AI"
             decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
             decision.setdefault("recommendation_execution_allowed", True)
-            result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, limit)
+            result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, internal_limit)
+            result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
+            result = attach_ai_process_owner(result, questionnaire_state, natural_language_query)
             return _suppress_unverified_recommendations(result)
 
         setattr(wrapped, "_combined_care_wrapped", True)
         setattr(wrapped, "_ai_interview_gate_wrapped", True)
+        setattr(wrapped, "_ai_process_owner_wrapped", True)
+        setattr(wrapped, "_must_ai_nice_pipeline_wrapped", True)
         module.run_patient_decision_engine = wrapped
 
 

@@ -1,0 +1,31 @@
+name: Golden Mother 90 Lifecycle
+
+on:
+  pull_request:
+    paths:
+      - 'backend/app/services/human_intelligence_runtime_verified.py'
+      - 'backend/app/services/living_strategy_runtime.py'
+      - 'backend/app/services/semantic_intent_ai.py'
+      - 'backend/app/services/patient_decision_engine.py'
+      - 'backend/app/services/patient_decision_engine/**'
+      - 'backend/tests/test_golden_mother_90_full_lifecycle.py'
+      - '.github/workflows/golden-mother90.yml'
+  workflow_dispatch:
+
+jobs:
+  golden-mother-90:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend runtime dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Run full lifecycle mother-90 golden simulation
+        run: python -m unittest backend.tests.test_golden_mother_90_full_lifecycle -v

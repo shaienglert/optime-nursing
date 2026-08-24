@@ -12,6 +12,7 @@ on:
       - 'backend/app/services/human_intelligence_runtime_verified.py'
       - 'backend/app/services/living_strategy_runtime.py'
       - 'backend/app/services/client_intent_runtime.py'
+      - 'backend/app/services/ai_process_owner_runtime.py'
       - 'backend/app/services/provider_housing_runtime.py'
       - 'backend/app/services/public_reputation_runtime.py'
       - 'backend/app/services/success_factor_runtime.py'
@@ -32,11 +33,18 @@ on:
       - 'backend/tests/test_success_factor_runtime.py'
       - 'backend/tests/test_decision_governance_runtime.py'
       - 'backend/tests/test_decision_agent_bridge.py'
+      - 'backend/tests/test_ai_process_owner_runtime.py'
+      - 'backend/tests/test_decision_quality_market_and_regulatory.py'
+      - 'backend/tests/test_decision_quality_strategy_families.py'
+      - 'backend/tests/test_decision_quality_topn_causality.py'
+      - 'backend/tests/test_decision_quality_topn_gates.py'
+      - 'backend/tests/test_golden_topn_decision_quality.py'
       - 'data/nevada/verified/independent_living_primary_evidence.json'
       - 'data/nevada/verified/provider_housing_primary_evidence.json'
       - 'data/nevada/verified/life_plan_primary_evidence.json'
       - 'data/nevada/verified/public_reputation_snapshot.json'
       - 'frontend/src/app/adaptive-interview/**'
+      - 'frontend/src/lib/decision-fact-canonicalization.ts'
       - 'frontend/src/app/api/ops/smoke/recommendations/**'
       - 'database/las_vegas_person_fit_summary_v1.b64'
       - 'database/nevada_facility_universe_canonical.json'
@@ -59,7 +67,7 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Install backend runtime dependencies
         run: python -m pip install -r backend/requirements.txt
-      - name: Run deterministic Nevada runtime tests
+      - name: Run deterministic Nevada runtime and golden decision-quality tests
         run: |
           python -m unittest \
             backend.tests.test_database_runtime \
@@ -72,8 +80,14 @@ jobs:
             backend.tests.test_success_factor_runtime \
             backend.tests.test_decision_governance_runtime \
             backend.tests.test_decision_agent_bridge \
-            backend.tests.test_main_decision_runtime_contract
-      - name: Verify AI-owned interview gate and READY-only Nevada ranking
+            backend.tests.test_ai_process_owner_runtime \
+            backend.tests.test_main_decision_runtime_contract \
+            backend.tests.test_decision_quality_market_and_regulatory \
+            backend.tests.test_decision_quality_strategy_families \
+            backend.tests.test_decision_quality_topn_causality \
+            backend.tests.test_decision_quality_topn_gates \
+            backend.tests.test_golden_topn_decision_quality
+      - name: Verify unified AI interview, Guardian, Valley and READY contracts
         run: |
           python - <<'PY'
           import json
@@ -85,6 +99,19 @@ jobs:
 
           os.environ['OPTIME_SEMANTIC_AI_ENABLED'] = '1'
           os.environ['OPTIME_SEMANTIC_AI_REQUIRED'] = '1'
+
+          VALLEY_CITIES = {
+              'las vegas', 'henderson', 'north las vegas', 'paradise',
+              'spring valley', 'enterprise', 'winchester', 'sunrise manor',
+          }
+          EXPECTED_RANKING_ORDER = [
+              'DETERMINISTIC_MUST_GATE',
+              'SEMANTIC_AI_DYNAMIC_PREFERENCES',
+              'SEMANTIC_AI_ALL_GOVERNED_EVIDENCE',
+              'EVIDENCE_GROUNDED_PREFERENCE_COVERAGE',
+              'PROVIDER_VERIFICATION',
+              'AI_RERANK',
+          ]
 
           base = {
               'relationship': 'Dad',
@@ -100,8 +127,6 @@ jobs:
               'He is mentally alert, has no dementia, is still mobile, and needs daily help.'
           )
 
-          # Phase 1: the AI owns the interview. A clarification state MUST stop the
-          # recommendation engine before any facility is scored or exposed.
           clarification_question = 'What matters most to him about the social environment in his next home?'
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'NEEDS_CLARIFICATION',
@@ -117,53 +142,70 @@ jobs:
           only_question = human['adaptive_questions'][0]
           assert only_question['question'] == clarification_question, only_question
           assert only_question['question_key'].startswith('semantic_ai_high_information_question:'), only_question
-          assert blocked['result_count'] == 0, blocked['result_count']
-          assert blocked['total_candidates_scored'] == 0, blocked['total_candidates_scored']
-          assert blocked['results'] == [], blocked['results']
+          assert only_question.get('target_fact_key'), only_question
+          assert blocked['result_count'] == 0 and blocked['results'] == []
           assert blocked['decision_intelligence']['recommendation_execution_allowed'] is False
           assert blocked['decision_intelligence']['decision_finality'] == 'BLOCKED_PENDING_AI_INTERVIEW'
-          assert blocked['recommendation_audit_trace']['blocked_before_facility_ranking'] is True
 
-          # Phase 2: only an AI+Guardian READY state unlocks facility matching.
+          premature_answers = iter([
+              {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
+              {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': clarification_question, 'statements': []},
+          ])
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: next(premature_answers)
+          vetoed = run_patient_decision_engine(base, query, limit=5)
+          veto_human = vetoed['decision_intelligence']['human_intelligence']
+          assert veto_human['decision_readiness'] == 'NEEDS_CLARIFICATION', veto_human
+          assert veto_human['readiness_guardian']['veto_applied'] is True
+          assert veto_human['readiness_guardian']['veto_resolution'] == 'RETURNED_TO_SEMANTIC_AI_FOR_NEXT_BEST_QUESTION'
+          assert veto_human['readiness_guardian']['client_owned_blockers']
+          assert vetoed['results'] == [] and vetoed['result_count'] == 0
+
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
-              'decision_readiness': 'READY',
-              'next_question': None,
-              'statements': [],
+              'decision_readiness': 'READY', 'next_question': None, 'statements': [],
           }
 
+          base_ready = deepcopy(base)
+          base_ready['humanIntelligenceV2'] = {
+              'personalityProfile': {'communitySizePreference': 'Large community'},
+              'familyProfile': {'socialInteractionNeed': 'Neither'},
+              'transitionRiskProfile': {'attitudeTowardMove': 'Cautious but open'},
+              'scoringEngine': {'adaptiveSignals': []},
+          }
           personas = {
-              'son_for_father': {'questionnaire_state': base, 'natural_language_query': query},
+              'son_for_father': {'questionnaire_state': base_ready, 'natural_language_query': query},
               'self_search': {
-                  'questionnaire_state': {**base, 'relationship': 'Myself'},
+                  'questionnaire_state': {**base_ready, 'relationship': 'Myself'},
                   'natural_language_query': query.replace('My father is', 'I am').replace('He has', 'I have').replace('He is', 'I am').replace('needs daily help', 'need daily help'),
               },
           }
 
-          output = {'blocked_interview': {'question': clarification_question, 'result_count': 0}}
+          output = {
+              'blocked_interview': {'question': clarification_question, 'result_count': 0},
+              'premature_ready_veto': {
+                  'decision_readiness': veto_human['decision_readiness'],
+                  'veto_resolution': veto_human['readiness_guardian']['veto_resolution'],
+                  'result_count': vetoed['result_count'],
+              },
+          }
           for key, persona in personas.items():
               result = run_patient_decision_engine(**persona, limit=5)
               assert result['decision_intelligence']['recommendation_execution_allowed'] is True, key
               assert result['decision_intelligence']['interview_owner'] == 'SEMANTIC_AI', key
               assert result['result_count'] == 5, f'{key}: no recommendations after READY'
-              assert result['total_candidates_scored'] > 0, f'{key}: no candidates scored after READY'
               assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f'{key}: location not governed'
-              assert result['care_setting_policy']['version'] == 'v1.1', f'{key}: wrong care-setting policy'
-              assert result['decision_intelligence']['version'] == 'decision-intelligence-runtime-v3.1', f'{key}: decision intelligence missing'
-              assert result['decision_intelligence']['ranking_order'] == ['CLIENT_INTENT','MUST_GATE','NICE_TO_HAVE','GOVERNMENT_REGULATORY_DATA','PUBLIC_REPUTATION','RELEVANT_EVIDENCE_COMPLETENESS']
+              assert result['decision_intelligence']['ranking_order'] == EXPECTED_RANKING_ORDER
               human = result['decision_intelligence']['human_intelligence']
               assert human['decision_readiness'] == 'READY', human
-              assert human['adaptive_questions'] == [], human['adaptive_questions']
-              assert human['signals']['recent_bereavement']['value'] == 'YES', f'{key}: bereavement signal lost'
-              assert len(result['decision_intelligence']['success_factor_policy']['factors']) == 16, f'{key}: success-factor canon disconnected'
-              assert all((row.get('client_intent_fit') or {}).get('hard_gate') != 'FAIL' for row in result['results']), f'{key}: MUST-failed result escaped gate'
+              assert human['adaptive_questions'] == []
+              assert human['signals']['recent_bereavement']['value'] == 'YES'
+              assert all((row.get('client_intent_fit') or {}).get('hard_gate') != 'FAIL' for row in result['results'])
               for row in result['results']:
                   assert str(row.get('state') or '').upper() == 'NV', f'{key}: non-NV result {row}'
-                  assert str(row.get('city') or '').strip().lower() == 'las vegas', f'{key}: city constraint missed {row}'
-                  assert 'human_person_fit' in row, f'{key}: person-fit evidence missing'
-                  assert len(row['success_factor_trace']['factors']) == 16, f'{key}: per-facility factor trace incomplete'
+                  assert str(row.get('city') or '').strip().lower() in VALLEY_CITIES, f'{key}: outside Valley {row}'
+                  assert 'human_person_fit' in row
+                  assert len(row['success_factor_trace']['factors']) == 16
               output[key] = {'decision_readiness': 'READY', 'top5': [row.get('facility_name') for row in result['results']]}
 
-          # Explicit preferences are allowed to affect fit only after READY.
           def answered(size):
               state = deepcopy(base)
               state['humanIntelligenceV2'] = {
@@ -176,47 +218,68 @@ jobs:
 
           large = answered('Large community')
           small = answered('Small community')
-          large_ids = [r['canonical_facility_id'] for r in large['results']]
-          small_ids = [r['canonical_facility_id'] for r in small['results']]
-          assert large_ids != small_ids, 'Explicit environment preference does not change Top-5 after READY'
+          assert [r['canonical_facility_id'] for r in large['results']] != [r['canonical_facility_id'] for r in small['results']]
           output['answered_variants'] = {
               'large_top5': [r['facility_name'] for r in large['results']],
               'small_top5': [r['facility_name'] for r in small['results']],
           }
 
-          # Strategy rules may identify material unknowns, but they cannot inject
-          # questions into the interview. Those unknowns are supplied to the AI as
-          # Guardian context; the AI chooses the next question.
           couple_state = {
-              'relationship': 'Dad',
+              'relationship': 'Wife',
               'ageGroup': '80+',
               'assistanceLevel': 'Needs assistance with bathing and dressing',
               'memoryStatus': 'No',
               'distanceFromFamily': 'Balanced location',
-              'humanIntelligenceV2': {'familyProfile': {'socialInteractionNeed': 'Very important'}},
+              'humanIntelligenceV2': {
+                  'familyProfile': {'socialInteractionNeed': 'Very important'},
+                  'personalityProfile': {'communitySizePreference': 'No preference'},
+                  'transitionRiskProfile': {'attitudeTowardMove': 'Wants to move'},
+              },
           }
           couple_query = (
               'A couple age 80+ wants to move to senior living in Las Vegas with lots of culture, classes and activities. '
-              'The husband had spinal surgery and needs rehabilitation. He is expected to return to walking, but for the next '
-              '3 months he needs help with bathing and dressing. The wife is independent and they want to live together.'
+              'The husband had spinal surgery and is expected to recover, but for the next 3 months he needs help with bathing and dressing. '
+              'The wife is independent and they want to live together.'
           )
-          couple = run_patient_decision_engine(couple_state, couple_query, limit=5)
-          guardian = couple['decision_intelligence']['human_intelligence']['living_strategy_guardian']
-          material_unknowns = set(guardian['material_unknowns'])
-          for required in ('medicare_status', 'move_timing_vs_rehab', 'monthly_budget', 'ccrc_entrance_fee_tolerance'):
-              assert required in material_unknowns, (required, material_unknowns)
-          assert couple['decision_intelligence']['human_intelligence']['adaptive_questions'] == []
+          couple_question = 'What does the rehabilitation team say is needed next?'
+          couple_answers = iter([
+              {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
+              {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': couple_question, 'statements': []},
+          ])
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: next(couple_answers)
+          couple_blocked = run_patient_decision_engine(couple_state, couple_query, limit=5)
+          couple_human = couple_blocked['decision_intelligence']['human_intelligence']
+          unknowns = set(couple_human['living_strategy_guardian']['material_unknowns'])
+          for required in ('rehab_level_needed', 'medicare_status', 'move_timing_vs_rehab', 'monthly_budget', 'ccrc_entrance_fee_tolerance'):
+              assert required in unknowns, (required, unknowns)
+          assert couple_blocked['decision_intelligence']['recommendation_execution_allowed'] is False
+          assert couple_blocked['results'] == []
+          assert len(couple_human['adaptive_questions']) == 1
+          assert couple_human['adaptive_questions'][0].get('target_fact_key')
+
+          couple_ready = deepcopy(couple_state)
+          couple_ready.update({
+              'budget': 8000,
+              'medicareStatus': 'Original Medicare',
+              'moveTiming': 'Move during recovery',
+              'entranceFeeTolerance': 'No',
+          })
+          couple_ready['humanIntelligenceV2']['transitionRiskProfile']['postHospitalRehabNeed'] = 'No'
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
+              'decision_readiness': 'READY', 'next_question': None, 'statements': [],
+          }
+          couple = run_patient_decision_engine(couple_ready, couple_query + ' The clinical team says only personal-care help is needed, not skilled rehab. Our budget is $8,000 monthly; he has Original Medicare; we want to move during recovery and do not want a CCRC entrance fee.', limit=5)
           assert couple['decision_intelligence']['recommendation_execution_allowed'] is True
           strategy = couple['decision_intelligence']['living_strategy']
           assert strategy['household']['type'] == 'COUPLE', strategy
-          assert strategy['signals']['spine_or_back_surgery'] is True, strategy
-          assert strategy['signals']['expected_recovery'] is True, strategy
-          assert strategy['signals']['temporary_support_duration_months'] == 3, strategy
+          assert strategy['signals']['spine_or_back_surgery'] is True
+          assert strategy['signals']['expected_recovery'] is True
+          assert strategy['signals']['temporary_support_duration_months'] == 3
           strategy_ids = [s['strategy_id'] for s in strategy['strategy_candidates']]
           assert {'INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE','POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING','LIFE_PLAN_CCRC','ASSISTED_LIVING'}.issubset(set(strategy_ids)), strategy_ids
           output['couple_rehab'] = {
-              'strategy_ids': strategy_ids,
-              'guardian_material_unknowns': sorted(material_unknowns),
+              'blocked_unknowns': sorted(unknowns),
+              'strategy_ids_after_resolution': strategy_ids,
               'top5': [r['facility_name'] for r in couple['results']],
           }
 

@@ -1,0 +1,38 @@
+name: Nursing MUST AI NICE Pipeline
+
+on:
+  pull_request:
+    paths:
+      - 'backend/app/services/client_intent_runtime.py'
+      - 'backend/app/services/ai_candidate_ranking_runtime.py'
+      - 'backend/app/services/semantic_preference_runtime.py'
+      - 'backend/app/services/must_ai_nice_pipeline.py'
+      - 'backend/app/services/__init__.py'
+      - 'backend/tests/test_must_ai_nice_pipeline.py'
+      - 'backend/tests/test_dynamic_semantic_preferences.py'
+      - 'backend/tests/test_specific_nice_preferences.py'
+      - 'backend/tests/test_golden_mother_90_full_lifecycle.py'
+      - '.github/workflows/must-ai-nice-pipeline.yml'
+  workflow_dispatch:
+
+jobs:
+  must-ai-nice:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: backend
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install -r backend/requirements.txt
+      - name: Validate deterministic MUST, open-ended semantic preferences, evidence-closed-world coverage and golden lifecycle
+        run: |
+          python -m unittest \
+            backend.tests.test_must_ai_nice_pipeline \
+            backend.tests.test_dynamic_semantic_preferences \
+            backend.tests.test_specific_nice_preferences \
+            backend.tests.test_golden_mother_90_full_lifecycle -v

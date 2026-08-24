@@ -1,0 +1,44 @@
+name: Nursing AI Process Owner
+
+on:
+  pull_request:
+    paths:
+      - 'backend/app/services/ai_process_owner_runtime.py'
+      - 'backend/app/services/__init__.py'
+      - 'backend/app/services/semantic_intent_ai.py'
+      - 'backend/app/services/human_intelligence_runtime_verified.py'
+      - 'backend/tests/test_ai_process_owner_runtime.py'
+      - '.github/workflows/nursing-ai-process-owner.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-ai-process-owner:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend runtime dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Verify governed AI process owner
+        run: python -m unittest backend.tests.test_ai_process_owner_runtime -v
+      - name: Verify process-owner wiring exists in public runtime
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          services = Path('backend/app/services/__init__.py').read_text(encoding='utf-8')
+          owner = Path('backend/app/services/ai_process_owner_runtime.py').read_text(encoding='utf-8')
+          assert 'attach_ai_process_owner(result, questionnaire_state, natural_language_query)' in services
+          assert 'SEMANTIC_AI_PROCESS_OWNER' in services
+          assert 'candidate_identity_closed_world' in owner
+          assert 'OPTIME_AI_PROCESS_OWNER_REQUIRED' in owner
+          assert 'PRESENT_RECOMMENDATION' in owner
+          assert 'RESEARCH_FACILITY_FACTS' in owner
+          print('AI_PROCESS_OWNER_WIRING=PASS')
+          PY
