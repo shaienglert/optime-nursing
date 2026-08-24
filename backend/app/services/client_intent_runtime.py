@@ -63,7 +63,8 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         must.append({"key": key, "reason": reason, "verification": verification})
 
     def add_nice(key: str, reason: str) -> None:
-        nice.append({"key": key, "reason": reason})
+        if not any(str(item.get("key") or "") == key for item in nice):
+            nice.append({"key": key, "reason": reason})
 
     city = str(questionnaire_state.get("locationCity") or questionnaire_state.get("city") or "").strip().upper()
     las_vegas_requested = "las vegas" in query or city == "LAS VEGAS"
@@ -91,6 +92,8 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
 
     if signals.get("high_social_culture_priority"):
         add_nice("RICH_CULTURE_AND_ACTIVITIES", "The clients explicitly want substantial culture, classes, events and social opportunities.")
+    if any(token in query for token in ("classical music", "classical concert", "classical concerts")):
+        add_nice("CLASSICAL_MUSIC_ACCESS", "The client explicitly values classical music; generic social programming is not sufficient evidence for this preference.")
 
     community = human_signals.get("community_size_preference") if isinstance(human_signals.get("community_size_preference"), dict) else {}
     community_value = _upper(community.get("value"))
@@ -103,11 +106,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
 
     return {
-        "version": "client-intent-runtime-v1.2",
+        "version": "client-intent-runtime-v1.3",
         "must_haves": must,
         "nice_to_haves": nice,
         "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
-        "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality.",
+        "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality. A specific NICE preference remains unresolved until evidence verifies that exact preference; a broader category cannot silently satisfy it.",
     }
 
 
@@ -219,6 +222,12 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
+        elif key == "CLASSICAL_MUSIC_ACCESS":
+            if any(p.get("classical_music_verified") is True for p in payloads):
+                nice_match.append(key)
+                nice_fit_scores[key] = 100.0
+            else:
+                nice_unknown.append(key)
         elif key == "COMMUNITY_ENVIRONMENT_MATCH":
             value = size.get("fit_score")
             if isinstance(value, (int, float)):
@@ -242,6 +251,8 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
+        else:
+            nice_unknown.append(key)
 
     reputation = get_public_reputation(row)
     web_rating = reputation.get("rating") if isinstance(reputation.get("rating"), (int, float)) else None
@@ -315,11 +326,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     else:
         setting_order = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INSUFFICIENT_SETTING": 3}.get(care_status, 1)
 
-    # Nevada does not license standalone Independent Living as an RFG. When an
-    # Independent Living product is the care-setting fit being compared, an RFG A/B
-    # grade on a hybrid campus is not positive evidence about its IL product and must
-    # not outrank a standalone IL community merely because the latter has no RFG grade.
-    # Adverse regulatory evidence (disciplinary action or C/D) remains a penalty.
     independent_capable = care_status in {"PRIMARY_FIT", "POSSIBLE_FIT"} and (
         "INDEPENDENT_LIVING" in modalities or "LIFE_PLAN_CCRC" in modalities
     )
