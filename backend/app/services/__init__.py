@@ -205,6 +205,9 @@ def _suppress_unverified_recommendations(result: dict[str, Any]) -> dict[str, An
 class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
     def exec_module(self, module: ModuleType) -> None:
         super().exec_module(module)
+        from app.services.decision_agent_bridge_fast import attach_agent_evidence_and_queue_gaps_fast
+        module.attach_agent_evidence_and_queue_gaps = attach_agent_evidence_and_queue_gaps_fast
+
         original = getattr(module, "run_patient_decision_engine", None)
         profile_builder = getattr(module, "build_patient_needs_profile", None)
         if not callable(original) or not callable(profile_builder) or getattr(original, "_combined_care_wrapped", False):
