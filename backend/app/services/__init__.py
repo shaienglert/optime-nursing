@@ -202,7 +202,8 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
                 if readiness != "READY":
                     return _blocked_interview_result(profile, readiness)
 
-            result = original(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=limit)
+            internal_limit = max(500, int(limit or 50))
+            result = original(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=internal_limit)
             if not isinstance(result, dict):
                 return result
             decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
@@ -213,19 +214,22 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
 
             from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
             from app.services.ai_process_owner_runtime import attach_ai_process_owner
+            from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
 
-            result = apply_semantic_facility_requirements(result, research_limit=max(20, int(limit or 50)))
+            result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit))
             decision = result.setdefault("decision_intelligence", {})
             decision["interview_owner"] = "SEMANTIC_AI"
             decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
             decision.setdefault("recommendation_execution_allowed", True)
-            result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, limit)
+            result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, internal_limit)
+            result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
             result = attach_ai_process_owner(result, questionnaire_state, natural_language_query)
             return _suppress_unverified_recommendations(result)
 
         setattr(wrapped, "_combined_care_wrapped", True)
         setattr(wrapped, "_ai_interview_gate_wrapped", True)
         setattr(wrapped, "_ai_process_owner_wrapped", True)
+        setattr(wrapped, "_must_ai_nice_pipeline_wrapped", True)
         module.run_patient_decision_engine = wrapped
 
 
