@@ -6,10 +6,13 @@ from __future__ import annotations
 2. Semantic AI owns an open-ended preference model and ranks only MUST_ELIGIBLE rows.
 3. Dynamic preference verification is evidence-closed-world: MATCH/MISMATCH requires
    governed claims; missing evidence stays UNKNOWN.
-4. PENDING MUST candidates remain research candidates, never recommendations.
-5. Provider verification can add governed claims and trigger an AI rerank later.
+4. Legacy structured NICE signals are audit-only and cannot drive the authoritative
+   ranking or NICE_COMPLETE result.
+5. PENDING MUST candidates remain research candidates, never recommendations.
+6. Provider verification can add governed claims and trigger an AI rerank later.
 """
 
+from copy import deepcopy
 from typing import Any, Dict, List
 
 from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates
@@ -19,6 +22,19 @@ from app.services.semantic_preference_runtime import build_dynamic_preference_mo
 
 def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     return intent_rank_key(row)
+
+
+def _remove_legacy_nice_from_authoritative_path(rows: List[Dict[str, Any]]) -> None:
+    for row in rows:
+        fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+        row["legacy_structured_nice_fit"] = {
+            "nice_match": list(fit.get("nice_match") or []),
+            "nice_unknown": list(fit.get("nice_unknown") or []),
+            "nice_fit_scores": dict(fit.get("nice_fit_scores") or {}),
+        }
+        fit["nice_match"] = []
+        fit["nice_unknown"] = []
+        fit["nice_fit_scores"] = {}
 
 
 def apply_must_ai_nice_pipeline(
@@ -49,29 +65,55 @@ def apply_must_ai_nice_pipeline(
             row["must_eligibility"] = "MUST_PENDING_VERIFICATION"
             pending.append(row)
 
-    # Open-ended semantic preference model: no code catalog of hobbies, cultures,
-    # languages, amenities, religions or lifestyle interests is required.
+    # Build the authoritative open-ended preference model exclusively from Semantic
+    # AI's interpretation of the conversation. No catalog of hobbies/preferences is
+    # required in the decision code.
     dynamic_preferences = build_dynamic_preference_model(human_context)
     human_context["dynamic_preference_model"] = dynamic_preferences
     decision["dynamic_preference_model"] = dynamic_preferences
 
+    # Preserve the old fixed NICE fields only for audit, then remove their influence
+    # from both AI ranking packets and deterministic fallback ordering.
+    audit_intent = deepcopy(client_intent)
+    _remove_legacy_nice_from_authoritative_path(eligible)
+    ranking_intent = deepcopy(client_intent)
+    ranking_intent["nice_to_haves"] = []
+
     ranked, ai_status = rank_must_eligible_candidates(
         eligible,
-        client_intent=client_intent,
+        client_intent=ranking_intent,
         human_context=human_context,
         strategy=strategy,
         deterministic_fallback_key=_fallback_key,
     )
 
-    # Keep structured legacy NICE dimensions for audit/backward compatibility. They
-    # are not allowed to claim that all user-specific preferences are satisfied when
-    # a dynamic semantic preference model exists.
-    structured_nice_summary = attach_nice_coverage(ranked, client_intent)
-    for row in ranked:
-        row["structured_nice_to_have_coverage"] = dict(row.get("nice_to_have_coverage") or {})
+    # Calculate the legacy structured view only as an audit artifact. It cannot set
+    # the authoritative NICE_COMPLETE flag.
+    audit_rows = deepcopy(ranked)
+    for audit_row in audit_rows:
+        legacy = audit_row.get("legacy_structured_nice_fit") if isinstance(audit_row.get("legacy_structured_nice_fit"), dict) else {}
+        fit = audit_row.get("client_intent_fit") if isinstance(audit_row.get("client_intent_fit"), dict) else {}
+        fit["nice_match"] = list(legacy.get("nice_match") or [])
+        fit["nice_unknown"] = list(legacy.get("nice_unknown") or [])
+        fit["nice_fit_scores"] = dict(legacy.get("nice_fit_scores") or {})
+    structured_nice_summary = attach_nice_coverage(audit_rows, audit_intent)
 
     selected = ranked[: max(0, int(limit or 0))]
     dynamic_summary = verify_dynamic_preferences(selected, dynamic_preferences)
+
+    # If the client expressed no dynamic NICE preferences, do not fabricate
+    # NICE_COMPLETE. The client simply has no preference-completeness claim to make.
+    if not dynamic_preferences.get("preference_count"):
+        for row in selected:
+            row["nice_to_have_coverage"] = {
+                "status": "NO_EXPLICIT_DYNAMIC_NICE",
+                "required": [],
+                "verified_match": [],
+                "unresolved": [],
+                "verified_match_count": 0,
+                "required_count": 0,
+                "source": "DYNAMIC_SEMANTIC_PREFERENCE_MODEL",
+            }
 
     for position, row in enumerate(ranked, start=1):
         row["rank_position"] = position
@@ -81,12 +123,9 @@ def apply_must_ai_nice_pipeline(
         row.setdefault("explanation", {})["selection_pipeline"] = {
             "stage_1": "MUST_ELIGIBLE_DETERMINISTIC",
             "stage_2": ai_status.get("status"),
-            "stage_3": (
-                "DYNAMIC_SEMANTIC_PREFERENCE_EVIDENCE"
-                if dynamic_preferences.get("preference_count")
-                else "STRUCTURED_NICE_COVERAGE"
-            ),
+            "stage_3": "DYNAMIC_SEMANTIC_PREFERENCE_EVIDENCE",
             "unknown_policy": "UNKNOWN_IS_INFORMATION_DEFICIT_NOT_NEGATIVE_EVIDENCE",
+            "legacy_nice_role": "AUDIT_ONLY",
         }
 
     complete_selected = [row for row in selected if (row.get("nice_to_have_coverage") or {}).get("status") == "NICE_COMPLETE"]
@@ -107,7 +146,7 @@ def apply_must_ai_nice_pipeline(
 
     preference_count = int(dynamic_preferences.get("preference_count") or 0)
     decision["facility_selection_pipeline"] = {
-        "version": "must-ai-dynamic-preferences-v2",
+        "version": "must-ai-dynamic-preferences-v3",
         "order": [
             "DETERMINISTIC_MUST_GATE",
             "SEMANTIC_AI_DYNAMIC_PREFERENCE_MODEL",
@@ -121,7 +160,8 @@ def apply_must_ai_nice_pipeline(
         "must_rejected_count": len(rejected),
         "ai_ranking": ai_status,
         "dynamic_preferences": dynamic_summary,
-        "structured_nice_audit": structured_nice_summary,
+        "legacy_structured_nice_audit": structured_nice_summary,
+        "legacy_structured_nice_authoritative": False,
         "top_nice_complete_count": len(complete_selected),
         "top_nice_complete_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_selected],
         "client_statement": (
@@ -132,10 +172,10 @@ def apply_must_ai_nice_pipeline(
                 "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
                 if preference_count
                 else
-                "The displayed facilities pass every verified MUST requirement. The current ranking is provisional and provider verification can materially improve it."
+                "The displayed facilities pass every verified MUST requirement. No explicit NICE preference-completeness claim is being made; provider verification can still improve the ranking."
             )
         ),
-        "rule": "AI never decides MUST eligibility. Semantic AI may create arbitrary client preference dimensions without code changes, but MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
+        "rule": "AI never decides MUST eligibility. Semantic AI may create arbitrary client preference dimensions without code changes. Legacy fixed NICE fields are audit-only. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
     }
     decision["must_gate"] = {
         **(decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}),
