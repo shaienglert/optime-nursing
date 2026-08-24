@@ -17,11 +17,16 @@ from typing import Any, Dict, List
 
 from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates
 from app.services.client_intent_runtime import intent_rank_key
+from app.services.human_intelligence_runtime_verified import person_fit_sort_key
 from app.services.semantic_preference_runtime import build_dynamic_preference_model, verify_dynamic_preferences
 
 
 def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
-    return intent_rank_key(row)
+    # When live AI ranking is unavailable, preserve explicit resident preferences
+    # already captured in the governed questionnaire state before generic tie-breaks.
+    # This does not affect MUST eligibility and does not turn facility size into a
+    # quality factor; it only preserves explicit preference congruence.
+    return (*person_fit_sort_key(row), *intent_rank_key(row))
 
 
 def _remove_legacy_nice_from_authoritative_path(rows: List[Dict[str, Any]]) -> None:
@@ -73,7 +78,9 @@ def apply_must_ai_nice_pipeline(
     decision["dynamic_preference_model"] = dynamic_preferences
 
     # Preserve the old fixed NICE fields only for audit, then remove their influence
-    # from both AI ranking packets and deterministic fallback ordering.
+    # from both AI ranking packets and deterministic fallback ordering. Explicit
+    # questionnaire person-fit congruence remains available to the deterministic
+    # fallback via human_person_fit; it is not treated as provider quality evidence.
     audit_intent = deepcopy(client_intent)
     _remove_legacy_nice_from_authoritative_path(eligible)
     ranking_intent = deepcopy(client_intent)
