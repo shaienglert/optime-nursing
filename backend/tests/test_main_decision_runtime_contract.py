@@ -108,7 +108,14 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertTrue(top_decision["recommendation_execution_allowed"])
         self.assertEqual(
             top_decision["ranking_order"],
-            ["DETERMINISTIC_MUST_GATE", "SEMANTIC_AI_ALL_GOVERNED_EVIDENCE", "NICE_COVERAGE_DISCLOSURE", "PROVIDER_VERIFICATION", "AI_RERANK"],
+            [
+                "DETERMINISTIC_MUST_GATE",
+                "SEMANTIC_AI_DYNAMIC_PREFERENCES",
+                "SEMANTIC_AI_ALL_GOVERNED_EVIDENCE",
+                "EVIDENCE_GROUNDED_PREFERENCE_COVERAGE",
+                "PROVIDER_VERIFICATION",
+                "AI_RERANK",
+            ],
         )
         self.assertEqual(len(patient_decision["success_factor_policy"]["factors"]), 16)
         human = patient_decision["human_intelligence"]
