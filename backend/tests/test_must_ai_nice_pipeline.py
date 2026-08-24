@@ -47,11 +47,11 @@ class MustAiNicePipelineTests(unittest.TestCase):
             },
         }
 
-    def test_only_must_pass_enters_ai_ranking_and_nice_is_separate(self):
+    def test_only_must_pass_enters_ai_ranking_and_legacy_nice_is_not_authoritative(self):
         packet = {
             "ranked_candidates": [
-                {"canonical_facility_id": "B", "reason": "overall evidence", "information_deficits": ["SOCIAL"]},
-                {"canonical_facility_id": "A", "reason": "verified social match", "information_deficits": []},
+                {"canonical_facility_id": "B", "reason": "overall evidence", "information_deficits": []},
+                {"canonical_facility_id": "A", "reason": "overall evidence", "information_deficits": []},
             ]
         }
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "1"}, clear=False), patch(
@@ -64,9 +64,13 @@ class MustAiNicePipelineTests(unittest.TestCase):
         self.assertEqual(result["must_pending_verification_count"], 1)
         self.assertEqual(result["must_rejected_count"], 1)
         self.assertEqual(result["results"][0]["must_eligibility"], "MUST_ELIGIBLE")
-        self.assertEqual(result["results"][0]["nice_to_have_coverage"]["status"], "NICE_UNVERIFIED")
-        self.assertEqual(result["results"][1]["nice_to_have_coverage"]["status"], "NICE_COMPLETE")
-        self.assertEqual(result["decision_intelligence"]["facility_selection_pipeline"]["ai_ranking"]["status"], "AI_RANKED")
+        self.assertEqual(result["results"][0]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
+        self.assertEqual(result["results"][1]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
+        self.assertEqual(result["results"][0]["legacy_structured_nice_fit"]["nice_unknown"], ["SOCIAL"])
+        self.assertEqual(result["results"][1]["legacy_structured_nice_fit"]["nice_match"], ["SOCIAL"])
+        pipeline = result["decision_intelligence"]["facility_selection_pipeline"]
+        self.assertEqual(pipeline["ai_ranking"]["status"], "AI_RANKED")
+        self.assertFalse(pipeline["legacy_structured_nice_authoritative"])
         self.assertEqual(result["decision_intelligence"]["ranking_order"][0], "DETERMINISTIC_MUST_GATE")
 
     def test_ai_cannot_introduce_or_drop_must_eligible_candidate(self):
