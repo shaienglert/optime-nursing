@@ -27,8 +27,10 @@ ADVISORY_AGENT_ORDER = [
     "data_quality",
 ]
 
+DECISION_TIME_AGENT_KNOWLEDGE_MAX_CHARS = 1800
 
-def _compact_payload(value: Any, max_chars: int = 6000) -> str:
+
+def _compact_payload(value: Any, max_chars: int = DECISION_TIME_AGENT_KNOWLEDGE_MAX_CHARS) -> str:
     if isinstance(value, (dict, list)):
         text = json.dumps(value, ensure_ascii=False, default=str)
     else:
@@ -120,6 +122,7 @@ def build_learning_center_advice(*, user_text: str) -> Dict[str, Any]:
         "policy": {
             "role": "ADVISORY_NOT_AUTHORITATIVE",
             "prefer_fresh_agent_reports": True,
+            "decision_time_knowledge_budget_chars_per_agent": DECISION_TIME_AGENT_KNOWLEDGE_MAX_CHARS,
             "unknown_remains_unknown": True,
             "must_not_invent_facility_facts": True,
             "must_preserve_user_meaning": True,
@@ -128,4 +131,4 @@ def build_learning_center_advice(*, user_text: str) -> Dict[str, Any]:
     }
 
 
-__all__ = ["build_learning_center_advice", "ADVISORY_AGENT_ORDER"]
+__all__ = ["build_learning_center_advice", "ADVISORY_AGENT_ORDER", "DECISION_TIME_AGENT_KNOWLEDGE_MAX_CHARS"]
