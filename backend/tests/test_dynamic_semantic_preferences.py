@@ -53,6 +53,11 @@ class DynamicSemanticPreferenceTests(unittest.TestCase):
                     "garden_program": "Resident gardening group and raised beds",
                 }
             },
+            # Simulates a future evidence namespace added by another research worker.
+            # The preference engine must ingest it without a code change.
+            "future_research_evidence_v99": {
+                "observatory_outings": "Monthly dark-sky astronomy outing documented by provider calendar"
+            },
             "client_intent_fit": {"public_reputation": {}},
         }
 
@@ -66,11 +71,13 @@ class DynamicSemanticPreferenceTests(unittest.TestCase):
         self.assertTrue(model["hard_coded_preference_catalog_forbidden"])
         self.assertEqual(len({row["preference_id"] for row in model["preferences"]}), 3)
 
-    def test_claim_ledger_is_generic_and_not_preference_specific(self):
+    def test_claim_ledger_is_generic_and_accepts_future_evidence_namespaces(self):
         ledger = build_facility_claim_ledger(self._row())
         paths = {claim["path"] for claim in ledger["claims"]}
         self.assertTrue(any("bridge_club_schedule" in path for path in paths))
         self.assertTrue(any("garden_program" in path for path in paths))
+        self.assertTrue(any("future_research_evidence_v99.observatory_outings" in path for path in paths))
+        self.assertEqual(ledger["source_model"], "COMPLETE_GOVERNED_CANDIDATE_RECORD")
 
     def test_ai_cannot_assert_match_without_governed_claim(self):
         model = build_dynamic_preference_model({"semantic_ai": {"result": {"preferences": ["A quiet astronomy club"], "statements": []}}})
