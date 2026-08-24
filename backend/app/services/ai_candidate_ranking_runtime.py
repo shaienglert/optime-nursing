@@ -1,0 +1,173 @@
+from __future__ import annotations
+
+"""Closed-world Semantic AI ranking for facilities that already passed every MUST.
+
+Rules/Guardian decide MUST eligibility. The AI never changes eligibility and never
+introduces a candidate. It only orders the MUST_ELIGIBLE set using the governed
+facts supplied for each facility. UNKNOWN is an information deficit, not negative
+evidence. NICE coverage is computed deterministically outside the AI ranking.
+"""
+
+import os
+from typing import Any, Dict, List
+
+from app.services.semantic_intent_ai import _default_transport
+
+
+def _ranking_packet(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    for row in rows:
+        fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+        care = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
+        out.append({
+            "canonical_facility_id": row.get("canonical_facility_id"),
+            "facility_name": row.get("facility_name"),
+            "canonical_type": row.get("canonical_type"),
+            "housing_modalities": row.get("housing_modalities") or [],
+            "care_setting_fit": care,
+            "nice_match": fit.get("nice_match") or [],
+            "nice_unknown": fit.get("nice_unknown") or [],
+            "nice_fit_scores": fit.get("nice_fit_scores") or {},
+            "regulatory_history": row.get("regulatory_history") or {},
+            "public_reputation": fit.get("public_reputation") or {},
+            "relevant_evidence_known_count": fit.get("relevant_evidence_known_count") or 0,
+            "relevant_evidence_unknown_count": fit.get("relevant_evidence_unknown_count") or 0,
+            "provider_housing_evidence": row.get("provider_housing_evidence") or {},
+            "human_person_fit": row.get("human_person_fit") or {},
+            "matched_needs": row.get("matched_needs") or [],
+            "unknown_critical_needs": row.get("unknown_critical_needs") or [],
+        })
+    return out
+
+
+def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "role": "OPTIME_NURSING_AI_CANDIDATE_RANKER",
+        "mission": "Rank only facilities that have already passed every deterministic MUST requirement, using all governed evidence relevant to this specific resident.",
+        "rules": [
+            "Do not change MUST eligibility; every supplied candidate is MUST_ELIGIBLE.",
+            "Rank all supplied candidate IDs exactly once and introduce no other facility.",
+            "Use all supplied resident-specific and facility-specific governed evidence, not generic brand assumptions.",
+            "Prefer verified NICE matches when they are relevant to the client.",
+            "Treat UNKNOWN as missing information, never as a negative fact and never as a positive fact.",
+            "Negative verified regulatory or fit evidence may lower a candidate.",
+            "Explain the main evidence that distinguishes each candidate and explicitly identify information deficits.",
+            "Do not invent price, availability, staffing, services, activities, reputation, or regulatory facts.",
+        ],
+        "client_intent": client_intent,
+        "human_context": human_context,
+        "living_strategy": strategy,
+        "must_eligible_candidates": _ranking_packet(rows),
+        "required_output": {
+            "ranked_candidates": [
+                {
+                    "canonical_facility_id": "string",
+                    "reason": "string",
+                    "information_deficits": ["string"],
+                }
+            ]
+        },
+    }
+
+
+def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    supplied = {str(row.get("canonical_facility_id") or "") for row in rows if row.get("canonical_facility_id")}
+    ranked = packet.get("ranked_candidates") if isinstance(packet.get("ranked_candidates"), list) else []
+    ids = [str(item.get("canonical_facility_id") or "") for item in ranked if isinstance(item, dict)]
+    if len(ids) != len(supplied) or len(set(ids)) != len(ids) or set(ids) != supplied:
+        raise RuntimeError("AI_CANDIDATE_RANKING_CLOSED_WORLD_VIOLATION")
+    by_id = {str(row.get("canonical_facility_id")): row for row in rows}
+    ordered: List[Dict[str, Any]] = []
+    for position, item in enumerate(ranked, start=1):
+        canonical_id = str(item.get("canonical_facility_id"))
+        row = by_id[canonical_id]
+        row["ai_ranking"] = {
+            "status": "AI_RANKED",
+            "rank": position,
+            "reason": str(item.get("reason") or ""),
+            "information_deficits": [str(v) for v in item.get("information_deficits") or []],
+        }
+        ordered.append(row)
+    return ordered
+
+
+def rank_must_eligible_candidates(
+    rows: List[Dict[str, Any]],
+    client_intent: Dict[str, Any],
+    human_context: Dict[str, Any],
+    strategy: Dict[str, Any],
+    deterministic_fallback_key,
+) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    if not rows:
+        return [], {"status": "NO_MUST_ELIGIBLE_CANDIDATES", "candidate_count": 0}
+
+    enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+    required = os.getenv("OPTIME_AI_CANDIDATE_RANKING_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
+
+    if enabled:
+        try:
+            ordered = _validate(_default_transport(_prompt(rows, client_intent, human_context, strategy)), rows)
+            return ordered, {
+                "status": "AI_RANKED",
+                "candidate_count": len(ordered),
+                "closed_world_validated": True,
+                "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE",
+            }
+        except Exception as exc:
+            if required:
+                raise RuntimeError(f"AI_CANDIDATE_RANKING_REQUIRED_FAILED:{exc}") from exc
+
+    indexed = list(enumerate(rows))
+    indexed.sort(key=lambda pair: (*deterministic_fallback_key(pair[1]), pair[0]))
+    ordered = [row for _, row in indexed]
+    for position, row in enumerate(ordered, start=1):
+        row["ai_ranking"] = {
+            "status": "DETERMINISTIC_FALLBACK",
+            "rank": position,
+            "reason": "Semantic AI ranking unavailable; governed deterministic ordering retained for continuity.",
+            "information_deficits": list((row.get("client_intent_fit") or {}).get("nice_unknown") or []),
+        }
+    return ordered, {
+        "status": "DETERMINISTIC_FALLBACK" if not required else "REQUIRED_BUT_UNAVAILABLE",
+        "candidate_count": len(ordered),
+        "closed_world_validated": True,
+        "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE",
+    }
+
+
+def attach_nice_coverage(rows: List[Dict[str, Any]], client_intent: Dict[str, Any]) -> Dict[str, Any]:
+    required = [str(item.get("key") or "") for item in client_intent.get("nice_to_haves") or [] if str(item.get("key") or "")]
+    complete_ids: List[str] = []
+    for row in rows:
+        fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+        matches = {str(v) for v in fit.get("nice_match") or []}
+        unknowns = {str(v) for v in fit.get("nice_unknown") or []}
+        missing = [key for key in required if key not in matches and key not in unknowns]
+        verified_match = [key for key in required if key in matches]
+        unresolved = [key for key in required if key in unknowns or key in missing]
+        if not required or len(verified_match) == len(required):
+            status = "NICE_COMPLETE"
+            if row.get("canonical_facility_id"):
+                complete_ids.append(str(row.get("canonical_facility_id")))
+        elif verified_match:
+            status = "NICE_PARTIAL"
+        else:
+            status = "NICE_UNVERIFIED"
+        row["nice_to_have_coverage"] = {
+            "status": status,
+            "required": required,
+            "verified_match": verified_match,
+            "unresolved": unresolved,
+            "verified_match_count": len(verified_match),
+            "required_count": len(required),
+        }
+    return {
+        "required_nice_to_have_count": len(required),
+        "nice_complete_candidate_count": len(complete_ids),
+        "nice_complete_candidate_ids": complete_ids,
+        "client_message_mode": "ALL_SPECIFIC_REQUIREMENTS_MATCH" if complete_ids else "PARTIAL_NICE_EVIDENCE",
+        "verification_message": "Current ranking uses verified evidence. We recommend verifying remaining provider-specific facts directly with the facilities because those answers can change the final ranking.",
+    }
+
+
+__all__ = ["rank_must_eligible_candidates", "attach_nice_coverage"]
