@@ -104,6 +104,14 @@ jobs:
               'las vegas', 'henderson', 'north las vegas', 'paradise',
               'spring valley', 'enterprise', 'winchester', 'sunrise manor',
           }
+          EXPECTED_RANKING_ORDER = [
+              'DETERMINISTIC_MUST_GATE',
+              'SEMANTIC_AI_DYNAMIC_PREFERENCES',
+              'SEMANTIC_AI_ALL_GOVERNED_EVIDENCE',
+              'EVIDENCE_GROUNDED_PREFERENCE_COVERAGE',
+              'PROVIDER_VERIFICATION',
+              'AI_RERANK',
+          ]
 
           base = {
               'relationship': 'Dad',
@@ -139,7 +147,6 @@ jobs:
           assert blocked['decision_intelligence']['recommendation_execution_allowed'] is False
           assert blocked['decision_intelligence']['decision_finality'] == 'BLOCKED_PENDING_AI_INTERVIEW'
 
-          # AI may propose READY, but Guardian owns the veto when client facts are unresolved.
           premature_answers = iter([
               {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
               {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': clarification_question, 'statements': []},
@@ -186,7 +193,7 @@ jobs:
               assert result['decision_intelligence']['interview_owner'] == 'SEMANTIC_AI', key
               assert result['result_count'] == 5, f'{key}: no recommendations after READY'
               assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f'{key}: location not governed'
-              assert result['decision_intelligence']['ranking_order'] == ['CLIENT_INTENT','MUST_GATE','NICE_TO_HAVE','GOVERNMENT_REGULATORY_DATA','PUBLIC_REPUTATION','RELEVANT_EVIDENCE_COMPLETENESS']
+              assert result['decision_intelligence']['ranking_order'] == EXPECTED_RANKING_ORDER
               human = result['decision_intelligence']['human_intelligence']
               assert human['decision_readiness'] == 'READY', human
               assert human['adaptive_questions'] == []
@@ -217,7 +224,6 @@ jobs:
               'small_top5': [r['facility_name'] for r in small['results']],
           }
 
-          # A post-op couple with unresolved client facts must stop at the interview.
           couple_state = {
               'relationship': 'Wife',
               'ageGroup': '80+',
@@ -251,7 +257,6 @@ jobs:
           assert len(couple_human['adaptive_questions']) == 1
           assert couple_human['adaptive_questions'][0].get('target_fact_key')
 
-          # Once all client-owned strategy facts are explicit, the same case may rank.
           couple_ready = deepcopy(couple_state)
           couple_ready.update({
               'budget': 8000,
