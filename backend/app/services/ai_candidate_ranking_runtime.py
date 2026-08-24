@@ -3,39 +3,31 @@ from __future__ import annotations
 """Closed-world Semantic AI ranking for facilities that already passed every MUST.
 
 Rules/Guardian decide MUST eligibility. The AI never changes eligibility and never
-introduces a candidate. It only orders the MUST_ELIGIBLE set using the governed
-facts supplied for each facility. UNKNOWN is an information deficit, not negative
-evidence. NICE coverage is computed deterministically outside the AI ranking.
+introduces a candidate. It orders the MUST_ELIGIBLE set using the dynamic client
+preference model plus a generic governed claim ledger for each facility. UNKNOWN is
+an information deficit, not negative evidence.
 """
 
 import os
 from typing import Any, Dict, List
 
 from app.services.semantic_intent_ai import _default_transport
+from app.services.semantic_preference_runtime import build_facility_claim_ledger
 
 
 def _ranking_packet(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     for row in rows:
         fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-        care = row.get("care_setting_fit") if isinstance(row.get("care_setting_fit"), dict) else {}
         out.append({
             "canonical_facility_id": row.get("canonical_facility_id"),
             "facility_name": row.get("facility_name"),
-            "canonical_type": row.get("canonical_type"),
-            "housing_modalities": row.get("housing_modalities") or [],
-            "care_setting_fit": care,
-            "nice_match": fit.get("nice_match") or [],
-            "nice_unknown": fit.get("nice_unknown") or [],
-            "nice_fit_scores": fit.get("nice_fit_scores") or {},
-            "regulatory_history": row.get("regulatory_history") or {},
+            "must_eligibility": row.get("must_eligibility"),
+            "care_setting_fit": row.get("care_setting_fit") or {},
             "public_reputation": fit.get("public_reputation") or {},
             "relevant_evidence_known_count": fit.get("relevant_evidence_known_count") or 0,
             "relevant_evidence_unknown_count": fit.get("relevant_evidence_unknown_count") or 0,
-            "provider_housing_evidence": row.get("provider_housing_evidence") or {},
-            "human_person_fit": row.get("human_person_fit") or {},
-            "matched_needs": row.get("matched_needs") or [],
-            "unknown_critical_needs": row.get("unknown_critical_needs") or [],
+            "governed_claim_ledger": build_facility_claim_ledger(row),
         })
     return out
 
@@ -43,15 +35,16 @@ def _ranking_packet(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "role": "OPTIME_NURSING_AI_CANDIDATE_RANKER",
-        "mission": "Rank only facilities that have already passed every deterministic MUST requirement, using all governed evidence relevant to this specific resident.",
+        "mission": "Rank only facilities that have already passed every deterministic MUST requirement, using the resident-specific semantic preference model and all governed facility claims supplied for each candidate.",
         "rules": [
             "Do not change MUST eligibility; every supplied candidate is MUST_ELIGIBLE.",
             "Rank all supplied candidate IDs exactly once and introduce no other facility.",
-            "Use all supplied resident-specific and facility-specific governed evidence, not generic brand assumptions.",
-            "Prefer verified NICE matches when they are relevant to the client.",
+            "Use the dynamic_preference_model in human_context; do not rely on a fixed preference catalog.",
+            "Use only supplied governed claim ledgers for facility facts; do not use generic brand assumptions or outside knowledge.",
             "Treat UNKNOWN as missing information, never as a negative fact and never as a positive fact.",
             "Negative verified regulatory or fit evidence may lower a candidate.",
-            "Explain the main evidence that distinguishes each candidate and explicitly identify information deficits.",
+            "A facility with missing preference evidence may be information-poor rather than a bad fit; explain that distinction.",
+            "Explain the main governed evidence that distinguishes each candidate and explicitly identify information deficits.",
             "Do not invent price, availability, staffing, services, activities, reputation, or regulatory facts.",
         ],
         "client_intent": client_intent,
@@ -111,6 +104,8 @@ def rank_must_eligible_candidates(
                 "status": "AI_RANKED",
                 "candidate_count": len(ordered),
                 "closed_world_validated": True,
+                "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER",
+                "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES",
                 "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE",
             }
         except Exception as exc:
@@ -124,18 +119,29 @@ def rank_must_eligible_candidates(
         row["ai_ranking"] = {
             "status": "DETERMINISTIC_FALLBACK",
             "rank": position,
-            "reason": "Semantic AI ranking unavailable; governed deterministic ordering retained for continuity.",
-            "information_deficits": list((row.get("client_intent_fit") or {}).get("nice_unknown") or []),
+            "reason": "Semantic AI ranking unavailable; governed deterministic ordering retained for continuity without inventing preference evidence.",
+            "information_deficits": [
+                str(pref.get("semantic_meaning") or "")
+                for pref in ((human_context.get("dynamic_preference_model") or {}).get("preferences") or [])
+                if str(pref.get("semantic_meaning") or "").strip()
+            ],
         }
     return ordered, {
         "status": "DETERMINISTIC_FALLBACK" if not required else "REQUIRED_BUT_UNAVAILABLE",
         "candidate_count": len(ordered),
         "closed_world_validated": True,
+        "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER",
+        "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES",
         "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE",
     }
 
 
 def attach_nice_coverage(rows: List[Dict[str, Any]], client_intent: Dict[str, Any]) -> Dict[str, Any]:
+    """Legacy structured NICE audit only.
+
+    The authoritative user-specific NICE coverage lives in semantic_preference_runtime.
+    This function remains for migration diagnostics and backward-compatible audit data.
+    """
     required = [str(item.get("key") or "") for item in client_intent.get("nice_to_haves") or [] if str(item.get("key") or "")]
     complete_ids: List[str] = []
     for row in rows:
@@ -160,13 +166,15 @@ def attach_nice_coverage(rows: List[Dict[str, Any]], client_intent: Dict[str, An
             "unresolved": unresolved,
             "verified_match_count": len(verified_match),
             "required_count": len(required),
+            "source": "LEGACY_STRUCTURED_NICE_AUDIT_ONLY",
         }
     return {
         "required_nice_to_have_count": len(required),
         "nice_complete_candidate_count": len(complete_ids),
         "nice_complete_candidate_ids": complete_ids,
-        "client_message_mode": "ALL_SPECIFIC_REQUIREMENTS_MATCH" if complete_ids else "PARTIAL_NICE_EVIDENCE",
-        "verification_message": "Current ranking uses verified evidence. We recommend verifying remaining provider-specific facts directly with the facilities because those answers can change the final ranking.",
+        "authoritative": False,
+        "client_message_mode": "AUDIT_ONLY",
+        "verification_message": "Legacy structured NICE coverage is retained only for migration audit. Dynamic semantic preferences are authoritative.",
     }
 
 
