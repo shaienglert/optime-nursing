@@ -11,9 +11,23 @@ ledger. Missing evidence remains UNKNOWN.
 
 import hashlib
 import os
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from app.services.semantic_intent_ai import _default_transport
+
+
+_DERIVED_OR_PRESENTATION_FIELDS = {
+    "ai_ranking",
+    "nice_to_have_coverage",
+    "dynamic_preference_fit",
+    "legacy_structured_nice_fit",
+    "structured_nice_to_have_coverage",
+    "rank_position",
+    "rank_display",
+    "rank_tie_status",
+    "tied_with",
+    "explanation",
+}
 
 
 def _stable_id(text: str) -> str:
@@ -84,16 +98,18 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
 
 
 def _flatten_claims(value: Any, path: str, out: List[Dict[str, Any]], *, depth: int = 0) -> None:
-    if depth > 5 or len(out) >= 160:
+    if depth > 6 or len(out) >= 240:
         return
     if isinstance(value, dict):
         for key, child in value.items():
             key_text = str(key)
+            if depth == 0 and key_text in _DERIVED_OR_PRESENTATION_FIELDS:
+                continue
             child_path = f"{path}.{key_text}" if path else key_text
             _flatten_claims(child, child_path, out, depth=depth + 1)
         return
     if isinstance(value, list):
-        for index, child in enumerate(value[:20]):
+        for index, child in enumerate(value[:30]):
             _flatten_claims(child, f"{path}[{index}]", out, depth=depth + 1)
         return
     if value is None or isinstance(value, (str, int, float, bool)):
@@ -105,25 +121,23 @@ def _flatten_claims(value: Any, path: str, out: List[Dict[str, Any]], *, depth: 
 
 
 def build_facility_claim_ledger(row: Dict[str, Any]) -> Dict[str, Any]:
-    """Expose only governed evidence already attached to the candidate."""
-    governed = {
-        "canonical_type": row.get("canonical_type"),
-        "housing_modalities": row.get("housing_modalities") or [],
-        "care_setting_fit": row.get("care_setting_fit") or {},
-        "provider_housing_evidence": row.get("provider_housing_evidence") or {},
-        "life_plan_primary_evidence": row.get("life_plan_primary_evidence") or {},
-        "agent_person_fit_evidence": row.get("agent_person_fit_evidence") or [],
-        "human_person_fit": row.get("human_person_fit") or {},
-        "regulatory_history": row.get("regulatory_history") or {},
-        "public_reputation": (row.get("client_intent_fit") or {}).get("public_reputation") or {},
-        "matched_needs": row.get("matched_needs") or [],
+    """Flatten the complete governed candidate record into auditable claims.
+
+    New evidence fields automatically enter the ledger. Only derived ranking/UI fields
+    are excluded to avoid circular self-evidence. This removes field-by-field wiring.
+    """
+    governed_record = {
+        str(key): value
+        for key, value in row.items()
+        if str(key) not in _DERIVED_OR_PRESENTATION_FIELDS and not str(key).startswith("__")
     }
     claims: List[Dict[str, Any]] = []
-    _flatten_claims(governed, "facility", claims)
+    _flatten_claims(governed_record, "facility", claims)
     return {
         "canonical_facility_id": row.get("canonical_facility_id"),
         "facility_name": row.get("facility_name"),
         "claims": claims,
+        "source_model": "COMPLETE_GOVERNED_CANDIDATE_RECORD",
     }
 
 
@@ -241,9 +255,6 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
             "assessments": assessments,
             "required_preference_ids": [str(pref.get("preference_id")) for pref in preferences],
         }
-        # This becomes the authoritative user-specific NICE coverage when dynamic
-        # preferences exist. Structured legacy NICE coverage remains available in
-        # client_intent_fit for audit but cannot declare all user preferences met.
         row["nice_to_have_coverage"] = {
             "status": coverage,
             "required": [str(pref.get("preference_id")) for pref in preferences],
