@@ -1,0 +1,270 @@
+from __future__ import annotations
+
+"""Dynamic semantic preference model and evidence verification.
+
+This module deliberately knows nothing about specific hobbies, cultures, languages,
+religions, amenities, or lifestyle preferences. Semantic AI extracts arbitrary
+client preferences from the interview. The verifier may mark a preference MATCH or
+MISMATCH only by citing claim IDs that exist in the governed facility evidence
+ledger. Missing evidence remains UNKNOWN.
+"""
+
+import hashlib
+import os
+from typing import Any, Dict, Iterable, List, Tuple
+
+from app.services.semantic_intent_ai import _default_transport
+
+
+def _stable_id(text: str) -> str:
+    digest = hashlib.sha256(text.strip().casefold().encode("utf-8")).hexdigest()[:16]
+    return f"pref:{digest}"
+
+
+def _semantic_result(human_context: Dict[str, Any]) -> Dict[str, Any]:
+    semantic = human_context.get("semantic_ai") if isinstance(human_context.get("semantic_ai"), dict) else {}
+    result = semantic.get("result") if isinstance(semantic.get("result"), dict) else {}
+    return result
+
+
+def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, Any]:
+    """Create an open-ended preference model from Semantic AI output.
+
+    No keyword list is used. Any NICE statement or explicit semantic preference can
+    become a preference dimension. The original client meaning is preserved.
+    """
+    result = _semantic_result(human_context)
+    raw: List[Tuple[str, str, str]] = []
+
+    for value in result.get("preferences") or []:
+        text = str(value or "").strip()
+        if text:
+            raw.append((text, text, "semantic_ai.preferences"))
+
+    for statement in result.get("statements") or []:
+        if not isinstance(statement, dict):
+            continue
+        if str(statement.get("importance") or "").upper() != "NICE":
+            continue
+        if str(statement.get("knowledge_state") or "").upper() not in {"KNOWN", "AMBIGUOUS"}:
+            continue
+        original = str(statement.get("raw_text") or "").strip()
+        meaning = str(statement.get("meaning") or original).strip()
+        if original or meaning:
+            raw.append((original or meaning, meaning or original, "semantic_ai.statements"))
+
+    seen: set[str] = set()
+    preferences: List[Dict[str, Any]] = []
+    for original, meaning, source in raw:
+        canonical_text = meaning.strip()
+        dedupe_key = canonical_text.casefold()
+        if not canonical_text or dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
+        preferences.append(
+            {
+                "preference_id": _stable_id(canonical_text),
+                "client_expression": original,
+                "semantic_meaning": canonical_text,
+                "importance": "NICE",
+                "source": source,
+                "verification_rule": "MATCH requires governed facility evidence that specifically supports this semantic preference; broader or adjacent evidence is insufficient unless it directly entails the preference.",
+            }
+        )
+
+    return {
+        "version": "dynamic-semantic-preferences-v1",
+        "owner": "SEMANTIC_AI",
+        "preferences": preferences,
+        "preference_count": len(preferences),
+        "open_world": True,
+        "hard_coded_preference_catalog_forbidden": True,
+        "unknown_policy": "NO_GOVERNED_EVIDENCE=>UNKNOWN",
+    }
+
+
+def _flatten_claims(value: Any, path: str, out: List[Dict[str, Any]], *, depth: int = 0) -> None:
+    if depth > 5 or len(out) >= 160:
+        return
+    if isinstance(value, dict):
+        for key, child in value.items():
+            key_text = str(key)
+            child_path = f"{path}.{key_text}" if path else key_text
+            _flatten_claims(child, child_path, out, depth=depth + 1)
+        return
+    if isinstance(value, list):
+        for index, child in enumerate(value[:20]):
+            _flatten_claims(child, f"{path}[{index}]", out, depth=depth + 1)
+        return
+    if value is None or isinstance(value, (str, int, float, bool)):
+        text = str(value).strip() if value is not None else ""
+        if not text or text.upper() == "UNKNOWN":
+            return
+        claim_id = f"claim:{hashlib.sha256((path + '=' + text).encode('utf-8')).hexdigest()[:18]}"
+        out.append({"claim_id": claim_id, "path": path, "value": value})
+
+
+def build_facility_claim_ledger(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Expose only governed evidence already attached to the candidate."""
+    governed = {
+        "canonical_type": row.get("canonical_type"),
+        "housing_modalities": row.get("housing_modalities") or [],
+        "care_setting_fit": row.get("care_setting_fit") or {},
+        "provider_housing_evidence": row.get("provider_housing_evidence") or {},
+        "life_plan_primary_evidence": row.get("life_plan_primary_evidence") or {},
+        "agent_person_fit_evidence": row.get("agent_person_fit_evidence") or [],
+        "human_person_fit": row.get("human_person_fit") or {},
+        "regulatory_history": row.get("regulatory_history") or {},
+        "public_reputation": (row.get("client_intent_fit") or {}).get("public_reputation") or {},
+        "matched_needs": row.get("matched_needs") or [],
+    }
+    claims: List[Dict[str, Any]] = []
+    _flatten_claims(governed, "facility", claims)
+    return {
+        "canonical_facility_id": row.get("canonical_facility_id"),
+        "facility_name": row.get("facility_name"),
+        "claims": claims,
+    }
+
+
+def _verification_prompt(row: Dict[str, Any], model: Dict[str, Any]) -> Dict[str, Any]:
+    ledger = build_facility_claim_ledger(row)
+    return {
+        "role": "OPTIME_NURSING_SEMANTIC_PREFERENCE_VERIFIER",
+        "mission": "Evaluate arbitrary client NICE preferences against the governed evidence ledger for one facility.",
+        "rules": [
+            "Do not use outside knowledge, brand knowledge, or assumptions.",
+            "For every supplied preference return exactly one assessment.",
+            "MATCH or MISMATCH requires at least one supporting_claim_id from the supplied ledger.",
+            "If the ledger does not specifically resolve the preference, return UNKNOWN.",
+            "Do not treat a broad category as proof of a narrower preference unless the cited claim directly entails it.",
+            "Never change MUST eligibility.",
+        ],
+        "facility": ledger,
+        "preferences": model.get("preferences") or [],
+        "required_output": {
+            "assessments": [
+                {
+                    "preference_id": "string",
+                    "status": "MATCH|MISMATCH|UNKNOWN",
+                    "supporting_claim_ids": ["claim:id"],
+                    "reason": "string",
+                    "provider_question_if_unknown": "string|null",
+                }
+            ]
+        },
+    }
+
+
+def _validate_assessments(packet: Dict[str, Any], row: Dict[str, Any], model: Dict[str, Any]) -> List[Dict[str, Any]]:
+    expected = {str(p.get("preference_id")) for p in model.get("preferences") or []}
+    ledger = build_facility_claim_ledger(row)
+    valid_claims = {str(c.get("claim_id")) for c in ledger.get("claims") or []}
+    assessments = packet.get("assessments") if isinstance(packet.get("assessments"), list) else []
+    ids = [str(a.get("preference_id") or "") for a in assessments if isinstance(a, dict)]
+    if len(ids) != len(expected) or set(ids) != expected or len(set(ids)) != len(ids):
+        raise RuntimeError("SEMANTIC_PREFERENCE_CLOSED_WORLD_VIOLATION")
+
+    validated: List[Dict[str, Any]] = []
+    for assessment in assessments:
+        status = str(assessment.get("status") or "UNKNOWN").upper()
+        if status not in {"MATCH", "MISMATCH", "UNKNOWN"}:
+            raise RuntimeError("SEMANTIC_PREFERENCE_INVALID_STATUS")
+        supporting = [str(v) for v in assessment.get("supporting_claim_ids") or []]
+        if any(claim_id not in valid_claims for claim_id in supporting):
+            raise RuntimeError("SEMANTIC_PREFERENCE_UNKNOWN_CLAIM")
+        if status in {"MATCH", "MISMATCH"} and not supporting:
+            raise RuntimeError("SEMANTIC_PREFERENCE_ASSERTION_WITHOUT_EVIDENCE")
+        if status == "UNKNOWN":
+            supporting = []
+        validated.append(
+            {
+                "preference_id": str(assessment.get("preference_id")),
+                "status": status,
+                "supporting_claim_ids": supporting,
+                "reason": str(assessment.get("reason") or ""),
+                "provider_question_if_unknown": str(assessment.get("provider_question_if_unknown") or "").strip() or None,
+            }
+        )
+    return validated
+
+
+def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]) -> Dict[str, Any]:
+    preferences = model.get("preferences") if isinstance(model.get("preferences"), list) else []
+    if not preferences:
+        return {
+            "status": "NO_DYNAMIC_PREFERENCES",
+            "preference_count": 0,
+            "nice_complete_candidate_count": 0,
+            "verification_required_count": 0,
+        }
+
+    enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+    required = os.getenv("OPTIME_AI_PREFERENCE_VERIFICATION_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
+    complete = 0
+    verification_required = 0
+
+    for row in rows:
+        assessments: List[Dict[str, Any]] = []
+        if enabled:
+            try:
+                assessments = _validate_assessments(_default_transport(_verification_prompt(row, model)), row, model)
+            except Exception as exc:
+                if required:
+                    raise RuntimeError(f"AI_PREFERENCE_VERIFICATION_REQUIRED_FAILED:{exc}") from exc
+
+        if not assessments:
+            assessments = [
+                {
+                    "preference_id": str(pref.get("preference_id")),
+                    "status": "UNKNOWN",
+                    "supporting_claim_ids": [],
+                    "reason": "No validated semantic preference verification was available.",
+                    "provider_question_if_unknown": f"Please verify whether this community satisfies: {pref.get('semantic_meaning')}",
+                }
+                for pref in preferences
+            ]
+
+        statuses = [a["status"] for a in assessments]
+        if statuses and all(status == "MATCH" for status in statuses):
+            coverage = "NICE_COMPLETE"
+            complete += 1
+        elif any(status == "MATCH" for status in statuses):
+            coverage = "NICE_PARTIAL"
+            verification_required += 1
+        else:
+            coverage = "NICE_UNVERIFIED"
+            verification_required += 1
+
+        row["dynamic_preference_fit"] = {
+            "status": coverage,
+            "assessments": assessments,
+            "required_preference_ids": [str(pref.get("preference_id")) for pref in preferences],
+        }
+        # This becomes the authoritative user-specific NICE coverage when dynamic
+        # preferences exist. Structured legacy NICE coverage remains available in
+        # client_intent_fit for audit but cannot declare all user preferences met.
+        row["nice_to_have_coverage"] = {
+            "status": coverage,
+            "required": [str(pref.get("preference_id")) for pref in preferences],
+            "verified_match": [a["preference_id"] for a in assessments if a["status"] == "MATCH"],
+            "unresolved": [a["preference_id"] for a in assessments if a["status"] != "MATCH"],
+            "verified_match_count": sum(1 for a in assessments if a["status"] == "MATCH"),
+            "required_count": len(preferences),
+            "source": "DYNAMIC_SEMANTIC_PREFERENCE_MODEL",
+        }
+
+    return {
+        "status": "VERIFIED" if enabled else "AI_UNAVAILABLE_UNKNOWN_PRESERVED",
+        "preference_count": len(preferences),
+        "nice_complete_candidate_count": complete,
+        "verification_required_count": verification_required,
+        "rule": "Any client NICE preference may exist without code changes. MATCH/MISMATCH requires governed claim evidence; otherwise UNKNOWN.",
+    }
+
+
+__all__ = [
+    "build_dynamic_preference_model",
+    "build_facility_claim_ledger",
+    "verify_dynamic_preferences",
+]
