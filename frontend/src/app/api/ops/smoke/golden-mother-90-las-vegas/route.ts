@@ -41,6 +41,7 @@ export async function GET() {
     const raw = await response.text();
     const elapsedMs = Date.now() - started;
     if (!response.ok) {
+      console.error("MOTHER90_SMOKE_BACKEND_FAIL", JSON.stringify({ backendStatus: response.status, elapsedMs, detail: raw.slice(0, 1200) }));
       return NextResponse.json({ status: "FAIL", error: `Decision engine ${response.status}`, elapsedMs, detail: raw.slice(0, 1200) }, { status: 502, headers: { "Cache-Control": "no-store" } });
     }
     const payload = raw ? JSON.parse(raw) : {};
@@ -70,8 +71,21 @@ export async function GET() {
       completesInsideVercelBudget: elapsedMs < 240000,
     };
     const passed = Object.values(assertions).every(Boolean);
-    return NextResponse.json({ status: passed ? "PASS" : "FAIL", caseId: "GOLDEN-MOTHER-90-WIDOW-LAS-VEGAS-8K", elapsedMs, decisionReadiness: readiness, decisionFinality: intelligence?.decision_finality ?? null, recommendationExecutionAllowed: intelligence?.recommendation_execution_allowed ?? null, facilityResearchState: intelligence?.facility_research_state ?? null, recentBereavement: bereavement, processOwner: intelligence?.process_owner ?? null, resultCount: payload?.result_count ?? rows.length, top5, assertions }, { status: passed ? 200 : 409, headers: { "Cache-Control": "no-store" } });
+    const diagnostic = {
+      elapsedMs,
+      decisionReadiness: readiness,
+      decisionFinality: intelligence?.decision_finality ?? null,
+      recommendationExecutionAllowed: intelligence?.recommendation_execution_allowed ?? null,
+      facilityResearchState: intelligence?.facility_research_state ?? null,
+      recentBereavement: bereavement,
+      resultCount: payload?.result_count ?? rows.length,
+      assertions,
+      top5,
+    };
+    console.log("MOTHER90_SMOKE_DIAGNOSTIC", JSON.stringify(diagnostic));
+    return NextResponse.json({ status: passed ? "PASS" : "FAIL", caseId: "GOLDEN-MOTHER-90-WIDOW-LAS-VEGAS-8K", ...diagnostic, processOwner: intelligence?.process_owner ?? null }, { status: passed ? 200 : 409, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    console.error("MOTHER90_SMOKE_EXCEPTION", error);
     return NextResponse.json({ status: "FAIL", error: error instanceof Error ? error.message : String(error) }, { status: 502, headers: { "Cache-Control": "no-store" } });
   }
 }
