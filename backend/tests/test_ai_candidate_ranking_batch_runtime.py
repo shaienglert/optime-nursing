@@ -8,16 +8,20 @@ from app.services.ai_candidate_ranking_runtime import rank_must_eligible_candida
 
 
 class BatchedAIRankingRuntimeTests(unittest.TestCase):
-    def test_large_candidate_set_is_batch_scored_and_globally_sorted(self):
-        rows = []
-        for index in range(1, 7):
-            rows.append({
-                "canonical_facility_id": f"FAC-{index}",
+    def _rows(self, count: int):
+        return [
+            {
+                "canonical_facility_id": f"FAC-{index:02d}",
                 "facility_name": f"Facility {index}",
                 "must_eligibility": "MUST_ELIGIBLE",
                 "client_intent_fit": {"hard_gate": "PASS"},
                 "care_setting_fit": {"status": "PRIMARY_FIT"},
-            })
+            }
+            for index in range(1, count + 1)
+        ]
+
+    def test_large_candidate_set_is_batch_scored_and_globally_sorted(self):
+        rows = self._rows(24)
 
         def transport(payload):
             candidates = payload["must_eligible_candidates"]
@@ -35,8 +39,8 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
 
         with patch.dict(os.environ, {
             "OPTIME_SEMANTIC_AI_ENABLED": "1",
-            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "2",
-            "OPTIME_AI_RANKING_BATCH_SIZE": "2",
+            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "20",
+            "OPTIME_AI_RANKING_BATCH_SIZE": "6",
             "OPTIME_AI_RANKING_MAX_WORKERS": "2",
         }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport):
             ranked, status = rank_must_eligible_candidates(
@@ -48,21 +52,18 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
             )
 
         self.assertEqual(status["status"], "AI_BATCH_RANKED")
-        self.assertEqual([row["canonical_facility_id"] for row in ranked], ["FAC-1", "FAC-2", "FAC-3", "FAC-4", "FAC-5", "FAC-6"])
+        self.assertEqual([row["canonical_facility_id"] for row in ranked], [f"FAC-{index:02d}" for index in range(1, 25)])
         self.assertTrue(all(row["ai_ranking"]["status"] == "AI_BATCH_SCORED" for row in ranked))
         self.assertTrue(all("global_score" in row["ai_ranking"] for row in ranked))
 
     def test_failed_batch_falls_back_for_entire_set_when_ai_not_required(self):
-        rows = [
-            {"canonical_facility_id": f"FAC-{index}", "facility_name": f"Facility {index}", "must_eligibility": "MUST_ELIGIBLE", "client_intent_fit": {"hard_gate": "PASS"}}
-            for index in range(1, 5)
-        ]
+        rows = self._rows(24)
 
         with patch.dict(os.environ, {
             "OPTIME_SEMANTIC_AI_ENABLED": "1",
             "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "0",
-            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "2",
-            "OPTIME_AI_RANKING_BATCH_SIZE": "2",
+            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "20",
+            "OPTIME_AI_RANKING_BATCH_SIZE": "6",
         }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=RuntimeError("boom")):
             ranked, status = rank_must_eligible_candidates(
                 rows,
@@ -73,7 +74,7 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
             )
 
         self.assertEqual(status["status"], "DETERMINISTIC_FALLBACK")
-        self.assertEqual(len(ranked), 4)
+        self.assertEqual(len(ranked), 24)
         self.assertTrue(all(row["ai_ranking"]["status"] == "DETERMINISTIC_FALLBACK" for row in ranked))
 
 
