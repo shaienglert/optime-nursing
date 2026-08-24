@@ -62,6 +62,8 @@ export async function GET() {
 
     const payload = raw ? JSON.parse(raw) : {};
     const intelligence = payload?.decision_intelligence || payload?.patient_needs_profile?.decision_intelligence || {};
+    const humanIntelligence = intelligence?.human_intelligence || payload?.patient_needs_profile?.decision_intelligence?.human_intelligence || {};
+    const semanticAi = humanIntelligence?.semantic_ai || {};
     const strategy = intelligence?.living_strategy || payload?.patient_needs_profile?.living_strategy || {};
     const rows = payload?.results || [];
     const top5 = rows.slice(0, 5).map((row: any) => ({
@@ -97,6 +99,9 @@ export async function GET() {
         clientText: CLIENT_TEXT,
         decisionReadiness: intelligence?.human_intelligence?.decision_readiness ?? intelligence?.decision_readiness ?? null,
         decisionFinality: intelligence?.decision_finality ?? null,
+        semanticAiStatus: semanticAi?.status ?? null,
+        semanticAiError: semanticAi?.error ?? null,
+        semanticAiRequired: semanticAi?.required ?? null,
         leadingStrategies,
         strategyUniverse: intelligence?.strategy_universe ?? null,
         resultCount: payload?.result_count ?? rows.length,
