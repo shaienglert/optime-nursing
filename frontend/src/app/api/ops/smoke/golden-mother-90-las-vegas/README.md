@@ -1,0 +1,1 @@
+Production smoke for the 90-year-old recent widow Las Vegas case. The endpoint returns HTTP 200 only when the client interview is complete, bereavement is preserved, five governed non-hard-fail assisted-living candidates are visible with stable ranks, and the request completes inside the production latency budget.
