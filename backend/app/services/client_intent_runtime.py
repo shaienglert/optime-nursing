@@ -106,11 +106,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
 
     return {
-        "version": "client-intent-runtime-v1.3",
+        "version": "client-intent-runtime-v1.4",
         "must_haves": must,
         "nice_to_haves": nice,
-        "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
-        "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality. A specific NICE preference remains unresolved until evidence verifies that exact preference; a broader category cannot silently satisfy it.",
+        "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE MATCH/UNKNOWN/MISMATCH ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
+        "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality. A specific NICE preference remains unresolved until evidence verifies that exact preference; known poor fit is MISMATCH, not UNKNOWN, and a broader category cannot silently satisfy it.",
     }
 
 
@@ -120,6 +120,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     must_pass: List[str] = []
     nice_match: List[str] = []
     nice_unknown: List[str] = []
+    nice_mismatch: List[str] = []
     nice_fit_scores: Dict[str, float] = {}
 
     city = str(row.get("city") or "").strip().upper()
@@ -233,10 +234,10 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             if isinstance(value, (int, float)):
                 score = float(value)
                 nice_fit_scores[key] = score
-                if score > 0:
+                if score >= 70.0:
                     nice_match.append(key)
                 else:
-                    nice_unknown.append(key)
+                    nice_mismatch.append(key)
             else:
                 nice_unknown.append(key)
         elif key == "TRANSPORTATION_AND_OUTINGS":
@@ -272,6 +273,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     relevant_known = (
         len(must_pass)
         + len(nice_match)
+        + len(nice_mismatch)
         + len(row.get("matched_needs") or [])
         + len(agent_payloads)
         + len(provider_payloads)
@@ -286,7 +288,9 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "must_fail": hard_fail,
         "nice_match": nice_match,
         "nice_unknown": nice_unknown,
+        "nice_mismatch": nice_mismatch,
         "nice_fit_scores": nice_fit_scores,
+        "preference_consistency": "MISMATCH" if nice_mismatch else ("UNKNOWN" if nice_unknown else "MATCH"),
         "public_reputation": {
             "rating": web_rating if web_rating is not None else "UNKNOWN",
             "review_count": web_review_count if web_review_count is not None else "UNKNOWN",
@@ -305,6 +309,7 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     hard_gate = str(fit.get("hard_gate") or "PENDING_VERIFICATION")
     gate_order = {"PASS": 0, "PENDING_VERIFICATION": 1, "FAIL": 2}.get(hard_gate, 1)
     nice_matches = len(fit.get("nice_match") or [])
+    nice_mismatches = len(fit.get("nice_mismatch") or [])
     nice_scores = fit.get("nice_fit_scores") if isinstance(fit.get("nice_fit_scores"), dict) else {}
     community_fit = nice_scores.get("COMMUNITY_ENVIRONMENT_MATCH")
     community_fit_known = isinstance(community_fit, (int, float))
@@ -345,6 +350,7 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         gate_order,
         setting_order,
         -nice_matches,
+        nice_mismatches,
         0 if community_fit_known else 1,
         -float(community_fit) if community_fit_known else 0.0,
         disciplinary_order,
