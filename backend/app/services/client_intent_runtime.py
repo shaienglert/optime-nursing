@@ -79,7 +79,10 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_must("COUPLE_CORESIDENCE", "The couple wants to live together; a solution that cannot house both partners is not acceptable.", "unit/occupancy policy")
 
     if signals.get("adl_support_needed"):
-        add_must("ADL_SUPPORT_AVAILABLE", "The recovering resident currently needs bathing/dressing assistance.", "service evidence or permitted outside-care model")
+        add_must("ADL_SUPPORT_AVAILABLE", "The resident explicitly needs bathing/dressing or other ADL assistance.", "service evidence or permitted outside-care model")
+
+    if signals.get("medication_support_needed"):
+        add_must("MEDICATION_SUPPORT_AVAILABLE", "The resident explicitly needs medication-management support; a facility cannot be called eligible until this capability is verified.", "verified medication-support evidence")
 
     if signals.get("rehabilitation_need_detected"):
         add_must("REHAB_PATH_AVAILABLE", "The recovery plan requires access to appropriate rehabilitation/PT/OT, either onsite or through a verified external pathway.", "rehab/PT/OT evidence")
@@ -106,7 +109,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
 
     return {
-        "version": "client-intent-runtime-v1.4",
+        "version": "client-intent-runtime-v1.5",
         "must_haves": must,
         "nice_to_haves": nice,
         "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE MATCH/UNKNOWN/MISMATCH ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
@@ -165,6 +168,11 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 for p in payloads
             ):
                 hard_fail.append(key)
+            else:
+                must_unknown.append(key)
+        elif key == "MEDICATION_SUPPORT_AVAILABLE":
+            if any(p.get("medication_support_verified") is True for p in payloads):
+                must_pass.append(key)
             else:
                 must_unknown.append(key)
         elif key == "REHAB_PATH_AVAILABLE":
