@@ -121,9 +121,12 @@ jobs:
               'budget': 6500,
               'distanceFromFamily': 'Balanced location',
           }
+          # This verifier exercises interview/Guardian/Valley/READY behavior. Medication
+          # verification has its own Golden Mother90 MUST contract, so do not inject an
+          # unrelated facility-owned medication requirement into this generic persona.
           query = (
               'My father is 84, recently widowed, and lives in Las Vegas. '
-              'He has difficulty with bathing, dressing, meals and medication. '
+              'He has difficulty with bathing, dressing and meals. '
               'He is mentally alert, has no dementia, is still mobile, and needs daily help.'
           )
 
