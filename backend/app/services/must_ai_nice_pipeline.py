@@ -10,8 +10,9 @@ from __future__ import annotations
    ranking or NICE_COMPLETE result.
 5. PENDING MUST candidates remain research candidates, never recommendations.
 6. Provider verification can add governed claims and trigger an AI rerank later.
-7. When Semantic AI is enabled, an unavailable AI ranking fails closed: deterministic
-   ordering may remain in diagnostics, but it is never exposed as an AI recommendation.
+7. When AI candidate ranking is explicitly required, an unavailable AI ranking fails
+   closed: deterministic ordering may remain in diagnostics but is never exposed as a
+   recommendation.
 """
 
 from copy import deepcopy
@@ -41,8 +42,8 @@ def _remove_legacy_nice_from_authoritative_path(rows: List[Dict[str, Any]]) -> N
         fit["nice_fit_scores"] = {}
 
 
-def _ai_enabled() -> bool:
-    return os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+def _env_true(name: str) -> bool:
+    return os.getenv(name, "0").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _ai_ranking_succeeded(ai_status: Dict[str, Any]) -> bool:
@@ -94,7 +95,12 @@ def apply_must_ai_nice_pipeline(
         deterministic_fallback_key=_fallback_key,
     )
 
-    ai_failure_block = bool(eligible) and _ai_enabled() and not _ai_ranking_succeeded(ai_status)
+    ai_failure_block = (
+        bool(eligible)
+        and _env_true("OPTIME_SEMANTIC_AI_ENABLED")
+        and _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED")
+        and not _ai_ranking_succeeded(ai_status)
+    )
 
     audit_rows = deepcopy(ranked)
     for audit_row in audit_rows:
@@ -164,6 +170,7 @@ def apply_must_ai_nice_pipeline(
         "must_pending_verification_count": len(pending),
         "must_rejected_count": len(rejected),
         "ai_ranking": ai_status,
+        "ai_ranking_required": _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED"),
         "ai_ranking_fail_closed": ai_failure_block,
         "dynamic_preferences": dynamic_summary,
         "legacy_structured_nice_audit": structured_nice_summary,
@@ -183,7 +190,7 @@ def apply_must_ai_nice_pipeline(
                 )
             )
         ),
-        "rule": "AI never decides MUST eligibility. When Semantic AI is enabled, failed AI ranking cannot silently degrade into a user-visible deterministic recommendation. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
+        "rule": "AI never decides MUST eligibility. When candidate AI ranking is required, failed ranking cannot silently degrade into a user-visible deterministic recommendation. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
     }
     decision["must_gate"] = {
         **(decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}),
