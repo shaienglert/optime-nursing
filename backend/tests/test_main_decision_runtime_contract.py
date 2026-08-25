@@ -25,7 +25,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
     def _query(self) -> str:
         return (
             "My father is 84, recently widowed, lives in Las Vegas, is mentally alert and mobile, "
-            "and needs help with bathing, dressing, meals and medication. No dementia."
+            "and needs help with bathing, dressing and meals. No dementia."
         )
 
     def _couple_rehab_query(self) -> str:
