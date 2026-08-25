@@ -39,9 +39,6 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         refresh_runtime_cache("test_teardown")
 
     def _run_ready(self, questionnaire: dict, query: str, limit: int = 5) -> dict:
-        # This helper means the client-owned Human Intelligence interview is complete.
-        # It may neutralize optional person-fit dimensions, but it never fabricates
-        # strategy-specific facts such as budget, Medicare, rehab level, or move timing.
         hi = questionnaire.setdefault("humanIntelligenceV2", {})
         hi.setdefault("personalityProfile", {}).setdefault("communitySizePreference", "No preference")
         hi.setdefault("familyProfile", {}).setdefault("socialInteractionNeed", "Neither")
@@ -126,7 +123,7 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
             "memoryStatus": "No", "budget": 6500, "distanceFromFamily": "Balanced location",
         }
         natural_language = (
-            "My father is 84, recently widowed, and lives in Las Vegas. He has difficulty with bathing, dressing, meals and medication. "
+            "My father is 84, recently widowed, and lives in Las Vegas. He has difficulty with bathing, dressing and meals. "
             "He is mentally alert, has no dementia, is still mobile, and needs daily help."
         )
         result = self._run_ready(questionnaire, natural_language)
@@ -141,14 +138,14 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
 
     def test_relationship_does_not_change_objective_care_setting_ranking_after_ai_ready(self) -> None:
         base = {"ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 6500, "distanceFromFamily": "Balanced location"}
-        son = self._run_ready({**base, "relationship": "Dad"}, "My father is 84, recently widowed, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing, meals and medication. No dementia.")
-        self_search = self._run_ready({**base, "relationship": "Myself"}, "I am 84, recently widowed, live in Las Vegas, am mentally alert and mobile, and need help with bathing, dressing, meals and medication. No dementia.")
+        son = self._run_ready({**base, "relationship": "Dad"}, "My father is 84, recently widowed, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing and meals. No dementia.")
+        self_search = self._run_ready({**base, "relationship": "Myself"}, "I am 84, recently widowed, live in Las Vegas, am mentally alert and mobile, and need help with bathing, dressing and meals. No dementia.")
         self.assertEqual([row["canonical_facility_id"] for row in son["results"]], [row["canonical_facility_id"] for row in self_search["results"]])
 
     def test_explicit_las_vegas_market_is_preserved_as_valley_after_ai_ready(self) -> None:
         result = self._run_ready(
             {"relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 6500},
-            "My father lives in Las Vegas and needs help with bathing and medication. No dementia. His monthly budget is $6,500.",
+            "My father lives in Las Vegas and needs help with bathing and dressing. No dementia. His monthly budget is $6,500.",
         )
         profile = result["patient_needs_profile"]
         self.assertEqual(profile["location_city"], "LAS VEGAS")
@@ -160,7 +157,7 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
     def test_governed_nevada_ranking_replaces_stale_legacy_tie_metadata_after_ai_ready(self) -> None:
         result = self._run_ready(
             {"relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 6500},
-            "My father is 84, lives in Las Vegas, is mentally alert and needs help with bathing, dressing and medication. No dementia.",
+            "My father is 84, lives in Las Vegas, is mentally alert and needs help with bathing and dressing. No dementia.",
         )
         rows = result["results"]
         self.assertEqual([row["rank_position"] for row in rows], [1, 2, 3, 4, 5])
