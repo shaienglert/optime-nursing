@@ -39,7 +39,7 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
                     "budget": 6500,
                     "distanceFromFamily": "Balanced location",
                 },
-                "My father is 84, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing, meals and medication. No dementia.",
+                "My father is 84, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing and meals. No dementia.",
                 limit=5,
             )
         self.assertEqual(result["patient_needs_profile"]["location_city"], "LAS VEGAS")
