@@ -9,6 +9,7 @@ MISMATCH only by citing claim IDs that exist in the governed facility evidence
 ledger. Missing evidence remains UNKNOWN.
 """
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import os
 from typing import Any, Dict, List, Tuple
@@ -217,16 +218,29 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
     required = os.getenv("OPTIME_AI_PREFERENCE_VERIFICATION_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
     complete = 0
     verification_required = 0
+    assessments_by_index: Dict[int, List[Dict[str, Any]]] = {}
 
-    for row in rows:
-        assessments: List[Dict[str, Any]] = []
-        if enabled:
-            try:
-                assessments = _validate_assessments(_default_transport(_verification_prompt(row, model)), row, model)
-            except Exception as exc:
-                if required:
-                    raise RuntimeError(f"AI_PREFERENCE_VERIFICATION_REQUIRED_FAILED:{exc}") from exc
+    def verify_one(index: int, row: Dict[str, Any]) -> tuple[int, List[Dict[str, Any]]]:
+        if not enabled:
+            return index, []
+        try:
+            packet = _default_transport(_verification_prompt(row, model))
+            return index, _validate_assessments(packet, row, model)
+        except Exception as exc:
+            if required:
+                raise RuntimeError(f"AI_PREFERENCE_VERIFICATION_REQUIRED_FAILED:{exc}") from exc
+            return index, []
 
+    if enabled and rows:
+        max_workers = max(1, min(10, int(os.getenv("OPTIME_AI_PREFERENCE_MAX_WORKERS", "5"))))
+        with ThreadPoolExecutor(max_workers=min(max_workers, len(rows))) as executor:
+            futures = [executor.submit(verify_one, index, row) for index, row in enumerate(rows)]
+            for future in as_completed(futures):
+                index, assessments = future.result()
+                assessments_by_index[index] = assessments
+
+    for index, row in enumerate(rows):
+        assessments = assessments_by_index.get(index, [])
         if not assessments:
             assessments = [
                 {
@@ -270,6 +284,8 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
         "preference_count": len(preferences),
         "nice_complete_candidate_count": complete,
         "verification_required_count": verification_required,
+        "verification_execution": "PARALLEL_PER_SELECTED_CANDIDATE" if enabled and rows else "NO_LIVE_AI_VERIFICATION",
+        "verification_worker_count": min(max(1, int(os.getenv("OPTIME_AI_PREFERENCE_MAX_WORKERS", "5"))), len(rows)) if enabled and rows else 0,
         "rule": "Any client NICE preference may exist without code changes. MATCH/MISMATCH requires governed claim evidence; otherwise UNKNOWN.",
     }
 
