@@ -12,7 +12,7 @@ from app.services.patient_decision_engine import run_patient_decision_engine
 
 
 class GoldenMother90FullLifecycleTests(unittest.TestCase):
-    """Golden regression for clarification -> READY -> ranking -> AI process-owner next action."""
+    """Golden regression for clarification -> MUST verification -> ranking -> AI process owner."""
 
     def _base_state(self) -> dict:
         return {
@@ -36,7 +36,7 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
             "She would like a friendly social environment and we want the least restrictive safe setting."
         )
 
-    def test_budget_question_then_ready_then_governed_top5(self) -> None:
+    def test_budget_question_then_medication_verification_then_governed_top5(self) -> None:
         state = self._base_state()
         question = "What monthly housing-and-care budget would be comfortable for your mother?"
         first_ai = {
@@ -89,8 +89,42 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
             }
         ]}
 
-        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+        # Client intent is complete, but medication support is a facility-owned MUST.
+        # Without governed evidence no candidate may be exposed as a recommendation.
+        with patch.dict(os.environ, {
+            "OPTIME_SEMANTIC_AI_ENABLED": "1",
+            "OPTIME_SEMANTIC_AI_REQUIRED": "1",
+            "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "0",
+        }, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ready_ai
+        ):
+            pending_result = run_patient_decision_engine(answered, self._query(), limit=5)
+
+        pending_decision = pending_result["decision_intelligence"]
+        self.assertEqual("READY", pending_decision["human_intelligence"]["decision_readiness"])
+        self.assertFalse(pending_decision["recommendation_execution_allowed"])
+        self.assertEqual([], pending_result["results"])
+        self.assertGreater(pending_result.get("must_pending_verification_count") or 0, 0)
+        self.assertTrue(
+            all(
+                "MEDICATION_SUPPORT_AVAILABLE" in (item.get("must_unknown") or [])
+                for item in (pending_result.get("must_pending_verification_candidates") or [])
+            )
+        )
+
+        # Once governed provider evidence explicitly verifies medication support, the
+        # same completed client interview may proceed to ranking. This is a test
+        # fixture for the downstream ranking/process-owner lifecycle, not a claim that
+        # every real facility has this service.
+        verified_medication_payload = [{"medication_support_verified": True}]
+        with patch.dict(os.environ, {
+            "OPTIME_SEMANTIC_AI_ENABLED": "1",
+            "OPTIME_SEMANTIC_AI_REQUIRED": "1",
+            "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "0",
+        }, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ready_ai
+        ), patch(
+            "app.services.client_intent_runtime._governed_provider_payloads", return_value=verified_medication_payload
         ):
             result = run_patient_decision_engine(answered, self._query(), limit=5)
 
@@ -103,6 +137,7 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         for row in result["results"]:
             canonical = canonical_index[row["canonical_facility_id"]]
             self.assertIs(canonical.get("is_las_vegas_valley"), True)
+            self.assertIn("MEDICATION_SUPPORT_AVAILABLE", (row.get("client_intent_fit") or {}).get("must_pass") or [])
         self.assertTrue(all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in result["results"]))
         self.assertTrue(all(row.get("canonical_type") == "ASSISTED_LIVING_RFG" for row in result["results"]))
         self.assertEqual([row["rank_position"] for row in result["results"]], [1, 2, 3, 4, 5])
@@ -140,8 +175,10 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         print("MOTHER90_GOLDEN=" + json.dumps({
             "first_question": question,
             "answered_budget": 8000,
+            "pre_verification_visible_results": pending_result["result_count"],
+            "pending_medication_candidates": pending_result.get("must_pending_verification_count"),
             "decision_readiness": decision["human_intelligence"]["decision_readiness"],
-            "result_count": result["result_count"],
+            "result_count_after_medication_evidence": result["result_count"],
             "top5": [
                 {
                     "rank": row["rank_position"],
@@ -149,6 +186,7 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
                     "city": row.get("city"),
                     "canonical_type": row.get("canonical_type"),
                     "hard_gate": (row.get("client_intent_fit") or {}).get("hard_gate"),
+                    "must_pass": (row.get("client_intent_fit") or {}).get("must_pass"),
                 }
                 for row in result["results"]
             ],

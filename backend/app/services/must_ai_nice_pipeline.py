@@ -10,9 +10,13 @@ from __future__ import annotations
    ranking or NICE_COMPLETE result.
 5. PENDING MUST candidates remain research candidates, never recommendations.
 6. Provider verification can add governed claims and trigger an AI rerank later.
+7. When AI candidate ranking is explicitly required, an unavailable AI ranking fails
+   closed: deterministic ordering may remain in diagnostics but is never exposed as a
+   recommendation.
 """
 
 from copy import deepcopy
+import os
 from typing import Any, Dict, List
 
 from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates
@@ -22,10 +26,6 @@ from app.services.semantic_preference_runtime import build_dynamic_preference_mo
 
 
 def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
-    # When live AI ranking is unavailable, preserve explicit resident preferences
-    # already captured in the governed questionnaire state before generic tie-breaks.
-    # This does not affect MUST eligibility and does not turn facility size into a
-    # quality factor; it only preserves explicit preference congruence.
     return (*person_fit_sort_key(row), *intent_rank_key(row))
 
 
@@ -40,6 +40,14 @@ def _remove_legacy_nice_from_authoritative_path(rows: List[Dict[str, Any]]) -> N
         fit["nice_match"] = []
         fit["nice_unknown"] = []
         fit["nice_fit_scores"] = {}
+
+
+def _env_true(name: str) -> bool:
+    return os.getenv(name, "0").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _ai_ranking_succeeded(ai_status: Dict[str, Any]) -> bool:
+    return str(ai_status.get("status") or "").upper() in {"AI_RANKED", "AI_BATCH_RANKED"}
 
 
 def apply_must_ai_nice_pipeline(
@@ -70,17 +78,10 @@ def apply_must_ai_nice_pipeline(
             row["must_eligibility"] = "MUST_PENDING_VERIFICATION"
             pending.append(row)
 
-    # Build the authoritative open-ended preference model exclusively from Semantic
-    # AI's interpretation of the conversation. No catalog of hobbies/preferences is
-    # required in the decision code.
     dynamic_preferences = build_dynamic_preference_model(human_context)
     human_context["dynamic_preference_model"] = dynamic_preferences
     decision["dynamic_preference_model"] = dynamic_preferences
 
-    # Preserve the old fixed NICE fields only for audit, then remove their influence
-    # from both AI ranking packets and deterministic fallback ordering. Explicit
-    # questionnaire person-fit congruence remains available to the deterministic
-    # fallback via human_person_fit; it is not treated as provider quality evidence.
     audit_intent = deepcopy(client_intent)
     _remove_legacy_nice_from_authoritative_path(eligible)
     ranking_intent = deepcopy(client_intent)
@@ -94,8 +95,13 @@ def apply_must_ai_nice_pipeline(
         deterministic_fallback_key=_fallback_key,
     )
 
-    # Calculate the legacy structured view only as an audit artifact. It cannot set
-    # the authoritative NICE_COMPLETE flag.
+    ai_failure_block = (
+        bool(eligible)
+        and _env_true("OPTIME_SEMANTIC_AI_ENABLED")
+        and _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED")
+        and not _ai_ranking_succeeded(ai_status)
+    )
+
     audit_rows = deepcopy(ranked)
     for audit_row in audit_rows:
         legacy = audit_row.get("legacy_structured_nice_fit") if isinstance(audit_row.get("legacy_structured_nice_fit"), dict) else {}
@@ -105,11 +111,9 @@ def apply_must_ai_nice_pipeline(
         fit["nice_fit_scores"] = dict(legacy.get("nice_fit_scores") or {})
     structured_nice_summary = attach_nice_coverage(audit_rows, audit_intent)
 
-    selected = ranked[: max(0, int(limit or 0))]
+    selected = [] if ai_failure_block else ranked[: max(0, int(limit or 0))]
     dynamic_summary = verify_dynamic_preferences(selected, dynamic_preferences)
 
-    # If the client expressed no dynamic NICE preferences, do not fabricate
-    # NICE_COMPLETE. The client simply has no preference-completeness claim to make.
     if not dynamic_preferences.get("preference_count"):
         for row in selected:
             row["nice_to_have_coverage"] = {
@@ -153,7 +157,7 @@ def apply_must_ai_nice_pipeline(
 
     preference_count = int(dynamic_preferences.get("preference_count") or 0)
     decision["facility_selection_pipeline"] = {
-        "version": "must-ai-dynamic-preferences-v3",
+        "version": "must-ai-dynamic-preferences-v4",
         "order": [
             "DETERMINISTIC_MUST_GATE",
             "SEMANTIC_AI_DYNAMIC_PREFERENCE_MODEL",
@@ -166,23 +170,27 @@ def apply_must_ai_nice_pipeline(
         "must_pending_verification_count": len(pending),
         "must_rejected_count": len(rejected),
         "ai_ranking": ai_status,
+        "ai_ranking_required": _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED"),
+        "ai_ranking_fail_closed": ai_failure_block,
         "dynamic_preferences": dynamic_summary,
         "legacy_structured_nice_audit": structured_nice_summary,
         "legacy_structured_nice_authoritative": False,
         "top_nice_complete_count": len(complete_selected),
         "top_nice_complete_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_selected],
         "client_statement": (
-            f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and have governed evidence matching every specific preference you expressed. "
-            "This ranking can still change when we verify missing provider facts directly with the facilities."
-            if preference_count and complete_selected
+            "We cannot present a recommendation yet because the required AI ranking did not complete successfully. The deterministic candidate order is retained only for diagnostics and is not exposed as a recommendation."
+            if ai_failure_block
             else (
-                "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
-                if preference_count
-                else
-                "The displayed facilities pass every verified MUST requirement. No explicit NICE preference-completeness claim is being made; provider verification can still improve the ranking."
+                f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and have governed evidence matching every specific preference you expressed. This ranking can still change when we verify missing provider facts directly with the facilities."
+                if preference_count and complete_selected
+                else (
+                    "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
+                    if preference_count
+                    else "The displayed facilities pass every verified MUST requirement. No explicit NICE preference-completeness claim is being made; provider verification can still improve the ranking."
+                )
             )
         ),
-        "rule": "AI never decides MUST eligibility. Semantic AI may create arbitrary client preference dimensions without code changes. Legacy fixed NICE fields are audit-only. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
+        "rule": "AI never decides MUST eligibility. When candidate AI ranking is required, failed ranking cannot silently degrade into a user-visible deterministic recommendation. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
     }
     decision["must_gate"] = {
         **(decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}),
@@ -199,10 +207,23 @@ def apply_must_ai_nice_pipeline(
         "PROVIDER_VERIFICATION",
         "AI_RERANK",
     ]
-    decision["recommendation_visibility"] = "PROVISIONAL_RANKING_VISIBLE" if selected else "NO_MUST_ELIGIBLE_RESULTS"
-    decision["recommendation_execution_allowed"] = bool(selected)
-    if selected:
-        decision["decision_finality"] = "PROVISIONAL_PENDING_PROVIDER_VERIFICATION"
+
+    if ai_failure_block:
+        decision["recommendation_visibility"] = "BLOCKED_AI_RANKING_UNAVAILABLE"
+        decision["recommendation_execution_allowed"] = False
+        decision["decision_finality"] = "BLOCKED_AI_RANKING_UNAVAILABLE"
+        decision["ai_ranking_failure"] = {
+            "status": ai_status.get("status"),
+            "candidate_count": len(eligible),
+            "deterministic_order_exposed": False,
+            "rule": "AI-owned ranking failure must fail closed rather than masquerade as an AI recommendation.",
+        }
+    else:
+        decision["recommendation_visibility"] = "PROVISIONAL_RANKING_VISIBLE" if selected else "NO_MUST_ELIGIBLE_RESULTS"
+        decision["recommendation_execution_allowed"] = bool(selected)
+        if selected:
+            decision["decision_finality"] = "PROVISIONAL_PENDING_PROVIDER_VERIFICATION"
+
     result["decision_intelligence"] = decision
     return result
 
