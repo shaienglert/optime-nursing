@@ -9,7 +9,7 @@ from app.services.patient_decision_engine import run_patient_decision_engine
 
 BASE_QUERY = (
     "My father is 84, recently widowed, and lives in Las Vegas. "
-    "He has difficulty with bathing, dressing, meals and medication. "
+    "He has difficulty with bathing, dressing and meals. "
     "He is mentally alert, has no dementia, is still mobile, and needs daily help."
 )
 
