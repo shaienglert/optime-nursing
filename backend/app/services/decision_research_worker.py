@@ -17,12 +17,17 @@ from app.services.decision_agent_bridge import QUEUE_TYPE
 from app.services.facility_parameter_service import get_canonical_facility_index
 from app.services.provider_housing_runtime import get_provider_housing_evidence
 from app.services.public_reputation_runtime import get_public_reputation
+from app.services.semantic_evidence_ai import capability_map, interpret_facility_evidence_with_ai
 
 _TIMEOUT = 12
 _RUN_LOCK = threading.Lock()
 _LOG = logging.getLogger(__name__)
 _SKIP_DOMAINS = ("aplaceformom.com", "caring.com", "seniorly.com", "yelp.com", "facebook.com", "instagram.com", "linkedin.com", "youtube.com", "google.com", "mapquest.com")
 _REGULATORY_DOMAINS = ("nvdpbh.aithent.com", "myhealthfacilitylicense.nv.gov", "dpbh.nv.gov", "health.nv.gov")
+
+# Keyword families are retained only as diagnostic continuity when semantic evidence AI
+# is disabled/unavailable and is NOT required. They are not the authoritative production
+# interpretation path.
 _SOCIAL_TERMS = ("activities", "activity calendar", "social events", "daily events", "engagement", "outings", "clubs", "fitness", "art studio", "movie theater", "cinema", "games", "live music", "community events", "life enrichment", "classes", "lectures")
 _MEDICATION_TERMS = ("medication management", "medication assistance", "medication reminders", "medication administration", "manage medications", "medication support")
 _ADL_TERMS = ("bathing", "dressing", "activities of daily living", "personal care", "assistance with daily living")
@@ -165,6 +170,7 @@ def _apply_verified_registry_evidence(research: Dict[str, Any], canonical_id: st
         research["outside_care_allowed_verified"] = evidence.get("outside_care_allowed_verified") is True
         research["continuum_of_care_verified"] = evidence.get("continuum_of_care_verified") is True
         research["verified_registry_used"] = True
+        research["evidence_interpretation_mode"] = "GOVERNED_REGISTRY_EVIDENCE"
     reputation = overlay.get("reputation") if isinstance(overlay.get("reputation"), dict) else {}
     if reputation.get("identity_verified") is True:
         research["public_rating"] = reputation.get("rating", "UNKNOWN")
@@ -173,6 +179,46 @@ def _apply_verified_registry_evidence(research: Dict[str, Any], canonical_id: st
         research["public_reputation_identity_verified"] = True
     else:
         research["public_reputation_identity_verified"] = False
+
+
+def _apply_semantic_capabilities(research: Dict[str, Any], interpretation: Dict[str, Any]) -> bool:
+    if interpretation.get("status") != "AI_SEMANTIC_EVIDENCE_INTERPRETED":
+        return False
+    capabilities = capability_map(interpretation)
+    research["semantic_evidence_interpretation"] = interpretation
+    research["evidence_interpretation_mode"] = "AI_SEMANTIC_GUARDIAN"
+
+    def sufficient(key: str) -> bool:
+        item = capabilities.get(key) or {}
+        return item.get("guardian_must_sufficient") is True
+
+    research["social_engagement_verified"] = sufficient("SOCIAL_ENGAGEMENT")
+    research["medication_support_verified"] = sufficient("MEDICATION_SUPPORT")
+    research["adl_support_verified"] = sufficient("ADL_SUPPORT")
+    research["transportation_verified"] = sufficient("TRANSPORTATION")
+    research["dining_verified"] = sufficient("DINING")
+    research["rehab_verified"] = sufficient("REHAB")
+    research["pt_ot_verified"] = sufficient("REHAB") and (capabilities.get("REHAB") or {}).get("level") in {"ONSITE_THERAPY", "SKILLED_REHAB"}
+    research["couple_coresidence_verified"] = sufficient("COUPLE_CORESIDENCE")
+    research["outside_care_allowed_verified"] = sufficient("OUTSIDE_CARE")
+    research["continuum_of_care_verified"] = sufficient("CONTINUUM_OF_CARE")
+    return True
+
+
+def _apply_keyword_fallback(research: Dict[str, Any], text: str) -> None:
+    research["evidence_interpretation_mode"] = "KEYWORD_FALLBACK_DIAGNOSTIC_ONLY"
+    research["social_engagement_verified"] = _contains_any(text, _SOCIAL_TERMS)
+    # Reminder-only wording is deliberately excluded from medication MUST fallback.
+    medication_strong_terms = tuple(term for term in _MEDICATION_TERMS if term != "medication reminders")
+    research["medication_support_verified"] = _contains_any(text, medication_strong_terms)
+    research["adl_support_verified"] = _contains_any(text, _ADL_TERMS)
+    research["transportation_verified"] = _contains_any(text, _TRANSPORT_TERMS)
+    research["dining_verified"] = _contains_any(text, _DINING_TERMS)
+    research["rehab_verified"] = _contains_any(text, _REHAB_TERMS)
+    research["pt_ot_verified"] = _contains_any(text, ("physical therapy", "occupational therapy"))
+    research["couple_coresidence_verified"] = _contains_any(text, _COUPLE_TERMS)
+    research["outside_care_allowed_verified"] = _contains_any(text, _OUTSIDE_CARE_TERMS)
+    research["continuum_of_care_verified"] = _contains_any(text, _CONTINUUM_TERMS)
 
 
 def _persist_record(db, *, agent_key: str, canonical_id: str, facility_name: str, source_url: str, payload: Dict[str, Any]) -> None:
@@ -208,6 +254,7 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
         "transportation_verified": False, "dining_verified": False, "rehab_verified": False, "pt_ot_verified": False,
         "couple_coresidence_verified": False, "outside_care_allowed_verified": False, "continuum_of_care_verified": False,
         "public_rating": "UNKNOWN", "public_review_count": "UNKNOWN", "public_reputation_source": "UNKNOWN",
+        "evidence_interpretation_mode": "UNRESOLVED",
     }
     if dimension != "facility_quality_safety":
         _apply_verified_registry_evidence(research, canonical_id, dimension)
@@ -226,16 +273,15 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
                 else:
                     research["official_identity_verified"] = identity_ok
                     if identity_ok:
-                        research["social_engagement_verified"] = _contains_any(text, _SOCIAL_TERMS)
-                        research["medication_support_verified"] = _contains_any(text, _MEDICATION_TERMS)
-                        research["adl_support_verified"] = _contains_any(text, _ADL_TERMS)
-                        research["transportation_verified"] = _contains_any(text, _TRANSPORT_TERMS)
-                        research["dining_verified"] = _contains_any(text, _DINING_TERMS)
-                        research["rehab_verified"] = _contains_any(text, _REHAB_TERMS)
-                        research["pt_ot_verified"] = _contains_any(text, ("physical therapy", "occupational therapy"))
-                        research["couple_coresidence_verified"] = _contains_any(text, _COUPLE_TERMS)
-                        research["outside_care_allowed_verified"] = _contains_any(text, _OUTSIDE_CARE_TERMS)
-                        research["continuum_of_care_verified"] = _contains_any(text, _CONTINUUM_TERMS)
+                        interpretation = interpret_facility_evidence_with_ai(
+                            facility_name=facility_name,
+                            city=city,
+                            source_url=source_url,
+                            source_text=text,
+                            requested_parameters=requested,
+                        )
+                        if not _apply_semantic_capabilities(research, interpretation):
+                            _apply_keyword_fallback(research, text)
         except requests.RequestException as exc:
             research["research_error"] = exc.__class__.__name__
     _persist_record(db, agent_key=str(item.agent_key or "provider_intelligence"), canonical_id=canonical_id, facility_name=facility_name, source_url=source_url or "", payload=research)
