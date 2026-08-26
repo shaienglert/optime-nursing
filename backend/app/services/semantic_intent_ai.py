@@ -101,20 +101,44 @@ def _extract_responses_output(body: Dict[str, Any]) -> Dict[str, Any]:
     raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
 
 
+def _retry_delay_seconds(response: requests.Response, *, attempt: int, backoff_seconds: float) -> float:
+    retry_after = str(response.headers.get("Retry-After") or "").strip()
+    if retry_after:
+        try:
+            return max(0.0, min(15.0, float(retry_after) + 0.25))
+        except ValueError:
+            pass
+    if response.status_code == 429:
+        match = re.search(r"try again in\s+([0-9.]+)s", response.text or "", re.IGNORECASE)
+        if match:
+            return max(0.0, min(15.0, float(match.group(1)) + 0.25))
+        return max(4.0, backoff_seconds * attempt)
+    return backoff_seconds * attempt
+
+
 def _request_with_retry(url: str, headers: Dict[str, str], request_json: Dict[str, Any]) -> requests.Response:
     timeout_seconds = max(5.0, float(os.getenv("OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS", "45")))
-    max_attempts = max(1, min(3, int(os.getenv("OPTIME_SEMANTIC_AI_MAX_ATTEMPTS", "2"))))
+    max_attempts = max(1, min(3, int(os.getenv("OPTIME_SEMANTIC_AI_MAX_ATTEMPTS", "3"))))
     backoff_seconds = max(0.0, float(os.getenv("OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS", "1")))
     last_error: Optional[Exception] = None
+    last_response: Optional[requests.Response] = None
     for attempt in range(1, max_attempts + 1):
         try:
-            return requests.post(url, headers=headers, json=request_json, timeout=(10.0, timeout_seconds))
+            response = requests.post(url, headers=headers, json=request_json, timeout=(10.0, timeout_seconds))
+            last_response = response
+            if response.ok or response.status_code not in {429, 500, 502, 503, 504} or attempt >= max_attempts:
+                return response
+            delay = _retry_delay_seconds(response, attempt=attempt, backoff_seconds=backoff_seconds)
+            if delay:
+                time.sleep(delay)
         except (requests.Timeout, requests.ConnectionError) as exc:
             last_error = exc
             if attempt >= max_attempts:
                 break
             if backoff_seconds:
                 time.sleep(backoff_seconds * attempt)
+    if last_response is not None:
+        return last_response
     raise RuntimeError(f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={max_attempts}:timeout={timeout_seconds}:{last_error}")
 
 
