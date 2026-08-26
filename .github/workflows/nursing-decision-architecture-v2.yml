@@ -22,10 +22,12 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install backend runtime dependencies
-        run: pip install -r backend/requirements.txt
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest
       - name: Validate canonical client and facility state contracts
         run: |
           cd backend
-          pytest -q \
+          python -m pytest -q \
             tests/test_canonical_decision_state_v2.py \
             tests/test_canonical_client_ai_v2.py
