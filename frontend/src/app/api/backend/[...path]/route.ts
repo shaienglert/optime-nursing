@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-export const maxDuration = 150;
+export const maxDuration = 300;
 
 const BACKEND_BASE = (
   process.env.BACKEND_INTERNAL_API_URL ||
