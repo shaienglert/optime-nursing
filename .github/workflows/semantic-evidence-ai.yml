@@ -1,0 +1,26 @@
+name: Nursing Semantic Evidence AI
+
+on:
+  pull_request:
+    paths:
+      - 'backend/app/services/semantic_evidence_ai.py'
+      - 'backend/app/services/decision_research_worker.py'
+      - 'backend/tests/test_semantic_evidence_ai.py'
+      - '.github/workflows/semantic-evidence-ai.yml'
+  workflow_dispatch:
+
+jobs:
+  semantic-evidence-ai:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install -r backend/requirements.txt
+      - name: Validate semantic evidence interpretation and Guardian service levels
+        run: python -m unittest backend.tests.test_semantic_evidence_ai -v
