@@ -34,7 +34,8 @@ jobs:
           from pathlib import Path
           services = Path('backend/app/services/__init__.py').read_text(encoding='utf-8')
           owner = Path('backend/app/services/ai_process_owner_runtime.py').read_text(encoding='utf-8')
-          assert 'attach_ai_process_owner(result, questionnaire_state, natural_language_query)' in services
+          assert 'attach_ai_process_owner_guarded(result, questionnaire_state, natural_language_query)' in services
+          assert 'from app.services.ai_process_owner_guard_patch import attach_ai_process_owner_guarded' in services
           assert 'SEMANTIC_AI_PROCESS_OWNER' in services
           assert 'candidate_identity_closed_world' in owner
           assert 'OPTIME_AI_PROCESS_OWNER_REQUIRED' in owner
