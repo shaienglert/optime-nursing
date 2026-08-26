@@ -1,0 +1,31 @@
+name: Nursing Decision Architecture V2
+
+on:
+  pull_request:
+    paths:
+      - 'backend/app/services/canonical_decision_state.py'
+      - 'backend/app/services/canonical_client_ai_v2.py'
+      - 'backend/app/services/**decision**'
+      - 'backend/app/services/**strategy**'
+      - 'backend/tests/test_canonical_*'
+      - 'docs/NURSING_DECISION_ARCHITECTURE_V2.md'
+      - '.github/workflows/nursing-decision-architecture-v2.yml'
+  workflow_dispatch:
+
+jobs:
+  single-source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install backend runtime dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Validate canonical client and facility state contracts
+        run: |
+          cd backend
+          pytest -q \
+            tests/test_canonical_decision_state_v2.py \
+            tests/test_canonical_client_ai_v2.py
