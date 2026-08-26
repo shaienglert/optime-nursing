@@ -127,11 +127,11 @@ class EngineRuntimeTests(unittest.TestCase):
             "rows": rows_by_id[canonical_id],
         }
 
-    @patch("app.services.patient_decision_engine.get_facility_parameter_table")
-    @patch("app.services.patient_decision_engine.get_all_canonical_facility_ids")
-    @patch("app.services.patient_decision_engine.get_canonical_facility_index")
-    @patch("app.services.patient_decision_engine.get_personalized_parameter_order")
-    @patch("app.services.patient_decision_engine.build_patient_needs_profile")
+    @patch("app.services._patient_decision_engine_legacy.get_facility_parameter_table")
+    @patch("app.services._patient_decision_engine_legacy.get_all_canonical_facility_ids")
+    @patch("app.services._patient_decision_engine_legacy.get_canonical_facility_index")
+    @patch("app.services._patient_decision_engine_legacy.get_personalized_parameter_order")
+    @patch("app.services._patient_decision_engine_legacy.build_patient_needs_profile")
     def test_deterministic_matching_and_no_type_exclusion(
         self,
         mock_build_profile,
@@ -162,11 +162,11 @@ class EngineRuntimeTests(unittest.TestCase):
         self.assertEqual({item["canonical_facility_id"] for item in first["results"]}, {"A", "B"})
         self.assertEqual(first["results"][0]["canonical_facility_id"], "A")
 
-    @patch("app.services.patient_decision_engine.get_facility_parameter_table")
-    @patch("app.services.patient_decision_engine.get_all_canonical_facility_ids")
-    @patch("app.services.patient_decision_engine.get_canonical_facility_index")
-    @patch("app.services.patient_decision_engine.get_personalized_parameter_order")
-    @patch("app.services.patient_decision_engine.build_patient_needs_profile")
+    @patch("app.services._patient_decision_engine_legacy.get_facility_parameter_table")
+    @patch("app.services._patient_decision_engine_legacy.get_all_canonical_facility_ids")
+    @patch("app.services._patient_decision_engine_legacy.get_canonical_facility_index")
+    @patch("app.services._patient_decision_engine_legacy.get_personalized_parameter_order")
+    @patch("app.services._patient_decision_engine_legacy.build_patient_needs_profile")
     def test_no_completeness_bias_for_extra_unknown_non_need_rows(
         self,
         mock_build_profile,
@@ -190,7 +190,7 @@ class EngineRuntimeTests(unittest.TestCase):
 
 
 class ComparisonContextTests(unittest.TestCase):
-    @patch("app.services.patient_decision_engine.compare_facility_parameter_tables")
+    @patch("app.services._patient_decision_engine_legacy.compare_facility_parameter_tables")
     def test_comparison_context_uses_identical_parameter_ids_and_preserves_scope(self, mock_compare) -> None:
         mock_compare.return_value = {
             "parameter_ids": ["pt", "nursing_24_7"],
@@ -336,11 +336,11 @@ class GovernedTieBreakerTests(unittest.TestCase):
         }
 
     def _run_with_tables(self, ids: list[str], tables: dict[str, dict]) -> dict:
-        with patch("app.services.patient_decision_engine.build_patient_needs_profile") as mock_profile, patch(
-            "app.services.patient_decision_engine.get_personalized_parameter_order"
-        ) as mock_order, patch("app.services.patient_decision_engine.get_all_canonical_facility_ids") as mock_ids, patch(
-            "app.services.patient_decision_engine.get_canonical_facility_index"
-        ) as mock_index, patch("app.services.patient_decision_engine.get_facility_parameter_table") as mock_table:
+        with patch("app.services._patient_decision_engine_legacy.build_patient_needs_profile") as mock_profile, patch(
+            "app.services._patient_decision_engine_legacy.get_personalized_parameter_order"
+        ) as mock_order, patch("app.services._patient_decision_engine_legacy.get_all_canonical_facility_ids") as mock_ids, patch(
+            "app.services._patient_decision_engine_legacy.get_canonical_facility_index"
+        ) as mock_index, patch("app.services._patient_decision_engine_legacy.get_facility_parameter_table") as mock_table:
             mock_profile.return_value = self._profile()
             mock_order.return_value = {
                 "ordered_parameters": [

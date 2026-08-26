@@ -28,6 +28,13 @@ sys.modules[_GOVERNED_PRIVATE_NAME] = _governed
 _spec.loader.exec_module(_governed)
 _regulatory_index = _governed._regulatory_index
 build_patient_comparison_context = _governed.build_patient_comparison_context
+_eligibility_from_needs = _governed._eligibility_from_needs
+_evaluate_need = _governed._evaluate_need
+compare_facility_parameter_tables = _governed.compare_facility_parameter_tables
+get_personalized_parameter_order = _governed.get_personalized_parameter_order
+get_all_canonical_facility_ids = _governed.get_all_canonical_facility_ids
+get_canonical_facility_index = _governed.get_canonical_facility_index
+get_facility_parameter_table = _governed.get_facility_parameter_table
 
 
 def _has_need(profile: Dict[str, Any], parameter_id: str) -> bool:

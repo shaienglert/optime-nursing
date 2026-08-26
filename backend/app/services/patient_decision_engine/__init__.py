@@ -112,6 +112,13 @@ def build_patient_needs_profile(
 # so patch it to the governed wrapper as well as exporting the wrapper publicly.
 _legacy.build_patient_needs_profile = build_patient_needs_profile
 build_patient_comparison_context = _legacy.build_patient_comparison_context
+_eligibility_from_needs = _legacy._eligibility_from_needs
+_evaluate_need = _legacy._evaluate_need
+compare_facility_parameter_tables = _legacy.compare_facility_parameter_tables
+get_personalized_parameter_order = _legacy.get_personalized_parameter_order
+get_all_canonical_facility_ids = _legacy.get_all_canonical_facility_ids
+get_canonical_facility_index = _legacy.get_canonical_facility_index
+get_facility_parameter_table = _legacy.get_facility_parameter_table
 
 
 CARE_SETTING_ORDER = {
