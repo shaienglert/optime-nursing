@@ -40,7 +40,7 @@ Responsibilities:
 - identify material ambiguity or contradiction;
 - choose the next client question when client-owned information is missing;
 - derive candidate living strategies from the canonical client state;
-- rank only candidates that have passed deterministic MUST eligibility;
+- rank every candidate that has passed deterministic MUST eligibility;
 - explain trade-offs and propose complete solutions;
 - request provider research when provider-owned facts are missing.
 
@@ -96,19 +96,20 @@ Guardian constrains and blocks. It does not own interview sequencing or ranking.
    - Guardian validates service level and provenance
    - write results back to `CanonicalFacilityEvidenceState`
 
-8. **Shortlist before expensive AI ranking**
-   - deterministic evidence-completeness / regulatory / strategy-fit shortlist of MUST-eligible candidates
-   - target 20-30 candidates, not hundreds
-   - shortlist cannot remove a candidate due only to an UNKNOWN NICE preference
+8. **Compact canonical ranking packets**
+   - every MUST-eligible candidate remains in the AI ranking universe
+   - precompute compact canonical evidence summaries/features per facility so ranking does not resend raw pages or re-run evidence interpretation
+   - performance optimization may batch or score candidates, but it may not eliminate a MUST-eligible candidate before the AI-owned ranking solely for speed
 
-9. **AI ranking**
-   - one resident-specific ranking over the shortlist
-   - consumes authoritative MUST snapshot and canonical evidence
-   - MUST facts are immutable in the ranking packet
+9. **AI ranking across all MUST-eligible candidates**
+   - resident-specific AI ranking covers the complete MUST-eligible set
+   - consumes authoritative MUST snapshots and compact canonical facility evidence
+   - MUST facts are immutable in ranking packets
    - AI may rank and explain, never re-decide eligibility
+   - large universes may use globally comparable batched AI scoring followed by one final AI adjudication of the leading set, provided every MUST-eligible candidate was AI-scored under the same rubric
 
 10. **NICE verification**
-    - verify only Top 5-10 against governed evidence
+    - verify Top 5-10 in depth against governed evidence after all eligible candidates have been AI-ranked
     - MATCH / MISMATCH requires evidence; UNKNOWN stays UNKNOWN
     - parallel/batched execution
 
@@ -132,7 +133,7 @@ Guardian constrains and blocks. It does not own interview sequencing or ranking.
 6. `NO_DUPLICATE_FACILITY_FACTS`: every facility capability is read from the canonical facility evidence state.
 7. `NO_AI_CANDIDATE_INVENTION`: AI receives and returns only supplied canonical facility IDs.
 8. `AI_FAILS_CLOSED_WHEN_REQUIRED`: required AI failure blocks recommendation visibility.
-9. `SHORTLIST_BEFORE_AI`: AI ranking never scans the full market universe candidate-by-candidate.
+9. `ALL_MUST_ELIGIBLE_AI_RANKED`: performance optimization may compact/batch evidence but may not silently remove an eligible candidate before AI scoring/ranking.
 10. `TOP_N_IS_UP_TO_FIVE`: fewer than five fully eligible candidates is a valid result.
 11. `PROVENANCE_REQUIRED`: every PASS/MISMATCH on material facility capability is traceable to governed evidence.
 12. `CONTRADICTION_BLOCKS_FINALITY`: unresolved material contradiction prevents FINAL.
@@ -143,7 +144,7 @@ Warm backend target for a normal recommendation request:
 - canonical client interpretation: <= 8s
 - deterministic universe + MUST gate: <= 2s
 - material provider research: asynchronous or explicitly bounded
-- shortlist AI ranking: <= 15s
+- AI scoring/ranking of all MUST-eligible candidates from compact precomputed canonical packets: <= 15s
 - Top-N NICE verification + Process Owner synthesis: <= 10s
 - target warm synchronous response: <= 35s
 
