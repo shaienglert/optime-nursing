@@ -168,16 +168,14 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 must_pass.append(key)
         elif key == "ADL_SUPPORT_AVAILABLE":
+            # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE
+            # above for why: the research pipeline cannot currently distinguish "confirmed not
+            # offered" from "never researched" (both are stored as False).
             if canonical_type == "ASSISTED_LIVING_RFG" or any(
                 p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True
                 for p in payloads
             ):
                 must_pass.append(key)
-            elif any(
-                p.get("adl_support_verified") is False and p.get("outside_care_allowed_verified") is False
-                for p in payloads
-            ):
-                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "MEDICATION_SUPPORT_AVAILABLE":
@@ -191,6 +189,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 must_unknown.append(key)
         elif key == "REHAB_PATH_AVAILABLE":
+            # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE.
             if canonical_type == "SKILLED_NURSING" or any(
                 p.get("rehab_verified") is True
                 or p.get("pt_ot_verified") is True
@@ -198,27 +197,20 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 for p in payloads
             ):
                 must_pass.append(key)
-            elif any(
-                p.get("rehab_verified") is False
-                and p.get("pt_ot_verified") is False
-                and p.get("pt_ot_external_path_verified") is False
-                for p in payloads
-            ):
-                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "COUPLE_CORESIDENCE":
+            # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE.
             if any(
                 p.get("couple_coresidence_verified") is True
                 or p.get("same_apartment_transition_verified") is True
                 for p in payloads
             ):
                 must_pass.append(key)
-            elif any(p.get("couple_coresidence_verified") is False for p in payloads):
-                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "RECOVERY_TRANSITION_COMPATIBLE":
+            # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE.
             if "LIFE_PLAN_CCRC" in modalities or any(
                 p.get("outside_care_allowed_verified") is True
                 or p.get("continuum_of_care_verified") is True
@@ -226,13 +218,6 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 for p in payloads
             ):
                 must_pass.append(key)
-            elif any(
-                p.get("outside_care_allowed_verified") is False
-                and p.get("continuum_of_care_verified") is False
-                and p.get("same_apartment_transition_verified") is False
-                for p in payloads
-            ):
-                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         else:
