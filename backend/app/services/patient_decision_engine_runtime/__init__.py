@@ -366,7 +366,16 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     core["must_gate_rejected_count"] = len(rejected)
     core["must_gate_survivor_count"] = len(survivors)
     core["care_partner_options"] = care_partner_layer.get("candidate_options") or []
+    _tail_stage_started = time.perf_counter()
+    _tail_stage_timings: Dict[str, float] = {}
+
+    def _tail_mark(stage_name: str, previous: float) -> float:
+        now = time.perf_counter()
+        _tail_stage_timings[stage_name] = round((now - previous) * 1000, 1)
+        return now
+
     presearch_policy = build_success_factor_trace(questionnaire_state, patient_profile)
+    _tail_stage_started = _tail_mark("presearch_policy_ms", _tail_stage_started)
     readiness = str(human_context.get("decision_readiness") or "UNKNOWN")
     selected_must_unknown = sum(len((row.get("client_intent_fit") or {}).get("must_unknown") or []) for row in selected)
     if readiness != "READY":
@@ -400,6 +409,7 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     care_policy = core.get("care_setting_policy")
     if isinstance(care_policy, dict):
         care_policy["decision_intelligence"] = decision_intelligence
+    _tail_stage_started = _tail_mark("decision_intelligence_assembly_ms", _tail_stage_started)
 
     questions = human_context.get("adaptive_questions") or []
     audit_rows: List[Dict[str, Any]] = []
@@ -420,6 +430,7 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
         explanation["agent_person_fit_evidence"] = row.get("agent_person_fit_evidence") or []
         explanation["success_factor_summary"] = trace_summary
         audit_rows.append({"canonical_facility_id": row.get("canonical_facility_id"), "rank_position": row.get("rank_position"), "eligibility_status": row.get("eligibility_status"), "care_setting_fit": (row.get("care_setting_fit") or {}).get("status"), "client_intent_fit": row.get("client_intent_fit") or {}, "care_partner_access": row.get("care_partner_access") or {}, "matched_needs": [item.get("parameter_id") for item in row.get("matched_needs") or []], "unknown_critical_needs": [item.get("parameter_id") for item in row.get("unknown_critical_needs") or []], "success_factors_known_both_sides": trace_summary.get("known_on_both_sides") or [], "success_factors_facility_unknown": trace_summary.get("facility_evidence_unknown") or [], "agent_market_evidence_count": len(row.get("agent_person_fit_evidence") or [])})
+    _tail_stage_started = _tail_mark("audit_rows_build_ms", _tail_stage_started)
 
     core["recommendation_audit_trace"] = {
         "model_version": "decision-intelligence-runtime-v3.1",
@@ -433,6 +444,8 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
         "agent_evidence_bridge": agent_bridge,
         "recommendations": audit_rows,
     }
+    _tail_stage_started = _tail_mark("recommendation_audit_trace_assembly_ms", _tail_stage_started)
+    logger.info("runtime_run_patient_decision_engine_tail_breakdown_ms %s total_ms=%s", _tail_stage_timings, round(sum(_tail_stage_timings.values()), 1))
     return attach_governed_knowledge_learning_and_audit(core=core, questionnaire_state=questionnaire_state)
 
 
