@@ -38,13 +38,23 @@ def _query_signals(questionnaire_state: Dict[str, Any], natural_language_query: 
     home_like = any(token in combined for token in ("intimate", "home-like", "homelike", "home like", "small community", "less institutional", "not institutional", "independent living", "independent senior living"))
     part_time = any(token in combined for token in ("few hours", "a few hours", "couple hours", "part time", "part-time", "morning and evening", "morning/evening", "one hour", "1 hour"))
     adl = any(token in combined for token in ("bathing", "dressing", "adl", "personal care", "caregiver", "care giver", "shower"))
+    medication = any(token in combined for token in ("medication", "meds", "med management", "pills", "prescription"))
     meals_material = any(token in combined for token in ("meal", "meals", "food", "dining", "breakfast", "lunch", "dinner", "ארוחות", "אוכל"))
+    in_house_only_requested = any(token in combined for token in (
+        "everything in house", "everything in-house", "all in house", "all in-house",
+        "only in house", "only in-house", "in house only", "in-house only",
+        "no outside care", "no outside caregiver", "no external care", "no external agency",
+        "no outside agency", "not okay with outside caregivers", "not comfortable with outside caregivers",
+        "don't want outside caregivers", "do not want outside caregivers",
+    ))
     return {
         "temporary_care_need": temporary,
         "home_like_or_independent_preference": home_like,
         "part_time_care_pattern": part_time,
         "adl_support_needed": adl,
+        "medication_support_needed": medication,
         "meals_material": meals_material,
+        "in_house_only_requested": in_house_only_requested,
         "external_care_strategy_material": adl and (temporary or home_like or part_time),
     }
 
@@ -110,6 +120,25 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
     outside_allowed_false = care_delivery.get("outside_care_allowed") is False or any(p.get("outside_care_allowed_verified") is False for p in payloads)
     agency = _agency_match_from_row(row)
     agency_verified = agency["status"] == "VERIFIED_MATCH"
+    in_house_only = bool(signals.get("in_house_only_requested"))
+
+    in_house_medication = any(p.get("medication_support_verified") is True for p in payloads)
+    medication_verified_false = any(p.get("medication_support_verified") is False for p in payloads)
+    if in_house_medication:
+        medication_coverage, medication_delivery_model = "PASS", "FACILITY_IN_HOUSE"
+        medication_reason = "Required medication management is verified in-house at the facility."
+    elif not in_house_only and outside_allowed_true and agency_verified:
+        medication_coverage, medication_delivery_model = "PASS", "FACILITY_PLUS_EXTERNAL_AGENCY"
+        medication_reason = "Facility housing allows outside care and a verified agency match covers medication management."
+    elif medication_verified_false and (in_house_only or outside_allowed_false):
+        medication_coverage, medication_delivery_model = "FAIL", "NO_VALID_EXTERNAL_PATH"
+        medication_reason = "Medication management is verified not offered in-house, and no external pathway is available or the client requested in-house-only care."
+    elif not in_house_only and outside_allowed_true:
+        medication_coverage, medication_delivery_model = "PENDING_VERIFICATION", "FACILITY_PLUS_EXTERNAL_AGENCY_PENDING_MATCH"
+        medication_reason = "Outside care is allowed, but no verified agency match for medication management has been attached yet."
+    else:
+        medication_coverage, medication_delivery_model = "PENDING_VERIFICATION", "CARE_DELIVERY_UNKNOWN"
+        medication_reason = "Medication management delivery is material but neither in-house coverage nor an external-care pathway is fully verified."
 
     independent_setting = bool(modalities & {"INDEPENDENT_LIVING", "ACTIVE_ADULT", "ACTIVE_ADULT_55_PLUS_APARTMENTS", "LIFE_PLAN_CCRC"}) or canonical_type in {"INDEPENDENT_LIVING", "LIFE_PLAN_CCRC"}
 
@@ -158,11 +187,21 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
             "partner_agency_license_id": care_delivery.get("partner_agency_license_id", UNKNOWN),
             "external_agency_match": agency,
         },
+        "medication_component": {
+            "medication_required": signals["medication_support_needed"],
+            "in_house_only_requested": in_house_only,
+            "in_house_medication_verified": in_house_medication,
+            "external_care_allowed": True if outside_allowed_true else False if outside_allowed_false else UNKNOWN,
+            "external_agency_match": agency,
+            "combined_must_coverage": medication_coverage,
+            "delivery_model": medication_delivery_model,
+            "reason": medication_reason,
+        },
         "support_services": service.get("support_services") or {},
         "combined_must_coverage": coverage,
         "delivery_model": delivery_model,
         "reason": reason,
-        "policy": "Rank the complete solution. Housing, meals and personal care are separate evidence domains. Dining never implies three meals/day; outside-care permission never implies a verified agency; UNKNOWN remains UNKNOWN.",
+        "policy": "Rank the complete solution. Housing, meals, personal care and medication management are separate evidence domains. Dining never implies three meals/day; outside-care permission never implies a verified agency; UNKNOWN remains UNKNOWN. An external-agency pathway is a valid complementary product for a care-delivery MUST unless the client explicitly requested in-house-only care.",
     }
 
 

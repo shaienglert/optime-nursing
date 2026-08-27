@@ -66,6 +66,14 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         if not any(str(item.get("key") or "") == key for item in nice):
             nice.append({"key": key, "reason": reason})
 
+    in_house_only_requested = any(token in query for token in (
+        "everything in house", "everything in-house", "all in house", "all in-house",
+        "only in house", "only in-house", "in house only", "in-house only",
+        "no outside care", "no outside caregiver", "no external care", "no external agency",
+        "no outside agency", "not okay with outside caregivers", "not comfortable with outside caregivers",
+        "don't want outside caregivers", "do not want outside caregivers",
+    ))
+
     city = str(questionnaire_state.get("locationCity") or questionnaire_state.get("city") or "").strip().upper()
     las_vegas_requested = "las vegas" in query or city == "LAS VEGAS"
     city_limits_only = any(token in query for token in ("las vegas city limits", "city limits only", "within las vegas city", "only in las vegas city"))
@@ -109,11 +117,13 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
 
     return {
-        "version": "client-intent-runtime-v1.5",
+        "version": "client-intent-runtime-v1.6",
         "must_haves": must,
         "nice_to_haves": nice,
+        "in_house_only_requested": in_house_only_requested,
         "rule": "Client intent first -> verified MUST gate -> NICE-TO-HAVE MATCH/UNKNOWN/MISMATCH ordering -> objective government/regulatory evidence -> public reputation -> relevant evidence completeness.",
         "unknown_policy": "A material MUST with UNKNOWN evidence is not a pass or a fail; it triggers clarification or research and prevents finality. A specific NICE preference remains unresolved until evidence verifies that exact preference; known poor fit is MISMATCH, not UNKNOWN, and a broader category cannot silently satisfy it.",
+        "external_care_policy": "A care-delivery MUST (e.g. medication management, ADL support) is satisfied by a verified in-house capability or a verified external-agency pathway as a complementary product; it is not restricted to in-house delivery unless the client explicitly asked for in-house-only care. External-vs-in-house delivery affects ranking and must be disclosed to the user, never used to silently exclude a facility.",
     }
 
 
@@ -171,9 +181,21 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 must_unknown.append(key)
         elif key == "MEDICATION_SUPPORT_AVAILABLE":
-            if any(p.get("medication_support_verified") is True for p in payloads):
+            in_house_only = bool(intent.get("in_house_only_requested"))
+            med_verified_true = any(p.get("medication_support_verified") is True for p in payloads)
+            med_verified_false = any(p.get("medication_support_verified") is False for p in payloads)
+            outside_false = any(p.get("outside_care_allowed_verified") is False for p in payloads)
+            if med_verified_true:
                 must_pass.append(key)
+            elif med_verified_false and (in_house_only or outside_false):
+                # No in-house coverage and either the client wants in-house-only, or the facility
+                # is verified not to permit an outside-agency path either: no valid delivery exists.
+                hard_fail.append(key)
             else:
+                # Not verified in-house, and no verified agency match is attached yet at this stage
+                # (that verification happens downstream in combined_care_solution_runtime). Stays
+                # UNKNOWN/pending rather than passing on an unverified "outside care allowed" flag --
+                # this never disqualifies the facility, it just keeps the decision provisional.
                 must_unknown.append(key)
         elif key == "REHAB_PATH_AVAILABLE":
             if canonical_type == "SKILLED_NURSING" or any(
