@@ -4,6 +4,12 @@ import hashlib
 import logging
 import time
 from datetime import datetime
+
+# Uvicorn configures its own named loggers (uvicorn, uvicorn.error, uvicorn.access) but
+# never touches the root logger, so any application logger.info()/warning() call was
+# silently dropped -- created but never written anywhere, no handler, no visible error.
+# This must run before any application logger is used.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 from statistics import mean
 from pathlib import Path
 from typing import Any, Dict, List, Optional
