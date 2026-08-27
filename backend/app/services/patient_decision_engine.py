@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import logging
+import time
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cmp_to_key
 import os
 import re
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 from app.services.facility_parameter_service import (
     compare_facility_parameter_tables,
@@ -1304,7 +1308,10 @@ def run_patient_decision_engine(
     results = []
     requested_city = profile.get("location_city")
 
+    _table_lookup_ms = 0.0
+    _scoring_ms = 0.0
     for canonical_id in discovered_ids:
+        _t0 = time.perf_counter()
         table = get_facility_parameter_table(
             canonical_id,
             need_tags=profile["need_tags"],
@@ -1312,13 +1319,40 @@ def run_patient_decision_engine(
             profile_key=profile["profile_key"],
             ordered_registry=recommendation_registry,
             include_evidence_records=False,
+            lean=True,
         )
+        _t1 = time.perf_counter()
+        _table_lookup_ms += (_t1 - _t0) * 1000
         canonical_meta = canonical_index.get(canonical_id, {})
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
 
         eligibility = _eligibility_from_needs(needs, row_by_param)
         scoring = _score_result(needs, eligibility)
         geo_note, geo_bonus = _facility_geo_match({"city": table.get("city")}, requested_city)
+
+        # ELIGIBILITY_ORDER always sorts INELIGIBLE facilities after every
+        # eligible/potentially-eligible/insufficient-evidence one regardless of these
+        # dimension scores, so an ineligible facility only reaches the visible top-N
+        # when there aren't enough non-ineligible candidates to fill it -- the common
+        # case pays for 4 scoring passes across the whole market to never show them.
+        if eligibility["eligibility_status"] == "INELIGIBLE":
+            quality_safety_score = None
+            staffing_score = None
+            capability_depth_score = None
+            outcomes_score = None
+            practical_fit_score = None
+        else:
+            quality_safety_score = _dimension_quality_safety(table["rows"])["score"]
+            staffing_score = _dimension_staffing(table["rows"])["score"]
+            capability_depth_score = _dimension_capability_depth(needs, eligibility, row_by_param)["score"]
+            outcomes_score = _dimension_outcomes(table["rows"], needs)["score"]
+            practical_fit_score = _dimension_practical_fit(
+                needs,
+                _build_need_status_map(eligibility),
+                requested_city,
+                table.get("city"),
+            )["score"]
+
         results.append(
             {
                 "canonical_facility_id": canonical_id,
@@ -1333,18 +1367,21 @@ def run_patient_decision_engine(
                 "eligibility_status": eligibility["eligibility_status"],
                 "match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "patient_match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
-                "quality_safety_score": _dimension_quality_safety(table["rows"])["score"],
-                "staffing_score": _dimension_staffing(table["rows"])["score"],
-                "capability_depth_score": _dimension_capability_depth(needs, eligibility, row_by_param)["score"],
-                "patient_relevant_outcomes_score": _dimension_outcomes(table["rows"], needs)["score"],
-                "practical_fit_score": _dimension_practical_fit(
-                    needs,
-                    _build_need_status_map(eligibility),
-                    requested_city,
-                    table.get("city"),
-                )["score"],
+                "quality_safety_score": quality_safety_score,
+                "staffing_score": staffing_score,
+                "capability_depth_score": capability_depth_score,
+                "patient_relevant_outcomes_score": outcomes_score,
+                "practical_fit_score": practical_fit_score,
             }
         )
+        _scoring_ms += (time.perf_counter() - _t1) * 1000
+
+    logger.info(
+        "run_patient_decision_engine_loop_breakdown_ms facility_count=%s table_lookup_ms=%s scoring_ms=%s",
+        len(discovered_ids),
+        round(_table_lookup_ms, 1),
+        round(_scoring_ms, 1),
+    )
 
     results, pairwise_decisions = _rank_with_true_ties(results, decision_limit=limit)
 
