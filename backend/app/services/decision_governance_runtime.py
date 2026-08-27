@@ -10,8 +10,12 @@ not applicable, or what authoritative source was checked while preserving UNKNOW
 
 import hashlib
 import json
+import logging
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -456,7 +460,9 @@ def persist_recommendation_verification_audits(
     )
     run_id = hashlib.sha256(run_seed.encode("utf-8")).hexdigest()[:24]
 
+    _t_session_start = time.perf_counter()
     db = SessionLocal()
+    _t_session_opened = time.perf_counter()
     try:
         written = 0
         usage_written = 0
@@ -509,8 +515,23 @@ def persist_recommendation_verification_audits(
             usage_written += int(usage.get("written") or 0)
             agent_audit[facility_id] = usage.get("agents") or {}
             written += 1
+        _t_rows_staged = time.perf_counter()
         _sync_snapshot_health(db, trace_summary)
+        _t_snapshot_health = time.perf_counter()
         db.commit()
+        _t_committed = time.perf_counter()
+        logger.info(
+            "persist_recommendation_verification_audits_breakdown_ms records_written=%s "
+            "agent_usage_records_written=%s session_open_ms=%s stage_rows_ms=%s "
+            "sync_snapshot_health_ms=%s commit_ms=%s total_ms=%s",
+            written,
+            usage_written,
+            round((_t_session_opened - _t_session_start) * 1000, 1),
+            round((_t_rows_staged - _t_session_opened) * 1000, 1),
+            round((_t_snapshot_health - _t_rows_staged) * 1000, 1),
+            round((_t_committed - _t_snapshot_health) * 1000, 1),
+            round((_t_committed - _t_session_start) * 1000, 1),
+        )
         return {
             "status": "PERSISTED",
             "run_id": run_id,
@@ -537,13 +558,22 @@ def attach_governed_knowledge_learning_and_audit(
     core: Dict[str, Any],
     questionnaire_state: Dict[str, Any],
 ) -> Dict[str, Any]:
+    _t0 = time.perf_counter()
     context = load_governed_decision_context()
+    _t1 = time.perf_counter()
     decision_intelligence = core.setdefault("decision_intelligence", {})
     decision_intelligence["governed_knowledge_learning"] = context
     persistence = persist_recommendation_verification_audits(
         core=core,
         questionnaire_state=questionnaire_state,
         governance_context=context,
+    )
+    _t2 = time.perf_counter()
+    logger.info(
+        "attach_governed_knowledge_learning_and_audit_ms load_context_ms=%s persist_audits_ms=%s total_ms=%s",
+        round((_t1 - _t0) * 1000, 1),
+        round((_t2 - _t1) * 1000, 1),
+        round((_t2 - _t0) * 1000, 1),
     )
     audit_trace = core.setdefault("recommendation_audit_trace", {})
     audit_trace["persistence"] = persistence
