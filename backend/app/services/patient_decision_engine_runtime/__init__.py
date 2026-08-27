@@ -3,9 +3,13 @@ from __future__ import annotations
 """Integrated production decision runtime."""
 
 import importlib.util
+import logging
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, List
+
+logger = logging.getLogger(__name__)
 
 from app.services.client_intent_runtime import attach_client_intent_fit, build_client_intent, intent_rank_key
 from app.services.decision_agent_bridge import attach_agent_evidence_and_queue_gaps
@@ -299,41 +303,63 @@ def _attach_facility_care_partner_access(rows: List[Dict[str, Any]], care_partne
 
 
 def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50) -> Dict[str, Any]:
+    _stage_started = time.perf_counter()
+    _stage_timings: Dict[str, float] = {}
+
+    def _mark(stage_name: str, previous: float) -> float:
+        now = time.perf_counter()
+        _stage_timings[stage_name] = round((now - previous) * 1000, 1)
+        return now
+
     strategy = build_living_strategy_context(questionnaire_state, natural_language_query)
+    _stage_started = _mark("build_living_strategy_context_ms", _stage_started)
     core = _governed.run_patient_decision_engine(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=max(10000, int(limit or 50)))
+    _stage_started = _mark("governed_run_patient_decision_engine_ms", _stage_started)
     patient_profile = core.get("patient_needs_profile") if isinstance(core.get("patient_needs_profile"), dict) else {}
     _apply_strategy_needs(patient_profile, strategy)
     patient_profile["living_strategy"] = strategy
 
     human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+    _stage_started = _mark("build_human_intelligence_context_ms", _stage_started)
     _merge_strategy_questions(human_context, strategy)
     client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context)
+    _stage_started = _mark("build_client_intent_ms", _stage_started)
     patient_profile["client_intent"] = client_intent
 
     rows = list(core.get("results") or [])
     attach_provider_housing_evidence(rows)
+    _stage_started = _mark("attach_provider_housing_evidence_ms", _stage_started)
     attach_human_person_fit(rows, human_context)
+    _stage_started = _mark("attach_human_person_fit_ms", _stage_started)
     attach_client_intent_fit(rows, client_intent)
+    _stage_started = _mark("attach_client_intent_fit_1_ms", _stage_started)
 
     indexed_pre_agent = list(enumerate(rows))
     indexed_pre_agent.sort(key=lambda pair: _stable_pre_agent_fit_key(pair[1], pair[0]))
     rows = [row for _, row in indexed_pre_agent]
+    _stage_started = _mark("pre_agent_sort_ms", _stage_started)
 
     non_failed = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")]
     research_pool = _strategy_research_pool(non_failed, int(limit or 50))
+    _stage_started = _mark("strategy_research_pool_ms", _stage_started)
     agent_bridge = attach_agent_evidence_and_queue_gaps(research_pool, human_context)
+    _stage_started = _mark("attach_agent_evidence_and_queue_gaps_ms", _stage_started)
 
     attach_client_intent_fit(rows, client_intent)
+    _stage_started = _mark("attach_client_intent_fit_2_ms", _stage_started)
     survivors = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")]
     rejected = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") == "FAIL")]
     indexed_final = list(enumerate(survivors))
     indexed_final.sort(key=lambda pair: _stable_final_intent_key(pair[1], pair[0]))
     ranked_survivors = [row for _, row in indexed_final]
     _reassign_rank_metadata(ranked_survivors)
+    _stage_started = _mark("final_sort_and_rank_ms", _stage_started)
 
     universe_status = _strategy_universe_status(ranked_survivors, strategy)
     care_partner_layer = _care_partner_layer(strategy, questionnaire_state, natural_language_query)
     _attach_facility_care_partner_access(ranked_survivors, care_partner_layer)
+    _stage_started = _mark("care_partner_layer_ms", _stage_started)
+    logger.info("runtime_run_patient_decision_engine_breakdown_ms %s total_ms=%s", _stage_timings, round(sum(_stage_timings.values()), 1))
     selected = ranked_survivors[: max(0, int(limit or 0))]
     core["results"] = selected
     core["result_count"] = len(selected)
