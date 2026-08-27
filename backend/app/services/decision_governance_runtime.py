@@ -461,6 +461,10 @@ def persist_recommendation_verification_audits(
     run_id = hashlib.sha256(run_seed.encode("utf-8")).hexdigest()[:24]
 
     _t_session_start = time.perf_counter()
+    logger.info(
+        "persist_recommendation_verification_audits_entry id=%s core_results_count=%s",
+        id(core), len(core.get("results") or []),
+    )
     db = SessionLocal()
     _t_session_opened = time.perf_counter()
     try:
