@@ -473,6 +473,40 @@ def get_personalized_parameter_order(
     }
 
 
+def _resolve_rows_for_facility_lean(
+    canonical_facility_id: str,
+    ordered_registry: List[Dict[str, Any]],
+    evidence_best_lookup: Dict[str, Dict[str, Dict[str, Any]]],
+) -> List[Dict[str, Any]]:
+    """Same raw_value/source/detail_scope resolution as the full row builder, minus
+    every field only used for client-facing display (category, provenance, evidence
+    records, etc). Scoring only ever reads raw_value/source/detail_scope per
+    parameter_id -- this exists so the per-candidate scoring pass over the full
+    market doesn't pay for building ~15 unused fields x ~59 parameters x N facilities.
+    """
+    facility_best_rows = evidence_best_lookup.get(canonical_facility_id, {})
+    resolved = []
+    for parameter in ordered_registry:
+        best = facility_best_rows.get(parameter["parameter_id"])
+        if best is not None:
+            raw_value = best.get("value")
+            source = str(best.get("source") or "Not verified")
+            detail_scope = str(best.get("scope") or parameter["applicable_scope"])
+        else:
+            raw_value = "UNKNOWN"
+            source = "Not verified"
+            detail_scope = parameter["applicable_scope"]
+        if parameter["parameter_id"] == "current_availability":
+            raw_value = "UNKNOWN"
+        resolved.append({
+            "parameter_id": parameter["parameter_id"],
+            "raw_value": raw_value,
+            "source": source,
+            "detail_scope": detail_scope,
+        })
+    return resolved
+
+
 def _resolve_rows_for_facility(
     canonical_facility_id: str,
     ordered_registry: List[Dict[str, Any]],
@@ -561,19 +595,23 @@ def get_facility_parameter_table(
     profile_key: Optional[str] = None,
     ordered_registry: Optional[List[Dict[str, Any]]] = None,
     include_evidence_records: bool = True,
+    lean: bool = False,
 ) -> Dict[str, Any]:
     runtime = _load_runtime()
     facility = runtime["canonical_by_id"].get(canonical_facility_id)
     if not facility:
         raise KeyError(canonical_facility_id)
     ordered = ordered_registry or _ordered_registry(runtime["registry"], need_tags=need_tags, priority_parameter_ids=priority_parameter_ids, profile_key=profile_key)
-    rows = _resolve_rows_for_facility(
-        canonical_facility_id,
-        ordered,
-        runtime["evidence_lookup"] if include_evidence_records else None,
-        runtime["evidence_best_lookup"],
-        include_evidence_records,
-    )
+    if lean:
+        rows = _resolve_rows_for_facility_lean(canonical_facility_id, ordered, runtime["evidence_best_lookup"])
+    else:
+        rows = _resolve_rows_for_facility(
+            canonical_facility_id,
+            ordered,
+            runtime["evidence_lookup"] if include_evidence_records else None,
+            runtime["evidence_best_lookup"],
+            include_evidence_records,
+        )
     return {
         "canonical_facility_id": canonical_facility_id,
         "facility_name": facility.get("facility_name"),
