@@ -14,10 +14,14 @@ import gzip
 import hashlib
 import importlib.util
 import json
+import logging
 import sys
+import time
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 from typing import Any, Dict, List
 
 from app.services.facility_parameter_service import get_canonical_facility_index
@@ -354,17 +358,20 @@ def run_patient_decision_engine(
 ) -> Dict[str, Any]:
     # Score the complete canonical market first. Care-setting routing must happen
     # before truncation; otherwise an over-level SNF-only top-N cannot be corrected.
+    _t0 = time.perf_counter()
     core = _legacy.run_patient_decision_engine(
         questionnaire_state=questionnaire_state,
         natural_language_query=natural_language_query,
         limit=max(10000, int(limit or 50)),
     )
+    _t1 = time.perf_counter()
 
     profile = core.get("patient_needs_profile") or {}
     context = _care_setting_context(profile)
     canonical_index = get_canonical_facility_index()
     regulatory = _regulatory_index()
     results = list(core.get("results") or [])
+    _t2 = time.perf_counter()
 
     for row in results:
         canonical_id = str(row.get("canonical_facility_id") or "")
@@ -372,9 +379,22 @@ def run_patient_decision_engine(
         row["care_setting_fit"] = _care_setting_fit(context, row, canonical_row)
         if canonical_id in regulatory:
             row["regulatory_history"] = regulatory[canonical_id]
+    _t3 = time.perf_counter()
 
     results.sort(key=_result_sort_key)
+    _t4 = time.perf_counter()
     _assign_governed_ranks(results)
+    _t5 = time.perf_counter()
+    logger.info(
+        "governed_run_patient_decision_engine_breakdown_ms result_count=%s legacy_call_ms=%s "
+        "context_and_regulatory_setup_ms=%s care_setting_fit_loop_ms=%s sort_ms=%s assign_ranks_ms=%s",
+        len(results),
+        round((_t1 - _t0) * 1000, 1),
+        round((_t2 - _t1) * 1000, 1),
+        round((_t3 - _t2) * 1000, 1),
+        round((_t4 - _t3) * 1000, 1),
+        round((_t5 - _t4) * 1000, 1),
+    )
     selected = results[: max(0, int(limit or 0))]
 
     core["results"] = selected
