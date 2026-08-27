@@ -26,7 +26,7 @@ type NeedsProfileWithDecisionIntelligence = PatientNeedsProfile & {
   };
 };
 
-const UI_REQUEST_TIMEOUT_MS = 120000;
+const UI_REQUEST_TIMEOUT_MS = 320000;
 
 function cloneState(state: QuestionnaireState): QuestionnaireState {
   return JSON.parse(JSON.stringify(state)) as QuestionnaireState;

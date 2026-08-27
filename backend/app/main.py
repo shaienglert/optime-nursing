@@ -1571,12 +1571,12 @@ async def post_personalized_parameter_order(payload: PersonalizedParameterOrderI
 
 
 @app.post("/decision-engine/patient-needs-profile", response_model=PatientNeedsProfileOut)
-async def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn):
+def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn):
     return build_patient_needs_profile(payload.questionnaire_state, payload.natural_language_query or "")
 
 
 @app.post("/decision-engine/recommendations", response_model=PatientDecisionEngineOut)
-async def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestIn, db: Session = Depends(get_db)):
+def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestIn, db: Session = Depends(get_db)):
     started = time.perf_counter()
     logger.info("decision_request_received limit=%s", payload.limit)
     response = run_patient_decision_engine(
@@ -1611,7 +1611,7 @@ async def post_patient_decision_recommendations(payload: PatientDecisionEngineRe
 
 
 @app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
-async def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
+def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
     return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
 
 
@@ -1787,7 +1787,7 @@ async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = 
 
 
 @app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut)
-async def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db)):
+def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db)):
     record = AdaptiveQuestionResponse(
         resident_key=payload.resident_key,
         question_key=payload.question_key,

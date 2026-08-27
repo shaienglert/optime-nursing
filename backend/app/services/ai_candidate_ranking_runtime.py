@@ -11,11 +11,32 @@ evidence.
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
+import logging
 import os
 from typing import Any, Dict, List
 
 from app.services.semantic_intent_ai import _default_transport
 from app.services.semantic_preference_runtime import build_facility_claim_ledger
+
+logger = logging.getLogger(__name__)
+
+
+def _log_closed_world_mismatch(label: str, supplied: set[str], returned_ids: List[str]) -> None:
+    returned = set(returned_ids)
+    missing = supplied - returned
+    extra = returned - supplied
+    duplicates = len(returned_ids) - len(returned)
+    logger.warning(
+        "%s supplied=%s returned=%s missing=%s extra=%s duplicates=%s "
+        "(missing_and_no_extra suggests truncation; extra suggests invented/hallucinated ids)",
+        label,
+        len(supplied),
+        len(returned_ids),
+        len(missing),
+        len(extra),
+        duplicates,
+    )
 
 
 def _ranking_packet(rows: List[Dict[str, Any]], *, claim_limit: int | None = None) -> List[Dict[str, Any]]:
@@ -100,6 +121,7 @@ def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> List[Dict[s
     ranked = packet.get("ranked_candidates") if isinstance(packet.get("ranked_candidates"), list) else []
     ids = [str(item.get("canonical_facility_id") or "") for item in ranked if isinstance(item, dict)]
     if len(ids) != len(supplied) or len(set(ids)) != len(ids) or set(ids) != supplied:
+        _log_closed_world_mismatch("AI_CANDIDATE_RANKING_CLOSED_WORLD_VIOLATION", supplied, ids)
         raise RuntimeError("AI_CANDIDATE_RANKING_CLOSED_WORLD_VIOLATION")
     by_id = {str(row.get("canonical_facility_id")): row for row in rows}
     ordered: List[Dict[str, Any]] = []
@@ -116,6 +138,7 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
     scored = packet.get("scored_candidates") if isinstance(packet.get("scored_candidates"), list) else []
     ids = [str(item.get("canonical_facility_id") or "") for item in scored if isinstance(item, dict)]
     if len(ids) != len(supplied) or len(set(ids)) != len(ids) or set(ids) != supplied:
+        _log_closed_world_mismatch("AI_CANDIDATE_SCORING_CLOSED_WORLD_VIOLATION", supplied, ids)
         raise RuntimeError("AI_CANDIDATE_SCORING_CLOSED_WORLD_VIOLATION")
     validated: Dict[str, Dict[str, Any]] = {}
     for item in scored:
@@ -148,6 +171,7 @@ def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hu
 
     expected_ids = {str(row.get("canonical_facility_id")) for row in rows}
     if set(scored_by_id) != expected_ids:
+        _log_closed_world_mismatch("AI_BATCHED_RANKING_CLOSED_WORLD_VIOLATION", expected_ids, list(scored_by_id))
         raise RuntimeError("AI_BATCHED_RANKING_CLOSED_WORLD_VIOLATION")
 
     indexed = list(enumerate(rows))
@@ -177,6 +201,7 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
     if enabled:
         try:
             if len(rows) > batch_threshold:
+                logger.info("ai_candidate_ranking_start mode=batched candidate_count=%s batch_threshold=%s", len(rows), batch_threshold)
                 ordered = _batch_ai_rank(rows, client_intent, human_context, strategy, deterministic_fallback_key)
                 return ordered, {
                     "status": "AI_BATCH_RANKED",
@@ -187,9 +212,16 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
                     "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE",
                     "batch_threshold": batch_threshold,
                 }
-            ordered = _validate(_default_transport(_prompt(rows, client_intent, human_context, strategy)), rows)
+            single_shot_prompt = _prompt(rows, client_intent, human_context, strategy)
+            logger.info(
+                "ai_candidate_ranking_start mode=single_shot candidate_count=%s prompt_chars=%s (no claim_limit applied on this path)",
+                len(rows),
+                len(json.dumps(single_shot_prompt, ensure_ascii=False)),
+            )
+            ordered = _validate(_default_transport(single_shot_prompt), rows)
             return ordered, {"status": "AI_RANKED", "candidate_count": len(ordered), "closed_world_validated": True, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE"}
         except Exception as exc:
+            logger.warning("ai_candidate_ranking_failed candidate_count=%s error=%s", len(rows), exc)
             if required:
                 raise RuntimeError(f"AI_CANDIDATE_RANKING_REQUIRED_FAILED:{exc}") from exc
 

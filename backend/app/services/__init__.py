@@ -12,10 +12,14 @@ keeps recommendation finality provisional and never becomes a silent PASS.
 import importlib.abc
 import importlib.machinery
 import importlib.util
+import logging
 import sys
+import time
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 
 _GOVERNED_FULLNAME = f"{__name__}.patient_decision_engine"
@@ -220,23 +224,35 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             return
 
         def wrapped(questionnaire_state: dict[str, Any], natural_language_query: str = "", limit: int = 50):
+            stage_started = time.perf_counter()
+            stage_timings: dict[str, float] = {}
+
+            def _mark(stage_name: str, previous: float) -> float:
+                now = time.perf_counter()
+                stage_timings[stage_name] = round((now - previous) * 1000, 1)
+                return now
+
             profile = profile_builder(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+            stage_started = _mark("build_patient_needs_profile_ms", stage_started)
             profile_readiness = "UNKNOWN"
             if isinstance(profile, dict):
                 profile_decision = _decision_from_profile(profile)
                 profile_readiness = _readiness_from_decision(profile_decision)
                 if _client_interview_blocked(profile_readiness):
+                    logger.info("decision_pipeline_stage_timings_ms (blocked at profile) %s", stage_timings)
                     return _blocked_interview_result(profile, profile_readiness)
                 _mark_client_ready_for_research(profile_decision, profile_readiness)
 
             internal_limit = max(500, int(limit or 50))
             result = original(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=internal_limit)
+            stage_started = _mark("run_patient_decision_engine_deterministic_ms", stage_started)
             if not isinstance(result, dict):
                 return result
             decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
             readiness = _readiness_from_decision(decision)
             if _client_interview_blocked(readiness):
                 runtime_profile = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else profile
+                logger.info("decision_pipeline_stage_timings_ms (blocked at result) %s", stage_timings)
                 return _blocked_interview_result(runtime_profile or {}, readiness)
             _mark_client_ready_for_research(decision, readiness)
 
@@ -245,14 +261,20 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
 
             result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit))
+            stage_started = _mark("apply_semantic_facility_requirements_ms", stage_started)
             decision = result.setdefault("decision_intelligence", {})
             decision["interview_owner"] = "SEMANTIC_AI"
             decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
             decision.setdefault("recommendation_execution_allowed", True)
             result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, internal_limit)
+            stage_started = _mark("apply_combined_care_layer_ms", stage_started)
             result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
+            stage_started = _mark("apply_must_ai_nice_pipeline_ms", stage_started)
             result = attach_ai_process_owner_guarded(result, questionnaire_state, natural_language_query)
-            return _suppress_unverified_recommendations(result)
+            stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
+            result = _suppress_unverified_recommendations(result)
+            logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
+            return result
 
         setattr(wrapped, "_combined_care_wrapped", True)
         setattr(wrapped, "_ai_interview_gate_wrapped", True)
