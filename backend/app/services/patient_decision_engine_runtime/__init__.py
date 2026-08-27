@@ -366,6 +366,10 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     core["must_gate_rejected_count"] = len(rejected)
     core["must_gate_survivor_count"] = len(survivors)
     core["care_partner_options"] = care_partner_layer.get("candidate_options") or []
+    logger.info(
+        "core_results_reassigned id=%s limit=%s selected_count=%s core_results_count=%s survivor_count=%s",
+        id(core), limit, len(selected), len(core.get("results") or []), len(survivors),
+    )
     _tail_stage_started = time.perf_counter()
     _tail_stage_timings: Dict[str, float] = {}
 
@@ -446,6 +450,10 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     }
     _tail_stage_started = _tail_mark("recommendation_audit_trace_assembly_ms", _tail_stage_started)
     logger.info("runtime_run_patient_decision_engine_tail_breakdown_ms %s total_ms=%s", _tail_stage_timings, round(sum(_tail_stage_timings.values()), 1))
+    logger.info(
+        "core_results_before_governance_call id=%s core_results_count=%s",
+        id(core), len(core.get("results") or []),
+    )
     return attach_governed_knowledge_learning_and_audit(core=core, questionnaire_state=questionnaire_state)
 
 
