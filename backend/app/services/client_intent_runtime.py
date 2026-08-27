@@ -181,21 +181,14 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 must_unknown.append(key)
         elif key == "MEDICATION_SUPPORT_AVAILABLE":
-            in_house_only = bool(intent.get("in_house_only_requested"))
-            med_verified_true = any(p.get("medication_support_verified") is True for p in payloads)
-            med_verified_false = any(p.get("medication_support_verified") is False for p in payloads)
-            outside_false = any(p.get("outside_care_allowed_verified") is False for p in payloads)
-            if med_verified_true:
+            # Entry into the candidate list must never turn on an unverified "False": the
+            # research pipeline currently cannot distinguish "confirmed not offered" from
+            # "never researched" (both are stored as False), so a hard_fail here would wrongly
+            # exclude facilities with no real negative finding. In-house-vs-external-agency
+            # delivery is a ranking signal (see combined_care_solution_runtime.py), never a gate.
+            if any(p.get("medication_support_verified") is True for p in payloads):
                 must_pass.append(key)
-            elif med_verified_false and (in_house_only or outside_false):
-                # No in-house coverage and either the client wants in-house-only, or the facility
-                # is verified not to permit an outside-agency path either: no valid delivery exists.
-                hard_fail.append(key)
             else:
-                # Not verified in-house, and no verified agency match is attached yet at this stage
-                # (that verification happens downstream in combined_care_solution_runtime). Stays
-                # UNKNOWN/pending rather than passing on an unverified "outside care allowed" flag --
-                # this never disqualifies the facility, it just keeps the decision provisional.
                 must_unknown.append(key)
         elif key == "REHAB_PATH_AVAILABLE":
             if canonical_type == "SKILLED_NURSING" or any(
