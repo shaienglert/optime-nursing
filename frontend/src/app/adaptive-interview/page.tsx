@@ -123,7 +123,12 @@ export default function AdaptiveInterviewPage() {
       }))) as NeedsProfileWithDecisionIntelligence;
       const context = getDecisionContext(response);
 
-      if (context.decision_readiness === "READY") {
+      if (context.decision_readiness === "READY" || context.decision_readiness === "NEEDS_RESEARCH") {
+        // NEEDS_RESEARCH means the client interview is done -- any remaining unknowns are
+        // facility-side research work, not something to keep asking the client about. The
+        // backend already treats this identically to READY (see _client_interview_blocked
+        // in app/services/__init__.py), so the frontend must too, or it dead-ends here with
+        // no adaptive_questions and no way to proceed.
         setQuestion(null);
         router.replace(destination);
         return;
