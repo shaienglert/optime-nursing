@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
@@ -60,15 +60,17 @@ export function SimpleResultsPageClient() {
     };
   }, [naturalLanguageQuery, state]);
 
-  const eligible = useMemo(
-    () => (response?.results || []).filter((item) => item.eligibility_status === "ELIGIBLE"),
-    [response],
-  );
-  const pending = useMemo(
-    () => (response?.results || []).filter((item) => item.eligibility_status !== "ELIGIBLE" && item.eligibility_status !== "INELIGIBLE"),
-    [response],
-  );
-  const top = eligible.slice(0, TOP_COUNT);
+  // response.results is already the backend's final, ranked selection: only candidates whose
+  // client_intent_fit.hard_gate is PASS get ranked and returned here (see
+  // must_ai_nice_pipeline.py). Re-filtering by the older, stricter eligibility_status field
+  // (from the separate static-needs eligibility system, where any HIGH-tier need with no
+  // registry-verified evidence -- e.g. medication_support, which has zero verified facilities
+  // in the current dataset -- caps a facility at POTENTIALLY_ELIGIBLE, never ELIGIBLE) meant
+  // this view almost never had anything to show, regardless of how confident the actual
+  // ranking was.
+  const allResults = response?.results || [];
+  const top = allResults.slice(0, TOP_COUNT);
+  const pending = allResults.slice(TOP_COUNT);
   const relationship = personLabel(state.relationship);
   const detailsHref = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
