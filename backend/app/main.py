@@ -1227,6 +1227,74 @@ async def runtime_status():
     return get_runtime_sync_status()
 
 
+@app.get("/diagnostics/medication-evidence-audit")
+def medication_evidence_audit(db: Session = Depends(get_db)):
+    from app.models.agent_execution import AgentKnowledgeRecord
+
+    rows = db.query(
+        AgentKnowledgeRecord.entity_key,
+        AgentKnowledgeRecord.agent_key,
+        AgentKnowledgeRecord.source,
+        AgentKnowledgeRecord.payload_json,
+    ).all()
+
+    total_rows = len(rows)
+    entity_keys = set()
+    medication_true = medication_false = medication_missing = 0
+    outside_true = outside_false = outside_missing = 0
+    both_false = 0
+    both_false_payload_samples: dict[str, int] = {}
+
+    for entity_key, agent_key, source, payload_json in rows:
+        entity_keys.add(entity_key)
+        try:
+            payload = json.loads(payload_json or "{}")
+        except (TypeError, ValueError):
+            payload = {}
+
+        med = payload.get("medication_support_verified")
+        outside = payload.get("outside_care_allowed_verified")
+
+        if med is True:
+            medication_true += 1
+        elif med is False:
+            medication_false += 1
+        else:
+            medication_missing += 1
+
+        if outside is True:
+            outside_true += 1
+        elif outside is False:
+            outside_false += 1
+        else:
+            outside_missing += 1
+
+        if med is False and outside is False:
+            both_false += 1
+            key = (payload_json or "").strip()
+            both_false_payload_samples[key] = both_false_payload_samples.get(key, 0) + 1
+
+    distinct_both_false_payloads = len(both_false_payload_samples)
+    top_repeated_payloads = sorted(both_false_payload_samples.items(), key=lambda item: -item[1])[:5]
+
+    return {
+        "total_rows": total_rows,
+        "distinct_facilities": len(entity_keys),
+        "medication_support_verified": {"true": medication_true, "false": medication_false, "missing_or_other": medication_missing},
+        "outside_care_allowed_verified": {"true": outside_true, "false": outside_false, "missing_or_other": outside_missing},
+        "both_false_count": both_false,
+        "distinct_both_false_payloads": distinct_both_false_payloads,
+        "interpretation": (
+            "If distinct_both_false_payloads is close to 1 (or a small number repeated across many rows), "
+            "these are almost certainly an identical default/boilerplate value, not per-facility research findings. "
+            "If distinct_both_false_payloads is close to both_false_count, each is a real distinct finding."
+        ),
+        "top_repeated_both_false_payloads": [
+            {"payload_json": payload, "facility_count": count} for payload, count in top_repeated_payloads
+        ],
+    }
+
+
 @app.get("/import-summary", response_model=ImportSummaryOut)
 async def import_summary():
     summary = getattr(app.state, "import_summary", None)
