@@ -1136,6 +1136,58 @@ def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) 
     return strong, verify, concerns
 
 
+def _agent_verified_medication_overlay(canonical_ids: List[str]) -> Dict[str, str]:
+    """The registry's evidence arbiter (_best_evidence_row) already resolves conflicting
+    registry evidence, but it never sees agent-research findings (AgentKnowledgeRecord),
+    which live in a separate table populated at request time. This asks that same
+    question of the agent's evidence for the current top candidates only (bounded, not
+    the full facility universe), so a real verified finding there can resolve what the
+    registry alone left UNKNOWN -- one governed answer per fact instead of two silently
+    disagreeing ones.
+
+    Only positive confirmations are used. An agent record with medication_support_verified
+    == False must never turn into a hard exclusion here: that field is stamped on every
+    agent record regardless of which dimension was actually being researched (see
+    decision_research_worker.py), so a False is frequently "never checked", not "checked
+    and absent". Missing evidence stays UNKNOWN, exactly as before this overlay existed.
+    """
+    if not canonical_ids:
+        return {}
+    from sqlalchemy import inspect
+    from sqlalchemy.exc import OperationalError
+
+    from app.database import SessionLocal
+    from app.models.agent_execution import AgentKnowledgeRecord
+
+    db = SessionLocal()
+    try:
+        # Local/test SQLite databases may not have the agent persistence tables
+        # initialized (see decision_agent_bridge.py's _agent_schema_available for the
+        # same pattern elsewhere); treat that as "no agent evidence available" rather
+        # than a hard failure.
+        if AgentKnowledgeRecord.__tablename__ not in inspect(db.get_bind()).get_table_names():
+            return {}
+        rows = (
+            db.query(AgentKnowledgeRecord.entity_key, AgentKnowledgeRecord.payload_json)
+            .filter(AgentKnowledgeRecord.entity_key.in_(canonical_ids))
+            .all()
+        )
+    except OperationalError:
+        return {}
+    finally:
+        db.close()
+
+    verified: set[str] = set()
+    for entity_key, payload_json in rows:
+        try:
+            payload = json.loads(payload_json or "{}")
+        except (TypeError, ValueError):
+            continue
+        if payload.get("medication_support_verified") is True:
+            verified.add(str(entity_key))
+    return {canonical_id: "YES" for canonical_id in verified}
+
+
 def _build_ranked_candidate_detail(
     *,
     canonical_id: str,
@@ -1144,6 +1196,7 @@ def _build_ranked_candidate_detail(
     needs: List[Dict[str, Any]],
     recommendation_registry: List[Dict[str, Any]],
     ordered_parameter_ids: List[str],
+    medication_overlay: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     table = get_facility_parameter_table(
         canonical_id,
@@ -1154,6 +1207,15 @@ def _build_ranked_candidate_detail(
         include_evidence_records=False,
     )
     row_by_param = {row["parameter_id"]: row for row in table["rows"]}
+    if (medication_overlay or {}).get(canonical_id) == "YES":
+        existing = row_by_param.get("medication_support") or {}
+        if str(existing.get("raw_value") or "UNKNOWN").upper() in {"UNKNOWN", ""}:
+            row_by_param["medication_support"] = {
+                **existing,
+                "parameter_id": "medication_support",
+                "raw_value": "YES",
+                "source": "Agent-verified (governed evidence arbiter)",
+            }
     eligibility = _eligibility_from_needs(needs, row_by_param)
     scoring = _score_result(needs, eligibility)
     requested_city = profile.get("location_city")
@@ -1417,6 +1479,10 @@ def run_patient_decision_engine(
 
     top = results[: max(10, limit)]
 
+    medication_overlay = _agent_verified_medication_overlay(
+        [item["canonical_facility_id"] for item in top]
+    )
+
     detailed_top = []
     for item in top:
         detail = _build_ranked_candidate_detail(
@@ -1426,6 +1492,7 @@ def run_patient_decision_engine(
             needs=needs,
             recommendation_registry=recommendation_registry,
             ordered_parameter_ids=ordered_parameter_ids,
+            medication_overlay=medication_overlay,
         )
         detail["rank_position"] = item.get("rank_position")
         detail["rank_tie_status"] = item.get("rank_tie_status")
