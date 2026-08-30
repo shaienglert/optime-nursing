@@ -124,17 +124,7 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
     summary = attach_combined_care_solutions(rows, questionnaire_state, natural_language_query)
     for row in rows:
         _reconcile_adl_must(row)
-        # _reconcile_medication_must intentionally NOT wired in yet: it would let
-        # combined_care_solution's medication_component (evidence source: _payloads(),
-        # i.e. agent_person_fit_evidence) silently downgrade a MEDICATION_SUPPORT_AVAILABLE
-        # already verified PASS via a *different* evidence channel
-        # (client_intent_runtime._governed_provider_payloads) back to
-        # PENDING_VERIFICATION, since combined_care_solution never looks at that channel.
-        # Confirmed live: test_golden_mother_90_full_lifecycle's medication-verification
-        # scenario regressed exactly this way. The three evidence-reading paths
-        # (_governed_provider_payloads, combined_care_solution_runtime._payloads,
-        # agent_person_fit_evidence) need to be reconciled into one before this is safe to
-        # enable -- see _reconcile_medication_must below, kept ready for that follow-up.
+        _reconcile_medication_must(row)
     indexed = list(enumerate(rows))
     indexed.sort(key=lambda pair: (*intent_rank_key(pair[1]), pair[0]))
     rows = [row for _, row in indexed]
