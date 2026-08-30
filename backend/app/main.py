@@ -1230,6 +1230,7 @@ async def runtime_status():
 @app.get("/diagnostics/medication-evidence-audit")
 def medication_evidence_audit(db: Session = Depends(get_db)):
     from app.models.agent_execution import AgentKnowledgeRecord
+    from app.services.governed_evidence_runtime import is_governed_positive_source
 
     rows = db.query(
         AgentKnowledgeRecord.entity_key,
@@ -1244,6 +1245,7 @@ def medication_evidence_audit(db: Session = Depends(get_db)):
     outside_true = outside_false = outside_missing = 0
     both_false = 0
     both_false_payload_samples: dict[str, int] = {}
+    medication_true_source_breakdown: list[dict] = []
 
     for entity_key, agent_key, source, payload_json in rows:
         entity_keys.add(entity_key)
@@ -1257,6 +1259,14 @@ def medication_evidence_audit(db: Session = Depends(get_db)):
 
         if med is True:
             medication_true += 1
+            medication_true_source_breakdown.append({
+                "canonical_facility_id": entity_key,
+                "facility_name": payload.get("facility_name"),
+                "agent_key": agent_key,
+                "source": source,
+                "official_identity_verified": payload.get("official_identity_verified"),
+                "would_pass_governed_source_filter": is_governed_positive_source(source, payload),
+            })
         elif med is False:
             medication_false += 1
         else:
@@ -1292,6 +1302,14 @@ def medication_evidence_audit(db: Session = Depends(get_db)):
         "top_repeated_both_false_payloads": [
             {"payload_json": payload, "facility_count": count} for payload, count in top_repeated_payloads
         ],
+        "medication_true_source_breakdown": medication_true_source_breakdown,
+        "medication_true_source_breakdown_note": (
+            "For every medication_support_verified=True record: whether its source would pass the "
+            "governed-source trust filter already applied on the dynamic MUST-gate pipeline "
+            "(is_governed_positive_source). If any row here is would_pass_governed_source_filter=false, "
+            "tightening _agent_verified_medication_overlay to require a governed source would flip that "
+            "facility back to UNKNOWN for medication support."
+        ),
     }
 
 
