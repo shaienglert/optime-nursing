@@ -10,6 +10,7 @@ from sqlalchemy import inspect
 
 from app.database import SessionLocal
 from app.models.agent_execution import AgentKnowledgeRecord, AgentQueueItem, AgentWorker
+from app.services import governed_evidence_runtime
 from app.services.facility_parameter_service import get_facility_parameter_table
 
 QUEUE_TYPE = "DECISION_EVIDENCE_RESEARCH"
@@ -23,7 +24,6 @@ _QUALITY_SAFETY_PARAMETERS = (
     "sanctions_final_orders",
 )
 _AGENT_TABLES = {"agent_knowledge_records", "agent_queue_items", "agent_workers"}
-_TRUSTED_POSITIVE_SOURCES = {"OFFICIAL_PROVIDER_WEBSITE", "NEVADA_HCQC_ALIS", "GOVERNMENT_REGULATORY_SOURCE"}
 
 
 def _upper(value: Any) -> str:
@@ -67,14 +67,7 @@ def _unknown_parameters(canonical_id: str, parameter_ids: tuple[str, ...]) -> Li
 
 
 def _market_evidence(db, canonical_id: str) -> List[Dict[str, Any]]:
-    rows = db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.entity_key == canonical_id).order_by(AgentKnowledgeRecord.id.desc()).all()
-    out: List[Dict[str, Any]] = []
-    for row in rows:
-        try: payload = json.loads(row.payload_json or "{}")
-        except json.JSONDecodeError: payload = {}
-        if str(payload.get("market") or "").lower() not in {"las-vegas", "las vegas", "nevada"}: continue
-        out.append({"agent_key": row.agent_key, "summary": row.summary, "confidence": float(row.confidence or 0.0), "source": row.source, "payload": payload, "created_at": row.created_at.isoformat() if row.created_at else None})
-    return out
+    return governed_evidence_runtime.bulk_market_scoped_agent_evidence(db, [canonical_id]).get(canonical_id, [])
 
 
 def _governed_evidence(evidence: List[Dict[str, Any]], dimension: str) -> List[Dict[str, Any]]:
@@ -90,9 +83,7 @@ def _governed_evidence(evidence: List[Dict[str, Any]], dimension: str) -> List[D
     governed: List[Dict[str, Any]] = []
     for item in relevant:
         payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
-        source = _upper(item.get("source"))
-        if source not in _TRUSTED_POSITIVE_SOURCES: continue
-        if source == "OFFICIAL_PROVIDER_WEBSITE" and payload.get("official_identity_verified") is not True: continue
+        if not governed_evidence_runtime.is_governed_positive_source(item.get("source"), payload): continue
         governed.append(item)
     return governed
 

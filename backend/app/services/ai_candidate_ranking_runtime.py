@@ -65,7 +65,11 @@ def _ranking_packet(rows: List[Dict[str, Any]], *, claim_limit: int | None = Non
     return out
 
 
-def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any]) -> Dict[str, Any]:
+def _resolve_claim_limit() -> int:
+    return max(30, min(160, int(os.getenv("OPTIME_AI_RANKING_CLAIMS_PER_CANDIDATE", "80"))))
+
+
+def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any], claim_limit: int) -> Dict[str, Any]:
     return {
         "role": "OPTIME_NURSING_AI_CANDIDATE_RANKER",
         "mission": "Rank only facilities that have already passed every deterministic MUST requirement, using the resident-specific semantic preference model plus supplied governed evidence.",
@@ -83,7 +87,7 @@ def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_con
         "client_intent": client_intent,
         "human_context": human_context,
         "living_strategy": strategy,
-        "must_eligible_candidates": _ranking_packet(rows),
+        "must_eligible_candidates": _ranking_packet(rows, claim_limit=claim_limit),
         "required_output": {"ranked_candidates": [{"canonical_facility_id": "string", "reason": "string", "information_deficits": ["string"]}]},
     }
 
@@ -156,7 +160,7 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
 def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any], deterministic_fallback_key) -> List[Dict[str, Any]]:
     batch_size = max(4, min(30, int(os.getenv("OPTIME_AI_RANKING_BATCH_SIZE", "16"))))
     workers = max(1, min(10, int(os.getenv("OPTIME_AI_RANKING_MAX_WORKERS", "6"))))
-    claim_limit = max(30, min(160, int(os.getenv("OPTIME_AI_RANKING_CLAIMS_PER_CANDIDATE", "80"))))
+    claim_limit = _resolve_claim_limit()
     batches = [rows[index:index + batch_size] for index in range(0, len(rows), batch_size)]
     scored_by_id: Dict[str, Dict[str, Any]] = {}
 
@@ -212,11 +216,13 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
                     "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE",
                     "batch_threshold": batch_threshold,
                 }
-            single_shot_prompt = _prompt(rows, client_intent, human_context, strategy)
+            claim_limit = _resolve_claim_limit()
+            single_shot_prompt = _prompt(rows, client_intent, human_context, strategy, claim_limit)
             logger.info(
-                "ai_candidate_ranking_start mode=single_shot candidate_count=%s prompt_chars=%s (no claim_limit applied on this path)",
+                "ai_candidate_ranking_start mode=single_shot candidate_count=%s prompt_chars=%s claim_limit=%s",
                 len(rows),
                 len(json.dumps(single_shot_prompt, ensure_ascii=False)),
+                claim_limit,
             )
             ordered = _validate(_default_transport(single_shot_prompt), rows)
             return ordered, {"status": "AI_RANKED", "candidate_count": len(ordered), "closed_world_validated": True, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE"}

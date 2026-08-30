@@ -1230,6 +1230,7 @@ async def runtime_status():
 @app.get("/diagnostics/medication-evidence-audit")
 def medication_evidence_audit(db: Session = Depends(get_db)):
     from app.models.agent_execution import AgentKnowledgeRecord
+    from app.services.governed_evidence_runtime import is_governed_positive_source
 
     rows = db.query(
         AgentKnowledgeRecord.entity_key,
@@ -1244,6 +1245,7 @@ def medication_evidence_audit(db: Session = Depends(get_db)):
     outside_true = outside_false = outside_missing = 0
     both_false = 0
     both_false_payload_samples: dict[str, int] = {}
+    medication_true_source_breakdown: list[dict] = []
 
     for entity_key, agent_key, source, payload_json in rows:
         entity_keys.add(entity_key)
@@ -1257,6 +1259,14 @@ def medication_evidence_audit(db: Session = Depends(get_db)):
 
         if med is True:
             medication_true += 1
+            medication_true_source_breakdown.append({
+                "canonical_facility_id": entity_key,
+                "facility_name": payload.get("facility_name"),
+                "agent_key": agent_key,
+                "source": source,
+                "official_identity_verified": payload.get("official_identity_verified"),
+                "would_pass_governed_source_filter": is_governed_positive_source(source, payload),
+            })
         elif med is False:
             medication_false += 1
         else:
@@ -1292,6 +1302,96 @@ def medication_evidence_audit(db: Session = Depends(get_db)):
         "top_repeated_both_false_payloads": [
             {"payload_json": payload, "facility_count": count} for payload, count in top_repeated_payloads
         ],
+        "medication_true_source_breakdown": medication_true_source_breakdown,
+        "medication_true_source_breakdown_note": (
+            "For every medication_support_verified=True record: whether its source would pass the "
+            "governed-source trust filter already applied on the dynamic MUST-gate pipeline "
+            "(is_governed_positive_source). If any row here is would_pass_governed_source_filter=false, "
+            "tightening _agent_verified_medication_overlay to require a governed source would flip that "
+            "facility back to UNKNOWN for medication support."
+        ),
+    }
+
+
+_MOTHER90_QUERY = (
+    "My mother is 90. Her husband died two months ago and she does not want to remain "
+    "alone at home. She is mentally alert, has no dementia, is mobile, and otherwise "
+    "functions independently, but she needs daily help with bathing, dressing and "
+    "medication management. She enjoys classical music and being around other people. "
+    "We are looking across the Las Vegas Valley with a total monthly housing-and-care "
+    "budget up to $8,000."
+)
+
+
+@app.get("/diagnostics/must-gate-screen")
+def must_gate_screen(db: Session = Depends(get_db)):
+    """Gold-dataset methodology, step 2: run one resident persona against every real
+    facility in the canonical registry using the real MUST-gate engine
+    (client_intent_runtime.evaluate_candidate_intent) with real agent evidence attached,
+    and bucket the results. This does not write gold examples -- it surfaces which
+    facilities are worth a human (or domain-expert) look for the next batch. See
+    backend/gold_examples/screen_candidates.py for the equivalent local script.
+    """
+    from collections import Counter, defaultdict
+
+    from sqlalchemy import inspect
+
+    from app.models.agent_execution import AgentKnowledgeRecord
+    from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
+    from app.services.facility_parameter_service import _load_runtime
+
+    if AgentKnowledgeRecord.__tablename__ in inspect(db.get_bind()).get_table_names():
+        rows = db.query(AgentKnowledgeRecord.entity_key, AgentKnowledgeRecord.payload_json).all()
+    else:
+        rows = []
+    agent_evidence_by_facility: Dict[str, list] = defaultdict(list)
+    for entity_key, payload_json in rows:
+        try:
+            payload = json.loads(payload_json or "{}")
+        except (TypeError, ValueError):
+            continue
+        agent_evidence_by_facility[entity_key].append({"payload": payload})
+
+    runtime = _load_runtime()
+    strategy = {"signals": {"adl_support_needed": True, "medication_support_needed": True}, "household": {}}
+    human_context = {"signals": {}}
+    intent = build_client_intent({"locationCity": "Las Vegas"}, _MOTHER90_QUERY, strategy, human_context)
+
+    by_gate: Dict[str, Counter] = defaultdict(Counter)
+    mixed_profile: List[Dict[str, Any]] = []
+
+    for canonical_id, facility in runtime["canonical_by_id"].items():
+        candidate_row = {
+            "canonical_facility_id": canonical_id,
+            "canonical_type": facility.get("canonical_type"),
+            "city": facility.get("city"),
+            "state": facility.get("state"),
+            "agent_person_fit_evidence": agent_evidence_by_facility.get(canonical_id, []),
+        }
+        result = evaluate_candidate_intent(candidate_row, intent)
+        statuses: Dict[str, str] = {}
+        for gate in intent["must_haves"]:
+            gate_key = gate["key"]
+            status = "PASS" if gate_key in result["must_pass"] else "FAIL" if gate_key in result["must_fail"] else "PENDING_VERIFICATION"
+            by_gate[gate_key][status] += 1
+            statuses[gate_key] = status
+        if "PASS" in statuses.values() and set(statuses.values()) != {"PASS"}:
+            mixed_profile.append({
+                "canonical_facility_id": canonical_id,
+                "facility_name": facility.get("facility_name"),
+                "canonical_type": facility.get("canonical_type"),
+                "gate_statuses": statuses,
+            })
+
+    return {
+        "persona": "mother-90-widow-las-vegas",
+        "must_haves_detected": [m["key"] for m in intent["must_haves"]],
+        "facilities_screened": len(runtime["canonical_by_id"]),
+        "agent_evidence_records_loaded": len(rows),
+        "facilities_with_agent_evidence": len(agent_evidence_by_facility),
+        "per_gate_outcome_counts": {gate: dict(counts) for gate, counts in by_gate.items()},
+        "mixed_profile_count": len(mixed_profile),
+        "mixed_profile_sample": mixed_profile[:25],
     }
 
 

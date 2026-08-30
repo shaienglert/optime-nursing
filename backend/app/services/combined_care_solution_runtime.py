@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List
 
+from app.services import governed_evidence_runtime
 from app.services.facility_service_delivery_runtime import get_facility_service_delivery_evidence
 
 UNKNOWN = "UNKNOWN"
@@ -11,23 +12,6 @@ UNKNOWN = "UNKNOWN"
 
 def _upper(value: Any) -> str:
     return str(value or UNKNOWN).strip().upper()
-
-
-def _payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
-    evidence = row.get("agent_person_fit_evidence") if isinstance(row.get("agent_person_fit_evidence"), list) else []
-    out: List[Dict[str, Any]] = []
-    for item in evidence:
-        payload = item.get("payload") if isinstance(item, dict) else None
-        if isinstance(payload, dict):
-            out.append(payload)
-    provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
-    provider_evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else None
-    if provider_evidence:
-        out.append(provider_evidence)
-    life_plan = row.get("life_plan_primary_evidence") if isinstance(row.get("life_plan_primary_evidence"), dict) else {}
-    if life_plan:
-        out.append(life_plan)
-    return out
 
 
 def _query_signals(questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
@@ -107,7 +91,7 @@ def _meal_component(service: Dict[str, Any]) -> Dict[str, Any]:
 
 def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
     signals = _query_signals(questionnaire_state, natural_language_query)
-    payloads = _payloads(row)
+    payloads = governed_evidence_runtime.agent_and_provider_payloads(row)
     canonical_type = _upper(row.get("canonical_type"))
     modalities = {_upper(item) for item in row.get("housing_modalities") or []}
     service = get_facility_service_delivery_evidence(row)
@@ -186,6 +170,14 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
             "partner_agency_name": care_delivery.get("partner_agency_name", UNKNOWN),
             "partner_agency_license_id": care_delivery.get("partner_agency_license_id", UNKNOWN),
             "external_agency_match": agency,
+            # Duplicated from the top-level combined_must_coverage/delivery_model/reason
+            # below (kept there for backward compatibility with existing callers) so that
+            # care_component and medication_component have the same self-contained shape --
+            # a caller reconciling either MUST doesn't need to know that only one of them
+            # also happens to live at the top level.
+            "combined_must_coverage": coverage,
+            "delivery_model": delivery_model,
+            "reason": reason,
         },
         "medication_component": {
             "medication_required": signals["medication_support_needed"],
