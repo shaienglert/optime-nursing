@@ -50,6 +50,58 @@ def _ai_ranking_succeeded(ai_status: Dict[str, Any]) -> bool:
     return str(ai_status.get("status") or "").upper() in {"AI_RANKED", "AI_BATCH_RANKED"}
 
 
+def _resolve_nice_wave_search_cap() -> int:
+    return max(10, min(200, int(os.getenv("OPTIME_NICE_WAVE_SEARCH_MAX_CANDIDATES", "40"))))
+
+
+def _verify_dynamic_preferences_in_waves(
+    ranked: List[Dict[str, Any]],
+    dynamic_preferences: Dict[str, Any],
+    target_complete_count: int,
+) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
+    """Verify NICE preferences past the displayed top-N in ranked waves.
+
+    A candidate ranked just outside the display window can still be NICE_COMPLETE.
+    Only checking ranked[:limit] means the pipeline would never discover it. This
+    searches rank 1..N, then N+1..2N, etc. until enough NICE_COMPLETE candidates are
+    found, the ranked list is exhausted, or the search cap is hit (bounded so a
+    preference nobody matches doesn't trigger AI verification of every eligible
+    facility).
+    """
+    if not dynamic_preferences.get("preference_count") or target_complete_count <= 0:
+        return verify_dynamic_preferences([], dynamic_preferences), []
+
+    wave_size = target_complete_count
+    search_limit = min(len(ranked), _resolve_nice_wave_search_cap())
+    complete_rows: List[Dict[str, Any]] = []
+    summary: Dict[str, Any] = {}
+    verified_count = 0
+    start = 0
+
+    while start < search_limit and len(complete_rows) < target_complete_count:
+        wave = ranked[start:min(start + wave_size, search_limit)]
+        if not wave:
+            break
+        wave_summary = verify_dynamic_preferences(wave, dynamic_preferences)
+        verified_count += len(wave)
+        complete_rows.extend(
+            row for row in wave if (row.get("nice_to_have_coverage") or {}).get("status") == "NICE_COMPLETE"
+        )
+        summary = {
+            **wave_summary,
+            "nice_complete_candidate_count": len(complete_rows),
+            "candidates_verified": verified_count,
+            "waves_searched": (start // wave_size) + 1,
+        }
+        start += wave_size
+        if wave_summary.get("status") != "VERIFIED":
+            # AI unavailable/disabled: every further wave is an identical
+            # placeholder pass, so searching deeper cannot find more matches.
+            break
+
+    return summary, complete_rows
+
+
 def apply_must_ai_nice_pipeline(
     result: Dict[str, Any],
     questionnaire_state: Dict[str, Any],
@@ -112,7 +164,9 @@ def apply_must_ai_nice_pipeline(
     structured_nice_summary = attach_nice_coverage(audit_rows, audit_intent)
 
     selected = [] if ai_failure_block else ranked[: max(0, int(limit or 0))]
-    dynamic_summary = verify_dynamic_preferences(selected, dynamic_preferences)
+    dynamic_summary, nice_complete_rows = _verify_dynamic_preferences_in_waves(
+        [] if ai_failure_block else ranked, dynamic_preferences, max(0, int(limit or 0))
+    )
 
     if not dynamic_preferences.get("preference_count"):
         for row in selected:
@@ -139,7 +193,9 @@ def apply_must_ai_nice_pipeline(
             "legacy_nice_role": "AUDIT_ONLY",
         }
 
-    complete_selected = [row for row in selected if (row.get("nice_to_have_coverage") or {}).get("status") == "NICE_COMPLETE"]
+    selected_ids = {str(row.get("canonical_facility_id")) for row in selected}
+    complete_selected = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) in selected_ids]
+    complete_beyond_display = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) not in selected_ids]
 
     result["results"] = selected
     result["result_count"] = len(selected)
@@ -177,14 +233,30 @@ def apply_must_ai_nice_pipeline(
         "legacy_structured_nice_authoritative": False,
         "top_nice_complete_count": len(complete_selected),
         "top_nice_complete_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_selected],
+        "nice_complete_beyond_display_count": len(complete_beyond_display),
+        "nice_complete_beyond_display_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_beyond_display],
         "client_statement": (
             "We cannot present a recommendation yet because the required AI ranking did not complete successfully. The deterministic candidate order is retained only for diagnostics and is not exposed as a recommendation."
             if ai_failure_block
             else (
-                f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and have governed evidence matching every specific preference you expressed. This ranking can still change when we verify missing provider facts directly with the facilities."
+                (
+                    f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and have governed evidence matching every specific preference you expressed. This ranking can still change when we verify missing provider facts directly with the facilities."
+                    + (
+                        f" We also found {len(complete_beyond_display)} additional facility(ies) further down the ranked list that fully match every preference you expressed; ask to see them for a wider comparison."
+                        if complete_beyond_display
+                        else ""
+                    )
+                )
                 if preference_count and complete_selected
                 else (
-                    "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
+                    (
+                        "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
+                        + (
+                            f" We did find {len(complete_beyond_display)} facility(ies) further down the ranked list that fully match every preference you expressed; ask to see them if a complete preference match matters more than AI rank order."
+                            if complete_beyond_display
+                            else ""
+                        )
+                    )
                     if preference_count
                     else "The displayed facilities pass every verified MUST requirement. No explicit NICE preference-completeness claim is being made; provider verification can still improve the ranking."
                 )
