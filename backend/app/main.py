@@ -1606,6 +1606,43 @@ async def get_canonical_facility_parameter_table(
         raise HTTPException(status_code=404, detail="Canonical facility not found") from exc
 
 
+def _cms_regulatory_history(facility: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Skilled nursing facilities are identified by CMS CCN, not a Nevada AGC license,
+    so they never appear in the Nevada HCQC/ALiS regulatory index (_regulatory_index),
+    which is scoped to exactly the 313 Nevada RFG-licensed records. CMS's own star
+    ratings for these facilities are already present in the canonical registry
+    (ingested alongside the rest of the facility record, cms_processing_date tracks
+    when) -- this was simply never read by this endpoint. Returned in its own shape
+    (5-star CMS ratings), not force-mapped into Nevada's A-D grade shape, since the
+    two rating systems are not equivalent.
+    """
+    ccn = str(facility.get("cms_ccn") or "").strip()
+    if not ccn or ccn.upper() == "UNKNOWN":
+        return None
+
+    def _rating(value: Any) -> Optional[int]:
+        text = str(value or "").strip()
+        return int(text) if text.isdigit() else None
+
+    ratings = {
+        "overall_rating": _rating(facility.get("cms_overall_rating")),
+        "health_inspection_rating": _rating(facility.get("cms_health_inspection_rating")),
+        "staffing_rating": _rating(facility.get("cms_staffing_rating")),
+        "quality_measure_rating": _rating(facility.get("cms_quality_measure_rating")),
+    }
+    if all(value is None for value in ratings.values()):
+        return None
+
+    return {
+        "cms_certification_number": ccn,
+        "rating_system": "CMS_FIVE_STAR",
+        **ratings,
+        "ownership_type": facility.get("cms_ownership_type") or "UNKNOWN",
+        "processing_date": facility.get("cms_processing_date") or "UNKNOWN",
+        "source_url": f"https://www.medicare.gov/care-compare/details/nursing-home/{ccn}",
+    }
+
+
 @app.get("/canonical-facilities/{canonical_id}/regulatory-history")
 async def get_canonical_facility_regulatory_history(canonical_id: str):
     canonical_index = get_canonical_facility_index()
@@ -1614,11 +1651,20 @@ async def get_canonical_facility_regulatory_history(canonical_id: str):
         raise HTTPException(status_code=404, detail="Canonical facility not found")
 
     history = _regulatory_index().get(canonical_id)
+    if history:
+        return {
+            "canonical_facility_id": canonical_id,
+            "facility_name": facility.get("name") or facility.get("facility_name") or facility.get("community_name"),
+            "source": "Nevada HCQC / ALiS",
+            "regulatory_history": history,
+        }
+
+    cms_history = _cms_regulatory_history(facility)
     return {
         "canonical_facility_id": canonical_id,
         "facility_name": facility.get("name") or facility.get("facility_name") or facility.get("community_name"),
-        "source": "Nevada HCQC / ALiS" if history else None,
-        "regulatory_history": history,
+        "source": "CMS Care Compare" if cms_history else None,
+        "regulatory_history": cms_history,
     }
 
 
