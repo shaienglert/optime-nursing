@@ -16,7 +16,8 @@ from typing import Any, Dict, List, Set, Tuple
 from sqlalchemy import inspect
 
 from app.database import SessionLocal
-from app.models.agent_execution import AgentKnowledgeRecord, AgentQueueItem, AgentWorker
+from app.models.agent_execution import AgentQueueItem, AgentWorker
+from app.services import governed_evidence_runtime
 from app.services.facility_parameter_service import get_facility_parameter_table
 from app.services.decision_agent_bridge import (
     QUEUE_TYPE,
@@ -59,32 +60,15 @@ def _load_unknown_parameters_once(canonical_id: str, parameter_ids: Set[str]) ->
 
 
 def _prefetch_evidence(db, canonical_ids: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    # This is the live production evidence-fetch path (see app/services/__init__.py's
+    # _IntegratedRuntimeLoader, which monkey-patches attach_agent_evidence_and_queue_gaps
+    # to this module's _fast variant). Was its own duplicate of the same
+    # fetch-and-market-filter query as decision_agent_bridge.py's _market_evidence /
+    # patient_decision_engine.py's medication overlay; now shares
+    # governed_evidence_runtime.bulk_market_scoped_agent_evidence with both.
     out: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
-    if not canonical_ids:
-        return out
-    rows = (
-        db.query(AgentKnowledgeRecord)
-        .filter(AgentKnowledgeRecord.entity_key.in_(canonical_ids))
-        .order_by(AgentKnowledgeRecord.id.desc())
-        .all()
-    )
-    for row in rows:
-        try:
-            payload = json.loads(row.payload_json or "{}")
-        except json.JSONDecodeError:
-            payload = {}
-        if str(payload.get("market") or "").lower() not in {"las-vegas", "las vegas", "nevada"}:
-            continue
-        out[str(row.entity_key)].append(
-            {
-                "agent_key": row.agent_key,
-                "summary": row.summary,
-                "confidence": float(row.confidence or 0.0),
-                "source": row.source,
-                "payload": payload,
-                "created_at": row.created_at.isoformat() if row.created_at else None,
-            }
-        )
+    for canonical_id, records in governed_evidence_runtime.bulk_market_scoped_agent_evidence(db, canonical_ids).items():
+        out[canonical_id] = records
     return out
 
 
