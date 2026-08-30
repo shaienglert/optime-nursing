@@ -117,16 +117,18 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         # fixture for the downstream ranking/process-owner lifecycle, not a claim that
         # every real facility has this service.
         #
-        # Two mocks, not one: client_intent_runtime's MUST gate and
-        # combined_care_solution_runtime's medication-delivery reconciliation each read
-        # governed provider evidence through their own function
-        # (_governed_provider_payloads vs _payloads) even though both ultimately read the
-        # same underlying row fields in real production traffic. Patching only the first
-        # made this scenario fail after MEDICATION_SUPPORT_AVAILABLE reconciliation was
-        # wired in: the MUST gate saw the mocked PASS, but combined_care_solution's
-        # independent check saw no evidence at all and downgraded it straight back to
-        # PENDING_VERIFICATION. Patching both keeps this test representative of a real
-        # verified finding, which really would flow through both readers identically.
+        # One mock, not two: client_intent_runtime's MUST gate and
+        # combined_care_solution_runtime's medication-delivery reconciliation both read
+        # governed provider evidence through the single shared
+        # governed_evidence_runtime.agent_and_provider_payloads(). Before that
+        # consolidation each module had its own separately-written reader
+        # (_governed_provider_payloads vs _payloads); patching only one of them made
+        # this scenario fail once MEDICATION_SUPPORT_AVAILABLE reconciliation was wired
+        # in, because the MUST gate saw the mocked PASS while combined_care_solution's
+        # independent reader saw no evidence and downgraded it back to
+        # PENDING_VERIFICATION. Patching the one shared function both modules call
+        # keeps this test representative of a real verified finding, which really does
+        # flow through both readers identically now.
         verified_medication_payload = [{"medication_support_verified": True}]
         with patch.dict(os.environ, {
             "OPTIME_SEMANTIC_AI_ENABLED": "1",
@@ -135,9 +137,7 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         }, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ready_ai
         ), patch(
-            "app.services.client_intent_runtime._governed_provider_payloads", return_value=verified_medication_payload
-        ), patch(
-            "app.services.combined_care_solution_runtime._payloads", return_value=verified_medication_payload
+            "app.services.governed_evidence_runtime.agent_and_provider_payloads", return_value=verified_medication_payload
         ):
             result = run_patient_decision_engine(answered, self._query(), limit=5)
 

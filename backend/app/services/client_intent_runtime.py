@@ -17,37 +17,12 @@ already has a governed score (for example community-environment congruence).
 
 from typing import Any, Dict, List
 
+from app.services import governed_evidence_runtime
 from app.services.public_reputation_runtime import get_public_reputation
 
 
 def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
-
-
-def _agent_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
-    evidence = row.get("agent_person_fit_evidence") if isinstance(row.get("agent_person_fit_evidence"), list) else []
-    return [item.get("payload") for item in evidence if isinstance(item.get("payload"), dict)]
-
-
-def _governed_provider_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
-    out: List[Dict[str, Any]] = []
-    provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
-    provider_evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else {}
-    if provider_evidence:
-        out.append(provider_evidence)
-
-    life_plan = row.get("life_plan_primary_evidence") if isinstance(row.get("life_plan_primary_evidence"), dict) else {}
-    if life_plan:
-        direct: Dict[str, Any] = {}
-        if str(life_plan.get("rehabilitation_source_url") or "").startswith("http"):
-            direct["rehab_verified"] = True
-            direct["pt_ot_verified"] = True
-        modalities = {_upper(value) for value in row.get("housing_modalities") or []}
-        if "LIFE_PLAN_CCRC" in modalities:
-            direct["continuum_of_care_verified"] = True
-        if direct:
-            out.append(direct)
-    return out
 
 
 def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any]) -> Dict[str, Any]:
@@ -141,9 +116,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     canonical_type = _upper(row.get("canonical_type"))
     person = row.get("human_person_fit") if isinstance(row.get("human_person_fit"), dict) else {}
     size = person.get("community_size") if isinstance(person.get("community_size"), dict) else {}
-    agent_payloads = _agent_payloads(row)
-    provider_payloads = _governed_provider_payloads(row)
-    payloads = [*agent_payloads, *provider_payloads]
+    payloads = governed_evidence_runtime.agent_and_provider_payloads(row)
     modalities = {_upper(value) for value in row.get("housing_modalities") or []}
 
     for must in intent.get("must_haves") or []:
@@ -270,7 +243,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     reputation_observed_at = reputation.get("observed_at") if reputation.get("identity_verified") is True else "UNKNOWN"
 
     if web_rating is None or web_review_count is None:
-        for payload in agent_payloads:
+        for payload in governed_evidence_runtime.agent_only_payloads(row):
             if web_rating is None and isinstance(payload.get("public_rating"), (int, float)):
                 web_rating = float(payload.get("public_rating"))
                 reputation_source = payload.get("public_reputation_source") or "AGENT_RESEARCH"
@@ -283,8 +256,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         + len(nice_match)
         + len(nice_mismatch)
         + len(row.get("matched_needs") or [])
-        + len(agent_payloads)
-        + len(provider_payloads)
+        + len(payloads)
         + (1 if reputation.get("identity_verified") is True else 0)
     )
     relevant_unknown = len(must_unknown) + len(nice_unknown) + len(row.get("unknown_critical_needs") or [])
