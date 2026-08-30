@@ -1158,6 +1158,7 @@ def _agent_verified_medication_overlay(canonical_ids: List[str]) -> Dict[str, st
 
     from app.database import SessionLocal
     from app.models.agent_execution import AgentKnowledgeRecord
+    from app.services import governed_evidence_runtime
 
     db = SessionLocal()
     try:
@@ -1167,24 +1168,20 @@ def _agent_verified_medication_overlay(canonical_ids: List[str]) -> Dict[str, st
         # than a hard failure.
         if AgentKnowledgeRecord.__tablename__ not in inspect(db.get_bind()).get_table_names():
             return {}
-        rows = (
-            db.query(AgentKnowledgeRecord.entity_key, AgentKnowledgeRecord.payload_json)
-            .filter(AgentKnowledgeRecord.entity_key.in_(canonical_ids))
-            .all()
-        )
+        # Deliberately the unfiltered reader (no market or source-trust filter), matching
+        # this overlay's behavior before it was extracted: see is_governed_positive_source's
+        # docstring for why tightening this to a governed-source-only check is left as an
+        # open decision rather than applied here.
+        evidence_by_id = governed_evidence_runtime.bulk_agent_evidence(db, canonical_ids)
     except OperationalError:
         return {}
     finally:
         db.close()
 
     verified: set[str] = set()
-    for entity_key, payload_json in rows:
-        try:
-            payload = json.loads(payload_json or "{}")
-        except (TypeError, ValueError):
-            continue
-        if payload.get("medication_support_verified") is True:
-            verified.add(str(entity_key))
+    for canonical_id, records in evidence_by_id.items():
+        if any((record.get("payload") or {}).get("medication_support_verified") is True for record in records):
+            verified.add(canonical_id)
     return {canonical_id: "YES" for canonical_id in verified}
 
 

@@ -15,11 +15,83 @@ reader of agent/provider/life-plan evidence should call agent_and_provider_paylo
 instead of re-deriving its own reading of these fields.
 """
 
+import json
 from typing import Any, Dict, List
+
+from app.models.agent_execution import AgentKnowledgeRecord
+
+_MARKET_TOKENS = {"las-vegas", "las vegas", "nevada"}
+TRUSTED_POSITIVE_SOURCES = {"OFFICIAL_PROVIDER_WEBSITE", "NEVADA_HCQC_ALIS", "GOVERNMENT_REGULATORY_SOURCE"}
 
 
 def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
+
+
+def bulk_agent_evidence(db: Any, canonical_ids: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    """Bulk-fetch raw AgentKnowledgeRecord evidence for many canonical ids in one query,
+    newest-first per facility. No market or source-trust filtering -- callers that need
+    those apply them on top (see bulk_market_scoped_agent_evidence,
+    is_governed_positive_source). Generalizes decision_agent_bridge.py's per-facility
+    query and patient_decision_engine.py's medication overlay query (which duplicated
+    the same fetch-and-parse for a bounded candidate set) into one query.
+    """
+    if not canonical_ids:
+        return {}
+    rows = (
+        db.query(AgentKnowledgeRecord)
+        .filter(AgentKnowledgeRecord.entity_key.in_(canonical_ids))
+        .order_by(AgentKnowledgeRecord.entity_key, AgentKnowledgeRecord.id.desc())
+        .all()
+    )
+    out: Dict[str, List[Dict[str, Any]]] = {}
+    for row in rows:
+        try:
+            payload = json.loads(row.payload_json or "{}")
+        except (TypeError, ValueError):
+            payload = {}
+        out.setdefault(str(row.entity_key), []).append({
+            "agent_key": row.agent_key,
+            "summary": row.summary,
+            "confidence": float(row.confidence or 0.0),
+            "source": row.source,
+            "payload": payload,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        })
+    return out
+
+
+def bulk_market_scoped_agent_evidence(db: Any, canonical_ids: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    """Same as bulk_agent_evidence(), filtered to records whose payload market is
+    Las Vegas/Nevada. Matches decision_agent_bridge.py's previous per-facility
+    _market_evidence() filter exactly.
+    """
+    by_id = bulk_agent_evidence(db, canonical_ids)
+    return {
+        canonical_id: [record for record in records if str((record.get("payload") or {}).get("market") or "").lower() in _MARKET_TOKENS]
+        for canonical_id, records in by_id.items()
+    }
+
+
+def is_governed_positive_source(source: Any, payload: Dict[str, Any]) -> bool:
+    """Whether one agent record counts as a trustworthy source for a positive claim,
+    matching decision_agent_bridge.py's trust policy: only certain source classes, and
+    an official-website claim only counts once its identity is verified.
+
+    Not yet applied by every consumer of agent evidence -- see
+    _agent_verified_medication_overlay in patient_decision_engine.py, which currently
+    accepts a positive medication_support_verified from any source. Whether to tighten
+    that to require a governed source, same as decision_agent_bridge.py already does
+    for the dynamic MUST-gate pipeline, is an open question flagged for a decision
+    rather than changed unilaterally, since it could affect facilities the medication
+    MUST-gate fix already resolved.
+    """
+    source_u = str(source or "").upper()
+    if source_u not in TRUSTED_POSITIVE_SOURCES:
+        return False
+    if source_u == "OFFICIAL_PROVIDER_WEBSITE" and payload.get("official_identity_verified") is not True:
+        return False
+    return True
 
 
 def agent_only_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -60,4 +132,11 @@ def agent_and_provider_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     return out
 
 
-__all__ = ["agent_only_payloads", "agent_and_provider_payloads"]
+__all__ = [
+    "agent_only_payloads",
+    "agent_and_provider_payloads",
+    "bulk_agent_evidence",
+    "bulk_market_scoped_agent_evidence",
+    "is_governed_positive_source",
+    "TRUSTED_POSITIVE_SOURCES",
+]
