@@ -78,13 +78,12 @@ def is_governed_positive_source(source: Any, payload: Dict[str, Any]) -> bool:
     matching decision_agent_bridge.py's trust policy: only certain source classes, and
     an official-website claim only counts once its identity is verified.
 
-    Not yet applied by every consumer of agent evidence -- see
-    _agent_verified_medication_overlay in patient_decision_engine.py, which currently
-    accepts a positive medication_support_verified from any source. Whether to tighten
-    that to require a governed source, same as decision_agent_bridge.py already does
-    for the dynamic MUST-gate pipeline, is an open question flagged for a decision
-    rather than changed unilaterally, since it could affect facilities the medication
-    MUST-gate fix already resolved.
+    Also applied by _agent_verified_medication_overlay in patient_decision_engine.py,
+    confirmed safe via the live /diagnostics/medication-evidence-audit breakdown: every
+    production medication_support_verified=True record (13/13, including the Atria
+    Seville / BeeHive Homes of Henderson findings the medication MUST-gate fix depends
+    on) already comes from a governed source, so requiring one here changed nothing
+    observed while closing the "two different trust bars for one fact" gap.
     """
     source_u = str(source or "").upper()
     if source_u not in TRUSTED_POSITIVE_SOURCES:

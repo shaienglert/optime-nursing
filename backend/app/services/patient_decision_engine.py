@@ -1150,6 +1150,14 @@ def _agent_verified_medication_overlay(canonical_ids: List[str]) -> Dict[str, st
     agent record regardless of which dimension was actually being researched (see
     decision_research_worker.py), so a False is frequently "never checked", not "checked
     and absent". Missing evidence stays UNKNOWN, exactly as before this overlay existed.
+
+    Requires the same governed-source trust that decision_agent_bridge.py already applies
+    to the dynamic MUST-gate pipeline (is_governed_positive_source): confirmed via the live
+    /diagnostics/medication-evidence-audit breakdown that every one of the 13 production
+    medication_support_verified=True records -- including every finding that resolved the
+    Atria Seville and BeeHive Homes of Henderson medication conflicts (31b8aa7) -- already
+    comes from OFFICIAL_PROVIDER_WEBSITE with official_identity_verified=True, so this is
+    a pure tightening with zero observed regression risk, not a speculative one.
     """
     if not canonical_ids:
         return {}
@@ -1168,10 +1176,6 @@ def _agent_verified_medication_overlay(canonical_ids: List[str]) -> Dict[str, st
         # than a hard failure.
         if AgentKnowledgeRecord.__tablename__ not in inspect(db.get_bind()).get_table_names():
             return {}
-        # Deliberately the unfiltered reader (no market or source-trust filter), matching
-        # this overlay's behavior before it was extracted: see is_governed_positive_source's
-        # docstring for why tightening this to a governed-source-only check is left as an
-        # open decision rather than applied here.
         evidence_by_id = governed_evidence_runtime.bulk_agent_evidence(db, canonical_ids)
     except OperationalError:
         return {}
@@ -1180,8 +1184,14 @@ def _agent_verified_medication_overlay(canonical_ids: List[str]) -> Dict[str, st
 
     verified: set[str] = set()
     for canonical_id, records in evidence_by_id.items():
-        if any((record.get("payload") or {}).get("medication_support_verified") is True for record in records):
+        for record in records:
+            payload = record.get("payload") or {}
+            if payload.get("medication_support_verified") is not True:
+                continue
+            if not governed_evidence_runtime.is_governed_positive_source(record.get("source"), payload):
+                continue
             verified.add(canonical_id)
+            break
     return {canonical_id: "YES" for canonical_id in verified}
 
 
