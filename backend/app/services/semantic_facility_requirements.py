@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 
 from app.database import SessionLocal
 from app.models.agent_execution import AgentQueueItem
+from app.services import governed_evidence_runtime
 from app.services.decision_agent_bridge import QUEUE_TYPE, _ensure_worker, _kick_worker_async
 
 
@@ -73,14 +74,7 @@ def _payload_verifies(payload: Dict[str, Any], key: str) -> bool | None:
 
 
 def _row_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
-    out: List[Dict[str, Any]] = []
-    for item in row.get("agent_person_fit_evidence") or []:
-        if isinstance(item, dict) and isinstance(item.get("payload"), dict):
-            out.append(item["payload"])
-    provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
-    if isinstance(provider.get("evidence"), dict):
-        out.append(provider["evidence"])
-    return out
+    return governed_evidence_runtime.agent_and_provider_payloads(row)
 
 
 def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any]) -> bool:
@@ -140,13 +134,17 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
             trace: List[Dict[str, Any]] = []
             for requirement in requirements:
                 key = str(requirement["key"])
+                # Never hard-fail entry on unverified agent evidence: decision_research_worker.py
+                # stamps every *_verified field False by default on every research pass,
+                # regardless of which specific dimension was actually requested, so a False
+                # here is frequently "never researched for this requirement", not "confirmed
+                # not offered". Matches the same policy already applied to the
+                # ADL/MEDICATION/REHAB/RECOVERY_TRANSITION gates in client_intent_runtime.py:
+                # agent evidence may only confirm a MUST (PASS), never exclude on it (FAIL).
                 verdicts = [_payload_verifies(payload, key) for payload in payloads]
                 if True in verdicts:
                     if key not in passed: passed.append(key)
                     status = "PASS"
-                elif False in verdicts:
-                    if key not in failed: failed.append(key)
-                    status = "FAIL"
                 else:
                     if key not in unknown: unknown.append(key)
                     status = "UNKNOWN"
