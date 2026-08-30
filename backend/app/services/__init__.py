@@ -59,34 +59,59 @@ def _agency_matches_for_row(row: dict[str, Any], result: dict[str, Any]) -> list
     return matches
 
 
-def _reconcile_adl_must(row: dict[str, Any]) -> None:
+def _reconcile_care_delivery_must(row: dict[str, Any], *, must_key: str, component_key: str, rule: str) -> None:
+    """Shared by ADL and medication: a facility-side care-delivery MUST closes only when
+    either in-house evidence or a *verified* external-agency match exists (see
+    combined_care_solution_runtime.py's care_component / medication_component). Outside-care
+    permission alone is never enough -- that would silently reintroduce the same
+    unverified-evidence problem this session spent most of its time fixing elsewhere.
+    """
     solution = row.get("combined_care_solution") if isinstance(row.get("combined_care_solution"), dict) else {}
+    component = solution.get(component_key) if isinstance(solution.get(component_key), dict) else {}
     fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-    if not fit or "ADL_SUPPORT_AVAILABLE" not in set((fit.get("must_pass") or []) + (fit.get("must_unknown") or []) + (fit.get("must_fail") or [])):
+    if not fit or must_key not in set((fit.get("must_pass") or []) + (fit.get("must_unknown") or []) + (fit.get("must_fail") or [])):
         return
     passed = list(fit.get("must_pass") or [])
     unknown = list(fit.get("must_unknown") or [])
     failed = list(fit.get("must_fail") or [])
     for bucket in (passed, unknown, failed):
-        while "ADL_SUPPORT_AVAILABLE" in bucket:
-            bucket.remove("ADL_SUPPORT_AVAILABLE")
-    coverage = str(solution.get("combined_must_coverage") or "PENDING_VERIFICATION")
+        while must_key in bucket:
+            bucket.remove(must_key)
+    coverage = str(component.get("combined_must_coverage") or "PENDING_VERIFICATION")
     if coverage == "PASS":
-        passed.append("ADL_SUPPORT_AVAILABLE")
+        passed.append(must_key)
     elif coverage == "FAIL":
-        failed.append("ADL_SUPPORT_AVAILABLE")
+        failed.append(must_key)
     else:
-        unknown.append("ADL_SUPPORT_AVAILABLE")
+        unknown.append(must_key)
     fit["must_pass"] = passed
     fit["must_unknown"] = unknown
     fit["must_fail"] = failed
     fit["hard_gate"] = "FAIL" if failed else ("PENDING_VERIFICATION" if unknown else "PASS")
-    fit["care_delivery_gate"] = {
+    fit.setdefault("care_delivery_gates", {})[must_key] = {
         "status": coverage,
-        "delivery_model": solution.get("delivery_model"),
-        "reason": solution.get("reason"),
-        "rule": "outside-care permission alone is not a care PASS; verified agency coverage is required",
+        "delivery_model": component.get("delivery_model"),
+        "reason": component.get("reason"),
+        "rule": rule,
     }
+
+
+def _reconcile_adl_must(row: dict[str, Any]) -> None:
+    _reconcile_care_delivery_must(
+        row,
+        must_key="ADL_SUPPORT_AVAILABLE",
+        component_key="care_component",
+        rule="outside-care permission alone is not a care PASS; verified agency coverage is required",
+    )
+
+
+def _reconcile_medication_must(row: dict[str, Any]) -> None:
+    _reconcile_care_delivery_must(
+        row,
+        must_key="MEDICATION_SUPPORT_AVAILABLE",
+        component_key="medication_component",
+        rule="outside-care permission alone is not a medication-support PASS; verified agency coverage is required",
+    )
 
 
 def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict[str, Any], natural_language_query: str, limit: int) -> dict[str, Any]:
@@ -99,6 +124,17 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
     summary = attach_combined_care_solutions(rows, questionnaire_state, natural_language_query)
     for row in rows:
         _reconcile_adl_must(row)
+        # _reconcile_medication_must intentionally NOT wired in yet: it would let
+        # combined_care_solution's medication_component (evidence source: _payloads(),
+        # i.e. agent_person_fit_evidence) silently downgrade a MEDICATION_SUPPORT_AVAILABLE
+        # already verified PASS via a *different* evidence channel
+        # (client_intent_runtime._governed_provider_payloads) back to
+        # PENDING_VERIFICATION, since combined_care_solution never looks at that channel.
+        # Confirmed live: test_golden_mother_90_full_lifecycle's medication-verification
+        # scenario regressed exactly this way. The three evidence-reading paths
+        # (_governed_provider_payloads, combined_care_solution_runtime._payloads,
+        # agent_person_fit_evidence) need to be reconciled into one before this is safe to
+        # enable -- see _reconcile_medication_must below, kept ready for that follow-up.
     indexed = list(enumerate(rows))
     indexed.sort(key=lambda pair: (*intent_rank_key(pair[1]), pair[0]))
     rows = [row for _, row in indexed]
@@ -116,7 +152,7 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
     decision["combined_care_solution"] = summary
     must_gate = decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}
     must_gate["combined_care_delivery_enforced"] = True
-    must_gate["combined_care_rule"] = "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE; a verified agency match covering required services is required."
+    must_gate["combined_care_rule"] = "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each."
     decision["must_gate"] = must_gate
     decision["combined_solution_principle"] = "Rank the complete solution: housing environment and care delivery are separate. A preferred intimate/independent setting stays viable when outside care is permitted, but the care MUST closes only after a verified agency match covers the required services."
     result["decision_intelligence"] = decision

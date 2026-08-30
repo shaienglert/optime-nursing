@@ -186,6 +186,14 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
             "partner_agency_name": care_delivery.get("partner_agency_name", UNKNOWN),
             "partner_agency_license_id": care_delivery.get("partner_agency_license_id", UNKNOWN),
             "external_agency_match": agency,
+            # Duplicated from the top-level combined_must_coverage/delivery_model/reason
+            # below (kept there for backward compatibility with existing callers) so that
+            # care_component and medication_component have the same self-contained shape --
+            # a caller reconciling either MUST doesn't need to know that only one of them
+            # also happens to live at the top level.
+            "combined_must_coverage": coverage,
+            "delivery_model": delivery_model,
+            "reason": reason,
         },
         "medication_component": {
             "medication_required": signals["medication_support_needed"],
