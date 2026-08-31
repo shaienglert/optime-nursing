@@ -69,6 +69,27 @@ def _resolve_claim_limit() -> int:
     return max(30, min(160, int(os.getenv("OPTIME_AI_RANKING_CLAIMS_PER_CANDIDATE", "80"))))
 
 
+def _claim_ids(row: Dict[str, Any]) -> set[str]:
+    ledger = build_facility_claim_ledger(row)
+    return {str(claim.get("claim_id")) for claim in ledger.get("claims") or [] if claim.get("claim_id")}
+
+
+def _validated_citations(label: str, canonical_id: str, item: Dict[str, Any], valid_claim_ids: set[str]) -> tuple[List[str], List[str]]:
+    drivers = [str(v) for v in item.get("rank_drivers") or []]
+    risks = [str(v) for v in item.get("rank_risks") or []]
+    invalid = [claim_id for claim_id in (*drivers, *risks) if claim_id not in valid_claim_ids]
+    if invalid:
+        logger.warning(
+            "%s candidate=%s invalid_claim_ids=%s (a rank_driver/rank_risk cited a claim_id absent from this "
+            "candidate's governed claim ledger -- treated as a fabricated citation)",
+            label,
+            canonical_id,
+            invalid,
+        )
+        raise RuntimeError(label)
+    return drivers, risks
+
+
 def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any], claim_limit: int) -> Dict[str, Any]:
     return {
         "role": "OPTIME_NURSING_AI_CANDIDATE_RANKER",
@@ -83,12 +104,23 @@ def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_con
             "A facility with missing preference evidence may be information-poor rather than a bad fit; explain that distinction.",
             "Explain the main governed evidence that distinguishes each candidate and explicitly identify information deficits.",
             "Do not invent price, availability, staffing, services, activities, reputation, or regulatory facts.",
+            "For rank_drivers and rank_risks, cite only claim_id values that appear in that exact candidate's governed_claim_ledger; leave a list empty rather than inventing or guessing a citation.",
         ],
         "client_intent": client_intent,
         "human_context": human_context,
         "living_strategy": strategy,
         "must_eligible_candidates": _ranking_packet(rows, claim_limit=claim_limit),
-        "required_output": {"ranked_candidates": [{"canonical_facility_id": "string", "reason": "string", "information_deficits": ["string"]}]},
+        "required_output": {
+            "ranked_candidates": [
+                {
+                    "canonical_facility_id": "string",
+                    "reason": "string",
+                    "information_deficits": ["string"],
+                    "rank_drivers": ["claim_id from this candidate's governed_claim_ledger that supports its rank; may be empty"],
+                    "rank_risks": ["claim_id from this candidate's governed_claim_ledger that is a concern or caveat; may be empty"],
+                }
+            ]
+        },
     }
 
 
@@ -111,12 +143,24 @@ def _score_prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hum
             "UNKNOWN is an information deficit, not negative evidence and not positive evidence.",
             "Verified regulatory, safety, care-setting or preference evidence may affect score.",
             "Do not invent facility facts or use outside/brand knowledge.",
+            "For rank_drivers and rank_risks, cite only claim_id values that appear in that exact candidate's governed_claim_ledger; leave a list empty rather than inventing or guessing a citation.",
         ],
         "client_intent": client_intent,
         "human_context": human_context,
         "living_strategy": strategy,
         "must_eligible_candidates": _ranking_packet(rows, claim_limit=claim_limit),
-        "required_output": {"scored_candidates": [{"canonical_facility_id": "string", "score": 0, "reason": "string", "information_deficits": ["string"]}]},
+        "required_output": {
+            "scored_candidates": [
+                {
+                    "canonical_facility_id": "string",
+                    "score": 0,
+                    "reason": "string",
+                    "information_deficits": ["string"],
+                    "rank_drivers": ["claim_id from this candidate's governed_claim_ledger that supports its score; may be empty"],
+                    "rank_risks": ["claim_id from this candidate's governed_claim_ledger that is a concern or caveat; may be empty"],
+                }
+            ]
+        },
     }
 
 
@@ -132,7 +176,15 @@ def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> List[Dict[s
     for position, item in enumerate(ranked, start=1):
         canonical_id = str(item.get("canonical_facility_id"))
         row = by_id[canonical_id]
-        row["ai_ranking"] = {"status": "AI_RANKED", "rank": position, "reason": str(item.get("reason") or ""), "information_deficits": [str(v) for v in item.get("information_deficits") or []]}
+        drivers, risks = _validated_citations("AI_CANDIDATE_RANKING_INVALID_CLAIM_CITATION", canonical_id, item, _claim_ids(row))
+        row["ai_ranking"] = {
+            "status": "AI_RANKED",
+            "rank": position,
+            "reason": str(item.get("reason") or ""),
+            "information_deficits": [str(v) for v in item.get("information_deficits") or []],
+            "rank_drivers": drivers,
+            "rank_risks": risks,
+        }
         ordered.append(row)
     return ordered
 
@@ -144,6 +196,7 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
     if len(ids) != len(supplied) or len(set(ids)) != len(ids) or set(ids) != supplied:
         _log_closed_world_mismatch("AI_CANDIDATE_SCORING_CLOSED_WORLD_VIOLATION", supplied, ids)
         raise RuntimeError("AI_CANDIDATE_SCORING_CLOSED_WORLD_VIOLATION")
+    by_id = {str(row.get("canonical_facility_id")): row for row in rows}
     validated: Dict[str, Dict[str, Any]] = {}
     for item in scored:
         canonical_id = str(item.get("canonical_facility_id") or "")
@@ -153,7 +206,14 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
             raise RuntimeError("AI_CANDIDATE_SCORING_INVALID_SCORE") from exc
         if score < 0 or score > 100:
             raise RuntimeError("AI_CANDIDATE_SCORING_INVALID_SCORE_RANGE")
-        validated[canonical_id] = {"score": round(score, 3), "reason": str(item.get("reason") or ""), "information_deficits": [str(v) for v in item.get("information_deficits") or []]}
+        drivers, risks = _validated_citations("AI_CANDIDATE_SCORING_INVALID_CLAIM_CITATION", canonical_id, item, _claim_ids(by_id[canonical_id]))
+        validated[canonical_id] = {
+            "score": round(score, 3),
+            "reason": str(item.get("reason") or ""),
+            "information_deficits": [str(v) for v in item.get("information_deficits") or []],
+            "rank_drivers": drivers,
+            "rank_risks": risks,
+        }
     return validated
 
 
@@ -190,6 +250,8 @@ def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hu
             "global_score": item["score"],
             "reason": item["reason"],
             "information_deficits": item["information_deficits"],
+            "rank_drivers": item["rank_drivers"],
+            "rank_risks": item["rank_risks"],
         }
     return ordered
 
@@ -240,6 +302,8 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
             "rank": position,
             "reason": "Semantic AI ranking unavailable; governed deterministic ordering retained for continuity without inventing preference evidence.",
             "information_deficits": [str(pref.get("semantic_meaning") or "") for pref in ((human_context.get("dynamic_preference_model") or {}).get("preferences") or []) if str(pref.get("semantic_meaning") or "").strip()],
+            "rank_drivers": [],
+            "rank_risks": [],
         }
     return ordered, {"status": "DETERMINISTIC_FALLBACK" if not required else "REQUIRED_BUT_UNAVAILABLE", "candidate_count": len(ordered), "closed_world_validated": True, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE"}
 
