@@ -29,7 +29,7 @@ Every example's `decision` must be traceable to one of:
 | Duplicate/agency-vs-facility confusion | 30 | Same physical facility under two records, or provider vs. licensed entity mismatch |
 | Inactive/unverified license | 30 | License expired, suspended, or facility record stale |
 | Edge cases and misleading data | 50 | Third-party directories disagree with the primary regulatory source, etc. |
-| Cases that already caused a production error | 40 | Real bugs found and fixed (or still open) — start here, we already have 6 |
+| Cases that already caused a production error | 40 | Real bugs found and fixed (or still open) — start here, we already have 8 |
 | **Total** | **500** | |
 
 First milestone: **200** (140 train / 30 validation / 30 held-out test), expanding by
