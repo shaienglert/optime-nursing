@@ -85,6 +85,24 @@ class SemanticAiLearningCenterContractTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "READY_WITH_UNRESOLVED"):
                 interpret_client_intent_with_ai(user_text="unknown preference", questionnaire_state={}, transport=lambda _: bad)
 
+    def test_live_invalid_enum_is_retried_with_exact_enum_instruction(self) -> None:
+        invalid = {"statements": [{"raw_text": "independent", "meaning": "independent", "importance": 0, "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": [], "clarification_question": None, "research_task": None}], "decision_readiness": "READY"}
+        valid = {"statements": [{"raw_text": "independent", "meaning": "independent", "importance": "CONTEXT", "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": [], "clarification_question": None, "research_task": None}], "decision_readiness": "READY"}
+        learning = {"advisor": "OPTIME_NURSING_LEARNING_CENTER", "consulted": True, "agent_count": 1, "available_agent_count": 1, "agents": [], "policy": {}}
+        with patch("app.services.semantic_intent_ai.build_learning_center_advice", return_value=learning), patch("app.services.semantic_intent_ai._default_transport", side_effect=[invalid, valid]) as transport:
+            result = interpret_client_intent_with_ai(user_text="independent")
+        self.assertEqual("READY", result["decision_readiness"])
+        self.assertEqual(2, transport.call_count)
+        self.assertIn("SEMANTIC_AI_INVALID_IMPORTANCE:0", transport.call_args.args[0]["response_constraints"]["invalid_output_recovery"])
+
+    def test_live_invalid_enum_fails_closed_after_retry(self) -> None:
+        invalid = {"statements": [{"raw_text": "independent", "meaning": "independent", "importance": 0, "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": [], "clarification_question": None, "research_task": None}], "decision_readiness": "READY"}
+        learning = {"advisor": "OPTIME_NURSING_LEARNING_CENTER", "consulted": True, "agent_count": 1, "available_agent_count": 1, "agents": [], "policy": {}}
+        with patch("app.services.semantic_intent_ai.build_learning_center_advice", return_value=learning), patch("app.services.semantic_intent_ai._default_transport", side_effect=[invalid, invalid]) as transport:
+            with self.assertRaisesRegex(RuntimeError, "SEMANTIC_AI_INVALID_IMPORTANCE:0"):
+                interpret_client_intent_with_ai(user_text="independent")
+        self.assertEqual(2, transport.call_count)
+
     def test_transport_retries_timeout_before_failing_closed(self) -> None:
         response = Mock()
         response.ok = True

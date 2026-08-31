@@ -271,7 +271,19 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     result = (transport or _default_transport)(payload)
     if transport is None:
         result = _repair_live_readiness_mismatch(result)
-    result = _validate_result(result)
+        try:
+            result = _validate_result(result)
+        except RuntimeError as exc:
+            if not str(exc).startswith("SEMANTIC_AI_INVALID_"):
+                raise
+            retry_payload = dict(payload)
+            retry_payload["response_constraints"] = {
+                **payload["response_constraints"],
+                "invalid_output_recovery": f"The previous response failed validation ({exc}). Return the complete packet again, using only the exact string enum values specified in required_output.",
+            }
+            result = _validate_result(_repair_live_readiness_mismatch(_default_transport(retry_payload)))
+    else:
+        result = _validate_result(result)
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
 
