@@ -116,6 +116,9 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
             "OPTIME_AI_RANKING_BATCH_SIZE": "6",
             "OPTIME_AI_RANKING_MAX_WORKERS": "2",
             "OPTIME_AI_RANKING_CALIBRATION_WINDOW": "20",
+            # Zero margin: this test isolates "did the reorder come from the calibration
+            # call", not near-boundary window extension (covered separately below).
+            "OPTIME_AI_RANKING_CALIBRATION_MARGIN": "0",
         }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport):
             ranked, status = rank_must_eligible_candidates(
                 rows,
@@ -133,6 +136,55 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertTrue(all(row["ai_ranking"]["status"] == "AI_BATCH_SCORED" for row in ranked[20:]))
         # global_score is preserved from the original batch scoring for every calibrated row.
         self.assertTrue(all(row["ai_ranking"]["global_score"] is not None for row in ranked[:20]))
+
+    def test_calibration_window_extends_to_near_boundary_candidates(self):
+        rows = self._rows(24)
+
+        def transport(payload):
+            role = payload.get("role")
+            candidates = payload["must_eligible_candidates"]
+            if role == "OPTIME_NURSING_AI_CANDIDATE_SCORER":
+                # FAC-01..FAC-20 score 1 point apart (80..99); FAC-21..FAC-23 sit within
+                # the default 3-point margin of FAC-20's score (80); FAC-24 sits well
+                # outside it. Only FAC-21..FAC-23 should be pulled into the window.
+                scores = {f"FAC-{i:02d}": 100 - i for i in range(1, 21)}
+                scores.update({"FAC-21": 79, "FAC-22": 78, "FAC-23": 77, "FAC-24": 50})
+                return {
+                    "scored_candidates": [
+                        {"canonical_facility_id": item["canonical_facility_id"], "score": scores[item["canonical_facility_id"]], "reason": "batch score", "information_deficits": []}
+                        for item in candidates
+                    ]
+                }
+            supplied_ids = {item["canonical_facility_id"] for item in candidates}
+            return {
+                "ranked_candidates": [
+                    {"canonical_facility_id": cid, "reason": "calibrated", "information_deficits": []}
+                    for cid in sorted(supplied_ids)
+                ]
+            }
+
+        with patch.dict(os.environ, {
+            "OPTIME_SEMANTIC_AI_ENABLED": "1",
+            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "20",
+            "OPTIME_AI_RANKING_BATCH_SIZE": "6",
+            "OPTIME_AI_RANKING_MAX_WORKERS": "2",
+            "OPTIME_AI_RANKING_CALIBRATION_WINDOW": "20",
+            "OPTIME_AI_RANKING_CALIBRATION_MARGIN": "3",
+        }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport):
+            ranked, status = rank_must_eligible_candidates(
+                rows,
+                client_intent={},
+                human_context={"dynamic_preference_model": {"preferences": []}},
+                strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        # Window extended from 20 to 23 (FAC-21/22/23 within margin of FAC-20's score 80;
+        # FAC-24 at 50 is not), so exactly 23 rows carry the calibrated status.
+        self.assertEqual(status["calibrated_top_candidate_count"], 23)
+        self.assertTrue(all(row["ai_ranking"]["status"] == "AI_BATCH_SCORED_CALIBRATED" for row in ranked[:23]))
+        self.assertEqual(ranked[23]["canonical_facility_id"], "FAC-24")
+        self.assertEqual(ranked[23]["ai_ranking"]["status"], "AI_BATCH_SCORED")
 
     def test_calibration_failure_keeps_the_original_batch_order(self):
         rows = self._rows(24)
