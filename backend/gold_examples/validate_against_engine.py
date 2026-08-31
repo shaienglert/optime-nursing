@@ -1,6 +1,15 @@
-"""Run the real MUST-gate engine (client_intent_runtime.evaluate_candidate_intent)
-against every gold example that carries a `synthetic_facility_row`, and report
-whether the engine's actual verdict matches the gold `must_gates` expectation.
+"""Run the real governing engine for each gold example against its
+`synthetic_facility_row`, and report whether the engine's actual verdict matches the
+gold `must_gates` expectation. Which engine governs a case is its `engine` field
+(default "client_intent_runtime" for cases predating this field):
+
+- client_intent_runtime: the dynamic MUST gate (client_intent_runtime.evaluate_candidate_intent)
+- semantic_facility_requirements: free-text client MUSTs with no standard key
+  (mobility layout, dietary safety, all-daily-meals, social delivery); also needs
+  `synthetic_semantic_statement`, the statement fed to extract_semantic_facility_requirements
+- combined_care_solution_runtime: ADL/medication care-delivery coverage
+  (build_combined_care_solution); checks medication_component/care_component depending
+  on which key is in must_gates
 
 This intentionally does not hit any database or live registry: `synthetic_facility_row`
 is a fixed, reviewed snapshot of exactly the evidence each case is about, so the
@@ -20,6 +29,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
+from app.services.combined_care_solution_runtime import build_combined_care_solution
+from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
 
 DATASET = Path(__file__).with_name("nursing_gold_v1.jsonl")
 
@@ -42,7 +53,7 @@ def gate_status(result: dict, key: str) -> str:
     return "PENDING_VERIFICATION"
 
 
-def run_case(case: dict) -> tuple[bool, list[str]]:
+def _run_client_intent_runtime_case(case: dict) -> tuple[bool, list[str]]:
     row = dict(case["synthetic_facility_row"])
     resident = case["resident"]
 
@@ -73,6 +84,61 @@ def run_case(case: dict) -> tuple[bool, list[str]]:
         else:
             notes.append(f"{gate['key']}: {actual} (matches)")
     return ok, notes
+
+
+def _run_semantic_facility_requirements_case(case: dict) -> tuple[bool, list[str]]:
+    row = dict(case["synthetic_facility_row"])
+    statement = case["synthetic_semantic_statement"]
+    payload = {
+        "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {"statements": [statement]}}}},
+        "results": [row],
+    }
+    out = apply_semantic_facility_requirements(payload)
+    fit = out["results"][0]["client_intent_fit"]
+
+    notes = []
+    ok = True
+    for gate in case["must_gates"]:
+        actual = gate_status(fit, gate["key"])
+        expected = gate["status"]
+        if actual != expected:
+            ok = False
+            notes.append(f"{gate['key']}: expected {expected}, engine returned {actual}")
+        else:
+            notes.append(f"{gate['key']}: {actual} (matches)")
+    return ok, notes
+
+
+def _run_combined_care_solution_runtime_case(case: dict) -> tuple[bool, list[str]]:
+    row = dict(case["synthetic_facility_row"])
+    resident = case["resident"]
+    result = build_combined_care_solution(row, {"locationCity": resident.get("location_city") or ""}, resident.get("natural_language_query") or "")
+
+    notes = []
+    ok = True
+    for gate in case["must_gates"]:
+        key = gate["key"]
+        component = "medication_component" if key == "MEDICATION_SUPPORT_AVAILABLE" else "care_component"
+        actual = result[component]["combined_must_coverage"]
+        expected = gate["status"] if gate["status"] in {"PASS", "FAIL"} else "PENDING_VERIFICATION"
+        if actual != expected:
+            ok = False
+            notes.append(f"{key}: expected {expected}, engine returned {actual}")
+        else:
+            notes.append(f"{key}: {actual} (matches)")
+    return ok, notes
+
+
+_ENGINE_RUNNERS = {
+    "client_intent_runtime": _run_client_intent_runtime_case,
+    "semantic_facility_requirements": _run_semantic_facility_requirements_case,
+    "combined_care_solution_runtime": _run_combined_care_solution_runtime_case,
+}
+
+
+def run_case(case: dict) -> tuple[bool, list[str]]:
+    engine = case.get("engine") or "client_intent_runtime"
+    return _ENGINE_RUNNERS[engine](case)
 
 
 def main() -> int:
