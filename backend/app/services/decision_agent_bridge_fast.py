@@ -26,6 +26,7 @@ from app.services.decision_agent_bridge import (
     _resolve_with_agent_evidence,
     _ensure_worker,
     _kick_worker_async,
+    research_priority,
 )
 
 _LOG = logging.getLogger(__name__)
@@ -164,7 +165,7 @@ def attach_agent_evidence_and_queue_gaps_fast(rows: List[Dict[str, Any]], human_
             _ensure_worker(db, agent_key)
 
         newly_queued_keys: Set[Tuple[str, str]] = set()
-        for row in rows:
+        for candidate_rank_index, row in enumerate(rows):
             cid = str(row.get("canonical_facility_id") or "")
             if not cid:
                 continue
@@ -204,6 +205,7 @@ def attach_agent_evidence_and_queue_gaps_fast(rows: List[Dict[str, Any]], human_
                     "dimension": dimension,
                     "requested_parameters": unknown,
                     "requested_at": datetime.now(timezone.utc).isoformat(),
+                    "research_priority": research_priority(dimension, candidate_rank_index),
                 }
                 db.add(
                     AgentQueueItem(

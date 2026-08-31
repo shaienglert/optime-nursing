@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 from app.database import SessionLocal
 from app.models.agent_execution import AgentQueueItem
 from app.services import governed_evidence_runtime
-from app.services.decision_agent_bridge import QUEUE_TYPE, _ensure_worker, _kick_worker_async
+from app.services.decision_agent_bridge import QUEUE_TYPE, _ensure_worker, _kick_worker_async, semantic_must_research_priority
 
 
 def _upper(value: Any) -> str:
@@ -77,7 +77,7 @@ def _row_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     return governed_evidence_runtime.agent_and_provider_payloads(row)
 
 
-def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any]) -> bool:
+def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int = 0) -> bool:
     canonical_id = str(row.get("canonical_facility_id") or "").strip()
     if not canonical_id:
         return False
@@ -109,6 +109,7 @@ def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any]) -> bool
             "semantic_requirement_key": requirement.get("key"),
             "semantic_research_task": requirement.get("research_task"),
             "requested_at": datetime.now(timezone.utc).isoformat(),
+            "research_priority": semantic_must_research_priority(candidate_rank_index),
         }
         db.add(AgentQueueItem(queue_type=QUEUE_TYPE, agent_key=agent_key, payload_json=json.dumps(payload, sort_keys=True), status="PENDING", max_attempts=3))
         db.commit()
@@ -148,7 +149,7 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 else:
                     if key not in unknown: unknown.append(key)
                     status = "UNKNOWN"
-                    if index < research_limit and _queue_requirement(row, requirement):
+                    if index < research_limit and _queue_requirement(row, requirement, index):
                         queued += 1
                 trace.append({**requirement, "status": status})
             fit["must_pass"] = passed

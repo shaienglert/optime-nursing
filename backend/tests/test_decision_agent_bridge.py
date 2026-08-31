@@ -8,6 +8,8 @@ from app.services.decision_agent_bridge import (
     _governed_evidence,
     _material_dimensions,
     _resolve_with_agent_evidence,
+    research_priority,
+    semantic_must_research_priority,
     social_evidence_sort_key,
 )
 from app.services.decision_research_worker import process_pending_decision_research
@@ -58,5 +60,28 @@ class DecisionAgentBridgeTests(unittest.TestCase):
         self.assertLess(social_evidence_sort_key(positive), social_evidence_sort_key(unknown))
 
     def test_worker_module_is_importable(self) -> None: self.assertTrue(callable(process_pending_decision_research))
+
+    def test_must_affecting_dimension_outranks_quality_and_nice_dimensions(self) -> None:
+        # care_support (medication/ADL) can flip MUST eligibility; facility_quality_safety
+        # is a tie-break/quality signal; social_engagement is NICE-tier in this module's
+        # own _material_dimensions (only material when explicitly HIGH priority).
+        self.assertGreater(research_priority("care_support", 0), research_priority("facility_quality_safety", 0))
+        self.assertGreater(research_priority("facility_quality_safety", 0), research_priority("social_engagement", 0))
+
+    def test_priority_prefers_candidates_earlier_in_the_research_pool(self) -> None:
+        self.assertGreater(research_priority("care_support", 0), research_priority("care_support", 5))
+        # Position can never flip the ordering across dimension bands: a low-priority
+        # dimension for the very first candidate still never outranks a MUST-affecting
+        # dimension for a candidate deep in the pool.
+        self.assertGreater(research_priority("care_support", 250), research_priority("social_engagement", 0))
+
+    def test_semantic_must_priority_always_uses_the_must_tier_band_not_the_shared_table(self) -> None:
+        # semantic_facility_requirements.py reuses the "social_engagement" dimension
+        # label for a client-stated MUST -- an unrelated, higher-stakes meaning than
+        # this module's own NICE-tier "social_engagement" bucket. Its priority must
+        # come from the dedicated MUST-tier helper, not a lookup that would silently
+        # misclassify it as NICE-tier.
+        self.assertEqual(semantic_must_research_priority(0), research_priority("care_support", 0))
+        self.assertGreater(semantic_must_research_priority(0), research_priority("social_engagement", 0))
 
 if __name__ == "__main__": unittest.main()

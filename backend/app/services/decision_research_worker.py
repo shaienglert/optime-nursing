@@ -320,6 +320,36 @@ def _reconcile_worker_delivery_metrics(db, remaining: int) -> None:
             worker.last_error = None
 
 
+def _queue_item_priority(item: AgentQueueItem) -> int:
+    try:
+        payload = json.loads(item.payload_json or "{}")
+    except (TypeError, ValueError):
+        return 0
+    value = payload.get("research_priority")
+    return int(value) if isinstance(value, (int, float)) else 0
+
+
+def _priority_ordered_pending_items(db, limit: int) -> List[AgentQueueItem]:
+    """Spend the bounded per-call research budget on what matters most first: a
+    dimension that can flip MUST eligibility for a candidate near the front of its
+    research pool (see decision_agent_bridge.py's research_priority) outranks a
+    NICE-tier dimension or a candidate unlikely to be displayed. Pulls a wider
+    candidate window than `limit` (oldest-first, so nothing starves indefinitely
+    across repeated worker kicks) and sorts that window by priority in Python, since
+    priority lives inside payload_json rather than its own indexed column.
+    """
+    fetch_limit = min(300, max(1, limit) * 5)
+    candidates = (
+        db.query(AgentQueueItem)
+        .filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING")
+        .order_by(AgentQueueItem.created_at.asc(), AgentQueueItem.id.asc())
+        .limit(fetch_limit)
+        .all()
+    )
+    candidates.sort(key=lambda item: -_queue_item_priority(item))
+    return candidates[:limit]
+
+
 def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
     if not _RUN_LOCK.acquire(blocking=False):
         return {"status": "ALREADY_RUNNING", "processed": 0, "succeeded": 0, "failed": 0, "remaining": None, "market": "las-vegas"}
@@ -328,7 +358,7 @@ def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
     run = AgentJobRun(agent_key="decision_evidence_research", status="RUNNING")
     db.add(run); db.commit(); db.refresh(run)
     try:
-        items: List[AgentQueueItem] = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").order_by(AgentQueueItem.created_at.asc()).limit(max(1, int(limit))).all()
+        items = _priority_ordered_pending_items(db, max(1, int(limit)))
         for item in items:
             item.status = "RUNNING"; item.started_at = datetime.now(timezone.utc); item.attempts = int(item.attempts or 0) + 1; db.commit(); processed += 1
             try:

@@ -25,6 +25,56 @@ _QUALITY_SAFETY_PARAMETERS = (
 )
 _AGENT_TABLES = {"agent_knowledge_records", "agent_queue_items", "agent_workers"}
 
+# Value-of-information queue priority. Higher runs first when the worker drains a
+# backlog. Dimensions that can flip MUST eligibility (a candidate could be excluded
+# entirely) outrank a quality/tie-break signal, which outranks a pure NICE/preference
+# dimension -- resolving the fact that could remove a candidate from consideration
+# matters more than one that only nudges its rank. This is a bounded, queue-time
+# approximation of value-of-information: a candidate's eventual AI-ranked position
+# isn't known yet (that would need the fully iterative re-rank-after-research loop
+# this is a first step toward), but dimension stakes and pre-ranking pool position are
+# both real signals available when the research task is queued.
+_MUST_TIER_PRIORITY_BAND = 300
+_DIMENSION_PRIORITY_BAND = {
+    "care_support": _MUST_TIER_PRIORITY_BAND,
+    "rehab_path": _MUST_TIER_PRIORITY_BAND,
+    "couple_coresidence": _MUST_TIER_PRIORITY_BAND,
+    "recovery_transition": _MUST_TIER_PRIORITY_BAND,
+    "facility_quality_safety": 150,
+    # NICE/preference-tier dimensions in this module's own _material_dimensions.
+    # semantic_facility_requirements.py reuses the "social_engagement" dimension
+    # label for a client-stated MUST, an unrelated meaning in that file's context --
+    # it must use semantic_must_research_priority() below, never this table.
+    "social_engagement": 50,
+    "autonomy_choice": 50,
+}
+_DEFAULT_DIMENSION_PRIORITY = 100
+
+
+def _band_priority(band: int, candidate_rank_index: int) -> int:
+    # band dominates: multiplied up so a candidate's position within its own band can
+    # never bridge into a different (lower) band's range, regardless of how deep in the
+    # research pool it is -- a MUST-affecting dimension must always outrank a NICE-tier
+    # one, position only breaks ties within the same band.
+    return band * 1000 - min(max(int(candidate_rank_index), 0), 999)
+
+
+def research_priority(dimension: str, candidate_rank_index: int) -> int:
+    """Higher is more urgent. See _DIMENSION_PRIORITY_BAND for the dimension-stakes
+    rationale; within one band, a candidate closer to the front of its research pool
+    (more likely to actually be displayed) is broken out ahead of one further back.
+    """
+    return _band_priority(_DIMENSION_PRIORITY_BAND.get(dimension, _DEFAULT_DIMENSION_PRIORITY), candidate_rank_index)
+
+
+def semantic_must_research_priority(candidate_rank_index: int) -> int:
+    """Priority for semantic_facility_requirements.py's queue: every requirement it
+    handles is a client-stated MUST by construction (it only ever processes
+    importance == "MUST" statements), so it always uses the MUST-tier band rather
+    than looking up its dimension label in _DIMENSION_PRIORITY_BAND.
+    """
+    return _band_priority(_MUST_TIER_PRIORITY_BAND, candidate_rank_index)
+
 
 def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
@@ -137,7 +187,7 @@ def _recent_completed_item(db, canonical_id: str, dimension: str, hours: int = 2
     return False
 
 
-def _queue(db, row: Dict[str, Any], dimension: str, unknown: List[str]) -> bool:
+def _queue(db, row: Dict[str, Any], dimension: str, unknown: List[str], candidate_rank_index: int = 0) -> bool:
     agent_key = "activities_intelligence" if dimension == "social_engagement" else "regulatory_intelligence" if dimension == "facility_quality_safety" else "provider_intelligence"
     _ensure_worker(db, agent_key); canonical_id = str(row.get("canonical_facility_id") or "")
     pending = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.agent_key == agent_key, AgentQueueItem.status.in_(["PENDING", "RUNNING"])).all()
@@ -146,7 +196,7 @@ def _queue(db, row: Dict[str, Any], dimension: str, unknown: List[str]) -> bool:
         except json.JSONDecodeError: continue
         if payload.get("canonical_facility_id") == canonical_id and payload.get("dimension") == dimension: return False
     if _recent_completed_item(db, canonical_id, dimension): return False
-    payload = {"market": "las-vegas", "canonical_facility_id": canonical_id, "facility_name": row.get("facility_name"), "city": row.get("city") or "LAS VEGAS", "state": "NV", "dimension": dimension, "requested_parameters": unknown, "requested_at": datetime.now(timezone.utc).isoformat()}
+    payload = {"market": "las-vegas", "canonical_facility_id": canonical_id, "facility_name": row.get("facility_name"), "city": row.get("city") or "LAS VEGAS", "state": "NV", "dimension": dimension, "requested_parameters": unknown, "requested_at": datetime.now(timezone.utc).isoformat(), "research_priority": research_priority(dimension, candidate_rank_index)}
     db.add(AgentQueueItem(queue_type=QUEUE_TYPE, agent_key=agent_key, payload_json=json.dumps(payload, sort_keys=True), status="PENDING", max_attempts=3)); return True
 
 
@@ -169,7 +219,7 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
             if bind.dialect.name == "sqlite": return {"status": "LOCAL_AGENT_SCHEMA_NOT_INITIALIZED", "market": "las-vegas", "market_scoped": True, "material_gaps": [], "tasks_queued": 0, "pending_backlog": 0, "researched_unknown_count": 0, "decision_finality": "PROVISIONAL_LOCAL_AGENT_SCHEMA_NOT_INITIALIZED", "policy": "Local/test SQLite may omit agent persistence tables; production PostgreSQL must contain them."}
             raise RuntimeError("Production agent persistence schema is incomplete")
         dimensions = _material_dimensions(human_context)
-        for row in rows:
+        for candidate_rank_index, row in enumerate(rows):
             cid = str(row.get("canonical_facility_id") or "")
             if not cid: continue
             evidence = _market_evidence(db, cid); row["agent_person_fit_evidence"] = evidence
@@ -179,7 +229,7 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
                 was_researched = _recent_completed_item(db, cid, dimension)
                 gaps.append({"canonical_facility_id": cid, "facility_name": row.get("facility_name"), "dimension": dimension, "unknown_parameters": unknown, "research_completed_no_public_evidence": was_researched})
                 if was_researched: researched_unknown += 1
-                elif _queue(db, row, dimension, unknown): queued += 1
+                elif _queue(db, row, dimension, unknown, candidate_rank_index): queued += 1
         db.commit(); pending_backlog = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").count()
         if queued > 0 or pending_backlog > 0: _kick_worker_async()
         if gaps and queued == 0 and researched_unknown == len(gaps): finality, status = "PROVISIONAL_DIRECT_VERIFICATION_REQUIRED", "PUBLIC_RESEARCH_EXHAUSTED_MATERIAL_UNKNOWN_REMAINS"

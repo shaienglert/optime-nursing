@@ -217,6 +217,76 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
     return validated
 
 
+def _resolve_calibration_window() -> int:
+    return max(0, min(40, int(os.getenv("OPTIME_AI_RANKING_CALIBRATION_WINDOW", "20"))))
+
+
+def _resolve_calibration_margin() -> float:
+    return max(0.0, min(20.0, float(os.getenv("OPTIME_AI_RANKING_CALIBRATION_MARGIN", "3.0"))))
+
+
+def _calibration_window_end(ordered: List[Dict[str, Any]], window: int, margin: float) -> int:
+    """Extend the strict top-N window to include any immediately-following candidate
+    whose batch score is within `margin` points of the boundary score. A candidate
+    scored 79.8 sitting just outside a window cut at 80.0 is not meaningfully worse
+    than the one just inside it, and calibration should judge both in the same direct
+    comparison rather than silently locking in whichever side of an arbitrary cutoff
+    the batch scoring happened to place them on. Capped at 2x window so a long tail of
+    similarly-scored candidates cannot balloon the calibration call's size.
+    """
+    if margin <= 0 or window >= len(ordered):
+        return min(window, len(ordered))
+    boundary_score = (ordered[window - 1].get("ai_ranking") or {}).get("global_score")
+    if not isinstance(boundary_score, (int, float)):
+        return window
+    end = window
+    hard_cap = min(len(ordered), window * 2)
+    while end < hard_cap:
+        score = (ordered[end].get("ai_ranking") or {}).get("global_score")
+        if not isinstance(score, (int, float)) or score < boundary_score - margin:
+            break
+        end += 1
+    return end
+
+
+def _calibrate_top_candidates(
+    ordered: List[Dict[str, Any]],
+    client_intent: Dict[str, Any],
+    human_context: Dict[str, Any],
+    strategy: Dict[str, Any],
+    claim_limit: int,
+) -> None:
+    """Batch scoring runs each batch as an independent LLM call sharing one absolute
+    rubric, but separate calls are not perfectly calibrated to each other -- the same
+    facility could plausibly score a few points differently in a different batch. This
+    reruns one coherent, directly-comparative single-shot adjudication over the
+    top-scored window plus any near-boundary candidates (the part of the order that is
+    actually displayed and matters most), so every facility judged is compared against
+    the same request instead of merged from independent batches. Mutates `ordered` in
+    place on success. This is a quality refinement, never a required step: any failure
+    (including a fabricated claim citation) leaves the original batch order untouched.
+    """
+    window = _resolve_calibration_window()
+    if window <= 0 or len(ordered) <= window:
+        return
+    window_end = _calibration_window_end(ordered, window, _resolve_calibration_margin())
+    top = ordered[:window_end]
+    original_scores = {str(row.get("canonical_facility_id")): (row.get("ai_ranking") or {}).get("global_score") for row in top}
+    try:
+        packet = _default_transport(_prompt(top, client_intent, human_context, strategy, claim_limit))
+        calibrated = _validate(packet, top)
+    except Exception as exc:
+        logger.warning("ai_ranking_calibration_failed candidate_count=%s error=%s", len(top), exc)
+        return
+
+    for position, row in enumerate(calibrated, start=1):
+        canonical_id = str(row.get("canonical_facility_id"))
+        row["ai_ranking"]["status"] = "AI_BATCH_SCORED_CALIBRATED"
+        row["ai_ranking"]["rank"] = position
+        row["ai_ranking"]["global_score"] = original_scores.get(canonical_id)
+    ordered[:window_end] = calibrated
+
+
 def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any], deterministic_fallback_key) -> List[Dict[str, Any]]:
     batch_size = max(4, min(30, int(os.getenv("OPTIME_AI_RANKING_BATCH_SIZE", "16"))))
     workers = max(1, min(10, int(os.getenv("OPTIME_AI_RANKING_MAX_WORKERS", "6"))))
@@ -253,6 +323,7 @@ def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hu
             "rank_drivers": item["rank_drivers"],
             "rank_risks": item["rank_risks"],
         }
+    _calibrate_top_candidates(ordered, client_intent, human_context, strategy, claim_limit)
     return ordered
 
 
@@ -269,6 +340,7 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
             if len(rows) > batch_threshold:
                 logger.info("ai_candidate_ranking_start mode=batched candidate_count=%s batch_threshold=%s", len(rows), batch_threshold)
                 ordered = _batch_ai_rank(rows, client_intent, human_context, strategy, deterministic_fallback_key)
+                calibrated_count = sum(1 for row in ordered if (row.get("ai_ranking") or {}).get("status") == "AI_BATCH_SCORED_CALIBRATED")
                 return ordered, {
                     "status": "AI_BATCH_RANKED",
                     "candidate_count": len(ordered),
@@ -277,6 +349,8 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
                     "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES",
                     "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE",
                     "batch_threshold": batch_threshold,
+                    "calibration_window": _resolve_calibration_window(),
+                    "calibrated_top_candidate_count": calibrated_count,
                 }
             claim_limit = _resolve_claim_limit()
             single_shot_prompt = _prompt(rows, client_intent, human_context, strategy, claim_limit)
