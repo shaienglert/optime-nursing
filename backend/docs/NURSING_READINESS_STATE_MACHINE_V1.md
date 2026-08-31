@@ -1,6 +1,32 @@
 # OPTIME Nursing Readiness / Decision State Migration
 
-Status: design + shadow implementation. No production control flow is changed by this document or by `canonical_decision_state.py` in phase 1.
+Status: design + shadow implementation (Phase 1 complete, frozen). No production control
+flow is changed by this document or by `canonical_decision_state.py`.
+
+This PR (`refactor/nursing-canonical-decision-state`) is intentionally not merged yet.
+Phase 1 (`canonical_decision_state.py` + tests) is done and stays shadow-only/add-only --
+it has zero writers into any production control field and is not called from `app/main.py`
+or any request path. It is frozen here, alongside this completed design document, so a
+future session can continue directly into Phase 2 without re-deriving this design. Do not
+start Phase 3 (single writer) before Phase 2's shadow comparison against Gold cases has
+run and every divergence has been resolved explicitly.
+
+### What Phase 2 needs before it can start
+
+`derive_canonical_decision_state(result)` consumes a full pipeline `result` payload
+(`results`, `must_eligible_count`, `decision_intelligence.facility_selection_pipeline`,
+etc.) -- the shape `run_patient_decision_engine` returns for one complete request.
+`gold_examples/nursing_gold_v1.jsonl`'s 13 cases are at a narrower grain: single
+facility/engine checks (`client_intent_runtime`, `semantic_facility_requirements`,
+`combined_care_solution_runtime`) validated by `validate_against_engine.py`, not full
+pipeline runs. Phase 2 cannot compare canonical state against them as-is. Before writing
+the shadow-comparison harness, either (a) add a handful of new gold cases at the *pipeline*
+grain (full `questionnaire_state` + `natural_language_query` + a small synthetic candidate
+pool, asserting an `expected_canonical_phase`), reusing the `engine` dispatch pattern
+already in `validate_against_engine.py` (a new `engine: "canonical_decision_state"` case
+type), or (b) run the shadow comparison against recorded real production responses instead
+of the gold set for this phase specifically. Decide which before starting Phase 2, don't
+assume the existing 13 cases already cover it.
 
 ## Problem
 
@@ -91,16 +117,59 @@ The canonical state also stores dimensions that should not be overloaded into on
 - finality: `NONE | PROVISIONAL | FINAL`
 - system: `HEALTHY | DEGRADED | BLOCKED`
 
+## Guardian (precise definition)
+
+Guardian is **not a new component and not an additional AI model**. It is a policy layer:
+the set of deterministic validators that already exist across the codebase, unified
+behind one call surface, not rewritten from scratch. Each existing validator keeps its
+current authority; Guardian's job in the migration is only to aggregate their verdicts
+into the canonical state's orthogonal dimensions, and to be the single place a new
+validator gets registered rather than a fifth ad hoc control field.
+
+- **Client-completeness validator** = `human_intelligence_runtime_verified.py`'s existing
+  `readiness_guardian` (`client_owned_blockers`, veto mechanism, already implemented and
+  already what `canonical_decision_state.py`'s `_material_client_blockers` reads). Owns:
+  whether a client-owned fact is still missing. This already *is* Guardian's
+  `CLIENT_INPUT_REQUIRED` check -- Phase 1 just consumes its output, no new code needed here.
+- **MUST validator** = `client_intent_runtime.evaluate_candidate_intent`. Owns PASS / FAIL /
+  UNKNOWN per MUST per facility, including the rule that UNKNOWN is never a hard fail on
+  unverified agent evidence (see governed_evidence_runtime.py and the semantic/combined-care
+  fixes from the same migration effort). In the target architecture this becomes **one
+  validator registered inside Guardian**, not Guardian itself: it has authority only over
+  facility-level MUST verdicts, which Guardian aggregates into the canonical `must` state
+  dimension (`NOT_EVALUATED | PENDING | PASS | NO_ELIGIBLE_CANDIDATES`). It never gets
+  authority over global `phase`.
+- Semantic AI proposes client understanding and the next question; it does not decide
+  `client` state itself -- the client-completeness validator (readiness_guardian) does,
+  and can veto Semantic AI's proposal (already implemented: `veto_applied`,
+  `veto_resolution` in the current runtime).
+
 ## Ownership rules
 
 - Semantic AI proposes client understanding and next question.
-- Guardian validates whether client-owned material blockers remain.
-- Research workers write evidence only.
-- MUST Guardian writes facility MUST verdicts only.
+- Guardian (the validator set above) determines `client`, `must`, and material-blocker state.
+- Research workers write evidence only, and choose *what to research next* using
+  `research_priority` (`decision_agent_bridge.py`) -- see "Value-of-information inside
+  EVIDENCE_COLLECTION" below. They never write `phase`, `finality`, or any other global
+  control field; `semantic_facility_requirements.py` currently violates this (see Adjacent
+  architecture issue) and must stop doing so in the same migration.
+- MUST Guardian (the MUST validator above) writes facility MUST verdicts only.
 - AI ranker writes ranking only.
 - Preference verifier writes preference assessments only.
 - Process Owner proposes the next decision action.
 - Canonical Decision State Machine is the only component that may write global phase.
+
+## Value-of-information inside EVIDENCE_COLLECTION
+
+`research_priority(dimension, candidate_rank_index)` (`decision_agent_bridge.py`, shipped
+the same night as this design) is not a separate state or a new capability the state
+machine needs to model -- it is the **existing mechanism EVIDENCE_COLLECTION already
+delegates to** for choosing which of several material gaps to resolve first. The state
+machine only needs to know "we are in EVIDENCE_COLLECTION, N candidates have pending MUST
+evidence"; `research_priority`'s dimension-stakes-then-pool-position ordering decides the
+work order of the research queue underneath that one phase. No new field, no new owner --
+just an explicit note so a future implementer does not duplicate it as e.g. an
+`evidence_priority` dimension on `CanonicalDecisionState`.
 
 ## Transition invariants
 
@@ -116,11 +185,29 @@ Allowed only for the exact closed world of all and only MUST-PASS candidates.
 ### `AI_RANKING -> PREFERENCE_VERIFICATION`
 Allowed only after validated closed-world AI ranking. Required AI failure goes to `SYSTEM_BLOCKED`, never deterministic user-visible fallback.
 
-### `PREFERENCE_VERIFICATION -> PROVISIONAL_RECOMMENDATION`
-Allowed when the recommendation is useful but material provider-owned preference unknowns can still change ordering or NICE completeness.
+### `PREFERENCE_VERIFICATION -> PROVISIONAL_RECOMMENDATION` vs `-> FINAL_RECOMMENDATION`
 
-### `PREFERENCE_VERIFICATION -> FINAL_RECOMMENDATION`
-Allowed when no decision-material unknown remains and all recommendation invariants pass.
+The distinction is not "any unknown remains" -- it is **which kind of unknown**:
+
+- A **MUST unknown** is material to a specific facility's *eligibility*. While it remains
+  unresolved for a candidate, that candidate cannot be in the MUST-PASS closed world at
+  all (`must` stays `PENDING`, the candidate stays in `EVIDENCE_COLLECTION`, never reaches
+  ranking). A MUST unknown never produces `PROVISIONAL_RECOMMENDATION` for that candidate --
+  it simply is not eligible to be recommended yet, provisionally or otherwise.
+- A **NICE/preference unknown** for a candidate that has *already* passed every MUST does
+  not revoke that candidate's eligibility. It can still change *ordering* (a candidate
+  ranked 6th might complete every NICE preference while 1st-5th remain partial) or NICE
+  completeness reporting, but the already-PASS candidate remains legitimately displayable.
+  This is what makes `PROVISIONAL_RECOMMENDATION` correct: the displayed set is not
+  provisionally *eligible*, only provisionally *final-ranked*.
+
+So: `-> PROVISIONAL_RECOMMENDATION` is allowed once ranking is complete for the full
+MUST-PASS closed world and at least one displayed candidate exists, even if
+`preferences` is `PARTIAL`. `-> FINAL_RECOMMENDATION` requires `preferences` to reach
+`COMPLETE` (no material NICE/provider unknown remains that could still change the
+displayed set or its ordering) with all other recommendation invariants passing. Neither
+transition ever depends on a MUST unknown -- by the time either is reachable, `must` is
+already `PASS` for the full eligible set.
 
 ### Any phase -> `SYSTEM_BLOCKED`
 For required AI outage, malformed required AI output, database/evidence corruption, or Guardian invariant violation.
@@ -152,11 +239,12 @@ and stop interpreting `READY || NEEDS_RESEARCH` itself.
 
 ## Migration plan
 
-### Phase 1 — shadow only
-- Add `CanonicalDecisionState` and legacy adapter.
-- Do not change any existing control field.
-- Attach state only in tests/diagnostics until shadow behavior is validated.
-- Record conflicts between canonical state and legacy fields.
+### Phase 1 — shadow only (DONE, frozen on `refactor/nursing-canonical-decision-state`)
+- Add `CanonicalDecisionState` and legacy adapter. -- done: `canonical_decision_state.py`.
+- Do not change any existing control field. -- confirmed: not referenced from `app/main.py` or any request path.
+- Attach state only in tests/diagnostics until shadow behavior is validated. -- `attach_canonical_decision_state_shadow` exists and is exercised only by `tests/test_canonical_decision_state.py` (6 tests, passing).
+- Record conflicts between canonical state and legacy fields. -- done: `legacy_state_conflicts`.
+- Not yet merged to `main`. Merge only after Phase 2 (below) has run and every divergence is resolved explicitly.
 
 ### Phase 2 — Gold shadow evaluation
 - Add expected phase/next-action assertions to representative Gold cases.
