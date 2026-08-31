@@ -41,6 +41,12 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         if not any(str(item.get("key") or "") == key for item in nice):
             nice.append({"key": key, "reason": reason})
 
+    # Unconditional, unlike every other MUST here: license validity matters regardless
+    # of what the client asked for. Safe to always include because evaluate_candidate_intent
+    # only fails this on a confirmed-past expiration_date (a curated registry field), never
+    # on missing data -- so a row with no expiration_date recorded still passes.
+    add_must("LICENSE_CURRENTLY_VALID", "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.", "canonical license expiration_date vs current date")
+
     in_house_only_requested = any(token in query for token in (
         "everything in house", "everything in-house", "all in house", "all in-house",
         "only in house", "only in-house", "in house only", "in-house only",
@@ -121,7 +127,16 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
 
     for must in intent.get("must_haves") or []:
         key = str(must.get("key") or "")
-        if key == "LAS_VEGAS":
+        if key == "LICENSE_CURRENTLY_VALID":
+            # Only a confirmed-past expiration_date (a curated registry field, not agent
+            # evidence) fails this; missing/unparseable data passes rather than blocking
+            # on absence of information, matching the "never fail on unverified data"
+            # policy but treating a *reliable* negative here as safe to hard-fail on.
+            if row.get("license_expired") is True:
+                hard_fail.append(key)
+            else:
+                must_pass.append(key)
+        elif key == "LAS_VEGAS":
             las_vegas_valley_cities = {
                 "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
                 "SPRING VALLEY", "ENTERPRISE", "WINCHESTER", "SUNRISE MANOR",
