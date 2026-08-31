@@ -5,6 +5,7 @@ import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from functools import cmp_to_key
 import os
 import re
@@ -1195,6 +1196,26 @@ def _agent_verified_medication_overlay(canonical_ids: List[str]) -> Dict[str, st
     return {canonical_id: "YES" for canonical_id in verified}
 
 
+def _license_expired(expiration_date: Any) -> Optional[bool]:
+    """True only when the canonical record's own expiration_date is a parseable date
+    already in the past. This is a curated registry field (database/las_vegas_runtime_v3),
+    not agent-research evidence, so unlike the agent-evidence gates a confirmed True here
+    is safe to hard-fail on. Returns None (unknown, never a fail) for missing/unparseable
+    values -- as of 2026-08-31 zero of the 364 live records are past due, so this is
+    currently inert in production and only guards against future drift.
+    """
+    text = str(expiration_date or "").strip()
+    if not text or text.upper() == "UNKNOWN":
+        return None
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d"):
+        try:
+            parsed = datetime.strptime(text, fmt)
+        except ValueError:
+            continue
+        return parsed.date() < datetime.now(timezone.utc).date()
+    return None
+
+
 def _build_ranked_candidate_detail(
     *,
     canonical_id: str,
@@ -1265,6 +1286,8 @@ def _build_ranked_candidate_detail(
         "city": table.get("city"),
         "state": table.get("state"),
         "county": table.get("county"),
+        "license_expiration_date": canonical_meta.get("expiration_date"),
+        "license_expired": _license_expired(canonical_meta.get("expiration_date")),
         "zip": table.get("zip"),
         "canonical_type": table.get("canonical_type"),
         "role_classification": table.get("role_classification"),
