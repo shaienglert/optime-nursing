@@ -23,7 +23,9 @@ jobs:
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
       - name: Install backend runtime dependencies
-        run: python -m pip install -r backend/requirements.txt
+        run: |
+          python -m pip install -r backend/requirements.txt
+          python -m pip install pytest
       - name: Run canonical decision state unit tests
         run: python -m pytest backend/tests/test_canonical_decision_state.py -q
       - name: Run lifecycle shadow comparison
