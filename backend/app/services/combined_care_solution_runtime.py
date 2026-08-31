@@ -98,25 +98,33 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
     row["facility_service_delivery_evidence"] = service
     care_delivery = dict(service.get("personal_care_delivery") or {})
 
+    # outside_allowed_false is deliberately sourced only from the curated
+    # facility_service_delivery_runtime.py registry, never from agent payloads:
+    # decision_research_worker.py stamps *_verified fields False by default on every
+    # research pass regardless of which dimension was actually requested, so an agent
+    # payload's outside_care_allowed_verified/medication_support_verified == False is
+    # frequently "never researched", not a confirmed negative. Agent evidence may only
+    # confirm this component (the *_true checks below), never fail it -- same policy as
+    # the ADL/MEDICATION/REHAB/RECOVERY_TRANSITION gates in client_intent_runtime.py and
+    # the semantic MUST gate in semantic_facility_requirements.py.
     explicit_in_house = care_delivery.get("personal_care_in_house") is True
     in_house_adl = canonical_type == "ASSISTED_LIVING_RFG" or explicit_in_house or any(p.get("adl_support_verified") is True for p in payloads)
     outside_allowed_true = care_delivery.get("outside_care_allowed") is True or any(p.get("outside_care_allowed_verified") is True for p in payloads)
-    outside_allowed_false = care_delivery.get("outside_care_allowed") is False or any(p.get("outside_care_allowed_verified") is False for p in payloads)
+    outside_allowed_false = care_delivery.get("outside_care_allowed") is False
     agency = _agency_match_from_row(row)
     agency_verified = agency["status"] == "VERIFIED_MATCH"
     in_house_only = bool(signals.get("in_house_only_requested"))
 
     in_house_medication = any(p.get("medication_support_verified") is True for p in payloads)
-    medication_verified_false = any(p.get("medication_support_verified") is False for p in payloads)
     if in_house_medication:
         medication_coverage, medication_delivery_model = "PASS", "FACILITY_IN_HOUSE"
         medication_reason = "Required medication management is verified in-house at the facility."
     elif not in_house_only and outside_allowed_true and agency_verified:
         medication_coverage, medication_delivery_model = "PASS", "FACILITY_PLUS_EXTERNAL_AGENCY"
         medication_reason = "Facility housing allows outside care and a verified agency match covers medication management."
-    elif medication_verified_false and (in_house_only or outside_allowed_false):
+    elif outside_allowed_false:
         medication_coverage, medication_delivery_model = "FAIL", "NO_VALID_EXTERNAL_PATH"
-        medication_reason = "Medication management is verified not offered in-house, and no external pathway is available or the client requested in-house-only care."
+        medication_reason = "No in-house medication management is confirmed, and the facility's outside-care pathway is curated-verified unavailable."
     elif not in_house_only and outside_allowed_true:
         medication_coverage, medication_delivery_model = "PENDING_VERIFICATION", "FACILITY_PLUS_EXTERNAL_AGENCY_PENDING_MATCH"
         medication_reason = "Outside care is allowed, but no verified agency match for medication management has been attached yet."
