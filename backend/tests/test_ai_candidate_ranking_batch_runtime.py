@@ -79,6 +79,104 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertTrue(all(row["ai_ranking"]["status"] == "DETERMINISTIC_FALLBACK" for row in ranked))
 
 
+    def test_calibration_reorders_top_window_using_single_shot_adjudication(self):
+        rows = self._rows(24)
+
+        def transport(payload):
+            role = payload.get("role")
+            candidates = payload["must_eligible_candidates"]
+            if role == "OPTIME_NURSING_AI_CANDIDATE_SCORER":
+                # Batch scores: FAC-01 highest, FAC-24 lowest -- these determine which
+                # 20 candidates fall inside the calibration window.
+                return {
+                    "scored_candidates": [
+                        {
+                            "canonical_facility_id": item["canonical_facility_id"],
+                            "score": 100 - int(item["canonical_facility_id"].split("-")[-1]),
+                            "reason": "batch score",
+                            "information_deficits": [],
+                        }
+                        for item in candidates
+                    ]
+                }
+            # Calibration call: deliberately return the window in the OPPOSITE order
+            # from the batch scores, so the assertions below can only pass if the
+            # final order actually came from this call, not from the batch scores.
+            ranked_ids = sorted((item["canonical_facility_id"] for item in candidates), reverse=True)
+            return {
+                "ranked_candidates": [
+                    {"canonical_facility_id": cid, "reason": "calibrated", "information_deficits": []}
+                    for cid in ranked_ids
+                ]
+            }
+
+        with patch.dict(os.environ, {
+            "OPTIME_SEMANTIC_AI_ENABLED": "1",
+            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "20",
+            "OPTIME_AI_RANKING_BATCH_SIZE": "6",
+            "OPTIME_AI_RANKING_MAX_WORKERS": "2",
+            "OPTIME_AI_RANKING_CALIBRATION_WINDOW": "20",
+        }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport):
+            ranked, status = rank_must_eligible_candidates(
+                rows,
+                client_intent={},
+                human_context={"dynamic_preference_model": {"preferences": []}},
+                strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual(status["calibrated_top_candidate_count"], 20)
+        expected_calibrated_order = [f"FAC-{i:02d}" for i in range(20, 0, -1)]
+        self.assertEqual([row["canonical_facility_id"] for row in ranked[:20]], expected_calibrated_order)
+        self.assertEqual([row["canonical_facility_id"] for row in ranked[20:]], ["FAC-21", "FAC-22", "FAC-23", "FAC-24"])
+        self.assertTrue(all(row["ai_ranking"]["status"] == "AI_BATCH_SCORED_CALIBRATED" for row in ranked[:20]))
+        self.assertTrue(all(row["ai_ranking"]["status"] == "AI_BATCH_SCORED" for row in ranked[20:]))
+        # global_score is preserved from the original batch scoring for every calibrated row.
+        self.assertTrue(all(row["ai_ranking"]["global_score"] is not None for row in ranked[:20]))
+
+    def test_calibration_failure_keeps_the_original_batch_order(self):
+        rows = self._rows(24)
+        call_count = {"n": 0}
+
+        def transport(payload):
+            role = payload.get("role")
+            candidates = payload["must_eligible_candidates"]
+            if role == "OPTIME_NURSING_AI_CANDIDATE_SCORER":
+                return {
+                    "scored_candidates": [
+                        {
+                            "canonical_facility_id": item["canonical_facility_id"],
+                            "score": 100 - int(item["canonical_facility_id"].split("-")[-1]),
+                            "reason": "batch score",
+                            "information_deficits": [],
+                        }
+                        for item in candidates
+                    ]
+                }
+            call_count["n"] += 1
+            raise RuntimeError("calibration transport unavailable")
+
+        with patch.dict(os.environ, {
+            "OPTIME_SEMANTIC_AI_ENABLED": "1",
+            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "20",
+            "OPTIME_AI_RANKING_BATCH_SIZE": "6",
+            "OPTIME_AI_RANKING_MAX_WORKERS": "2",
+            "OPTIME_AI_RANKING_CALIBRATION_WINDOW": "20",
+        }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport):
+            ranked, status = rank_must_eligible_candidates(
+                rows,
+                client_intent={},
+                human_context={"dynamic_preference_model": {"preferences": []}},
+                strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual(call_count["n"], 1)
+        self.assertEqual(status["status"], "AI_BATCH_RANKED")
+        self.assertEqual(status["calibrated_top_candidate_count"], 0)
+        self.assertEqual([row["canonical_facility_id"] for row in ranked[:3]], ["FAC-01", "FAC-02", "FAC-03"])
+        self.assertTrue(all(row["ai_ranking"]["status"] == "AI_BATCH_SCORED" for row in ranked))
+
     def test_single_shot_ranking_accepts_a_real_claim_citation(self):
         row = {
             "canonical_facility_id": "FAC-01",
