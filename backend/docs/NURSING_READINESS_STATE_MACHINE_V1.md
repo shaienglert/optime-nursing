@@ -8,10 +8,11 @@ Phase 1 (`canonical_decision_state.py` + tests) is done and stays shadow-only/ad
 it has zero writers into any production control field and is not called from `app/main.py`
 or any request path. It is frozen here, alongside this completed design document, so a
 future session can continue directly into Phase 2 without re-deriving this design. Do not
-start Phase 3 (single writer) before Phase 2's shadow comparison against Gold cases has
-run and every divergence has been resolved explicitly.
+start Phase 3 (single writer) before Phase 2's shadow comparison (see "Phase 2 status"
+below) has run against more than the initial six happy-path fixtures and every divergence
+has been resolved explicitly.
 
-### What Phase 2 needs before it can start
+### Phase 2 status
 
 `derive_canonical_decision_state(result)` consumes a full pipeline `result` payload
 (`results`, `must_eligible_count`, `decision_intelligence.facility_selection_pipeline`,
@@ -19,14 +20,29 @@ etc.) -- the shape `run_patient_decision_engine` returns for one complete reques
 `gold_examples/nursing_gold_v1.jsonl`'s 13 cases are at a narrower grain: single
 facility/engine checks (`client_intent_runtime`, `semantic_facility_requirements`,
 `combined_care_solution_runtime`) validated by `validate_against_engine.py`, not full
-pipeline runs. Phase 2 cannot compare canonical state against them as-is. Before writing
-the shadow-comparison harness, either (a) add a handful of new gold cases at the *pipeline*
-grain (full `questionnaire_state` + `natural_language_query` + a small synthetic candidate
-pool, asserting an `expected_canonical_phase`), reusing the `engine` dispatch pattern
-already in `validate_against_engine.py` (a new `engine: "canonical_decision_state"` case
-type), or (b) run the shadow comparison against recorded real production responses instead
-of the gold set for this phase specifically. Decide which before starting Phase 2, don't
-assume the existing 13 cases already cover it.
+pipeline runs -- so Phase 2 cannot compare canonical state against that file directly.
+
+`gold_examples/validate_canonical_state_shadow.py` (added the same session, after this
+note was first written) takes a third path, deliberately kept separate from
+`validate_against_engine.py`: six hand-built pipeline-grain fixtures (not JSONL, not the
+existing gold set), each asserting an `expected phase` + `next_action`. Run it with:
+
+```
+cd backend && python gold_examples/validate_canonical_state_shadow.py
+```
+
+As of this note: 6/6 fixtures match, and it already surfaces two real legacy-field
+conflicts on the fixtures that trigger them (`LEGACY_READINESS_ADVANCES_WITH_CLIENT_
+BLOCKERS`, `LEGACY_EXECUTION_ALLOWS_PREMATURE_RECOMMENDATION`) -- exactly the shadow
+telemetry Phase 2 is for. Remaining before Phase 2 is considered done: (1) decide whether
+these six hand-built fixtures are sufficient coverage or whether real recorded production
+responses / additional fixtures are still needed for edge cases (SYSTEM_BLOCKED variants,
+NO_ELIGIBLE_CANDIDATES, the DecisionPhase.MUST_EVALUATION branch, degraded/ambiguous
+legacy payloads) -- the six so far are the "happy path" lifecycle, one per phase, not a
+divergence stress test; (2) actually resolve the two surfaced conflicts (are they real
+bugs in the legacy fields, or does the shadow model's inference need adjusting) rather
+than just recording them; (3) run the harness against a sample of real production
+payloads, not just fixtures, before Phase 3 begins.
 
 ## Problem
 
@@ -246,10 +262,10 @@ and stop interpreting `READY || NEEDS_RESEARCH` itself.
 - Record conflicts between canonical state and legacy fields. -- done: `legacy_state_conflicts`.
 - Not yet merged to `main`. Merge only after Phase 2 (below) has run and every divergence is resolved explicitly.
 
-### Phase 2 — Gold shadow evaluation
-- Add expected phase/next-action assertions to representative Gold cases.
-- Compare canonical state with current production decisions.
-- Resolve every divergence explicitly; do not silently force parity when legacy behavior is wrong.
+### Phase 2 — shadow evaluation (in progress)
+- Add expected phase/next-action assertions to representative lifecycle fixtures. -- started: `gold_examples/validate_canonical_state_shadow.py`, 6/6 happy-path fixtures passing (see "Phase 2 status" above for what's left).
+- Compare canonical state with current production decisions. -- not yet done against real recorded payloads, only synthetic fixtures so far.
+- Resolve every divergence explicitly; do not silently force parity when legacy behavior is wrong. -- 2 conflicts already surfaced and not yet triaged.
 
 ### Phase 3 — one writer
 - Introduce an orchestrator-owned transition function.
