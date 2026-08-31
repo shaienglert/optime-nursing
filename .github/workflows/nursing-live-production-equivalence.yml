@@ -1,0 +1,23 @@
+name: Nursing Live Production Equivalence
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  live-two-path:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - working-directory: frontend
+        run: npm install
+      - working-directory: frontend
+        run: npm install --no-save @playwright/test@1.55.0
+      - working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - working-directory: frontend
+        run: npx playwright test tests/browser/live-production-equivalence.spec.cjs --reporter=line --workers=1
