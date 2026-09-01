@@ -243,7 +243,9 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         blockers = list(((context.get("readiness_guardian") or {}).get("client_owned_blockers") or []))
         guardian_veto = readiness == "READY" and bool(blockers)
         selected_blocker: Dict[str, Any] | None = None
-        if readiness == "NEEDS_CLARIFICATION" and blockers and not _question_matches_guardian_target(result, blockers[0]):
+        # Only attach/validate a fixed target when Guardian supplied an answer
+        # contract. Other semantic clarifications remain AI-owned free-form questions.
+        if readiness == "NEEDS_CLARIFICATION" and blockers and str(result.get("selected_fact_key") or "").strip() and blockers[0].get("answer_options") and not _question_matches_guardian_target(result, blockers[0]):
             selected_blocker = blockers[0]
             repair_packet = {
                 "reason": "AI_QUESTION_TARGET_DOES_NOT_MATCH_GUARDIAN_BLOCKER",
@@ -305,6 +307,16 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             answered_keys = _answered_adaptive_keys(questionnaire_state)
             if question_key not in answered_keys and not _question_exists(context, question_key):
                 target = selected_blocker or (blockers[0] if blockers else {})
+                # Never attach one Guardian fact's answer choices to an AI question
+                # about another fact. If the semantic trace addresses a different
+                # dimension, preserve the AI question as unstructured; the remaining
+                # Guardian blocker will be asked in a later turn.
+                if target.get("answer_options") and not _question_matches_guardian_target(result, target):
+                    target = {
+                        "fact_key": "semantic_ai_unstructured_fact",
+                        "decision_dimensions": ["client_intent_completeness"],
+                        "answer_options": [],
+                    }
                 question = _base._question(
                     question_key,
                     next_question,
