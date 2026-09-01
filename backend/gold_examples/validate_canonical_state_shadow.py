@@ -83,6 +83,11 @@ def _fixtures() -> list[dict]:
     deterministic_fallback["decision_intelligence"]["facility_selection_pipeline"] = {
         "ai_ranking": {"status": "DETERMINISTIC_FALLBACK"}
     }
+    deterministic_fallback["decision_intelligence"].update(
+        recommendation_execution_allowed=True,
+        recommendation_visibility="PROVISIONAL_RANKING_VISIBLE",
+        decision_finality="PROVISIONAL_PENDING_PROVIDER_VERIFICATION",
+    )
 
     nice_unknown = _base()
     nice_unknown.update(must_eligible_count=5, must_pending_verification_count=0, must_rejected_count=2)
@@ -129,7 +134,13 @@ def _fixtures() -> list[dict]:
         {"id": "legacy-ai-visibility-block", "payload": legacy_visibility_block, "phase": DecisionPhase.SYSTEM_BLOCKED, "next": "RECOVER_SYSTEM"},
         {"id": "no-eligible-candidates", "payload": no_eligible, "phase": DecisionPhase.MUST_EVALUATION, "next": "EXPAND_OR_REVISE_STRATEGY"},
         {"id": "must-pass-awaiting-ranking", "payload": ranking, "phase": DecisionPhase.AI_RANKING, "next": "RUN_AI_RANKING"},
-        {"id": "deterministic-fallback-not-ai-complete", "payload": deterministic_fallback, "phase": DecisionPhase.AI_RANKING, "next": "RUN_AI_RANKING"},
+        {
+            "id": "deterministic-fallback-not-ai-complete",
+            "payload": deterministic_fallback,
+            "phase": DecisionPhase.AI_RANKING,
+            "next": "RUN_AI_RANKING",
+            "conflicts": {"LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION"},
+        },
         {"id": "ranked-with-nice-unknowns", "payload": nice_unknown, "phase": DecisionPhase.PREFERENCE_VERIFICATION, "next": "VERIFY_MATERIAL_PREFERENCES"},
         {"id": "complete-decision", "payload": final, "phase": DecisionPhase.FINAL_RECOMMENDATION, "next": "SHOW_FINAL_RECOMMENDATION"},
         {
