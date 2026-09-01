@@ -145,7 +145,7 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         # A deterministic ordering is useful internally, but it is not a completed
         # AI ranking and may not be exposed as a recommendation.
         self.assertFalse(decision["recommendation_execution_allowed"])
-        self.assertEqual(decision["recommendation_visibility"], "BLOCKED_AI_RANKING")
+        self.assertEqual(decision["recommendation_visibility"], "BLOCKED_EVIDENCE_COLLECTION")
         self.assertEqual(result["result_count"], 0)
         self.assertGreater(result["total_candidates_scored"], 0)
         self.assertEqual(decision["human_intelligence"]["decision_readiness"], "READY")
