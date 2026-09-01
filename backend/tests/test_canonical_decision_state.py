@@ -1,4 +1,9 @@
-from app.services.canonical_decision_state import DecisionPhase, derive_canonical_decision_state, legacy_state_conflicts
+from app.services.canonical_decision_state import (
+    DecisionPhase,
+    apply_canonical_decision_state_authority,
+    derive_canonical_decision_state,
+    legacy_state_conflicts,
+)
 
 
 def base_result():
@@ -79,3 +84,22 @@ def test_visible_deterministic_fallback_is_reported_as_legacy_conflict():
     state = derive_canonical_decision_state(result)
     assert state.phase is DecisionPhase.AI_RANKING
     assert "LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION" in legacy_state_conflicts(state)
+
+
+def test_canonical_authority_overwrites_legacy_global_controls():
+    result = base_result()
+    result.update({"must_eligible_count": 6, "must_pending_verification_count": 0, "must_rejected_count": 2})
+    result["decision_intelligence"].update(
+        recommendation_execution_allowed=True,
+        recommendation_visibility="PROVISIONAL_RANKING_VISIBLE",
+        decision_finality="PROVISIONAL_PENDING_PROVIDER_VERIFICATION",
+        facility_selection_pipeline={"ai_ranking": {"status": "DETERMINISTIC_FALLBACK"}},
+    )
+
+    out = apply_canonical_decision_state_authority(result)
+    decision = out["decision_intelligence"]
+    assert decision["canonical_decision_state"]["authoritative"] is True
+    assert decision["canonical_decision_state"]["phase"] == "AI_RANKING"
+    assert decision["recommendation_execution_allowed"] is False
+    assert decision["recommendation_visibility"] == "BLOCKED_AI_RANKING"
+    assert decision["decision_finality"] == "PENDING_AI_RANKING"
