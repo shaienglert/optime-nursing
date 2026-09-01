@@ -171,8 +171,6 @@ def _mark_client_ready_for_research(decision: dict[str, Any], readiness: str) ->
         return
     decision["client_decision_readiness"] = "READY"
     decision["facility_research_state"] = "RESEARCH_REQUIRED"
-    decision["decision_finality"] = "PROVISIONAL_PENDING_FACILITY_RESEARCH"
-    decision["recommendation_execution_allowed"] = False
     decision["readiness_separation_rule"] = "Client readiness and facility evidence readiness are separate. Facility research never reopens a completed client interview."
 
 
@@ -191,7 +189,7 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
         },
         "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
     }
-    return {
+    blocked = {
         "patient_needs_profile": profile,
         "results": [],
         "result_count": 0,
@@ -200,14 +198,11 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
         "care_setting_policy": {"status": "BLOCKED_PENDING_AI_INTERVIEW", "decision_intelligence": decision},
         "decision_intelligence": {
             **decision,
-            "decision_finality": "BLOCKED_PENDING_AI_INTERVIEW",
-            "recommendation_execution_allowed": False,
             "interview_owner": "SEMANTIC_AI",
             "process_owner": process_owner,
             "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
         },
         "recommendation_audit_trace": {
-            "recommendation_execution_allowed": False,
             "blocked_before_facility_ranking": True,
             "reason": readiness,
             "adaptive_questions": questions,
@@ -216,6 +211,8 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
             "rule": "Only unresolved client intent may block facility matching. Facility research is downstream of a completed client interview.",
         },
     }
+    from app.services.canonical_decision_state import apply_canonical_decision_state_authority
+    return apply_canonical_decision_state_authority(blocked)
 
 
 def _suppress_unverified_recommendations(result: dict[str, Any]) -> dict[str, Any]:
@@ -224,8 +221,7 @@ def _suppress_unverified_recommendations(result: dict[str, Any]) -> dict[str, An
         return result
     candidate_count = len(result.get("results") or [])
     decision["research_candidate_count"] = candidate_count
-    decision["recommendation_visibility"] = "BLOCKED_UNTIL_MUST_GATE_PASS"
-    decision["recommendation_visibility_rule"] = "Candidate identities and ranking are not exposed while any material MUST remains unresolved."
+    decision["recommendation_visibility_rule"] = "Canonical Decision State blocks candidate identities and ranking until its phase permits recommendation visibility."
     result["decision_intelligence"] = decision
     result["results"] = []
     result["result_count"] = 0
@@ -282,6 +278,7 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
                 return _blocked_interview_result(runtime_profile or {}, readiness)
             _mark_client_ready_for_research(decision, readiness)
 
+            from app.services.canonical_decision_state import apply_canonical_decision_state_authority
             from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
             from app.services.ai_process_owner_guard_patch import attach_ai_process_owner_guarded
             from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
@@ -291,13 +288,14 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             decision = result.setdefault("decision_intelligence", {})
             decision["interview_owner"] = "SEMANTIC_AI"
             decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
-            decision.setdefault("recommendation_execution_allowed", True)
             result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, internal_limit)
             stage_started = _mark("apply_combined_care_layer_ms", stage_started)
             result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
             stage_started = _mark("apply_must_ai_nice_pipeline_ms", stage_started)
+            result = apply_canonical_decision_state_authority(result)
             result = attach_ai_process_owner_guarded(result, questionnaire_state, natural_language_query)
             stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
+            result = apply_canonical_decision_state_authority(result)
             result = _suppress_unverified_recommendations(result)
             logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
             return result
