@@ -1,10 +1,10 @@
 # OPTIME Nursing Readiness / Decision State Migration
 
-Status: design + shadow implementation (Phase 1 complete, frozen). No production control
-flow is changed by this document or by `canonical_decision_state.py`.
+Status: Phase 2 shadow validation complete; Phase 3 is blocked only on resolving the
+recorded production divergences below. No production control flow is changed by this
+document or by `canonical_decision_state.py`.
 
-This PR (`refactor/nursing-canonical-decision-state`) is intentionally not merged yet.
-Phase 1 (`canonical_decision_state.py` + tests) is done and stays shadow-only/add-only --
+Phase 1 (`canonical_decision_state.py` + tests) is merged and stays shadow-only/add-only --
 it has zero writers into any production control field and is not called from `app/main.py`
 or any request path. It is frozen here, alongside this completed design document, so a
 future session can continue directly into Phase 2 without re-deriving this design. Do not
@@ -31,18 +31,28 @@ existing gold set), each asserting an `expected phase` + `next_action`. Run it w
 cd backend && python gold_examples/validate_canonical_state_shadow.py
 ```
 
-As of this note: 6/6 fixtures match, and it already surfaces two real legacy-field
-conflicts on the fixtures that trigger them (`LEGACY_READINESS_ADVANCES_WITH_CLIENT_
-BLOCKERS`, `LEGACY_EXECUTION_ALLOWS_PREMATURE_RECOMMENDATION`) -- exactly the shadow
-telemetry Phase 2 is for. Remaining before Phase 2 is considered done: (1) decide whether
-these six hand-built fixtures are sufficient coverage or whether real recorded production
-responses / additional fixtures are still needed for edge cases (SYSTEM_BLOCKED variants,
-NO_ELIGIBLE_CANDIDATES, the DecisionPhase.MUST_EVALUATION branch, degraded/ambiguous
-legacy payloads) -- the six so far are the "happy path" lifecycle, one per phase, not a
-divergence stress test; (2) actually resolve the two surfaced conflicts (are they real
-bugs in the legacy fields, or does the shadow model's inference need adjusting) rather
-than just recording them; (3) run the harness against a sample of real production
-payloads, not just fixtures, before Phase 3 begins.
+PR #159 extends this harness to system-failure, no-eligible, fail-closed,
+deterministic-fallback, and ambiguous-payload paths. On 2026-09-01 it was also compared
+locally (read-only) against two real production responses from
+`/decision-engine/recommendations`:
+
+1. An independent-living request had `READY`, execution allowed, and
+   `PROVISIONAL_RANKING_VISIBLE`, while its ranking status was
+   `DETERMINISTIC_FALLBACK`. Canonical state correctly returned `AI_RANKING` /
+   `RUN_AI_RANKING`. Showing recommendations before a validated AI rank is a legacy
+   visibility divergence, now explicitly emitted as
+   `LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION`.
+2. A client-interview request had three `client_owned_blockers` and no adaptive question,
+   yet legacy state allowed execution and showed provisional recommendations. Canonical
+   state correctly returned `CLIENT_INPUT_REQUIRED` / `ASK_CLIENT`, surfacing
+   `LEGACY_READINESS_ADVANCES_WITH_CLIENT_BLOCKERS` and
+   `LEGACY_EXECUTION_ALLOWS_PREMATURE_RECOMMENDATION`.
+
+These are confirmed legacy writer defects, not reasons to weaken canonical inference.
+Phase 3 must remove those writers' authority and derive global execution, visibility,
+and finality from Canonical Decision State. The adaptive-question generator remains the
+owner of question content, while Canonical Decision State determines only whether a
+client question is required.
 
 ## Problem
 
