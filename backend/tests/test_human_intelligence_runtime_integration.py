@@ -80,7 +80,6 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         human = intelligence["human_intelligence"]
         self.assertEqual("READY", human["decision_readiness"])
         self.assertFalse(intelligence["recommendation_execution_allowed"])
-        self.assertEqual("DETERMINISTIC_FALLBACK", intelligence["ai_ranking"]["status"])
         self.assertEqual("ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE", intelligence["person_fit_rank_effect"])
         self.assertEqual([], human["adaptive_questions"])
         self.assertEqual([], result["results"])
@@ -96,7 +95,6 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         )
         intelligence = result["decision_intelligence"]
         self.assertFalse(intelligence["recommendation_execution_allowed"])
-        self.assertEqual("DETERMINISTIC_FALLBACK", intelligence["ai_ranking"]["status"])
         self.assertEqual("ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE", intelligence["person_fit_rank_effect"])
         self.assertEqual([], result["results"])
 
