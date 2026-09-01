@@ -98,6 +98,18 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         }, "My father lives in Las Vegas, needs help bathing and dressing, has no dementia, and has a $6,500 monthly budget.")
         self.assertIn("community_size_preference", context["readiness_guardian"]["acknowledged_fact_keys"])
 
+    def test_free_text_budget_resolves_monthly_budget_guardian_blocker(self) -> None:
+        context = self._run(self._state(), {
+            "decision_readiness": "READY",
+            "next_question": None,
+            "statements": [],
+        }, "My father lives in Las Vegas and his monthly budget is up to $8,000.")
+        self.assertIn("monthly_budget", context["readiness_guardian"]["acknowledged_fact_keys"])
+        self.assertNotIn(
+            "monthly_budget",
+            [row["fact_key"] for row in context["readiness_guardian"]["client_owned_blockers"]],
+        )
+
     def test_needs_research_blocks_without_scripted_question(self) -> None:
         context = self._run(self._state(), {
             "decision_readiness": "NEEDS_RESEARCH",
