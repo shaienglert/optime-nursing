@@ -33,7 +33,6 @@ def attach_ai_process_owner_guarded(
     natural_language_query: str,
 ) -> Dict[str, Any]:
     decision = result.setdefault("decision_intelligence", {})
-    prior_execution_allowed = decision.get("recommendation_execution_allowed")
     first = _runtime.attach_ai_process_owner(result, questionnaire_state, natural_language_query)
     decision = first.setdefault("decision_intelligence", {})
     owner = decision.get("process_owner") if isinstance(decision.get("process_owner"), dict) else {}
@@ -72,8 +71,6 @@ def attach_ai_process_owner_guarded(
             "guardian_rejected_error": error,
             **packet,
         }
-        if prior_execution_allowed is not None:
-            decision["recommendation_execution_allowed"] = prior_execution_allowed
     except Exception as retry_exc:
         owner["guardian_retry_applied"] = True
         owner["guardian_retry_error"] = str(retry_exc)

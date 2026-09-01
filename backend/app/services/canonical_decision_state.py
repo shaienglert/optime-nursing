@@ -206,12 +206,14 @@ def _system_failure(decision: Dict[str, Any], human: Dict[str, Any]) -> tuple[Sy
     if semantic_status in {"FAILED", "REQUIRED_BUT_DISABLED"} and bool(semantic.get("required")):
         return SystemHealth.BLOCKED, f"required semantic AI unavailable: {semantic_status}"
 
+    owner = decision.get("process_owner") if isinstance(decision.get("process_owner"), dict) else {}
+    owner_status = _upper(owner.get("status"))
+    if bool(owner.get("required")) and owner_status in {"FAILED", "REQUIRED_BUT_DISABLED"}:
+        return SystemHealth.BLOCKED, f"required AI process owner unavailable: {owner_status}"
+
     pipeline = decision.get("facility_selection_pipeline")
     if isinstance(pipeline, dict) and pipeline.get("ai_ranking_fail_closed") is True:
         return SystemHealth.BLOCKED, "required AI ranking did not complete"
-
-    if _upper(decision.get("recommendation_visibility")) == "BLOCKED_AI_RANKING_UNAVAILABLE":
-        return SystemHealth.BLOCKED, "legacy recommendation visibility reports AI ranking unavailable"
 
     return SystemHealth.HEALTHY, ""
 
@@ -416,9 +418,42 @@ def attach_canonical_decision_state_shadow(result: Dict[str, Any]) -> Dict[str, 
     return result
 
 
+def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Make Canonical Decision State the sole writer of global decision controls.
+
+    Evidence and research services contribute facts, counters and ranking outcomes. They
+    must not decide whether recommendations may execute or be visible.
+    """
+
+    state = derive_canonical_decision_state(result)
+    decision = result.setdefault("decision_intelligence", {})
+    if state.phase is DecisionPhase.FINAL_RECOMMENDATION:
+        visibility, finality = "FINAL_RECOMMENDATION_VISIBLE", "FINAL"
+    elif state.phase is DecisionPhase.PROVISIONAL_RECOMMENDATION:
+        visibility, finality = "PROVISIONAL_RANKING_VISIBLE", "PROVISIONAL_PENDING_PREFERENCE_VERIFICATION"
+    elif state.phase is DecisionPhase.SYSTEM_BLOCKED:
+        visibility, finality = "BLOCKED_SYSTEM", "BLOCKED_SYSTEM"
+    else:
+        visibility, finality = f"BLOCKED_{state.phase.value}", f"PENDING_{state.phase.value}"
+
+    decision.update(
+        recommendation_execution_allowed=state.can_show_recommendations,
+        recommendation_visibility=visibility,
+        decision_finality=finality,
+        canonical_decision_state={
+            **state.to_dict(),
+            "legacy_conflicts": legacy_state_conflicts(state),
+            "authoritative": True,
+            "migration_rule": "phase-3: canonical state is the sole global decision-control writer",
+        },
+    )
+    return result
+
+
 __all__ = [
     "CanonicalDecisionState",
     "DecisionPhase",
+    "apply_canonical_decision_state_authority",
     "attach_canonical_decision_state_shadow",
     "derive_canonical_decision_state",
     "legacy_state_conflicts",

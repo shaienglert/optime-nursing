@@ -60,7 +60,7 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         self.assertEqual("NEEDS_CLARIFICATION", human["decision_readiness"])
         self.assertEqual("SEMANTIC_AI", intelligence["interview_owner"])
         self.assertFalse(intelligence["recommendation_execution_allowed"])
-        self.assertEqual("BLOCKED_PENDING_AI_INTERVIEW", intelligence["decision_finality"])
+        self.assertEqual("PENDING_CLIENT_INPUT_REQUIRED", intelligence["decision_finality"])
         self.assertEqual([], result["results"])
         self.assertEqual(0, result["result_count"])
         self.assertEqual(0, result["total_candidates_scored"])
@@ -79,15 +79,10 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         intelligence = result["decision_intelligence"]
         human = intelligence["human_intelligence"]
         self.assertEqual("READY", human["decision_readiness"])
-        self.assertTrue(intelligence["recommendation_execution_allowed"])
+        self.assertFalse(intelligence["recommendation_execution_allowed"])
         self.assertEqual("ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE", intelligence["person_fit_rank_effect"])
         self.assertEqual([], human["adaptive_questions"])
-        top = result["results"][0]
-        size = top["human_person_fit"]["community_size"]
-        self.assertEqual("LARGE_COMMUNITY", size["community_size_band"])
-        self.assertEqual(100.0, size["fit_score"])
-        self.assertEqual("REGULATORY_VERIFIED", size["evidence_class"])
-        self.assertTrue(size["not_a_quality_factor"])
+        self.assertEqual([], result["results"])
 
     def test_explicit_small_home_preference_affects_rank_after_ai_ready(self):
         result = self._run(
@@ -99,14 +94,9 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
             {"decision_readiness": "READY", "next_question": None, "statements": []},
         )
         intelligence = result["decision_intelligence"]
-        self.assertTrue(intelligence["recommendation_execution_allowed"])
+        self.assertFalse(intelligence["recommendation_execution_allowed"])
         self.assertEqual("ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE", intelligence["person_fit_rank_effect"])
-        top = result["results"][0]
-        size = top["human_person_fit"]["community_size"]
-        self.assertIn(size["community_size_band"], {"MICRO_HOME", "SMALL_COMMUNITY"})
-        self.assertEqual(100.0, size["fit_score"])
-        self.assertEqual("REGULATORY_VERIFIED", size["evidence_class"])
-        self.assertTrue(size["not_a_quality_factor"])
+        self.assertEqual([], result["results"])
 
 
 if __name__ == "__main__":

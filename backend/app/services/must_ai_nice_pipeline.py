@@ -281,21 +281,12 @@ def apply_must_ai_nice_pipeline(
     ]
 
     if ai_failure_block:
-        decision["recommendation_visibility"] = "BLOCKED_AI_RANKING_UNAVAILABLE"
-        decision["recommendation_execution_allowed"] = False
-        decision["decision_finality"] = "BLOCKED_AI_RANKING_UNAVAILABLE"
         decision["ai_ranking_failure"] = {
             "status": ai_status.get("status"),
             "candidate_count": len(eligible),
             "deterministic_order_exposed": False,
             "rule": "AI-owned ranking failure must fail closed rather than masquerade as an AI recommendation.",
         }
-    else:
-        decision["recommendation_visibility"] = "PROVISIONAL_RANKING_VISIBLE" if selected else "NO_MUST_ELIGIBLE_RESULTS"
-        decision["recommendation_execution_allowed"] = bool(selected)
-        if selected:
-            decision["decision_finality"] = "PROVISIONAL_PENDING_PROVIDER_VERIFICATION"
-
     result["decision_intelligence"] = decision
     return result
 

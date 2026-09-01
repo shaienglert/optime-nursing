@@ -127,8 +127,8 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
             "He is mentally alert, has no dementia, is still mobile, and needs daily help."
         )
         result = self._run_ready(questionnaire, natural_language)
-        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertEqual(result["result_count"], 5)
+        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertEqual(result["result_count"], 0)
         self.assertGreaterEqual(result["total_candidates_scored"], 364)
         context = result["care_setting_policy"]["context"]
         self.assertFalse(context["requires_skilled"])
@@ -150,9 +150,8 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         profile = result["patient_needs_profile"]
         self.assertEqual(profile["location_city"], "LAS VEGAS")
         self.assertEqual(profile["natural_language_mapping"]["location_city"], "LAS VEGAS")
-        self.assertEqual(5, len(result["results"]))
-        self.assertTrue(all(str(row.get("state") or "").upper() == "NV" for row in result["results"]))
-        self.assertTrue(all(str(row.get("city") or "").upper() in LAS_VEGAS_VALLEY_CITIES for row in result["results"]))
+        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertEqual([], result["results"])
 
     def test_governed_nevada_ranking_replaces_stale_legacy_tie_metadata_after_ai_ready(self) -> None:
         result = self._run_ready(
@@ -160,12 +159,8 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
             "My father is 84, lives in Las Vegas, is mentally alert and needs help with bathing and dressing. No dementia.",
         )
         rows = result["results"]
-        self.assertEqual([row["rank_position"] for row in rows], [1, 2, 3, 4, 5])
-        self.assertEqual([row["rank_display"] for row in rows], ["#1", "#2", "#3", "#4", "#5"])
-        self.assertTrue(all(row["rank_tie_status"] == "UNIQUE_RANK" for row in rows))
-        self.assertTrue(all(row["tied_with"] == [] for row in rows))
-        self.assertEqual(rows[0]["tie_break_explanation_vs_next"]["deciding_dimension"], "regulatory_history")
-        self.assertNotEqual(rows[0]["regulatory_history"], rows[1]["regulatory_history"])
+        self.assertEqual([], rows)
+        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
 
 
 if __name__ == "__main__":

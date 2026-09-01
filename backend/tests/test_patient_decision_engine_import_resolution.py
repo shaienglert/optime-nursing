@@ -45,16 +45,13 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         self.assertEqual(result["patient_needs_profile"]["location_city"], "LAS VEGAS")
         self.assertEqual(result["care_setting_policy"]["version"], "v1.1")
         self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v3.1")
-        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
         self.assertEqual("SEMANTIC_AI", result["decision_intelligence"]["interview_owner"])
         self.assertIn("living_strategy", result["decision_intelligence"])
         self.assertIn("client_intent", result["decision_intelligence"])
         self.assertIn("must_gate", result["decision_intelligence"])
         self.assertEqual(len(result["decision_intelligence"]["success_factor_policy"]["factors"]), 16)
-        self.assertEqual([row["rank_position"] for row in result["results"]], [1, 2, 3, 4, 5])
-        self.assertTrue(all(row["rank_tie_status"] == "UNIQUE_RANK" for row in result["results"]))
-        self.assertTrue(all(row["city"] == "LAS VEGAS" for row in result["results"]))
-        self.assertTrue(all(row["client_intent_fit"]["hard_gate"] != "FAIL" for row in result["results"]))
+        self.assertEqual([], result["results"])
 
 
 if __name__ == "__main__":

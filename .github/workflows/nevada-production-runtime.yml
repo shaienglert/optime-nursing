@@ -148,7 +148,7 @@ jobs:
           assert only_question.get('target_fact_key'), only_question
           assert blocked['result_count'] == 0 and blocked['results'] == []
           assert blocked['decision_intelligence']['recommendation_execution_allowed'] is False
-          assert blocked['decision_intelligence']['decision_finality'] == 'BLOCKED_PENDING_AI_INTERVIEW'
+          assert blocked['decision_intelligence']['decision_finality'] == 'PENDING_CLIENT_INPUT_REQUIRED'
 
           premature_answers = iter([
               {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
@@ -192,16 +192,19 @@ jobs:
           }
           for key, persona in personas.items():
               result = run_patient_decision_engine(**persona, limit=5)
-              assert result['decision_intelligence']['recommendation_execution_allowed'] is True, key
+              # The interview is READY, but this workflow deliberately has no
+              # semantic ranking provider. A deterministic fallback is never a
+              # releasable AI ranking under the canonical decision state.
+              assert result['decision_intelligence']['recommendation_execution_allowed'] is False, key
               assert result['decision_intelligence']['interview_owner'] == 'SEMANTIC_AI', key
-              assert result['result_count'] == 5, f'{key}: no recommendations after READY'
+              assert result['result_count'] == 0, f'{key}: fallback recommendations must stay hidden'
               assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f'{key}: location not governed'
               assert result['decision_intelligence']['ranking_order'] == EXPECTED_RANKING_ORDER
               human = result['decision_intelligence']['human_intelligence']
               assert human['decision_readiness'] == 'READY', human
               assert human['adaptive_questions'] == []
               assert human['signals']['recent_bereavement']['value'] == 'YES'
-              assert all((row.get('client_intent_fit') or {}).get('hard_gate') != 'FAIL' for row in result['results'])
+              assert result['results'] == []
               for row in result['results']:
                   assert str(row.get('state') or '').upper() == 'NV', f'{key}: non-NV result {row}'
                   assert str(row.get('city') or '').strip().lower() in VALLEY_CITIES, f'{key}: outside Valley {row}'
@@ -221,7 +224,10 @@ jobs:
 
           large = answered('Large community')
           small = answered('Small community')
-          assert [r['canonical_facility_id'] for r in large['results']] != [r['canonical_facility_id'] for r in small['results']]
+          assert large['decision_intelligence']['recommendation_execution_allowed'] is False
+          assert small['decision_intelligence']['recommendation_execution_allowed'] is False
+          assert large['results'] == []
+          assert small['results'] == []
           output['answered_variants'] = {
               'large_top5': [r['facility_name'] for r in large['results']],
               'small_top5': [r['facility_name'] for r in small['results']],
@@ -272,7 +278,8 @@ jobs:
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
           }
           couple = run_patient_decision_engine(couple_ready, couple_query + ' The clinical team says only personal-care help is needed, not skilled rehab. Our budget is $8,000 monthly; he has Original Medicare; we want to move during recovery and do not want a CCRC entrance fee.', limit=5)
-          assert couple['decision_intelligence']['recommendation_execution_allowed'] is True
+          assert couple['decision_intelligence']['recommendation_execution_allowed'] is False
+          assert couple['results'] == []
           strategy = couple['decision_intelligence']['living_strategy']
           assert strategy['household']['type'] == 'COUPLE', strategy
           assert strategy['signals']['spine_or_back_surgery'] is True

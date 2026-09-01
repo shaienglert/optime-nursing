@@ -131,7 +131,12 @@ def _fixtures() -> list[dict]:
         {"id": "required-ai-failure", "payload": ai_failure, "phase": DecisionPhase.SYSTEM_BLOCKED, "next": "RECOVER_SYSTEM"},
         {"id": "required-ai-disabled", "payload": ai_disabled, "phase": DecisionPhase.SYSTEM_BLOCKED, "next": "RECOVER_SYSTEM"},
         {"id": "ranking-fail-closed", "payload": ranking_fail_closed, "phase": DecisionPhase.SYSTEM_BLOCKED, "next": "RECOVER_SYSTEM"},
-        {"id": "legacy-ai-visibility-block", "payload": legacy_visibility_block, "phase": DecisionPhase.SYSTEM_BLOCKED, "next": "RECOVER_SYSTEM"},
+        {
+            "id": "legacy-ai-visibility-is-observation",
+            "payload": legacy_visibility_block,
+            "phase": DecisionPhase.AI_RANKING,
+            "next": "RUN_AI_RANKING",
+        },
         {"id": "no-eligible-candidates", "payload": no_eligible, "phase": DecisionPhase.MUST_EVALUATION, "next": "EXPAND_OR_REVISE_STRATEGY"},
         {"id": "must-pass-awaiting-ranking", "payload": ranking, "phase": DecisionPhase.AI_RANKING, "next": "RUN_AI_RANKING"},
         {
