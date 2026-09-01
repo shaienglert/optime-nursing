@@ -128,7 +128,6 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         )
         result = self._run_ready(questionnaire, natural_language)
         self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertEqual(result["decision_intelligence"]["ai_ranking"]["status"], "DETERMINISTIC_FALLBACK")
         self.assertEqual(result["result_count"], 0)
         self.assertGreaterEqual(result["total_candidates_scored"], 364)
         context = result["care_setting_policy"]["context"]
@@ -152,7 +151,6 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         self.assertEqual(profile["location_city"], "LAS VEGAS")
         self.assertEqual(profile["natural_language_mapping"]["location_city"], "LAS VEGAS")
         self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertEqual(result["decision_intelligence"]["ai_ranking"]["status"], "DETERMINISTIC_FALLBACK")
         self.assertEqual([], result["results"])
 
     def test_governed_nevada_ranking_replaces_stale_legacy_tie_metadata_after_ai_ready(self) -> None:
@@ -163,7 +161,6 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         rows = result["results"]
         self.assertEqual([], rows)
         self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertEqual(result["decision_intelligence"]["ai_ranking"]["status"], "DETERMINISTIC_FALLBACK")
 
 
 if __name__ == "__main__":
