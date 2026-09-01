@@ -60,6 +60,25 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertTrue(context["readiness_guardian"]["client_owned_blockers"])
         self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
 
+    def test_guardian_never_attaches_budget_options_to_a_different_ai_question(self) -> None:
+        bad = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": "What level of care is needed day to day?",
+            "statements": [{
+                "raw_text": "Budget is not known.", "importance": "MUST", "knowledge_state": "UNKNOWN",
+                "status": "ASKED", "clarification_question": "What level of care is needed day to day?",
+                "research_task": None, "mapped_parameters": ["care_needs"],
+            }],
+        }
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=bad
+        ):
+            context = build_human_intelligence_context(self._state(), "My father needs senior living in Las Vegas.")
+        question = context["adaptive_questions"][0]
+        self.assertEqual("semantic_ai_unstructured_fact", question["target_fact_key"])
+        self.assertEqual("What level of care is needed day to day?", question["question"])
+        self.assertEqual([], question["answer_options"])
+
     def test_explicit_semantic_fact_answer_resolves_guardian_blocker_without_scripted_question(self) -> None:
         state = self._state()
         state["budget"] = 6500

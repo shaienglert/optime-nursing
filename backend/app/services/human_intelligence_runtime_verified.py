@@ -197,6 +197,33 @@ def _call_semantic_ai(
     )
 
 
+def _question_matches_guardian_target(result: Dict[str, Any], target: Dict[str, Any]) -> bool:
+    """Reject an AI question whose declared semantic target differs from its UI target.
+
+    The AI owns the wording, but a Guardian-selected answer set may only be attached
+    to a question that resolves that same fact. Empty statement traces are retained
+    for backwards-compatible test doubles and cannot establish a contradiction.
+    """
+    statements = result.get("statements")
+    if not isinstance(statements, list) or not statements:
+        return True
+    next_question = str(result.get("next_question") or "").strip()
+    if not next_question:
+        return True
+    asked = [row for row in statements if isinstance(row, dict) and str(row.get("status") or "").upper() == "ASKED"]
+    if len(asked) != 1:
+        return False
+    asked_row = asked[0]
+    declared = str(result.get("selected_fact_key") or asked_row.get("target_fact_key") or "").strip()
+    mapped = {str(value).strip() for value in asked_row.get("mapped_parameters") or [] if str(value).strip()}
+    target_key = str(target.get("fact_key") or "").strip()
+    semantic_aliases = {
+        "monthly_budget": {"monthly_affordability", "budget"},
+    }
+    allowed_mappings = {target_key, *semantic_aliases.get(target_key, set())}
+    return bool(target_key) and (declared == target_key or bool(mapped & allowed_mappings))
+
+
 def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     required = os.getenv("OPTIME_SEMANTIC_AI_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
@@ -216,6 +243,27 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         blockers = list(((context.get("readiness_guardian") or {}).get("client_owned_blockers") or []))
         guardian_veto = readiness == "READY" and bool(blockers)
         selected_blocker: Dict[str, Any] | None = None
+        # Only attach/validate a fixed target when Guardian supplied an answer
+        # contract. Other semantic clarifications remain AI-owned free-form questions.
+        if readiness == "NEEDS_CLARIFICATION" and blockers and str(result.get("selected_fact_key") or "").strip() and blockers[0].get("answer_options") and not _question_matches_guardian_target(result, blockers[0]):
+            selected_blocker = blockers[0]
+            repair_packet = {
+                "reason": "AI_QUESTION_TARGET_DOES_NOT_MATCH_GUARDIAN_BLOCKER",
+                "highest_priority_fact_key": selected_blocker.get("fact_key"),
+                "allowed_answer_options": selected_blocker.get("answer_options") or [],
+                "instruction": "Ask exactly one concise question that resolves highest_priority_fact_key. Its wording, selected_fact_key, mapped_parameters, and answer options must all describe that same fact. Do not ask a different fact with this fact's answer options.",
+            }
+            repaired = _call_semantic_ai(context, questionnaire_state, natural_language_query, readiness_veto=repair_packet)
+            if str(repaired.get("decision_readiness") or "").upper() == "NEEDS_CLARIFICATION" and _question_matches_guardian_target(repaired, selected_blocker):
+                result = repaired
+                readiness = "NEEDS_CLARIFICATION"
+                context["readiness_guardian"]["question_target_repair_applied"] = True
+                context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
+            else:
+                result = repaired
+                readiness = "NEEDS_RESEARCH"
+                context["readiness_guardian"]["question_target_repair_applied"] = True
+                context["readiness_guardian"]["question_target_repair_resolution"] = "AI_DID_NOT_ALIGN_QUESTION_TO_GUARDIAN_TARGET"
         if guardian_veto:
             selected_blocker = blockers[0]
             veto_packet = {
@@ -259,6 +307,16 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             answered_keys = _answered_adaptive_keys(questionnaire_state)
             if question_key not in answered_keys and not _question_exists(context, question_key):
                 target = selected_blocker or (blockers[0] if blockers else {})
+                # Never attach one Guardian fact's answer choices to an AI question
+                # about another fact. If the semantic trace addresses a different
+                # dimension, preserve the AI question as unstructured; the remaining
+                # Guardian blocker will be asked in a later turn.
+                if target.get("answer_options") and not _question_matches_guardian_target(result, target):
+                    target = {
+                        "fact_key": "semantic_ai_unstructured_fact",
+                        "decision_dimensions": ["client_intent_completeness"],
+                        "answer_options": [],
+                    }
                 question = _base._question(
                     question_key,
                     next_question,
