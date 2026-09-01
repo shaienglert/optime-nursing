@@ -65,6 +65,33 @@ def _answered_fact_keys(questionnaire_state: Dict[str, Any]) -> set[str]:
     return keys
 
 
+def _explicit_client_fact_keys(questionnaire_state: Dict[str, Any], natural_language_query: str) -> set[str]:
+    """Return client facts supplied directly, before the AI chooses interview order.
+
+    A Guardian may veto readiness only for a fact that is actually unknown.  In
+    particular, a clear affordability statement in free text must have the same
+    effect as the structured ``budget`` field; otherwise the system asks for an
+    answer that it already received.
+    """
+    facts: set[str] = set()
+    raw_budget = questionnaire_state.get("budget")
+    if isinstance(raw_budget, (int, float)) and not isinstance(raw_budget, bool) and float(raw_budget) > 0:
+        facts.add("monthly_budget")
+
+    text = str(natural_language_query or "")
+    amount = r"(?:\$\s*\d[\d,]*(?:\.\d+)?|\b\d[\d,]*(?:\.\d+)?\s*(?:usd|dollars?)\b)"
+    budget_language = r"(?:monthly\s+)?(?:housing(?:\s*(?:and|&)\s*care)?\s+)?(?:budget|affordability|afford|cost|price)"
+    has_explicit_budget = re.search(rf"{budget_language}[^.\n]{{0,80}}?{amount}", text, flags=re.IGNORECASE)
+    has_explicit_no_limit = re.search(
+        r"\b(?:no\s+(?:monthly\s+)?budget\s+limit|no\s+limit\s+on\s+(?:the\s+)?budget|do\s+not\s+want\s+to\s+set\s+a\s+budget|don't\s+want\s+to\s+set\s+a\s+budget)\b",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if has_explicit_budget or has_explicit_no_limit:
+        facts.add("monthly_budget")
+    return facts
+
+
 def _question_exists(context: Dict[str, Any], key: str) -> bool:
     return any(str(row.get("question_key") or "") == key for row in context.get("adaptive_questions") or [])
 
@@ -119,7 +146,10 @@ def _governed_context(
     questionnaire_state: Dict[str, Any],
 ) -> Dict[str, Any]:
     accounting = account_user_input(natural_language_query)
-    answered_fact_keys = _answered_fact_keys(questionnaire_state)
+    answered_fact_keys = _answered_fact_keys(questionnaire_state) | _explicit_client_fact_keys(
+        questionnaire_state,
+        natural_language_query,
+    )
     blockers = _base_client_blockers(base_context, answered_fact_keys) + _strategy_client_blockers(strategy_context, answered_fact_keys)
     material_unknowns = [str(value) for value in strategy_context.get("material_unknowns") or []]
     sanitized_strategy_unknowns = [
