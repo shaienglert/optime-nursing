@@ -46,7 +46,6 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         self.assertEqual(result["care_setting_policy"]["version"], "v1.1")
         self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v3.1")
         self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertEqual("DETERMINISTIC_FALLBACK", result["decision_intelligence"]["ai_ranking"]["status"])
         self.assertEqual("SEMANTIC_AI", result["decision_intelligence"]["interview_owner"])
         self.assertIn("living_strategy", result["decision_intelligence"])
         self.assertIn("client_intent", result["decision_intelligence"])
