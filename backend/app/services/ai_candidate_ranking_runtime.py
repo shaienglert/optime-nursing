@@ -217,6 +217,31 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
     return validated
 
 
+def _validated_ai_response(prompt: Dict[str, Any], rows: List[Dict[str, Any]], validate, *, output_key: str) -> tuple[Any, bool]:
+    """Make one bounded repair attempt for an invalid closed-world AI response."""
+    packet = _default_transport(prompt)
+    try:
+        return validate(packet, rows), False
+    except RuntimeError as exc:
+        error = str(exc)
+        if not error.startswith("AI_CANDIDATE_"):
+            raise
+        candidate_ids = [str(row.get("canonical_facility_id")) for row in rows if row.get("canonical_facility_id")]
+        retry_prompt = {
+            **prompt,
+            "contract_repair": {
+                "previous_validation_error": error,
+                "candidate_ids_required_exactly_once": candidate_ids,
+                "instruction": (
+                    f"Return a complete replacement `{output_key}` array containing exactly these IDs once each, "
+                    "with no extras. Recheck every citation against that candidate's supplied ledger; use [] if uncertain."
+                ),
+            },
+        }
+        logger.warning("ai_candidate_ranking_contract_repair_attempt candidate_count=%s error=%s", len(candidate_ids), error)
+        return validate(_default_transport(retry_prompt), rows), True
+
+
 def _resolve_calibration_window() -> int:
     return max(0, min(40, int(os.getenv("OPTIME_AI_RANKING_CALIBRATION_WINDOW", "20"))))
 
@@ -295,8 +320,8 @@ def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hu
     scored_by_id: Dict[str, Dict[str, Any]] = {}
 
     def score_batch(batch: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-        packet = _default_transport(_score_prompt(batch, client_intent, human_context, strategy, claim_limit))
-        return _validate_scores(packet, batch)
+        scored, _ = _validated_ai_response(_score_prompt(batch, client_intent, human_context, strategy, claim_limit), batch, _validate_scores, output_key="scored_candidates")
+        return scored
 
     with ThreadPoolExecutor(max_workers=min(workers, len(batches))) as executor:
         futures = [executor.submit(score_batch, batch) for batch in batches]
@@ -360,8 +385,8 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
                 len(json.dumps(single_shot_prompt, ensure_ascii=False)),
                 claim_limit,
             )
-            ordered = _validate(_default_transport(single_shot_prompt), rows)
-            return ordered, {"status": "AI_RANKED", "candidate_count": len(ordered), "closed_world_validated": True, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE"}
+            ordered, contract_repair_applied = _validated_ai_response(single_shot_prompt, rows, _validate, output_key="ranked_candidates")
+            return ordered, {"status": "AI_RANKED", "candidate_count": len(ordered), "closed_world_validated": True, "contract_repair_applied": contract_repair_applied, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE"}
         except Exception as exc:
             logger.warning("ai_candidate_ranking_failed candidate_count=%s error=%s", len(rows), exc)
             if required:
