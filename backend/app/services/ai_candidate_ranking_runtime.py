@@ -74,20 +74,27 @@ def _claim_ids(row: Dict[str, Any]) -> set[str]:
     return {str(claim.get("claim_id")) for claim in ledger.get("claims") or [] if claim.get("claim_id")}
 
 
-def _validated_citations(label: str, canonical_id: str, item: Dict[str, Any], valid_claim_ids: set[str]) -> tuple[List[str], List[str]]:
+def _validated_citations(label: str, canonical_id: str, item: Dict[str, Any], valid_claim_ids: set[str]) -> tuple[List[str], List[str], bool]:
+    """Citations are optional supporting detail, not the score/rank itself -- the
+    contract already allows an empty list rather than a citation. So a fabricated
+    claim_id is stripped and logged, not treated as grounds to discard the whole
+    candidate's score. A closed-world violation (wrong candidate set) is a different,
+    more serious kind of failure and is still handled by the caller as a hard fail.
+    """
     drivers = [str(v) for v in item.get("rank_drivers") or []]
     risks = [str(v) for v in item.get("rank_risks") or []]
+    clean_drivers = [claim_id for claim_id in drivers if claim_id in valid_claim_ids]
+    clean_risks = [claim_id for claim_id in risks if claim_id in valid_claim_ids]
     invalid = [claim_id for claim_id in (*drivers, *risks) if claim_id not in valid_claim_ids]
     if invalid:
         logger.warning(
             "%s candidate=%s invalid_claim_ids=%s (a rank_driver/rank_risk cited a claim_id absent from this "
-            "candidate's governed claim ledger -- treated as a fabricated citation)",
+            "candidate's governed claim ledger -- stripped as a fabricated citation; score/rank retained)",
             label,
             canonical_id,
             invalid,
         )
-        raise RuntimeError(label)
-    return drivers, risks
+    return clean_drivers, clean_risks, bool(invalid)
 
 
 def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any], claim_limit: int) -> Dict[str, Any]:
@@ -176,7 +183,7 @@ def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> List[Dict[s
     for position, item in enumerate(ranked, start=1):
         canonical_id = str(item.get("canonical_facility_id"))
         row = by_id[canonical_id]
-        drivers, risks = _validated_citations("AI_CANDIDATE_RANKING_INVALID_CLAIM_CITATION", canonical_id, item, _claim_ids(row))
+        drivers, risks, citation_stripped = _validated_citations("AI_CANDIDATE_RANKING_INVALID_CLAIM_CITATION", canonical_id, item, _claim_ids(row))
         row["ai_ranking"] = {
             "status": "AI_RANKED",
             "rank": position,
@@ -184,6 +191,7 @@ def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> List[Dict[s
             "information_deficits": [str(v) for v in item.get("information_deficits") or []],
             "rank_drivers": drivers,
             "rank_risks": risks,
+            "citation_validation": "PARTIAL" if citation_stripped else "FULL",
         }
         ordered.append(row)
     return ordered
@@ -206,13 +214,14 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
             raise RuntimeError("AI_CANDIDATE_SCORING_INVALID_SCORE") from exc
         if score < 0 or score > 100:
             raise RuntimeError("AI_CANDIDATE_SCORING_INVALID_SCORE_RANGE")
-        drivers, risks = _validated_citations("AI_CANDIDATE_SCORING_INVALID_CLAIM_CITATION", canonical_id, item, _claim_ids(by_id[canonical_id]))
+        drivers, risks, citation_stripped = _validated_citations("AI_CANDIDATE_SCORING_INVALID_CLAIM_CITATION", canonical_id, item, _claim_ids(by_id[canonical_id]))
         validated[canonical_id] = {
             "score": round(score, 3),
             "reason": str(item.get("reason") or ""),
             "information_deficits": [str(v) for v in item.get("information_deficits") or []],
             "rank_drivers": drivers,
             "rank_risks": risks,
+            "citation_validation": "PARTIAL" if citation_stripped else "FULL",
         }
     return validated
 
@@ -319,9 +328,28 @@ def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hu
     batches = [rows[index:index + batch_size] for index in range(0, len(rows), batch_size)]
     scored_by_id: Dict[str, Dict[str, Any]] = {}
 
-    def score_batch(batch: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-        scored, _ = _validated_ai_response(_score_prompt(batch, client_intent, human_context, strategy, claim_limit), batch, _validate_scores, output_key="scored_candidates")
-        return scored
+    def score_batch(batch: List[Dict[str, Any]], depth: int = 0) -> Dict[str, Dict[str, Any]]:
+        """One batch/sub-batch's scoring attempt, with one contract-repair retry (see
+        _validated_ai_response). If that still fails, the batch is split in half and
+        each half retried independently rather than discarding every candidate in it --
+        a single hard-to-score candidate should not erase its batch-mates' valid
+        scores, and a whole batch should not erase every other batch's valid scores.
+        Bottoms out at a single candidate: if that candidate still cannot be validated
+        on its own, it is excluded from this ranking pass (never a fabricated score),
+        which the caller surfaces as a closed-world gap rather than silently.
+        """
+        try:
+            scored, _ = _validated_ai_response(_score_prompt(batch, client_intent, human_context, strategy, claim_limit), batch, _validate_scores, output_key="scored_candidates")
+            return scored
+        except Exception as exc:
+            if len(batch) <= 1:
+                logger.warning("ai_ranking_candidate_unrecoverable candidate_count=1 depth=%s error=%s", depth, exc)
+                return {}
+            mid = len(batch) // 2
+            logger.warning("ai_ranking_batch_split_retry candidate_count=%s depth=%s error=%s", len(batch), depth, exc)
+            left = score_batch(batch[:mid], depth + 1)
+            right = score_batch(batch[mid:], depth + 1)
+            return {**left, **right}
 
     with ThreadPoolExecutor(max_workers=min(workers, len(batches))) as executor:
         futures = [executor.submit(score_batch, batch) for batch in batches]
@@ -329,9 +357,17 @@ def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hu
             scored_by_id.update(future.result())
 
     expected_ids = {str(row.get("canonical_facility_id")) for row in rows}
-    if set(scored_by_id) != expected_ids:
+    if not scored_by_id:
         _log_closed_world_mismatch("AI_BATCHED_RANKING_CLOSED_WORLD_VIOLATION", expected_ids, list(scored_by_id))
         raise RuntimeError("AI_BATCHED_RANKING_CLOSED_WORLD_VIOLATION")
+    if set(scored_by_id) != expected_ids:
+        missing = expected_ids - set(scored_by_id)
+        logger.warning(
+            "ai_batched_ranking_partial_coverage scored_count=%s missing_count=%s missing_ids=%s",
+            len(scored_by_id), len(missing), sorted(missing)[:20],
+        )
+        _log_closed_world_mismatch("AI_BATCHED_RANKING_CLOSED_WORLD_VIOLATION", expected_ids, list(scored_by_id))
+        raise RuntimeError(f"AI_BATCHED_RANKING_CLOSED_WORLD_VIOLATION:missing={len(missing)}_of_{len(expected_ids)}")
 
     indexed = list(enumerate(rows))
     indexed.sort(key=lambda pair: (-scored_by_id[str(pair[1].get("canonical_facility_id"))]["score"], *deterministic_fallback_key(pair[1]), pair[0]))
@@ -347,6 +383,7 @@ def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hu
             "information_deficits": item["information_deficits"],
             "rank_drivers": item["rank_drivers"],
             "rank_risks": item["rank_risks"],
+            "citation_validation": item.get("citation_validation", "FULL"),
         }
     _calibrate_top_candidates(ordered, client_intent, human_context, strategy, claim_limit)
     return ordered
@@ -388,9 +425,12 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
             ordered, contract_repair_applied = _validated_ai_response(single_shot_prompt, rows, _validate, output_key="ranked_candidates")
             return ordered, {"status": "AI_RANKED", "candidate_count": len(ordered), "closed_world_validated": True, "contract_repair_applied": contract_repair_applied, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE"}
         except Exception as exc:
-            logger.warning("ai_candidate_ranking_failed candidate_count=%s error=%s", len(rows), exc)
+            fallback_reason = str(exc)
+            logger.warning("ai_candidate_ranking_failed candidate_count=%s error=%s", len(rows), fallback_reason)
             if required:
                 raise RuntimeError(f"AI_CANDIDATE_RANKING_REQUIRED_FAILED:{exc}") from exc
+    else:
+        fallback_reason = "OPTIME_SEMANTIC_AI_ENABLED is off"
 
     indexed = list(enumerate(rows))
     indexed.sort(key=lambda pair: (*deterministic_fallback_key(pair[1]), pair[0]))
@@ -404,7 +444,7 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
             "rank_drivers": [],
             "rank_risks": [],
         }
-    return ordered, {"status": "DETERMINISTIC_FALLBACK" if not required else "REQUIRED_BUT_UNAVAILABLE", "candidate_count": len(ordered), "closed_world_validated": True, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE"}
+    return ordered, {"status": "DETERMINISTIC_FALLBACK" if not required else "REQUIRED_BUT_UNAVAILABLE", "candidate_count": len(ordered), "closed_world_validated": True, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE", "fallback_reason": fallback_reason}
 
 
 def attach_nice_coverage(rows: List[Dict[str, Any]], client_intent: Dict[str, Any]) -> Dict[str, Any]:
