@@ -41,6 +41,18 @@ def test_pending_must_routes_to_evidence_collection():
     assert state.phase is DecisionPhase.EVIDENCE_COLLECTION
 
 
+def test_pending_non_eligible_candidates_do_not_hide_completed_ranked_shortlist():
+    result = base_result()
+    result.update({"must_eligible_count": 3, "must_pending_verification_count": 40, "must_rejected_count": 2})
+    result["decision_intelligence"]["facility_selection_pipeline"] = {
+        "ai_ranking": {"status": "AI_RANKED"},
+        "dynamic_preferences": {"preference_count": 0, "verification_required_count": 0},
+    }
+    state = derive_canonical_decision_state(result)
+    assert state.phase is DecisionPhase.FINAL_RECOMMENDATION
+    assert state.can_show_recommendations is True
+
+
 def test_must_pass_routes_to_ai_ranking_until_ranking_complete():
     result = base_result()
     result.update({"must_eligible_count": 8, "must_pending_verification_count": 0, "must_rejected_count": 3})
