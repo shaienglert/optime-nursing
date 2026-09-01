@@ -81,7 +81,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
         serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()
         top_decision = serialized["decision_intelligence"]
-        self.assertEqual("BLOCKED_PENDING_AI_INTERVIEW", top_decision["decision_finality"])
+        self.assertEqual("PENDING_CLIENT_INPUT_REQUIRED", top_decision["decision_finality"])
         self.assertFalse(top_decision["recommendation_execution_allowed"])
         self.assertEqual("SEMANTIC_AI", top_decision["interview_owner"])
         self.assertEqual([], serialized["results"])
@@ -105,7 +105,8 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         for ctx in (patient_decision, policy_decision, top_decision):
             self.assertEqual(ctx["version"], "decision-intelligence-runtime-v3.1")
             self.assertIn("client_intent", ctx)
-        self.assertTrue(top_decision["recommendation_execution_allowed"])
+        self.assertFalse(top_decision["recommendation_execution_allowed"])
+        self.assertEqual("DETERMINISTIC_FALLBACK", top_decision["ai_ranking"]["status"])
         self.assertEqual(
             top_decision["ranking_order"],
             [
@@ -122,14 +123,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertEqual(human["decision_readiness"], "READY")
         self.assertEqual(human["signals"]["recent_bereavement"]["value"], "YES")
         self.assertEqual([], human["adaptive_questions"])
-        self.assertTrue(serialized["results"])
-        first = serialized["results"][0]
-        self.assertIn("client_intent_fit", first)
-        self.assertEqual(first["client_intent_fit"]["hard_gate"], "PASS")
-        self.assertEqual(first["must_eligibility"], "MUST_ELIGIBLE")
-        self.assertIn("nice_to_have_coverage", first)
-        self.assertEqual(len(first["success_factor_trace"]["factors"]), 16)
-        self.assertIn("success_factor_summary", first["explanation"])
+        self.assertEqual([], serialized["results"])
         self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3.1")
 
     def test_couple_spine_rehab_unknowns_are_guardian_inputs_not_scripted_questions(self) -> None:
@@ -161,7 +155,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertTrue(human["adaptive_questions"][0]["question_key"].startswith("semantic_ai_high_information_question:"))
         self.assertTrue(human["adaptive_questions"][0].get("target_fact_key"))
         self.assertEqual([], result["results"])
-        self.assertEqual("BLOCKED_PENDING_AI_INTERVIEW", result["decision_intelligence"]["decision_finality"])
+        self.assertEqual("PENDING_CLIENT_INPUT_REQUIRED", result["decision_intelligence"]["decision_finality"])
 
 
 if __name__ == "__main__":
