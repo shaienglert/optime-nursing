@@ -217,7 +217,11 @@ def _question_matches_guardian_target(result: Dict[str, Any], target: Dict[str, 
     declared = str(result.get("selected_fact_key") or asked_row.get("target_fact_key") or "").strip()
     mapped = {str(value).strip() for value in asked_row.get("mapped_parameters") or [] if str(value).strip()}
     target_key = str(target.get("fact_key") or "").strip()
-    return bool(target_key) and (declared == target_key or target_key in mapped)
+    semantic_aliases = {
+        "monthly_budget": {"monthly_affordability", "budget"},
+    }
+    allowed_mappings = {target_key, *semantic_aliases.get(target_key, set())}
+    return bool(target_key) and (declared == target_key or bool(mapped & allowed_mappings))
 
 
 def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
