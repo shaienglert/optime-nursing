@@ -224,7 +224,8 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
             "phase": _phase(result, questionnaire_state),
             "prior_process_state": _continuity_state(questionnaire_state),
         }
-        return result
+        from app.services.canonical_decision_state import apply_canonical_decision_state_authority
+        return apply_canonical_decision_state_authority(result)
 
     try:
         packet = _validate(
@@ -248,7 +249,8 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
             "prior_process_state": _continuity_state(questionnaire_state),
             "error": str(exc),
         }
-    return result
+    from app.services.canonical_decision_state import apply_canonical_decision_state_authority
+    return apply_canonical_decision_state_authority(result)
 
 
 __all__ = ["attach_ai_process_owner"]
