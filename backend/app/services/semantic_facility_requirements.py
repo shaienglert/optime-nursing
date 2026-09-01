@@ -166,9 +166,6 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
         "tasks_queued": queued,
         "rule": "Semantic AI identifies client MUSTs; facility evidence or direct verification decides PASS/FAIL. UNKNOWN never becomes PASS.",
     }
-    if requirements and any((row.get("client_intent_fit") or {}).get("must_unknown") for row in rows):
-        decision["decision_finality"] = "PROVISIONAL_PENDING_SEMANTIC_MUST_EVIDENCE"
-        decision["recommendation_execution_allowed"] = False
     result["decision_intelligence"] = decision
     return result
 
