@@ -339,6 +339,7 @@ class PatientDecisionEngineOut(BaseModel):
     care_setting_policy: Dict[str, Any] = Field(default_factory=dict)
     decision_intelligence: Dict[str, Any] = Field(default_factory=dict)
     recommendation_audit_trace: Dict[str, Any] = Field(default_factory=dict)
+    decision_pipeline_trace: Dict[str, Any] = Field(default_factory=dict)
 
 
 class PatientNeedsProfileOut(BaseModel):
