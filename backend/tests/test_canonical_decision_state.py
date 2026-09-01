@@ -1,4 +1,4 @@
-from app.services.canonical_decision_state import DecisionPhase, derive_canonical_decision_state
+from app.services.canonical_decision_state import DecisionPhase, derive_canonical_decision_state, legacy_state_conflicts
 
 
 def base_result():
@@ -64,3 +64,18 @@ def test_complete_pipeline_reaches_final_recommendation():
     state = derive_canonical_decision_state(result)
     assert state.phase is DecisionPhase.FINAL_RECOMMENDATION
     assert state.can_show_recommendations is True
+
+
+def test_visible_deterministic_fallback_is_reported_as_legacy_conflict():
+    result = base_result()
+    result.update({"must_eligible_count": 6, "must_pending_verification_count": 0, "must_rejected_count": 2})
+    result["decision_intelligence"].update(
+        recommendation_execution_allowed=True,
+        recommendation_visibility="PROVISIONAL_RANKING_VISIBLE",
+    )
+    result["decision_intelligence"]["facility_selection_pipeline"] = {
+        "ai_ranking": {"status": "DETERMINISTIC_FALLBACK"}
+    }
+    state = derive_canonical_decision_state(result)
+    assert state.phase is DecisionPhase.AI_RANKING
+    assert "LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION" in legacy_state_conflicts(state)
