@@ -63,7 +63,11 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
                 "human_intelligence": {"decision_readiness": "READY"},
                 "strategy_universe": {"status": "SUFFICIENT_FOR_LEADING_STRATEGIES"},
                 "care_partner_layer": {},
-                "must_gate": {"selected_must_unknown_count": 0},
+                "must_gate": {"eligible": 2, "pending_verification": 0, "rejected": 0, "selected_must_unknown_count": 0},
+                "facility_selection_pipeline": {
+                    "ai_ranking": {"status": "AI_BATCH_RANKED"},
+                    "dynamic_preferences": {"preference_count": 0, "nice_complete_candidate_count": 0, "verification_required_count": 0},
+                },
                 "ranking_order": ["CLIENT_INTENT", "MUST_GATE", "NICE_TO_HAVE"],
             },
         }
