@@ -35,8 +35,11 @@ def test_ai_failure_is_system_blocked():
 
 
 def test_pending_must_routes_to_evidence_collection():
+    # No candidate has passed every MUST yet -- pending evidence is still a
+    # real block here, unlike test_pending_non_eligible_candidates_do_not_hide_
+    # completed_ranked_shortlist below, where eligible > 0 already.
     result = base_result()
-    result.update({"must_eligible_count": 3, "must_pending_verification_count": 4, "must_rejected_count": 2})
+    result.update({"must_eligible_count": 0, "must_pending_verification_count": 4, "must_rejected_count": 2})
     state = derive_canonical_decision_state(result)
     assert state.phase is DecisionPhase.EVIDENCE_COLLECTION
 
