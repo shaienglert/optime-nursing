@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from app.services import _suppress_unverified_recommendations
+from app.services.canonical_decision_state import apply_canonical_decision_state_authority
 
 
 def test_suppresses_candidate_identities_when_execution_is_blocked():
     result = {
         "results": [{"canonical_facility_id": "NV-1", "facility_name": "Hidden Candidate"}],
         "result_count": 1,
+        "must_rejected_count": 1,
         "decision_intelligence": {
             "decision_finality": "PROVISIONAL_PENDING_SEMANTIC_MUST_EVIDENCE",
             "recommendation_execution_allowed": False,
@@ -16,12 +18,12 @@ def test_suppresses_candidate_identities_when_execution_is_blocked():
         },
     }
 
-    out = _suppress_unverified_recommendations(result)
+    out = _suppress_unverified_recommendations(apply_canonical_decision_state_authority(result))
 
     assert out["results"] == []
     assert out["result_count"] == 0
     assert out["decision_intelligence"]["research_candidate_count"] == 1
-    assert out["decision_intelligence"]["recommendation_visibility"] == "BLOCKED_UNTIL_MUST_GATE_PASS"
+    assert out["decision_intelligence"]["recommendation_visibility"] == "BLOCKED_MUST_EVALUATION"
     assert out["recommendation_audit_trace"]["recommendations"] == []
 
 
