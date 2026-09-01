@@ -122,12 +122,15 @@ def apply_must_ai_nice_pipeline(
         gate = str(fit.get("hard_gate") or "PENDING_VERIFICATION").upper()
         if gate == "PASS":
             row["must_eligibility"] = "MUST_ELIGIBLE"
+            row["must_disposition_reason"] = "MUST_PASS"
             eligible.append(row)
         elif gate == "FAIL":
             row["must_eligibility"] = "MUST_REJECTED"
+            row["must_disposition_reason"] = "MUST_FAIL"
             rejected.append(row)
         else:
             row["must_eligibility"] = "MUST_PENDING_VERIFICATION"
+            row["must_disposition_reason"] = "MUST_EVIDENCE_PENDING"
             pending.append(row)
 
     dynamic_preferences = build_dynamic_preference_model(human_context)
@@ -225,6 +228,17 @@ def apply_must_ai_nice_pipeline(
         "must_eligible_count": len(eligible),
         "must_pending_verification_count": len(pending),
         "must_rejected_count": len(rejected),
+        "candidate_dispositions": [
+            {
+                "canonical_facility_id": row.get("canonical_facility_id"),
+                "must_eligibility": row.get("must_eligibility"),
+                "reason_code": row.get("must_disposition_reason"),
+                "must_pass": list((row.get("client_intent_fit") or {}).get("must_pass") or []),
+                "must_unknown": list((row.get("client_intent_fit") or {}).get("must_unknown") or []),
+                "must_fail": list((row.get("client_intent_fit") or {}).get("must_fail") or []),
+            }
+            for row in rows
+        ],
         "ai_ranking": ai_status,
         "ai_ranking_required": _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED"),
         "ai_ranking_fail_closed": ai_failure_block,
