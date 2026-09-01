@@ -60,7 +60,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertTrue(context["readiness_guardian"]["client_owned_blockers"])
         self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
 
-    def test_guardian_repairs_question_when_ai_text_and_budget_target_do_not_match(self) -> None:
+    def test_guardian_never_attaches_budget_options_to_a_different_ai_question(self) -> None:
         bad = {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": "What level of care is needed day to day?",
@@ -70,25 +70,14 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
                 "research_task": None, "mapped_parameters": ["care_needs"],
             }],
         }
-        repaired = {
-            "decision_readiness": "NEEDS_CLARIFICATION",
-            "selected_fact_key": "monthly_budget",
-            "next_question": "What monthly housing-and-care budget is comfortable?",
-            "statements": [{
-                "raw_text": "Budget is not known.", "importance": "MUST", "knowledge_state": "UNKNOWN",
-                "status": "ASKED", "clarification_question": "What monthly housing-and-care budget is comfortable?",
-                "research_task": None, "mapped_parameters": ["monthly_budget"],
-            }],
-        }
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
-            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", side_effect=[bad, repaired]
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=bad
         ):
             context = build_human_intelligence_context(self._state(), "My father needs senior living in Las Vegas.")
-        self.assertTrue(context["readiness_guardian"]["question_target_repair_applied"])
         question = context["adaptive_questions"][0]
-        self.assertEqual("monthly_budget", question["target_fact_key"])
-        self.assertEqual("What monthly housing-and-care budget is comfortable?", question["question"])
-        self.assertIn("$5,000-$8,000", question["answer_options"])
+        self.assertEqual("semantic_ai_unstructured_fact", question["target_fact_key"])
+        self.assertEqual("What level of care is needed day to day?", question["question"])
+        self.assertEqual([], question["answer_options"])
 
     def test_explicit_semantic_fact_answer_resolves_guardian_blocker_without_scripted_question(self) -> None:
         state = self._state()
