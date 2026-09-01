@@ -268,6 +268,33 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertEqual(ranked[0]["ai_ranking"]["rank_drivers"], [real_claim_id])
         self.assertEqual(ranked[0]["ai_ranking"]["rank_risks"], [])
 
+    def test_single_shot_repairs_one_closed_world_omission(self):
+        rows = self._rows(2)
+        calls = []
+
+        def transport(payload):
+            calls.append(payload)
+            candidates = payload["must_eligible_candidates"]
+            if len(calls) == 1:
+                candidates = candidates[:1]
+            return {"ranked_candidates": [
+                {"canonical_facility_id": item["canonical_facility_id"], "reason": "governed rank", "information_deficits": [], "rank_drivers": [], "rank_risks": []}
+                for item in candidates
+            ]}
+
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1"}, clear=False), patch(
+            "app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport
+        ):
+            ranked, status = rank_must_eligible_candidates(
+                rows, client_intent={}, human_context={"dynamic_preference_model": {"preferences": []}}, strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual(2, len(calls))
+        self.assertTrue(status["contract_repair_applied"])
+        self.assertEqual(["FAC-01", "FAC-02"], [row["canonical_facility_id"] for row in ranked])
+        self.assertEqual(["FAC-01", "FAC-02"], calls[1]["contract_repair"]["candidate_ids_required_exactly_once"])
+
     def test_fabricated_claim_citation_is_rejected_and_falls_back(self):
         rows = self._rows(1)
 
