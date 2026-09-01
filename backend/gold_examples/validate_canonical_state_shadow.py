@@ -43,7 +43,12 @@ def _fixtures() -> list[dict]:
 
     provider_unknown = _base()
     provider_unknown.update(
-        must_eligible_count=3,
+        # No candidate has passed every MUST yet (eligible=0): pending provider
+        # evidence is still a genuine block, and legacy_execution=True below is
+        # a real conflict here -- contrast with must-pass-awaiting-ranking and
+        # deterministic-fallback-not-ai-complete, where eligible > 0 already
+        # moves the canonical phase to AI_RANKING.
+        must_eligible_count=0,
         must_pending_verification_count=2,
         must_rejected_count=1,
     )

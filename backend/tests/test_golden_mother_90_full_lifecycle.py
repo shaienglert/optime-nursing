@@ -143,9 +143,13 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
 
         decision = result["decision_intelligence"]
         # A deterministic ordering is useful internally, but it is not a completed
-        # AI ranking and may not be exposed as a recommendation.
+        # AI ranking and may not be exposed as a recommendation. Canonical decision
+        # state reaches this via the AI_RANKING phase (eligible candidates exist,
+        # ranking has not completed) rather than EVIDENCE_COLLECTION (no eligible
+        # candidates yet) -- see test_canonical_decision_state.py's own
+        # BLOCKED_AI_RANKING fixture for the same distinction.
         self.assertFalse(decision["recommendation_execution_allowed"])
-        self.assertEqual(decision["recommendation_visibility"], "BLOCKED_EVIDENCE_COLLECTION")
+        self.assertEqual(decision["recommendation_visibility"], "BLOCKED_AI_RANKING")
         self.assertEqual(result["result_count"], 0)
         self.assertGreater(result["total_candidates_scored"], 0)
         self.assertEqual(decision["human_intelligence"]["decision_readiness"], "READY")

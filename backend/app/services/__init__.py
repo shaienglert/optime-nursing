@@ -234,6 +234,11 @@ def _suppress_unverified_recommendations(result: dict[str, Any]) -> dict[str, An
     return result
 
 
+def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
+    from app.services.decision_pipeline_trace import attach_decision_pipeline_trace
+    return attach_decision_pipeline_trace(result)
+
+
 class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
     def exec_module(self, module: ModuleType) -> None:
         super().exec_module(module)
@@ -262,7 +267,7 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
                 profile_readiness = _readiness_from_decision(profile_decision)
                 if _client_interview_blocked(profile_readiness):
                     logger.info("decision_pipeline_stage_timings_ms (blocked at profile) %s", stage_timings)
-                    return _blocked_interview_result(profile, profile_readiness)
+                    return _attach_pipeline_trace(_blocked_interview_result(profile, profile_readiness))
                 _mark_client_ready_for_research(profile_decision, profile_readiness)
 
             internal_limit = max(500, int(limit or 50))
@@ -275,7 +280,7 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             if _client_interview_blocked(readiness):
                 runtime_profile = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else profile
                 logger.info("decision_pipeline_stage_timings_ms (blocked at result) %s", stage_timings)
-                return _blocked_interview_result(runtime_profile or {}, readiness)
+                return _attach_pipeline_trace(_blocked_interview_result(runtime_profile or {}, readiness))
             _mark_client_ready_for_research(decision, readiness)
 
             from app.services.canonical_decision_state import apply_canonical_decision_state_authority
@@ -297,6 +302,7 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
             result = apply_canonical_decision_state_authority(result)
             result = _suppress_unverified_recommendations(result)
+            result = _attach_pipeline_trace(result)
             logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
             return result
 
