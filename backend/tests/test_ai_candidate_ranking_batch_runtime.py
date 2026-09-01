@@ -77,6 +77,88 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertEqual(status["status"], "DETERMINISTIC_FALLBACK")
         self.assertEqual(len(ranked), 24)
         self.assertTrue(all(row["ai_ranking"]["status"] == "DETERMINISTIC_FALLBACK" for row in ranked))
+        # Every batch splits all the way down to individual candidates trying to
+        # recover from "boom" (see ai_ranking_batch_split_retry warnings), and only
+        # once every single one is unrecoverable does the whole set fall back. The
+        # fallback reason must still survive into the returned status -- otherwise a
+        # caller (including the API response) has no way to see why ranking degraded,
+        # only that it did.
+        self.assertIn("CLOSED_WORLD_VIOLATION", status["fallback_reason"])
+
+    def test_fallback_reason_reflects_a_closed_world_violation_that_broke_every_batch(self):
+        # A closed-world violation (wrong candidate set returned) is still a hard
+        # failure -- unlike a fabricated citation, which is now stripped rather than
+        # fatal (see test_fabricated_claim_citation_is_stripped_but_score_and_rank_are_
+        # kept). Every batch returning an empty set here forces a full fallback, and
+        # the status object must say why, not just that it happened.
+        rows = self._rows(24)
+
+        def transport(payload):
+            return {"scored_candidates": []}
+
+        with patch.dict(os.environ, {
+            "OPTIME_SEMANTIC_AI_ENABLED": "1",
+            "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "0",
+            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "20",
+            "OPTIME_AI_RANKING_BATCH_SIZE": "6",
+        }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport):
+            ranked, status = rank_must_eligible_candidates(
+                rows,
+                client_intent={},
+                human_context={"dynamic_preference_model": {"preferences": []}},
+                strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual(status["status"], "DETERMINISTIC_FALLBACK")
+        self.assertIn("CLOSED_WORLD_VIOLATION", status["fallback_reason"])
+
+    def test_one_persistently_confused_batch_no_longer_erases_every_other_batchs_valid_scores(self):
+        # Reproduces the real production pattern: a large batch returns a closed-world
+        # violation (candidates confused with each other), but the same candidates
+        # score cleanly once split into smaller groups -- exactly what happened when
+        # production's 13-batch, 374-candidate run failed on one batch and lost all
+        # 373 other, perfectly valid scores with it.
+        rows = self._rows(24)
+        calls = []
+
+        def transport(payload):
+            candidates = payload["must_eligible_candidates"]
+            calls.append(len(candidates))
+            ids = [item["canonical_facility_id"] for item in candidates]
+            if "FAC-07" in ids and len(candidates) > 2:
+                # This group confuses the model into returning duplicates for the
+                # batch containing FAC-07, but only when grouped with 3+ others.
+                return {"scored_candidates": [
+                    {"canonical_facility_id": ids[0], "score": 50, "reason": "r", "information_deficits": []}
+                    for _ in candidates
+                ]}
+            return {"scored_candidates": [
+                {"canonical_facility_id": item["canonical_facility_id"], "score": 100 - int(item["canonical_facility_id"].split("-")[-1]), "reason": "r", "information_deficits": []}
+                for item in candidates
+            ]}
+
+        with patch.dict(os.environ, {
+            "OPTIME_SEMANTIC_AI_ENABLED": "1",
+            "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "0",
+            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "20",
+            "OPTIME_AI_RANKING_BATCH_SIZE": "6",
+        }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport):
+            ranked, status = rank_must_eligible_candidates(
+                rows,
+                client_intent={},
+                human_context={"dynamic_preference_model": {"preferences": []}},
+                strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        # Every one of the 24 candidates -- including the ones that shared a batch
+        # with FAC-07 -- got a real AI score, not a full-set deterministic fallback.
+        self.assertEqual(status["status"], "AI_BATCH_RANKED")
+        self.assertEqual(len(ranked), 24)
+        self.assertTrue(all(row["ai_ranking"]["status"] == "AI_BATCH_SCORED" for row in ranked))
+        # It took more than the original 4 batch calls to get there.
+        self.assertGreater(len(calls), 4)
 
 
     def test_calibration_reorders_top_window_using_single_shot_adjudication(self):
@@ -295,7 +377,12 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertEqual(["FAC-01", "FAC-02"], [row["canonical_facility_id"] for row in ranked])
         self.assertEqual(["FAC-01", "FAC-02"], calls[1]["contract_repair"]["candidate_ids_required_exactly_once"])
 
-    def test_fabricated_claim_citation_is_rejected_and_falls_back(self):
+    def test_fabricated_claim_citation_is_stripped_but_score_and_rank_are_kept(self):
+        # rank_drivers/rank_risks are optional supporting detail ("may be empty"), so a
+        # single fabricated claim_id is not grounds to discard the whole candidate's
+        # score -- it is stripped and the candidate is marked citation_validation:
+        # PARTIAL, distinct from a closed-world violation (wrong candidate set), which
+        # is still a hard failure.
         rows = self._rows(1)
 
         def transport(payload):
@@ -323,24 +410,18 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
                 deterministic_fallback_key=lambda r: (str(r["canonical_facility_id"]),),
             )
 
-        self.assertEqual(status["status"], "DETERMINISTIC_FALLBACK")
-        self.assertEqual(ranked[0]["ai_ranking"]["status"], "DETERMINISTIC_FALLBACK")
+        self.assertEqual(status["status"], "AI_RANKED")
+        self.assertEqual(ranked[0]["ai_ranking"]["status"], "AI_RANKED")
+        self.assertEqual(ranked[0]["ai_ranking"]["rank_drivers"], [])
+        self.assertEqual(ranked[0]["ai_ranking"]["citation_validation"], "PARTIAL")
 
-    def test_fabricated_claim_citation_fails_closed_when_ranking_required(self):
+    def test_closed_world_violation_still_fails_closed_when_ranking_required(self):
+        # Unlike a fabricated citation, a closed-world violation means the AI did not
+        # return the exact supplied candidate set -- that is still a hard failure.
         rows = self._rows(1)
 
         def transport(payload):
-            return {
-                "ranked_candidates": [
-                    {
-                        "canonical_facility_id": "FAC-01",
-                        "reason": "governed single-shot rank",
-                        "information_deficits": [],
-                        "rank_drivers": ["claim:does-not-exist-in-the-ledger"],
-                        "rank_risks": [],
-                    }
-                ]
-            }
+            return {"ranked_candidates": []}
 
         with patch.dict(os.environ, {
             "OPTIME_SEMANTIC_AI_ENABLED": "1",
