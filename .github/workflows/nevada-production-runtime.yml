@@ -148,7 +148,7 @@ jobs:
           assert only_question.get('target_fact_key'), only_question
           assert blocked['result_count'] == 0 and blocked['results'] == []
           assert blocked['decision_intelligence']['recommendation_execution_allowed'] is False
-          assert blocked['decision_intelligence']['decision_finality'] == 'BLOCKED_PENDING_AI_INTERVIEW'
+          assert blocked['decision_intelligence']['decision_finality'] == 'PENDING_CLIENT_INPUT_REQUIRED'
 
           premature_answers = iter([
               {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
