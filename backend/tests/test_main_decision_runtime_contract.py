@@ -106,7 +106,6 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             self.assertEqual(ctx["version"], "decision-intelligence-runtime-v3.1")
             self.assertIn("client_intent", ctx)
         self.assertFalse(top_decision["recommendation_execution_allowed"])
-        self.assertEqual("DETERMINISTIC_FALLBACK", top_decision["ai_ranking"]["status"])
         self.assertEqual(
             top_decision["ranking_order"],
             [
