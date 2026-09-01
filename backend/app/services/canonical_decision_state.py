@@ -395,6 +395,8 @@ def legacy_state_conflicts(state: CanonicalDecisionState) -> list[str]:
         conflicts.append("LEGACY_EXECUTION_BLOCKS_CANONICAL_RECOMMENDATION")
     if not state.can_show_recommendations and state.legacy_recommendation_execution_allowed is True and state.phase is not DecisionPhase.AI_RANKING:
         conflicts.append("LEGACY_EXECUTION_ALLOWS_PREMATURE_RECOMMENDATION")
+    if not state.can_show_recommendations and "VISIBLE" in state.legacy_recommendation_visibility:
+        conflicts.append("LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION")
     if state.phase is DecisionPhase.SYSTEM_BLOCKED and "PROVISIONAL" in state.legacy_decision_finality:
         conflicts.append("LEGACY_FINALITY_PROVISIONAL_DURING_SYSTEM_FAILURE")
     return conflicts
