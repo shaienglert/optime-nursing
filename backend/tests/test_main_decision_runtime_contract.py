@@ -88,6 +88,8 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertEqual(0, serialized["result_count"])
         self.assertEqual(0, serialized["total_candidates_scored"])
         self.assertTrue(serialized["recommendation_audit_trace"]["blocked_before_facility_ranking"])
+        self.assertEqual(question, top_decision["process_owner"]["next_best_action"]["question"])
+        self.assertEqual(question, serialized["recommendation_audit_trace"]["adaptive_questions"][0]["question"])
 
     def test_ready_decision_context_and_success_factor_trace_survive_fastapi_response_model(self) -> None:
         main = importlib.import_module("app.main")
