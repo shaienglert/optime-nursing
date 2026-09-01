@@ -142,18 +142,12 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
             result = run_patient_decision_engine(answered, self._query(), limit=5)
 
         decision = result["decision_intelligence"]
-        self.assertTrue(decision["recommendation_execution_allowed"])
-        self.assertEqual(result["result_count"], 5)
+        # A deterministic ordering is useful internally, but it is not a completed
+        # AI ranking and may not be exposed as a recommendation.
+        self.assertFalse(decision["recommendation_execution_allowed"])
+        self.assertEqual(decision["recommendation_visibility"], "BLOCKED_AI_RANKING")
+        self.assertEqual(result["result_count"], 0)
         self.assertGreater(result["total_candidates_scored"], 0)
-        self.assertTrue(all(str(row.get("state") or "").upper() == "NV" for row in result["results"]))
-        canonical_index = get_canonical_facility_index()
-        for row in result["results"]:
-            canonical = canonical_index[row["canonical_facility_id"]]
-            self.assertIs(canonical.get("is_las_vegas_valley"), True)
-            self.assertIn("MEDICATION_SUPPORT_AVAILABLE", (row.get("client_intent_fit") or {}).get("must_pass") or [])
-        self.assertTrue(all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in result["results"]))
-        self.assertTrue(all(row.get("canonical_type") == "ASSISTED_LIVING_RFG" for row in result["results"]))
-        self.assertEqual([row["rank_position"] for row in result["results"]], [1, 2, 3, 4, 5])
         self.assertEqual(decision["human_intelligence"]["decision_readiness"], "READY")
         self.assertEqual(decision["human_intelligence"]["adaptive_questions"], [])
 
