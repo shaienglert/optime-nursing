@@ -220,11 +220,10 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
         decision["process_owner"] = {
             "owner": "SEMANTIC_AI_PROCESS_OWNER",
             "status": "REQUIRED_BUT_DISABLED" if required else "DISABLED",
+            "required": required,
             "phase": _phase(result, questionnaire_state),
             "prior_process_state": _continuity_state(questionnaire_state),
         }
-        if required:
-            decision["recommendation_execution_allowed"] = False
         return result
 
     try:
@@ -236,6 +235,7 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
         decision["process_owner"] = {
             "owner": "SEMANTIC_AI_PROCESS_OWNER",
             "status": "ACTIVE",
+            "required": required,
             "prior_process_state": _continuity_state(questionnaire_state),
             **packet,
         }
@@ -243,12 +243,11 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
         decision["process_owner"] = {
             "owner": "SEMANTIC_AI_PROCESS_OWNER",
             "status": "FAILED",
+            "required": required,
             "phase": _phase(result, questionnaire_state),
             "prior_process_state": _continuity_state(questionnaire_state),
             "error": str(exc),
         }
-        if required:
-            decision["recommendation_execution_allowed"] = False
     return result
 
 
