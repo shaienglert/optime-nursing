@@ -277,7 +277,10 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             legacy_decision_finality=legacy_finality,
         )
 
-    if pending > 0:
+    # Pending evidence is a research queue, not a veto on candidates that already
+    # passed every MUST.  The former behaviour let one unresolved non-shortlisted
+    # facility hide a successfully AI-ranked shortlist.
+    if pending > 0 and eligible == 0:
         return CanonicalDecisionState(
             phase=DecisionPhase.EVIDENCE_COLLECTION,
             client=ClientState.COMPLETE,
