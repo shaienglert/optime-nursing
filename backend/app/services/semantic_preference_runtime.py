@@ -153,6 +153,12 @@ def _verification_prompt(row: Dict[str, Any], model: Dict[str, Any]) -> Dict[str
             "MATCH or MISMATCH requires at least one supporting_claim_id from the supplied ledger.",
             "If the ledger does not specifically resolve the preference, return UNKNOWN.",
             "Do not treat a broad category as proof of a narrower preference unless the cited claim directly entails it.",
+            "Some supplied preferences describe a client value, goal, or search-scope decision "
+            "(for example 'preserve independence', 'least restrictive setting', or 'include CCRC "
+            "options in the search') rather than a checkable fact about this specific facility. No "
+            "governed evidence could ever confirm or refute those -- return NOT_APPLICABLE for them, "
+            "not UNKNOWN. Use NOT_APPLICABLE only when no facility's evidence could ever resolve the "
+            "preference in principle, not merely because this facility's ledger happens to lack it.",
             "Never change MUST eligibility.",
         ],
         "facility": ledger,
@@ -161,7 +167,7 @@ def _verification_prompt(row: Dict[str, Any], model: Dict[str, Any]) -> Dict[str
             "assessments": [
                 {
                     "preference_id": "string",
-                    "status": "MATCH|MISMATCH|UNKNOWN",
+                    "status": "MATCH|MISMATCH|UNKNOWN|NOT_APPLICABLE",
                     "supporting_claim_ids": ["claim:id"],
                     "reason": "string",
                     "provider_question_if_unknown": "string|null",
@@ -183,14 +189,14 @@ def _validate_assessments(packet: Dict[str, Any], row: Dict[str, Any], model: Di
     validated: List[Dict[str, Any]] = []
     for assessment in assessments:
         status = str(assessment.get("status") or "UNKNOWN").upper()
-        if status not in {"MATCH", "MISMATCH", "UNKNOWN"}:
+        if status not in {"MATCH", "MISMATCH", "UNKNOWN", "NOT_APPLICABLE"}:
             raise RuntimeError("SEMANTIC_PREFERENCE_INVALID_STATUS")
         supporting = [str(v) for v in assessment.get("supporting_claim_ids") or []]
         if any(claim_id not in valid_claims for claim_id in supporting):
             raise RuntimeError("SEMANTIC_PREFERENCE_UNKNOWN_CLAIM")
         if status in {"MATCH", "MISMATCH"} and not supporting:
             raise RuntimeError("SEMANTIC_PREFERENCE_ASSERTION_WITHOUT_EVIDENCE")
-        if status == "UNKNOWN":
+        if status in {"UNKNOWN", "NOT_APPLICABLE"}:
             supporting = []
         validated.append(
             {
@@ -253,11 +259,15 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
                 for pref in preferences
             ]
 
-        statuses = [a["status"] for a in assessments]
-        if statuses and all(status == "MATCH" for status in statuses):
+        # NOT_APPLICABLE preferences (client values/goals/search-scope, not checkable
+        # facts about this facility) never block completeness -- no facility's
+        # evidence could ever resolve them, so requiring a MATCH on them would make
+        # NICE_COMPLETE permanently unreachable for any query that contains one.
+        checkable_statuses = [status for status in (a["status"] for a in assessments) if status != "NOT_APPLICABLE"]
+        if not checkable_statuses or all(status == "MATCH" for status in checkable_statuses):
             coverage = "NICE_COMPLETE"
             complete += 1
-        elif any(status == "MATCH" for status in statuses):
+        elif any(status == "MATCH" for status in checkable_statuses):
             coverage = "NICE_PARTIAL"
             verification_required += 1
         else:
@@ -273,7 +283,7 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
             "status": coverage,
             "required": [str(pref.get("preference_id")) for pref in preferences],
             "verified_match": [a["preference_id"] for a in assessments if a["status"] == "MATCH"],
-            "unresolved": [a["preference_id"] for a in assessments if a["status"] != "MATCH"],
+            "unresolved": [a["preference_id"] for a in assessments if a["status"] not in {"MATCH", "NOT_APPLICABLE"}],
             "verified_match_count": sum(1 for a in assessments if a["status"] == "MATCH"),
             "required_count": len(preferences),
             "source": "DYNAMIC_SEMANTIC_PREFERENCE_MODEL",
