@@ -9,12 +9,16 @@ MISMATCH only by citing claim IDs that exist in the governed facility evidence
 ledger. Missing evidence remains UNKNOWN.
 """
 
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
+import logging
 import os
 from typing import Any, Dict, List, Tuple
 
 from app.services.semantic_intent_ai import _default_transport
+
+logger = logging.getLogger(__name__)
 
 
 _DERIVED_OR_PRESENTATION_FIELDS = {
@@ -226,6 +230,8 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
     verification_required = 0
     assessments_by_index: Dict[int, List[Dict[str, Any]]] = {}
 
+    failure_count = 0
+
     def verify_one(index: int, row: Dict[str, Any]) -> tuple[int, List[Dict[str, Any]]]:
         if not enabled:
             return index, []
@@ -233,6 +239,12 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
             packet = _default_transport(_verification_prompt(row, model))
             return index, _validate_assessments(packet, row, model)
         except Exception as exc:
+            nonlocal failure_count
+            failure_count += 1
+            logger.warning(
+                "dynamic_preference_verification_failed candidate=%s error=%s",
+                row.get("canonical_facility_id"), exc,
+            )
             if required:
                 raise RuntimeError(f"AI_PREFERENCE_VERIFICATION_REQUIRED_FAILED:{exc}") from exc
             return index, []
@@ -245,6 +257,7 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
                 index, assessments = future.result()
                 assessments_by_index[index] = assessments
 
+    status_counter: Counter = Counter()
     for index, row in enumerate(rows):
         assessments = assessments_by_index.get(index, [])
         if not assessments:
@@ -263,6 +276,7 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
         # facts about this facility) never block completeness -- no facility's
         # evidence could ever resolve them, so requiring a MATCH on them would make
         # NICE_COMPLETE permanently unreachable for any query that contains one.
+        status_counter.update(a["status"] for a in assessments)
         checkable_statuses = [status for status in (a["status"] for a in assessments) if status != "NOT_APPLICABLE"]
         if not checkable_statuses or all(status == "MATCH" for status in checkable_statuses):
             coverage = "NICE_COMPLETE"
@@ -288,6 +302,14 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
             "required_count": len(preferences),
             "source": "DYNAMIC_SEMANTIC_PREFERENCE_MODEL",
         }
+
+    if enabled and rows:
+        logger.info(
+            "dynamic_preference_verification_summary candidates=%s preferences=%s "
+            "nice_complete_candidate_count=%s verification_required_count=%s "
+            "verification_failures=%s status_counts=%s",
+            len(rows), len(preferences), complete, verification_required, failure_count, dict(status_counter),
+        )
 
     return {
         "status": "VERIFIED" if enabled else "AI_UNAVAILABLE_UNKNOWN_PRESERVED",
