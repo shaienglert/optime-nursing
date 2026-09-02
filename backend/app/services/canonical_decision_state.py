@@ -166,6 +166,21 @@ def _must_counts(result: Dict[str, Any], decision: Dict[str, Any]) -> tuple[int,
     )
 
 
+def _preference_counts(decision: Dict[str, Any]) -> tuple[int, int]:
+    """Raw (nice_complete_candidate_count, verification_required_count), independent
+    of the collapsed COMPLETE/PARTIAL state -- callers that need to distinguish "at
+    least one candidate is ready to show" from "every checked candidate is fully
+    resolved" read these directly rather than the binary PreferenceState.
+    """
+    pipeline = decision.get("facility_selection_pipeline")
+    if not isinstance(pipeline, dict):
+        return 0, 0
+    dynamic = pipeline.get("dynamic_preferences")
+    if not isinstance(dynamic, dict):
+        return 0, 0
+    return int(dynamic.get("nice_complete_candidate_count") or 0), int(dynamic.get("verification_required_count") or 0)
+
+
 def _preference_state(decision: Dict[str, Any]) -> PreferenceState:
     pipeline = decision.get("facility_selection_pipeline")
     if not isinstance(pipeline, dict):
@@ -176,8 +191,7 @@ def _preference_state(decision: Dict[str, Any]) -> PreferenceState:
     preference_count = int(dynamic.get("preference_count") or 0)
     if preference_count == 0:
         return PreferenceState.COMPLETE
-    complete = int(dynamic.get("nice_complete_candidate_count") or 0)
-    verification_required = int(dynamic.get("verification_required_count") or 0)
+    complete, verification_required = _preference_counts(decision)
     if complete > 0 and verification_required == 0:
         return PreferenceState.COMPLETE
     return PreferenceState.PARTIAL
@@ -334,24 +348,12 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             legacy_decision_finality=legacy_finality,
         )
 
-    if eligible > 0 and ranking is RankingState.COMPLETE and preferences is PreferenceState.PARTIAL:
-        return CanonicalDecisionState(
-            phase=DecisionPhase.PREFERENCE_VERIFICATION,
-            client=ClientState.COMPLETE,
-            evidence=EvidenceState.MATERIAL_GAPS,
-            must=MustState.PASS,
-            ranking=RankingState.COMPLETE,
-            preferences=PreferenceState.PARTIAL,
-            finality=DecisionFinality.PROVISIONAL,
-            system=SystemHealth.HEALTHY,
-            next_action="VERIFY_MATERIAL_PREFERENCES",
-            reason="ranking exists but material NICE evidence remains unresolved",
-            legacy_readiness=legacy_readiness,
-            legacy_recommendation_execution_allowed=legacy_execution,
-            legacy_recommendation_visibility=legacy_visibility,
-            legacy_decision_finality=legacy_finality,
-        )
-
+    # NICE preferences are a ranking/labeling signal, not a visibility gate: more
+    # confirmed matches can only raise a candidate's standing (via finality, or via
+    # ranking elsewhere) -- their absence never blocks a validated MUST-pass,
+    # fully-ranked shortlist from being shown. PREFERENCE_VERIFICATION is therefore
+    # unreachable once eligible>0 and ranking is complete; preferences only decide
+    # FINAL vs PROVISIONAL below, never whether anything is shown at all.
     if eligible > 0 and ranking is RankingState.COMPLETE:
         finality = DecisionFinality.FINAL if preferences is PreferenceState.COMPLETE else DecisionFinality.PROVISIONAL
         phase = DecisionPhase.FINAL_RECOMMENDATION if finality is DecisionFinality.FINAL else DecisionPhase.PROVISIONAL_RECOMMENDATION

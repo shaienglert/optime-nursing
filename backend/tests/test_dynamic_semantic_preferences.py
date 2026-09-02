@@ -131,6 +131,70 @@ class DynamicSemanticPreferenceTests(unittest.TestCase):
         self.assertEqual(row["nice_to_have_coverage"]["status"], "NICE_COMPLETE")
         self.assertEqual(summary["nice_complete_candidate_count"], 1)
 
+    def test_not_applicable_preference_does_not_block_completeness(self):
+        # Reproduces the production pattern: a client value/goal ("preserve
+        # independence") sits alongside a genuinely checkable preference. The
+        # checkable one matching should be enough for NICE_COMPLETE -- an
+        # unverifiable preference must never be required to MATCH.
+        human = {"semantic_ai": {"result": {"preferences": ["Regular bridge games", "Preserve independence"], "statements": []}}}
+        model = build_dynamic_preference_model(human)
+        row = self._row()
+        ledger = build_facility_claim_ledger(row)
+        bridge_claim = next(c["claim_id"] for c in ledger["claims"] if "bridge_club_schedule" in c["path"])
+        packet = {
+            "assessments": [
+                {
+                    "preference_id": model["preferences"][0]["preference_id"],
+                    "status": "MATCH",
+                    "supporting_claim_ids": [bridge_claim],
+                    "reason": "The governed schedule explicitly documents regular bridge games.",
+                    "provider_question_if_unknown": None,
+                },
+                {
+                    "preference_id": model["preferences"][1]["preference_id"],
+                    "status": "NOT_APPLICABLE",
+                    "supporting_claim_ids": [],
+                    "reason": "This describes a client goal, not a checkable fact about any facility.",
+                    "provider_question_if_unknown": None,
+                },
+            ]
+        }
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_PREFERENCE_VERIFICATION_REQUIRED": "1"}, clear=False), patch(
+            "app.services.semantic_preference_runtime._default_transport", return_value=packet
+        ):
+            summary = verify_dynamic_preferences([row], model)
+        self.assertEqual(row["nice_to_have_coverage"]["status"], "NICE_COMPLETE")
+        self.assertEqual(summary["nice_complete_candidate_count"], 1)
+        self.assertEqual(summary["verification_required_count"], 0)
+        self.assertNotIn(model["preferences"][1]["preference_id"], row["nice_to_have_coverage"]["unresolved"])
+
+    def test_all_preferences_not_applicable_is_trivially_complete(self):
+        # If every extracted "preference" turns out to be an unverifiable client
+        # value/goal, completeness must not be permanently unreachable -- there is
+        # nothing left to check, so this is complete by definition.
+        human = {"semantic_ai": {"result": {"preferences": ["Preserve independence", "Least restrictive setting"], "statements": []}}}
+        model = build_dynamic_preference_model(human)
+        row = self._row()
+        packet = {
+            "assessments": [
+                {
+                    "preference_id": pref["preference_id"],
+                    "status": "NOT_APPLICABLE",
+                    "supporting_claim_ids": [],
+                    "reason": "Client value/goal, not a checkable facility fact.",
+                    "provider_question_if_unknown": None,
+                }
+                for pref in model["preferences"]
+            ]
+        }
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_PREFERENCE_VERIFICATION_REQUIRED": "1"}, clear=False), patch(
+            "app.services.semantic_preference_runtime._default_transport", return_value=packet
+        ):
+            summary = verify_dynamic_preferences([row], model)
+        self.assertEqual(row["nice_to_have_coverage"]["status"], "NICE_COMPLETE")
+        self.assertEqual(summary["nice_complete_candidate_count"], 1)
+        self.assertEqual(summary["verification_required_count"], 0)
+
     def test_missing_evidence_stays_unknown_not_negative(self):
         model = build_dynamic_preference_model({"semantic_ai": {"result": {"preferences": ["Weekly astronomy lectures"], "statements": []}}})
         row = self._row()
