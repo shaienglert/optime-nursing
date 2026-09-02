@@ -64,7 +64,11 @@ def test_must_pass_routes_to_ai_ranking_until_ranking_complete():
     assert state.phase is DecisionPhase.AI_RANKING
 
 
-def test_no_candidate_with_resolved_preferences_yet_routes_to_preference_verification():
+def test_no_resolved_preferences_at_all_still_shows_a_provisional_recommendation():
+    # NICE preferences are a ranking/labeling signal, not a visibility gate: more
+    # confirmed matches can only raise a candidate's standing, but their absence
+    # never blocks a validated MUST-pass, fully-ranked shortlist from being shown --
+    # even when literally no candidate has any preference resolved yet.
     result = base_result()
     result.update({"must_eligible_count": 5, "must_pending_verification_count": 0, "must_rejected_count": 2})
     result["decision_intelligence"]["facility_selection_pipeline"] = {
@@ -72,8 +76,9 @@ def test_no_candidate_with_resolved_preferences_yet_routes_to_preference_verific
         "dynamic_preferences": {"preference_count": 3, "nice_complete_candidate_count": 0, "verification_required_count": 4},
     }
     state = derive_canonical_decision_state(result)
-    assert state.phase is DecisionPhase.PREFERENCE_VERIFICATION
-    assert state.can_show_recommendations is False
+    assert state.phase is DecisionPhase.PROVISIONAL_RECOMMENDATION
+    assert state.can_show_recommendations is True
+    assert state.finality is DecisionFinality.PROVISIONAL
 
 
 def test_one_candidate_with_resolved_preferences_reaches_provisional_despite_other_gaps():

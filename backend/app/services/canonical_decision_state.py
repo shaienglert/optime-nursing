@@ -254,7 +254,6 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     eligible, pending, rejected = _must_counts(result, decision)
     ranking = _ranking_state(decision)
     preferences = _preference_state(decision)
-    preference_complete_count, _preference_verification_required = _preference_counts(decision)
 
     if blockers:
         return CanonicalDecisionState(
@@ -349,29 +348,12 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             legacy_decision_finality=legacy_finality,
         )
 
-    # A candidate whose preferences are already fully resolved (nice_complete_
-    # candidate_count > 0) should not be hidden because some *other* checked
-    # candidate still has unresolved NICE evidence -- the same "one unresolved
-    # candidate is a research queue, not a veto" principle already applied to the
-    # MUST gate above. Only block entirely when nothing is ready to show yet.
-    if eligible > 0 and ranking is RankingState.COMPLETE and preferences is PreferenceState.PARTIAL and preference_complete_count == 0:
-        return CanonicalDecisionState(
-            phase=DecisionPhase.PREFERENCE_VERIFICATION,
-            client=ClientState.COMPLETE,
-            evidence=EvidenceState.MATERIAL_GAPS,
-            must=MustState.PASS,
-            ranking=RankingState.COMPLETE,
-            preferences=PreferenceState.PARTIAL,
-            finality=DecisionFinality.PROVISIONAL,
-            system=SystemHealth.HEALTHY,
-            next_action="VERIFY_MATERIAL_PREFERENCES",
-            reason="ranking exists but no candidate has fully resolved NICE evidence yet",
-            legacy_readiness=legacy_readiness,
-            legacy_recommendation_execution_allowed=legacy_execution,
-            legacy_recommendation_visibility=legacy_visibility,
-            legacy_decision_finality=legacy_finality,
-        )
-
+    # NICE preferences are a ranking/labeling signal, not a visibility gate: more
+    # confirmed matches can only raise a candidate's standing (via finality, or via
+    # ranking elsewhere) -- their absence never blocks a validated MUST-pass,
+    # fully-ranked shortlist from being shown. PREFERENCE_VERIFICATION is therefore
+    # unreachable once eligible>0 and ranking is complete; preferences only decide
+    # FINAL vs PROVISIONAL below, never whether anything is shown at all.
     if eligible > 0 and ranking is RankingState.COMPLETE:
         finality = DecisionFinality.FINAL if preferences is PreferenceState.COMPLETE else DecisionFinality.PROVISIONAL
         phase = DecisionPhase.FINAL_RECOMMENDATION if finality is DecisionFinality.FINAL else DecisionPhase.PROVISIONAL_RECOMMENDATION

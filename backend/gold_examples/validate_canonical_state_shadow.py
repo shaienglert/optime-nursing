@@ -99,9 +99,9 @@ def _fixtures() -> list[dict]:
     nice_unknown["decision_intelligence"]["facility_selection_pipeline"] = {
         "ai_ranking": {"status": "AI_RANKED"},
         "dynamic_preferences": {
-            # No candidate has fully resolved NICE evidence yet (complete=0) -- unlike
-            # a candidate with complete>0, which reaches PROVISIONAL_RECOMMENDATION
-            # even while other checked candidates still have gaps.
+            # No candidate has fully resolved NICE evidence yet (complete=0) -- NICE
+            # preferences are a labeling signal, not a visibility gate, so this still
+            # reaches PROVISIONAL_RECOMMENDATION, just with no confirmed matches to show.
             "preference_count": 3,
             "nice_complete_candidate_count": 0,
             "verification_required_count": 4,
@@ -154,7 +154,7 @@ def _fixtures() -> list[dict]:
             "next": "RUN_AI_RANKING",
             "conflicts": {"LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION"},
         },
-        {"id": "ranked-with-nice-unknowns", "payload": nice_unknown, "phase": DecisionPhase.PREFERENCE_VERIFICATION, "next": "VERIFY_MATERIAL_PREFERENCES"},
+        {"id": "ranked-with-nice-unknowns", "payload": nice_unknown, "phase": DecisionPhase.PROVISIONAL_RECOMMENDATION, "next": "SHOW_PROVISIONAL_RECOMMENDATION"},
         {"id": "complete-decision", "payload": final, "phase": DecisionPhase.FINAL_RECOMMENDATION, "next": "SHOW_FINAL_RECOMMENDATION"},
         {
             "id": "ambiguous-payload",
