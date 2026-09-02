@@ -99,8 +99,11 @@ def _fixtures() -> list[dict]:
     nice_unknown["decision_intelligence"]["facility_selection_pipeline"] = {
         "ai_ranking": {"status": "AI_RANKED"},
         "dynamic_preferences": {
+            # No candidate has fully resolved NICE evidence yet (complete=0) -- unlike
+            # a candidate with complete>0, which reaches PROVISIONAL_RECOMMENDATION
+            # even while other checked candidates still have gaps.
             "preference_count": 3,
-            "nice_complete_candidate_count": 1,
+            "nice_complete_candidate_count": 0,
             "verification_required_count": 4,
         },
     }

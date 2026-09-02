@@ -166,6 +166,21 @@ def _must_counts(result: Dict[str, Any], decision: Dict[str, Any]) -> tuple[int,
     )
 
 
+def _preference_counts(decision: Dict[str, Any]) -> tuple[int, int]:
+    """Raw (nice_complete_candidate_count, verification_required_count), independent
+    of the collapsed COMPLETE/PARTIAL state -- callers that need to distinguish "at
+    least one candidate is ready to show" from "every checked candidate is fully
+    resolved" read these directly rather than the binary PreferenceState.
+    """
+    pipeline = decision.get("facility_selection_pipeline")
+    if not isinstance(pipeline, dict):
+        return 0, 0
+    dynamic = pipeline.get("dynamic_preferences")
+    if not isinstance(dynamic, dict):
+        return 0, 0
+    return int(dynamic.get("nice_complete_candidate_count") or 0), int(dynamic.get("verification_required_count") or 0)
+
+
 def _preference_state(decision: Dict[str, Any]) -> PreferenceState:
     pipeline = decision.get("facility_selection_pipeline")
     if not isinstance(pipeline, dict):
@@ -176,8 +191,7 @@ def _preference_state(decision: Dict[str, Any]) -> PreferenceState:
     preference_count = int(dynamic.get("preference_count") or 0)
     if preference_count == 0:
         return PreferenceState.COMPLETE
-    complete = int(dynamic.get("nice_complete_candidate_count") or 0)
-    verification_required = int(dynamic.get("verification_required_count") or 0)
+    complete, verification_required = _preference_counts(decision)
     if complete > 0 and verification_required == 0:
         return PreferenceState.COMPLETE
     return PreferenceState.PARTIAL
@@ -240,6 +254,7 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     eligible, pending, rejected = _must_counts(result, decision)
     ranking = _ranking_state(decision)
     preferences = _preference_state(decision)
+    preference_complete_count, _preference_verification_required = _preference_counts(decision)
 
     if blockers:
         return CanonicalDecisionState(
@@ -334,7 +349,12 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             legacy_decision_finality=legacy_finality,
         )
 
-    if eligible > 0 and ranking is RankingState.COMPLETE and preferences is PreferenceState.PARTIAL:
+    # A candidate whose preferences are already fully resolved (nice_complete_
+    # candidate_count > 0) should not be hidden because some *other* checked
+    # candidate still has unresolved NICE evidence -- the same "one unresolved
+    # candidate is a research queue, not a veto" principle already applied to the
+    # MUST gate above. Only block entirely when nothing is ready to show yet.
+    if eligible > 0 and ranking is RankingState.COMPLETE and preferences is PreferenceState.PARTIAL and preference_complete_count == 0:
         return CanonicalDecisionState(
             phase=DecisionPhase.PREFERENCE_VERIFICATION,
             client=ClientState.COMPLETE,
@@ -345,7 +365,7 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             finality=DecisionFinality.PROVISIONAL,
             system=SystemHealth.HEALTHY,
             next_action="VERIFY_MATERIAL_PREFERENCES",
-            reason="ranking exists but material NICE evidence remains unresolved",
+            reason="ranking exists but no candidate has fully resolved NICE evidence yet",
             legacy_readiness=legacy_readiness,
             legacy_recommendation_execution_allowed=legacy_execution,
             legacy_recommendation_visibility=legacy_visibility,

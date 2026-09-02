@@ -1,4 +1,5 @@
 from app.services.canonical_decision_state import (
+    DecisionFinality,
     DecisionPhase,
     apply_canonical_decision_state_authority,
     derive_canonical_decision_state,
@@ -63,7 +64,24 @@ def test_must_pass_routes_to_ai_ranking_until_ranking_complete():
     assert state.phase is DecisionPhase.AI_RANKING
 
 
-def test_ranked_with_nice_gaps_routes_to_preference_verification():
+def test_no_candidate_with_resolved_preferences_yet_routes_to_preference_verification():
+    result = base_result()
+    result.update({"must_eligible_count": 5, "must_pending_verification_count": 0, "must_rejected_count": 2})
+    result["decision_intelligence"]["facility_selection_pipeline"] = {
+        "ai_ranking": {"status": "AI_RANKED"},
+        "dynamic_preferences": {"preference_count": 3, "nice_complete_candidate_count": 0, "verification_required_count": 4},
+    }
+    state = derive_canonical_decision_state(result)
+    assert state.phase is DecisionPhase.PREFERENCE_VERIFICATION
+    assert state.can_show_recommendations is False
+
+
+def test_one_candidate_with_resolved_preferences_reaches_provisional_despite_other_gaps():
+    # A candidate whose own NICE preferences are fully resolved must not stay hidden
+    # because some *other* checked candidate still has unresolved evidence -- the
+    # same "unresolved evidence on one candidate is a research queue, not a veto"
+    # principle already applied to the MUST gate (see
+    # test_pending_non_eligible_candidates_do_not_hide_completed_ranked_shortlist).
     result = base_result()
     result.update({"must_eligible_count": 5, "must_pending_verification_count": 0, "must_rejected_count": 2})
     result["decision_intelligence"]["facility_selection_pipeline"] = {
@@ -71,7 +89,9 @@ def test_ranked_with_nice_gaps_routes_to_preference_verification():
         "dynamic_preferences": {"preference_count": 3, "nice_complete_candidate_count": 1, "verification_required_count": 4},
     }
     state = derive_canonical_decision_state(result)
-    assert state.phase is DecisionPhase.PREFERENCE_VERIFICATION
+    assert state.phase is DecisionPhase.PROVISIONAL_RECOMMENDATION
+    assert state.can_show_recommendations is True
+    assert state.finality is DecisionFinality.PROVISIONAL
 
 
 def test_complete_pipeline_reaches_final_recommendation():
