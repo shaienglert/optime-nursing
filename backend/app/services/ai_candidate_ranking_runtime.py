@@ -91,12 +91,13 @@ def _validated_citations(label: str, canonical_id: str, item: Dict[str, Any], va
 
 
 def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any], claim_limit: int) -> Dict[str, Any]:
+    output_template = _ranking_output_template(rows)
     return {
         "role": "OPTIME_NURSING_AI_CANDIDATE_RANKER",
         "mission": "Rank only facilities that have already passed every deterministic MUST requirement, using the resident-specific semantic preference model plus supplied governed evidence.",
         "rules": [
             "Do not change MUST eligibility; every supplied candidate is MUST_ELIGIBLE.",
-            "Rank all supplied candidate IDs exactly once and introduce no other facility.",
+            "Return the supplied output template as a complete replacement: preserve every canonical_facility_id exactly once, in the same order, and fill only its non-ID fields. Never omit, add, rename, or duplicate an ID.",
             "Use the dynamic_preference_model in human_context; do not rely on a fixed preference catalog.",
             "Use only supplied governed claim ledgers for facility facts; do not use generic brand assumptions or outside knowledge.",
             "Treat UNKNOWN as missing information, never as a negative fact and never as a positive fact.",
@@ -111,20 +112,13 @@ def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_con
         "living_strategy": strategy,
         "must_eligible_candidates": _ranking_packet(rows, claim_limit=claim_limit),
         "required_output": {
-            "ranked_candidates": [
-                {
-                    "canonical_facility_id": "string",
-                    "reason": "string",
-                    "information_deficits": ["string"],
-                    "rank_drivers": ["claim_id from this candidate's governed_claim_ledger that supports its rank; may be empty"],
-                    "rank_risks": ["claim_id from this candidate's governed_claim_ledger that is a concern or caveat; may be empty"],
-                }
-            ]
+            "ranked_candidates": output_template,
         },
     }
 
 
 def _score_prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_context: Dict[str, Any], strategy: Dict[str, Any], claim_limit: int) -> Dict[str, Any]:
+    output_template = _scoring_output_template(rows)
     return {
         "role": "OPTIME_NURSING_AI_CANDIDATE_SCORER",
         "mission": "Score every supplied MUST_ELIGIBLE facility on one globally comparable resident-specific 0-100 fit scale. These batch scores will be merged with scores from other batches, so apply the rubric absolutely, not relatively within this batch.",
@@ -137,7 +131,7 @@ def _score_prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hum
         },
         "rules": [
             "Every candidate already passed deterministic MUST. Never change eligibility.",
-            "Return every supplied canonical_facility_id exactly once and no other IDs.",
+            "Return the supplied output template as a complete replacement: preserve every canonical_facility_id exactly once, in the same order, and fill only its non-ID fields. Never omit, add, rename, or duplicate an ID.",
             "Use the same absolute 0-100 scale for every candidate; do not normalize scores to the current batch.",
             "Use the dynamic_preference_model in human_context and supplied governed evidence only.",
             "UNKNOWN is an information deficit, not negative evidence and not positive evidence.",
@@ -150,18 +144,38 @@ def _score_prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hum
         "living_strategy": strategy,
         "must_eligible_candidates": _ranking_packet(rows, claim_limit=claim_limit),
         "required_output": {
-            "scored_candidates": [
-                {
-                    "canonical_facility_id": "string",
-                    "score": 0,
-                    "reason": "string",
-                    "information_deficits": ["string"],
-                    "rank_drivers": ["claim_id from this candidate's governed_claim_ledger that supports its score; may be empty"],
-                    "rank_risks": ["claim_id from this candidate's governed_claim_ledger that is a concern or caveat; may be empty"],
-                }
-            ]
+            "scored_candidates": output_template,
         },
     }
+
+
+def _ranking_output_template(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Deterministically enumerate IDs so the model only fills rank details."""
+    return [
+        {
+            "canonical_facility_id": str(row["canonical_facility_id"]),
+            "reason": "fill with a governed explanation",
+            "information_deficits": [],
+            "rank_drivers": [],
+            "rank_risks": [],
+        }
+        for row in rows
+    ]
+
+
+def _scoring_output_template(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Deterministically enumerate IDs so the model only fills score details."""
+    return [
+        {
+            "canonical_facility_id": str(row["canonical_facility_id"]),
+            "score": 0,
+            "reason": "fill with a governed explanation",
+            "information_deficits": [],
+            "rank_drivers": [],
+            "rank_risks": [],
+        }
+        for row in rows
+    ]
 
 
 def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -232,9 +246,11 @@ def _validated_ai_response(prompt: Dict[str, Any], rows: List[Dict[str, Any]], v
             "contract_repair": {
                 "previous_validation_error": error,
                 "candidate_ids_required_exactly_once": candidate_ids,
+                "output_template_required_exactly_once": (prompt.get("required_output") or {}).get(output_key),
                 "instruction": (
-                    f"Return a complete replacement `{output_key}` array containing exactly these IDs once each, "
-                    "with no extras. Recheck every citation against that candidate's supplied ledger; use [] if uncertain."
+                    f"Return the supplied `{output_key}` output template as a complete replacement, preserving exactly "
+                    "these IDs once each and in the supplied order. Fill only non-ID fields; no extras. Recheck every "
+                    "citation against that candidate's supplied ledger; use [] if uncertain."
                 ),
             },
         }

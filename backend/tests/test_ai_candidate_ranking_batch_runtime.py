@@ -293,7 +293,15 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertEqual(2, len(calls))
         self.assertTrue(status["contract_repair_applied"])
         self.assertEqual(["FAC-01", "FAC-02"], [row["canonical_facility_id"] for row in ranked])
+        self.assertEqual(
+            ["FAC-01", "FAC-02"],
+            [item["canonical_facility_id"] for item in calls[0]["required_output"]["ranked_candidates"]],
+        )
         self.assertEqual(["FAC-01", "FAC-02"], calls[1]["contract_repair"]["candidate_ids_required_exactly_once"])
+        self.assertEqual(
+            ["FAC-01", "FAC-02"],
+            [item["canonical_facility_id"] for item in calls[1]["contract_repair"]["output_template_required_exactly_once"]],
+        )
 
     def test_fabricated_claim_citation_is_rejected_and_falls_back(self):
         rows = self._rows(1)
