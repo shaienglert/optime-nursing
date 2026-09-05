@@ -8,7 +8,12 @@ from __future__ import annotations
    governed claims; missing evidence stays UNKNOWN.
 4. Legacy structured NICE signals are audit-only and cannot drive the authoritative
    ranking or NICE_COMPLETE result.
-5. PENDING MUST candidates remain research candidates, never recommendations.
+5. A MUST criterion with no evidence yet is a research item, not a rejection: a
+   PENDING candidate is ranked alongside MUST_ELIGIBLE ones on whatever evidence
+   already exists, and shown with an explicit note of what is still unverified.
+   Missing evidence is scored as neutral, never as a negative -- so confirming it
+   later can only hold or improve the candidate's rank, never worsen it. Only an
+   explicit MUST_FAIL (governed evidence contradicts a requirement) is excluded.
 6. Provider verification can add governed claims and trigger an AI rerank later.
 7. When AI candidate ranking is explicitly required, an unavailable AI ranking fails
    closed: deterministic ordering may remain in diagnostics but is never exposed as a
@@ -137,13 +142,17 @@ def apply_must_ai_nice_pipeline(
     human_context["dynamic_preference_model"] = dynamic_preferences
     decision["dynamic_preference_model"] = dynamic_preferences
 
+    # Pending candidates are ranked together with eligible ones: a MUST item with no
+    # evidence yet is not a veto, so it must not silently disappear from the shortlist.
+    rankable = eligible + pending
+
     audit_intent = deepcopy(client_intent)
-    _remove_legacy_nice_from_authoritative_path(eligible)
+    _remove_legacy_nice_from_authoritative_path(rankable)
     ranking_intent = deepcopy(client_intent)
     ranking_intent["nice_to_haves"] = []
 
     ranked, ai_status = rank_must_eligible_candidates(
-        eligible,
+        rankable,
         client_intent=ranking_intent,
         human_context=human_context,
         strategy=strategy,
@@ -151,7 +160,7 @@ def apply_must_ai_nice_pipeline(
     )
 
     ai_failure_block = (
-        bool(eligible)
+        bool(rankable)
         and _env_true("OPTIME_SEMANTIC_AI_ENABLED")
         and _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED")
         and not _ai_ranking_succeeded(ai_status)
@@ -195,10 +204,33 @@ def apply_must_ai_nice_pipeline(
             "unknown_policy": "UNKNOWN_IS_INFORMATION_DEFICIT_NOT_NEGATIVE_EVIDENCE",
             "legacy_nice_role": "AUDIT_ONLY",
         }
+        if row.get("must_eligibility") == "MUST_PENDING_VERIFICATION":
+            still_unverified = list((row.get("client_intent_fit") or {}).get("must_unknown") or [])
+            row["provisional_ranking_note"] = {
+                "status": "MUST_VERIFICATION_PENDING",
+                "still_unverified": still_unverified,
+                "statement": (
+                    (
+                        "This is not yet a confirmed match: "
+                        + ", ".join(still_unverified)
+                        + " still need to be verified for this facility. Ranked here using only "
+                        "the evidence already available; unverified items are not held against it. "
+                        "If they are confirmed, this facility's rank can only stay the same or improve, "
+                        "never get worse."
+                    )
+                    if still_unverified
+                    else (
+                        "This is not yet a confirmed match: one or more requirements still need to be "
+                        "verified for this facility. Ranked here using only the evidence already "
+                        "available; confirming the missing evidence can only hold or improve this rank."
+                    )
+                ),
+            }
 
     selected_ids = {str(row.get("canonical_facility_id")) for row in selected}
     complete_selected = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) in selected_ids]
     complete_beyond_display = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) not in selected_ids]
+    pending_in_display_count = sum(1 for row in selected if row.get("must_eligibility") == "MUST_PENDING_VERIFICATION")
 
     result["results"] = selected
     result["result_count"] = len(selected)
@@ -250,30 +282,37 @@ def apply_must_ai_nice_pipeline(
         "nice_complete_beyond_display_count": len(complete_beyond_display),
         "nice_complete_beyond_display_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_beyond_display],
         "client_statement": (
-            "We cannot present a recommendation yet because the required AI ranking did not complete successfully. The deterministic candidate order is retained only for diagnostics and is not exposed as a recommendation."
-            if ai_failure_block
-            else (
-                (
-                    f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and have governed evidence matching every specific preference you expressed. This ranking can still change when we verify missing provider facts directly with the facilities."
-                    + (
-                        f" We also found {len(complete_beyond_display)} additional facility(ies) further down the ranked list that fully match every preference you expressed; ask to see them for a wider comparison."
-                        if complete_beyond_display
-                        else ""
-                    )
-                )
-                if preference_count and complete_selected
+            (
+                "We cannot present a recommendation yet because the required AI ranking did not complete successfully. The deterministic candidate order is retained only for diagnostics and is not exposed as a recommendation."
+                if ai_failure_block
                 else (
                     (
-                        "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
+                        f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and have governed evidence matching every specific preference you expressed. This ranking can still change when we verify missing provider facts directly with the facilities."
                         + (
-                            f" We did find {len(complete_beyond_display)} facility(ies) further down the ranked list that fully match every preference you expressed; ask to see them if a complete preference match matters more than AI rank order."
+                            f" We also found {len(complete_beyond_display)} additional facility(ies) further down the ranked list that fully match every preference you expressed; ask to see them for a wider comparison."
                             if complete_beyond_display
                             else ""
                         )
                     )
-                    if preference_count
-                    else "The displayed facilities pass every verified MUST requirement. No explicit NICE preference-completeness claim is being made; provider verification can still improve the ranking."
+                    if preference_count and complete_selected
+                    else (
+                        (
+                            "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
+                            + (
+                                f" We did find {len(complete_beyond_display)} facility(ies) further down the ranked list that fully match every preference you expressed; ask to see them if a complete preference match matters more than AI rank order."
+                                if complete_beyond_display
+                                else ""
+                            )
+                        )
+                        if preference_count
+                        else "The displayed facilities pass every verified MUST requirement. No explicit NICE preference-completeness claim is being made; provider verification can still improve the ranking."
+                    )
                 )
+            )
+            + (
+                f" {pending_in_display_count} of the facilities shown still have at least one MUST requirement pending verification rather than confirmed -- they are ranked on the evidence available today, unverified items are not counted against them, and confirming those items can only hold or improve their position, never worsen it."
+                if pending_in_display_count and not ai_failure_block
+                else ""
             )
         ),
         "rule": "AI never decides MUST eligibility. When candidate AI ranking is required, failed ranking cannot silently degrade into a user-visible deterministic recommendation. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
@@ -297,7 +336,7 @@ def apply_must_ai_nice_pipeline(
     if ai_failure_block:
         decision["ai_ranking_failure"] = {
             "status": ai_status.get("status"),
-            "candidate_count": len(eligible),
+            "candidate_count": len(rankable),
             "deterministic_order_exposed": False,
             "rule": "AI-owned ranking failure must fail closed rather than masquerade as an AI recommendation.",
         }
