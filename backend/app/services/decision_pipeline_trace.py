@@ -42,7 +42,7 @@ def attach_decision_pipeline_trace(result: Dict[str, Any]) -> Dict[str, Any]:
             },
         },
         "outcome": "VISIBLE_RECOMMENDATIONS" if visible else "NO_VISIBLE_RECOMMENDATIONS",
-        "contract": "Pending evidence for candidates outside the MUST-eligible shortlist never revokes a completed, validated ranking of eligible candidates.",
+        "contract": "A candidate with unresolved (not failed) MUST evidence is ranked and shown alongside MUST-eligible candidates on today's evidence, with an explicit per-candidate note of what remains unverified; only an explicit MUST failure excludes a candidate from the shortlist.",
     }
     result["decision_pipeline_trace"] = trace
     audit = result.get("recommendation_audit_trace") if isinstance(result.get("recommendation_audit_trace"), dict) else {}

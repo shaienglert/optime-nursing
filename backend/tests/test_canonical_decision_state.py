@@ -35,17 +35,24 @@ def test_ai_failure_is_system_blocked():
     assert state.phase is DecisionPhase.SYSTEM_BLOCKED
 
 
-def test_pending_must_routes_to_evidence_collection():
-    # No candidate has passed every MUST yet -- pending evidence is still a
-    # real block here, unlike test_pending_non_eligible_candidates_do_not_hide_
-    # completed_ranked_shortlist below, where eligible > 0 already.
+def test_pending_must_routes_to_evidence_collection_before_ranking_runs():
+    # No candidate has passed every MUST yet, and AI ranking has not run over the
+    # pending pool either (no facility_selection_pipeline.ai_ranking status set) --
+    # there is genuinely nothing ranked to show yet, unlike
+    # test_pending_candidates_are_shown_provisionally_once_ranked below, where
+    # ranking over the pending pool has already completed.
     result = base_result()
     result.update({"must_eligible_count": 0, "must_pending_verification_count": 4, "must_rejected_count": 2})
     state = derive_canonical_decision_state(result)
     assert state.phase is DecisionPhase.EVIDENCE_COLLECTION
 
 
-def test_pending_non_eligible_candidates_do_not_hide_completed_ranked_shortlist():
+def test_pending_candidates_are_shown_provisionally_once_ranked():
+    # Pending candidates are ranked alongside eligible ones (must_ai_nice_pipeline.py)
+    # rather than excluded, so a completed ranking over eligible+pending must show a
+    # shortlist -- but with 40 still-unresolved candidates in that ranked pool, this
+    # is provisional (not final): the old "hide everything" and a false "fully
+    # final" claim are both wrong here.
     result = base_result()
     result.update({"must_eligible_count": 3, "must_pending_verification_count": 40, "must_rejected_count": 2})
     result["decision_intelligence"]["facility_selection_pipeline"] = {
@@ -53,7 +60,22 @@ def test_pending_non_eligible_candidates_do_not_hide_completed_ranked_shortlist(
         "dynamic_preferences": {"preference_count": 0, "verification_required_count": 0},
     }
     state = derive_canonical_decision_state(result)
-    assert state.phase is DecisionPhase.FINAL_RECOMMENDATION
+    assert state.phase is DecisionPhase.PROVISIONAL_RECOMMENDATION
+    assert state.can_show_recommendations is True
+    assert state.finality is DecisionFinality.PROVISIONAL
+
+
+def test_zero_eligible_but_ranked_pending_candidates_still_show_a_provisional_recommendation():
+    # No candidate has fully passed MUST yet, but 5 pending ones have already been
+    # ranked on today's evidence -- this must not collapse to an empty shortlist.
+    result = base_result()
+    result.update({"must_eligible_count": 0, "must_pending_verification_count": 5, "must_rejected_count": 0})
+    result["decision_intelligence"]["facility_selection_pipeline"] = {
+        "ai_ranking": {"status": "AI_RANKED"},
+        "dynamic_preferences": {"preference_count": 0, "verification_required_count": 0},
+    }
+    state = derive_canonical_decision_state(result)
+    assert state.phase is DecisionPhase.PROVISIONAL_RECOMMENDATION
     assert state.can_show_recommendations is True
 
 
@@ -86,7 +108,7 @@ def test_one_candidate_with_resolved_preferences_reaches_provisional_despite_oth
     # because some *other* checked candidate still has unresolved evidence -- the
     # same "unresolved evidence on one candidate is a research queue, not a veto"
     # principle already applied to the MUST gate (see
-    # test_pending_non_eligible_candidates_do_not_hide_completed_ranked_shortlist).
+    # test_pending_candidates_are_shown_provisionally_once_ranked).
     result = base_result()
     result.update({"must_eligible_count": 5, "must_pending_verification_count": 0, "must_rejected_count": 2})
     result["decision_intelligence"]["facility_selection_pipeline"] = {
