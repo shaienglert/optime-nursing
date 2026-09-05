@@ -32,6 +32,8 @@ jobs:
           cat /tmp/optime-nursing-next.log
           exit 1
       - run: npx playwright test tests/browser/adaptive-interview-buttons.spec.cjs --reporter=line --workers=1
+      - name: Live production two-path equivalence
+        run: npx playwright test tests/browser/live-production-equivalence.spec.cjs --reporter=line --workers=1
       - name: Show server log on failure
         if: failure()
         run: cat /tmp/optime-nursing-next.log || true
