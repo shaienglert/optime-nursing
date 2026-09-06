@@ -1703,7 +1703,7 @@ function shouldRouteToLocalBackend(configuredBase: string): boolean {
   return configuredUrl.port === currentOriginUrl.port;
 }
 
-function joinApiUrl(baseUrl: string, routePath: string): string {
+export function joinApiUrl(baseUrl: string, routePath: string): string {
   const normalizedBase = normalizeApiBaseUrl(baseUrl);
   const normalizedRoute = routePath.startsWith("/") ? routePath : `/${routePath}`;
   return `${normalizedBase}${normalizedRoute}`;
