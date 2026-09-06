@@ -1,0 +1,78 @@
+{
+  "report_type": "PERSONAL_DECISION_AND_TRANSITION_REPORT",
+  "report_version": "v1-closed-world",
+  "decision": {
+    "phase": "FINAL_RECOMMENDATION",
+    "finality": "FINAL",
+    "can_show_recommendations": true
+  },
+  "sections": [
+    {
+      "section": "YOUR_SITUATION",
+      "title": "Your Situation",
+      "claims": []
+    },
+    {
+      "section": "YOUR_ROLE",
+      "title": "Your Role in This Decision",
+      "claims": [
+        {
+          "claim_id": "case:role",
+          "text": "You are a family member helping with this decision.",
+          "claim_type": "USER_INFORMATION",
+          "provenance_ids": ["case:user_input:role"]
+        }
+      ]
+    },
+    {
+      "section": "WHAT_MATTERS",
+      "title": "What Matters Most",
+      "claims": [
+        {
+          "claim_id": "case:priority",
+          "text": "The family identified preserving independence as an important preference.",
+          "claim_type": "USER_INFORMATION",
+          "provenance_ids": ["case:user_input:independence"]
+        }
+      ]
+    },
+    {
+      "section": "WHY_RECOMMENDATION",
+      "title": "Why This Recommendation",
+      "claims": [
+        {
+          "claim_id": "decision:canonical-reason",
+          "text": "validated MUST gate and AI ranking are complete",
+          "claim_type": "ENGINE_CONCLUSION",
+          "provenance_ids": ["decision:canonical"]
+        }
+      ]
+    },
+    {
+      "section": "SUCCESSFUL_TRANSITION",
+      "title": "Preparing for a Successful Transition",
+      "claims": [
+        {
+          "claim_id": "research:transition-autonomy",
+          "text": "Preserving autonomy is relevant to a successful transition when it is part of the person's stated preferences.",
+          "claim_type": "RESEARCH_FINDING",
+          "provenance_ids": ["research:RI-TRANSITION-AUTONOMY"]
+        }
+      ]
+    },
+    {
+      "section": "BEFORE_YOU_DECIDE",
+      "title": "What We Still Don't Know",
+      "claims": [
+        {
+          "claim_id": "facility:night-staff",
+          "text": "Night staffing has not been verified.",
+          "claim_type": "UNKNOWN",
+          "provenance_ids": ["facility:night_staffing:UNKNOWN"]
+        }
+      ]
+    }
+  ],
+  "fixture_only": true,
+  "warning": "Synthetic example. Not a real client or facility report."
+}
