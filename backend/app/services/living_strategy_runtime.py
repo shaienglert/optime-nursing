@@ -23,6 +23,32 @@ def _contains(text: str, *tokens: str) -> bool:
     return any(token in text for token in tokens)
 
 
+_COUPLE_NEGATION_WORDS = {"no", "not", "without", "single", "widow", "widower", "unmarried", "divorced"}
+_COUPLE_RELATIONSHIP_WORDS = ("husband", "wife", "spouse", "parents")
+
+
+def _mentions_couple(text: str) -> bool:
+    """True only for a genuine couple/relationship signal.
+
+    A naive substring check on "couple" fires on the idiomatic "a couple of X" (weeks,
+    specific things, ...), which has nothing to do with a relationship, and fires on
+    "spouse"/"husband"/"wife" even when the sentence explicitly negates them ("no
+    spouse", "without a husband") -- both produced a false COUPLE_CORESIDENCE MUST and
+    a spurious CCRC entrance-fee guardian question for single-person searches.
+    """
+    if re.search(r"\bcouple\b(?!\s+of\b)", text):
+        return True
+    if _contains(text, "both of us", "both parents"):
+        return True
+    for word in _COUPLE_RELATIONSHIP_WORDS:
+        for match in re.finditer(rf"\b{word}\b", text):
+            preceding_words = text[: match.start()].split()[-3:]
+            if any(negation in preceding_words for negation in _COUPLE_NEGATION_WORDS):
+                continue
+            return True
+    return False
+
+
 def _first_known(questionnaire: Dict[str, Any], *keys: str) -> Any:
     for key in keys:
         value = questionnaire.get(key)
@@ -62,7 +88,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     transition = hi.get("transitionRiskProfile") if isinstance(hi.get("transitionRiskProfile"), dict) else {}
     finance = hi.get("financialProfile") if isinstance(hi.get("financialProfile"), dict) else {}
 
-    couple = _contains(query, "couple", "husband", "wife", "spouse", "both of us", "both parents", "parents")
+    couple = _mentions_couple(query)
     if _norm(questionnaire_state.get("relationship")) in {"wife", "husband", "spouse"}:
         couple = True
 
