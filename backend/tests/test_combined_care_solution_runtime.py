@@ -46,6 +46,20 @@ def test_in_house_adl_remains_valid_path():
     assert result["delivery_model"] == "FACILITY_IN_HOUSE"
 
 
+def test_skilled_nursing_in_house_adl_also_passes():
+    # Same regulatory logic as ASSISTED_LIVING_RFG above: a licensed skilled nursing
+    # facility cannot hold that license without providing ADL assistance. This is the
+    # value _reconcile_adl_must (app/services/__init__.py) actually uses to set
+    # ADL_SUPPORT_AVAILABLE's final status in production, overwriting whatever any
+    # earlier gate decided -- before this fix, every skilled nursing facility sat in
+    # MUST_PENDING_VERIFICATION on this key regardless of what client_intent_runtime.py
+    # or facility_parameter_service.py's governed CMS-sourced evidence said.
+    row = _row(canonical_type="SKILLED_NURSING")
+    result = build_combined_care_solution(row, {}, "Needs help bathing")
+    assert result["combined_must_coverage"] == "PASS"
+    assert result["delivery_model"] == "FACILITY_IN_HOUSE"
+
+
 def test_agent_reported_no_outside_care_alone_does_not_fail_must():
     # decision_research_worker.py stamps outside_care_allowed_verified=False by default
     # on every research record regardless of which dimension was actually requested, so

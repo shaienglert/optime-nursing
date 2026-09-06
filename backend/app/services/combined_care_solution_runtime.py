@@ -108,7 +108,14 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
     # the ADL/MEDICATION/REHAB/RECOVERY_TRANSITION gates in client_intent_runtime.py and
     # the semantic MUST gate in semantic_facility_requirements.py.
     explicit_in_house = care_delivery.get("personal_care_in_house") is True
-    in_house_adl = canonical_type == "ASSISTED_LIVING_RFG" or explicit_in_house or any(p.get("adl_support_verified") is True for p in payloads)
+    # SKILLED_NURSING is included for the same reason ASSISTED_LIVING_RFG already is:
+    # ADL assistance is a baseline requirement of that license category, not something a
+    # facility could hold the license without providing. This is the actual value that
+    # drives ADL_SUPPORT_AVAILABLE's final status (via _reconcile_adl_must in
+    # app/services/__init__.py, which overwrites whatever an earlier gate decided based
+    # on this coverage) -- the equivalent fix in client_intent_runtime.py alone had no
+    # effect in production because this reconciliation runs after it and ignores it.
+    in_house_adl = canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or explicit_in_house or any(p.get("adl_support_verified") is True for p in payloads)
     outside_allowed_true = care_delivery.get("outside_care_allowed") is True or any(p.get("outside_care_allowed_verified") is True for p in payloads)
     outside_allowed_false = care_delivery.get("outside_care_allowed") is False
     agency = _agency_match_from_row(row)
