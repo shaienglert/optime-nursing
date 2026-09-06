@@ -66,27 +66,34 @@ jobs:
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
       - name: Install backend runtime dependencies
-        run: python -m pip install -r backend/requirements.txt
+        run: python -m pip install -r backend/requirements.txt pytest
+      # Run with pytest, not unittest. Six of the modules below hold their tests as
+      # plain module-level functions rather than TestCase subclasses, and
+      # `python -m unittest` collects only TestCase. This job reported success having
+      # executed none of them: 30 tests across the decision-quality suite -- the ones
+      # asserting that the product recommends the right thing -- were invisible here
+      # while the job stayed green.
       - name: Run deterministic Nevada runtime and golden decision-quality tests
+        working-directory: backend
         run: |
-          python -m unittest \
-            backend.tests.test_database_runtime \
-            backend.tests.test_facility_parameter_service \
-            backend.tests.test_nevada_production_runtime \
-            backend.tests.test_provider_housing_runtime \
-            backend.tests.test_patient_decision_engine_import_resolution \
-            backend.tests.test_human_intelligence_runtime_integration \
-            backend.tests.test_adaptive_interview_roundtrip \
-            backend.tests.test_success_factor_runtime \
-            backend.tests.test_decision_governance_runtime \
-            backend.tests.test_decision_agent_bridge \
-            backend.tests.test_ai_process_owner_runtime \
-            backend.tests.test_main_decision_runtime_contract \
-            backend.tests.test_decision_quality_market_and_regulatory \
-            backend.tests.test_decision_quality_strategy_families \
-            backend.tests.test_decision_quality_topn_causality \
-            backend.tests.test_decision_quality_topn_gates \
-            backend.tests.test_golden_topn_decision_quality
+          python -m pytest -q \
+            tests/test_database_runtime.py \
+            tests/test_facility_parameter_service.py \
+            tests/test_nevada_production_runtime.py \
+            tests/test_provider_housing_runtime.py \
+            tests/test_patient_decision_engine_import_resolution.py \
+            tests/test_human_intelligence_runtime_integration.py \
+            tests/test_adaptive_interview_roundtrip.py \
+            tests/test_success_factor_runtime.py \
+            tests/test_decision_governance_runtime.py \
+            tests/test_decision_agent_bridge.py \
+            tests/test_ai_process_owner_runtime.py \
+            tests/test_main_decision_runtime_contract.py \
+            tests/test_decision_quality_market_and_regulatory.py \
+            tests/test_decision_quality_strategy_families.py \
+            tests/test_decision_quality_topn_causality.py \
+            tests/test_decision_quality_topn_gates.py \
+            tests/test_golden_topn_decision_quality.py
       - name: Verify unified AI interview, Guardian, Valley and READY contracts
         run: |
           python - <<'PY'
