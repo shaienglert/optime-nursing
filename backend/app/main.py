@@ -55,6 +55,7 @@ from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
 from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
+from app.services.schema_migrations import ensure_state_license_schema
 from app.services.provider_identity import (
     apply_facility_field_update,
     complete_email_verification,
@@ -65,6 +66,14 @@ from app.services.provider_identity import (
     run_annual_reverification,
     start_email_verification,
     validate_license_ownership,
+)
+from app.services.facility_profile_portal import (
+    add_photo,
+    deactivate_photo,
+    facility_profile_snapshot,
+    recompute_completeness,
+    save_capabilities,
+    search_claimable_facilities,
 )
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.evidence_source_integrity import (
@@ -588,6 +597,44 @@ class RevertAuditOut(BaseModel):
     facility_id: int
     reverted_audit_id: int
     reversal_audit_id: int
+
+
+class ClaimSearchOut(BaseModel):
+    facility_id: int
+    cms_id: str
+    name: str
+    address: str
+    city: str
+    state: str
+    zip_code: str
+    beds: Optional[int] = None
+    overall_rating: Optional[int] = None
+    already_claimed: bool
+
+
+class CapabilitySaveIn(BaseModel):
+    user_id: int
+    answers: Dict[str, str]
+    ip_address: Optional[str] = None
+
+
+class CapabilitySaveOut(BaseModel):
+    updated: int
+    unchanged: int
+    completeness: Dict[str, object]
+
+
+class PhotoAddIn(BaseModel):
+    user_id: int
+    url: str
+    category: str = "general"
+    caption: Optional[str] = None
+    ip_address: Optional[str] = None
+
+
+class PhotoRemoveIn(BaseModel):
+    user_id: int
+    ip_address: Optional[str] = None
 
 
 class StaffInviteIn(BaseModel):
@@ -1138,6 +1185,7 @@ def startup() -> None:
     # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
+    ensure_state_license_schema(engine)
     ensure_facility_intelligence_profile_schema(engine)
     ensure_agent_knowledge_report_snapshot_schema(engine)
     db = SessionLocal()
@@ -2370,6 +2418,94 @@ async def provider_identity_role_change(
         raise HTTPException(status_code=400, detail=str(error)) from error
 
     return RoleChangeOut(**result)
+
+
+@app.get("/provider/facilities/search", response_model=List[ClaimSearchOut])
+async def provider_facility_search(
+    q: str,
+    state: Optional[str] = None,
+    city: Optional[str] = None,
+    limit: int = 25,
+    db: Session = Depends(get_db),
+):
+    return [ClaimSearchOut(**row) for row in search_claimable_facilities(db, q, state, city, limit)]
+
+
+@app.get("/provider/facilities/{facility_id}/profile")
+async def provider_facility_profile(facility_id: int, db: Session = Depends(get_db)):
+    try:
+        return facility_profile_snapshot(db, facility_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@app.put("/provider/facilities/{facility_id}/capabilities", response_model=CapabilitySaveOut)
+async def provider_facility_save_capabilities(
+    facility_id: int,
+    payload: CapabilitySaveIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = save_capabilities(
+            db=db,
+            facility_id=facility_id,
+            user_id=payload.user_id,
+            answers=payload.answers,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return CapabilitySaveOut(**result)
+
+
+@app.post("/provider/facilities/{facility_id}/photos")
+async def provider_facility_add_photo(
+    facility_id: int,
+    payload: PhotoAddIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        return add_photo(
+            db=db,
+            facility_id=facility_id,
+            user_id=payload.user_id,
+            category=payload.category,
+            url=payload.url,
+            caption=payload.caption,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.delete("/provider/facilities/{facility_id}/photos/{photo_id}")
+async def provider_facility_remove_photo(
+    facility_id: int,
+    photo_id: int,
+    payload: PhotoRemoveIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        return deactivate_photo(
+            db=db,
+            facility_id=facility_id,
+            user_id=payload.user_id,
+            photo_id=photo_id,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@app.get("/provider/facilities/{facility_id}/completeness")
+async def provider_facility_completeness(facility_id: int, db: Session = Depends(get_db)):
+    return recompute_completeness(db, facility_id)
 
 
 @app.post("/provider/identity/reverification/run")

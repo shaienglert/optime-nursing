@@ -102,3 +102,35 @@ def ensure_agent_knowledge_report_snapshot_schema(engine: Engine) -> None:
     with engine.begin() as connection:
         for statement in alter_statements:
             connection.execute(text(statement))
+
+
+def ensure_state_license_schema(engine: Engine) -> None:
+    """Nevada and other state licences on facility_license_records.
+
+    A community that is not Medicare-certified has no CCN, so its state credential is the
+    only public identity it carries. Existing databases predate these columns; the model
+    alone would only serve a freshly created schema.
+    """
+    columns = _column_names(engine, "facility_license_records")
+    if not columns:
+        return
+
+    alter_statements: list[str] = []
+
+    if "state_license_number" not in columns:
+        alter_statements.append("ALTER TABLE facility_license_records ADD COLUMN state_license_number VARCHAR(40) NULL")
+    if "state_license_type" not in columns:
+        alter_statements.append("ALTER TABLE facility_license_records ADD COLUMN state_license_type VARCHAR(20) NULL")
+    if "state_care_type" not in columns:
+        alter_statements.append("ALTER TABLE facility_license_records ADD COLUMN state_care_type VARCHAR(60) NULL")
+    if "state_endorsements" not in columns:
+        alter_statements.append("ALTER TABLE facility_license_records ADD COLUMN state_endorsements TEXT NULL")
+    if "state_source_url" not in columns:
+        alter_statements.append("ALTER TABLE facility_license_records ADD COLUMN state_source_url VARCHAR(500) NULL")
+
+    if not alter_statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in alter_statements:
+            connection.execute(text(statement))
