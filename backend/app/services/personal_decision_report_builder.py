@@ -11,7 +11,7 @@ research, decide, or interpret. Every produced payload is validated (fail-closed
 through personal_decision_report_contract.enforce_report_contract before it is returned.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Mapping, Sequence
 
@@ -176,70 +176,79 @@ def _why_recommendation_claims(decision_intelligence: Mapping[str, Any]) -> list
     return claims
 
 
-def _candidate_claims(row: Mapping[str, Any]) -> tuple[list[ApprovedReportClaim], list[ApprovedReportClaim]]:
-    """Returns (why_this_place_claims, before_you_decide_claims) for one ranked candidate."""
+def _candidate_claims(row: Mapping[str, Any]) -> list[tuple[ApprovedReportClaim, ReportSection]]:
+    """Returns (claim, section) pairs for one ranked candidate.
+
+    Paired at creation time rather than inferred later by list membership -- a claim's
+    section is a fact about that claim, not something to be reverse-engineered from
+    which bucket it happened to be appended to.
+    """
 
     facility_id = str(row.get("canonical_facility_id") or "")
     explanation = row.get("explanation") or {}
-    fit_claims: list[ApprovedReportClaim] = []
-    unknown_claims: list[ApprovedReportClaim] = []
+    pairs: list[tuple[ApprovedReportClaim, ReportSection]] = []
 
     for index, text in enumerate(explanation.get("why_matches") or []):
-        fit_claims.append(
+        pairs.append((
             _claim(
                 f"decision:{facility_id}.why_matches.{index}",
                 ClaimType.ENGINE_CONCLUSION,
                 str(text),
                 [f"decision:candidate.{facility_id}.why_matches"],
                 [ReportSection.WHY_THIS_PLACE],
-            )
-        )
+            ),
+            ReportSection.WHY_THIS_PLACE,
+        ))
     for index, text in enumerate(explanation.get("concerns") or []):
-        fit_claims.append(
+        pairs.append((
             _claim(
                 f"decision:{facility_id}.concern.{index}",
                 ClaimType.ENGINE_CONCLUSION,
                 str(text),
                 [f"decision:candidate.{facility_id}.concerns"],
                 [ReportSection.WHY_THIS_PLACE],
-            )
-        )
+            ),
+            ReportSection.WHY_THIS_PLACE,
+        ))
 
     regulatory = row.get("regulatory_history") or {}
     latest_grade = regulatory.get("latest_known_grade")
     if latest_grade not in (None, "", "UNKNOWN"):
         source = regulatory.get("source_url") or "facility:regulatory_history"
-        fit_claims.append(
+        pairs.append((
             _claim(
                 f"facility:{facility_id}.latest_grade",
                 ClaimType.VERIFIED_FACT,
                 f"Most recent inspection grade on file: {latest_grade}.",
                 [source],
                 [ReportSection.WHY_THIS_PLACE],
-            )
-        )
+            ),
+            ReportSection.WHY_THIS_PLACE,
+        ))
 
     for index, text in enumerate(explanation.get("needs_verification") or []):
-        unknown_claims.append(
+        pairs.append((
             _claim(
                 f"decision:{facility_id}.needs_verification.{index}",
                 ClaimType.UNKNOWN,
                 str(text),
                 [f"decision:candidate.{facility_id}.needs_verification"],
                 [ReportSection.BEFORE_YOU_DECIDE],
-            )
-        )
+            ),
+            ReportSection.BEFORE_YOU_DECIDE,
+        ))
     for index, parameter_id in enumerate(row.get("unknown_critical_needs") or []):
-        unknown_claims.append(
+        pairs.append((
             _claim(
                 f"facility:{facility_id}.unknown.{parameter_id}",
                 ClaimType.UNKNOWN,
                 f"{parameter_id.replace('_', ' ').title()} has not been verified for this facility.",
                 [f"facility:{facility_id}.{parameter_id}:UNKNOWN"],
                 [ReportSection.BEFORE_YOU_DECIDE],
-            )
-        )
-    return fit_claims, unknown_claims
+            ),
+            ReportSection.BEFORE_YOU_DECIDE,
+        ))
+    return pairs
 
 
 def build_personal_decision_report(
@@ -281,12 +290,9 @@ def build_personal_decision_report(
     if can_show:
         rows = list(decision_result.get("results") or [])[:max_candidates]
         for row in rows:
-            fit_claims, unknown_claims = _candidate_claims(row)
-            row_claims = fit_claims + unknown_claims
-            row_uses = [
-                _use(c, ReportSection.WHY_THIS_PLACE if c in fit_claims else ReportSection.BEFORE_YOU_DECIDE)
-                for c in row_claims
-            ]
+            pairs = _candidate_claims(row)
+            row_claims = [claim for claim, _section in pairs]
+            row_uses = [_use(claim, section) for claim, section in pairs]
             claims.extend(row_claims)
             uses.extend(row_uses)
             candidates.append(
