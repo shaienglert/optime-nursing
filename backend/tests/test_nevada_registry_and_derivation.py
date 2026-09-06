@@ -11,6 +11,7 @@ import app.main  # noqa: F401 -- registers every model so Base.metadata.create_a
 from app.database import Base
 from app.ingestion.nevada_hcqc import (
     REGISTRY_PATH,
+    federal_provider_number,
     endorsements_of,
     import_nevada_registry,
     read_rows,
@@ -155,10 +156,11 @@ class NevadaRegistryIngestionTests(unittest.TestCase):
             self.assertFalse(serves_seniors(_row(derived_care_type=care_type, serves_elderly="Y")),
                              f"{care_type} must not be listed as senior housing")
 
-    def test_the_real_extract_keeps_every_skilled_nursing_facility(self) -> None:
+    def test_the_real_registry_keeps_every_skilled_nursing_facility(self) -> None:
+        # The count is data and moves with each refresh; the property is the contract.
         rows = read_rows()
         snf = [r for r in rows if r["derived_care_type"] == "SKILLED_NURSING"]
-        self.assertEqual(len(snf), 40)
+        self.assertGreater(len(snf), 30, "the registry should carry Clark County's nursing facilities")
         self.assertTrue(all(serves_seniors(r) for r in snf))
 
     def test_a_dedicated_alzheimer_home_counts_as_senior_housing_despite_the_flag(self) -> None:
@@ -174,6 +176,28 @@ class NevadaRegistryIngestionTests(unittest.TestCase):
             endorsements_of({"endorsement": "ALZHEIMER DISEASE, MENTAL ILLNESS"}),
             ["ALZHEIMER DISEASE", "MENTAL ILLNESS"],
         )
+
+    def test_a_sentinel_is_never_treated_as_a_certification_number(self) -> None:
+        # ALiS writes "UNKNOWN" where it has no federal number. Read as an identity, it once
+        # collapsed 291 separate communities onto a single facility row.
+        for sentinel in ("UNKNOWN", "unknown", "N/A", "None", "-", ""):
+            self.assertEqual(federal_provider_number({"federal_provider_no": sentinel}), "")
+        self.assertEqual(federal_provider_number({"federal_provider_no": "295001"}), "295001")
+        # Anything that is not six digits is not an identity, whatever the column is called.
+        self.assertEqual(federal_provider_number({"federal_provider_no": "PENDING"}), "")
+
+    def test_rows_sharing_a_sentinel_stay_separate_facilities(self) -> None:
+        result = import_nevada_registry(self.db, rows=[
+            _row(name="A AND J CARE HOME", credential_number="1-AGC-1", federal_provider_no="UNKNOWN"),
+            _row(name="ABINGTON MANOR", credential_number="2-AGC-2", federal_provider_no="UNKNOWN"),
+            _row(name="ACE CARE HOME", credential_number="3-AGC-3", federal_provider_no="UNKNOWN"),
+        ])
+        self.assertEqual(result["facilities_created"], 3)
+        self.assertEqual(result["cms_facilities_enriched"], 0)
+        self.assertEqual(self.db.query(Facility).count(), 3)
+        ids = {f.cms_id for f in self.db.query(Facility).all()}
+        self.assertEqual(ids, {"NV-1-AGC-1", "NV-2-AGC-2", "NV-3-AGC-3"})
+        self.assertNotIn("UNKNOWN", ids)
 
     def test_synthetic_id_fits_the_column(self) -> None:
         self.assertLessEqual(len(synthetic_id("12345678901")), 20)

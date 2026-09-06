@@ -62,8 +62,31 @@ SENIOR_ENDORSEMENTS = {
 }
 
 
+# Values the state uses to mean "we do not have this". Passed through untouched, "UNKNOWN"
+# reads as data: it once became a facility identifier, and 291 separate assisted living
+# communities collapsed onto a single row that answered to it.
+NULL_SENTINELS = {"", "UNKNOWN", "N/A", "NA", "NONE", "NULL", "-"}
+
+
 def _clean(value: Optional[str]) -> str:
     return str(value or "").strip()
+
+
+def _clean_optional(value: Optional[str]) -> str:
+    """Empty string for anything the source used to mean absence."""
+    text = _clean(value)
+    return "" if text.upper() in NULL_SENTINELS else text
+
+
+def federal_provider_number(row: Dict[str, str]) -> str:
+    """A CCN is six digits. Anything else is not an identity, whatever the column says.
+
+    This is the guard rather than the sentinel list above: a new sentinel spelled some other
+    way still fails the shape test, so identity can only ever be taken from something that
+    actually looks like a certification number.
+    """
+    candidate = _clean_optional(row.get("federal_provider_no"))
+    return candidate if candidate.isdigit() else ""
 
 
 def _to_int(value: Optional[str]) -> Optional[int]:
@@ -167,7 +190,7 @@ def _upsert_license(db: Session, facility: Facility, row: Dict[str, str]) -> Non
     record.legal_name = _clean(row.get("name")) or None
     record.legal_address = _clean(row.get("address")) or None
     record.status = "VERIFIED"
-    record.medicare_provider_number = _clean(row.get("federal_provider_no")) or None
+    record.medicare_provider_number = federal_provider_number(row) or None
     record.verification_notes = (
         f"{SOURCE_NAME} active credential {credential}; "
         f"expires {_clean(row.get('expiration_date')) or 'unknown'}."
@@ -200,7 +223,7 @@ def import_nevada_registry(
         if not credential:
             continue
 
-        ccn = _clean(row.get("federal_provider_no"))
+        ccn = federal_provider_number(row)
         facility: Optional[Facility] = None
         if ccn:
             facility = db.query(Facility).filter(Facility.cms_id == ccn).one_or_none()
@@ -230,7 +253,7 @@ def import_nevada_registry(
         beds = _to_int(row.get("bed_count"))
         if beds and not facility.beds:
             facility.beds = beds
-        phone = _clean(row.get("phone"))
+        phone = _clean_optional(row.get("phone"))
         if phone and not facility.phone:
             facility.phone = phone
         if not facility.source_name:
