@@ -377,6 +377,15 @@ class FacilityLicenseRecord(Base):
 	status = Column(String(40), nullable=False, default="PENDING")
 	verified_at = Column(DateTime(timezone=True), nullable=True)
 	verification_notes = Column(Text, nullable=True)
+	# Nevada (and any non-CMS state) licences: a community that is not Medicare-certified has
+	# no CCN, and its licence is the only public identity it has. Kept beside the federal
+	# identifiers rather than in a separate table because it answers the same question --
+	# which real, licensed entity is this row -- and downstream code reads one record either way.
+	state_license_number = Column(String(40), nullable=True, index=True)
+	state_license_type = Column(String(20), nullable=True)
+	state_care_type = Column(String(60), nullable=True)
+	state_endorsements = Column(Text, nullable=True)
+	state_source_url = Column(String(500), nullable=True)
 	created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 	facility = relationship("Facility", back_populates="license_records")

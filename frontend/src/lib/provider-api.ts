@@ -36,6 +36,8 @@ export type ProfileQuestion = {
   label: string;
   value: AnswerState;
   source: string | null;
+  /** Present only on an answer derived from public record: what it was read from. */
+  note: string | null;
   updated_at: string | null;
 };
 
@@ -43,6 +45,7 @@ export type ProfileSection = {
   section: string;
   edit_category: string;
   answered: number;
+  prefilled_from_public_record: number;
   total: number;
   questions: ProfileQuestion[];
 };
@@ -162,6 +165,13 @@ export async function removeFacilityPhoto(
     method: "DELETE",
     body: JSON.stringify({ user_id: userId }),
   });
+}
+
+export const PORTAL_SOURCE = "provider_portal";
+
+/** An answer we filled in from a licence or certification, not one the provider gave us. */
+export function isDerived(question: ProfileQuestion): boolean {
+  return Boolean(question.source) && question.source !== PORTAL_SOURCE;
 }
 
 export function formatPercent(ratio: number): string {

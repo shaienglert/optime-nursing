@@ -31,6 +31,7 @@ from app.models.facility import (
     FacilityActivityCategory,
     FacilityAuditLog,
     FacilityCapability,
+    FacilityLicenseRecord,
     FacilityPhoto,
     FacilityProfileCompleteness,
     FacilityUser,
@@ -166,40 +167,56 @@ def search_claimable_facilities(
     return results
 
 
-def _known_from_public_record(facility: Facility) -> List[Dict[str, object]]:
-    """What we already hold, so the provider corrects rather than starts from blank."""
-    return [
-        {"key": "name", "label": "Community name", "value": facility.name, "source": "CMS"},
-        {"key": "address", "label": "Address", "value": facility.address, "source": "CMS"},
-        {"key": "city", "label": "City", "value": facility.city, "source": "CMS"},
-        {"key": "state", "label": "State", "value": facility.state, "source": "CMS"},
-        {"key": "zip_code", "label": "ZIP", "value": facility.zip_code, "source": "CMS"},
-        {"key": "phone", "label": "Phone", "value": facility.phone, "source": "CMS"},
-        {"key": "beds", "label": "Certified beds", "value": facility.beds, "source": "CMS"},
+def _known_from_public_record(facility: Facility, license_records: List) -> List[Dict[str, object]]:
+    """What we already hold, so the provider corrects rather than starts from blank.
+
+    The source label is per-facility, not a constant: a Medicare-certified nursing facility
+    is described by CMS, while an assisted living community has no CCN and is described by
+    its state licence. Labelling a state row "CMS" would be a small lie on the one screen
+    whose whole argument is that we say where each fact came from.
+    """
+    certified = str(facility.cms_id or "").strip().isdigit()
+    origin = "CMS" if certified else "NV state licence"
+    fields: List[Dict[str, object]] = [
+        {"key": "name", "label": "Community name", "value": facility.name, "source": origin},
+        {"key": "address", "label": "Address", "value": facility.address, "source": origin},
+        {"key": "city", "label": "City", "value": facility.city, "source": origin},
+        {"key": "state", "label": "State", "value": facility.state, "source": origin},
+        {"key": "zip_code", "label": "ZIP", "value": facility.zip_code, "source": origin},
+        {"key": "phone", "label": "Phone", "value": facility.phone, "source": origin},
         {
-            "key": "overall_rating",
-            "label": "CMS overall rating",
-            "value": facility.overall_rating,
-            "source": "CMS",
-        },
-        {
-            "key": "staffing_rating",
-            "label": "CMS staffing rating",
-            "value": facility.staffing_rating,
-            "source": "CMS",
-        },
-        {
-            "key": "inspection_rating",
-            "label": "CMS inspection rating",
-            "value": facility.inspection_rating,
-            "source": "CMS",
+            "key": "beds",
+            "label": "Certified beds" if certified else "Licensed beds",
+            "value": facility.beds,
+            "source": origin,
         },
     ]
+    if certified:
+        fields += [
+            {"key": "overall_rating", "label": "CMS overall rating", "value": facility.overall_rating, "source": "CMS"},
+            {"key": "staffing_rating", "label": "CMS staffing rating", "value": facility.staffing_rating, "source": "CMS"},
+            {"key": "inspection_rating", "label": "CMS inspection rating", "value": facility.inspection_rating, "source": "CMS"},
+        ]
+    for record in license_records:
+        if record.state_license_number:
+            fields.append({
+                "key": f"state_license_{record.id}",
+                "label": "State licence",
+                "value": f"{record.state_license_number}"
+                         + (f" · {record.state_care_type.replace('_', ' ').title()}" if record.state_care_type else ""),
+                "source": "NV DPBH HCQC",
+            })
+    return fields
 
 
 def facility_profile_snapshot(db: Session, facility_id: int) -> Dict[str, object]:
     """Everything the editor needs in one read: what we know, what we're missing, and why it matters."""
     facility = _get_facility(db, facility_id)
+    license_records = (
+        db.query(FacilityLicenseRecord)
+        .filter(FacilityLicenseRecord.facility_id == facility_id)
+        .all()
+    )
 
     answers = {
         row.capability: row
@@ -219,15 +236,24 @@ def facility_profile_snapshot(db: Session, facility_id: int) -> Dict[str, object
                     "label": question["label"],
                     "value": existing.value.value if existing else AnswerState.UNKNOWN.value,
                     "source": existing.source if existing else None,
+                    # Present only on a derived answer: what public record it was read from,
+                    # so the provider can correct the source rather than argue with a system.
+                    "note": existing.notes if existing and existing.source != PORTAL_SOURCE else None,
                     "updated_at": existing.updated_at.isoformat() if existing and existing.updated_at else None,
                 }
             )
         answered = sum(1 for item in items if item["value"] != AnswerState.UNKNOWN.value)
+        prefilled = sum(
+            1
+            for item in items
+            if item["value"] != AnswerState.UNKNOWN.value and item["source"] not in (None, PORTAL_SOURCE)
+        )
         sections.append(
             {
                 "section": section,
                 "edit_category": SECTION_TO_EDIT_CATEGORY.get(section, CATEGORY_MEDICAL),
                 "answered": answered,
+                "prefilled_from_public_record": prefilled,
                 "total": len(items),
                 "questions": items,
             }
@@ -265,7 +291,7 @@ def facility_profile_snapshot(db: Session, facility_id: int) -> Dict[str, object
     return {
         "facility_id": facility.id,
         "name": facility.name,
-        "known_from_public_record": _known_from_public_record(facility),
+        "known_from_public_record": _known_from_public_record(facility, license_records),
         "sections": sections,
         "photos": photos,
         "photo_target": PHOTO_TARGET,

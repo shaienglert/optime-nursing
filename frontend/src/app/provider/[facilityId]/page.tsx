@@ -10,6 +10,7 @@ import {
   addFacilityPhoto,
   fetchProfileSnapshot,
   formatPercent,
+  isDerived,
   removeFacilityPhoto,
   saveCapabilities,
 } from "@/lib/provider-api";
@@ -237,6 +238,13 @@ export default function ProviderProfilePage({
           &ldquo;Not sure&rdquo; is a real answer and costs you nothing in ranking. It just
           cannot match a family who asked for that thing.
         </p>
+        {snapshot.sections.some((section) => section.prefilled_from_public_record > 0) ? (
+          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+            A few are already answered. We read those off your licence or your Medicare
+            certification &mdash; hover to see which. Change any of them and your answer replaces
+            ours permanently.
+          </p>
+        ) : null}
 
         <div className="mt-6 space-y-8">
           {snapshot.sections.map((section) => (
@@ -245,6 +253,9 @@ export default function ProviderProfilePage({
                 <h3 className="font-semibold text-slate-900">{section.section}</h3>
                 <span className="text-xs text-slate-500">
                   {section.answered}/{section.total}
+                  {section.prefilled_from_public_record > 0
+                    ? ` · ${section.prefilled_from_public_record} from public record`
+                    : ""}
                 </span>
               </div>
               <ul className="mt-2 divide-y divide-slate-100">
@@ -259,6 +270,14 @@ export default function ProviderProfilePage({
                       <span className="text-slate-800">
                         {question.label}
                         {isDirty ? <span className="ml-2 text-xs text-teal-700">unsaved</span> : null}
+                        {!isDirty && isDerived(question) ? (
+                          <span
+                            className="ml-2 cursor-help text-xs text-slate-500 underline decoration-dotted"
+                            title={question.note ?? undefined}
+                          >
+                            from public record
+                          </span>
+                        ) : null}
                       </span>
                       <div className="flex gap-1" role="group" aria-label={question.label}>
                         {ANSWER_CHOICES.map((choice) => {

@@ -55,6 +55,7 @@ from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
 from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
+from app.services.schema_migrations import ensure_state_license_schema
 from app.services.provider_identity import (
     apply_facility_field_update,
     complete_email_verification,
@@ -1183,6 +1184,7 @@ def startup() -> None:
     # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
+    ensure_state_license_schema(engine)
     ensure_facility_intelligence_profile_schema(engine)
     ensure_agent_knowledge_report_snapshot_schema(engine)
     db = SessionLocal()
