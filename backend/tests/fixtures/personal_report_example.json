@@ -1,0 +1,35 @@
+{
+  "case_claims": [
+    {
+      "claim_id": "case:role",
+      "text": "You are a family member helping with this decision.",
+      "provenance_ids": ["case:user_input:role"],
+      "allowed_sections": ["YOUR_ROLE"]
+    },
+    {
+      "claim_id": "case:priority",
+      "text": "The family identified preserving independence as an important preference.",
+      "provenance_ids": ["case:user_input:independence"],
+      "allowed_sections": ["WHAT_MATTERS"]
+    }
+  ],
+  "research_claims": [
+    {
+      "claim_id": "research:transition-autonomy",
+      "approved_text": "Preserving autonomy is relevant to a successful transition when it is part of the person's stated preferences.",
+      "provenance_ids": ["research:RI-TRANSITION-AUTONOMY"],
+      "allowed_sections": ["SUCCESSFUL_TRANSITION"],
+      "confidence": "APPROVED"
+    }
+  ],
+  "facility_claims": [
+    {
+      "claim_id": "facility:night-staff",
+      "approved_text": "Night staffing has not been verified.",
+      "unknown": true,
+      "provenance_ids": ["facility:night_staffing:UNKNOWN"],
+      "allowed_sections": ["BEFORE_YOU_DECIDE"]
+    }
+  ],
+  "note": "Synthetic fixture only. It proves the report pipeline and must not be presented as a real client or facility report."
+}
