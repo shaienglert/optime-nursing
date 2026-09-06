@@ -3,6 +3,7 @@ from app.services.personal_decision_report_builder import (
     UserRole,
     build_personal_decision_report,
     derive_user_role,
+    serialize_personal_report_payload,
 )
 
 
@@ -137,3 +138,47 @@ def test_unverified_grade_is_not_rendered_as_verified_fact():
     )
     grade_claims = [c for c in payload.claims if c.claim_id.endswith(".latest_grade")]
     assert grade_claims == []
+
+
+def test_serialize_groups_claims_by_section_and_is_json_safe():
+    payload = build_personal_decision_report(
+        questionnaire_state={"relationship": "Father", "budget": 5000},
+        natural_language_query="",
+        decision_result=_ready_decision_result(),
+    )
+    serialized = serialize_personal_report_payload(payload)
+
+    assert serialized["user_role"] == "FAMILY_MEMBER"
+    assert serialized["report_ready"] is True
+    assert serialized["omitted_sections"] == ["SUCCESSFUL_TRANSITION"]
+
+    situation = serialized["sections"]["YOUR_SITUATION"]
+    assert any(row["text"].startswith("Monthly budget") for row in situation)
+    for row in situation:
+        assert row["claim_type"] == "USER_INFORMATION"
+        assert row["provenance_ids"]
+
+    assert len(serialized["candidates"]) == 1
+    candidate = serialized["candidates"][0]
+    assert candidate["canonical_facility_id"] == "NV-LIC-TEST-1"
+    why_this_place = candidate["sections"]["WHY_THIS_PLACE"]
+    assert any(row["claim_type"] == "VERIFIED_FACT" for row in why_this_place)
+    assert any(row["claim_type"] == "ENGINE_CONCLUSION" for row in why_this_place)
+    before_you_decide = candidate["sections"]["BEFORE_YOU_DECIDE"]
+    assert all(row["claim_type"] == "UNKNOWN" for row in before_you_decide)
+
+    import json
+
+    json.dumps(serialized)  # must round-trip through JSON with no custom encoder
+
+
+def test_serialize_blocked_case_has_no_candidates():
+    payload = build_personal_decision_report(
+        questionnaire_state={"relationship": "Father"},
+        natural_language_query="",
+        decision_result=_blocked_decision_result(),
+    )
+    serialized = serialize_personal_report_payload(payload)
+    assert serialized["report_ready"] is False
+    assert serialized["candidates"] == []
+    assert serialized["sections"]["BEFORE_YOU_DECIDE"][0]["claim_type"] == "UNKNOWN"
