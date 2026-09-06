@@ -20,6 +20,7 @@ from app.services.facility_parameter_service import (
     get_facility_parameter_table,
     get_personalized_parameter_order,
 )
+from app.services.canonical_universe import configured_canonical_market
 
 
 REQUIREMENT_WEIGHTS = {
@@ -43,6 +44,19 @@ TIE_THRESHOLD_POLICY = {
     "capability_depth": 1.5,
     "patient_relevant_outcomes": 1.5,
     "practical_fit": 1.5,
+}
+
+CITY_MARKETS = {
+    "NORTH LAS VEGAS": "las-vegas",
+    "LAS VEGAS": "las-vegas",
+    "HENDERSON": "las-vegas",
+    "MIAMI": "florida",
+    "HIALEAH": "florida",
+    "DORAL": "florida",
+    "AVENTURA": "florida",
+    "HOMESTEAD": "florida",
+    "CORAL GABLES": "florida",
+    "NORTH MIAMI": "florida",
 }
 
 MATCH_EVIDENCE_MULTIPLIER = {
@@ -1115,6 +1129,27 @@ def _facility_geo_match(facility: Dict[str, Any], requested_city: Optional[str])
     return f"Not in requested city ({requested_city.title()}); location may still be acceptable by broader radius.", 0.0
 
 
+def _market_coverage_notice(requested_city: Optional[str]) -> Optional[str]:
+    """Warn when the query names a city outside the market this deployment searches.
+
+    OPTIME searches exactly one fixed market per deployment (OPTIME_CANONICAL_MARKET,
+    default las-vegas) -- it does not route a request to a different market's data
+    based on the query. Without this notice, a query mentioning e.g. Miami silently
+    got Las Vegas facilities back with no indication of the mismatch.
+    """
+    if not requested_city:
+        return None
+    city_market = CITY_MARKETS.get(requested_city)
+    active_market = configured_canonical_market()
+    if not city_market or city_market == active_market:
+        return None
+    return (
+        f"This search covers the {active_market} market only. Your query mentions "
+        f"{requested_city.title()}, which is outside that area, so the results below "
+        f"are {active_market} facilities and may not be relevant to that location."
+    )
+
+
 def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) -> Tuple[List[str], List[str], List[str]]:
     row_by_param = {row["parameter_id"]: row for row in table_rows}
 
@@ -1536,6 +1571,7 @@ def run_patient_decision_engine(
         "results": detailed_top[:limit],
         "result_count": len(detailed_top[:limit]),
         "total_candidates_scored": len(results),
+        "market_coverage_notice": _market_coverage_notice(requested_city),
         "availability_policy": "Current availability must be confirmed directly with the facility.",
         "tie_break_policy": {
             "thresholds": TIE_THRESHOLD_POLICY,

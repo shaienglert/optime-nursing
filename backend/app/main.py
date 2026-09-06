@@ -335,6 +335,7 @@ class PatientDecisionEngineOut(BaseModel):
     results: List[Dict[str, Any]]
     result_count: int
     total_candidates_scored: int
+    market_coverage_notice: Optional[str] = None
     availability_policy: str
     care_setting_policy: Dict[str, Any] = Field(default_factory=dict)
     decision_intelligence: Dict[str, Any] = Field(default_factory=dict)
