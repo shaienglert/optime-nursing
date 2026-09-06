@@ -46,7 +46,7 @@ from app.services.agent_knowledge_reports import (
     refresh_all_agent_reports,
     start_background_refresh_loop,
 )
-from app.services.chief_ai_supervisor import recent_incidents, run_supervisor_cycle, stale_usage_summary
+from app.services.chief_ai_supervisor import recent_incidents, run_supervisor_cycle, stale_usage_summary, start_supervisor_scheduler
 from app.services.cms_inspection_import import import_inspection_data
 from app.services.cms_provider_import import import_provider_information
 from app.services.cms_quality_import import import_quality_data
@@ -1179,6 +1179,8 @@ def startup() -> None:
     start_background_refresh_loop()
     # Trigger daily executive intelligence report at 08:00 local server time.
     start_executive_report_scheduler()
+    # Run heartbeat/dependency/full-cycle supervisor sweeps and the daily owner brief.
+    start_supervisor_scheduler()
     logger.info(
         "startup_completed facilities_imported=%s origins=%s",
         app.state.import_summary.get("facilities_imported"),
