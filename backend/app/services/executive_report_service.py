@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import threading
@@ -9,6 +10,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.database import SessionLocal
 from app.models.agent_execution import AgentJobRun, AgentKnowledgeRecord, AgentKnowledgeRefreshEvent, AgentKnowledgeReportSnapshot, SupervisorIncidentLog
@@ -101,41 +104,41 @@ def _read(path: Path) -> str:
 
 def _extract_int(pattern: str, text: str) -> Optional[int]:
     m = re.search(pattern, text, re.IGNORECASE)
-
-
-    def _load_evidence_parity_audit() -> Dict[str, Any]:
-        path = _reports_path("GOLDEN_CASE_RANKING_CAUSALITY_AUDIT.json")
-        if not path.exists():
-            return {
-                "status": "UNPROVEN",
-                "corrected_proven_match_top5": [],
-                "high_potential_needs_verification": [],
-                "regression_status": "UNPROVEN",
-            }
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            return {
-                "status": "UNPROVEN",
-                "corrected_proven_match_top5": [],
-                "high_potential_needs_verification": [],
-                "regression_status": "UNPROVEN",
-            }
-
-        golden = payload.get("golden_case") if isinstance(payload.get("golden_case"), dict) else {}
-        regression = payload.get("regression_tests") if isinstance(payload.get("regression_tests"), dict) else {}
-        return {
-            "status": "ACTIVE",
-            "corrected_proven_match_top5": golden.get("corrected_proven_match_top5") or golden.get("evidence_parity_top5") or [],
-            "high_potential_needs_verification": golden.get("high_potential_needs_verification") or [],
-            "regression_status": regression.get("status", "UNPROVEN"),
-        }
     if not m:
         return None
     try:
         return int(m.group(1))
     except ValueError:
         return None
+
+
+def _load_evidence_parity_audit() -> Dict[str, Any]:
+    path = _reports_path("GOLDEN_CASE_RANKING_CAUSALITY_AUDIT.json")
+    if not path.exists():
+        return {
+            "status": "UNPROVEN",
+            "corrected_proven_match_top5": [],
+            "high_potential_needs_verification": [],
+            "regression_status": "UNPROVEN",
+        }
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {
+            "status": "UNPROVEN",
+            "corrected_proven_match_top5": [],
+            "high_potential_needs_verification": [],
+            "regression_status": "UNPROVEN",
+        }
+
+    golden = payload.get("golden_case") if isinstance(payload.get("golden_case"), dict) else {}
+    regression = payload.get("regression_tests") if isinstance(payload.get("regression_tests"), dict) else {}
+    return {
+        "status": "ACTIVE",
+        "corrected_proven_match_top5": golden.get("corrected_proven_match_top5") or golden.get("evidence_parity_top5") or [],
+        "high_potential_needs_verification": golden.get("high_potential_needs_verification") or [],
+        "regression_status": regression.get("status", "UNPROVEN"),
+    }
 
 
 def _extract_float(pattern: str, text: str) -> Optional[float]:
@@ -1527,8 +1530,9 @@ def start_executive_report_scheduler() -> None:
                         if result.get("ok"):
                             state["last_success_date"] = today
                     except Exception:
-                        # Keep scheduler alive and retry on next interval.
-                        pass
+                        # Keep scheduler alive and retry on next interval, but never fail silently --
+                        # a bare `except: pass` here previously hid a report-generation bug for weeks.
+                        logger.exception("executive_report_scheduler_run_failed")
                     finally:
                         db.close()
 
