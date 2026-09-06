@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import hashlib
 import threading
@@ -10,6 +11,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.database import SessionLocal
 from app.models.agent_execution import (
@@ -1444,8 +1447,11 @@ def start_background_refresh_loop() -> None:
             try:
                 refresh_all_agent_reports(db, refresh_mode="scheduled", incremental=True)
             except Exception:
-                # Keep background loop alive on any intermittent DB/data error.
-                pass
+                # Keep background loop alive on any intermittent DB/data error, but never
+                # fail silently -- a bare `except: pass` here hid the executive report
+                # generator's crash for seven weeks (see executive_report_service.py);
+                # this loop had the identical pattern.
+                logger.exception("agent_knowledge_refresh_loop_run_failed")
             finally:
                 db.close()
             time.sleep(interval_seconds)
