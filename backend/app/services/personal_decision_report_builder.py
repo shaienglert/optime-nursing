@@ -342,3 +342,50 @@ def build_personal_decision_report(
         candidates=tuple(candidates),
         omitted_sections=tuple(omitted),
     )
+
+
+def _serialize_claim_use(use: ReportClaimUse, claims_by_id: Mapping[str, ApprovedReportClaim]) -> dict[str, Any]:
+    claim = claims_by_id[use.claim_id]
+    return {
+        "claim_id": use.claim_id,
+        "claim_type": claim.claim_type.value,
+        "text": use.rendered_text,
+        "provenance_ids": list(claim.provenance_ids),
+        "confidence": claim.confidence,
+    }
+
+
+def _group_by_section(
+    claim_uses: Sequence[ReportClaimUse], claims_by_id: Mapping[str, ApprovedReportClaim]
+) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for use in claim_uses:
+        grouped.setdefault(use.section.value, []).append(_serialize_claim_use(use, claims_by_id))
+    return grouped
+
+
+def serialize_personal_report_payload(payload: PersonalReportPayload) -> dict[str, Any]:
+    """JSON-safe projection of a PersonalReportPayload, grouped by report section.
+
+    Presentation-neutral: does not add, drop, or reword any claim. A future
+    renderer/frontend consumes this shape; this function is not itself the renderer.
+    """
+
+    claims_by_id = {claim.claim_id: claim for claim in payload.claims}
+    return {
+        "user_role": payload.user_role.value,
+        "report_ready": payload.report_ready,
+        "sections": _group_by_section(payload.claim_uses, claims_by_id),
+        "candidates": [
+            {
+                "canonical_facility_id": candidate.canonical_facility_id,
+                "facility_name": candidate.facility_name,
+                "rank_position": candidate.rank_position,
+                "match_band": candidate.match_band,
+                "match_score": candidate.match_score,
+                "sections": _group_by_section(candidate.claim_uses, claims_by_id),
+            }
+            for candidate in payload.candidates
+        ],
+        "omitted_sections": list(payload.omitted_sections),
+    }
