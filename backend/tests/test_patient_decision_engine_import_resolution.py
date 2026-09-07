@@ -45,13 +45,17 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         self.assertEqual(result["patient_needs_profile"]["location_city"], "LAS VEGAS")
         self.assertEqual(result["care_setting_policy"]["version"], "v1.1")
         self.assertEqual(result["decision_intelligence"]["version"], "decision-intelligence-runtime-v3.1")
-        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
+        # The ranking model is unavailable in this environment, so the hard criteria carry
+        # the result: the eligible set is shown, explicitly unordered, with a degradation
+        # notice. It used to be hidden entirely, which told the family nothing.
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual("SEMANTIC_AI", result["decision_intelligence"]["interview_owner"])
         self.assertIn("living_strategy", result["decision_intelligence"])
         self.assertIn("client_intent", result["decision_intelligence"])
         self.assertIn("must_gate", result["decision_intelligence"])
         self.assertEqual(len(result["decision_intelligence"]["success_factor_policy"]["factors"]), 16)
-        self.assertEqual([], result["results"])
+        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
 
 
 if __name__ == "__main__":

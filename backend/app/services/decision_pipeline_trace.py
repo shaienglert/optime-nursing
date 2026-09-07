@@ -10,6 +10,8 @@ from the canonical payload, so it cannot become a second decision authority.
 from collections import Counter
 from typing import Any, Dict
 
+from app.services.degraded_result_notice import attach_degraded_result_notice
+
 
 def attach_decision_pipeline_trace(result: Dict[str, Any]) -> Dict[str, Any]:
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
@@ -41,13 +43,20 @@ def attach_decision_pipeline_trace(result: Dict[str, Any]) -> Dict[str, Any]:
                 "next_action": canonical.get("next_action"),
             },
         },
-        "outcome": "VISIBLE_RECOMMENDATIONS" if visible else "NO_VISIBLE_RECOMMENDATIONS",
+        "outcome": (
+            "VISIBLE_UNRANKED_ELIGIBLE_SET" if visible and canonical.get("is_degraded_result")
+            else "VISIBLE_RECOMMENDATIONS" if visible
+            else "NO_VISIBLE_RECOMMENDATIONS"
+        ),
         "contract": "A candidate with unresolved (not failed) MUST evidence is ranked and shown alongside MUST-eligible candidates on today's evidence, with an explicit per-candidate note of what remains unverified; only an explicit MUST failure excludes a candidate from the shortlist.",
     }
     result["decision_pipeline_trace"] = trace
     audit = result.get("recommendation_audit_trace") if isinstance(result.get("recommendation_audit_trace"), dict) else {}
     audit["decision_pipeline_trace"] = trace
     result["recommendation_audit_trace"] = audit
+    # The notice reads the canonical state, so it has to be built after the trace has
+    # settled and from the same payload the trace described.
+    attach_degraded_result_notice(result)
     return result
 
 

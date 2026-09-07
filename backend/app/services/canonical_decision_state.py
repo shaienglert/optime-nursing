@@ -22,6 +22,10 @@ class DecisionPhase(str, Enum):
     PREFERENCE_VERIFICATION = "PREFERENCE_VERIFICATION"
     PROVISIONAL_RECOMMENDATION = "PROVISIONAL_RECOMMENDATION"
     FINAL_RECOMMENDATION = "FINAL_RECOMMENDATION"
+    # The MUST gate ran and produced eligible candidates, but the model that weighs them
+    # against what this family said did not. They are shown as a set, never as an order,
+    # with the degradation stated on the result rather than inferred from a missing field.
+    UNRANKED_ELIGIBLE_SET = "UNRANKED_ELIGIBLE_SET"
     SYSTEM_BLOCKED = "SYSTEM_BLOCKED"
 
 
@@ -47,6 +51,10 @@ class RankingState(str, Enum):
     RUNNING = "RUNNING"
     COMPLETE = "COMPLETE"
     FAILED = "FAILED"
+    # The model was unavailable and the hard criteria carried the result on their own.
+    # Distinct from NOT_STARTED, which is what the fallback used to collapse into, and
+    # distinct from COMPLETE, which would claim a weighing that never happened.
+    UNAVAILABLE_HARD_CRITERIA_ONLY = "UNAVAILABLE_HARD_CRITERIA_ONLY"
 
 
 class PreferenceState(str, Enum):
@@ -59,6 +67,10 @@ class DecisionFinality(str, Enum):
     NONE = "NONE"
     PROVISIONAL = "PROVISIONAL"
     FINAL = "FINAL"
+    # Not a weaker PROVISIONAL: provisional means ranked but awaiting verification, this
+    # means never ranked at all. Collapsing the two would let a degraded answer be read as
+    # an ordinary one that simply needs confirming.
+    DEGRADED_UNRANKED = "DEGRADED_UNRANKED"
 
 
 class SystemHealth(str, Enum):
@@ -89,7 +101,17 @@ class CanonicalDecisionState:
         return self.phase in {
             DecisionPhase.PROVISIONAL_RECOMMENDATION,
             DecisionPhase.FINAL_RECOMMENDATION,
+            DecisionPhase.UNRANKED_ELIGIBLE_SET,
         }
+
+    @property
+    def is_degraded_result(self) -> bool:
+        """True when the candidates shown passed the hard criteria and nothing more.
+
+        Every caller that renders a shortlist must branch on this. A degraded set carries
+        no order, so presenting it as "best first" would assert work the system did not do.
+        """
+        return self.phase is DecisionPhase.UNRANKED_ELIGIBLE_SET
 
     def to_dict(self) -> Dict[str, Any]:
         payload = asdict(self)
@@ -102,6 +124,7 @@ class CanonicalDecisionState:
         payload["finality"] = self.finality.value
         payload["system"] = self.system.value
         payload["can_show_recommendations"] = self.can_show_recommendations
+        payload["is_degraded_result"] = self.is_degraded_result
         payload["version"] = "canonical-decision-state-v1-shadow"
         return payload
 
@@ -207,7 +230,13 @@ def _ranking_state(decision: Dict[str, Any]) -> RankingState:
         return RankingState.COMPLETE
     if status in {"STARTED", "RUNNING", "IN_PROGRESS"}:
         return RankingState.RUNNING
-    if status and status not in {"NO_MUST_ELIGIBLE_CANDIDATES", "DETERMINISTIC_FALLBACK"}:
+    # DETERMINISTIC_FALLBACK was deliberately excluded from the FAILED set below -- it is
+    # not a failure -- but nothing then claimed it, so it fell through to NOT_STARTED and a
+    # completed MUST gate was hidden behind "requires validated AI ranking". 374 eligible
+    # candidates, nothing shown, and no message saying why.
+    if status in {"DETERMINISTIC_FALLBACK", "REQUIRED_BUT_UNAVAILABLE"}:
+        return RankingState.UNAVAILABLE_HARD_CRITERIA_ONLY
+    if status and status not in {"NO_MUST_ELIGIBLE_CANDIDATES"}:
         return RankingState.FAILED
     if pipeline.get("ai_ranking_fail_closed") is True:
         return RankingState.FAILED
@@ -302,7 +331,8 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     # applies while that combined ranking has not completed yet -- once it has,
     # control falls through to the PROVISIONAL/FINAL_RECOMMENDATION branch below,
     # which shows them with an explicit per-candidate pending-verification note.
-    if pending > 0 and eligible == 0 and ranking is not RankingState.COMPLETE:
+    if (pending > 0 and eligible == 0
+            and ranking not in {RankingState.COMPLETE, RankingState.UNAVAILABLE_HARD_CRITERIA_ONLY}):
         return CanonicalDecisionState(
             phase=DecisionPhase.EVIDENCE_COLLECTION,
             client=ClientState.COMPLETE,
@@ -332,6 +362,30 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             system=SystemHealth.HEALTHY,
             next_action="EXPAND_OR_REVISE_STRATEGY",
             reason="MUST evaluation produced no eligible candidate",
+            legacy_readiness=legacy_readiness,
+            legacy_recommendation_execution_allowed=legacy_execution,
+            legacy_recommendation_visibility=legacy_visibility,
+            legacy_decision_finality=legacy_finality,
+        )
+
+    # Hard criteria carried the result. Show the eligible set, do not order it, and say
+    # plainly that the deep work did not run -- a family is better served by "these twelve
+    # meet your requirements, we could not study them today" than by an empty screen.
+    if rankable_count > 0 and ranking is RankingState.UNAVAILABLE_HARD_CRITERIA_ONLY:
+        return CanonicalDecisionState(
+            phase=DecisionPhase.UNRANKED_ELIGIBLE_SET,
+            client=ClientState.COMPLETE,
+            evidence=EvidenceState.SUFFICIENT,
+            must=MustState.PASS if pending == 0 else MustState.PENDING,
+            ranking=ranking,
+            preferences=PreferenceState.NOT_STARTED,
+            finality=DecisionFinality.DEGRADED_UNRANKED,
+            system=SystemHealth.DEGRADED,
+            next_action="SHOW_UNRANKED_ELIGIBLE_SET_WITH_DEGRADATION_NOTICE",
+            reason=(
+                f"{rankable_count} candidate(s) meet the stated hard criteria; the ranking "
+                "model was unavailable, so they are shown unordered and unstudied"
+            ),
             legacy_readiness=legacy_readiness,
             legacy_recommendation_execution_allowed=legacy_execution,
             legacy_recommendation_visibility=legacy_visibility,
@@ -446,6 +500,11 @@ def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str
         visibility, finality = "FINAL_RECOMMENDATION_VISIBLE", "FINAL"
     elif state.phase is DecisionPhase.PROVISIONAL_RECOMMENDATION:
         visibility, finality = "PROVISIONAL_RANKING_VISIBLE", "PROVISIONAL_PENDING_PREFERENCE_VERIFICATION"
+    elif state.phase is DecisionPhase.UNRANKED_ELIGIBLE_SET:
+        # Visible, and named so no legacy reader mistakes it for a ranking. Falling through
+        # to the generic branch below would have produced BLOCKED_UNRANKED_ELIGIBLE_SET
+        # while execution_allowed said True -- a payload contradicting itself.
+        visibility, finality = "UNRANKED_ELIGIBLE_SET_VISIBLE", "DEGRADED_UNRANKED"
     elif state.phase is DecisionPhase.SYSTEM_BLOCKED:
         visibility, finality = "BLOCKED_SYSTEM", "BLOCKED_SYSTEM"
     else:
