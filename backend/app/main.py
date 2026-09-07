@@ -27,6 +27,7 @@ import app.models.clinical_evidence
 import app.models.agent_execution
 import app.models.external_discovery
 import app.models.knowledge_fabric
+import app.models.personal_report_case
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
@@ -129,6 +130,7 @@ from app.services.personal_decision_report_builder import (
     serialize_personal_report_payload,
 )
 from app.services.personal_decision_report_contract import ReportContractViolation
+from app.services.personal_report_case_service import case_inputs, create_case, get_case_by_token, save_snapshot
 from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
@@ -343,10 +345,14 @@ class PatientDecisionEngineRequestIn(BaseModel):
 
 
 class PersonalDecisionReportRequestIn(BaseModel):
-    questionnaire_state: Dict[str, Any]
+    # Omit questionnaire_state and pass case_token instead to request an updated
+    # report for a case created by an earlier call -- the stored inputs are used and
+    # the pipeline is re-run fresh against current facility data.
+    questionnaire_state: Dict[str, Any] = Field(default_factory=dict)
     natural_language_query: Optional[str] = ""
     limit: int = 50
     decision_result: Optional[Dict[str, Any]] = None
+    case_token: Optional[str] = None
 
 
 class PatientNeedsProfileRequestIn(BaseModel):
@@ -378,6 +384,7 @@ class PatientDecisionEngineOut(BaseModel):
 
 
 class PersonalDecisionReportOut(BaseModel):
+    case_token: str
     user_role: str
     report_ready: bool
     sections: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
@@ -1965,7 +1972,7 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
 
 
 @app.post("/decision-engine/personal-report", response_model=PersonalDecisionReportOut)
-def post_personal_decision_report(payload: PersonalDecisionReportRequestIn):
+def post_personal_decision_report(payload: PersonalDecisionReportRequestIn, db: Session = Depends(get_db)):
     """Presentation-only report over an already-computed decision-engine result.
 
     Projects a decision-engine result through the fail-closed Personal Decision Report
@@ -1979,24 +1986,50 @@ def post_personal_decision_report(payload: PersonalDecisionReportRequestIn):
     patient_needs_profile. Only the shape of the report built from it is validated;
     the report cannot escape into a wider recommendation-visibility state than
     decision_result's own canonical_decision_state already grants.
+
+    Every call is remembered as a case (or, with case_token, appended to an existing
+    one) so a client can request an updated report later -- per the intended workflow,
+    24-72h after the preliminary report while facilities are verified -- without
+    re-submitting their whole questionnaire. Passing case_token loads that case's
+    stored inputs and ignores questionnaire_state/natural_language_query/limit on the
+    request; decision_result is still honored if given, but an updated report should
+    normally omit it so the pipeline re-runs against current facility data.
     """
 
-    decision_result = payload.decision_result
-    if decision_result is None:
-        decision_result = run_patient_decision_engine(
+    if payload.case_token:
+        case = get_case_by_token(db, payload.case_token)
+        if case is None:
+            raise HTTPException(status_code=404, detail=f"Unknown case_token: {payload.case_token}")
+        inputs = case_inputs(case)
+    else:
+        case = create_case(
+            db,
             questionnaire_state=payload.questionnaire_state,
             natural_language_query=payload.natural_language_query or "",
             limit=payload.limit,
         )
+        inputs = case_inputs(case)
+
+    decision_result = payload.decision_result
+    if decision_result is None:
+        decision_result = run_patient_decision_engine(
+            questionnaire_state=inputs["questionnaire_state"],
+            natural_language_query=inputs["natural_language_query"],
+            limit=inputs["limit"],
+        )
     try:
         report_payload = build_personal_decision_report(
-            questionnaire_state=payload.questionnaire_state,
-            natural_language_query=payload.natural_language_query or "",
+            questionnaire_state=inputs["questionnaire_state"],
+            natural_language_query=inputs["natural_language_query"],
             decision_result=decision_result,
         )
     except ReportContractViolation as exc:
         raise HTTPException(status_code=500, detail=f"Report contract violation: {exc}") from exc
-    return serialize_personal_report_payload(report_payload)
+
+    serialized = serialize_personal_report_payload(report_payload)
+    save_snapshot(db, case_id=case.id, report_ready=report_payload.report_ready, report=serialized)
+    serialized["case_token"] = case.case_token
+    return serialized
 
 
 @app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
