@@ -28,6 +28,7 @@ import app.models.agent_execution
 import app.models.external_discovery
 import app.models.knowledge_fabric
 import app.models.personal_report_case
+import app.models.facility_room_offering
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
@@ -131,6 +132,7 @@ from app.services.personal_decision_report_builder import (
 )
 from app.services.personal_decision_report_contract import ReportContractViolation
 from app.services.personal_report_case_service import case_inputs, create_case, get_case_by_token, save_snapshot
+from app.services.facility_room_service import list_room_types
 from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
@@ -307,6 +309,28 @@ class FacilityParameterComparisonOut(BaseModel):
     priority_parameter_ids: List[str] = Field(default_factory=list)
     profile_key: Optional[str] = None
     facilities: List[FacilityParameterTableOut]
+
+
+class FacilityRoomPhotoOut(BaseModel):
+    url: str
+    caption: Optional[str] = None
+
+
+class FacilityRoomTypeOut(BaseModel):
+    room_type_name: str
+    description: str
+    monthly_price: Optional[float] = None
+    availability_status: str
+    source: str
+    last_verified_at: Optional[str] = None
+    photos: List[FacilityRoomPhotoOut] = Field(default_factory=list)
+
+
+class FacilityRoomsOut(BaseModel):
+    canonical_facility_id: str
+    facility_name: str
+    has_data: bool
+    room_types: List[FacilityRoomTypeOut] = Field(default_factory=list)
 
 
 class PersonalizedParameterOrderIn(BaseModel):
@@ -1815,6 +1839,33 @@ async def get_canonical_facility_parameter_table(
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Canonical facility not found") from exc
+
+
+@app.get("/canonical-facilities/{canonical_id}/rooms", response_model=FacilityRoomsOut)
+async def get_canonical_facility_rooms(canonical_id: str, db: Session = Depends(get_db)):
+    canonical_index = get_canonical_facility_index()
+    facility = canonical_index.get(canonical_id)
+    if not facility:
+        raise HTTPException(status_code=404, detail="Canonical facility not found")
+
+    rooms = list_room_types(db, canonical_id)
+    return FacilityRoomsOut(
+        canonical_facility_id=canonical_id,
+        facility_name=facility.get("name") or facility.get("facility_name") or facility.get("community_name") or "",
+        has_data=len(rooms) > 0,
+        room_types=[
+            FacilityRoomTypeOut(
+                room_type_name=room.room_type_name,
+                description=room.description or "",
+                monthly_price=(room.monthly_price_cents / 100) if room.monthly_price_cents is not None else None,
+                availability_status=room.availability_status,
+                source=room.source,
+                last_verified_at=room.last_verified_at.isoformat() if room.last_verified_at else None,
+                photos=[FacilityRoomPhotoOut(url=photo.url, caption=photo.caption) for photo in room.photos],
+            )
+            for room in rooms
+        ],
+    )
 
 
 def _cms_regulatory_history(facility: Dict[str, Any]) -> Optional[Dict[str, Any]]:

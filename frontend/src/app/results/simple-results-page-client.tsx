@@ -126,7 +126,15 @@ export function SimpleResultsPageClient() {
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{item.facility_name}</h2>
                       <p className="mt-2 text-lg text-[#627069]">{[item.city, item.state].filter(Boolean).join(", ")}</p>
                     </div>
-                    <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">Meets verified must-haves</span>
+                    <div className="flex flex-col items-start gap-2 sm:items-end">
+                      <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">Meets verified must-haves</span>
+                      <Link
+                        href={`/facility/canonical?canonical=${encodeURIComponent(item.canonical_facility_id)}&back=${encodeURIComponent(`/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`}
+                        className="rounded-full border border-[#315f53] px-4 py-2 text-base font-semibold text-[#315f53] hover:bg-[#f4fbf7]"
+                      >
+                        View full listing →
+                      </Link>
+                    </div>
                   </div>
 
                   <div className="mt-7 grid gap-5 lg:grid-cols-2">

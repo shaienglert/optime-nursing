@@ -159,11 +159,19 @@ export function PersonalReportPageClient() {
                       <p className="text-lg font-semibold text-[#3e7868]">#{index + 1} current match</p>
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{candidate.facility_name}</h2>
                     </div>
-                    {candidate.match_score !== null ? (
-                      <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">
-                        {candidate.match_band ? candidate.match_band.replace(/_/g, " ") : "Match"} · {Math.round(candidate.match_score)}%
-                      </span>
-                    ) : null}
+                    <div className="flex flex-col items-start gap-2 sm:items-end">
+                      {candidate.match_score !== null ? (
+                        <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">
+                          {candidate.match_band ? candidate.match_band.replace(/_/g, " ") : "Match"} · {Math.round(candidate.match_score)}%
+                        </span>
+                      ) : null}
+                      <Link
+                        href={`/facility/canonical?canonical=${encodeURIComponent(candidate.canonical_facility_id)}&back=${encodeURIComponent(`/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`}
+                        className="rounded-full border border-[#315f53] px-4 py-2 text-base font-semibold text-[#315f53] hover:bg-[#f4fbf7]"
+                      >
+                        View full listing →
+                      </Link>
+                    </div>
                   </div>
 
                   <div className="mt-7 grid gap-5 lg:grid-cols-2">
