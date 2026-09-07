@@ -404,6 +404,13 @@ export type PersonalDecisionReportResponse = {
   omitted_sections: string[];
 };
 
+export type PersonalDecisionReportRequest = DecisionEngineRequest & {
+  // Pass an already-fetched DecisionEngineResponse for the identical
+  // questionnaire_state/natural_language_query/limit to skip a second, redundant
+  // multi-minute AI-ranking pass on the backend.
+  decision_result?: Record<string, unknown>;
+};
+
 export type PatientComparisonContextRequest = {
   canonical_facility_ids: string[];
   patient_needs_profile: PatientNeedsProfile;
@@ -2049,9 +2056,9 @@ export async function fetchPatientDecisionRecommendations(
 }
 
 export async function fetchPersonalDecisionReport(
-  payload: DecisionEngineRequest
+  payload: PersonalDecisionReportRequest
 ): Promise<PersonalDecisionReportResponse> {
-  return postJson<DecisionEngineRequest, PersonalDecisionReportResponse>("/decision-engine/personal-report", payload);
+  return postJson<PersonalDecisionReportRequest, PersonalDecisionReportResponse>("/decision-engine/personal-report", payload);
 }
 
 export async function fetchPatientComparisonContext(

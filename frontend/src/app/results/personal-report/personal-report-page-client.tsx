@@ -6,11 +6,13 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import {
+  DecisionEngineResponse,
   PersonalDecisionReportResponse,
   PersonalReportClaim,
   PersonalReportSections,
   fetchPersonalDecisionReport,
 } from "@/lib/api";
+import { loadDecisionResponseCache } from "@/lib/search-session";
 
 function personLabel(relationship: string): string {
   if (relationship === "Myself") return "you";
@@ -40,15 +42,24 @@ export function PersonalReportPageClient() {
   const naturalLanguageQuery = (
     searchParams.get("q") || searchParams.get("search") || searchParams.get("notes") || state.notes || ""
   ).trim();
+  // Same shape/limit as the results page's cache key -- reuses an already-computed
+  // decision result when the visitor just came from /results for this exact case,
+  // instead of paying for a second, redundant multi-minute AI-ranking pass.
+  const decisionRequestKey = useMemo(
+    () => JSON.stringify({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
+    [state, naturalLanguageQuery],
+  );
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError(null);
+    const cachedDecisionResult = loadDecisionResponseCache<DecisionEngineResponse>(decisionRequestKey);
     void fetchPersonalDecisionReport({
       questionnaire_state: state as unknown as Record<string, unknown>,
       natural_language_query: naturalLanguageQuery,
-      limit: 5,
+      limit: 50,
+      decision_result: cachedDecisionResult ? (cachedDecisionResult as unknown as Record<string, unknown>) : undefined,
     })
       .then((value) => {
         if (active) setReport(value);
@@ -62,7 +73,7 @@ export function PersonalReportPageClient() {
     return () => {
       active = false;
     };
-  }, [naturalLanguageQuery, state]);
+  }, [decisionRequestKey, naturalLanguageQuery, state]);
 
   const relationship = personLabel(state.relationship);
   const backHref = `/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
