@@ -56,6 +56,9 @@ class PersonalReportEndpointContractTests(unittest.TestCase):
             decision_result=decision_result,
         )
         serialized_dict = builder.serialize_personal_report_payload(payload)
+        # case_token is attached by the endpoint (personal_report_case_service), not the
+        # builder -- this test is only about the builder's own output shape.
+        serialized_dict["case_token"] = "test-case-token"
         serialized = main.PersonalDecisionReportOut.model_validate(serialized_dict).model_dump()
 
         self.assertIn(serialized["user_role"], {"SELF", "FAMILY_MEMBER", "OTHER"})
@@ -84,11 +87,66 @@ class PersonalReportEndpointContractTests(unittest.TestCase):
             limit=5,
             decision_result=decision_result,
         )
-        with patch("app.main.run_patient_decision_engine") as mock_run:
-            result = main.post_personal_decision_report(payload)
+        db = main.SessionLocal()
+        try:
+            with patch("app.main.run_patient_decision_engine") as mock_run:
+                result = main.post_personal_decision_report(payload, db=db)
+        finally:
+            db.close()
         mock_run.assert_not_called()
         self.assertIn(result["user_role"], {"SELF", "FAMILY_MEMBER", "OTHER"})
         self.assertEqual(result["report_ready"], decision_result["decision_intelligence"]["canonical_decision_state"]["can_show_recommendations"])
+        self.assertTrue(result["case_token"])
+
+    def test_case_token_regenerates_without_resubmitting_questionnaire(self) -> None:
+        """The whole point of a case: the client sends the full questionnaire once,
+        then only case_token for every later ('updated report') request."""
+        main = importlib.import_module("app.main")
+        decision = importlib.import_module("app.services.patient_decision_engine")
+
+        ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        db = main.SessionLocal()
+        try:
+            with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+                "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+            ):
+                decision_result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
+
+            first_payload = main.PersonalDecisionReportRequestIn(
+                questionnaire_state=self._questionnaire(),
+                natural_language_query=self._query(),
+                limit=5,
+                decision_result=decision_result,
+            )
+            first_result = main.post_personal_decision_report(first_payload, db=db)
+            case_token = first_result["case_token"]
+            self.assertTrue(case_token)
+
+            # Second call: only case_token, no questionnaire_state at all -- must still
+            # produce a full report by loading the stored inputs, and must re-run the
+            # pipeline fresh (no decision_result given) rather than reusing anything stale.
+            second_payload = main.PersonalDecisionReportRequestIn(case_token=case_token)
+            with patch("app.main.run_patient_decision_engine", return_value=decision_result) as mock_run:
+                second_result = main.post_personal_decision_report(second_payload, db=db)
+            mock_run.assert_called_once()
+            called_kwargs = mock_run.call_args.kwargs
+            self.assertEqual(called_kwargs["questionnaire_state"], self._questionnaire())
+            self.assertEqual(called_kwargs["natural_language_query"], self._query())
+            self.assertEqual(second_result["case_token"], case_token)
+            self.assertEqual(second_result["user_role"], first_result["user_role"])
+        finally:
+            db.close()
+
+    def test_unknown_case_token_is_404(self) -> None:
+        main = importlib.import_module("app.main")
+        db = main.SessionLocal()
+        try:
+            payload = main.PersonalDecisionReportRequestIn(case_token="not-a-real-token")
+            with self.assertRaises(main.HTTPException) as ctx:
+                main.post_personal_decision_report(payload, db=db)
+            self.assertEqual(ctx.exception.status_code, 404)
+        finally:
+            db.close()
 
     def test_main_wires_personal_report_endpoint(self) -> None:
         main = importlib.import_module("app.main")
