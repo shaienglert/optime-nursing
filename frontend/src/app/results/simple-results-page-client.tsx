@@ -71,6 +71,7 @@ export function SimpleResultsPageClient() {
   const top = eligible.slice(0, TOP_COUNT);
   const relationship = personLabel(state.relationship);
   const detailsHref = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+  const personalReportHref = `/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
   if (loading) {
     return <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]"><div className="mx-auto max-w-5xl text-xl">Preparing the clearest options for you…</div></main>;
@@ -157,6 +158,7 @@ export function SimpleResultsPageClient() {
 
         <section className="mt-8 flex flex-wrap gap-4 pb-10">
           <Link href={detailsHref} className="rounded-2xl border-2 border-[#315f53] px-6 py-4 text-xl font-semibold text-[#315f53]">See detailed comparison</Link>
+          <Link href={personalReportHref} className="rounded-2xl border-2 border-[#315f53] px-6 py-4 text-xl font-semibold text-[#315f53]">See your personal report</Link>
           <Link href="/adaptive-interview?review=1&next=/results" className="rounded-2xl border border-[#cfc6b7] bg-white px-6 py-4 text-xl font-semibold">Change answers</Link>
         </section>
       </div>

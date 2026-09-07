@@ -375,6 +375,35 @@ export type DecisionEngineRequest = {
   limit?: number;
 };
 
+export type PersonalReportClaimType = "USER_INFORMATION" | "VERIFIED_FACT" | "RESEARCH_FINDING" | "ENGINE_CONCLUSION" | "UNKNOWN";
+
+export type PersonalReportClaim = {
+  claim_id: string;
+  claim_type: PersonalReportClaimType;
+  text: string;
+  provenance_ids: string[];
+  confidence: string | null;
+};
+
+export type PersonalReportSections = Record<string, PersonalReportClaim[]>;
+
+export type PersonalReportCandidate = {
+  canonical_facility_id: string;
+  facility_name: string;
+  rank_position: number | null;
+  match_band: string | null;
+  match_score: number | null;
+  sections: PersonalReportSections;
+};
+
+export type PersonalDecisionReportResponse = {
+  user_role: "SELF" | "FAMILY_MEMBER" | "OTHER";
+  report_ready: boolean;
+  sections: PersonalReportSections;
+  candidates: PersonalReportCandidate[];
+  omitted_sections: string[];
+};
+
 export type PatientComparisonContextRequest = {
   canonical_facility_ids: string[];
   patient_needs_profile: PatientNeedsProfile;
@@ -2017,6 +2046,12 @@ export async function fetchPatientDecisionRecommendations(
   payload: DecisionEngineRequest
 ): Promise<DecisionEngineResponse> {
   return postJson<DecisionEngineRequest, DecisionEngineResponse>("/decision-engine/recommendations", payload);
+}
+
+export async function fetchPersonalDecisionReport(
+  payload: DecisionEngineRequest
+): Promise<PersonalDecisionReportResponse> {
+  return postJson<DecisionEngineRequest, PersonalDecisionReportResponse>("/decision-engine/personal-report", payload);
 }
 
 export async function fetchPatientComparisonContext(
