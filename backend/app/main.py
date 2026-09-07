@@ -107,6 +107,11 @@ from app.services.patient_decision_engine import (
     build_patient_needs_profile,
     run_patient_decision_engine,
 )
+from app.services.personal_decision_report_builder import (
+    build_personal_decision_report,
+    serialize_personal_report_payload,
+)
+from app.services.personal_decision_report_contract import ReportContractViolation
 from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
@@ -341,6 +346,14 @@ class PatientDecisionEngineOut(BaseModel):
     decision_intelligence: Dict[str, Any] = Field(default_factory=dict)
     recommendation_audit_trace: Dict[str, Any] = Field(default_factory=dict)
     decision_pipeline_trace: Dict[str, Any] = Field(default_factory=dict)
+
+
+class PersonalDecisionReportOut(BaseModel):
+    user_role: str
+    report_ready: bool
+    sections: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
+    candidates: List[Dict[str, Any]] = Field(default_factory=list)
+    omitted_sections: List[str] = Field(default_factory=list)
 
 
 class PatientNeedsProfileOut(BaseModel):
@@ -1832,6 +1845,31 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
     )
 
     return response
+
+
+@app.post("/decision-engine/personal-report", response_model=PersonalDecisionReportOut)
+def post_personal_decision_report(payload: PatientDecisionEngineRequestIn):
+    """Presentation-only report over an already-computed decision-engine result.
+
+    Runs the same governed pipeline as /decision-engine/recommendations, then projects
+    it through the fail-closed Personal Decision Report contract -- no new research,
+    ranking, or decision authority is exercised here.
+    """
+
+    decision_result = run_patient_decision_engine(
+        questionnaire_state=payload.questionnaire_state,
+        natural_language_query=payload.natural_language_query or "",
+        limit=payload.limit,
+    )
+    try:
+        report_payload = build_personal_decision_report(
+            questionnaire_state=payload.questionnaire_state,
+            natural_language_query=payload.natural_language_query or "",
+            decision_result=decision_result,
+        )
+    except ReportContractViolation as exc:
+        raise HTTPException(status_code=500, detail=f"Report contract violation: {exc}") from exc
+    return serialize_personal_report_payload(report_payload)
 
 
 @app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
