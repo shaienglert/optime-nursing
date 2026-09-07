@@ -66,6 +66,30 @@ class PersonalReportEndpointContractTests(unittest.TestCase):
             self.assertIn("WHY_THIS_PLACE", serialized["candidates"][0]["sections"])
         self.assertEqual(["SUCCESSFUL_TRANSITION"], serialized["omitted_sections"])
 
+    def test_passed_in_decision_result_skips_recomputation(self) -> None:
+        """A caller that already has a decision_result must not trigger a second,
+        redundant run through the full (multi-minute, AI-ranking) pipeline."""
+        main = importlib.import_module("app.main")
+        decision = importlib.import_module("app.services.patient_decision_engine")
+
+        ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ):
+            decision_result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
+
+        payload = main.PersonalDecisionReportRequestIn(
+            questionnaire_state=self._questionnaire(),
+            natural_language_query=self._query(),
+            limit=5,
+            decision_result=decision_result,
+        )
+        with patch("app.main.run_patient_decision_engine") as mock_run:
+            result = main.post_personal_decision_report(payload)
+        mock_run.assert_not_called()
+        self.assertIn(result["user_role"], {"SELF", "FAMILY_MEMBER", "OTHER"})
+        self.assertEqual(result["report_ready"], decision_result["decision_intelligence"]["canonical_decision_state"]["can_show_recommendations"])
+
     def test_main_wires_personal_report_endpoint(self) -> None:
         main = importlib.import_module("app.main")
         self.assertTrue(callable(main.post_personal_decision_report))

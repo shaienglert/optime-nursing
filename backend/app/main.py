@@ -325,6 +325,13 @@ class PatientDecisionEngineRequestIn(BaseModel):
     limit: int = 50
 
 
+class PersonalDecisionReportRequestIn(BaseModel):
+    questionnaire_state: Dict[str, Any]
+    natural_language_query: Optional[str] = ""
+    limit: int = 50
+    decision_result: Optional[Dict[str, Any]] = None
+
+
 class PatientNeedsProfileRequestIn(BaseModel):
     questionnaire_state: Dict[str, Any]
     natural_language_query: Optional[str] = ""
@@ -1848,19 +1855,29 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
 
 
 @app.post("/decision-engine/personal-report", response_model=PersonalDecisionReportOut)
-def post_personal_decision_report(payload: PatientDecisionEngineRequestIn):
+def post_personal_decision_report(payload: PersonalDecisionReportRequestIn):
     """Presentation-only report over an already-computed decision-engine result.
 
-    Runs the same governed pipeline as /decision-engine/recommendations, then projects
-    it through the fail-closed Personal Decision Report contract -- no new research,
-    ranking, or decision authority is exercised here.
+    Projects a decision-engine result through the fail-closed Personal Decision Report
+    contract -- no new research, ranking, or decision authority is exercised here.
+
+    If the caller already has a decision_result (e.g. a client that just rendered
+    /decision-engine/recommendations for the identical questionnaire_state /
+    natural_language_query / limit), it can be passed straight through, skipping a
+    second, redundant, multi-minute AI-ranking pass for data the caller already has --
+    the same trust model /decision-engine/comparison-context already uses for
+    patient_needs_profile. Only the shape of the report built from it is validated;
+    the report cannot escape into a wider recommendation-visibility state than
+    decision_result's own canonical_decision_state already grants.
     """
 
-    decision_result = run_patient_decision_engine(
-        questionnaire_state=payload.questionnaire_state,
-        natural_language_query=payload.natural_language_query or "",
-        limit=payload.limit,
-    )
+    decision_result = payload.decision_result
+    if decision_result is None:
+        decision_result = run_patient_decision_engine(
+            questionnaire_state=payload.questionnaire_state,
+            natural_language_query=payload.natural_language_query or "",
+            limit=payload.limit,
+        )
     try:
         report_payload = build_personal_decision_report(
             questionnaire_state=payload.questionnaire_state,

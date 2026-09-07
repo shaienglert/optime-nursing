@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
+import { loadDecisionResponseCache, saveDecisionResponseCache } from "@/lib/search-session";
 
 const TOP_COUNT = 5;
 
@@ -36,16 +37,27 @@ export function SimpleResultsPageClient() {
   const naturalLanguageQuery = (
     searchParams.get("q") || searchParams.get("search") || searchParams.get("notes") || state.notes || ""
   ).trim();
+  const decisionRequestKey = useMemo(
+    () => JSON.stringify({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 }),
+    [state, naturalLanguageQuery],
+  );
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError(null);
-    void fetchPatientDecisionRecommendations({
-      questionnaire_state: state as unknown as Record<string, unknown>,
-      natural_language_query: naturalLanguageQuery,
-      limit: 50,
-    })
+    const cached = loadDecisionResponseCache<DecisionEngineResponse>(decisionRequestKey);
+    const load = cached
+      ? Promise.resolve(cached)
+      : fetchPatientDecisionRecommendations({
+          questionnaire_state: state as unknown as Record<string, unknown>,
+          natural_language_query: naturalLanguageQuery,
+          limit: 50,
+        }).then((value) => {
+          saveDecisionResponseCache(decisionRequestKey, value);
+          return value;
+        });
+    void load
       .then((value) => {
         if (active) setResponse(value);
       })
@@ -58,7 +70,7 @@ export function SimpleResultsPageClient() {
     return () => {
       active = false;
     };
-  }, [naturalLanguageQuery, state]);
+  }, [decisionRequestKey, naturalLanguageQuery, state]);
 
   const eligible = useMemo(
     () => (response?.results || []).filter((item) => item.eligibility_status === "ELIGIBLE"),
@@ -71,6 +83,7 @@ export function SimpleResultsPageClient() {
   const top = eligible.slice(0, TOP_COUNT);
   const relationship = personLabel(state.relationship);
   const detailsHref = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+  const personalReportHref = `/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
   if (loading) {
     return <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]"><div className="mx-auto max-w-5xl text-xl">Preparing the clearest options for you…</div></main>;
@@ -157,6 +170,7 @@ export function SimpleResultsPageClient() {
 
         <section className="mt-8 flex flex-wrap gap-4 pb-10">
           <Link href={detailsHref} className="rounded-2xl border-2 border-[#315f53] px-6 py-4 text-xl font-semibold text-[#315f53]">See detailed comparison</Link>
+          <Link href={personalReportHref} className="rounded-2xl border-2 border-[#315f53] px-6 py-4 text-xl font-semibold text-[#315f53]">See your personal report</Link>
           <Link href="/adaptive-interview?review=1&next=/results" className="rounded-2xl border border-[#cfc6b7] bg-white px-6 py-4 text-xl font-semibold">Change answers</Link>
         </section>
       </div>
