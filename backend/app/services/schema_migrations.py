@@ -134,3 +134,14 @@ def ensure_state_license_schema(engine: Engine) -> None:
     with engine.begin() as connection:
         for statement in alter_statements:
             connection.execute(text(statement))
+
+
+def ensure_deferred_report_schema(engine: Engine) -> None:
+    """Create the deferred-report table on a database that predates it.
+
+    create_all handles a fresh schema; an existing deployment needs the table added without
+    a migration framework, which is the pattern the rest of this module already follows.
+    """
+    from app.models.deferred_report import DeferredDecisionReport  # noqa: PLC0415
+
+    DeferredDecisionReport.__table__.create(bind=engine, checkfirst=True)

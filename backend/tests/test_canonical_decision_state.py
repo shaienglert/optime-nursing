@@ -133,7 +133,15 @@ def test_complete_pipeline_reaches_final_recommendation():
     assert state.can_show_recommendations is True
 
 
-def test_visible_deterministic_fallback_is_reported_as_legacy_conflict():
+def test_deterministic_fallback_shows_an_unranked_eligible_set():
+    """Recorded as a legacy divergence during the shadow rollout; now resolved in favour
+    of showing the set.
+
+    When the ranking model is unavailable the hard criteria still produced eligible
+    communities, and a family is better served by "these meet your requirements, we could
+    not study them today" than by an empty screen. What the result must never do is imply
+    an order, so the phase is its own and the finality says degraded rather than provisional.
+    """
     result = base_result()
     result.update({"must_eligible_count": 6, "must_pending_verification_count": 0, "must_rejected_count": 2})
     result["decision_intelligence"].update(
@@ -144,8 +152,11 @@ def test_visible_deterministic_fallback_is_reported_as_legacy_conflict():
         "ai_ranking": {"status": "DETERMINISTIC_FALLBACK"}
     }
     state = derive_canonical_decision_state(result)
-    assert state.phase is DecisionPhase.AI_RANKING
-    assert "LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION" in legacy_state_conflicts(state)
+    assert state.phase is DecisionPhase.UNRANKED_ELIGIBLE_SET
+    assert state.can_show_recommendations is True
+    assert state.is_degraded_result is True
+    assert state.finality is DecisionFinality.DEGRADED_UNRANKED
+    assert "LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION" not in legacy_state_conflicts(state)
 
 
 def test_canonical_authority_overwrites_legacy_global_controls():
@@ -155,13 +166,14 @@ def test_canonical_authority_overwrites_legacy_global_controls():
         recommendation_execution_allowed=True,
         recommendation_visibility="PROVISIONAL_RANKING_VISIBLE",
         decision_finality="PROVISIONAL_PENDING_PROVIDER_VERIFICATION",
-        facility_selection_pipeline={"ai_ranking": {"status": "DETERMINISTIC_FALLBACK"}},
+        # A model that errored outright, rather than one that was merely unavailable: the
+        # unavailable case now legitimately shows an unranked set, so proving that canonical
+        # state overrides legacy needs a status that genuinely blocks.
+        facility_selection_pipeline={"ai_ranking": {"status": "AI_RANKING_ERROR"}},
     )
 
     out = apply_canonical_decision_state_authority(result)
     decision = out["decision_intelligence"]
     assert decision["canonical_decision_state"]["authoritative"] is True
-    assert decision["canonical_decision_state"]["phase"] == "AI_RANKING"
     assert decision["recommendation_execution_allowed"] is False
     assert decision["recommendation_visibility"] == "BLOCKED_AI_RANKING"
-    assert decision["decision_finality"] == "PENDING_AI_RANKING"

@@ -127,8 +127,12 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
             "He is mentally alert, has no dementia, is still mobile, and needs daily help."
         )
         result = self._run_ready(questionnaire, natural_language)
-        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertEqual(result["result_count"], 0)
+        # The ranking model is unavailable in this environment, so the hard criteria carry
+        # the result: the eligible set is shown, explicitly unordered, with a degradation
+        # notice. It used to be hidden entirely, which told the family nothing.
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
         self.assertGreaterEqual(result["total_candidates_scored"], 364)
         context = result["care_setting_policy"]["context"]
         self.assertFalse(context["requires_skilled"])
@@ -150,17 +154,25 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         profile = result["patient_needs_profile"]
         self.assertEqual(profile["location_city"], "LAS VEGAS")
         self.assertEqual(profile["natural_language_mapping"]["location_city"], "LAS VEGAS")
-        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertEqual([], result["results"])
+        # The ranking model is unavailable in this environment, so the hard criteria carry
+        # the result: the eligible set is shown, explicitly unordered, with a degradation
+        # notice. It used to be hidden entirely, which told the family nothing.
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
 
     def test_governed_nevada_ranking_replaces_stale_legacy_tie_metadata_after_ai_ready(self) -> None:
         result = self._run_ready(
             {"relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 6500},
             "My father is 84, lives in Las Vegas, is mentally alert and needs help with bathing and dressing. No dementia.",
         )
+        # The ranking model is unavailable in this environment, so the hard criteria carry
+        # the result: the eligible set is shown, explicitly unordered, with a degradation
+        # notice. It used to be hidden entirely, which told the family nothing.
         rows = result["results"]
-        self.assertEqual([], rows)
-        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertTrue(rows, "hard criteria should still surface an eligible set")
+        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        # No stale tie metadata may claim an ordering the model never produced.
+        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
 
 
 if __name__ == "__main__":

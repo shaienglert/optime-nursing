@@ -107,7 +107,14 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         for ctx in (patient_decision, policy_decision, top_decision):
             self.assertEqual(ctx["version"], "decision-intelligence-runtime-v3.1")
             self.assertIn("client_intent", ctx)
-        self.assertFalse(top_decision["recommendation_execution_allowed"])
+        # The ranking model is unavailable here, so the hard criteria carry the result and
+        # the eligible set is shown unordered. What this test guards is that the degraded
+        # shape survives the FastAPI response model intact -- the flag a caller branches on
+        # is worthless if serialisation drops it.
+        self.assertTrue(top_decision["recommendation_execution_allowed"])
+        self.assertTrue(top_decision["canonical_decision_state"]["is_degraded_result"])
+        self.assertEqual(top_decision["recommendation_visibility"], "UNRANKED_ELIGIBLE_SET_VISIBLE")
+        self.assertFalse(serialized["degraded_result_notice"]["results_are_ordered"])
         self.assertEqual(
             top_decision["ranking_order"],
             [
@@ -124,7 +131,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertEqual(human["decision_readiness"], "READY")
         self.assertEqual(human["signals"]["recent_bereavement"]["value"], "YES")
         self.assertEqual([], human["adaptive_questions"])
-        self.assertEqual([], serialized["results"])
+        self.assertTrue(serialized["results"], "the eligible set is shown even when the model is unavailable")
         self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3.1")
 
     def test_couple_spine_rehab_unknowns_are_guardian_inputs_not_scripted_questions(self) -> None:

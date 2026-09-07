@@ -56,6 +56,14 @@ from app.services.facility_memory_persistence import apply_provider_verification
 from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
 from app.services.schema_migrations import ensure_state_license_schema
+
+
+from app.services.schema_migrations import ensure_deferred_report_schema
+from app.services.deferred_report_service import (
+    pending_report_summary,
+    process_pending_reports,
+    request_deferred_report,
+)
 from app.services.provider_identity import (
     apply_facility_field_update,
     complete_email_verification,
@@ -362,6 +370,11 @@ class PatientDecisionEngineOut(BaseModel):
     decision_intelligence: Dict[str, Any] = Field(default_factory=dict)
     recommendation_audit_trace: Dict[str, Any] = Field(default_factory=dict)
     decision_pipeline_trace: Dict[str, Any] = Field(default_factory=dict)
+    # Optional because an ordinary result carries no notice at all -- absent rather than
+    # present-and-false, so a caller that forgets to check finds nothing to render. It must
+    # be declared here regardless: a field the response model does not know about is
+    # dropped in serialisation, and the notice would never reach the family it is for.
+    degraded_result_notice: Optional[Dict[str, Any]] = None
 
 
 class PersonalDecisionReportOut(BaseModel):
@@ -581,6 +594,22 @@ class LicenseValidationOut(BaseModel):
     address_match: bool
     domain_allowed: bool
     provider_match: bool
+
+
+class DeferredReportIn(BaseModel):
+    email: str
+    questionnaire: Dict[str, Any] = Field(default_factory=dict)
+    query_text: str
+    market: Optional[str] = None
+    limit: int = 5
+    degraded_reason: Optional[str] = None
+    eligible_at_request: Optional[int] = None
+
+
+class DeferredReportOut(BaseModel):
+    request_id: int
+    status: str
+    created: bool
 
 
 class AccessCheckIn(BaseModel):
@@ -1206,6 +1235,9 @@ def startup() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
     ensure_state_license_schema(engine)
+
+
+    ensure_deferred_report_schema(engine)
     ensure_facility_intelligence_profile_schema(engine)
     ensure_agent_knowledge_report_snapshot_schema(engine)
     db = SessionLocal()
@@ -1865,6 +1897,36 @@ async def post_personalized_parameter_order(payload: PersonalizedParameterOrderI
 @app.post("/decision-engine/patient-needs-profile", response_model=PatientNeedsProfileOut)
 def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn):
     return build_patient_needs_profile(payload.questionnaire_state, payload.natural_language_query or "")
+
+
+@app.post("/decision-engine/deferred-report", response_model=DeferredReportOut)
+async def decision_engine_deferred_report(payload: DeferredReportIn, db: Session = Depends(get_db)):
+    """Take an address from a family whose search degraded, and promise them the real report."""
+    try:
+        result = request_deferred_report(
+            db,
+            email=payload.email,
+            questionnaire=payload.questionnaire,
+            query_text=payload.query_text,
+            market=payload.market,
+            limit=payload.limit,
+            degraded_reason=payload.degraded_reason,
+            eligible_at_request=payload.eligible_at_request,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return DeferredReportOut(**result)
+
+
+@app.post("/decision-engine/deferred-report/process")
+async def decision_engine_process_deferred_reports(limit: int = 25, db: Session = Depends(get_db)):
+    """Retry pending requests and send the ones that now rank. Safe to call repeatedly."""
+    return process_pending_reports(db, limit=limit)
+
+
+@app.get("/decision-engine/deferred-report/status")
+async def decision_engine_deferred_report_status(db: Session = Depends(get_db)):
+    return pending_report_summary(db)
 
 
 @app.post("/decision-engine/recommendations", response_model=PatientDecisionEngineOut)
