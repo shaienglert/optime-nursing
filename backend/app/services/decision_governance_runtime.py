@@ -88,10 +88,17 @@ def _eligible_knowledge_objects(db) -> List[KnowledgeObject]:
         .filter(KnowledgeObject.recommendation_eligible == 1)
         .all()
     )
+    # status and recommendation_eligible are re-checked here even though the query above
+    # already filters on them. A governance gate that holds only while the SQL happens to be
+    # written correctly is the fragile half of the guarantee: this function is what decides
+    # whether an object may inform a recommendation, so it decides on the row in front of
+    # it rather than trusting how the row arrived.
     return [
         row
         for row in rows
-        if str(row.verification_status or "").upper() in _VERIFIED
+        if str(row.status or "").upper() == "ACTIVE"
+        and int(row.recommendation_eligible or 0) == 1
+        and str(row.verification_status or "").upper() in _VERIFIED
         and str(row.freshness_status or "").upper() in _FRESH
         and str(row.conflict_status or "").upper() in _NO_CONFLICT
         and float(row.confidence or 0.0) > 0.0

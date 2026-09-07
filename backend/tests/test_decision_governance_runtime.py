@@ -149,7 +149,14 @@ def test_audit_persistence_writes_agent_delivery_trace_per_recommendation(monkey
             },
         ],
     }
-    context = {"knowledge_fabric": {"objects": [_knowledge()]}, "outcome_learning": {"sample_size": 0}}
+    # governance_context carries the serialised payload, not ORM rows: in production
+    # _knowledge_payload converts them before they reach here. Building the fixture through
+    # that same function keeps the test honest about the shape the runtime is handed, and
+    # stops it drifting from production the way passing raw rows did.
+    context = {
+        "knowledge_fabric": runtime._knowledge_payload([_knowledge()]),
+        "outcome_learning": {"sample_size": 0},
+    }
     result = runtime.persist_recommendation_verification_audits(
         core=core,
         questionnaire_state={"resident_key": "test-resident"},
