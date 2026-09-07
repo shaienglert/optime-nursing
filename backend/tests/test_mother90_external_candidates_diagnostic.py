@@ -52,9 +52,19 @@ class Mother90ExternalCandidateDiagnosticTests(unittest.TestCase):
         }
         print("MOTHER90_MEDICATION_MUST_DIAGNOSTIC=" + json.dumps(diagnostics, indent=2, default=str))
 
-        self.assertEqual([], result.get("results") or [])
-        self.assertEqual(0, result.get("result_count"))
-        self.assertFalse(decision.get("recommendation_execution_allowed"))
+        # What this test is named for still holds: no candidate whose medication support is
+        # unverified reaches the visible list. What changed is the other half. Five
+        # communities did verify it, and with the ranking model unavailable those five are
+        # shown as an unordered set rather than withheld -- a family whose mother needs
+        # daily medication is better served by five confirmed options than by a blank page.
+        shown = result.get("results") or []
+        self.assertTrue(shown, "verified candidates should survive a degraded run")
+        for row in shown:
+            self.assertEqual("MUST_ELIGIBLE", row.get("must_eligibility"))
+            self.assertEqual([], (row.get("client_intent_fit") or {}).get("must_unknown") or [])
+        self.assertEqual(len(shown), result.get("result_count"))
+        self.assertTrue(decision.get("canonical_decision_state", {}).get("is_degraded_result"))
+        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
         self.assertTrue(pending)
         self.assertGreater(result.get("must_pending_verification_count") or 0, 0)
         self.assertTrue(

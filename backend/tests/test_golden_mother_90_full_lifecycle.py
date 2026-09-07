@@ -102,8 +102,15 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
 
         pending_decision = pending_result["decision_intelligence"]
         self.assertEqual("READY", pending_decision["human_intelligence"]["decision_readiness"])
-        self.assertFalse(pending_decision["recommendation_execution_allowed"])
-        self.assertEqual([], pending_result["results"])
+        # Nothing whose medication support is unverified may appear. Anything that does
+        # appear has verified it -- the degraded run shows the confirmed subset rather than
+        # the whole eligible pool.
+        for row in pending_result["results"]:
+            self.assertEqual("MUST_ELIGIBLE", row.get("must_eligibility"))
+            self.assertNotIn(
+                "MEDICATION_SUPPORT_AVAILABLE",
+                (row.get("client_intent_fit") or {}).get("must_unknown") or [],
+            )
         self.assertGreater(pending_result.get("must_pending_verification_count") or 0, 0)
         self.assertTrue(
             all(
@@ -142,15 +149,21 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
             result = run_patient_decision_engine(answered, self._query(), limit=5)
 
         decision = result["decision_intelligence"]
-        # A deterministic ordering is useful internally, but it is not a completed
-        # AI ranking and may not be exposed as a recommendation. Canonical decision
-        # state reaches this via the AI_RANKING phase (eligible candidates exist,
-        # ranking has not completed) rather than EVIDENCE_COLLECTION (no eligible
-        # candidates yet) -- see test_canonical_decision_state.py's own
-        # BLOCKED_AI_RANKING fixture for the same distinction.
-        self.assertFalse(decision["recommendation_execution_allowed"])
-        self.assertEqual(decision["recommendation_visibility"], "BLOCKED_AI_RANKING")
-        self.assertEqual(result["result_count"], 0)
+        # A deterministic ordering is still not a completed AI ranking and is still never
+        # presented as one. What changed is what happens instead of presenting it: rather
+        # than hiding a completed MUST evaluation, the candidates that passed it are shown
+        # as an unordered set, with the notice saying plainly that nothing compared them.
+        # The old behaviour returned an empty screen and no explanation, which told a family
+        # nothing and discarded work that was correct.
+        #
+        # The ordering claim is the line that must not be crossed, and it is not: the phase
+        # is its own, the finality is degraded rather than provisional, and the payload
+        # states results_are_ordered false.
+        self.assertTrue(decision["canonical_decision_state"]["is_degraded_result"])
+        self.assertEqual(decision["recommendation_visibility"], "UNRANKED_ELIGIBLE_SET_VISIBLE")
+        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        for row in result["results"]:
+            self.assertEqual("MUST_ELIGIBLE", row.get("must_eligibility"))
         self.assertGreater(result["total_candidates_scored"], 0)
         self.assertEqual(decision["human_intelligence"]["decision_readiness"], "READY")
         self.assertEqual(decision["human_intelligence"]["adaptive_questions"], [])

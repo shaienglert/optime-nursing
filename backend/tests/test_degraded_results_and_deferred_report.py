@@ -14,6 +14,7 @@ from app.database import Base
 from app.models.deferred_report import DeferredDecisionReport, DeferredReportStatus
 from app.services.canonical_decision_state import (
     DecisionFinality,
+    apply_canonical_decision_state_authority,
     DecisionPhase,
     RankingState,
     derive_canonical_decision_state,
@@ -68,9 +69,29 @@ class DegradedStateTests(unittest.TestCase):
         self.assertIs(state.phase, DecisionPhase.UNRANKED_ELIGIBLE_SET)
         self.assertTrue(state.can_show_recommendations)
 
-    def test_pending_only_candidates_still_degrade_rather_than_vanish(self) -> None:
+    def test_nothing_verified_means_nothing_to_show(self) -> None:
+        # Every candidate unverified: there is no hard-criteria result to fall back on, so
+        # a family who needs medication support is not sent to communities whose ability to
+        # provide it is merely unknown.
         state = derive_canonical_decision_state(_payload("DETERMINISTIC_FALLBACK", eligible=0, pending=9))
+        self.assertIsNot(state.phase, DecisionPhase.UNRANKED_ELIGIBLE_SET)
+        self.assertFalse(state.can_show_recommendations)
+
+    def test_a_mixed_set_shows_the_verified_and_withholds_the_rest(self) -> None:
+        # Requiring pending==0 was too blunt: an ADL search with 350 eligible and 24
+        # unverified hid all 350. The 24 are dropped from the list, not the other 350.
+        payload = _payload("DETERMINISTIC_FALLBACK", eligible=12, pending=3)
+        payload["results"] = [
+            {"facility_name": "verified", "must_eligibility": "MUST_ELIGIBLE"},
+            {"facility_name": "unverified", "must_eligibility": "MUST_PENDING_VERIFICATION"},
+        ]
+        state = derive_canonical_decision_state(payload)
         self.assertIs(state.phase, DecisionPhase.UNRANKED_ELIGIBLE_SET)
+
+        apply_canonical_decision_state_authority(payload)
+        shown = [row["facility_name"] for row in payload["results"]]
+        self.assertEqual(shown, ["verified"])
+        self.assertEqual(payload["result_count"], 1)
 
     def test_a_real_ranking_is_unaffected(self) -> None:
         state = derive_canonical_decision_state(_payload("AI_BATCH_RANKED"))

@@ -331,8 +331,7 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     # applies while that combined ranking has not completed yet -- once it has,
     # control falls through to the PROVISIONAL/FINAL_RECOMMENDATION branch below,
     # which shows them with an explicit per-candidate pending-verification note.
-    if (pending > 0 and eligible == 0
-            and ranking not in {RankingState.COMPLETE, RankingState.UNAVAILABLE_HARD_CRITERIA_ONLY}):
+    if pending > 0 and eligible == 0 and ranking is not RankingState.COMPLETE:
         return CanonicalDecisionState(
             phase=DecisionPhase.EVIDENCE_COLLECTION,
             client=ClientState.COMPLETE,
@@ -371,20 +370,29 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     # Hard criteria carried the result. Show the eligible set, do not order it, and say
     # plainly that the deep work did not run -- a family is better served by "these twelve
     # meet your requirements, we could not study them today" than by an empty screen.
-    if rankable_count > 0 and ranking is RankingState.UNAVAILABLE_HARD_CRITERIA_ONLY:
+    #
+    # Only genuinely eligible candidates are shown, and the pending ones are dropped from
+    # the list rather than blocking it. The normal path does display a pending candidate
+    # with a note, but only because the model assessed it first; here nothing assessed
+    # anything, and a family who needs medication support must not be sent to communities
+    # whose ability to provide it is merely unknown. Requiring pending==0 to degrade was the
+    # first attempt and it was too blunt: an ADL search with 350 eligible and 24 unverified
+    # hid all 350. Excluding the 24 keeps the safety property without discarding the work.
+    if eligible > 0 and ranking is RankingState.UNAVAILABLE_HARD_CRITERIA_ONLY:
         return CanonicalDecisionState(
             phase=DecisionPhase.UNRANKED_ELIGIBLE_SET,
             client=ClientState.COMPLETE,
             evidence=EvidenceState.SUFFICIENT,
-            must=MustState.PASS if pending == 0 else MustState.PENDING,
+            must=MustState.PASS,
             ranking=ranking,
             preferences=PreferenceState.NOT_STARTED,
             finality=DecisionFinality.DEGRADED_UNRANKED,
             system=SystemHealth.DEGRADED,
             next_action="SHOW_UNRANKED_ELIGIBLE_SET_WITH_DEGRADATION_NOTICE",
             reason=(
-                f"{rankable_count} candidate(s) meet the stated hard criteria; the ranking "
-                "model was unavailable, so they are shown unordered and unstudied"
+                f"{eligible} candidate(s) meet the stated hard criteria; the ranking model "
+                "was unavailable, so they are shown unordered and unstudied"
+                + (f", and {pending} unverified candidate(s) are withheld" if pending else "")
             ),
             legacy_readiness=legacy_readiness,
             legacy_recommendation_execution_allowed=legacy_execution,
@@ -509,6 +517,21 @@ def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str
         visibility, finality = "BLOCKED_SYSTEM", "BLOCKED_SYSTEM"
     else:
         visibility, finality = f"BLOCKED_{state.phase.value}", f"PENDING_{state.phase.value}"
+
+    if state.is_degraded_result:
+        # This module already owns whether recommendations may be shown, so it is also where
+        # "shown by the hard criteria alone" is enforced. Without the model nothing assessed
+        # the unverified candidates, and a degraded list that quietly carried them would be
+        # asserting exactly what the notice says it is not.
+        rows = result.get("results")
+        if isinstance(rows, list):
+            verified = [
+                row for row in rows
+                if not (isinstance(row, dict) and _upper(row.get("must_eligibility")) == "MUST_PENDING_VERIFICATION")
+            ]
+            if len(verified) != len(rows):
+                result["results"] = verified
+                result["result_count"] = len(verified)
 
     decision.update(
         recommendation_execution_allowed=state.can_show_recommendations,
