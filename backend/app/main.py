@@ -55,6 +55,9 @@ from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
 from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
+from app.services.schema_migrations import ensure_state_license_schema
+
+
 from app.services.schema_migrations import ensure_deferred_report_schema
 from app.services.deferred_report_service import (
     pending_report_summary,
@@ -71,6 +74,14 @@ from app.services.provider_identity import (
     run_annual_reverification,
     start_email_verification,
     validate_license_ownership,
+)
+from app.services.facility_profile_portal import (
+    add_photo,
+    deactivate_photo,
+    facility_profile_snapshot,
+    recompute_completeness,
+    save_capabilities,
+    search_claimable_facilities,
 )
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.evidence_source_integrity import (
@@ -113,6 +124,11 @@ from app.services.patient_decision_engine import (
     build_patient_needs_profile,
     run_patient_decision_engine,
 )
+from app.services.personal_decision_report_builder import (
+    build_personal_decision_report,
+    serialize_personal_report_payload,
+)
+from app.services.personal_decision_report_contract import ReportContractViolation
 from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
@@ -326,6 +342,13 @@ class PatientDecisionEngineRequestIn(BaseModel):
     limit: int = 50
 
 
+class PersonalDecisionReportRequestIn(BaseModel):
+    questionnaire_state: Dict[str, Any]
+    natural_language_query: Optional[str] = ""
+    limit: int = 50
+    decision_result: Optional[Dict[str, Any]] = None
+
+
 class PatientNeedsProfileRequestIn(BaseModel):
     questionnaire_state: Dict[str, Any]
     natural_language_query: Optional[str] = ""
@@ -352,6 +375,14 @@ class PatientDecisionEngineOut(BaseModel):
     # be declared here regardless: a field the response model does not know about is
     # dropped in serialisation, and the notice would never reach the family it is for.
     degraded_result_notice: Optional[Dict[str, Any]] = None
+
+
+class PersonalDecisionReportOut(BaseModel):
+    user_role: str
+    report_ready: bool
+    sections: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
+    candidates: List[Dict[str, Any]] = Field(default_factory=list)
+    omitted_sections: List[str] = Field(default_factory=list)
 
 
 class PatientNeedsProfileOut(BaseModel):
@@ -615,6 +646,44 @@ class RevertAuditOut(BaseModel):
     facility_id: int
     reverted_audit_id: int
     reversal_audit_id: int
+
+
+class ClaimSearchOut(BaseModel):
+    facility_id: int
+    cms_id: str
+    name: str
+    address: str
+    city: str
+    state: str
+    zip_code: str
+    beds: Optional[int] = None
+    overall_rating: Optional[int] = None
+    already_claimed: bool
+
+
+class CapabilitySaveIn(BaseModel):
+    user_id: int
+    answers: Dict[str, str]
+    ip_address: Optional[str] = None
+
+
+class CapabilitySaveOut(BaseModel):
+    updated: int
+    unchanged: int
+    completeness: Dict[str, object]
+
+
+class PhotoAddIn(BaseModel):
+    user_id: int
+    url: str
+    category: str = "general"
+    caption: Optional[str] = None
+    ip_address: Optional[str] = None
+
+
+class PhotoRemoveIn(BaseModel):
+    user_id: int
+    ip_address: Optional[str] = None
 
 
 class StaffInviteIn(BaseModel):
@@ -1165,6 +1234,9 @@ def startup() -> None:
     # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
+    ensure_state_license_schema(engine)
+
+
     ensure_deferred_report_schema(engine)
     ensure_facility_intelligence_profile_schema(engine)
     ensure_agent_knowledge_report_snapshot_schema(engine)
@@ -1892,6 +1964,41 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
     return response
 
 
+@app.post("/decision-engine/personal-report", response_model=PersonalDecisionReportOut)
+def post_personal_decision_report(payload: PersonalDecisionReportRequestIn):
+    """Presentation-only report over an already-computed decision-engine result.
+
+    Projects a decision-engine result through the fail-closed Personal Decision Report
+    contract -- no new research, ranking, or decision authority is exercised here.
+
+    If the caller already has a decision_result (e.g. a client that just rendered
+    /decision-engine/recommendations for the identical questionnaire_state /
+    natural_language_query / limit), it can be passed straight through, skipping a
+    second, redundant, multi-minute AI-ranking pass for data the caller already has --
+    the same trust model /decision-engine/comparison-context already uses for
+    patient_needs_profile. Only the shape of the report built from it is validated;
+    the report cannot escape into a wider recommendation-visibility state than
+    decision_result's own canonical_decision_state already grants.
+    """
+
+    decision_result = payload.decision_result
+    if decision_result is None:
+        decision_result = run_patient_decision_engine(
+            questionnaire_state=payload.questionnaire_state,
+            natural_language_query=payload.natural_language_query or "",
+            limit=payload.limit,
+        )
+    try:
+        report_payload = build_personal_decision_report(
+            questionnaire_state=payload.questionnaire_state,
+            natural_language_query=payload.natural_language_query or "",
+            decision_result=decision_result,
+        )
+    except ReportContractViolation as exc:
+        raise HTTPException(status_code=500, detail=f"Report contract violation: {exc}") from exc
+    return serialize_personal_report_payload(report_payload)
+
+
 @app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
 def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
     return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
@@ -2430,6 +2537,94 @@ async def provider_identity_role_change(
         raise HTTPException(status_code=400, detail=str(error)) from error
 
     return RoleChangeOut(**result)
+
+
+@app.get("/provider/facilities/search", response_model=List[ClaimSearchOut])
+async def provider_facility_search(
+    q: str,
+    state: Optional[str] = None,
+    city: Optional[str] = None,
+    limit: int = 25,
+    db: Session = Depends(get_db),
+):
+    return [ClaimSearchOut(**row) for row in search_claimable_facilities(db, q, state, city, limit)]
+
+
+@app.get("/provider/facilities/{facility_id}/profile")
+async def provider_facility_profile(facility_id: int, db: Session = Depends(get_db)):
+    try:
+        return facility_profile_snapshot(db, facility_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@app.put("/provider/facilities/{facility_id}/capabilities", response_model=CapabilitySaveOut)
+async def provider_facility_save_capabilities(
+    facility_id: int,
+    payload: CapabilitySaveIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        result = save_capabilities(
+            db=db,
+            facility_id=facility_id,
+            user_id=payload.user_id,
+            answers=payload.answers,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return CapabilitySaveOut(**result)
+
+
+@app.post("/provider/facilities/{facility_id}/photos")
+async def provider_facility_add_photo(
+    facility_id: int,
+    payload: PhotoAddIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        return add_photo(
+            db=db,
+            facility_id=facility_id,
+            user_id=payload.user_id,
+            category=payload.category,
+            url=payload.url,
+            caption=payload.caption,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.delete("/provider/facilities/{facility_id}/photos/{photo_id}")
+async def provider_facility_remove_photo(
+    facility_id: int,
+    photo_id: int,
+    payload: PhotoRemoveIn,
+    db: Session = Depends(get_db),
+):
+    try:
+        return deactivate_photo(
+            db=db,
+            facility_id=facility_id,
+            user_id=payload.user_id,
+            photo_id=photo_id,
+            ip_address=payload.ip_address,
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@app.get("/provider/facilities/{facility_id}/completeness")
+async def provider_facility_completeness(facility_id: int, db: Session = Depends(get_db)):
+    return recompute_completeness(db, facility_id)
 
 
 @app.post("/provider/identity/reverification/run")
