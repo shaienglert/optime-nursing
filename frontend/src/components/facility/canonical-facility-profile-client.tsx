@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { FacilityParameterTable, fetchFacilityParameterTable } from "@/lib/api";
+import { FacilityParameterTable, FacilityRooms, fetchFacilityParameterTable, fetchFacilityRooms } from "@/lib/api";
 
 type CanonicalFacilityProfileClientProps = {
   canonicalFacilityId: string;
@@ -57,9 +57,29 @@ function isImportantParameter(parameterId: string): boolean {
   ].includes(parameterId);
 }
 
+const AVAILABILITY_LABEL: Record<FacilityRooms["room_types"][number]["availability_status"], string> = {
+  AVAILABLE: "Available now",
+  WAITLIST: "Waitlist",
+  UNAVAILABLE: "Not available",
+  UNKNOWN: "Availability unconfirmed",
+};
+
+const AVAILABILITY_STYLE: Record<FacilityRooms["room_types"][number]["availability_status"], string> = {
+  AVAILABLE: "border-[#cfe2d8] bg-[#f4fbf7] text-[#315f53]",
+  WAITLIST: "border-[#eedfbf] bg-[#fff9ed] text-[#8a6a1f]",
+  UNAVAILABLE: "border-[#e6cfc7] bg-[#fdf4f1] text-[#8b3d2e]",
+  UNKNOWN: "border-[#d9cfbf] bg-[#faf7f1] text-[#6d655b]",
+};
+
+function formatMonthlyPrice(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "Price not yet confirmed";
+  return `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo`;
+}
+
 export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, backLabel }: CanonicalFacilityProfileClientProps) {
   const [table, setTable] = useState<FacilityParameterTable | null>(null);
   const [regulatory, setRegulatory] = useState<RegulatoryResponse | null>(null);
+  const [rooms, setRooms] = useState<FacilityRooms | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,7 +90,10 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
       setIsLoading(true);
       setError(null);
       try {
-        const parameterTable = await fetchFacilityParameterTable(canonicalFacilityId);
+        const [parameterTable, roomsPayload] = await Promise.all([
+          fetchFacilityParameterTable(canonicalFacilityId),
+          fetchFacilityRooms(canonicalFacilityId).catch(() => null),
+        ]);
         let regulatoryPayload: RegulatoryResponse | null = null;
         try {
           const response = await fetch(`/api/backend/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/regulatory-history`, {
@@ -88,6 +111,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
         if (!mounted) return;
         setTable(parameterTable);
         setRegulatory(regulatoryPayload);
+        setRooms(roomsPayload);
       } catch (err) {
         if (mounted) setError(err instanceof Error ? err.message : "Unable to load canonical facility profile.");
       } finally {
@@ -137,6 +161,39 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
             <Link href={backHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">{backLabel}</Link>
           </div>
         </header>
+
+        <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Rooms & pricing</p>
+          {rooms && rooms.has_data ? (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {rooms.room_types.map((room) => (
+                <article key={room.room_type_name} className="flex flex-col overflow-hidden rounded-2xl border border-[#e8ddcc] bg-[#fffdf8]">
+                  {room.photos.length > 0 ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={room.photos[0].url} alt={room.photos[0].caption || room.room_type_name} className="h-40 w-full object-cover" />
+                  ) : (
+                    <div className="flex h-40 w-full items-center justify-center bg-[#f3ede0] text-xs font-medium text-[#a89a80]">Photo not yet available</div>
+                  )}
+                  <div className="flex flex-1 flex-col gap-2 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-[#2f2a24]">{room.room_type_name}</h3>
+                      <span className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold ${AVAILABILITY_STYLE[room.availability_status]}`}>
+                        {AVAILABILITY_LABEL[room.availability_status]}
+                      </span>
+                    </div>
+                    {room.description && <p className="text-sm text-[#6d655b]">{room.description}</p>}
+                    <p className="mt-auto text-lg font-semibold text-[#315f53]">{formatMonthlyPrice(room.monthly_price)}</p>
+                    {room.last_verified_at && <p className="text-xs text-[#a89a80]">Verified {new Date(room.last_verified_at).toLocaleDateString()}</p>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-[#776e62]">
+              We haven&apos;t gathered detailed room types, photos, or current pricing for this community yet. Once you select this community for follow-up, we&apos;ll reach out directly and add that here.
+            </p>
+          )}
+        </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-[#e8ddcc] bg-white p-5">

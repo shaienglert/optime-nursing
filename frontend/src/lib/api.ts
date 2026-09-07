@@ -220,6 +220,28 @@ export type FacilityParameterTable = {
   rows: ParameterTableRow[];
 };
 
+export type FacilityRoomPhoto = {
+  url: string;
+  caption?: string | null;
+};
+
+export type FacilityRoomType = {
+  room_type_name: string;
+  description: string;
+  monthly_price?: number | null;
+  availability_status: "AVAILABLE" | "WAITLIST" | "UNAVAILABLE" | "UNKNOWN";
+  source: "OUTREACH" | "MANUAL" | "EXISTING_DATABASE";
+  last_verified_at?: string | null;
+  photos: FacilityRoomPhoto[];
+};
+
+export type FacilityRooms = {
+  canonical_facility_id: string;
+  facility_name: string;
+  has_data: boolean;
+  room_types: FacilityRoomType[];
+};
+
 export type FacilityParameterComparisonRequest = {
   canonical_facility_ids: string[];
   need_tags?: string[];
@@ -2029,6 +2051,10 @@ export async function fetchFacilityParameterTable(
   if (options?.profileKey) params.set("profile_key", options.profileKey);
   const suffix = params.toString() ? `?${params.toString()}` : "";
   return fetchJson<FacilityParameterTable>(`/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/parameter-table${suffix}`);
+}
+
+export async function fetchFacilityRooms(canonicalFacilityId: string): Promise<FacilityRooms> {
+  return fetchJson<FacilityRooms>(`/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/rooms`);
 }
 
 export async function compareFacilityParameters(
