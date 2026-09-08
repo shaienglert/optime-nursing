@@ -29,6 +29,7 @@ import app.models.external_discovery
 import app.models.knowledge_fabric
 import app.models.personal_report_case
 import app.models.facility_room_offering
+import app.models.facility_outreach
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
@@ -133,6 +134,7 @@ from app.services.personal_decision_report_builder import (
 from app.services.personal_decision_report_contract import ReportContractViolation
 from app.services.personal_report_case_service import case_inputs, create_case, get_case_by_token, save_snapshot
 from app.services.facility_room_service import list_room_types
+from app.services import facility_outreach_service
 from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
@@ -331,6 +333,43 @@ class FacilityRoomsOut(BaseModel):
     facility_name: str
     has_data: bool
     room_types: List[FacilityRoomTypeOut] = Field(default_factory=list)
+
+
+class FacilityOutreachDraftOut(BaseModel):
+    to: Optional[str] = None
+    subject: Optional[str] = None
+    body_text: Optional[str] = None
+
+
+class FacilityOutreachRequestOut(BaseModel):
+    id: int
+    canonical_facility_id: str
+    facility_name: str
+    status: str
+    contact_email: Optional[str] = None
+    failure_reason: Optional[str] = None
+    requested_at: str
+    sent_at: Optional[str] = None
+    responded_at: Optional[str] = None
+    draft: Optional[FacilityOutreachDraftOut] = None
+
+
+class FacilityOutreachPublicStatusOut(BaseModel):
+    canonical_facility_id: str
+    facility_name: str
+    status: str
+
+
+class RoomSubmissionIn(BaseModel):
+    room_type_name: str
+    description: str = ""
+    monthly_price_cents: Optional[int] = None
+    availability_status: str = "UNKNOWN"
+    photo_urls: List[str] = Field(default_factory=list)
+
+
+class FacilityOutreachSubmissionIn(BaseModel):
+    room_types: List[RoomSubmissionIn]
 
 
 class PersonalizedParameterOrderIn(BaseModel):
@@ -1865,6 +1904,74 @@ async def get_canonical_facility_rooms(canonical_id: str, db: Session = Depends(
             )
             for room in rooms
         ],
+    )
+
+
+def _serialize_outreach_request(outreach, *, include_draft: bool) -> FacilityOutreachRequestOut:
+    draft = None
+    if include_draft and outreach.status == "AWAITING_APPROVAL":
+        composed = facility_outreach_service.draft_email(outreach)
+        draft = FacilityOutreachDraftOut(to=composed["to"], subject=composed["subject"], body_text=composed["body_text"])
+    return FacilityOutreachRequestOut(
+        id=outreach.id,
+        canonical_facility_id=outreach.canonical_facility_id,
+        facility_name=facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
+        status=outreach.status,
+        contact_email=outreach.contact_email,
+        failure_reason=outreach.failure_reason,
+        requested_at=outreach.requested_at.isoformat(),
+        sent_at=outreach.sent_at.isoformat() if outreach.sent_at else None,
+        responded_at=outreach.responded_at.isoformat() if outreach.responded_at else None,
+        draft=draft,
+    )
+
+
+@app.post("/canonical-facilities/{canonical_id}/request-outreach", response_model=FacilityOutreachRequestOut)
+async def post_request_facility_outreach(canonical_id: str, db: Session = Depends(get_db)):
+    if canonical_id not in get_canonical_facility_index():
+        raise HTTPException(status_code=404, detail="Canonical facility not found")
+    outreach = facility_outreach_service.request_outreach(db, canonical_id)
+    return _serialize_outreach_request(outreach, include_draft=True)
+
+
+@app.get("/facility-outreach-requests/awaiting-approval", response_model=List[FacilityOutreachRequestOut])
+async def get_facility_outreach_requests_awaiting_approval(db: Session = Depends(get_db)):
+    return [_serialize_outreach_request(o, include_draft=True) for o in facility_outreach_service.list_awaiting_approval(db)]
+
+
+@app.post("/facility-outreach-requests/{request_id}/approve-send", response_model=FacilityOutreachRequestOut)
+async def post_approve_and_send_facility_outreach(request_id: int, db: Session = Depends(get_db)):
+    try:
+        outreach = facility_outreach_service.approve_and_send_outreach(db, request_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return _serialize_outreach_request(outreach, include_draft=False)
+
+
+@app.get("/facility-outreach/{response_token}", response_model=FacilityOutreachPublicStatusOut)
+async def get_facility_outreach_public_status(response_token: str, db: Session = Depends(get_db)):
+    outreach = facility_outreach_service.get_request_by_token(db, response_token)
+    if outreach is None:
+        raise HTTPException(status_code=404, detail="Unknown outreach link")
+    return FacilityOutreachPublicStatusOut(
+        canonical_facility_id=outreach.canonical_facility_id,
+        facility_name=facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
+        status=outreach.status,
+    )
+
+
+@app.post("/facility-outreach/{response_token}/submit", response_model=FacilityOutreachPublicStatusOut)
+async def post_facility_outreach_submission(response_token: str, payload: FacilityOutreachSubmissionIn, db: Session = Depends(get_db)):
+    try:
+        outreach = facility_outreach_service.submit_outreach_response(
+            db, response_token, [room.model_dump() for room in payload.room_types]
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Unknown outreach link") from exc
+    return FacilityOutreachPublicStatusOut(
+        canonical_facility_id=outreach.canonical_facility_id,
+        facility_name=facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
+        status=outreach.status,
     )
 
 

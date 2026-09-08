@@ -15,6 +15,26 @@ class FacilityRoomsEndpointTests(unittest.TestCase):
         self.assertGreater(len(index), 0)
         self.real_canonical_id = next(iter(index))
 
+    def tearDown(self) -> None:
+        # This id is deterministic (next(iter(index))) and other test modules use the
+        # same lookup for their own smoke tests -- without cleanup, whichever module
+        # runs first leaves rows the other reads back, making pass/fail depend on
+        # pytest's file ordering instead of each test's own setup.
+        from app.models.facility_room_offering import FacilityRoomPhoto, FacilityRoomType
+
+        db = self.main.SessionLocal()
+        try:
+            room_ids = [
+                row.id
+                for row in db.query(FacilityRoomType.id).filter(FacilityRoomType.canonical_facility_id == self.real_canonical_id)
+            ]
+            if room_ids:
+                db.query(FacilityRoomPhoto).filter(FacilityRoomPhoto.room_type_id.in_(room_ids)).delete(synchronize_session=False)
+                db.query(FacilityRoomType).filter(FacilityRoomType.id.in_(room_ids)).delete(synchronize_session=False)
+                db.commit()
+        finally:
+            db.close()
+
     def test_unknown_canonical_facility_is_404(self) -> None:
         response = self.client.get("/canonical-facilities/not-a-real-facility/rooms")
         self.assertEqual(response.status_code, 404)

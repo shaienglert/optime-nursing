@@ -24,6 +24,12 @@ export default function AdminIndexPage() {
             <h2 className="mt-2 text-xl font-semibold">Daily Executive Report</h2>
             <p className="mt-2 text-sm text-slate-300">Existing control tower report history and authority-progress intelligence.</p>
           </Link>
+
+          <Link href="/admin/facility-outreach" className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 hover:border-slate-600">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Facility Outreach</p>
+            <h2 className="mt-2 text-xl font-semibold">Requests Awaiting Approval</h2>
+            <p className="mt-2 text-sm text-slate-300">Review and approve draft emails asking facilities for room types, pricing, and availability before they send.</p>
+          </Link>
         </div>
       </section>
     </main>
