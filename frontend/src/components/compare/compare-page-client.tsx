@@ -619,8 +619,8 @@ export function ComparePageClient() {
                   </ul>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {recommendation?.facility_profile_id ? (
-                    <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(facilityId)}&back=${encodeURIComponent(currentComparePath)}`} className="rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
+                  {facilityId ? (
+                    <Link href={`/facility/canonical?canonical=${encodeURIComponent(facilityId)}&back=${encodeURIComponent(currentComparePath)}`} className="rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
                       Open facility
                     </Link>
                   ) : null}
