@@ -31,6 +31,7 @@ import app.models.personal_report_case
 import app.models.facility_room_offering
 import app.models.facility_outreach
 import app.models.placement_referral
+import app.models.competitive_intelligence
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
@@ -137,6 +138,11 @@ from app.services.personal_report_case_service import case_inputs, create_case, 
 from app.services.facility_room_service import list_room_types
 from app.services import facility_outreach_service
 from app.services import placement_referral_service
+from app.services.competitive_intelligence_service import (
+    latest_signals as competitive_intelligence_latest_signals,
+    run_competitive_intelligence_cycle,
+    start_competitive_intelligence_scheduler,
+)
 from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
@@ -402,6 +408,27 @@ class PlacementReferralOut(BaseModel):
     departure_date: Optional[str] = None
     departure_reason: Optional[str] = None
     created_at: str
+
+
+class CompetitiveIntelligenceSignalOut(BaseModel):
+    competitor_key: str
+    competitor_name: str
+    signal_type: str
+    source_url: str
+    detail_text: str
+    first_observed_at: str
+    last_observed_at: str
+    last_changed_at: Optional[str] = None
+
+
+class CompetitiveIntelligenceCycleOut(BaseModel):
+    started_at: str
+    finished_at: str
+    runtime_ms: int
+    items_added: int
+    items_updated: int
+    errors: int
+    results: List[Dict[str, Any]]
 
 
 class PersonalizedParameterOrderIn(BaseModel):
@@ -1395,6 +1422,8 @@ def startup() -> None:
     start_executive_report_scheduler()
     # Run heartbeat/dependency/full-cycle supervisor sweeps and the daily owner brief.
     start_supervisor_scheduler()
+    # Track named competitors' public positioning/monetization/feature signals every 6h.
+    start_competitive_intelligence_scheduler()
     logger.info(
         "startup_completed facilities_imported=%s origins=%s",
         app.state.import_summary.get("facilities_imported"),
@@ -2086,6 +2115,28 @@ async def post_report_placement_departure(referral_code: str, payload: Placement
         status_code = 404 if str(exc) == "unknown_referral_code" else 422
         raise HTTPException(status_code=status_code, detail=detail) from exc
     return _serialize_placement_referral(referral)
+
+
+@app.get("/competitive-intelligence/signals", response_model=List[CompetitiveIntelligenceSignalOut])
+async def get_competitive_intelligence_signals(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    return [
+        CompetitiveIntelligenceSignalOut(
+            competitor_key=row.competitor_key,
+            competitor_name=row.competitor_name,
+            signal_type=row.signal_type,
+            source_url=row.source_url,
+            detail_text=row.detail_text,
+            first_observed_at=row.first_observed_at.isoformat(),
+            last_observed_at=row.last_observed_at.isoformat(),
+            last_changed_at=row.last_changed_at.isoformat() if row.last_changed_at else None,
+        )
+        for row in competitive_intelligence_latest_signals(db)
+    ]
+
+
+@app.post("/competitive-intelligence/run-now", response_model=CompetitiveIntelligenceCycleOut)
+async def post_run_competitive_intelligence_now(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    return run_competitive_intelligence_cycle(db)
 
 
 def _cms_regulatory_history(facility: Dict[str, Any]) -> Optional[Dict[str, Any]]:
