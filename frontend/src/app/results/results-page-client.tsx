@@ -788,8 +788,8 @@ export function ResultsPageClient() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {recommendation.facility_profile_id ? (
-              <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
+            {recommendation.canonical_facility_id ? (
+              <Link href={`/facility/canonical?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="inline-flex rounded-full bg-[#6f9a86] px-4 py-2 text-sm font-semibold text-white hover:bg-[#618a77]">
                 VIEW DETAILS
               </Link>
             ) : (
@@ -1059,8 +1059,8 @@ export function ResultsPageClient() {
                               <p className="mt-1 text-xs text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
                               <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Image source: ${imageInfo.sourceLabel}` : "No verified facility image available"}</p>
                               <div className="mt-2 flex flex-wrap gap-2">
-                                {recommendation.facility_profile_id ? (
-                                  <Link href={`/facility/${recommendation.facility_profile_id}?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="rounded-full bg-[#6f9a86] px-3 py-1 text-xs font-semibold text-white hover:bg-[#618a77]">
+                                {recommendation.canonical_facility_id ? (
+                                  <Link href={`/facility/canonical?canonical=${encodeURIComponent(recommendation.canonical_facility_id)}&back=${encodeURIComponent(currentResultsPath)}`} className="rounded-full bg-[#6f9a86] px-3 py-1 text-xs font-semibold text-white hover:bg-[#618a77]">
                                     Facility profile
                                   </Link>
                                 ) : null}
