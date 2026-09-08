@@ -110,28 +110,31 @@ def _sentence_with_keyword(text: str, keyword: str, radius: int = 140) -> Option
 
 _NOT_A_CITY_WORDS = {
     "total", "approach", "report", "overview", "summary", "update", "news", "market",
-    "senior", "senior living", "the", "grand", "phase", "state", "national",
+    "senior", "living", "the", "grand", "phase", "state", "national", "overall",
+    "google", "maps", "map", "view", "photo", "image", "source",
 }
-_STREET_SUFFIXES = ("ave", "ave.", "st", "st.", "rd", "rd.", "blvd", "blvd.", "dr", "dr.", "ln", "ln.", "ct", "ct.", "way")
+_STREET_SUFFIXES = {"ave", "ave.", "st", "st.", "rd", "rd.", "blvd", "blvd.", "dr", "dr.", "ln", "ln.", "ct", "ct.", "way"}
+_VALID_STATE_ABBRS = set(_US_STATE_ABBR.values())
 
 
 def _looks_like_city(candidate: str) -> bool:
     if any(ch.isdigit() for ch in candidate):
         return False
-    last_word = candidate.strip().split()[-1].lower().rstrip(".,")
-    if last_word in _STREET_SUFFIXES:
-        return False
-    if candidate.strip().lower() in _NOT_A_CITY_WORDS:
+    words = [w.lower().rstrip(".,") for w in candidate.strip().split()]
+    if any(w in _STREET_SUFFIXES or w in _NOT_A_CITY_WORDS for w in words):
         return False
     return True
 
 
 def _find_city_state(text: str) -> Optional[str]:
-    for pattern, resolve_state in ((_CITY_STATE_ABBR_RE, lambda g: g), (_CITY_STATE_NAME_RE, lambda g: _US_STATE_ABBR[g])):
-        for match in pattern.finditer(text):
-            city = match.group(1).strip()
-            if _looks_like_city(city):
-                return f"{city}, {resolve_state(match.group(2))}"
+    for match in _CITY_STATE_ABBR_RE.finditer(text):
+        city, abbr = match.group(1).strip(), match.group(2)
+        if abbr in _VALID_STATE_ABBRS and _looks_like_city(city):
+            return f"{city}, {abbr}"
+    for match in _CITY_STATE_NAME_RE.finditer(text):
+        city = match.group(1).strip()
+        if _looks_like_city(city):
+            return f"{city}, {_US_STATE_ABBR[match.group(2)]}"
     return None
 
 
