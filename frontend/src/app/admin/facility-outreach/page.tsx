@@ -5,20 +5,46 @@ import { useEffect, useState } from "react";
 
 import { FacilityOutreachRequest, approveAndSendFacilityOutreach, fetchFacilityOutreachAwaitingApproval } from "@/lib/api";
 
+const ADMIN_TOKEN_SESSION_KEY = "optime.admin.token";
+
 export default function FacilityOutreachAdminPage() {
+  const [adminToken, setAdminToken] = useState("");
+  const [tokenInput, setTokenInput] = useState("");
   const [requests, setRequests] = useState<FacilityOutreachRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sendingId, setSendingId] = useState<number | null>(null);
 
   useEffect(() => {
+    // Deferred via a resolved promise (matching this codebase's convention of never
+    // calling setState synchronously in an effect body) rather than a lazy useState
+    // initializer, which would read sessionStorage during the server render pass and
+    // risk a hydration mismatch between server and client.
+    Promise.resolve().then(() => {
+      try {
+        const saved = window.sessionStorage.getItem(ADMIN_TOKEN_SESSION_KEY);
+        if (saved) {
+          setAdminToken(saved);
+          setTokenInput(saved);
+        }
+      } catch {
+        // sessionStorage unavailable -- the token input still works, it just won't persist.
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!adminToken) return;
     let active = true;
-    fetchFacilityOutreachAwaitingApproval()
+    fetchFacilityOutreachAwaitingApproval(adminToken)
       .then((rows) => {
-        if (active) setRequests(rows);
+        if (active) {
+          setRequests(rows);
+          setError(null);
+        }
       })
       .catch((err) => {
-        if (active) setError(err instanceof Error ? err.message : "Failed to load outreach requests.");
+        if (active) setError(err instanceof Error ? err.message : "Failed to load outreach requests. Check your admin token.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -26,18 +52,57 @@ export default function FacilityOutreachAdminPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [adminToken]);
+
+  function handleUnlock() {
+    const trimmed = tokenInput.trim();
+    if (!trimmed) return;
+    try {
+      window.sessionStorage.setItem(ADMIN_TOKEN_SESSION_KEY, trimmed);
+    } catch {
+      // sessionStorage unavailable -- proceed with the in-memory token anyway.
+    }
+    setLoading(true);
+    setAdminToken(trimmed);
+  }
 
   async function handleApprove(requestId: number) {
     setSendingId(requestId);
     try {
-      await approveAndSendFacilityOutreach(requestId);
+      await approveAndSendFacilityOutreach(requestId, adminToken);
       setRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send.");
     } finally {
       setSendingId(null);
     }
+  }
+
+  if (!adminToken) {
+    return (
+      <main className="min-h-screen bg-slate-950 px-6 py-8 text-slate-100 sm:px-10 lg:px-16">
+        <section className="mx-auto max-w-md space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">Admin · Facility Outreach</p>
+          <h1 className="text-2xl font-semibold">Admin token required</h1>
+          <p className="text-sm text-slate-400">This page reviews and sends real emails to facilities -- it requires the admin token.</p>
+          <input
+            type="password"
+            value={tokenInput}
+            onChange={(e) => setTokenInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+            placeholder="Admin token"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-slate-100"
+          />
+          <button
+            type="button"
+            onClick={handleUnlock}
+            className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500"
+          >
+            Unlock
+          </button>
+        </section>
+      </main>
+    );
   }
 
   return (

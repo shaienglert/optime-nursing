@@ -1,14 +1,21 @@
 from __future__ import annotations
 
 import importlib
+import os
 import unittest
 from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
+_TEST_ADMIN_TOKEN = "test-admin-token"
+_ADMIN_HEADERS = {"X-Admin-Token": _TEST_ADMIN_TOKEN}
+_admin_env = patch.dict(os.environ, {"OPTIME_ADMIN_TOKEN": _TEST_ADMIN_TOKEN})
+
 
 class FacilityOutreachEndpointsTests(unittest.TestCase):
     def setUp(self) -> None:
+        _admin_env.start()
+        self.addCleanup(_admin_env.stop)
         self.main = importlib.import_module("app.main")
         self.client = TestClient(self.main.app)
         index = self.main.get_canonical_facility_index()
@@ -71,7 +78,7 @@ class FacilityOutreachEndpointsTests(unittest.TestCase):
     def test_approve_send_rejects_non_awaiting_request(self) -> None:
         with patch("app.main.facility_outreach_service.discover_contact", return_value=None):
             created = self.client.post(f"/canonical-facilities/{self.real_canonical_id}/request-outreach").json()
-        response = self.client.post(f"/facility-outreach-requests/{created['id']}/approve-send")
+        response = self.client.post(f"/facility-outreach-requests/{created['id']}/approve-send", headers=_ADMIN_HEADERS)
         self.assertEqual(response.status_code, 400)
 
     def test_approve_send_success_actually_calls_email_service(self) -> None:
@@ -81,10 +88,52 @@ class FacilityOutreachEndpointsTests(unittest.TestCase):
 
         ok_result = MagicMock(ok=True, message="sent")
         with patch("app.main.facility_outreach_service.email_service.send_email_detailed", return_value=ok_result) as mock_send:
-            response = self.client.post(f"/facility-outreach-requests/{created['id']}/approve-send")
+            response = self.client.post(f"/facility-outreach-requests/{created['id']}/approve-send", headers=_ADMIN_HEADERS)
         mock_send.assert_called_once()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "SENT")
+
+    def test_approve_send_without_admin_token_is_401(self) -> None:
+        with patch("app.main.facility_outreach_service.discover_contact", return_value=None):
+            created = self.client.post(f"/canonical-facilities/{self.real_canonical_id}/request-outreach").json()
+        with patch("app.main.facility_outreach_service.email_service.send_email_detailed") as mock_send:
+            response = self.client.post(f"/facility-outreach-requests/{created['id']}/approve-send")
+        mock_send.assert_not_called()
+        self.assertEqual(response.status_code, 401)
+
+    def test_approve_send_with_wrong_admin_token_is_401(self) -> None:
+        with patch("app.main.facility_outreach_service.discover_contact", return_value=None):
+            created = self.client.post(f"/canonical-facilities/{self.real_canonical_id}/request-outreach").json()
+        response = self.client.post(
+            f"/facility-outreach-requests/{created['id']}/approve-send", headers={"X-Admin-Token": "wrong-token"}
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_approve_send_fails_closed_when_admin_token_not_configured(self) -> None:
+        with patch("app.main.facility_outreach_service.discover_contact", return_value=None):
+            created = self.client.post(f"/canonical-facilities/{self.real_canonical_id}/request-outreach").json()
+        _admin_env.stop()
+        try:
+            with patch.dict(os.environ, {"OPTIME_ADMIN_TOKEN": ""}):
+                response = self.client.post(
+                    f"/facility-outreach-requests/{created['id']}/approve-send", headers=_ADMIN_HEADERS
+                )
+            self.assertEqual(response.status_code, 401)
+        finally:
+            _admin_env.start()
+
+    def test_awaiting_approval_requires_admin_token(self) -> None:
+        no_token_response = self.client.get("/facility-outreach-requests/awaiting-approval")
+        self.assertEqual(no_token_response.status_code, 401)
+        with_token_response = self.client.get("/facility-outreach-requests/awaiting-approval", headers=_ADMIN_HEADERS)
+        self.assertEqual(with_token_response.status_code, 200)
+
+    def test_request_outreach_itself_stays_public_no_token_needed(self) -> None:
+        # The client-facing "request outreach on my behalf" action must stay
+        # unauthenticated -- only the staff-side review/send actions are gated.
+        with patch("app.main.facility_outreach_service.discover_contact", return_value=None):
+            response = self.client.post(f"/canonical-facilities/{self.real_canonical_id}/request-outreach")
+        self.assertEqual(response.status_code, 200)
 
     def test_public_status_unknown_token_is_404(self) -> None:
         response = self.client.get("/facility-outreach/not-a-real-token")

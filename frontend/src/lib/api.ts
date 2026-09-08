@@ -2110,12 +2110,26 @@ export async function requestFacilityOutreach(canonicalFacilityId: string): Prom
   return postNoBody<FacilityOutreachRequest>(`/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/request-outreach`);
 }
 
-export async function fetchFacilityOutreachAwaitingApproval(): Promise<FacilityOutreachRequest[]> {
-  return fetchJson<FacilityOutreachRequest[]>("/facility-outreach-requests/awaiting-approval");
+export async function fetchFacilityOutreachAwaitingApproval(adminToken: string): Promise<FacilityOutreachRequest[]> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), "/facility-outreach-requests/awaiting-approval"), {
+    headers: { "X-Admin-Token": adminToken },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`API request failed (${response.status})`);
+  }
+  return response.json() as Promise<FacilityOutreachRequest[]>;
 }
 
-export async function approveAndSendFacilityOutreach(requestId: number): Promise<FacilityOutreachRequest> {
-  return postNoBody<FacilityOutreachRequest>(`/facility-outreach-requests/${requestId}/approve-send`);
+export async function approveAndSendFacilityOutreach(requestId: number, adminToken: string): Promise<FacilityOutreachRequest> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), `/facility-outreach-requests/${requestId}/approve-send`), {
+    method: "POST",
+    headers: { "X-Admin-Token": adminToken },
+  });
+  if (!response.ok) {
+    throw new Error(`API request failed (${response.status})`);
+  }
+  return response.json() as Promise<FacilityOutreachRequest>;
 }
 
 export async function fetchFacilityOutreachPublicStatus(responseToken: string): Promise<FacilityOutreachPublicStatus> {
