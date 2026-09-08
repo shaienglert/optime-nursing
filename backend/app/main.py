@@ -143,6 +143,11 @@ from app.services.competitive_intelligence_service import (
     run_competitive_intelligence_cycle,
     start_competitive_intelligence_scheduler,
 )
+from app.services.market_supply_intelligence_service import (
+    latest_market_supply_signals,
+    run_market_supply_intelligence_cycle,
+    start_market_supply_intelligence_scheduler,
+)
 from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
@@ -429,6 +434,25 @@ class CompetitiveIntelligenceCycleOut(BaseModel):
     items_updated: int
     errors: int
     results: List[Dict[str, Any]]
+
+
+class MarketSupplySignalOut(BaseModel):
+    category: str
+    headline: str
+    snippet: str
+    city_state: Optional[str] = None
+    source_url: str
+    source_domain: str
+    first_observed_at: str
+
+
+class MarketSupplyCycleOut(BaseModel):
+    started_at: str
+    finished_at: str
+    runtime_ms: int
+    items_added: int
+    errors: int
+    categories: List[Dict[str, Any]]
 
 
 class PersonalizedParameterOrderIn(BaseModel):
@@ -1424,6 +1448,8 @@ def startup() -> None:
     start_supervisor_scheduler()
     # Track named competitors' public positioning/monetization/feature signals every 6h.
     start_competitive_intelligence_scheduler()
+    # Weekly: senior-living construction starts, planned openings, and occupancy rates.
+    start_market_supply_intelligence_scheduler()
     logger.info(
         "startup_completed facilities_imported=%s origins=%s",
         app.state.import_summary.get("facilities_imported"),
@@ -2137,6 +2163,27 @@ async def get_competitive_intelligence_signals(db: Session = Depends(get_db), _:
 @app.post("/competitive-intelligence/run-now", response_model=CompetitiveIntelligenceCycleOut)
 async def post_run_competitive_intelligence_now(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return run_competitive_intelligence_cycle(db)
+
+
+@app.get("/market-supply-intelligence/signals", response_model=List[MarketSupplySignalOut])
+async def get_market_supply_intelligence_signals(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    return [
+        MarketSupplySignalOut(
+            category=row.category,
+            headline=row.headline,
+            snippet=row.snippet,
+            city_state=row.city_state,
+            source_url=row.source_url,
+            source_domain=row.source_domain,
+            first_observed_at=row.first_observed_at.isoformat(),
+        )
+        for row in latest_market_supply_signals(db)
+    ]
+
+
+@app.post("/market-supply-intelligence/run-now", response_model=MarketSupplyCycleOut)
+async def post_run_market_supply_intelligence_now(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    return run_market_supply_intelligence_cycle(db)
 
 
 def _cms_regulatory_history(facility: Dict[str, Any]) -> Optional[Dict[str, Any]]:

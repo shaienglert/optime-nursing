@@ -25,3 +25,25 @@ class CompetitiveIntelligenceSignal(Base):
     first_observed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_observed_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     last_changed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class MarketSupplySignal(Base):
+    """One real news item about senior-living supply -- a construction start, a
+    planned/actual opening, or a reported occupancy rate -- found via live search,
+    with its real source URL and an extracted snippet, never a fabricated summary.
+
+    Unlike CompetitiveIntelligenceSignal (one live row per tracked fact, updated in
+    place), this is append-only and deduplicated by source URL: each article is its
+    own event, not a slot whose value changes over time.
+    """
+
+    __tablename__ = "market_supply_signals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    category = Column(String(32), nullable=False, index=True)
+    headline = Column(String(300), nullable=False)
+    snippet = Column(Text, nullable=False)
+    city_state = Column(String(80), nullable=True)
+    source_url = Column(Text, nullable=False)
+    source_domain = Column(String(160), nullable=False)
+    first_observed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
