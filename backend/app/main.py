@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func, or_
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
@@ -940,6 +940,18 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def require_admin_token(x_admin_token: Optional[str] = Header(default=None)) -> None:
+    """Gate for staff-only actions with real consequences (sending a real email to a
+    real facility, viewing the internal outreach queue). There is no broader
+    authentication system in this codebase yet -- this is a minimal, fail-closed
+    stopgap: if OPTIME_ADMIN_TOKEN isn't configured, every request is denied rather
+    than silently left open, unlike everything else in this API today.
+    """
+    expected = os.getenv("OPTIME_ADMIN_TOKEN", "").strip()
+    if not expected or not x_admin_token or x_admin_token != expected:
+        raise HTTPException(status_code=401, detail="Missing or invalid admin token")
 
 
 def _get_measure_score(measures: List[QualityMeasure], keywords: List[str]) -> Optional[float]:
@@ -1935,12 +1947,12 @@ async def post_request_facility_outreach(canonical_id: str, db: Session = Depend
 
 
 @app.get("/facility-outreach-requests/awaiting-approval", response_model=List[FacilityOutreachRequestOut])
-async def get_facility_outreach_requests_awaiting_approval(db: Session = Depends(get_db)):
+async def get_facility_outreach_requests_awaiting_approval(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return [_serialize_outreach_request(o, include_draft=True) for o in facility_outreach_service.list_awaiting_approval(db)]
 
 
 @app.post("/facility-outreach-requests/{request_id}/approve-send", response_model=FacilityOutreachRequestOut)
-async def post_approve_and_send_facility_outreach(request_id: int, db: Session = Depends(get_db)):
+async def post_approve_and_send_facility_outreach(request_id: int, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     try:
         outreach = facility_outreach_service.approve_and_send_outreach(db, request_id)
     except ValueError as exc:
