@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { FacilityParameterTable, FacilityRooms, fetchFacilityParameterTable, fetchFacilityRooms } from "@/lib/api";
+import { FacilityParameterTable, FacilityRooms, fetchFacilityParameterTable, fetchFacilityRooms, requestFacilityOutreach } from "@/lib/api";
 
 type CanonicalFacilityProfileClientProps = {
   canonicalFacilityId: string;
@@ -82,6 +82,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
   const [rooms, setRooms] = useState<FacilityRooms | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [outreachState, setOutreachState] = useState<"idle" | "requesting" | "sent" | "no_contact" | "error">("idle");
 
   useEffect(() => {
     let mounted = true;
@@ -189,9 +190,39 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-sm text-[#776e62]">
-              We haven&apos;t gathered detailed room types, photos, or current pricing for this community yet. Once you select this community for follow-up, we&apos;ll reach out directly and add that here.
-            </p>
+            <div className="mt-4">
+              <p className="text-sm text-[#776e62]">
+                We haven&apos;t gathered detailed room types, photos, or current pricing for this community yet.
+              </p>
+              {outreachState === "idle" || outreachState === "requesting" ? (
+                <button
+                  type="button"
+                  disabled={outreachState === "requesting"}
+                  onClick={async () => {
+                    setOutreachState("requesting");
+                    try {
+                      const result = await requestFacilityOutreach(canonicalFacilityId);
+                      setOutreachState(result.status === "AWAITING_APPROVAL" ? "sent" : result.status === "FAILED_NO_CONTACT" ? "no_contact" : "error");
+                    } catch {
+                      setOutreachState("error");
+                    }
+                  }}
+                  className="mt-3 rounded-full bg-[#2F5D46] px-4 py-2 text-sm font-semibold text-white hover:bg-[#254a38] disabled:opacity-60"
+                >
+                  {outreachState === "requesting" ? "Requesting…" : "Request details from this facility"}
+                </button>
+              ) : outreachState === "sent" ? (
+                <p className="mt-3 text-sm font-medium text-[#315f53]">
+                  Request sent to our team for review -- we&apos;ll reach out to the community and add their reply here once it comes in.
+                </p>
+              ) : outreachState === "no_contact" ? (
+                <p className="mt-3 text-sm font-medium text-[#8b3d2e]">
+                  We couldn&apos;t find a public contact for this community yet, so we can&apos;t request this automatically right now.
+                </p>
+              ) : (
+                <p className="mt-3 text-sm font-medium text-[#8b3d2e]">Something went wrong requesting this -- please try again.</p>
+              )}
+            </div>
           )}
         </section>
 

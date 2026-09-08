@@ -2057,6 +2057,78 @@ export async function fetchFacilityRooms(canonicalFacilityId: string): Promise<F
   return fetchJson<FacilityRooms>(`/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/rooms`);
 }
 
+export type FacilityOutreachStatus =
+  | "PENDING"
+  | "AWAITING_APPROVAL"
+  | "SENT"
+  | "FAILED_SEND"
+  | "FAILED_NO_CONTACT"
+  | "RESPONDED";
+
+export type FacilityOutreachDraft = {
+  to?: string | null;
+  subject?: string | null;
+  body_text?: string | null;
+};
+
+export type FacilityOutreachRequest = {
+  id: number;
+  canonical_facility_id: string;
+  facility_name: string;
+  status: FacilityOutreachStatus;
+  contact_email?: string | null;
+  failure_reason?: string | null;
+  requested_at: string;
+  sent_at?: string | null;
+  responded_at?: string | null;
+  draft?: FacilityOutreachDraft | null;
+};
+
+export type FacilityOutreachPublicStatus = {
+  canonical_facility_id: string;
+  facility_name: string;
+  status: FacilityOutreachStatus;
+};
+
+export type RoomSubmission = {
+  room_type_name: string;
+  description?: string;
+  monthly_price_cents?: number | null;
+  availability_status: "AVAILABLE" | "WAITLIST" | "UNAVAILABLE" | "UNKNOWN";
+  photo_urls?: string[];
+};
+
+async function postNoBody<TRes>(path: string): Promise<TRes> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), path), { method: "POST" });
+  if (!response.ok) {
+    throw new Error(`API request failed (${response.status})`);
+  }
+  return response.json() as Promise<TRes>;
+}
+
+export async function requestFacilityOutreach(canonicalFacilityId: string): Promise<FacilityOutreachRequest> {
+  return postNoBody<FacilityOutreachRequest>(`/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/request-outreach`);
+}
+
+export async function fetchFacilityOutreachAwaitingApproval(): Promise<FacilityOutreachRequest[]> {
+  return fetchJson<FacilityOutreachRequest[]>("/facility-outreach-requests/awaiting-approval");
+}
+
+export async function approveAndSendFacilityOutreach(requestId: number): Promise<FacilityOutreachRequest> {
+  return postNoBody<FacilityOutreachRequest>(`/facility-outreach-requests/${requestId}/approve-send`);
+}
+
+export async function fetchFacilityOutreachPublicStatus(responseToken: string): Promise<FacilityOutreachPublicStatus> {
+  return fetchJson<FacilityOutreachPublicStatus>(`/facility-outreach/${encodeURIComponent(responseToken)}`);
+}
+
+export async function submitFacilityOutreachResponse(responseToken: string, roomTypes: RoomSubmission[]): Promise<FacilityOutreachPublicStatus> {
+  return postJson<{ room_types: RoomSubmission[] }, FacilityOutreachPublicStatus>(
+    `/facility-outreach/${encodeURIComponent(responseToken)}/submit`,
+    { room_types: roomTypes },
+  );
+}
+
 export async function compareFacilityParameters(
   payload: FacilityParameterComparisonRequest
 ): Promise<FacilityParameterComparison> {
