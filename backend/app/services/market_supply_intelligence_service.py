@@ -58,7 +58,28 @@ QUERIES: List[Dict[str, str]] = [
     },
 ]
 
-_CITY_STATE_RE = re.compile(r"\b([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2}),\s([A-Z]{2})\b")
+_US_STATE_ABBR = {
+    "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR", "California": "CA",
+    "Colorado": "CO", "Connecticut": "CT", "Delaware": "DE", "Florida": "FL", "Georgia": "GA",
+    "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Indiana": "IN", "Iowa": "IA",
+    "Kansas": "KS", "Kentucky": "KY", "Louisiana": "LA", "Maine": "ME", "Maryland": "MD",
+    "Massachusetts": "MA", "Michigan": "MI", "Minnesota": "MN", "Mississippi": "MS", "Missouri": "MO",
+    "Montana": "MT", "Nebraska": "NE", "Nevada": "NV", "New Hampshire": "NH", "New Jersey": "NJ",
+    "New Mexico": "NM", "New York": "NY", "North Carolina": "NC", "North Dakota": "ND", "Ohio": "OH",
+    "Oklahoma": "OK", "Oregon": "OR", "Pennsylvania": "PA", "Rhode Island": "RI", "South Carolina": "SC",
+    "South Dakota": "SD", "Tennessee": "TN", "Texas": "TX", "Utah": "UT", "Vermont": "VT",
+    "Virginia": "VA", "Washington": "WA", "West Virginia": "WV", "Wisconsin": "WI", "Wyoming": "WY",
+    "District of Columbia": "DC",
+}
+# Longest names first so "New York" matches before a hypothetical shorter overlapping name would.
+_STATE_NAME_ALTERNATION = "|".join(re.escape(name) for name in sorted(_US_STATE_ABBR, key=len, reverse=True))
+
+# "Austin, TX" -- a two-letter postal abbreviation right after the city.
+_CITY_STATE_ABBR_RE = re.compile(r"\b([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2}),\s([A-Z]{2})\b")
+# "Wapakoneta, Ohio" -- the far more common style in local/trade news, spelled out.
+_CITY_STATE_NAME_RE = re.compile(
+    rf"\b([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){{0,2}}),\s({_STATE_NAME_ALTERNATION})\b"
+)
 
 
 @dataclass
@@ -80,11 +101,31 @@ def _sentence_with_keyword(text: str, keyword: str, radius: int = 140) -> Option
     return text[start:end].strip()
 
 
+_NOT_A_CITY_WORDS = {
+    "total", "approach", "report", "overview", "summary", "update", "news", "market",
+    "senior", "senior living", "the", "grand", "phase", "state", "national",
+}
+_STREET_SUFFIXES = ("ave", "ave.", "st", "st.", "rd", "rd.", "blvd", "blvd.", "dr", "dr.", "ln", "ln.", "ct", "ct.", "way")
+
+
+def _looks_like_city(candidate: str) -> bool:
+    if any(ch.isdigit() for ch in candidate):
+        return False
+    last_word = candidate.strip().split()[-1].lower().rstrip(".,")
+    if last_word in _STREET_SUFFIXES:
+        return False
+    if candidate.strip().lower() in _NOT_A_CITY_WORDS:
+        return False
+    return True
+
+
 def _find_city_state(text: str) -> Optional[str]:
-    match = _CITY_STATE_RE.search(text)
-    if not match:
-        return None
-    return f"{match.group(1)}, {match.group(2)}"
+    for pattern, resolve_state in ((_CITY_STATE_ABBR_RE, lambda g: g), (_CITY_STATE_NAME_RE, lambda g: _US_STATE_ABBR[g])):
+        for match in pattern.finditer(text):
+            city = match.group(1).strip()
+            if _looks_like_city(city):
+                return f"{city}, {resolve_state(match.group(2))}"
+    return None
 
 
 def _headline_from_html(html: str) -> str:
@@ -110,7 +151,7 @@ def _extract_market_supply_items(*, category: str, keywords: List[str], url: str
                 category=category,
                 headline=headline,
                 snippet=snippet,
-                city_state=_find_city_state(snippet) or _find_city_state(text[:2000]),
+                city_state=_find_city_state(headline) or _find_city_state(snippet) or _find_city_state(text[:4000]),
                 source_url=url,
                 source_domain=domain,
             )
