@@ -12,6 +12,13 @@ targeted industry queries, fetches the real article, and extracts only sentences
 that actually contain the relevant keywords, with the real source URL attached. If a
 week turns up nothing for a category, that is reported as exactly that -- zero
 results is a true finding, not a fetch failure to paper over.
+
+City/state extraction is a bounded regex heuristic ("City, ST" or "City, State
+Name" patterns actually present in the text), not real NLP/NER -- it filters out
+the most obvious false positives (street-address fragments, generic words) but can
+still miss a real city or occasionally mislabel one. Treat city_state as a
+best-effort pointer to go verify against source_url, not a guaranteed-accurate
+structured field.
 """
 
 import hashlib
