@@ -30,6 +30,7 @@ import app.models.knowledge_fabric
 import app.models.personal_report_case
 import app.models.facility_room_offering
 import app.models.facility_outreach
+import app.models.placement_referral
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
@@ -135,6 +136,7 @@ from app.services.personal_decision_report_contract import ReportContractViolati
 from app.services.personal_report_case_service import case_inputs, create_case, get_case_by_token, save_snapshot
 from app.services.facility_room_service import list_room_types
 from app.services import facility_outreach_service
+from app.services import placement_referral_service
 from app.services.runtime_sync_service import get_runtime_sync_status
 
 app = FastAPI(
@@ -370,6 +372,36 @@ class RoomSubmissionIn(BaseModel):
 
 class FacilityOutreachSubmissionIn(BaseModel):
     room_types: List[RoomSubmissionIn]
+
+
+class PlacementReferralCreateIn(BaseModel):
+    canonical_facility_id: str
+    case_token: Optional[str] = None
+
+
+class PlacementReferralConfirmEntryIn(BaseModel):
+    entry_date: str
+    confirmed_by: Optional[str] = None
+
+
+class PlacementReferralDepartureIn(BaseModel):
+    departure_date: str
+    reason: str
+
+
+class PlacementReferralOut(BaseModel):
+    referral_code: str
+    canonical_facility_id: str
+    facility_name: str
+    billable_status: str
+    benefit_amount: float
+    facility_credit_amount: float
+    commission_amount: float
+    commission_due: float
+    entry_confirmed_at: Optional[str] = None
+    departure_date: Optional[str] = None
+    departure_reason: Optional[str] = None
+    created_at: str
 
 
 class PersonalizedParameterOrderIn(BaseModel):
@@ -1973,6 +2005,75 @@ async def post_facility_outreach_submission(response_token: str, payload: Facili
         facility_name=facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
         status=outreach.status,
     )
+
+
+def _serialize_placement_referral(referral) -> PlacementReferralOut:
+    status = placement_referral_service.billable_status(referral)
+    return PlacementReferralOut(
+        referral_code=referral.referral_code,
+        canonical_facility_id=referral.canonical_facility_id,
+        facility_name=facility_outreach_service.facility_name_for(referral.canonical_facility_id),
+        billable_status=status,
+        benefit_amount=referral.benefit_amount_cents / 100,
+        facility_credit_amount=referral.facility_credit_amount_cents / 100,
+        commission_amount=referral.commission_amount_cents / 100,
+        commission_due=placement_referral_service.commission_due_cents(referral) / 100,
+        entry_confirmed_at=referral.entry_confirmed_at.isoformat() if referral.entry_confirmed_at else None,
+        departure_date=referral.departure_date.isoformat() if referral.departure_date else None,
+        departure_reason=referral.departure_reason,
+        created_at=referral.created_at.isoformat(),
+    )
+
+
+def _parse_iso_datetime(value: str, *, field_name: str) -> datetime:
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid {field_name}: must be an ISO 8601 date/datetime") from exc
+
+
+@app.post("/placement-referrals", response_model=PlacementReferralOut)
+async def post_create_placement_referral(payload: PlacementReferralCreateIn, db: Session = Depends(get_db)):
+    if payload.canonical_facility_id not in get_canonical_facility_index():
+        raise HTTPException(status_code=404, detail="Canonical facility not found")
+    referral = placement_referral_service.create_referral(
+        db, canonical_facility_id=payload.canonical_facility_id, case_token=payload.case_token
+    )
+    return _serialize_placement_referral(referral)
+
+
+@app.get("/placement-referrals/{referral_code}", response_model=PlacementReferralOut)
+async def get_placement_referral(referral_code: str, db: Session = Depends(get_db)):
+    referral = placement_referral_service.get_referral_by_code(db, referral_code)
+    if referral is None:
+        raise HTTPException(status_code=404, detail="Unknown referral code")
+    return _serialize_placement_referral(referral)
+
+
+@app.post("/placement-referrals/{referral_code}/confirm-entry", response_model=PlacementReferralOut)
+async def post_confirm_placement_entry(referral_code: str, payload: PlacementReferralConfirmEntryIn, db: Session = Depends(get_db)):
+    entry_date = _parse_iso_datetime(payload.entry_date, field_name="entry_date")
+    try:
+        referral = placement_referral_service.confirm_entry(
+            db, referral_code, entry_date=entry_date, confirmed_by=payload.confirmed_by
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Unknown referral code") from exc
+    return _serialize_placement_referral(referral)
+
+
+@app.post("/placement-referrals/{referral_code}/report-departure", response_model=PlacementReferralOut)
+async def post_report_placement_departure(referral_code: str, payload: PlacementReferralDepartureIn, db: Session = Depends(get_db)):
+    departure_date = _parse_iso_datetime(payload.departure_date, field_name="departure_date")
+    try:
+        referral = placement_referral_service.report_departure(
+            db, referral_code, departure_date=departure_date, reason=payload.reason
+        )
+    except ValueError as exc:
+        detail = "Unknown referral code" if str(exc) == "unknown_referral_code" else str(exc)
+        status_code = 404 if str(exc) == "unknown_referral_code" else 422
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+    return _serialize_placement_referral(referral)
 
 
 def _cms_regulatory_history(facility: Dict[str, Any]) -> Optional[Dict[str, Any]]:
