@@ -45,7 +45,15 @@ def _norm(value: Any) -> str:
 
 def _fetch(url: str) -> tuple[str, int]:
     response = requests.get(url, timeout=_TIMEOUT, headers={"User-Agent": "Mozilla/5.0 OPTIME Decision Evidence/1.0"}, allow_redirects=True)
-    return response.text or "", int(response.status_code)
+    # requests' default encoding guess (from headers alone, per RFC 2616) falls back to
+    # ISO-8859-1 for text/html with no explicit charset, which mangles punctuation
+    # (smart quotes, em dashes) on the overwhelming majority of modern sites that are
+    # actually UTF-8. Prefer UTF-8; only fall back to requests' own guess if that fails.
+    try:
+        text = response.content.decode("utf-8")
+    except UnicodeDecodeError:
+        text = response.text or ""
+    return text or "", int(response.status_code)
 
 
 def _facility_tokens(facility_name: str) -> List[str]:
