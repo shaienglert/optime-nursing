@@ -291,6 +291,7 @@ def facility_profile_snapshot(db: Session, facility_id: int) -> Dict[str, object
     return {
         "facility_id": facility.id,
         "name": facility.name,
+        "is_demo": facility.cms_id == "OOMNIK-OPTICARE-DEMO",
         "known_from_public_record": _known_from_public_record(facility, license_records),
         "sections": sections,
         "photos": photos,
