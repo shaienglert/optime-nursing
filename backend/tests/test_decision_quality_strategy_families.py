@@ -41,6 +41,7 @@ def test_golden_persistent_adl_need_leads_with_assisted_living():
     )
     assert "ASSISTED_LIVING" in _leading_ids(result)
     assert "INDEPENDENT_LIVING" not in _leading_ids(result)
+    assert result["signals"]["expected_recovery"] is False
 
 
 def test_golden_medication_support_only_does_not_fall_into_unresolved_bucket():
