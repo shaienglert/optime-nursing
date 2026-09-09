@@ -12,8 +12,10 @@ import {
 } from "@/lib/api";
 import {
   CompetitiveIntelligenceSignal,
+  MarketIntelligenceReport,
   MarketSupplySignal,
   fetchCompetitiveIntelligenceSignals,
+  fetchMarketIntelligenceReport,
   fetchMarketSupplyIntelligenceSignals,
 } from "@/lib/admin-intelligence";
 
@@ -48,6 +50,7 @@ export default function ExecutiveIntelligenceAdminPage() {
   const [tokenInput, setTokenInput] = useState("");
   const [competitiveSignals, setCompetitiveSignals] = useState<CompetitiveIntelligenceSignal[]>([]);
   const [marketSignals, setMarketSignals] = useState<MarketSupplySignal[]>([]);
+  const [marketReport, setMarketReport] = useState<MarketIntelligenceReport | null>(null);
   const [intelligenceError, setIntelligenceError] = useState<string | null>(null);
   const [isLoadingIntelligence, setIsLoadingIntelligence] = useState(false);
 
@@ -103,11 +106,13 @@ export default function ExecutiveIntelligenceAdminPage() {
     Promise.all([
       fetchCompetitiveIntelligenceSignals(adminToken),
       fetchMarketSupplyIntelligenceSignals(adminToken),
+      fetchMarketIntelligenceReport(adminToken).catch(() => null),
     ])
-      .then(([competitors, market]) => {
+      .then(([competitors, market, report]) => {
         if (!active) return;
         setCompetitiveSignals(competitors);
         setMarketSignals(market);
+        setMarketReport(report);
       })
       .catch((err) => {
         if (active) setIntelligenceError(err instanceof Error ? err.message : "Failed to load intelligence signals.");
@@ -339,53 +344,92 @@ export default function ExecutiveIntelligenceAdminPage() {
               {intelligenceError ? <p className="mt-5 rounded-2xl border border-rose-500/40 bg-rose-950/30 p-4 text-sm text-rose-200">{intelligenceError}</p> : null}
 
               {adminToken && !isLoadingIntelligence && !intelligenceError ? (
-                <div className="mt-5 grid gap-5 xl:grid-cols-2">
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-medium">Competitor observations</h3>
-                    {Object.entries(competitorGroups).map(([competitor, signals]) => (
-                      <article key={competitor} className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                        <h4 className="font-medium text-slate-100">{competitor}</h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                          {signals.map((signal) => (
-                            <li key={`${signal.competitor_key}-${signal.signal_type}`}>
-                              <span className="mr-2 text-xs uppercase tracking-wide text-cyan-300">{signal.signal_type.replaceAll("_", " ")}</span>
-                              {signal.detail_text}
-                            </li>
-                          ))}
-                        </ul>
-                      </article>
-                    ))}
-                    {competitiveSignals.length === 0 ? <p className="text-sm text-slate-400">No competitor signals have been stored yet.</p> : null}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium">Senior-living supply signals</h3>
-                    <div className="mt-3 max-h-[38rem] overflow-auto rounded-2xl border border-slate-800 bg-slate-950">
+                <>
+                  <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-medium">Nevada market scorecard</h3>
+                        <p className="mt-1 text-sm text-slate-400">Every requested metric is shown. Missing means the agent has not collected a sourced number yet — never zero or estimated.</p>
+                      </div>
+                      <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Not used in recommendation ranking</span>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
                       <table className="min-w-full text-left text-sm">
-                        <thead className="sticky top-0 bg-slate-900 text-slate-400">
+                        <thead className="border-b border-slate-800 text-slate-400">
                           <tr>
-                            <th className="px-3 py-3">Type</th>
-                            <th className="px-3 py-3">Place</th>
-                            <th className="px-3 py-3">Source</th>
+                            <th className="px-3 py-2">Metric</th>
+                            <th className="px-3 py-2">Status</th>
+                            <th className="px-3 py-2">Collected observations</th>
+                            <th className="px-3 py-2">Source / scope</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {marketSignals.map((signal) => (
-                            <tr key={signal.source_url} className="border-t border-slate-900 align-top">
-                              <td className="px-3 py-3 text-xs text-cyan-300">{signal.category.replaceAll("_", " ")}</td>
-                              <td className="px-3 py-3">
-                                <p className="font-medium text-slate-100">{signal.headline}</p>
-                                <p className="mt-1 text-slate-400">{signal.city_state || "Location not verified in article"}</p>
-                                <p className="mt-1 text-slate-300">{signal.snippet}</p>
+                          {(marketReport?.metrics || []).map((metric) => (
+                            <tr key={metric.metric_key} className="border-b border-slate-900 align-top">
+                              <td className="px-3 py-3 font-medium text-slate-100"><p>{metric.label}</p><p className="mt-1 text-xs text-slate-500">{metric.scope}</p></td>
+                              <td className="px-3 py-3"><span className={metric.status === "AVAILABLE" ? "text-emerald-300" : "text-amber-300"}>{metric.status}</span></td>
+                              <td className="px-3 py-3 text-slate-300">
+                                {metric.observations.length > 0 ? metric.observations.map((observation) => <p key={`${observation.segment}-${observation.value}`}><span className="text-slate-500">{observation.segment}:</span> {observation.value} {metric.unit} <span className="text-xs text-slate-500">({observation.observed_period})</span></p>) : <span className="text-amber-200">{metric.reason || "No sourced observation collected."}</span>}
                               </td>
-                              <td className="px-3 py-3"><a className="text-cyan-300 underline hover:text-cyan-200" href={signal.source_url} target="_blank" rel="noreferrer">{signal.source_domain}</a></td>
+                              <td className="px-3 py-3 text-slate-400">
+                                {metric.observations.map((observation) => <p key={`${observation.source_name}-${observation.segment}`}><a className="text-cyan-300 underline hover:text-cyan-200" href={observation.source_url} target="_blank" rel="noreferrer">{observation.source_name}</a><span className="ml-1 text-xs">· {observation.evidence_status}</span></p>)}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                      {marketSignals.length === 0 ? <p className="p-4 text-sm text-slate-400">No market-supply signals have been stored yet.</p> : null}
+                      {!marketReport ? <p className="p-4 text-sm text-amber-200">The market-report endpoint has not been deployed yet.</p> : null}
                     </div>
                   </div>
-                </div>
+
+                  <div className="mt-5 grid gap-5 xl:grid-cols-2">
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-medium">Competitor observations</h3>
+                      {Object.entries(competitorGroups).map(([competitor, signals]) => (
+                        <article key={competitor} className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                          <h4 className="font-medium text-slate-100">{competitor}</h4>
+                          <ul className="mt-3 space-y-2 text-sm text-slate-300">
+                            {signals.map((signal) => (
+                              <li key={`${signal.competitor_key}-${signal.signal_type}`}>
+                                <span className="mr-2 text-xs uppercase tracking-wide text-cyan-300">{signal.signal_type.replaceAll("_", " ")}</span>
+                                {signal.detail_text}
+                              </li>
+                            ))}
+                          </ul>
+                        </article>
+                      ))}
+                      {competitiveSignals.length === 0 ? <p className="text-sm text-slate-400">No competitor signals have been stored yet.</p> : null}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium">Senior-living supply signals</h3>
+                      <div className="mt-3 max-h-[38rem] overflow-auto rounded-2xl border border-slate-800 bg-slate-950">
+                        <table className="min-w-full text-left text-sm">
+                          <thead className="sticky top-0 bg-slate-900 text-slate-400">
+                            <tr>
+                              <th className="px-3 py-3">Type</th>
+                              <th className="px-3 py-3">Place</th>
+                              <th className="px-3 py-3">Source</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {marketSignals.map((signal) => (
+                              <tr key={signal.source_url} className="border-t border-slate-900 align-top">
+                                <td className="px-3 py-3 text-xs text-cyan-300">{signal.category.replaceAll("_", " ")}</td>
+                                <td className="px-3 py-3">
+                                  <p className="font-medium text-slate-100">{signal.headline}</p>
+                                  <p className="mt-1 text-slate-400">{signal.city_state || "Location not verified in article"}</p>
+                                  <p className="mt-1 text-slate-300">{signal.snippet}</p>
+                                </td>
+                                <td className="px-3 py-3"><a className="text-cyan-300 underline hover:text-cyan-200" href={signal.source_url} target="_blank" rel="noreferrer">{signal.source_domain}</a></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {marketSignals.length === 0 ? <p className="p-4 text-sm text-slate-400">No market-supply signals have been stored yet.</p> : null}
+                      </div>
+                    </div>
+                  </div>
+                </>
               ) : null}
             </section>
 

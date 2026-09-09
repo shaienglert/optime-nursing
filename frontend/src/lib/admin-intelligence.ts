@@ -21,6 +21,32 @@ export type MarketSupplySignal = {
   first_observed_at: string;
 };
 
+export type MarketReportObservation = {
+  segment: string;
+  value: string;
+  observed_period: string;
+  source_name: string;
+  source_url: string;
+  evidence_status: string;
+  source_scope: string;
+};
+
+export type MarketReportMetric = {
+  metric_key: string;
+  label: string;
+  unit: string;
+  scope: string;
+  status: "AVAILABLE" | "MISSING";
+  observations: MarketReportObservation[];
+  reason?: string | null;
+};
+
+export type MarketIntelligenceReport = {
+  geography_key: string;
+  ranking_input: boolean;
+  metrics: MarketReportMetric[];
+};
+
 async function fetchAdminJson<T>(path: string, adminToken: string): Promise<T> {
   const response = await fetch(joinApiUrl(getApiBaseUrl(), path), {
     headers: { "X-Admin-Token": adminToken },
@@ -36,4 +62,8 @@ export function fetchCompetitiveIntelligenceSignals(adminToken: string): Promise
 
 export function fetchMarketSupplyIntelligenceSignals(adminToken: string): Promise<MarketSupplySignal[]> {
   return fetchAdminJson<MarketSupplySignal[]>("/market-supply-intelligence/signals", adminToken);
+}
+
+export function fetchMarketIntelligenceReport(adminToken: string): Promise<MarketIntelligenceReport> {
+  return fetchAdminJson<MarketIntelligenceReport>("/market-intelligence/report?geography_key=NEVADA", adminToken);
 }
