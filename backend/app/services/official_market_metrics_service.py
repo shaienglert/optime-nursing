@@ -53,6 +53,11 @@ def _upsert(
     source_scope: str = SOURCE_SCOPE,
     segment: str = "SKILLED_NURSING",
 ) -> None:
+    # The audit schema deliberately keeps this human-readable scope compact.
+    # CMS measure labels can be much longer than the column, so retain the
+    # authoritative URL and a bounded, non-failing description rather than
+    # letting one label abort the complete atomic collection cycle.
+    source_scope = source_scope[:240]
     row = (
         db.query(MarketMetricObservation)
         .filter(
