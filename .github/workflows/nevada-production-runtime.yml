@@ -106,6 +106,7 @@ jobs:
 
           os.environ['OPTIME_SEMANTIC_AI_ENABLED'] = '1'
           os.environ['OPTIME_SEMANTIC_AI_REQUIRED'] = '1'
+          os.environ['OPTIME_AI_CANDIDATE_RANKING_REQUIRED'] = '1'
 
           VALLEY_CITIES = {
               'las vegas', 'henderson', 'north las vegas', 'paradise',
@@ -200,8 +201,8 @@ jobs:
           for key, persona in personas.items():
               result = run_patient_decision_engine(**persona, limit=5)
               # The interview is READY, but this workflow deliberately has no
-              # semantic ranking provider. A deterministic fallback is never a
-              # releasable AI ranking under the canonical decision state.
+              # semantic ranking provider. With ranking explicitly required, a
+              # deterministic fallback is never releasable under the canonical state.
               assert result['decision_intelligence']['recommendation_execution_allowed'] is False, key
               assert result['decision_intelligence']['interview_owner'] == 'SEMANTIC_AI', key
               assert result['result_count'] == 0, f'{key}: fallback recommendations must stay hidden'
