@@ -175,3 +175,10 @@ def ensure_market_supply_signal_schema(engine: Engine) -> None:
     with engine.begin() as connection:
         for statement in statements:
             connection.execute(text(statement))
+
+
+def ensure_market_metric_observation_schema(engine: Engine) -> None:
+    """Create the descriptive market-metric ledger on existing deployments."""
+    from app.models.competitive_intelligence import MarketMetricObservation  # noqa: PLC0415
+
+    MarketMetricObservation.__table__.create(bind=engine, checkfirst=True)

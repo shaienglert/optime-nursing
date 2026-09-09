@@ -59,3 +59,28 @@ class MarketSupplySignal(Base):
     source_url = Column(Text, nullable=False)
     source_domain = Column(String(160), nullable=False)
     first_observed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class MarketMetricObservation(Base):
+    """A sourced market-level metric used only in the market-intelligence report.
+
+    This table intentionally does not reference a facility and is never read by
+    recommendation or ranking code.  It makes the report auditable: a number is
+    inseparable from its geography, segment, period, source and evidence status.
+    """
+
+    __tablename__ = "market_metric_observations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    metric_key = Column(String(80), nullable=False, index=True)
+    geography_key = Column(String(80), nullable=False, index=True)
+    geography_label = Column(String(160), nullable=False)
+    segment = Column(String(80), nullable=False, default="ALL")
+    value_text = Column(String(80), nullable=False)
+    unit = Column(String(40), nullable=False)
+    observed_period = Column(String(80), nullable=False)
+    source_name = Column(String(160), nullable=False)
+    source_url = Column(Text, nullable=False)
+    evidence_status = Column(String(32), nullable=False, default="VERIFIED")
+    source_scope = Column(String(240), nullable=False)
+    captured_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
