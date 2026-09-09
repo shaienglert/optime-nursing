@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientDecisionRecommendations, fetchPatientNeedsProfile } from "@/lib/api";
+import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
 
 const EXAMPLE_QUERY =
   "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
@@ -323,6 +324,28 @@ export default function HomePage() {
               {isSubmitting ? "Opening the AI interview..." : "See options that may fit"} <span className="ml-2">→</span>
             </button>
           </form>
+        </div>
+      </section>
+
+      <section className="border-y border-[#dbe4df] bg-[#edf6f1]">
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:px-12">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3a7969]">Las Vegas market transparency</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-5xl">Know the market. Then find the right fit.</h2>
+            <p className="mt-5 text-lg leading-8 text-[#52645d]">We publish the evidence-backed market facts we have, with definitions and sources. Market data is context — it never replaces a person-specific recommendation.</p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[...LAS_VEGAS_MARKET_FACTS.supply, ...LAS_VEGAS_MARKET_FACTS.skilledNursing.slice(0, 2)].map((fact) => (
+              <div key={fact.label} className="rounded-3xl border border-[#d2e2dc] bg-white p-6">
+                <p className="text-3xl font-semibold tracking-[-0.04em] text-[#1e4f43]">{fact.value}</p>
+                <p className="mt-2 text-sm font-medium leading-6 text-[#42554d]">{fact.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 flex flex-wrap gap-5 text-sm font-semibold">
+            <Link href="/las-vegas-senior-living" className="text-[#285f51] underline underline-offset-4">See definitions and sources →</Link>
+            <Link href="/guides" className="text-[#285f51] underline underline-offset-4">Read family research guides →</Link>
+          </div>
         </div>
       </section>
 
