@@ -100,6 +100,8 @@ def market_report(db: Session, *, geography_key: str = "NEVADA") -> Dict[str, ob
                 "reason": None,
             })
             continue
+        required_geographies = set(comparison_geographies)
+        observed_geographies = {row.geography_key for row in matched}
         if not matched:
             metrics.append({
                 **definition,
@@ -110,7 +112,10 @@ def market_report(db: Session, *, geography_key: str = "NEVADA") -> Dict[str, ob
             continue
         metrics.append({
             **definition,
-            "status": "AVAILABLE",
+            # The executive scorecard compares Nevada with the United States.
+            # Do not call a row complete merely because one geography happened
+            # to have a value.  This makes source gaps operationally visible.
+            "status": "AVAILABLE" if required_geographies.issubset(observed_geographies) else "PARTIAL",
             "observations": [
                 {
                     "segment": f"{row.geography_label} · {row.segment}",
@@ -123,6 +128,10 @@ def market_report(db: Session, *, geography_key: str = "NEVADA") -> Dict[str, ob
                 }
                 for row in matched
             ],
-            "reason": None,
+            "reason": None if required_geographies.issubset(observed_geographies) else (
+                "Source-backed observation is missing for: "
+                + ", ".join(sorted(required_geographies - observed_geographies))
+                + "."
+            ),
         })
     return {"geography_key": geography_key, "ranking_input": False, "metrics": metrics}
