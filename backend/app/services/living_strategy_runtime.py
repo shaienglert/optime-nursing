@@ -101,7 +101,28 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")
     spine_or_back = _contains(query, "spine", "spinal", "back surgery", "back operation")
     rehab = _contains(query, "rehab", "rehabilitation", "physical therapy", "physiotherapy", "pt ", " pt", "occupational therapy")
-    expected_recovery = _contains(query, "expected to walk", "should walk again", "return to walking", "expected to recover", "temporary", "short-term", "short term")
+    # A phrase such as "not temporary" must not be mistaken for temporary recovery merely
+    # because it contains the word "temporary". Persistent ADL support belongs on the
+    # Assisted Living path, while a genuine recovery episode can lead with lower intensity.
+    explicitly_persistent = _contains(
+        query,
+        "not temporary",
+        "not a temporary",
+        "permanent",
+        "ongoing daily help",
+        "ongoing help",
+        "not expected to recover",
+    )
+    expected_recovery = not explicitly_persistent and _contains(
+        query,
+        "expected to walk",
+        "should walk again",
+        "return to walking",
+        "expected to recover",
+        "temporary",
+        "short-term",
+        "short term",
+    )
     duration = _duration_months(query)
     if duration is not None and duration <= 6:
         expected_recovery = True
