@@ -60,7 +60,8 @@ from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
 from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
-from app.services.schema_migrations import ensure_state_license_schema
+from app.services.schema_migrations import ensure_market_metric_observation_schema, ensure_market_supply_signal_schema, ensure_state_license_schema
+from app.services.market_report_service import market_report
 
 
 from app.services.schema_migrations import ensure_deferred_report_schema
@@ -145,6 +146,7 @@ from app.services.competitive_intelligence_service import (
 )
 from app.services.market_supply_intelligence_service import (
     latest_market_supply_signals,
+    run_las_vegas_market_supply_pilot,
     run_market_supply_intelligence_cycle,
     start_market_supply_intelligence_scheduler,
 )
@@ -441,18 +443,44 @@ class MarketSupplySignalOut(BaseModel):
     headline: str
     snippet: str
     city_state: Optional[str] = None
+    market_key: Optional[str] = None
+    project_name: Optional[str] = None
+    service_lines: Optional[str] = None
+    units_or_beds: Optional[int] = None
+    expected_opening: Optional[str] = None
+    occupancy_rate: Optional[str] = None
+    occupancy_period: Optional[str] = None
+    evidence_status: str
+    nursing_relevance: str
     source_url: str
     source_domain: str
     first_observed_at: str
 
 
 class MarketSupplyCycleOut(BaseModel):
+    market_key: Optional[str] = None
     started_at: str
     finished_at: str
     runtime_ms: int
     items_added: int
     errors: int
     categories: List[Dict[str, Any]]
+
+
+class MarketReportMetricOut(BaseModel):
+    metric_key: str
+    label: str
+    unit: str
+    scope: str
+    status: str
+    observations: List[Dict[str, Any]]
+    reason: Optional[str] = None
+
+
+class MarketReportOut(BaseModel):
+    geography_key: str
+    ranking_input: bool
+    metrics: List[MarketReportMetricOut]
 
 
 class PersonalizedParameterOrderIn(BaseModel):
@@ -1344,1743 +1372,201 @@ def _to_intelligence_profile_out(profile: FacilityIntelligenceProfile) -> Facili
 _AGENT_REPORT_DEF_BY_KEY = {str(item["agent_key"]): item for item in AGENT_REPORT_DEFS}
 
 
-def _to_agent_knowledge_report_summary(row: AgentKnowledgeReportSnapshot) -> AgentKnowledgeReportSummaryOut:
-    return AgentKnowledgeReportSummaryOut(
-        agent_key=row.agent_key,
-        agent_name=row.agent_name,
-        domain=row.domain,
-        confidence=float(row.average_confidence or 0.0),
-        evidence_count=int(row.evidence_count or 0),
-        coverage=float(row.coverage or 0.0),
-        health_status=row.health_status,
-        freshness_status=row.freshness_status,
-        knowledge_age_seconds=int(row.knowledge_age_seconds or 0),
-        ttl_seconds=int(row.ttl_seconds or 0),
-        pending_reviews=int(row.pending_reviews or 0),
-        last_update=row.last_refreshed_at.isoformat() if row.last_refreshed_at else None,
-        next_refresh_at=row.next_refresh_at.isoformat() if row.next_refresh_at else None,
-    )
-
-
-def _to_agent_knowledge_report(row: AgentKnowledgeReportSnapshot) -> AgentKnowledgeReportOut:
-    payload = _parse_json_object(row.report_json)
-    defn = _AGENT_REPORT_DEF_BY_KEY.get(row.agent_key, {})
-    return AgentKnowledgeReportOut(
-        agent_key=row.agent_key,
-        agent_name=row.agent_name,
-        domain=row.domain,
-        mission=str(payload.get("mission") or defn.get("mission") or ""),
-        topics_covered=[str(item) for item in (payload.get("topics_covered") or defn.get("topics") or [])],
-        knowledge_base=payload.get("knowledge_base") if isinstance(payload.get("knowledge_base"), dict) else {},
-        last_update=row.last_refreshed_at.isoformat() if row.last_refreshed_at else None,
-        confidence=float(row.average_confidence or 0.0),
-        evidence_count=int(row.evidence_count or 0),
-        coverage=float(row.coverage or 0.0),
-        api={str(k): str(v) for k, v in ((payload.get("api") or {}) if isinstance(payload.get("api"), dict) else {}).items()},
-        health_status=row.health_status,
-        freshness_status=row.freshness_status,
-        knowledge_age_seconds=int(row.knowledge_age_seconds or 0),
-        last_successful_refresh=row.last_successful_refresh.isoformat() if row.last_successful_refresh else None,
-        last_refresh_attempt=row.last_refresh_attempt.isoformat() if row.last_refresh_attempt else None,
-        refresh_duration_ms=int(row.refresh_duration_ms or 0),
-        verified_until=row.verified_until.isoformat() if row.verified_until else None,
-        ttl_seconds=int(row.ttl_seconds or 0),
-        pending_changes=int(row.pending_changes or 0),
-        pending_reviews=int(row.pending_reviews or 0),
-        failed_refresh_count=int(row.failed_refresh_count or 0),
-        refresh_status=row.refresh_status,
-        next_refresh_at=row.next_refresh_at.isoformat() if row.next_refresh_at else None,
-    )
-
-
-@app.on_event("startup")
-def startup() -> None:
-    print(f"CORS_ALLOWED_ORIGINS={allowed_origins}")
-    # Preserve provider memory and verification history across restarts.
-    Base.metadata.create_all(bind=engine)
-    ensure_provider_identity_schema(engine)
-    ensure_state_license_schema(engine)
-
-
-    ensure_deferred_report_schema(engine)
-    ensure_facility_intelligence_profile_schema(engine)
-    ensure_agent_knowledge_report_snapshot_schema(engine)
-    db = SessionLocal()
-    try:
-        state = os.getenv("OPTIME_IMPORT_STATE", "FL")
-        limit = env_int("OPTIME_IMPORT_LIMIT", 100)
-        should_reingest = os.getenv("OPTIME_REINGEST_ON_STARTUP", "0") == "1"
-        has_facilities = (db.query(func.count(Facility.id)).scalar() or 0) > 0
-        if should_reingest or not has_facilities:
-            app.state.import_summary = run_phase1_ingestion(db, state=state, limit=limit)
-        else:
-            app.state.import_summary = {
-                "facilities_imported": int(db.query(func.count(Facility.id)).scalar() or 0),
-                "missing_records": 0,
-                "failed_mappings": 0,
-                "score_distributions": {},
-            }
-
-        # Prepared knowledge reports can be generated lazily to keep startup memory bounded.
-        eager_reports = os.getenv("OPTIME_EAGER_REPORTS_ON_STARTUP", "0") == "1"
-        if eager_reports:
-            ensure_reports_available(db)
-    finally:
-        db.close()
-
-    # One-time SMTP validation email on deployment startup.
-    print("SMTP_TEST: ATTEMPTING")
-    smtp_test_result = send_startup_test_email_once()
-    if not smtp_test_result.get("attempted"):
-        print(f"SMTP_TEST: SKIPPED reason={smtp_test_result.get('reason', 'unknown')}")
-    elif smtp_test_result.get("smtp_accepted"):
-        print("SMTP_TEST: SUCCESS smtp_accepted=true")
-    else:
-        err_type = smtp_test_result.get("error_type", "UNKNOWN")
-        err_msg = smtp_test_result.get("error_message", "unknown")
-        print(f"SMTP_TEST: FAILED error_type={err_type} message={err_msg}")
-
-    # Refresh reports continuously in background so user requests never wait on research.
-    start_background_refresh_loop()
-    # Trigger daily executive intelligence report at 08:00 local server time.
-    start_executive_report_scheduler()
-    # Run heartbeat/dependency/full-cycle supervisor sweeps and the daily owner brief.
-    start_supervisor_scheduler()
-    # Track named competitors' public positioning/monetization/feature signals every 6h.
-    start_competitive_intelligence_scheduler()
-    # Weekly: senior-living construction starts, planned openings, and occupancy rates.
-    start_market_supply_intelligence_scheduler()
-    logger.info(
-        "startup_completed facilities_imported=%s origins=%s",
-        app.state.import_summary.get("facilities_imported"),
-        len(allowed_origins),
-    )
-
-
-@app.middleware("http")
-async def request_observability_middleware(request, call_next):
-    start = time.perf_counter()
-    path = request.url.path
-    method = request.method
-    try:
-        response = await call_next(request)
-    except Exception:
-        duration_ms = round((time.perf_counter() - start) * 1000, 2)
-        logger.exception("request_failed method=%s path=%s duration_ms=%s", method, path, duration_ms)
-        raise
-
-    duration_ms = round((time.perf_counter() - start) * 1000, 2)
-    if path in {"/health", "/decision-engine/recommendations", "/facilities"}:
-        logger.info(
-            "request_completed method=%s path=%s status=%s duration_ms=%s",
-            method,
-            path,
-            response.status_code,
-            duration_ms,
-        )
-    return response
-
-
-@app.get("/")
-async def root():
-    return {
-        "project": "OPTIME Nursing",
-        "status": "running",
-        "version": "0.3.0",
-    }
-
-
-@app.get("/health")
-async def health():
-    return {"status": "healthy"}
-
-
-@app.get("/runtime/status")
-async def runtime_status():
-    return get_runtime_sync_status()
-
-
-@app.get("/diagnostics/medication-evidence-audit")
-def medication_evidence_audit(db: Session = Depends(get_db)):
-    from app.models.agent_execution import AgentKnowledgeRecord
-    from app.services.governed_evidence_runtime import is_governed_positive_source
-
-    rows = db.query(
-        AgentKnowledgeRecord.entity_key,
-        AgentKnowledgeRecord.agent_key,
-        AgentKnowledgeRecord.source,
-        AgentKnowledgeRecord.payload_json,
-    ).all()
-
-    total_rows = len(rows)
-    entity_keys = set()
-    medication_true = medication_false = medication_missing = 0
-    outside_true = outside_false = outside_missing = 0
-    both_false = 0
-    both_false_payload_samples: dict[str, int] = {}
-    medication_true_source_breakdown: list[dict] = []
-
-    for entity_key, agent_key, source, payload_json in rows:
-        entity_keys.add(entity_key)
-        try:
-            payload = json.loads(payload_json or "{}")
-        except (TypeError, ValueError):
-            payload = {}
-
-        med = payload.get("medication_support_verified")
-        outside = payload.get("outside_care_allowed_verified")
-
-        if med is True:
-            medication_true += 1
-            medication_true_source_breakdown.append({
-                "canonical_facility_id": entity_key,
-                "facility_name": payload.get("facility_name"),
-                "agent_key": agent_key,
-                "source": source,
-                "official_identity_verified": payload.get("official_identity_verified"),
-                "would_pass_governed_source_filter": is_governed_positive_source(source, payload),
-            })
-        elif med is False:
-            medication_false += 1
-        else:
-            medication_missing += 1
-
-        if outside is True:
-            outside_true += 1
-        elif outside is False:
-            outside_false += 1
-        else:
-            outside_missing += 1
-
-        if med is False and outside is False:
-            both_false += 1
-            key = (payload_json or "").strip()
-            both_false_payload_samples[key] = both_false_payload_samples.get(key, 0) + 1
-
-    distinct_both_false_payloads = len(both_false_payload_samples)
-    top_repeated_payloads = sorted(both_false_payload_samples.items(), key=lambda item: -item[1])[:5]
-
-    return {
-        "total_rows": total_rows,
-        "distinct_facilities": len(entity_keys),
-        "medication_support_verified": {"true": medication_true, "false": medication_false, "missing_or_other": medication_missing},
-        "outside_care_allowed_verified": {"true": outside_true, "false": outside_false, "missing_or_other": outside_missing},
-        "both_false_count": both_false,
-        "distinct_both_false_payloads": distinct_both_false_payloads,
-        "interpretation": (
-            "If distinct_both_false_payloads is close to 1 (or a small number repeated across many rows), "
-            "these are almost certainly an identical default/boilerplate value, not per-facility research findings. "
-            "If distinct_both_false_payloads is close to both_false_count, each is a real distinct finding."
-        ),
-        "top_repeated_both_false_payloads": [
-            {"payload_json": payload, "facility_count": count} for payload, count in top_repeated_payloads
-        ],
-        "medication_true_source_breakdown": medication_true_source_breakdown,
-        "medication_true_source_breakdown_note": (
-            "For every medication_support_verified=True record: whether its source would pass the "
-            "governed-source trust filter already applied on the dynamic MUST-gate pipeline "
-            "(is_governed_positive_source). If any row here is would_pass_governed_source_filter=false, "
-            "tightening _agent_verified_medication_overlay to require a governed source would flip that "
-            "facility back to UNKNOWN for medication support."
-        ),
-    }
-
-
-_MOTHER90_QUERY = (
-    "My mother is 90. Her husband died two months ago and she does not want to remain "
-    "alone at home. She is mentally alert, has no dementia, is mobile, and otherwise "
-    "functions independently, but she needs daily help with bathing, dressing and "
-    "medication management. She enjoys classical music and being around other people. "
-    "We are looking across the Las Vegas Valley with a total monthly housing-and-care "
-    "budget up to $8,000."
-)
-
-
-@app.get("/diagnostics/must-gate-screen")
-def must_gate_screen(db: Session = Depends(get_db)):
-    """Gold-dataset methodology, step 2: run one resident persona against every real
-    facility in the canonical registry using the real MUST-gate engine
-    (client_intent_runtime.evaluate_candidate_intent) with real agent evidence attached,
-    and bucket the results. This does not write gold examples -- it surfaces which
-    facilities are worth a human (or domain-expert) look for the next batch. See
-    backend/gold_examples/screen_candidates.py for the equivalent local script.
-    """
-    from collections import Counter, defaultdict
-
-    from sqlalchemy import inspect
-
-    from app.models.agent_execution import AgentKnowledgeRecord
-    from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
-    from app.services.facility_parameter_service import _load_runtime
-
-    if AgentKnowledgeRecord.__tablename__ in inspect(db.get_bind()).get_table_names():
-        rows = db.query(AgentKnowledgeRecord.entity_key, AgentKnowledgeRecord.payload_json).all()
-    else:
-        rows = []
-    agent_evidence_by_facility: Dict[str, list] = defaultdict(list)
-    for entity_key, payload_json in rows:
-        try:
-            payload = json.loads(payload_json or "{}")
-        except (TypeError, ValueError):
-            continue
-        agent_evidence_by_facility[entity_key].append({"payload": payload})
-
-    runtime = _load_runtime()
-    strategy = {"signals": {"adl_support_needed": True, "medication_support_needed": True}, "household": {}}
-    human_context = {"signals": {}}
-    intent = build_client_intent({"locationCity": "Las Vegas"}, _MOTHER90_QUERY, strategy, human_context)
-
-    by_gate: Dict[str, Counter] = defaultdict(Counter)
-    mixed_profile: List[Dict[str, Any]] = []
-
-    for canonical_id, facility in runtime["canonical_by_id"].items():
-        candidate_row = {
-            "canonical_facility_id": canonical_id,
-            "canonical_type": facility.get("canonical_type"),
-            "city": facility.get("city"),
-            "state": facility.get("state"),
-            "agent_person_fit_evidence": agent_evidence_by_facility.get(canonical_id, []),
-        }
-        result = evaluate_candidate_intent(candidate_row, intent)
-        statuses: Dict[str, str] = {}
-        for gate in intent["must_haves"]:
-            gate_key = gate["key"]
-            status = "PASS" if gate_key in result["must_pass"] else "FAIL" if gate_key in result["must_fail"] else "PENDING_VERIFICATION"
-            by_gate[gate_key][status] += 1
-            statuses[gate_key] = status
-        if "PASS" in statuses.values() and set(statuses.values()) != {"PASS"}:
-            mixed_profile.append({
-                "canonical_facility_id": canonical_id,
-                "facility_name": facility.get("facility_name"),
-                "canonical_type": facility.get("canonical_type"),
-                "gate_statuses": statuses,
-            })
-
-    return {
-        "persona": "mother-90-widow-las-vegas",
-        "must_haves_detected": [m["key"] for m in intent["must_haves"]],
-        "facilities_screened": len(runtime["canonical_by_id"]),
-        "agent_evidence_records_loaded": len(rows),
-        "facilities_with_agent_evidence": len(agent_evidence_by_facility),
-        "per_gate_outcome_counts": {gate: dict(counts) for gate, counts in by_gate.items()},
-        "mixed_profile_count": len(mixed_profile),
-        "mixed_profile_sample": mixed_profile[:25],
-    }
-
-
-@app.get("/import-summary", response_model=ImportSummaryOut)
-async def import_summary():
-    summary = getattr(app.state, "import_summary", None)
-    if not summary:
-        raise HTTPException(status_code=404, detail="Import summary not found")
-    return summary
-
-
-@app.get("/governance/runtime-context")
-async def get_governance_runtime_context(db: Session = Depends(get_db)):
-    registry_path = REPO_ROOT / "database" / "professional_rule_registry.json"
-    three_layer_path = REPO_ROOT / "database" / "three_layer_decision_model_schema.json"
-    evidence_path = REPO_ROOT / "database" / "facility_evidence_matrix_snapshot.json"
-    candidate_policy_path = REPO_ROOT / "database" / "candidate_governance_policy.json"
-    canonical_path = REPO_ROOT / "database" / "florida_senior_living_inventory.json"
-
-    registry_payload = _load_json_file(registry_path)
-    three_layer_payload = _load_json_file(three_layer_path)
-    evidence_payload = _load_json_file(evidence_path)
-    candidate_policy_payload = _load_json_file(candidate_policy_path)
-    canonical_payload = _load_json_file(canonical_path)
-
-    facilities = db.query(Facility).filter(Facility.state == "FL").order_by(Facility.id.asc()).all()
-    profile_rows = db.query(FacilityIntelligenceProfile).filter(
-        FacilityIntelligenceProfile.facility_id.in_([facility.id for facility in facilities])
-    ).all() if facilities else []
-    profiles_by_facility = {row.facility_id: row for row in profile_rows}
-
-    canonical_records = canonical_payload.get("records") or []
-    canonical_by_cms = _canonical_lookup(canonical_records)
-
-    reconciliation_rows: List[Dict[str, Any]] = []
-    confidence_totals = {"total_evaluated": len(facilities), "known_confidence": 0, "unknown_confidence": 0}
-    confidence_reasons: Dict[str, int] = {}
-
-    for facility in facilities:
-        cms_id = str(facility.cms_id or "").strip()
-        canonical = canonical_by_cms.get(cms_id)
-        identity_status = "CONFIRMED_CANONICAL_ID" if canonical else "UNRESOLVED_IDENTITY"
-        reconciliation_rows.append(
-            {
-                "runtime_facility_id": facility.id,
-                "canonical_facility_id": canonical.get("canonical_facility_id") if canonical else None,
-                "cms_certification_number": cms_id or None,
-                "identity_status": identity_status,
-                "source_provenance": canonical.get("source_refs") if canonical else ["runtime_db_only"],
-            }
-        )
-
-        confidence_result = _compute_confidence_level_for_facility(facility, profiles_by_facility.get(facility.id))
-        if confidence_result["confidence"] == "UNKNOWN":
-            confidence_totals["unknown_confidence"] += 1
-        else:
-            confidence_totals["known_confidence"] += 1
-        reason_key = str(confidence_result["reason"])
-        confidence_reasons[reason_key] = int(confidence_reasons.get(reason_key) or 0) + 1
-
-    confirmed_count = sum(1 for row in reconciliation_rows if row["identity_status"] == "CONFIRMED_CANONICAL_ID")
-
-    return {
-        "generated_at_utc": datetime.utcnow().isoformat() + "Z",
-        "professional_rule_registry": {
-            "version": registry_payload.get("phase"),
-            "rule_count": len(registry_payload.get("rules") or []),
-            "hash": _sha256_for_file(registry_path),
-            "rules": registry_payload.get("rules") or [],
-            "validator_policy": registry_payload.get("validator_policy") or {},
-            "authority_model": registry_payload.get("authority_model") or {},
-        },
-        "three_layer_model": {
-            "hash": _sha256_for_file(three_layer_path),
-            "allowed_classifications": three_layer_payload.get("allowed_classifications") or [],
-            "governance_boundaries": three_layer_payload.get("governance_boundaries") or {},
-        },
-        "candidate_governance": {
-            "hash": _sha256_for_file(candidate_policy_path),
-            "candidate_lifecycle": candidate_policy_payload.get("candidate_lifecycle") or [],
-            "hard_rejection_taxonomy": candidate_policy_payload.get("hard_rejection_taxonomy") or [],
-            "governance_rules": candidate_policy_payload.get("governance_rules") or [],
-        },
-        "facility_evidence_runtime": {
-            "hash": _sha256_for_file(evidence_path),
-            "verification_status_counts": evidence_payload.get("verification_status_counts") or {},
-            "source_level_counts": evidence_payload.get("source_level_counts") or {},
-            "unknown_field_counts": evidence_payload.get("unknown_field_counts") or {},
-            "policies": evidence_payload.get("policies") or {
-                "unknown_is_not_no": True,
-                "conflict_requires_review": True,
-            },
-        },
-        "canonical_runtime_coverage": {
-            "canonical_total": canonical_payload.get("record_count") or len(canonical_records),
-            "runtime_total": len(facilities),
-            "confirmed_canonical_identity": confirmed_count,
-            "unresolved_identity": len(facilities) - confirmed_count,
-            "reconciliation": reconciliation_rows,
-        },
-        "confidence_status": {
-            **confidence_totals,
-            "reason_breakdown": confidence_reasons,
-        },
-        "validation_truth": {
-            "external_professional_validation": "PARTIAL",
-            "benchmark_52_status": "FAIL",
-        },
-    }
-
-
-@app.get("/facilities", response_model=List[FacilityListOut])
-async def get_facilities(q: Optional[str] = Query(default=None), db: Session = Depends(get_db)):
-    query = db.query(Facility).filter(Facility.state == "FL")
-
-    term = (q or "").strip()
-    if term:
-        like = f"%{term}%"
-        query = query.filter(
-            or_(
-                Facility.name.ilike(like),
-                Facility.city.ilike(like),
-                Facility.address.ilike(like),
-                Facility.zip_code.ilike(like),
-                Facility.cms_id.ilike(like),
-            )
-        )
-
-    facilities = query.order_by(Facility.overall_optime_score.desc().nullslast(), Facility.id.asc()).all()
-
-    if facilities and db.query(FacilityIntelligenceProfile).count() == 0:
-        run_intelligence_collection(db)
-
-    intelligence_profiles = {
-        profile.facility_id: profile
-        for profile in db.query(FacilityIntelligenceProfile).filter(
-            FacilityIntelligenceProfile.facility_id.in_([facility.id for facility in facilities])
-        ).all()
-    }
-
-    canonical_index = get_canonical_facility_index()
-    cms_to_canonical_id: Dict[str, str] = {}
-    for candidate_id, candidate in canonical_index.items():
-        source_identity_ids = candidate.get("source_identity_ids") or {}
-        cms_ccn = str(source_identity_ids.get("cms_ccn") or "").strip()
-        if cms_ccn:
-            cms_to_canonical_id[cms_ccn] = candidate_id
-
-    payload: List[FacilityListOut] = []
-    for facility in facilities:
-        profile = intelligence_profiles.get(facility.id)
-        canonical_facility_id = cms_to_canonical_id.get(str(facility.cms_id or "").strip())
-        media_payload = build_visual_media_payload(get_facility_media_record(canonical_facility_id))
-        profile_hero = _parse_json_object(profile.visual_hero_image) if profile else {}
-        profile_gallery = _parse_json_objects(profile.visual_gallery_images) if profile else []
-        visual_hero_image = media_payload["hero"] if media_payload else profile_hero
-        visual_gallery_images = media_payload["gallery"] if media_payload else profile_gallery
-
-        payload.append(
-            FacilityListOut(
-                id=facility.id,
-                cms_id=facility.cms_id,
-                name=facility.name,
-                city=facility.city,
-                state=facility.state,
-                address=facility.address,
-                zip_code=facility.zip_code,
-                phone=facility.phone,
-                overall_rating=facility.overall_rating,
-                staffing_rating=facility.staffing_rating,
-                quality_rating=facility.quality_rating,
-                inspection_rating=facility.inspection_rating,
-                beds=facility.beds,
-                medical_quality_score=facility.medical_quality_score,
-                staffing_score=facility.staffing_score,
-                safety_score=facility.safety_score,
-                overall_optime_score=facility.overall_optime_score,
-                confidence_level=facility.confidence_level,
-                intelligence_confidence=profile.intelligence_confidence if profile else None,
-                intelligence_sources_used=_parse_json_array(profile.sources_used) if profile else [],
-                intelligence_positive_signals=_parse_json_array(profile.positive_signals) if profile else [],
-                intelligence_negative_signals=_parse_json_array(profile.negative_signals) if profile else [],
-                intelligence_signal_details=_parse_json_objects(profile.signal_details) if profile else [],
-                family_satisfaction_index=profile.family_satisfaction_index if profile else None,
-                staff_stability_index=profile.staff_stability_index if profile else None,
-                regulatory_risk_index=profile.regulatory_risk_index if profile else None,
-                litigation_risk_index=profile.litigation_risk_index if profile else None,
-                social_energy_index=profile.social_energy_index if profile else None,
-                community_engagement_index=profile.community_engagement_index if profile else None,
-                reputation_index=profile.reputation_index if profile else None,
-                cultural_match_signals=profile.cultural_match_signals if profile else None,
-                visual_hero_image=visual_hero_image,
-                visual_gallery_images=visual_gallery_images,
-                visual_lifestyle_tags=_parse_json_objects(profile.visual_lifestyle_tags) if profile else [],
-                visual_confidence_score=profile.visual_confidence_score if profile else None,
-                visual_coverage_score=profile.visual_coverage_score if profile else None,
-            )
-        )
-
-    return payload
-
-
-@app.get("/facilities/{id}", response_model=FacilityDetailsOut)
-async def get_facility(id: int, db: Session = Depends(get_db)):
-    facility = db.query(Facility).filter(Facility.id == id, Facility.state == "FL").first()
-    if not facility:
-        raise HTTPException(status_code=404, detail="Facility not found")
-
-    quality_rows = db.query(QualityMeasure).filter(QualityMeasure.facility_id == facility.id).all()
-    staffing_row = (
-        db.query(Staffing)
-        .filter(Staffing.facility_id == facility.id)
-        .order_by(Staffing.id.desc())
-        .first()
-    )
-    inspection_rows = db.query(Inspection).filter(Inspection.facility_id == facility.id).all()
-    profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == facility.id).first()
-
-    medical_components = {
-        "cms_rating": round(stars_to_score(facility.quality_rating or facility.overall_rating), 2),
-        "hospitalizations": round(invert_percent(_get_measure_score(quality_rows, ["hospital", "rehospital"])), 2),
-        "er_visits": round(invert_percent(_get_measure_score(quality_rows, ["emergency", "er visit"])), 2),
-        "falls": round(invert_percent(_get_measure_score(quality_rows, ["fall"])), 2),
-        "pressure_ulcers": round(invert_percent(_get_measure_score(quality_rows, ["pressure ulcer", "pressure"])), 2),
-        "weight_loss": round(invert_percent(_get_measure_score(quality_rows, ["weight loss"])), 2),
-    }
-
-    staffing_components = {
-        "rn_hours": round(normalize_hours(staffing_row.rn_hours_per_resident_day if staffing_row else None, 0.75), 2),
-        "total_staffing": round(normalize_hours(staffing_row.total_nurse_hours_per_resident_day if staffing_row else None, 3.5), 2),
-        "agency_staff": 50.0,
-        "turnover": 50.0,
-    }
-
-    safety_components = {
-        "serious_deficiencies": round(inverse_count(sum(item.severe_deficiency_count or 0 for item in inspection_rows), 10), 2),
-        "complaints": round(inverse_count(sum(item.payment_denials_count or 0 for item in inspection_rows), 25), 2),
-        "fines": 50.0,
-        "infection_control": 50.0,
-    }
-
-    canonical_facility_id = None
-    if facility.cms_id:
-        canonical_index = get_canonical_facility_index()
-        for candidate_id, candidate in canonical_index.items():
-            source_identity_ids = candidate.get("source_identity_ids") or {}
-            if str(source_identity_ids.get("cms_ccn") or "") == str(facility.cms_id):
-                canonical_facility_id = candidate_id
-                break
-
-    media_payload = build_visual_media_payload(get_facility_media_record(canonical_facility_id))
-    profile_hero = _parse_json_object(profile.visual_hero_image) if profile else {}
-    profile_gallery = _parse_json_objects(profile.visual_gallery_images) if profile else []
-    visual_hero_image = media_payload["hero"] if media_payload else profile_hero
-    visual_gallery_images = media_payload["gallery"] if media_payload else profile_gallery
-
-    return FacilityDetailsOut(
-        id=facility.id,
-        cms_id=facility.cms_id,
-        canonical_facility_id=canonical_facility_id,
-        name=facility.name,
-        address=facility.address,
-        city=facility.city,
-        state=facility.state,
-        zip_code=facility.zip_code,
-        phone=facility.phone,
-        overall_rating=facility.overall_rating,
-        staffing_rating=facility.staffing_rating,
-        quality_rating=facility.quality_rating,
-        inspection_rating=facility.inspection_rating,
-        beds=facility.beds,
-        confidence_level=facility.confidence_level,
-        visual_hero_image=visual_hero_image,
-        visual_gallery_images=visual_gallery_images,
-        visual_lifestyle_tags=_parse_json_objects(profile.visual_lifestyle_tags) if profile else [],
-        visual_confidence_score=profile.visual_confidence_score if profile else None,
-        visual_coverage_score=profile.visual_coverage_score if profile else None,
-        score_breakdown=ScoreBreakdownOut(
-            medical_quality_score=facility.medical_quality_score or 0.0,
-            staffing_score=facility.staffing_score or 0.0,
-            safety_score=facility.safety_score or 0.0,
-            overall_optime_score=facility.overall_optime_score or 0.0,
-            medical_components=medical_components,
-            staffing_components=staffing_components,
-            safety_components=safety_components,
-        ),
-    )
-
-
-@app.get("/optime-parameter-registry", response_model=ParameterRegistryOut)
-async def get_optime_parameter_registry():
-    return get_parameter_registry_payload()
-
-
-@app.get("/canonical-facilities/{canonical_id}/parameter-table", response_model=FacilityParameterTableOut)
-async def get_canonical_facility_parameter_table(
-    canonical_id: str,
-    need_tags: Optional[str] = Query(default=None),
-    priority_parameter_ids: Optional[str] = Query(default=None),
-    profile_key: Optional[str] = Query(default=None),
-):
-    parsed_need_tags = [item.strip() for item in (need_tags or "").split(",") if item.strip()]
-    parsed_priority_ids = [item.strip() for item in (priority_parameter_ids or "").split(",") if item.strip()]
-    try:
-        return get_facility_parameter_table(
-            canonical_id,
-            need_tags=parsed_need_tags,
-            priority_parameter_ids=parsed_priority_ids,
-            profile_key=profile_key,
-        )
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail="Canonical facility not found") from exc
-
-
-@app.get("/canonical-facilities/{canonical_id}/rooms", response_model=FacilityRoomsOut)
-async def get_canonical_facility_rooms(canonical_id: str, db: Session = Depends(get_db)):
-    canonical_index = get_canonical_facility_index()
-    facility = canonical_index.get(canonical_id)
-    if not facility:
-        raise HTTPException(status_code=404, detail="Canonical facility not found")
-
-    rooms = list_room_types(db, canonical_id)
-    return FacilityRoomsOut(
-        canonical_facility_id=canonical_id,
-        facility_name=facility.get("name") or facility.get("facility_name") or facility.get("community_name") or "",
-        has_data=len(rooms) > 0,
-        room_types=[
-            FacilityRoomTypeOut(
-                room_type_name=room.room_type_name,
-                description=room.description or "",
-                monthly_price=(room.monthly_price_cents / 100) if room.monthly_price_cents is not None else None,
-                availability_status=room.availability_status,
-                source=room.source,
-                last_verified_at=room.last_verified_at.isoformat() if room.last_verified_at else None,
-                photos=[FacilityRoomPhotoOut(url=photo.url, caption=photo.caption) for photo in room.photos],
-            )
-            for room in rooms
-        ],
-    )
-
-
-def _serialize_outreach_request(outreach, *, include_draft: bool) -> FacilityOutreachRequestOut:
-    draft = None
-    if include_draft and outreach.status == "AWAITING_APPROVAL":
-        composed = facility_outreach_service.draft_email(outreach)
-        draft = FacilityOutreachDraftOut(to=composed["to"], subject=composed["subject"], body_text=composed["body_text"])
-    return FacilityOutreachRequestOut(
-        id=outreach.id,
-        canonical_facility_id=outreach.canonical_facility_id,
-        facility_name=facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
-        status=outreach.status,
-        contact_email=outreach.contact_email,
-        failure_reason=outreach.failure_reason,
-        requested_at=outreach.requested_at.isoformat(),
-        sent_at=outreach.sent_at.isoformat() if outreach.sent_at else None,
-        responded_at=outreach.responded_at.isoformat() if outreach.responded_at else None,
-        draft=draft,
-    )
-
-
-@app.post("/canonical-facilities/{canonical_id}/request-outreach", response_model=FacilityOutreachRequestOut)
-async def post_request_facility_outreach(canonical_id: str, db: Session = Depends(get_db)):
-    if canonical_id not in get_canonical_facility_index():
-        raise HTTPException(status_code=404, detail="Canonical facility not found")
-    outreach = facility_outreach_service.request_outreach(db, canonical_id)
-    return _serialize_outreach_request(outreach, include_draft=True)
-
-
-@app.get("/facility-outreach-requests/awaiting-approval", response_model=List[FacilityOutreachRequestOut])
-async def get_facility_outreach_requests_awaiting_approval(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    return [_serialize_outreach_request(o, include_draft=True) for o in facility_outreach_service.list_awaiting_approval(db)]
-
-
-@app.post("/facility-outreach-requests/{request_id}/approve-send", response_model=FacilityOutreachRequestOut)
-async def post_approve_and_send_facility_outreach(request_id: int, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    try:
-        outreach = facility_outreach_service.approve_and_send_outreach(db, request_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return _serialize_outreach_request(outreach, include_draft=False)
-
-
-@app.get("/facility-outreach/{response_token}", response_model=FacilityOutreachPublicStatusOut)
-async def get_facility_outreach_public_status(response_token: str, db: Session = Depends(get_db)):
-    outreach = facility_outreach_service.get_request_by_token(db, response_token)
-    if outreach is None:
-        raise HTTPException(status_code=404, detail="Unknown outreach link")
-    return FacilityOutreachPublicStatusOut(
-        canonical_facility_id=outreach.canonical_facility_id,
-        facility_name=facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
-        status=outreach.status,
-    )
-
-
-@app.post("/facility-outreach/{response_token}/submit", response_model=FacilityOutreachPublicStatusOut)
-async def post_facility_outreach_submission(response_token: str, payload: FacilityOutreachSubmissionIn, db: Session = Depends(get_db)):
-    try:
-        outreach = facility_outreach_service.submit_outreach_response(
-            db, response_token, [room.model_dump() for room in payload.room_types]
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail="Unknown outreach link") from exc
-    return FacilityOutreachPublicStatusOut(
-        canonical_facility_id=outreach.canonical_facility_id,
-        facility_name=facility_outreach_service.facility_name_for(outreach.canonical_facility_id),
-        status=outreach.status,
-    )
-
-
-def _serialize_placement_referral(referral) -> PlacementReferralOut:
-    status = placement_referral_service.billable_status(referral)
-    return PlacementReferralOut(
-        referral_code=referral.referral_code,
-        canonical_facility_id=referral.canonical_facility_id,
-        facility_name=facility_outreach_service.facility_name_for(referral.canonical_facility_id),
-        billable_status=status,
-        benefit_amount=referral.benefit_amount_cents / 100,
-        facility_credit_amount=referral.facility_credit_amount_cents / 100,
-        commission_amount=referral.commission_amount_cents / 100,
-        commission_due=placement_referral_service.commission_due_cents(referral) / 100,
-        entry_confirmed_at=referral.entry_confirmed_at.isoformat() if referral.entry_confirmed_at else None,
-        departure_date=referral.departure_date.isoformat() if referral.departure_date else None,
-        departure_reason=referral.departure_reason,
-        created_at=referral.created_at.isoformat(),
-    )
-
-
-def _parse_iso_datetime(value: str, *, field_name: str) -> datetime:
-    try:
-        return datetime.fromisoformat(value)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=f"Invalid {field_name}: must be an ISO 8601 date/datetime") from exc
-
-
-@app.post("/placement-referrals", response_model=PlacementReferralOut)
-async def post_create_placement_referral(payload: PlacementReferralCreateIn, db: Session = Depends(get_db)):
-    if payload.canonical_facility_id not in get_canonical_facility_index():
-        raise HTTPException(status_code=404, detail="Canonical facility not found")
-    referral = placement_referral_service.create_referral(
-        db, canonical_facility_id=payload.canonical_facility_id, case_token=payload.case_token
-    )
-    return _serialize_placement_referral(referral)
-
-
-@app.get("/placement-referrals/{referral_code}", response_model=PlacementReferralOut)
-async def get_placement_referral(referral_code: str, db: Session = Depends(get_db)):
-    referral = placement_referral_service.get_referral_by_code(db, referral_code)
-    if referral is None:
-        raise HTTPException(status_code=404, detail="Unknown referral code")
-    return _serialize_placement_referral(referral)
-
-
-@app.post("/placement-referrals/{referral_code}/confirm-entry", response_model=PlacementReferralOut)
-async def post_confirm_placement_entry(referral_code: str, payload: PlacementReferralConfirmEntryIn, db: Session = Depends(get_db)):
-    entry_date = _parse_iso_datetime(payload.entry_date, field_name="entry_date")
-    try:
-        referral = placement_referral_service.confirm_entry(
-            db, referral_code, entry_date=entry_date, confirmed_by=payload.confirmed_by
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail="Unknown referral code") from exc
-    return _serialize_placement_referral(referral)
-
-
-@app.post("/placement-referrals/{referral_code}/report-departure", response_model=PlacementReferralOut)
-async def post_report_placement_departure(referral_code: str, payload: PlacementReferralDepartureIn, db: Session = Depends(get_db)):
-    departure_date = _parse_iso_datetime(payload.departure_date, field_name="departure_date")
-    try:
-        referral = placement_referral_service.report_departure(
-            db, referral_code, departure_date=departure_date, reason=payload.reason
-        )
-    except ValueError as exc:
-        detail = "Unknown referral code" if str(exc) == "unknown_referral_code" else str(exc)
-        status_code = 404 if str(exc) == "unknown_referral_code" else 422
-        raise HTTPException(status_code=status_code, detail=detail) from exc
-    return _serialize_placement_referral(referral)
-
-
-@app.get("/competitive-intelligence/signals", response_model=List[CompetitiveIntelligenceSignalOut])
-async def get_competitive_intelligence_signals(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    return [
-        CompetitiveIntelligenceSignalOut(
-            competitor_key=row.competitor_key,
-            competitor_name=row.competitor_name,
-            signal_type=row.signal_type,
-            source_url=row.source_url,
-            detail_text=row.detail_text,
-            first_observed_at=row.first_observed_at.isoformat(),
-            last_observed_at=row.last_observed_at.isoformat(),
-            last_changed_at=row.last_changed_at.isoformat() if row.last_changed_at else None,
-        )
-        for row in competitive_intelligence_latest_signals(db)
-    ]
-
-
-@app.post("/competitive-intelligence/run-now", response_model=CompetitiveIntelligenceCycleOut)
-async def post_run_competitive_intelligence_now(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    return run_competitive_intelligence_cycle(db)
-
-
-@app.get("/market-supply-intelligence/signals", response_model=List[MarketSupplySignalOut])
-async def get_market_supply_intelligence_signals(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    return [
-        MarketSupplySignalOut(
-            category=row.category,
-            headline=row.headline,
-            snippet=row.snippet,
-            city_state=row.city_state,
-            source_url=row.source_url,
-            source_domain=row.source_domain,
-            first_observed_at=row.first_observed_at.isoformat(),
-        )
-        for row in latest_market_supply_signals(db)
-    ]
-
-
-@app.post("/market-supply-intelligence/run-now", response_model=MarketSupplyCycleOut)
-async def post_run_market_supply_intelligence_now(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    return run_market_supply_intelligence_cycle(db)
-
-
-def _cms_regulatory_history(facility: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Skilled nursing facilities are identified by CMS CCN, not a Nevada AGC license,
-    so they never appear in the Nevada HCQC/ALiS regulatory index (_regulatory_index),
-    which is scoped to exactly the 313 Nevada RFG-licensed records. CMS's own star
-    ratings for these facilities are already present in the canonical registry
-    (ingested alongside the rest of the facility record, cms_processing_date tracks
-    when) -- this was simply never read by this endpoint. Returned in its own shape
-    (5-star CMS ratings), not force-mapped into Nevada's A-D grade shape, since the
-    two rating systems are not equivalent.
-    """
-    ccn = str(facility.get("cms_ccn") or "").strip()
-    if not ccn or ccn.upper() == "UNKNOWN":
-        return None
-
-    def _rating(value: Any) -> Optional[int]:
-        text = str(value or "").strip()
-        return int(text) if text.isdigit() else None
-
-    ratings = {
-        "overall_rating": _rating(facility.get("cms_overall_rating")),
-        "health_inspection_rating": _rating(facility.get("cms_health_inspection_rating")),
-        "staffing_rating": _rating(facility.get("cms_staffing_rating")),
-        "quality_measure_rating": _rating(facility.get("cms_quality_measure_rating")),
-    }
-    if all(value is None for value in ratings.values()):
-        return None
-
-    return {
-        "cms_certification_number": ccn,
-        "rating_system": "CMS_FIVE_STAR",
-        **ratings,
-        "ownership_type": facility.get("cms_ownership_type") or "UNKNOWN",
-        "processing_date": facility.get("cms_processing_date") or "UNKNOWN",
-        "source_url": f"https://www.medicare.gov/care-compare/details/nursing-home/{ccn}",
-    }
-
-
-@app.get("/canonical-facilities/{canonical_id}/regulatory-history")
-async def get_canonical_facility_regulatory_history(canonical_id: str):
-    canonical_index = get_canonical_facility_index()
-    facility = canonical_index.get(canonical_id)
-    if not facility:
-        raise HTTPException(status_code=404, detail="Canonical facility not found")
-
-    history = _regulatory_index().get(canonical_id)
-    if history:
-        return {
-            "canonical_facility_id": canonical_id,
-            "facility_name": facility.get("name") or facility.get("facility_name") or facility.get("community_name"),
-            "source": "Nevada HCQC / ALiS",
-            "regulatory_history": history,
-        }
-
-    cms_history = _cms_regulatory_history(facility)
-    return {
-        "canonical_facility_id": canonical_id,
-        "facility_name": facility.get("name") or facility.get("facility_name") or facility.get("community_name"),
-        "source": "CMS Care Compare" if cms_history else None,
-        "regulatory_history": cms_history,
-    }
-
-
-@app.post("/canonical-facilities/parameter-comparison", response_model=FacilityParameterComparisonOut)
-async def post_canonical_facility_parameter_comparison(payload: FacilityParameterComparisonIn):
-    try:
-        return compare_facility_parameter_tables(
-            payload.canonical_facility_ids,
-            need_tags=payload.need_tags,
-            priority_parameter_ids=payload.priority_parameter_ids,
-            profile_key=payload.profile_key,
-        )
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail=f"Canonical facility not found: {exc.args[0]}") from exc
-
-
-@app.post("/canonical-facilities/personalized-parameter-order", response_model=PersonalizedParameterOrderOut)
-async def post_personalized_parameter_order(payload: PersonalizedParameterOrderIn):
-    return get_personalized_parameter_order(
-        need_tags=payload.need_tags,
-        priority_parameter_ids=payload.priority_parameter_ids,
-        profile_key=payload.profile_key,
-    )
-
-
-@app.post("/decision-engine/patient-needs-profile", response_model=PatientNeedsProfileOut)
-def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn):
-    return build_patient_needs_profile(payload.questionnaire_state, payload.natural_language_query or "")
-
-
-@app.post("/decision-engine/deferred-report", response_model=DeferredReportOut)
-async def decision_engine_deferred_report(payload: DeferredReportIn, db: Session = Depends(get_db)):
-    """Take an address from a family whose search degraded, and promise them the real report."""
-    try:
-        result = request_deferred_report(
-            db,
-            email=payload.email,
-            questionnaire=payload.questionnaire,
-            query_text=payload.query_text,
-            market=payload.market,
-            limit=payload.limit,
-            degraded_reason=payload.degraded_reason,
-            eligible_at_request=payload.eligible_at_request,
-        )
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-    return DeferredReportOut(**result)
-
-
-@app.post("/decision-engine/deferred-report/process")
-async def decision_engine_process_deferred_reports(limit: int = 25, db: Session = Depends(get_db)):
-    """Retry pending requests and send the ones that now rank. Safe to call repeatedly."""
-    return process_pending_reports(db, limit=limit)
-
-
-@app.get("/decision-engine/deferred-report/status")
-async def decision_engine_deferred_report_status(db: Session = Depends(get_db)):
-    return pending_report_summary(db)
-
-
-@app.post("/decision-engine/recommendations", response_model=PatientDecisionEngineOut)
-def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestIn, db: Session = Depends(get_db)):
-    started = time.perf_counter()
-    logger.info("decision_request_received limit=%s", payload.limit)
-    response = run_patient_decision_engine(
-        questionnaire_state=payload.questionnaire_state,
-        natural_language_query=payload.natural_language_query or "",
-        limit=payload.limit,
-    )
-
-    ccn_to_facility_id = {
-        str(facility.cms_id): int(facility.id)
-        for facility in db.query(Facility.id, Facility.cms_id).filter(Facility.state == "FL").all()
-    }
-    for result in response.get("results", []):
-        source_identity_ids = result.get("source_identity_ids") or {}
-        cms_ccn = str(source_identity_ids.get("cms_ccn") or "")
-        legacy_profile_id = ccn_to_facility_id.get(cms_ccn)
-        result["facility_profile_id"] = (
-            legacy_profile_id
-            if legacy_profile_id is not None
-            else ("canonical" if result.get("canonical_facility_id") else None)
-        )
-
-    duration_ms = round((time.perf_counter() - started) * 1000, 2)
-    logger.info(
-        "decision_request_completed result_count=%s total_candidates_scored=%s duration_ms=%s",
-        response.get("result_count"),
-        response.get("total_candidates_scored"),
-        duration_ms,
-    )
-
-    return response
-
-
-@app.post("/decision-engine/personal-report", response_model=PersonalDecisionReportOut)
-def post_personal_decision_report(payload: PersonalDecisionReportRequestIn, db: Session = Depends(get_db)):
-    """Presentation-only report over an already-computed decision-engine result.
-
-    Projects a decision-engine result through the fail-closed Personal Decision Report
-    contract -- no new research, ranking, or decision authority is exercised here.
-
-    If the caller already has a decision_result (e.g. a client that just rendered
-    /decision-engine/recommendations for the identical questionnaire_state /
-    natural_language_query / limit), it can be passed straight through, skipping a
-    second, redundant, multi-minute AI-ranking pass for data the caller already has --
-    the same trust model /decision-engine/comparison-context already uses for
-    patient_needs_profile. Only the shape of the report built from it is validated;
-    the report cannot escape into a wider recommendation-visibility state than
-    decision_result's own canonical_decision_state already grants.
-
-    Every call is remembered as a case (or, with case_token, appended to an existing
-    one) so a client can request an updated report later -- per the intended workflow,
-    24-72h after the preliminary report while facilities are verified -- without
-    re-submitting their whole questionnaire. Passing case_token loads that case's
-    stored inputs and ignores questionnaire_state/natural_language_query/limit on the
-    request; decision_result is still honored if given, but an updated report should
-    normally omit it so the pipeline re-runs against current facility data.
-    """
-
-    if payload.case_token:
-        case = get_case_by_token(db, payload.case_token)
-        if case is None:
-            raise HTTPException(status_code=404, detail=f"Unknown case_token: {payload.case_token}")
-        inputs = case_inputs(case)
-    else:
-        case = create_case(
-            db,
-            questionnaire_state=payload.questionnaire_state,
-            natural_language_query=payload.natural_language_query or "",
-            limit=payload.limit,
-        )
-        inputs = case_inputs(case)
-
-    decision_result = payload.decision_result
-    if decision_result is None:
-        decision_result = run_patient_decision_engine(
-            questionnaire_state=inputs["questionnaire_state"],
-            natural_language_query=inputs["natural_language_query"],
-            limit=inputs["limit"],
-        )
-    try:
-        report_payload = build_personal_decision_report(
-            questionnaire_state=inputs["questionnaire_state"],
-            natural_language_query=inputs["natural_language_query"],
-            decision_result=decision_result,
-        )
-    except ReportContractViolation as exc:
-        raise HTTPException(status_code=500, detail=f"Report contract violation: {exc}") from exc
-
-    serialized = serialize_personal_report_payload(report_payload)
-    save_snapshot(db, case_id=case.id, report_ready=report_payload.report_ready, report=serialized)
-    serialized["case_token"] = case.case_token
-    return serialized
-
-
-@app.post("/decision-engine/comparison-context", response_model=PatientComparisonContextOut)
-def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
-    return build_patient_comparison_context(payload.canonical_facility_ids, payload.patient_needs_profile)
-
-
-@app.post("/intelligence/run", response_model=IntelligenceRunSummaryOut)
-async def run_intelligence(facility_id: Optional[int] = Query(default=None), db: Session = Depends(get_db)):
-    if facility_id is not None:
-        facility = db.query(Facility).filter(Facility.id == facility_id).first()
-        if not facility:
-            raise HTTPException(status_code=404, detail="Facility not found")
-
-    result = run_intelligence_collection(db, facility_id=facility_id)
-    return IntelligenceRunSummaryOut(
-        processed=int(result["processed"]),
-        facility_ids=[int(value) for value in result["facility_ids"]],
-        update_frequency={str(key): str(value) for key, value in result["update_frequency"].items()},
-    )
-
-
-@app.get("/intelligence/facilities/{id}", response_model=FacilityIntelligenceProfileOut)
-async def get_facility_intelligence_profile(id: int, db: Session = Depends(get_db)):
-    profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == id).first()
-    if not profile:
-        facility = db.query(Facility).filter(Facility.id == id).first()
-        if not facility:
-            raise HTTPException(status_code=404, detail="Facility not found")
-        run_intelligence_collection(db, facility_id=id)
-        profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == id).first()
-
-    if not profile:
-        raise HTTPException(status_code=500, detail="Intelligence profile generation failed")
-
-    return _to_intelligence_profile_out(profile)
-
-
-@app.get("/intelligence/schedule")
-async def intelligence_schedule():
-    return {
-        "update_frequency": UPDATE_FREQUENCY,
-        "policy": "Only publicly available information is used.",
-    }
-
-
-@app.get("/expert-agents/knowledge-reports", response_model=List[AgentKnowledgeReportSummaryOut])
-async def list_agent_knowledge_reports(db: Session = Depends(get_db)):
-    ensure_reports_available(db)
-    rows = db.query(AgentKnowledgeReportSnapshot).order_by(AgentKnowledgeReportSnapshot.agent_name.asc()).all()
-    return [_to_agent_knowledge_report_summary(row) for row in rows]
-
-
-@app.get("/expert-agents/{agent_key}/knowledge-report", response_model=AgentKnowledgeReportOut)
-async def get_agent_knowledge_report(agent_key: str, db: Session = Depends(get_db)):
-    ensure_reports_available(db)
-    row = db.query(AgentKnowledgeReportSnapshot).filter(AgentKnowledgeReportSnapshot.agent_key == agent_key).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Agent knowledge report not found")
-    return _to_agent_knowledge_report(row)
-
-
-@app.get("/expert-agents/knowledge-reports/search", response_model=AgentKnowledgeSearchOut)
-async def search_agent_knowledge_reports(query: str = Query(..., min_length=2), db: Session = Depends(get_db)):
-    ensure_reports_available(db)
-    term = query.strip().lower()
-    rows = db.query(AgentKnowledgeReportSnapshot).all()
-
-    matched: List[AgentKnowledgeReportSummaryOut] = []
-    for row in rows:
-        payload = _parse_json_object(row.report_json)
-        topics = [str(item).lower() for item in (payload.get("topics_covered") or [])]
-        mission = str(payload.get("mission") or "").lower()
-        haystack = " ".join([row.agent_name.lower(), row.domain.lower(), mission] + topics)
-        if term in haystack:
-            matched.append(_to_agent_knowledge_report_summary(row))
-
-    return AgentKnowledgeSearchOut(query=query, matched_agents=matched)
-
-
-@app.post("/expert-agents/knowledge-reports/refresh", response_model=AgentKnowledgeRefreshOut)
-async def refresh_agent_knowledge_reports(db: Session = Depends(get_db)):
-    result = refresh_all_agent_reports(db, refresh_mode="manual", force=True)
-    return AgentKnowledgeRefreshOut(
-        attempted=int(result.get("attempted", 0)),
-        refreshed=int(result.get("refreshed", 0)),
-        failures=int(result.get("failures", 0)),
-        skipped=int(result.get("skipped", 0)),
-        retried=int(result.get("retried", 0)),
-        incidents=int(result.get("incidents", 0)),
-        agents=[AgentKnowledgeRefreshAgentOut(**row) for row in result.get("agents", [])],
-    )
-
-
-@app.get("/expert-agents/freshness/states")
-async def knowledge_freshness_states():
-    return {
-        "states": sorted(FRESHNESS_STATES),
-        "ttl_policy_seconds": TTL_POLICY_SECONDS,
-    }
-
-
-@app.get("/supervisor/overview", response_model=KnowledgeSupervisorOut)
-async def supervisor_overview(db: Session = Depends(get_db)):
-    summary = compute_supervisor_metrics(db)
-    return KnowledgeSupervisorOut(**summary)
-
-
-@app.post("/supervisor/run-cycle")
-async def supervisor_run_cycle(db: Session = Depends(get_db)):
-    ensure_reports_available(db)
-    return run_supervisor_cycle(db)
-
-
-@app.get("/supervisor/incidents")
-async def supervisor_incidents(limit: int = Query(default=200, ge=1, le=1000), db: Session = Depends(get_db)):
-    return {"incidents": recent_incidents(db, limit=limit)}
-
-
-@app.get("/supervisor/stale-usage")
-async def supervisor_stale_usage(hours: int = Query(default=24, ge=1, le=24 * 30), db: Session = Depends(get_db)):
-    return stale_usage_summary(db, hours=hours)
-
-
-@app.post("/recommendation/knowledge-guard", response_model=RecommendationGuardCheckOut)
-async def recommendation_knowledge_guard(payload: RecommendationGuardCheckIn, db: Session = Depends(get_db)):
-    ensure_reports_available(db)
-    decisions: List[RecommendationGuardDecisionOut] = []
-    for agent_key in payload.agent_keys:
-        decision = recommendation_guard_decision(
-            db,
-            recommendation_key=payload.recommendation_key,
-            resident_key=payload.resident_key,
-            agent_key=agent_key,
-            min_confidence=float(payload.min_confidence),
-            allow_stale=bool(payload.allow_stale),
-        )
-        decisions.append(RecommendationGuardDecisionOut(**decision))
-
-    return RecommendationGuardCheckOut(recommendation_key=payload.recommendation_key, decisions=decisions)
-
-
-@app.post("/human-intelligence", response_model=HumanIntelligenceOut)
-async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db)):
-    def clip_optional(value: Optional[float]) -> Optional[float]:
-        if value is None:
-            return None
-        return clip_0_100(value)
-
-    record = HumanIntelligenceScore(
-        resident_key=payload.resident_key,
-        relationship=payload.relationship,
-        age_group=payload.age_group,
-        social_profile_score=clip_0_100(payload.social_profile_score),
-        family_support_score=clip_0_100(payload.family_support_score),
-        cultural_match_score=clip_0_100(payload.cultural_match_score),
-        loneliness_risk_score=clip_0_100(payload.loneliness_risk_score),
-        transition_risk_score=clip_0_100(payload.transition_risk_score),
-        future_care_score=clip_0_100(payload.future_care_score),
-        social_fit_score=clip_optional(payload.social_fit_score),
-        family_fit_score=clip_optional(payload.family_fit_score),
-        language_match_score=clip_optional(payload.language_match_score),
-        religious_fit_score=clip_optional(payload.religious_fit_score),
-        language_fit_score=clip_optional(payload.language_fit_score),
-        cultural_fit_score=clip_optional(payload.cultural_fit_score),
-        food_fit_score=clip_optional(payload.food_fit_score),
-        family_engagement_score=clip_optional(payload.family_engagement_score),
-        community_style_score=clip_optional(payload.community_style_score),
-        independence_fit_score=clip_optional(payload.independence_fit_score),
-        transition_success_probability=clip_optional(payload.transition_success_probability),
-        metadata_json=payload.metadata_json,
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-    return HumanIntelligenceOut.model_validate(record)
-
-
-@app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut)
-def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db)):
-    record = AdaptiveQuestionResponse(
-        resident_key=payload.resident_key,
-        question_key=payload.question_key,
-        answer=payload.answer,
-        signal_type=payload.signal_type,
-        signal_json=payload.signal_json,
-        weights_json=payload.weights_json,
-        impact_explanation=payload.impact_explanation,
-        info_gain_score=max(0.0, min(100.0, payload.info_gain_score)),
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-    return AdaptiveQuestionResponseOut.model_validate(record)
-
-
-@app.post("/resident-outcomes", response_model=ResidentOutcomeOut)
-async def create_resident_outcome(payload: ResidentOutcomeIn, db: Session = Depends(get_db)):
-    if payload.human_intelligence_score_id is not None:
-        score_record = db.query(HumanIntelligenceScore).filter(HumanIntelligenceScore.id == payload.human_intelligence_score_id).first()
-        if not score_record:
-            raise HTTPException(status_code=404, detail="Human intelligence score not found")
-
-    if payload.facility_id is not None:
-        facility = db.query(Facility).filter(Facility.id == payload.facility_id).first()
-        if not facility:
-            raise HTTPException(status_code=404, detail="Facility not found")
-
-    record = ResidentOutcome(
-        resident_key=payload.resident_key,
-        human_intelligence_score_id=payload.human_intelligence_score_id,
-        facility_id=payload.facility_id,
-        successful_adjustment=1 if payload.successful_adjustment else 0,
-        loneliness_event=1 if payload.loneliness_event else 0,
-        relocated_within_24m=1 if payload.relocated_within_24m else 0,
-        notes=payload.notes,
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-
-    return ResidentOutcomeOut(
-        id=record.id,
-        resident_key=record.resident_key,
-        human_intelligence_score_id=record.human_intelligence_score_id,
-        facility_id=record.facility_id,
-        successful_adjustment=bool(record.successful_adjustment),
-        loneliness_event=bool(record.loneliness_event),
-        relocated_within_24m=bool(record.relocated_within_24m),
-        notes=record.notes,
-    )
-
-
-@app.get("/validation-feedback", response_model=ValidationFeedbackOut)
-async def get_validation_feedback(db: Session = Depends(get_db)):
-    outcomes_count = db.query(func.count(ResidentOutcome.id)).scalar() or 0
-    if outcomes_count == 0:
-        return ValidationFeedbackOut(
-            outcomes_count=0,
-            adjustment_success_rate=0.0,
-            loneliness_event_rate=0.0,
-            relocation_rate_24m=0.0,
-            average_scores_for_successful_adjustment={
-                "social_profile_score": 0.0,
-                "family_support_score": 0.0,
-                "cultural_match_score": 0.0,
-                "loneliness_risk_score": 0.0,
-                "transition_risk_score": 0.0,
-                "future_care_score": 0.0,
-            },
-            average_scores_for_unsuccessful_adjustment={
-                "social_profile_score": 0.0,
-                "family_support_score": 0.0,
-                "cultural_match_score": 0.0,
-                "loneliness_risk_score": 0.0,
-                "transition_risk_score": 0.0,
-                "future_care_score": 0.0,
-            },
-        )
-
-    success_count = db.query(func.sum(ResidentOutcome.successful_adjustment)).scalar() or 0
-    loneliness_count = db.query(func.sum(ResidentOutcome.loneliness_event)).scalar() or 0
-    relocation_count = db.query(func.sum(ResidentOutcome.relocated_within_24m)).scalar() or 0
-
-    return ValidationFeedbackOut(
-        outcomes_count=int(outcomes_count),
-        adjustment_success_rate=round((float(success_count) / float(outcomes_count)) * 100, 2),
-        loneliness_event_rate=round((float(loneliness_count) / float(outcomes_count)) * 100, 2),
-        relocation_rate_24m=round((float(relocation_count) / float(outcomes_count)) * 100, 2),
-        average_scores_for_successful_adjustment=_group_average_scores(db, 1),
-        average_scores_for_unsuccessful_adjustment=_group_average_scores(db, 0),
-    )
-
-
-@app.post("/provider/facilities/{facility_id}/activities/import", response_model=ActivityImportOut)
-async def import_facility_activities(
-    facility_id: int,
-    payload: ActivityImportIn,
-    db: Session = Depends(get_db),
-):
-    facility = db.query(Facility).filter(Facility.id == facility_id).first()
-    if not facility:
-        raise HTTPException(status_code=404, detail="Facility not found")
-
-    source_type = (payload.source_type or "").strip().lower()
-    if source_type not in {"google_calendar", "ics", "csv", "pdf"}:
-        raise HTTPException(status_code=400, detail="source_type must be one of: google_calendar, ics, csv, pdf")
-
-    try:
-        result = import_activity_categories(
-            db=db,
-            facility_id=facility_id,
-            source_type=source_type,
-            content=payload.content,
-            updated_by_user_id=payload.updated_by_user_id,
-        )
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-    return ActivityImportOut(
-        facility_id=int(result["facility_id"]),
-        source_type=str(result["source_type"]),
-        imported_at=str(result["imported_at"]),
-        categories=[ActivityCategoryOut(**item) for item in result["categories"]],
-        privacy_policy=str(result["privacy_policy"]),
-    )
-
-
-@app.get("/provider/facilities/{facility_id}/activities/categories", response_model=List[ActivityCategoryOut])
-async def get_facility_activity_categories(
-    facility_id: int,
-    db: Session = Depends(get_db),
-):
-    facility = db.query(Facility).filter(Facility.id == facility_id).first()
-    if not facility:
-        raise HTTPException(status_code=404, detail="Facility not found")
-
-    return [ActivityCategoryOut(**item) for item in get_public_activity_categories(db, facility_id)]
-
-
-@app.get("/provider/activity-intelligence/policy")
-async def get_activity_intelligence_policy():
-    return {
-        "supported_imports": ["google_calendar", "ics", "csv", "pdf"],
-        "stored_public_categories": ALLOWED_ACTIVITY_CATEGORIES,
-        "privacy": "Exact schedules are never exposed publicly; only category-level availability and confidence are returned.",
-    }
-
-
-@app.post("/provider/facilities/{facility_id}/verification/persist", response_model=ProviderPersistOut)
-async def persist_provider_verification_answers(
-    facility_id: int,
-    payload: ProviderPersistIn,
-    db: Session = Depends(get_db),
-):
-    facility = db.query(Facility).filter(Facility.id == facility_id).first()
-    if not facility:
-        raise HTTPException(status_code=404, detail="Facility not found")
-
-    result = apply_provider_verification_answers(
-        db=db,
-        facility_id=facility_id,
-        answers=[
-            {
-                "capability_key": item.capability_key,
-                "value": item.value,
-                "source": item.source,
-            }
-            for item in payload.answers
-        ],
-        verified_by_user_id=payload.verified_by_user_id,
-        verification_method=payload.verification_method,
-        request_subject=payload.request_subject,
-        request_body=payload.request_body,
-    )
-
-    return ProviderPersistOut(
-        facility_id=int(result["facility_id"]),
-        request_id=int(result["request_id"]),
-        persisted_answers=int(result["persisted_answers"]),
-        conflict_records=int(result["conflict_records"]),
-    )
-
-
-@app.get("/provider/facilities/{facility_id}/memory", response_model=FacilityMemoryOut)
-async def get_facility_memory(
-    facility_id: int,
-    db: Session = Depends(get_db),
-):
-    facility = db.query(Facility).filter(Facility.id == facility_id).first()
-    if not facility:
-        raise HTTPException(status_code=404, detail="Facility not found")
-
-    memory = facility_memory_overlay(db, facility_id)
-    return FacilityMemoryOut(
-        facility_id=int(memory["facility_id"]),
-        overall_confidence=float(memory["overall_confidence"]),
-        capabilities=[MemoryCapabilityOut(**item) for item in memory["capabilities"]],
-    )
-
-
-@app.post("/provider/facilities/{facility_id}/identity/register/start", response_model=IdentityRegistrationStartOut)
-async def provider_identity_register_start(
-    facility_id: int,
-    payload: IdentityRegistrationStartIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        result = start_email_verification(
-            db=db,
-            facility_id=facility_id,
-            email=payload.email,
-            full_name=payload.full_name,
-            role=payload.role,
-            ip_address=payload.ip_address,
-        )
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-    return IdentityRegistrationStartOut(**result)
-
-
-@app.post("/provider/facilities/{facility_id}/identity/register/verify", response_model=IdentityVerificationCompleteOut)
-async def provider_identity_register_verify(
-    facility_id: int,
-    payload: IdentityVerificationCompleteIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        result = complete_email_verification(
-            db=db,
-            facility_id=facility_id,
-            email=payload.email,
-            code=payload.code,
-        )
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-    return IdentityVerificationCompleteOut(**result)
-
-
-@app.post("/provider/facilities/{facility_id}/identity/license/validate", response_model=LicenseValidationOut)
-async def provider_identity_license_validate(
-    facility_id: int,
-    payload: LicenseValidationIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        result = validate_license_ownership(
-            db=db,
-            facility_id=facility_id,
-            cms_provider_id=payload.cms_provider_id,
-            ahca_license_number=payload.ahca_license_number,
-            medicare_provider_number=payload.medicare_provider_number,
-            legal_name=payload.legal_name,
-            legal_address=payload.legal_address,
-            domain=payload.domain,
-        )
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-    return LicenseValidationOut(**result)
-
-
-@app.post("/provider/identity/access-check", response_model=AccessCheckOut)
-async def provider_identity_access_check(payload: AccessCheckIn):
-    return AccessCheckOut(allowed=role_can_edit_category(payload.role, payload.category))
-
-
-@app.post("/provider/facilities/{facility_id}/identity/field-update", response_model=FieldUpdateOut)
-async def provider_identity_field_update(
-    facility_id: int,
-    payload: FieldUpdateIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        result = apply_facility_field_update(
-            db=db,
-            facility_id=facility_id,
-            user_id=payload.user_id,
-            field_name=payload.field_name,
-            new_value=payload.new_value,
-            category=payload.category,
-            ip_address=payload.ip_address,
-        )
-    except PermissionError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-    return FieldUpdateOut(**result)
-
-
-@app.post("/provider/facilities/{facility_id}/identity/audit/{audit_id}/revert", response_model=RevertAuditOut)
-async def provider_identity_revert_audit(
-    facility_id: int,
-    audit_id: int,
-    payload: RevertAuditIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        result = revert_audit_change(
-            db=db,
-            facility_id=facility_id,
-            audit_id=audit_id,
-            reverted_by_user_id=payload.reverted_by_user_id,
-            ip_address=payload.ip_address,
-        )
-    except PermissionError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-    return RevertAuditOut(**result)
-
-
-@app.post("/provider/facilities/{facility_id}/identity/staff/invite", response_model=IdentityRegistrationStartOut)
-async def provider_identity_staff_invite(
-    facility_id: int,
-    payload: StaffInviteIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        result = invite_staff_member(
-            db=db,
-            facility_id=facility_id,
-            inviter_user_id=payload.inviter_user_id,
-            email=payload.email,
-            full_name=payload.full_name,
-            role=payload.role,
-            ip_address=payload.ip_address,
-        )
-    except PermissionError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-    return IdentityRegistrationStartOut(**result)
-
-
-@app.post("/provider/facilities/{facility_id}/identity/role/change", response_model=RoleChangeOut)
-async def provider_identity_role_change(
-    facility_id: int,
-    payload: RoleChangeIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        result = request_role_change(
-            db=db,
-            facility_id=facility_id,
-            actor_user_id=payload.actor_user_id,
-            target_user_id=payload.target_user_id,
-            new_role=payload.new_role,
-        )
-    except PermissionError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-    return RoleChangeOut(**result)
-
-
-@app.get("/provider/facilities/search", response_model=List[ClaimSearchOut])
-async def provider_facility_search(
-    q: str,
-    state: Optional[str] = None,
-    city: Optional[str] = None,
-    limit: int = 25,
-    db: Session = Depends(get_db),
-):
-    return [ClaimSearchOut(**row) for row in search_claimable_facilities(db, q, state, city, limit)]
-
-
-@app.get("/provider/facilities/{facility_id}/profile")
-async def provider_facility_profile(facility_id: int, db: Session = Depends(get_db)):
-    try:
-        return facility_profile_snapshot(db, facility_id)
-    except ValueError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@app.put("/provider/facilities/{facility_id}/capabilities", response_model=CapabilitySaveOut)
-async def provider_facility_save_capabilities(
-    facility_id: int,
-    payload: CapabilitySaveIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        result = save_capabilities(
-            db=db,
-            facility_id=facility_id,
-            user_id=payload.user_id,
-            answers=payload.answers,
-            ip_address=payload.ip_address,
-        )
-    except PermissionError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-    return CapabilitySaveOut(**result)
-
-
-@app.post("/provider/facilities/{facility_id}/photos")
-async def provider_facility_add_photo(
-    facility_id: int,
-    payload: PhotoAddIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        return add_photo(
-            db=db,
-            facility_id=facility_id,
-            user_id=payload.user_id,
-            category=payload.category,
-            url=payload.url,
-            caption=payload.caption,
-            ip_address=payload.ip_address,
-        )
-    except PermissionError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-
-
-@app.delete("/provider/facilities/{facility_id}/photos/{photo_id}")
-async def provider_facility_remove_photo(
-    facility_id: int,
-    photo_id: int,
-    payload: PhotoRemoveIn,
-    db: Session = Depends(get_db),
-):
-    try:
-        return deactivate_photo(
-            db=db,
-            facility_id=facility_id,
-            user_id=payload.user_id,
-            photo_id=photo_id,
-            ip_address=payload.ip_address,
-        )
-    except PermissionError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@app.get("/provider/facilities/{facility_id}/completeness")
-async def provider_facility_completeness(facility_id: int, db: Session = Depends(get_db)):
-    return recompute_completeness(db, facility_id)
-
-
-@app.post("/provider/identity/reverification/run")
-async def provider_identity_reverification_run(db: Session = Depends(get_db)):
-    return run_annual_reverification(db)
-
-
-@app.get("/executive-report/latest")
-async def executive_report_latest():
-    latest = get_latest_executive_report()
-    if not latest:
-        raise HTTPException(status_code=404, detail="No executive report generated yet")
-    return latest
-
-
-@app.get("/executive-report/latest/full")
-async def executive_report_latest_full():
-    payload = get_executive_report_payload()
-    if not payload:
-        raise HTTPException(status_code=404, detail="No executive report generated yet")
-    return payload
-
-
-@app.get("/executive-report/by-id/{report_id}")
-async def executive_report_by_id(report_id: str):
-    payload = get_executive_report_payload(report_id=report_id)
-    if not payload:
-        raise HTTPException(status_code=404, detail="Executive report not found")
-    return payload
-
-
-@app.get("/executive-report/history")
-async def executive_report_history(limit: int = Query(default=30, ge=1, le=365)):
-    return {"reports": get_executive_report_history(limit=limit)}
-
-
-@app.get("/executive-report/compare")
-async def executive_report_compare():
-    return compare_latest_vs_previous()
-
-
-@app.get("/evidence/traceability/audit")
-async def evidence_traceability_audit(db: Session = Depends(get_db)):
-    return audit_traceability(db)
-
-
-@app.get("/evidence/facilities/{facility_id}/material-claims")
-async def evidence_facility_material_claims(facility_id: int, db: Session = Depends(get_db)):
-    payload = facility_material_claim_trace(db, facility_id)
-    if payload.get("error") == "facility_not_found":
-        raise HTTPException(status_code=404, detail="Facility not found")
-    return payload
-
-
-@app.get("/evidence/recommendations/{recommendation_key}/score-trace")
-async def evidence_recommendation_score_trace(recommendation_key: str, db: Session = Depends(get_db)):
-    return recommendation_score_trace(db, recommendation_key)
+def _to_agent_knowledge_report_summary(row: AgentKnowמ5򚤺{-Ωܪםٝ\ۈ٘ۛ[Y[٘][ۑݘ\ِڙXړݝ
+٘ۛ[Y[٘][ۗڙ^O\^[ؙܙXۛ[Y[٘][ۗڙ^KXڜڛۜϙXڜڛۜʂИ\ܛܝ
+˚[X[˚[ݙ[YؙٛHˈٜܛۜٗۛٙ[R[X[қݙ[YؙٛSݝ
+B؜ޛ؈YȘܙX]Wڝ[X[ך[ݙ[YؙٛJ^[ؙȒ[X[қݙ[YؙٛR[ˈΈٜܚ[ۈH\[ٜʙٝ٘ʊNYȘۚ\ۜ[ۘ[
+؛YNȓܝ[ۘ[ٛ؝JHOȓܝ[ۘ[ٛ؝NYȝ؛YH\ȓَۛٝ\ۈۛقȈٝ\ۈۚ\̗̌
+؛YJB٘ۜوH[X[қݙ[YؙٛT؛ܙJȈٜڙ[ݗڙ^O\^[ؙܙ\ڙ[ݗڙ^KȈٛ][ۜښ\\^[ؙܙ[][ۜښ\ȈYٜٗ۝\\^[ؙؙٜٗ۝\Ȉۘژ[ܜۙڛWܘُۜXۚ\̗̌
+^[ؙܛؚX[ܜۙڛWܘۜيKȈ؛Z[Wܝ\ܝܘُۜXۚ\̗̌
+^[ؙ٘[Z[Wܝ\ܝܘۜيKȈݛ\؛ۘ]ڗܘُۜXۚ\̗̌
+^[ؙ؝[\؛ۘ]ڗܘۜيKȈۙ[[ٜܗܚ\ڗܘُۜXۚ\̗̌
+^[ؙۛۙ[[ٜܗܚ\ڗܘۜيKȈ؛ܚ][ۗܚ\ڗܘُۜXۚ\̗̌
+^[ؙݜ؛ܚ][ۗܚ\ڗܘۜيKȈݝ\ؘٗ\ٗܘُۜXۚ\̗̌
+^[ؙٝ]\ؘٗ\ٗܘۜيKȈۘژ[ٚ]ܘُۜXۚ\ۜ[ۘ[
+^[ؙܛؚX[ٚ]ܘۜيKȈ؛Z[Wٚ]ܘُۜXۚ\ۜ[ۘ[
+^[ؙ٘[Z[Wٚ]ܘۜيKȈ[ٝXYٗۘ]ڗܘُۜXۚ\ۜ[ۘ[
+^[ؙۘ[ٝXYٗۘ]ڗܘۜيKȈٛYڛݜיڝܘُۜXۚ\ۜ[ۘ[
+^[ؙܙ[YڛݜיڝܘۜيKȈ[ٝXYٗٚ]ܘُۜXۚ\ۜ[ۘ[
+^[ؙۘ[ٝXYٗٚ]ܘۜيKȈݛ\؛ٚ]ܘُۜXۚ\ۜ[ۘ[
+^[ؙ؝[\؛ٚ]ܘۜيKȈۛٗٚ]ܘُۜXۚ\ۜ[ۘ[
+^[ؙٛۙٚ]ܘۜيKȈ؛Z[Wٛ٘YٛY[ݗܘُۜXۚ\ۜ[ۘ[
+^[ؙ٘[Z[Wٛ٘YٛY[ݗܘۜيKȈۛ[][ڝWܝ[WܘُۜXۚ\ۜ[ۘ[
+^[ؙ؛ۛ][ڝWܝ[WܘۜيKȈ[ٙ\[ٙ[ؙWٚ]ܘُۜXۚ\ۜ[ۘ[
+^[ؙڛٙ\[ٙ[ؙWٚ]ܘۜيKȈ؛ܚ][ۗܝXؙ\ܗܜؘۘڛ]OXۚ\ۜ[ۘ[
+^[ؙݜ؛ܚ][ۗܝXؙ\ܗܜؘۘڛ]JKȈY]Y]WڜۛϜ^[ؙۙ]Y]Wڜۛ˂Ȉ
+BȈ˘Y
+٘ۜيBȈ˘ۛ[Z]
+
+BȈ˜ٙܙ\ڊ٘ۜيBȈٝ\ۈ[X[қݙ[YؙٛSݝۛٙ[ݘ[Y]J٘ۜيBИ\ܛܝ
+˚[X[˚[ݙ[YؙٛKؙ\]ً\ٜܛۜوˈٜܛۜٗۛٙ[PY\]ٔ]Y\ݚ[۔ٜܛۜٓݝ
+BٙYȘܙX]Wؙ\]ٗܙ\ܛۜي^[ؙȐY\]ٔ]Y\ݚ[۔ٜܛْۜ[ˈΈٜܚ[ۈH\[ٜʙٝ٘ʊN٘ۜوHY\]ٔ]Y\ݚ[۔ٜܛۜيȈٜڙ[ݗڙ^O\^[ؙܙ\ڙ[ݗڙ^KȈ]Y\ݚ[ۗڙ^O\^[ؙܝY\ݚ[ۗڙ^KȈ[ܝٜϜ^[ؙ؛ܝٜ˂Ȉڙۘ[ݞ\O\^[ؙܚYۘ[ݞ\KȈڙۘ[ڜۛϜ^[ؙܚYۘ[ڜۛ˂ȈٚYڝךܛۏ\^[ؙݙZYڝךܛۋȈ[\Xݗٞ[؝[ۏ\^[ؙڛ\Xݗٞ[؝[ۋȈ[ٛיؚ[ל؛ܙO[X^
+̋Z[ʌL̋^[ؙڛٛיؚ[ל؛ܙJJKȈ
+BȈ˘Y
+٘ۜيBȈ˘ۛ[Z]
+
+BȈ˜ٙܙ\ڊ٘ۜيBȈٝ\ۈY\]ٔ]Y\ݚ[۔ٜܛۜٓݝۛٙ[ݘ[Y]J٘ۜيBИ\ܛܝ
+˜ٜڙ[݋[ݝۛY\ȋٜܛۜٗۛٙ[Tٜڙ[ݓݝۛYSݝ
+B؜ޛ؈YȘܙX]Wܙ\ڙ[ݗ۝]ۛYJ^[ؙȔٜڙ[ݓݝۛYR[ˈΈٜܚ[ۈH\[ٜʙٝ٘ʊNYȜ^[ؙڝ[X[ך[ݙ[YؙٛWܘۜٗڙ\ț۝َۛ؛ܙWܙXۜوH˜]Y\ފ[X[қݙ[YؙٛT؛ܙJKٚ[\ʒ[X[қݙ[YؙٛT؛ܙKڙOH^[ؙڝ[X[ך[ݙ[YؙٛWܘۜٗڙ
+Kٚ\ܝ
+
+BȈYț۝؛ܙWܙXَۜؚ\و^ٜ[ۊݘ]\טۙOM]Z[Hҝ[X[Ț[ݙ[YؙٛH؛ܙH۝۝[وʂYȜ^[ؙ٘Xڛ]Wڙ\ț۝َۛؘڛ]HH˜]Y\ފؘڛ]JKٚ[\ʑؘڛ]KڙOH^[ؙ٘Xڛ]Wڙ
+Kٚ\ܝ
+
+BȈYț۝ؘڛ]Nؚ\و^ٜ[ۊݘ]\טۙOM]Z[HјXڛ]H۝۝[وʂ٘ۜوHٜڙ[ݓݝۛYJȈٜڙ[ݗڙ^O\^[ؙܙ\ڙ[ݗڙ^KȈ[X[ך[ݙ[YؙٛWܘۜٗڙ\^[ؙڝ[X[ך[ݙ[YؙٛWܘۜٗڙȈؘڛ]Wڙ\^[ؙ٘Xڛ]WڙȈݘؙ\ܙݛؙݜݛY[ݏLHYȜ^[ؙܝXؙ\ܙݛؙݜݛY[݈[وȈۙ[[ٜܗٝٛݏLHYȜ^[ؙۛۙ[[ٜܗ݈ٝٛ[وȈٛؘ]Yݚ][׌͛OLHYȜ^[ؙܙ[ؘ]Yݚ][׌͛H[وȈ۝\Ϝ^[ؙۛݙ\˂Ȉ
+BȈ˘Y
+٘ۜيBȈ˘ۛ[Z]
+
+BȈ˜ٙܙ\ڊ٘ۜيBٝ\ۈٜڙ[ݓݝۛYSݝ
+ȈY\ً٘ۜڙȈٜڙ[ݗڙ^O\ً٘ۜܙ\ڙ[ݗڙ^KȈ[X[ך[ݙ[YؙٛWܘۜٗڙ\ً٘ۜڝ[X[ך[ݙ[YؙٛWܘۜٗڙȈؘڛ]Wڙ\ً٘ۜ٘Xڛ]WڙȈݘؙ\ܙݛؙݜݛY[ݏXۛۊً٘ۜܝXؙ\ܙݛؙݜݛY[݊KȈۙ[[ٜܗٝٛݏXۛۊً٘ۜۛۙ[[ٜܗٝٛ݊KȈٛؘ]Yݚ][׌͛OXۛۊً٘ۜܙ[ؘ]Yݚ][׌͛JKȈ۝\Ϝً٘ۜۛݙ\˂Ȉ
+BИ\ٙ]
+˝؛Y][ۋYٙYؘڈˈٜܛۜٗۛٙ[U؛Y][ۑٙYؘړݝ
+B؜ޛ؈Yșٝݘ[Y][ۗٙYYؘڊΈٜܚ[ۈH\[ٜʙٝ٘ʊNݝۛY\ט۝[݈H˜]Y\ފݛ؋؛ݛ݊ٜڙ[ݓݝۛYKڙ
+JKܘ؛\ʊH܈ȈYțݝۛY\ט۝[݈OHٝ\ۈ؛Y][ۑٙYؘړݝ
+ȈݝۛY\ט۝[ݏLȈYݜݛY[ݗܝXؙ\ܗܘ]OL̋Ȉۙ[[ٜܗٝٛݗܘ]OL̋Ȉٛؘ][ۗܘ]W̍OL̋Ȉ]ؙٜٗܘٜۜיۜלݘؙ\ܙݛؙݜݛY[ݏ^ܛؚX[ܜۙڛWܘۜوΈ̋Ȉ٘[Z[Wܝ\ܝܘۜوΈ̋Ȉ؝[\؛ۘ]ڗܘۜوΈ̋Ȉۛۙ[[ٜܗܚ\ڗܘۜوΈ̋Ȉݜ؛ܚ][ۗܚ\ڗܘۜوΈ̋Ȉٝ]\ؘٗ\ٗܘۜوΈ̋ȈKȈ]ؙٜٗܘٜۜיۜם[ܝXؙ\ܙݛؙݜݛY[ݏ^ܛؚX[ܜۙڛWܘۜوΈ̋Ȉ٘[Z[Wܝ\ܝܘۜوΈ̋Ȉ؝[\؛ۘ]ڗܘۜوΈ̋Ȉۛۙ[[ٜܗܚ\ڗܘۜوΈ̋Ȉݜ؛ܚ][ۗܚ\ڗܘۜوΈ̋Ȉٝ]\ؘٗ\ٗܘۜوΈ̋ȈKȈ
+Bݘؙ\ܗ؛ݛ݈H˜]Y\ފݛ؋ܝ[Jٜڙ[ݓݝۛYKܝXؙ\ܙݛؙݜݛY[݊JKܘ؛\ʊH܈Ȉۙ[[ٜܗ؛ݛ݈H˜]Y\ފݛ؋ܝ[Jٜڙ[ݓݝۛYKۛۙ[[ٜܗٝٛ݊JKܘ؛\ʊH܈Ȉٛؘ][ۗ؛ݛ݈H˜]Y\ފݛ؋ܝ[Jٜڙ[ݓݝۛYKܙ[ؘ]Yݚ][׌͛JJKܘ؛\ʊH܈ٝ\ۈ؛Y][ۑٙYؘړݝ
+ȈݝۛY\ט۝[ݏZ[݊ݝۛY\ט۝[݊KȈYݜݛY[ݗܝXؙ\ܗܘ]O\۝[ي
+ۛ؝
+ݘؙ\ܗ؛ݛ݊Hșۛ؝
+ݝۛY\ט۝[݊JH
+ȌLʋȈۙ[[ٜܗٝٛݗܘ]O\۝[ي
+ۛ؝
+ۙ[[ٜܗ؛ݛ݊Hșۛ؝
+ݝۛY\ט۝[݊JH
+ȌLʋȈٛؘ][ۗܘ]W̍O\۝[ي
+ۛ؝
+ٛؘ][ۗ؛ݛ݊Hșۛ؝
+ݝۛY\ט۝[݊JH
+ȌLʋȈ]ؙٜٗܘٜۜיۜלݘؙ\ܙݛؙݜݛY[ݏWٜ۝\؝ؙٜٗܘٜۜʙˈJKȈ]ؙٜٗܘٜۜיۜם[ܝXؙ\ܙݛؙݜݛY[ݏWٜ۝\؝ؙٜٗܘٜۜʙˈ
+KȈ
+BИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKؘݚ]ڝY\˚[\ܝˈٜܛۜٗۛٙ[PXݚ]ڝR[\ܝݝ
+B؜ޛ؈YȚ[\ܝ٘Xڛ]Wؘݚ]ڝY\ʂȈؘڛ]WڙȚ[݋Ȉ^[ؙȐXݚ]ڝR[\ܝ[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎؘڛ]HH˜]Y\ފؘڛ]JKٚ[\ʑؘڛ]KڙOHؘڛ]Wڙ
+Kٚ\ܝ
+
+BȈYț۝ؘڛ]Nؚ\و^ٜ[ۊݘ]\טۙOM]Z[HјXڛ]H۝۝[وʂ۝\ؙWݞ\HH
+^[ؙܛݜؙWݞ\H܈ȊKܝڜ
+
+Kۛݙ\ʊBȈYȜ۝\ؙWݞ\H۝[ȞșۛٛWؘ[[٘\ȋژ܈ˈ؜݈ˈܙȟNؚ\و^ٜ[ۊݘ]\טۙOM]Z[HܛݜؙWݞ\H]\݈وۙHَșۛٛWؘ[[٘\ˈX܋ܝˈȊBގٜݛH[\ܝؘݚ]ڝWؘ]Yۜڙ\ʂȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ۝\ؙWݞ\O\۝\ؙWݞ\KȈۛݙ[ݏ\^[ؙ؛۝[݋Ȉ\]Y؞WݜٜךY\^[ؙݜ]Y؞WݜٜךYȈ
+BȈ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂ٝ\ۈXݚ]ڝR[\ܝݝ
+Ȉؘڛ]WڙZ[݊ٜݛșؘڛ]Wڙ׊KȈ۝\ؙWݞ\O\ݜʜٜݛȜ۝\ؙWݞ\H׊KȈ[\ܝY؝\ݜʜٜݛȚ[\ܝY؝׊KȈ؝Yۜڙ\ϖИݚ]ڝP؝Yۜޓݝ
+
+ʚ][JHۜȚ][H[ȜٜݛȘ؝Yۜڙ\ȗWKȈڝؘޗܛۚXޏ\ݜʜٜݛȜڝؘޗܛۚXވ׊KȈ
+BИ\ٙ]
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKؘݚ]ڝY\˘؝Yۜڙ\ȋٜܛۜٗۛٙ[S\ݖИݚ]ڝP؝YۜޓݝJB؜ޛ؈Yșٝ٘Xڛ]Wؘݚ]ڝWؘ]Yۜڙ\ʂȈؘڛ]WڙȚ[݋ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎؘڛ]HH˜]Y\ފؘڛ]JKٚ[\ʑؘڛ]KڙOHؘڛ]Wڙ
+Kٚ\ܝ
+
+BȈYț۝ؘڛ]Nؚ\و^ٜ[ۊݘ]\טۙOM]Z[HјXڛ]H۝۝[وʂٝ\ۈИݚ]ڝP؝Yۜޓݝ
+
+ʚ][JHۜȚ][H[șٝܝXۚXטXݚ]ڝWؘ]Yۜڙ\ʙˈؘڛ]Wڙ
+WBИ\ٙ]
+˜۝ڙ\˘Xݚ]ڝKZ[ݙ[YؙٛKܛۚXވʂ؜ޛ؈Yșٝؘݚ]ڝWڛݙ[YؙٛWܛۚXފ
+Nٝ\ۈܝ\ܝYڛ\ܝȎȖșۛٛWؘ[[٘\ȋژ܈ˈ؜݈ˈܙȗKȈܝܙYܝXۚXט؝Yۜڙ\ȎȐSՑQАՒUҕWАUQӔґT˂ȈܜڝؘވΈўX݈ؚY[\Ș\وٜٝș^ܙYXۚX۞NțۛH؝Yۜދ[]ٛ]ؚ[Xڛ]H[وۛٚY[ؙH\وٝ\ۙYȋȈBИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKݙ\ڙژ؝[ۋܙ\ܚ\݈ˈٜܛۜٗۛٙ[T۝ڙ\ԙ\ܚ\ݓݝ
+B؜ޛ؈YȜ\ܚ\ݗܜ۝ڙ\םٜڙژ؝[ۗ؛ܝٜ܊Ȉؘڛ]WڙȚ[݋Ȉ^[ؙȔ۝ڙ\ԙ\ܚ\ݒ[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎؘڛ]HH˜]Y\ފؘڛ]JKٚ[\ʑؘڛ]KڙOHؘڛ]Wڙ
+Kٚ\ܝ
+
+BȈYț۝ؘڛ]Nؚ\و^ٜ[ۊݘ]\טۙOM]Z[HјXڛ]H۝۝[وʂٜݛH\Wܜ۝ڙ\םٜڙژ؝[ۗ؛ܝٜ܊Ȉϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ[ܝٜ܏Vؘ\Xڛ]Wڙ^HΈ][Kؘ\Xڛ]Wڙ^KȈݘ[YHΈ][Kݘ[YKȈܛݜؙHΈ][KܛݜؙKȈBȈۜȚ][H[Ȝ^[ؙ؛ܝٜ܂ȈKȈٜڙڙY؞WݜٜךY\^[ؙݙ\ڙڙY؞WݜٜךYȈٜڙژ؝[ۗۙ]ُ\^[ؙݙ\ڙژ؝[ۗۙ]ًȈٜ]Y\ݗܝXڙXݏ\^[ؙܙ\]Y\ݗܝXڙX݋Ȉٜ]Y\ݗ؛ٞO\^[ؙܙ\]Y\ݗ؛ٞKȈ
+Bٝ\ۈ۝ڙ\ԙ\ܚ\ݓݝ
+Ȉؘڛ]WڙZ[݊ٜݛșؘڛ]Wڙ׊KȈٜ]Y\ݗڙZ[݊ٜݛȜٜ]Y\ݗڙ׊KȈ\ܚ\ݙY؛ܝٜ܏Z[݊ٜݛȜ\ܚ\ݙY؛ܝٜ܈׊KȈۛٛXݗܙXٜۜϚ[݊ٜݛȘۛٛXݗܙXٜۜȗJKȈ
+BИ\ٙ]
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKۙ[[ܞHˈٜܛۜٗۛٙ[Qؘڛ]SY[[ܞSݝ
+B؜ޛ؈Yșٝ٘Xڛ]Wۙ[[ܞJȈؘڛ]WڙȚ[݋ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎؘڛ]HH˜]Y\ފؘڛ]JKٚ[\ʑؘڛ]KڙOHؘڛ]Wڙ
+Kٚ\ܝ
+
+BȈYț۝ؘڛ]Nؚ\و^ٜ[ۊݘ]\טۙOM]Z[HјXڛ]H۝۝[وʂY[[ܞHHؘڛ]Wۙ[[ܞW۝ٜۘ^Jˈؘڛ]Wڙ
+BȈٝ\ۈؘڛ]SY[[ܞSݝ
+Ȉؘڛ]WڙZ[݊Y[[ܞVșؘڛ]Wڙ׊KȈݙ\؛؛ۙڙ[ؙOYۛ؝
+Y[[ܞVțݙ\؛؛ۙڙ[ؙH׊KȈ؜Xڛ]Y\ϖә[[ܞP؜Xڛ]Sݝ
+
+ʚ][JHۜȚ][H[țY[[ܞVȘ؜Xڛ]Y\ȗWKȈ
+BИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKڙ[ݚ]KܙYڜݙ\˜ݘ\݈ˈٜܛۜٗۛٙ[RY[ݚ]Tٙڜݜ؝[۔ݘ\ݓݝ
+B؜ޛ؈YȜ۝ڙ\ךY[ݚ]WܙYڜݙ\לݘ\݊Ȉؘڛ]WڙȚ[݋Ȉ^[ؙȒY[ݚ]Tٙڜݜ؝[۔ݘ\ݒ[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٜݛHݘ\ݗٛXZ[ݙ\ڙژ؝[ۊȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ[XZ[\^[ؙٛXZ[Ȉݛۘ[YO\^[ؙٝ[ۘ[YKȈۛO\^[ؙܛۙKȈ\ؙٜ܏\^[ؙڜؙٜ܋Ȉ
+BȈ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂ٝ\ۈY[ݚ]Tٙڜݜ؝[۔ݘ\ݓݝ
+
+ʜٜݛ
+BИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKڙ[ݚ]KܙYڜݙ\˝ٜڙވˈٜܛۜٗۛٙ[RY[ݚ]Uٜڙژ؝[ېۛ\]Sݝ
+B؜ޛ؈YȜ۝ڙ\ךY[ݚ]WܙYڜݙ\םٜڙފȈؘڛ]WڙȚ[݋Ȉ^[ؙȒY[ݚ]Uٜڙژ؝[ېۛ\]R[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٜݛHۛ\]WٛXZ[ݙ\ڙژ؝[ۊȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ[XZ[\^[ؙٛXZ[ȈۙO\^[ؙ؛ٙKȈ
+BȈ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂ٝ\ۈY[ݚ]Uٜڙژ؝[ېۛ\]Sݝ
+
+ʜٜݛ
+BИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKڙ[ݚ]KۚXٛܙKݘ[Y]Hˈٜܛۜٗۛٙ[SXٛܙU؛Y][ۓݝ
+B؜ޛ؈YȜ۝ڙ\ךY[ݚ]WۚXٛܙWݘ[Y]JȈؘڛ]WڙȚ[݋Ȉ^[ؙȓXٛܙU؛Y][ے[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٜݛH؛Y]WۚXٛܙW۝ۙ\ܚ\
+Ȉϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈۜל۝ڙ\ךY\^[ؙ؛\ל۝ڙ\ךYȈZؗۚXٛܙW۝[XٜϜ^[ؙؚؗۚXٛܙW۝[Xٜ˂ȈYYX؜ٗܜ۝ڙ\כݛXٜϜ^[ؙۙYX؜ٗܜ۝ڙ\כݛXٜ˂ȈY؛ۘ[YO\^[ؙۙY؛ۘ[YKȈY؛ؙٜ܏\^[ؙۙY؛ؙٜ܋ȈۘZ[Ϝ^[ؙٛۘZ[˂Ȉ
+BȈ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂ٝ\ۈXٛܙU؛Y][ۓݝ
+
+ʜٜݛ
+BИ\ܛܝ
+˜۝ڙ\˚Y[ݚ]Kؘؙ\܋XڙXڈˈٜܛۜٗۛٙ[PXؙ\ܐڙXړݝ
+B؜ޛ؈YȜ۝ڙ\ךY[ݚ]Wؘؙ\ܗؚXڊ^[ؙȐXؙ\ܐڙXڒ[ʎٝ\ۈXؙ\ܐڙXړݝ
+[ݙY\ۛWؘ[יY]ؘ]Yۜފ^[ؙܛۙK^[ؙؘ]YۜފJBИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKڙ[ݚ]KٚY[]\]Hˈٜܛۜٗۛٙ[Qڙ[\]Sݝ
+B؜ޛ؈YȜ۝ڙ\ךY[ݚ]WٚY[ݜ]JȈؘڛ]WڙȚ[݋Ȉ^[ؙȑڙ[\]R[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٜݛH\W٘Xڛ]WٚY[ݜ]JȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ\ٜךY\^[ؙݜٜךYȈڙ[ۘ[YO\^[ؙٚY[ۘ[YKȈٝם؛YO\^[ؙۙ]ם؛YKȈ؝Yۜޏ\^[ؙؘ]YۜދȈ\ؙٜ܏\^[ؙڜؙٜ܋Ȉ
+BȈ^ٜ\ۚ\ܚ[ۑ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOMˈ]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂Ȉ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂ٝ\ۈڙ[\]Sݝ
+
+ʜٜݛ
+BИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKڙ[ݚ]K؝Y]ޘ]Y]ڙKܙ]ٜ݈ˈٜܛۜٗۛٙ[Tٜٝݐ]Y]ݝ
+B؜ޛ؈YȜ۝ڙ\ךY[ݚ]Wܙ]ٜݗ؝Y]
+Ȉؘڛ]WڙȚ[݋Ȉ]Y]ڙȚ[݋Ȉ^[ؙȔٜٝݐ]Y][˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٜݛHٜٝݗ؝Y]ؚ[ٙJȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ]Y]ڙX]Y]ڙȈٜٝݙY؞WݜٜךY\^[ؙܙ]ٜݙY؞WݜٜךYȈ\ؙٜ܏\^[ؙڜؙٜ܋Ȉ
+BȈ^ٜ\ۚ\ܚ[ۑ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOMˈ]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂Ȉ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂ٝ\ۈٜٝݐ]Y]ݝ
+
+ʜٜݛ
+BИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKڙ[ݚ]KܝYًڛݚ]Hˈٜܛۜٗۛٙ[RY[ݚ]Tٙڜݜ؝[۔ݘ\ݓݝ
+B؜ޛ؈YȜ۝ڙ\ךY[ݚ]WܝYٗڛݚ]JȈؘڛ]WڙȚ[݋Ȉ^[ؙȔݘYْ[ݚ]R[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٜݛH[ݚ]WܝYٗۙ[XٜʂȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ[ݚ]\ם\ٜךY\^[ؙڛݚ]\ם\ٜךYȈ[XZ[\^[ؙٛXZ[Ȉݛۘ[YO\^[ؙٝ[ۘ[YKȈۛO\^[ؙܛۙKȈ\ؙٜ܏\^[ؙڜؙٜ܋Ȉ
+BȈ^ٜ\ۚ\ܚ[ۑ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOMˈ]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂Ȉ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂ٝ\ۈY[ݚ]Tٙڜݜ؝[۔ݘ\ݓݝ
+
+ʜٜݛ
+BИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKڙ[ݚ]KܛۙKؚ[ٙHˈٜܛۜٗۛٙ[TۛPژ[ٙSݝ
+B؜ޛ؈YȜ۝ڙ\ךY[ݚ]WܛۙWؚ[ٙJȈؘڛ]WڙȚ[݋Ȉ^[ؙȔۛPژ[ٙR[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٜݛHٜ]Y\ݗܛۙWؚ[ٙJȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈXݛܗݜٜךY\^[ؙؘݛܗݜٜךYȈ\ٙ]ݜٜךY\^[ؙݘ\ٙ]ݜٜךYȈٝלۛO\^[ؙۙ]לۛKȈ
+BȈ^ٜ\ۚ\ܚ[ۑ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOMˈ]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂Ȉ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂ٝ\ۈۛPژ[ٙSݝ
+
+ʜٜݛ
+BИ\ٙ]
+˜۝ڙ\˙ؘڛ]Y\˜٘\ؚˈٜܛۜٗۛٙ[S\ݖЛZ[T٘\ؚݝJB؜ޛ؈YȜ۝ڙ\יؘڛ]WܙX\ؚ
+ȈNȜݜ˂Ȉݘ]Nȓܝ[ۘ[ܝ׈HًۛȈڝNȓܝ[ۘ[ܝ׈HًۛȈ[Z]Ț[݈H͋ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎٝ\ۈЛZ[T٘\ؚݝ
+
+ʜ۝ʈۜȜ۝Ț[Ȝ٘\ؚ؛Z[XXۙW٘Xڛ]Y\ʙˈKݘ]KڝK[Z]
+WBИ\ٙ]
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKܜۙڛHʂ؜ޛ؈YȜ۝ڙ\יؘڛ]WܜۙڛJؘڛ]WڙȚ[݋Έٜܚ[ۈH\[ٜʙٝ٘ʊNގٝ\ۈؘڛ]WܜۙڛWܛ؜ڛ݊ˈؘڛ]Wڙ
+BȈ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂И\ܝ]
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKؘ\Xڛ]Y\ȋٜܛۜٗۛٙ[P؜Xڛ]T؝ٓݝ
+B؜ޛ؈YȜ۝ڙ\יؘڛ]Wܘ]ؘٗ\Xڛ]Y\ʂȈؘڛ]WڙȚ[݋Ȉ^[ؙȐ؜Xڛ]T؝ْ[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٜݛH؝ؘٗ\Xڛ]Y\ʂȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ\ٜךY\^[ؙݜٜךYȈ[ܝٜ܏\^[ؙ؛ܝٜ܋Ȉ\ؙٜ܏\^[ؙڜؙٜ܋Ȉ
+BȈ^ٜ\ۚ\ܚ[ۑ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOMˈ]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂Ȉ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂Ȉٝ\ۈ؜Xڛ]T؝ٓݝ
+
+ʜٜݛ
+BИ\ܛܝ
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKܚݛ܈ʂ؜ޛ؈YȜ۝ڙ\יؘڛ]WؙܚݛʂȈؘڛ]WڙȚ[݋Ȉ^[ؙȔݛЙ[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٝ\ۈYܚݛʂȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ\ٜךY\^[ؙݜٜךYȈ؝Yۜޏ\^[ؙؘ]YۜދȈ\ۏ\^[ؙݜۋȈ؜[ۏ\^[ؙؘ\[ۋȈ\ؙٜ܏\^[ؙڜؙٜ܋Ȉ
+BȈ^ٜ\ۚ\ܚ[ۑ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOMˈ]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂Ȉ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂И\ٙ[]J˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙKܚݛ܋ޜݛךYHʂ؜ޛ؈YȜ۝ڙ\יؘڛ]Wܙ[[ݙWܚݛʂȈؘڛ]WڙȚ[݋ȈݛךYȚ[݋Ȉ^[ؙȔݛԙ[[ݙR[˂ȈΈٜܚ[ۈH\[ٜʙٝ٘ʋʎގٝ\ۈXXݚ]؝WܚݛʂȈϙ˂Ȉؘڛ]WڙYؘڛ]WڙȈ\ٜךY\^[ؙݜٜךYȈݛךY\ݛךYȈ\ؙٜ܏\^[ؙڜؙٜ܋Ȉ
+BȈ^ٜ\ۚ\ܚ[ۑ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOMˈ]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂Ȉ^ٜ؛YQ\ܛ܈\ș\ܛ܎ؚ\و^ٜ[ۊݘ]\טۙOM]Z[\ݜʙ\ܛ܊JHܛۈ\ܛ܂И\ٙ]
+˜۝ڙ\˙ؘڛ]Y\˞٘Xڛ]WڙK؛ۜ][ٜ܈ʂ؜ޛ؈YȜ۝ڙ\יؘڛ]W؛ۜ][ٜ܊ؘڛ]WڙȚ[݋Έٜܚ[ۈH\[ٜʙٝ٘ʊNٝ\ۈ٘ۛ\]W؛ۜ][ٜ܊ˈؘڛ]Wڙ
+BИ\ܛܝ
+˜۝ڙ\˚Y[ݚ]Kܙ]ٜڙژ؝[ۋܝ[ȊB؜ޛ؈YȜ۝ڙ\ךY[ݚ]Wܙ]ٜڙژ؝[ۗܝ[ʙΈٜܚ[ۈH\[ٜʙٝ٘ʊNٝ\ۈݛט[۝X[ܙ]ٜڙژ؝[ۊʂИ\ٙ]
+˙^Xݝ]ً\ٜܝۘ]\݈ʂ؜ޛ؈Yș^Xݝ]ٗܙ\ܝۘ]\݊
+N]\݈Hٝۘ]\ݗٞXݝ]ٗܙ\ܝ
+
+BȈYț۝]\ݎؚ\و^ٜ[ۊݘ]\טۙOM]Z[Hӛș^Xݝ]وٜܝٜٛ؝YY]ʂȈٝ\ۈ]\݂И\ٙ]
+˙^Xݝ]ً\ٜܝۘ]\݋ٝ[ʂ؜ޛ؈Yș^Xݝ]ٗܙ\ܝۘ]\ݗٝ[
+
+N^[ؙHٝٞXݝ]ٗܙ\ܝܘ^[ؙ
+
+BȈYț۝^[ؙؚ\و^ٜ[ۊݘ]\טۙOM]Z[Hӛș^Xݝ]وٜܝٜٛ؝YY]ʂȈٝ\ۈ^[ؙИ\ٙ]
+˙^Xݝ]ً\ٜܝ؞KZYޜٜܝڙHʂ؜ޛ؈Yș^Xݝ]ٗܙ\ܝ؞Wڙ
+ٜܝڙȜݜʎ^[ؙHٝٞXݝ]ٗܙ\ܝܘ^[ؙ
+ٜܝڙ\ٜܝڙ
+BȈYț۝^[ؙؚ\و^ٜ[ۊݘ]\טۙOM]Z[HўXݝ]وٜܝ۝۝[وʂȈٝ\ۈ^[ؙИ\ٙ]
+˙^Xݝ]ً\ٜܝښ\ݛܞHʂ؜ޛ؈Yș^Xݝ]ٗܙ\ܝښ\ݛܞJ[Z]Ț[݈H]Y\ފY؝[L̋ُLKOL͍JJNٝ\ۈȜٜܝȎșٝٞXݝ]ٗܙ\ܝښ\ݛܞJ[Z][[Z]
+_BИ\ٙ]
+˙^Xݝ]ً\ٜܝ؛ۜ\وʂ؜ޛ؈Yș^Xݝ]ٗܙ\ܝ؛ۜ\ي
+Nٝ\ۈۛ\\ٗۘ]\ݗݜלٝڛݜʊBИ\ٙ]
+˙]ڙ[ؙKݜؘ٘Xڛ]K؝Y]ʂ؜ޛ؈Yș]ڙ[ؙWݜؘ٘Xڛ]W؝Y]
+Έٜܚ[ۈH\[ٜʙٝ٘ʊNٝ\ۈ]Y]ݜؘ٘Xڛ]JʂИ\ٙ]
+˙]ڙ[ؙK٘Xڛ]Y\˞٘Xڛ]WڙKۘ]\ژ[XۘZ[\ȊB؜ޛ؈Yș]ڙ[ؙW٘Xڛ]Wۘ]\ژ[؛Z[\ʙؘڛ]WڙȚ[݋Έٜܚ[ۈH\[ٜʙٝ٘ʊN^[ؙHؘڛ]Wۘ]\ژ[؛Z[Wݜؘيˈؘڛ]Wڙ
+BȈYȜ^[ؙٙ]
+ٜܛ܈ʈOH٘Xڛ]Wۛݗٛݛو΂Ȉؚ\و^ٜ[ۊݘ]\טۙOM]Z[HјXڛ]H۝۝[وʂȈٝ\ۈ^[ؙИ\ٙ]
+˙]ڙ[ؙKܙXۛ[Y[٘][ۜ˞ܙXۛ[Y[٘][ۗڙ^_Kܘًۜ]ؘوʂ؜ޛ؈Yș]ڙ[ؙWܙXۛ[Y[٘][ۗܘۜٗݜؘي٘ۛ[Y[٘][ۗڙ^NȜݜˈΈٜܚ[ۈH\[ٜʙٝ٘ʊNٝ\ۈ٘ۛ[Y[٘][ۗܘۜٗݜؘيˈ٘ۛ[Y[٘][ۗڙ^JB

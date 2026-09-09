@@ -27,6 +27,7 @@ class MarketSupplyIntelligenceEndpointsTests(unittest.TestCase):
     def tearDown(self) -> None:
         from app.models.agent_execution import AgentJobRun, AgentKnowledgeRecord
         from app.models.competitive_intelligence import MarketSupplySignal
+        from app.models.facility import Facility, FacilityLicenseRecord
         from app.services.competitive_intelligence_service import AGENT_KEY
 
         db = self.main.SessionLocal()
@@ -34,6 +35,8 @@ class MarketSupplyIntelligenceEndpointsTests(unittest.TestCase):
             db.query(MarketSupplySignal).delete()
             db.query(AgentJobRun).filter(AgentJobRun.agent_key == AGENT_KEY).delete()
             db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.agent_key == AGENT_KEY).delete()
+            db.query(FacilityLicenseRecord).filter(FacilityLicenseRecord.state_care_type == "ASSISTED_LIVING").delete()
+            db.query(Facility).filter(Facility.cms_id == "NV-REPORT-1").delete()
             db.commit()
         finally:
             db.close()
@@ -63,6 +66,40 @@ class MarketSupplyIntelligenceEndpointsTests(unittest.TestCase):
         rows = list_response.json()
         self.assertGreater(len(rows), 0)
         self.assertEqual(rows[0]["city_state"], "Denver, CO")
+
+    def test_las_vegas_run_now_is_admin_protected(self) -> None:
+        response = self.client.post("/market-supply-intelligence/las-vegas/run-now")
+        self.assertEqual(response.status_code, 401)
+
+    def test_market_report_marks_uncollected_metrics_missing_not_zero(self) -> None:
+        response = self.client.get("/market-intelligence/report?geography_key=NEVADA", headers=_ADMIN_HEADERS)
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertFalse(payload["ranking_input"])
+        occupancy = next(row for row in payload["metrics"] if row["metric_key"] == "OCCUPANCY_RATE")
+        self.assertEqual(occupancy["status"], "MISSING")
+        self.assertEqual(occupancy["observations"], [])
+
+    def test_market_report_derives_nevada_licensed_counts_without_claiming_independent_living(self) -> None:
+        from app.models.facility import Facility, FacilityLicenseRecord
+
+        db = self.main.SessionLocal()
+        try:
+            facility = Facility(cms_id="NV-REPORT-1", name="Report Test", address="1 Test Way", city="Las Vegas", state="NV", zip_code="89101", beds=42)
+            db.add(facility)
+            db.flush()
+            db.add(FacilityLicenseRecord(facility_id=facility.id, status="VERIFIED", state_care_type="ASSISTED_LIVING"))
+            db.commit()
+        finally:
+            db.close()
+
+        response = self.client.get("/market-intelligence/report?geography_key=NEVADA", headers=_ADMIN_HEADERS)
+        self.assertEqual(response.status_code, 200)
+        rows = response.json()["metrics"]
+        facility_count = next(row for row in rows if row["metric_key"] == "FACILITY_COUNT")
+        self.assertEqual(facility_count["status"], "AVAILABLE")
+        self.assertEqual(facility_count["observations"][0]["value"], "1")
+        self.assertIn("excludes unlicensed independent living", facility_count["observations"][0]["source_scope"])
 
 
 if __name__ == "__main__":
