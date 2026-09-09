@@ -71,6 +71,22 @@ class MarketSupplyIntelligenceEndpointsTests(unittest.TestCase):
         response = self.client.post("/market-supply-intelligence/las-vegas/run-now")
         self.assertEqual(response.status_code, 401)
 
+    def test_official_cms_collection_is_admin_protected_and_returns_collector_result(self) -> None:
+        denied = self.client.post("/market-intelligence/collect/cms")
+        self.assertEqual(denied.status_code, 401)
+        expected = {
+            "source": "CMS",
+            "provider_rows": 12,
+            "quality_rows": 34,
+            "observations_written": 8,
+            "provider_source_url": "https://data.cms.gov/provider-data/dataset/4pq5-n9py",
+            "quality_source_url": "https://data.cms.gov/provider-data/dataset/djen-97ju",
+        }
+        with patch("app.main.collect_cms_market_metrics", return_value=expected):
+            response = self.client.post("/market-intelligence/collect/cms", headers=_ADMIN_HEADERS)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), expected)
+
     def test_market_report_marks_uncollected_metrics_missing_not_zero(self) -> None:
         response = self.client.get("/market-intelligence/report?geography_key=NEVADA", headers=_ADMIN_HEADERS)
         self.assertEqual(response.status_code, 200)
