@@ -18,6 +18,10 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
   if (contentType) headers.set("content-type", contentType);
   const authorization = request.headers.get("authorization");
   if (authorization) headers.set("authorization", authorization);
+  // Staff-only backend endpoints authenticate with this header. Forwarding only
+  // `Authorization` silently turned every admin dashboard request into a 401.
+  const adminToken = request.headers.get("x-admin-token");
+  if (adminToken) headers.set("x-admin-token", adminToken);
 
   const hasBody = !["GET", "HEAD"].includes(request.method);
 
