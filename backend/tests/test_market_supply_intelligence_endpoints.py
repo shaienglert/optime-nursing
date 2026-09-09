@@ -64,6 +64,10 @@ class MarketSupplyIntelligenceEndpointsTests(unittest.TestCase):
         self.assertGreater(len(rows), 0)
         self.assertEqual(rows[0]["city_state"], "Denver, CO")
 
+    def test_las_vegas_run_now_is_admin_protected(self) -> None:
+        response = self.client.post("/market-supply-intelligence/las-vegas/run-now")
+        self.assertEqual(response.status_code, 401)
+
 
 if __name__ == "__main__":
     unittest.main()

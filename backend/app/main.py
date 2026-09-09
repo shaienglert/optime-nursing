@@ -60,7 +60,7 @@ from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
 from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
-from app.services.schema_migrations import ensure_state_license_schema
+from app.services.schema_migrations import ensure_market_supply_signal_schema, ensure_state_license_schema
 
 
 from app.services.schema_migrations import ensure_deferred_report_schema
@@ -145,6 +145,7 @@ from app.services.competitive_intelligence_service import (
 )
 from app.services.market_supply_intelligence_service import (
     latest_market_supply_signals,
+    run_las_vegas_market_supply_pilot,
     run_market_supply_intelligence_cycle,
     start_market_supply_intelligence_scheduler,
 )
@@ -441,12 +442,22 @@ class MarketSupplySignalOut(BaseModel):
     headline: str
     snippet: str
     city_state: Optional[str] = None
+    market_key: Optional[str] = None
+    project_name: Optional[str] = None
+    service_lines: Optional[str] = None
+    units_or_beds: Optional[int] = None
+    expected_opening: Optional[str] = None
+    occupancy_rate: Optional[str] = None
+    occupancy_period: Optional[str] = None
+    evidence_status: str
+    nursing_relevance: str
     source_url: str
     source_domain: str
     first_observed_at: str
 
 
 class MarketSupplyCycleOut(BaseModel):
+    market_key: Optional[str] = None
     started_at: str
     finished_at: str
     runtime_ms: int
@@ -1400,6 +1411,7 @@ def startup() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
     ensure_state_license_schema(engine)
+    ensure_market_supply_signal_schema(engine)
 
 
     ensure_deferred_report_schema(engine)
@@ -2173,6 +2185,15 @@ async def get_market_supply_intelligence_signals(db: Session = Depends(get_db), 
             headline=row.headline,
             snippet=row.snippet,
             city_state=row.city_state,
+            market_key=row.market_key,
+            project_name=row.project_name,
+            service_lines=row.service_lines,
+            units_or_beds=row.units_or_beds,
+            expected_opening=row.expected_opening,
+            occupancy_rate=row.occupancy_rate,
+            occupancy_period=row.occupancy_period,
+            evidence_status=row.evidence_status,
+            nursing_relevance=row.nursing_relevance,
             source_url=row.source_url,
             source_domain=row.source_domain,
             first_observed_at=row.first_observed_at.isoformat(),
@@ -2184,6 +2205,11 @@ async def get_market_supply_intelligence_signals(db: Session = Depends(get_db), 
 @app.post("/market-supply-intelligence/run-now", response_model=MarketSupplyCycleOut)
 async def post_run_market_supply_intelligence_now(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return run_market_supply_intelligence_cycle(db)
+
+
+@app.post("/market-supply-intelligence/las-vegas/run-now", response_model=MarketSupplyCycleOut)
+async def post_run_las_vegas_market_supply_pilot(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    return run_las_vegas_market_supply_pilot(db)
 
 
 def _cms_regulatory_history(facility: Dict[str, Any]) -> Optional[Dict[str, Any]]:

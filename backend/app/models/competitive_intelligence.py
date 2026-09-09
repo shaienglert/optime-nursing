@@ -44,6 +44,18 @@ class MarketSupplySignal(Base):
     headline = Column(String(300), nullable=False)
     snippet = Column(Text, nullable=False)
     city_state = Column(String(80), nullable=True)
+    # Structured market intelligence is deliberately separate from recommendation
+    # evidence.  These fields describe a reported development event; none of them
+    # contributes to a facility score or ranking.
+    market_key = Column(String(80), nullable=True, index=True)
+    project_name = Column(String(300), nullable=True)
+    service_lines = Column(String(160), nullable=True)
+    units_or_beds = Column(Integer, nullable=True)
+    expected_opening = Column(String(40), nullable=True)
+    occupancy_rate = Column(String(32), nullable=True)
+    occupancy_period = Column(String(40), nullable=True)
+    evidence_status = Column(String(32), nullable=False, default="REPORTED")
+    nursing_relevance = Column(String(32), nullable=False, default="UNCLASSIFIED")
     source_url = Column(Text, nullable=False)
     source_domain = Column(String(160), nullable=False)
     first_observed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

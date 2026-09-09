@@ -145,3 +145,33 @@ def ensure_deferred_report_schema(engine: Engine) -> None:
     from app.models.deferred_report import DeferredDecisionReport  # noqa: PLC0415
 
     DeferredDecisionReport.__table__.create(bind=engine, checkfirst=True)
+
+
+def ensure_market_supply_signal_schema(engine: Engine) -> None:
+    """Add structured market-intelligence fields to databases created before the
+    Las Vegas pilot.  This is descriptive market research only, never ranking data.
+    """
+    columns = _column_names(engine, "market_supply_signals")
+    if not columns:
+        return
+
+    statements: list[str] = []
+    additions = {
+        "market_key": "VARCHAR(80) NULL",
+        "project_name": "VARCHAR(300) NULL",
+        "service_lines": "VARCHAR(160) NULL",
+        "units_or_beds": "INTEGER NULL",
+        "expected_opening": "VARCHAR(40) NULL",
+        "occupancy_rate": "VARCHAR(32) NULL",
+        "occupancy_period": "VARCHAR(40) NULL",
+        "evidence_status": "VARCHAR(32) NOT NULL DEFAULT 'REPORTED'",
+        "nursing_relevance": "VARCHAR(32) NOT NULL DEFAULT 'UNCLASSIFIED'",
+    }
+    for column, definition in additions.items():
+        if column not in columns:
+            statements.append(f"ALTER TABLE market_supply_signals ADD COLUMN {column} {definition}")
+    if not statements:
+        return
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(text(statement))
