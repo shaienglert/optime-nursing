@@ -28,6 +28,12 @@ export const LAS_VEGAS_MARKET_FACTS = {
     { value: "3.24%", label: "falls with major injury nationally" },
     { value: "23.75%", label: "short-stay rehospitalization nationally" },
   ],
+  populationGrowth: [
+    { value: "+11.95%", label: "Nevada population age 65+ projected growth, 2025–2030" },
+    { value: "+17.59%", label: "Nevada population age 75+ projected growth, 2025–2030" },
+    { value: "+10.69%", label: "U.S. population age 65+ projected growth, 2025–2030" },
+    { value: "+20.08%", label: "U.S. population age 75+ projected growth, 2025–2030" },
+  ],
 } as const;
 
 export const PUBLIC_ARTICLES: PublicArticle[] = [
