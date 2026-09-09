@@ -65,20 +65,24 @@ def _licensed_nevada_inventory(db: Session) -> Dict[str, List[Dict[str, str]]]:
 
 
 def market_report(db: Session, *, geography_key: str = "NEVADA") -> Dict[str, object]:
+    comparison_geographies = [geography_key]
+    if geography_key == "NEVADA":
+        comparison_geographies.append("NATIONAL")
     rows = (
         db.query(MarketMetricObservation)
-        .filter(MarketMetricObservation.geography_key == geography_key)
+        .filter(MarketMetricObservation.geography_key.in_(comparison_geographies))
         .order_by(MarketMetricObservation.metric_key, MarketMetricObservation.captured_at.desc())
         .all()
     )
     latest = {}
     for row in rows:
-        latest.setdefault((row.metric_key, row.segment), row)
+        latest.setdefault((row.metric_key, row.geography_key, row.segment, row.source_name), row)
 
     derived = _licensed_nevada_inventory(db) if geography_key == "NEVADA" else {}
     metrics = []
     for definition in REPORT_METRICS:
-        if definition["metric_key"] in derived:
+        matched = [row for (key, _geography, _segment, _source), row in latest.items() if key == definition["metric_key"]]
+        if definition["metric_key"] in derived and not matched:
             metrics.append({
                 **definition,
                 "status": "AVAILABLE",
@@ -96,7 +100,6 @@ def market_report(db: Session, *, geography_key: str = "NEVADA") -> Dict[str, ob
                 "reason": None,
             })
             continue
-        matched = [row for (key, _segment), row in latest.items() if key == definition["metric_key"]]
         if not matched:
             metrics.append({
                 **definition,
@@ -110,7 +113,7 @@ def market_report(db: Session, *, geography_key: str = "NEVADA") -> Dict[str, ob
             "status": "AVAILABLE",
             "observations": [
                 {
-                    "segment": row.segment,
+                    "segment": f"{row.geography_label} · {row.segment}",
                     "value": row.value_text,
                     "observed_period": row.observed_period,
                     "source_name": row.source_name,
