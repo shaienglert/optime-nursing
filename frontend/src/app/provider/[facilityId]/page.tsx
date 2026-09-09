@@ -8,6 +8,7 @@ import {
   Completeness,
   ProfileSnapshot,
   addFacilityPhoto,
+  ensureOpticareDemo,
   fetchProfileSnapshot,
   formatPercent,
   isDerived,
@@ -163,6 +164,20 @@ export default function ProviderProfilePage({
     }
   };
 
+  const enterDemoWorkspace = async () => {
+    setError(null);
+    try {
+      const demo = await ensureOpticareDemo();
+      if (demo.facility_id !== facilityId) {
+        throw new Error("This practice access is only available for the OPTICARE demonstration profile.");
+      }
+      window.localStorage.setItem(PROVIDER_USER_KEY, String(demo.user_id));
+      window.location.reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The practice workspace could not be opened.");
+    }
+  };
+
   if (isLoading) {
     return <main className="mx-auto max-w-4xl px-6 py-14 text-slate-500">Loading profile&hellip;</main>;
   }
@@ -180,6 +195,35 @@ export default function ProviderProfilePage({
     );
   }
 
+  if (!canEdit) {
+    return (
+      <main className="min-h-screen bg-[#f5f5f7] px-4 py-8 text-[#1d1d1f] sm:px-8 sm:py-12">
+        <section className="mx-auto max-w-3xl">
+          <Link href="/provider" className="text-base font-semibold text-[#17624f]">← Back to community search</Link>
+          <div className="mt-6 rounded-[2rem] border border-[#e5e5ea] bg-[radial-gradient(circle_at_92%_4%,#e3f1eb_0,transparent_31%),linear-gradient(135deg,#ffffff_0%,#fbfbfc_100%)] px-6 py-10 shadow-[0_18px_60px_-40px_rgba(29,29,31,.38)] sm:px-12 sm:py-14">
+            <p className="text-sm font-semibold uppercase tracking-[.18em] text-[#26715d]">Step 2 of 3 · secure access</p>
+            <h1 className="mt-5 text-4xl font-semibold leading-[1.05] tracking-[-.045em] sm:text-5xl">Confirm that you represent {snapshot.name}.</h1>
+            <p className="mt-5 max-w-2xl text-xl leading-8 text-[#4b4b4f]">We will verify a work email before anyone can update the public listing. Every change remains linked to the person who made it.</p>
+            <div className="mt-8 rounded-2xl border border-[#d7e3dc] bg-white/85 p-5 text-base leading-7 text-[#3d4b46]">
+              <p className="font-semibold text-[#1d1d1f]">What happens next</p>
+              <p className="mt-2">After email verification, a short questionnaire helps place the community accurately. Information you enter is clearly labelled as provider-supplied and does not improve organic ranking by itself.</p>
+            </div>
+            {snapshot.is_demo ? (
+              <div className="mt-8 rounded-2xl border border-[#9bcbb9] bg-[#edf8f3] p-5">
+                <p className="font-semibold text-[#185f4c]">OPTICARE is a fictitious practice profile.</p>
+                <p className="mt-2 text-base leading-7 text-[#3d4b46]">Email delivery is not connected yet, so use the practice workspace to review editing, saving, photographs and audit history without claiming a real community.</p>
+                <button type="button" onClick={() => void enterDemoWorkspace()} className="mt-5 min-h-12 rounded-full bg-[#16715e] px-6 py-3 text-base font-semibold text-white shadow-[0_5px_14px_rgba(22,113,94,.2)] transition hover:bg-[#105c4d]">Open OPTICARE practice workspace</button>
+              </div>
+            ) : (
+              <div className="mt-8 rounded-2xl border border-[#e5e5ea] bg-white p-5 text-base text-[#52645d]">Email verification will be available here once the Oomnik mail service is connected.</div>
+            )}
+            {error ? <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-base text-red-800">{error}</p> : null}
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <Link href="/provider" className="text-sm text-teal-700 underline">
@@ -188,14 +232,6 @@ export default function ProviderProfilePage({
       <h1 className="mt-3 text-3xl font-semibold text-slate-900">{snapshot.name}</h1>
 
       <CompletenessPanel completeness={snapshot.completeness} />
-
-      {!canEdit ? (
-        <p className="mt-6 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          You are viewing this profile read-only. Verify your work email against this
-          community to make changes &mdash; every edit is recorded against the person who made
-          it, which is what lets us tell your answers apart from a government file.
-        </p>
-      ) : null}
 
       {error ? (
         <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>

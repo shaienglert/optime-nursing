@@ -83,6 +83,7 @@ export type Completeness = {
 export type ProfileSnapshot = {
   facility_id: number;
   name: string;
+  is_demo: boolean;
   known_from_public_record: PublicRecordField[];
   sections: ProfileSection[];
   photos: ProfilePhoto[];
@@ -127,6 +128,15 @@ export async function searchClaimableFacilities(
 
 export async function fetchProfileSnapshot(facilityId: number): Promise<ProfileSnapshot> {
   return request<ProfileSnapshot>(`/provider/facilities/${facilityId}/profile`);
+}
+
+export async function ensureOpticareDemo(): Promise<{
+  facility_id: number;
+  user_id: number;
+  name: string;
+  is_demo: boolean;
+}> {
+  return request("/provider/demo/opticare", { method: "POST" });
 }
 
 export async function saveCapabilities(

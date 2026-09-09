@@ -88,6 +88,7 @@ from app.services.facility_profile_portal import (
     save_capabilities,
     search_claimable_facilities,
 )
+from app.services.provider_portal_demo import ensure_opticare_demo
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.evidence_source_integrity import (
     audit_traceability,
@@ -2950,6 +2951,12 @@ async def provider_facility_search(
     db: Session = Depends(get_db),
 ):
     return [ClaimSearchOut(**row) for row in search_claimable_facilities(db, q, state, city, limit)]
+
+
+@app.post("/provider/demo/opticare")
+async def provider_portal_opticare_demo(db: Session = Depends(get_db)):
+    """Create or return the one isolated, non-production portal test record."""
+    return ensure_opticare_demo(db)
 
 
 @app.get("/provider/facilities/{facility_id}/profile")

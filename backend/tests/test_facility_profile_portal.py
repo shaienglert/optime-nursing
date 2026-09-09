@@ -25,6 +25,7 @@ from app.services.facility_profile_portal import (
     save_capabilities,
     search_claimable_facilities,
 )
+from app.services.provider_portal_demo import DEMO_CMS_ID, ensure_opticare_demo
 
 
 class FacilityProfilePortalTests(unittest.TestCase):
@@ -93,6 +94,16 @@ class FacilityProfilePortalTests(unittest.TestCase):
         self.assertEqual(len(search_claimable_facilities(self.db, "en", state="NV")), 2)
         self.assertEqual(len(search_claimable_facilities(self.db, "en", city="Henderson")), 1)
         self.assertEqual(search_claimable_facilities(self.db, "en", state="TX"), [])
+
+    def test_opticare_demo_is_idempotent_and_identified_as_demo(self) -> None:
+        first = ensure_opticare_demo(self.db)
+        second = ensure_opticare_demo(self.db)
+
+        self.assertEqual(first["facility_id"], second["facility_id"])
+        self.assertEqual(first["user_id"], second["user_id"])
+        facility = self.db.query(Facility).filter(Facility.cms_id == DEMO_CMS_ID).one()
+        self.assertEqual(facility.name, "OPTICARE — Portal demonstration")
+        self.assertTrue(facility_profile_snapshot(self.db, facility.id)["is_demo"])
 
     # ---------- the snapshot the editor renders ----------
 
