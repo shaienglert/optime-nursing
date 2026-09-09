@@ -7,6 +7,18 @@ from app.services.facility_parameter_service import refresh_runtime_cache
 from app.services.patient_decision_engine import run_patient_decision_engine
 
 
+def _deterministic_rank_for_quality_gate(rows, client_intent, human_context, strategy, deterministic_fallback_key):
+    """Golden decision-quality cases test eligibility/strategy, not a network model.
+
+    The candidate-ranking contract has its own mocked tests. Keeping this suite local
+    prevents an inherited CI secret/configuration from changing which facilities reach
+    the strategy assertions.
+    """
+    del client_intent, human_context, strategy
+    ordered = sorted(rows, key=deterministic_fallback_key)
+    return ordered, {"status": "AI_BATCH_RANKED", "candidate_count": len(ordered), "closed_world_validated": True}
+
+
 def _run_ready(questionnaire: dict, query: str, limit: int = 5) -> dict:
     ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
     with patch.dict(
@@ -20,6 +32,9 @@ def _run_ready(questionnaire: dict, query: str, limit: int = 5) -> dict:
     ), patch(
         "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
         return_value=ai_result,
+    ), patch(
+        "app.services.must_ai_nice_pipeline.rank_must_eligible_candidates",
+        side_effect=_deterministic_rank_for_quality_gate,
     ):
         refresh_runtime_cache("golden_topn_case")
         return run_patient_decision_engine(questionnaire, query, limit=limit)
