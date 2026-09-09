@@ -1,8 +1,8 @@
 """A deliberately isolated record for exercising the provider portal.
 
-It is never presented as a real community or as evidence for a family decision. The
+It is never presented as a real community or as evidence for a family decision.  The
 record exists solely so the portal can be reviewed end-to-end before email delivery is
-configured. Keeping it idempotent makes it safe to call from a deployed environment.
+configured.  Keeping it idempotent makes it safe to call from a deployed environment.
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def ensure_opticare_demo(db: Session) -> dict[str, object]:
             phone="(702) 555-0147",
             beds=72,
             source_name="OOMNIK_PORTAL_DEMO_ONLY",
-            source_date="Synthetic test record — not a real facility",
+            source_date="DEMO_2026-09-09",
             confidence_level="DEMO_ONLY",
         )
         db.add(facility)
