@@ -62,6 +62,7 @@ from app.services.schema_migrations import ensure_facility_intelligence_profile_
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
 from app.services.schema_migrations import ensure_market_metric_observation_schema, ensure_market_supply_signal_schema, ensure_state_license_schema
 from app.services.market_report_service import market_report
+from app.services.official_market_metrics_service import collect_cms_market_metrics, start_official_market_metrics_scheduler
 
 
 from app.services.schema_migrations import ensure_deferred_report_schema
@@ -482,6 +483,15 @@ class MarketReportOut(BaseModel):
     geography_key: str
     ranking_input: bool
     metrics: List[MarketReportMetricOut]
+
+
+class OfficialMarketMetricCollectionOut(BaseModel):
+    source: str
+    provider_rows: int
+    quality_rows: int
+    observations_written: int
+    provider_source_url: str
+    quality_source_url: str
 
 
 class PersonalizedParameterOrderIn(BaseModel):
@@ -1481,6 +1491,8 @@ def startup() -> None:
     start_competitive_intelligence_scheduler()
     # Weekly: senior-living construction starts, planned openings, and occupancy rates.
     start_market_supply_intelligence_scheduler()
+    # Monthly public CMS snapshots for the market report, guarded by database freshness.
+    start_official_market_metrics_scheduler()
     logger.info(
         "startup_completed facilities_imported=%s origins=%s",
         app.state.import_summary.get("facilities_imported"),
@@ -2219,6 +2231,18 @@ async def get_market_supply_intelligence_signals(db: Session = Depends(get_db), 
         )
         for row in latest_market_supply_signals(db)
     ]
+
+
+@app.post("/market-intelligence/collect/cms", response_model=OfficialMarketMetricCollectionOut)
+async def post_collect_official_market_metrics_from_cms(
+    db: Session = Depends(get_db), _: None = Depends(require_admin_token)
+):
+    """Refresh only public, source-labelled CMS market metrics.
+
+    The call is intentionally staff-only: it downloads current public datasets and
+    writes an auditable snapshot. It never feeds recommendation ranking.
+    """
+    return collect_cms_market_metrics(db)
 
 
 @app.post("/market-supply-intelligence/run-now", response_model=MarketSupplyCycleOut)

@@ -14,6 +14,7 @@ import {
   CompetitiveIntelligenceSignal,
   MarketIntelligenceReport,
   MarketSupplySignal,
+  collectOfficialCmsMarketMetrics,
   fetchCompetitiveIntelligenceSignals,
   fetchMarketIntelligenceReport,
   fetchMarketSupplyIntelligenceSignals,
@@ -53,6 +54,7 @@ export default function ExecutiveIntelligenceAdminPage() {
   const [marketReport, setMarketReport] = useState<MarketIntelligenceReport | null>(null);
   const [intelligenceError, setIntelligenceError] = useState<string | null>(null);
   const [isLoadingIntelligence, setIsLoadingIntelligence] = useState(false);
+  const [isCollectingOfficialMetrics, setIsCollectingOfficialMetrics] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -134,6 +136,20 @@ export default function ExecutiveIntelligenceAdminPage() {
       // Use the token in memory if session storage is unavailable.
     }
     setAdminToken(trimmed);
+  }
+
+  async function handleCollectOfficialMetrics() {
+    if (!adminToken) return;
+    setIsCollectingOfficialMetrics(true);
+    setIntelligenceError(null);
+    try {
+      await collectOfficialCmsMarketMetrics(adminToken);
+      setMarketReport(await fetchMarketIntelligenceReport(adminToken));
+    } catch (err) {
+      setIntelligenceError(err instanceof Error ? err.message : "Official market collection failed.");
+    } finally {
+      setIsCollectingOfficialMetrics(false);
+    }
   }
 
   async function handleSelect(reportId: string) {
@@ -348,10 +364,15 @@ export default function ExecutiveIntelligenceAdminPage() {
                   <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <h3 className="text-lg font-medium">Nevada market scorecard</h3>
-                        <p className="mt-1 text-sm text-slate-400">Every requested metric is shown. Missing means the agent has not collected a sourced number yet — never zero or estimated.</p>
+                        <h3 className="text-lg font-medium">Nevada and U.S. market scorecard</h3>
+                        <p className="mt-1 text-sm text-slate-400">Each number keeps its geography, source and scope. Missing means no source-backed observation exists — never zero or estimated.</p>
                       </div>
-                      <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Not used in recommendation ranking</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button type="button" onClick={handleCollectOfficialMetrics} disabled={isCollectingOfficialMetrics} className="rounded-xl border border-cyan-400/60 px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-400/10 disabled:cursor-wait disabled:opacity-60">
+                          {isCollectingOfficialMetrics ? "Collecting official CMS data…" : "Refresh official CMS data"}
+                        </button>
+                        <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Not used in recommendation ranking</span>
+                      </div>
                     </div>
                     <div className="mt-4 overflow-x-auto">
                       <table className="min-w-full text-left text-sm">
