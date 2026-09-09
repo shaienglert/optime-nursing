@@ -140,7 +140,21 @@ def _transition_participation(questionnaire: Dict[str, Any]) -> Dict[str, Any]:
     raw = transition.get("attitudeTowardMove")
     normalized = _norm(raw)
     if normalized:
-        if any(token in normalized for token in ("positive", "involved", "his choice", "her choice", "ready")):
+        if any(
+            token in normalized
+            for token in (
+                "positive",
+                "involved",
+                "his choice",
+                "her choice",
+                "ready",
+                "wants to move",
+                "want to move",
+                "does not want to remain alone",
+                "doesn't want to remain alone",
+                "does not want to stay alone",
+            )
+        ):
             return {"value": "PARTICIPATING", "source": "questionnaire.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove", "confidence": 1.0}
         if any(token in normalized for token in ("cautious", "open", "uncertain")):
             return {"value": "CAUTIOUS", "source": "questionnaire.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove", "confidence": 1.0}
