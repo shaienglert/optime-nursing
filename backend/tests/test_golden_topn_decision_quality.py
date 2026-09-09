@@ -35,6 +35,9 @@ def _run_ready(questionnaire: dict, query: str, limit: int = 5) -> dict:
     ), patch(
         "app.services.must_ai_nice_pipeline.rank_must_eligible_candidates",
         side_effect=_deterministic_rank_for_quality_gate,
+    ), patch(
+        "app.services.ai_process_owner_guard_patch.attach_ai_process_owner_guarded",
+        side_effect=lambda result, questionnaire_state, natural_language_query: result,
     ):
         refresh_runtime_cache("golden_topn_case")
         return run_patient_decision_engine(questionnaire, query, limit=limit)
