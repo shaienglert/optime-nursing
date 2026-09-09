@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
-import { ClaimSearchResult, searchClaimableFacilities } from "@/lib/provider-api";
+import { ClaimSearchResult, ensureOpticareDemo, searchClaimableFacilities } from "@/lib/provider-api";
 
 /**
  * Step one of the provider portal: find your own community.
@@ -19,6 +19,7 @@ export default function ProviderLandingPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isPreparingDemo, setIsPreparingDemo] = useState(false);
 
   const runSearch = useCallback(async (term: string, stateFilter: string) => {
     if (term.trim().length < 2) {
@@ -38,6 +39,21 @@ export default function ProviderLandingPage() {
       setIsSearching(false);
     }
   }, []);
+
+  const prepareOpticare = async () => {
+    setIsPreparingDemo(true);
+    setError(null);
+    try {
+      await ensureOpticareDemo();
+      setState("NV");
+      setQuery("OPTICARE");
+      await runSearch("OPTICARE", "NV");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The demonstration profile could not be prepared.");
+    } finally {
+      setIsPreparingDemo(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
