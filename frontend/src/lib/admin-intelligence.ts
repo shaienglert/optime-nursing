@@ -67,3 +67,14 @@ export function fetchMarketSupplyIntelligenceSignals(adminToken: string): Promis
 export function fetchMarketIntelligenceReport(adminToken: string): Promise<MarketIntelligenceReport> {
   return fetchAdminJson<MarketIntelligenceReport>("/market-intelligence/report?geography_key=NEVADA", adminToken);
 }
+
+export function collectOfficialCmsMarketMetrics(adminToken: string): Promise<{ observations_written: number }> {
+  return fetch(joinApiUrl(getApiBaseUrl(), "/market-intelligence/collect/cms"), {
+    method: "POST",
+    headers: { "X-Admin-Token": adminToken },
+    cache: "no-store",
+  }).then(async (response) => {
+    if (!response.ok) throw new Error(`CMS market collection failed (${response.status})`);
+    return response.json() as Promise<{ observations_written: number }>;
+  });
+}
