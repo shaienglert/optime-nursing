@@ -8,7 +8,12 @@ import app.models.competitive_intelligence  # noqa: F401 -- registers tables on 
 from app.models.agent_execution import AgentJobRun, AgentKnowledgeRecord, AgentWorker
 from app.models.competitive_intelligence import MarketSupplySignal
 from app.services.competitive_intelligence_service import AGENT_KEY
-from app.services.market_supply_intelligence_service import QUERIES, run_market_supply_intelligence_cycle
+from app.services.market_supply_intelligence_service import (
+    QUERIES,
+    _extract_market_supply_items,
+    run_las_vegas_market_supply_pilot,
+    run_market_supply_intelligence_cycle,
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,6 +30,12 @@ in Denver, CO after an 18-month construction timeline.</p></body></html>
 """
 
 _IRRELEVANT_HTML = "<html><head><title>Unrelated Article</title></head><body><p>Nothing relevant here.</p></body></html>"
+
+_LAS_VEGAS_HTML = """
+<html><head><title>Valara Senior Living planned in Henderson, NV</title></head>
+<body><p>The 244 residences will include independent living, assisted living and memory care.
+The community is expected to open in fall 2027.</p></body></html>
+"""
 
 
 def _db():
@@ -155,6 +166,47 @@ class MarketSupplyIntelligenceServiceTests(unittest.TestCase):
                 AgentKnowledgeRecord.record_type == "market_supply_intelligence_cycle",
             ).all()
             self.assertEqual(len(knowledge), 1)
+        finally:
+            db.close()
+
+    def test_las_vegas_pilot_rejects_non_local_result_and_keeps_structured_care_fields(self) -> None:
+        local = _extract_market_supply_items(
+            category="PLANNED_OPENING",
+            keywords=["expected to open"],
+            url="https://example-news.com/valara",
+            html=_LAS_VEGAS_HTML,
+            market_key="LAS_VEGAS_METRO",
+        )
+        self.assertEqual(len(local), 1)
+        self.assertEqual(local[0].market_key, "LAS_VEGAS_METRO")
+        self.assertEqual(local[0].units_or_beds, 244)
+        self.assertEqual(local[0].service_lines, "ASSISTED_LIVING,MEMORY_CARE,INDEPENDENT_LIVING")
+        self.assertEqual(local[0].nursing_relevance, "DIRECT_CARE_RELEVANT")
+        self.assertEqual(local[0].evidence_status, "REPORTED")
+
+        non_local = _extract_market_supply_items(
+            category="PLANNED_OPENING",
+            keywords=["expected to open"],
+            url="https://example-news.com/other",
+            html=_LAS_VEGAS_HTML.replace("Henderson, NV", "Denver, CO").replace("Henderson", "Denver"),
+            market_key="LAS_VEGAS_METRO",
+        )
+        self.assertEqual(non_local, [])
+
+    def test_las_vegas_pilot_persists_market_key(self) -> None:
+        db = _db()
+        try:
+            with patch(
+                "app.services.market_supply_intelligence_service._search_result_urls",
+                return_value=[("https://example-news.com/valara", "Valara")],
+            ), patch(
+                "app.services.market_supply_intelligence_service._fetch",
+                return_value=(_LAS_VEGAS_HTML, 200),
+            ):
+                result = run_las_vegas_market_supply_pilot(db)
+            self.assertEqual(result["market_key"], "LAS_VEGAS_METRO")
+            row = db.query(MarketSupplySignal).filter(MarketSupplySignal.market_key == "LAS_VEGAS_METRO").first()
+            self.assertIsNotNone(row)
         finally:
             db.close()
 

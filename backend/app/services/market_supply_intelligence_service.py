@@ -95,6 +95,15 @@ class MarketSupplyItem:
     headline: str
     snippet: str
     city_state: Optional[str]
+    market_key: Optional[str]
+    project_name: Optional[str]
+    service_lines: Optional[str]
+    units_or_beds: Optional[int]
+    expected_opening: Optional[str]
+    occupancy_rate: Optional[str]
+    occupancy_period: Optional[str]
+    evidence_status: str
+    nursing_relevance: str
     source_url: str
     source_domain: str
 
@@ -147,7 +156,38 @@ def _headline_from_html(html: str) -> str:
     return _STRIP_RE.sub(" ", match.group(1)).strip()[:200] or "(no page title found)"
 
 
-def _extract_market_supply_items(*, category: str, keywords: List[str], url: str, html: str) -> List[MarketSupplyItem]:
+_UNITS_RE = re.compile(r"\b(\d{1,4})[- ]?(?:unit|units|bed|beds|residences)\b", re.IGNORECASE)
+_OPENING_RE = re.compile(r"\b(?:open(?:ing|ed)?|completion|complete(?:d)?|move-?ins?)\b[^.]{0,100}?\b((?:early|late|spring|summer|fall|winter|Q[1-4])?\s*20\d{2})\b", re.IGNORECASE)
+_OCCUPANCY_RE = re.compile(r"\boccupancy(?:\s+(?:rate|reached|rose|climbed|was))?[^.%]{0,70}?(\d{1,3}(?:\.\d+)?)\s*%", re.IGNORECASE)
+_PERIOD_RE = re.compile(r"\b(?:Q[1-4]|first|second|third|fourth)\s+(?:quarter\s+(?:of\s+)?)?(20\d{2})\b", re.IGNORECASE)
+_LAS_VEGAS_MARKET_TERMS = ("las vegas", "north las vegas", "henderson", "summerlin", "clark county")
+
+
+def _project_name_from_headline(headline: str) -> Optional[str]:
+    """A conservative label for the report, not a claimed facility identity."""
+    cleaned = re.sub(r"\s*[|–—-]\s*[^|–—-]+$", "", headline).strip()
+    if len(cleaned) < 4 or "senior" not in cleaned.lower():
+        return None
+    return cleaned[:300]
+
+
+def _service_lines(text: str) -> Optional[str]:
+    labels = []
+    for phrase, label in (("skilled nursing", "SKILLED_NURSING"), ("assisted living", "ASSISTED_LIVING"), ("memory care", "MEMORY_CARE"), ("independent living", "INDEPENDENT_LIVING"), ("active adult", "ACTIVE_ADULT"), ("affordable", "AFFORDABLE_SENIOR_HOUSING")):
+        if phrase in text.lower():
+            labels.append(label)
+    return ",".join(labels) if labels else None
+
+
+def _nursing_relevance(lines: Optional[str]) -> str:
+    if not lines:
+        return "UNCLASSIFIED"
+    if any(value in lines for value in ("SKILLED_NURSING", "ASSISTED_LIVING", "MEMORY_CARE")):
+        return "DIRECT_CARE_RELEVANT"
+    return "SENIOR_HOUSING_CONTEXT_ONLY"
+
+
+def _extract_market_supply_items(*, category: str, keywords: List[str], url: str, html: str, market_key: Optional[str] = None) -> List[MarketSupplyItem]:
     text = _visible_text(html)
     headline = _headline_from_html(html)
     domain = urlparse(url).netloc.lower()
@@ -156,12 +196,33 @@ def _extract_market_supply_items(*, category: str, keywords: List[str], url: str
         snippet = _sentence_with_keyword(text, keyword)
         if not snippet:
             continue
+        context = f"{headline}. {snippet}. {text[:5000]}"
+        city_state = _find_city_state(headline) or _find_city_state(snippet) or _find_city_state(text[:4000])
+        # A targeted pilot must not silently accept a national result merely because
+        # the search engine returned it.  If the actual source does not name the
+        # Las Vegas metro, it is excluded rather than guessed into the market.
+        if market_key == "LAS_VEGAS_METRO" and not any(term in context.lower() for term in _LAS_VEGAS_MARKET_TERMS):
+            continue
+        service_lines = _service_lines(context)
+        units_match = _UNITS_RE.search(context)
+        opening_match = _OPENING_RE.search(context)
+        occupancy_match = _OCCUPANCY_RE.search(context)
+        period_match = _PERIOD_RE.search(context)
         items.append(
             MarketSupplyItem(
                 category=category,
                 headline=headline,
                 snippet=snippet,
-                city_state=_find_city_state(headline) or _find_city_state(snippet) or _find_city_state(text[:4000]),
+                city_state=city_state,
+                market_key=market_key,
+                project_name=_project_name_from_headline(headline),
+                service_lines=service_lines,
+                units_or_beds=int(units_match.group(1)) if units_match else None,
+                expected_opening=opening_match.group(1).strip() if opening_match else None,
+                occupancy_rate=f"{occupancy_match.group(1)}%" if occupancy_match else None,
+                occupancy_period=(f"Q{period_match.group(0)[1]} {period_match.group(1)}" if period_match and period_match.group(0).upper().startswith("Q") else period_match.group(0) if period_match else None),
+                evidence_status="REPORTED",
+                nursing_relevance=_nursing_relevance(service_lines),
                 source_url=url,
                 source_domain=domain,
             )
@@ -172,8 +233,11 @@ def _extract_market_supply_items(*, category: str, keywords: List[str], url: str
 
 def _persist_item(db: Session, item: MarketSupplyItem) -> bool:
     """Returns True if this was a genuinely new item (not a re-seen URL)."""
-    existing = db.query(MarketSupplySignal).filter(MarketSupplySignal.source_url == item.source_url).first()
-    if existing is not None:
+    existing = db.query(MarketSupplySignal).filter(
+        MarketSupplySignal.source_url == item.source_url,
+        MarketSupplySignal.category == item.category,
+    ).all()
+    if any((row.market_key or None) == item.market_key for row in existing):
         return False
     db.add(
         MarketSupplySignal(
@@ -181,6 +245,15 @@ def _persist_item(db: Session, item: MarketSupplyItem) -> bool:
             headline=item.headline,
             snippet=item.snippet,
             city_state=item.city_state,
+            market_key=item.market_key,
+            project_name=item.project_name,
+            service_lines=item.service_lines,
+            units_or_beds=item.units_or_beds,
+            expected_opening=item.expected_opening,
+            occupancy_rate=item.occupancy_rate,
+            occupancy_period=item.occupancy_period,
+            evidence_status=item.evidence_status,
+            nursing_relevance=item.nursing_relevance,
             source_url=item.source_url,
             source_domain=item.source_domain,
         )
@@ -188,7 +261,14 @@ def _persist_item(db: Session, item: MarketSupplyItem) -> bool:
     return True
 
 
-def run_market_supply_intelligence_cycle(db: Session) -> Dict[str, object]:
+LAS_VEGAS_QUERIES: List[Dict[str, str]] = [
+    {"category": "CONSTRUCTION_START", "query": "Las Vegas Henderson North Las Vegas senior living broke ground construction 2026", "keywords": QUERIES[0]["keywords"]},
+    {"category": "PLANNED_OPENING", "query": "Las Vegas Henderson North Las Vegas senior living planned opening 2026 2027 2028", "keywords": QUERIES[1]["keywords"]},
+    {"category": "OCCUPANCY_RATE", "query": "Las Vegas senior housing occupancy rate NIC MAP 2026", "keywords": QUERIES[2]["keywords"]},
+]
+
+
+def run_market_supply_intelligence_cycle(db: Session, *, query_specs: Optional[List[Dict[str, str]]] = None, market_key: Optional[str] = None) -> Dict[str, object]:
     started_at = datetime.now(timezone.utc)
     job = AgentJobRun(agent_key=AGENT_KEY, status="RUNNING")
     db.add(job)
@@ -199,7 +279,8 @@ def run_market_supply_intelligence_cycle(db: Session) -> Dict[str, object]:
     errors = 0
     category_results: List[Dict[str, object]] = []
 
-    for spec in QUERIES:
+    specs = query_specs or QUERIES
+    for spec in specs:
         category = spec["category"]
         query = spec["query"]
         keywords = spec["keywords"]
@@ -229,7 +310,7 @@ def run_market_supply_intelligence_cycle(db: Session) -> Dict[str, object]:
             if status != 200:
                 continue
 
-            extracted = _extract_market_supply_items(category=category, keywords=keywords, url=url, html=html)
+            extracted = _extract_market_supply_items(category=category, keywords=keywords, url=url, html=html, market_key=market_key)
             for item in extracted:
                 is_new = _persist_item(db, item)
                 if is_new:
@@ -276,6 +357,7 @@ def run_market_supply_intelligence_cycle(db: Session) -> Dict[str, object]:
     db.commit()
 
     return {
+        "market_key": market_key,
         "started_at": started_at.isoformat(),
         "finished_at": finished_at.isoformat(),
         "runtime_ms": runtime_ms,
@@ -283,6 +365,11 @@ def run_market_supply_intelligence_cycle(db: Session) -> Dict[str, object]:
         "errors": errors,
         "categories": category_results,
     }
+
+
+def run_las_vegas_market_supply_pilot(db: Session) -> Dict[str, object]:
+    """Targeted, structured research cycle for the Las Vegas metro pilot."""
+    return run_market_supply_intelligence_cycle(db, query_specs=LAS_VEGAS_QUERIES, market_key="LAS_VEGAS_METRO")
 
 
 def _payload_json(category_results: List[Dict[str, object]]) -> str:
