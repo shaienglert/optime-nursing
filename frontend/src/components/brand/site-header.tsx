@@ -6,6 +6,8 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/results", label: "Results" },
   { href: "/facilities", label: "Facilities" },
+  { href: "/las-vegas-senior-living", label: "Las Vegas data" },
+  { href: "/guides", label: "Guides" },
   { href: "/compare", label: "Compare" },
   { href: "/workspace", label: "Saved Cases" },
   { href: "/admin", label: "Admin" },
