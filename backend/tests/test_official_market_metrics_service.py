@@ -13,12 +13,16 @@ _PROVIDERS = [
     {"CMS Certification Number (CCN)": "200001", "State": "CA", "Number of Certified Beds": "75", "Processing Date": "2026-08-01"},
 ]
 
-_QUALITY = [
+_MDS_QUALITY = [
     {"State": "NV", "Measure Description": "Percentage of residents experiencing one or more falls with major injury", "Four Quarter Average Score": "2.0", "Measure Period": "2026 Q1"},
     {"State": "NV", "Measure Description": "Percentage of residents experiencing one or more falls with major injury", "Four Quarter Average Score": "4.0", "Measure Period": "2026 Q1"},
     {"State": "CA", "Measure Description": "Percentage of residents experiencing one or more falls with major injury", "Four Quarter Average Score": "6.0", "Measure Period": "2026 Q1"},
-    {"State": "NV", "Measure Description": "Number of hospitalizations per 1,000 long-stay resident days", "Four Quarter Average Score": "1.5", "Measure Period": "2026 Q1"},
-    {"State": "CA", "Measure Description": "Number of hospitalizations per 1,000 long-stay resident days", "Four Quarter Average Score": "2.5", "Measure Period": "2026 Q1"},
+]
+
+_CLAIMS_QUALITY = [
+    {"State": "NV", "Measure Description": "Percentage of short-stay residents who were rehospitalized after a nursing home admission", "Adjusted Score": "12.0", "Measure Period": "2026 Q1"},
+    {"State": "NV", "Measure Description": "Percentage of short-stay residents who were rehospitalized after a nursing home admission", "Adjusted Score": "14.0", "Measure Period": "2026 Q1"},
+    {"State": "CA", "Measure Description": "Percentage of short-stay residents who were rehospitalized after a nursing home admission", "Adjusted Score": "16.0", "Measure Period": "2026 Q1"},
 ]
 
 
@@ -35,7 +39,7 @@ class OfficialMarketMetricsServiceTests(unittest.TestCase):
         self.db.close()
 
     def test_collects_official_national_and_nevada_snf_metrics(self) -> None:
-        result = collect_cms_market_metrics(self.db, provider_rows=_PROVIDERS, quality_rows=_QUALITY)
+        result = collect_cms_market_metrics(self.db, provider_rows=_PROVIDERS, quality_rows=_MDS_QUALITY, claims_quality_rows=_CLAIMS_QUALITY)
         self.assertEqual(result["observations_written"], 8)
 
         rows = {(row.metric_key, row.geography_key): row for row in self.db.query(MarketMetricObservation).all()}
@@ -45,12 +49,14 @@ class OfficialMarketMetricsServiceTests(unittest.TestCase):
         self.assertEqual(rows[("LICENSED_CAPACITY", "NATIONAL")].value_text, "225")
         self.assertEqual(rows[("FALLS_MAJOR_INJURY", "NEVADA")].value_text, "3.00")
         self.assertEqual(rows[("FALLS_MAJOR_INJURY", "NATIONAL")].value_text, "4.00")
-        self.assertEqual(rows[("HOSPITALIZATION_RATE", "NEVADA")].unit, "source_reported_rate")
+        self.assertEqual(rows[("HOSPITALIZATION_RATE", "NEVADA")].value_text, "13.00")
+        self.assertEqual(rows[("HOSPITALIZATION_RATE", "NEVADA")].unit, "percent")
+        self.assertEqual(rows[("HOSPITALIZATION_RATE", "NEVADA")].source_name, "CMS Medicare Claims Quality Measures")
         self.assertIn("not a population-weighted rate", rows[("HOSPITALIZATION_RATE", "NATIONAL")].source_scope)
 
     def test_refresh_updates_in_place_instead_of_accumulating_duplicate_snapshots(self) -> None:
-        collect_cms_market_metrics(self.db, provider_rows=_PROVIDERS, quality_rows=_QUALITY)
-        collect_cms_market_metrics(self.db, provider_rows=_PROVIDERS, quality_rows=_QUALITY)
+        collect_cms_market_metrics(self.db, provider_rows=_PROVIDERS, quality_rows=_MDS_QUALITY, claims_quality_rows=_CLAIMS_QUALITY)
+        collect_cms_market_metrics(self.db, provider_rows=_PROVIDERS, quality_rows=_MDS_QUALITY, claims_quality_rows=_CLAIMS_QUALITY)
         self.assertEqual(self.db.query(MarketMetricObservation).count(), 8)
         self.assertTrue(cms_market_metrics_are_fresh(self.db))
 
