@@ -3,7 +3,8 @@ from __future__ import annotations
 """Official, reproducible market metrics.
 
 This collector deliberately has a narrow source contract: CMS Provider Information
-and CMS Nursing Home Quality Measures.  Both are public national datasets and cover
+CMS Nursing Home Quality Measures, and CMS Medicare Claims Quality Measures.  All
+are public national datasets and cover
 *skilled nursing facilities only*.  They must never be stretched into claims about
 all senior living or independent living.
 
@@ -25,6 +26,7 @@ from sqlalchemy.orm import Session
 from app.models.competitive_intelligence import MarketMetricObservation
 from app.services.cms_service import (
     CMS_PROVIDER_DATASET_ID,
+    CMS_CLAIMS_QUALITY_DATASET_ID,
     CMS_QUALITY_DATASET_ID,
     clean_state,
     download_dataset,
@@ -36,6 +38,7 @@ from app.services.cms_service import (
 logger = logging.getLogger(__name__)
 CMS_PROVIDER_LANDING = f"https://data.cms.gov/provider-data/dataset/{CMS_PROVIDER_DATASET_ID}"
 CMS_QUALITY_LANDING = f"https://data.cms.gov/provider-data/dataset/{CMS_QUALITY_DATASET_ID}"
+CMS_CLAIMS_QUALITY_LANDING = f"https://data.cms.gov/provider-data/dataset/{CMS_CLAIMS_QUALITY_DATASET_ID}"
 SOURCE_SCOPE = "CMS Nursing Home data only (Medicare/Medicaid-certified skilled nursing facilities); excludes assisted living, memory care and independent living."
 
 
@@ -124,7 +127,9 @@ def _measure_family(description: str) -> Optional[str]:
     return None
 
 
-def _quality_aggregates(rows: Iterable[Dict[str, str]]) -> Tuple[Dict[Tuple[str, str], Tuple[float, int, str, str]], int]:
+def _quality_aggregates(
+    rows: Iterable[Dict[str, str]], *, expected_metric: str
+) -> Tuple[Dict[Tuple[str, str], Tuple[float, int, str, str]], int]:
     """Return one transparent arithmetic mean per metric/geography.
 
     CMS quality measures can be percentages or rates.  We preserve the published
@@ -137,8 +142,11 @@ def _quality_aggregates(rows: Iterable[Dict[str, str]]) -> Tuple[Dict[Tuple[str,
     for row in rows:
         row_count += 1
         metric = _measure_family(str(row.get("Measure Description") or ""))
+        # MDS publishes Four Quarter Average Score; Claims publishes Adjusted Score.
         value = to_float(row.get("Four Quarter Average Score"))
-        if not metric or value is None:
+        if value is None:
+            value = to_float(row.get("Adjusted Score"))
+        if metric != expected_metric or value is None:
             continue
         geography = "NEVADA" if clean_state(row.get("State")) == "NV" else "NATIONAL"
         description = str(row.get("Measure Description") or "").strip()
@@ -161,6 +169,7 @@ def collect_cms_market_metrics(
     *,
     provider_rows: Optional[Iterable[Dict[str, str]]] = None,
     quality_rows: Optional[Iterable[Dict[str, str]]] = None,
+    claims_quality_rows: Optional[Iterable[Dict[str, str]]] = None,
 ) -> Dict[str, object]:
     """Collect and persist official national and Nevada SNF market metrics.
 
@@ -174,6 +183,9 @@ def collect_cms_market_metrics(
     quality_stream = quality_rows if quality_rows is not None else iter_csv_rows(
         download_dataset(CMS_QUALITY_DATASET_ID, "market_cms_quality_measures.csv", force=True)
     )
+    claims_stream = claims_quality_rows if claims_quality_rows is not None else iter_csv_rows(
+        download_dataset(CMS_CLAIMS_QUALITY_DATASET_ID, "market_cms_claims_quality_measures.csv", force=True)
+    )
 
     aggregate, provider_period, provider_row_count = _provider_aggregates(provider_stream)
     for geography, label in (("NATIONAL", "United States"), ("NEVADA", "Nevada")):
@@ -181,8 +193,14 @@ def collect_cms_market_metrics(
         _upsert(db, metric_key="FACILITY_COUNT", geography_key=geography, geography_label=label, value_text=str(data["facilities"]), unit="facilities", observed_period=provider_period, source_name="CMS Provider Information", source_url=CMS_PROVIDER_LANDING)
         _upsert(db, metric_key="LICENSED_CAPACITY", geography_key=geography, geography_label=label, value_text=str(data["beds"]), unit="beds", observed_period=provider_period, source_name="CMS Provider Information", source_url=CMS_PROVIDER_LANDING)
 
-    quality, quality_row_count = _quality_aggregates(quality_stream)
-    for (metric, geography), (value, count, description, period) in quality.items():
+    falls, quality_row_count = _quality_aggregates(quality_stream, expected_metric="FALLS_MAJOR_INJURY")
+    hospitalizations, claims_row_count = _quality_aggregates(claims_stream, expected_metric="HOSPITALIZATION_RATE")
+    expected = {(metric, geography) for metric in ("FALLS_MAJOR_INJURY", "HOSPITALIZATION_RATE") for geography in ("NATIONAL", "NEVADA")}
+    found = set(falls) | set(hospitalizations)
+    if missing := expected - found:
+        raise RuntimeError(f"CMS quality refresh missing required metric/geography values: {sorted(missing)}")
+
+    for (metric, geography), (value, count, description, period) in falls.items():
         unit = "percent" if "percent" in description.lower() or "%" in description else "source_reported_rate"
         label = "United States" if geography == "NATIONAL" else "Nevada"
         _upsert(
@@ -197,14 +215,31 @@ def collect_cms_market_metrics(
             source_url=CMS_QUALITY_LANDING,
             source_scope=f"{SOURCE_SCOPE} Published measure: {description}. Arithmetic mean across {count} reporting facilities; not a population-weighted rate.",
         )
+    for (metric, geography), (value, count, description, period) in hospitalizations.items():
+        unit = "percent" if "percent" in description.lower() or "%" in description else "source_reported_rate"
+        label = "United States" if geography == "NATIONAL" else "Nevada"
+        _upsert(
+            db,
+            metric_key=metric,
+            geography_key=geography,
+            geography_label=label,
+            value_text=f"{value:.2f}",
+            unit=unit,
+            observed_period=period or "CMS published measure",
+            source_name="CMS Medicare Claims Quality Measures",
+            source_url=CMS_CLAIMS_QUALITY_LANDING,
+            source_scope=f"{SOURCE_SCOPE} Published measure: {description}. Arithmetic mean across {count} reporting facilities; not a population-weighted rate.",
+        )
     db.commit()
     return {
         "source": "CMS",
         "provider_rows": provider_row_count,
         "quality_rows": quality_row_count,
-        "observations_written": 4 + len(quality),
+        "claims_quality_rows": claims_row_count,
+        "observations_written": 4 + len(falls) + len(hospitalizations),
         "provider_source_url": CMS_PROVIDER_LANDING,
         "quality_source_url": CMS_QUALITY_LANDING,
+        "claims_quality_source_url": CMS_CLAIMS_QUALITY_LANDING,
     }
 
 
@@ -214,7 +249,7 @@ def cms_market_metrics_are_fresh(db: Session, *, max_age_days: int = 28) -> bool
         db.query(MarketMetricObservation)
         .filter(
             MarketMetricObservation.geography_key.in_(("NEVADA", "NATIONAL")),
-            MarketMetricObservation.source_name.in_(("CMS Provider Information", "CMS Nursing Home Quality Measures")),
+            MarketMetricObservation.source_name.in_(("CMS Provider Information", "CMS Nursing Home Quality Measures", "CMS Medicare Claims Quality Measures")),
         )
         .all()
     )
