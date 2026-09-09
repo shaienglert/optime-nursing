@@ -15,6 +15,11 @@ def _run_ready(questionnaire: dict, query: str, limit: int = 5) -> dict:
             "OPTIME_CANONICAL_MARKET": "las-vegas",
             "OPTIME_SEMANTIC_AI_ENABLED": "1",
             "OPTIME_SEMANTIC_AI_REQUIRED": "1",
+            # These are deterministic decision-quality tests.  They mock the
+            # interview AI, but intentionally do not provide a live candidate
+            # ranking transport/key; a repository-level CI variable must not turn
+            # that unrelated external call into an empty-result test outcome.
+            "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "0",
         },
         clear=False,
     ), patch(

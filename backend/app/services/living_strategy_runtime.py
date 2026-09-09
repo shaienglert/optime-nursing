@@ -82,6 +82,19 @@ def _duration_months(text: str) -> int | None:
     return None
 
 
+def _affirmatively_mentions_temporary_recovery(text: str) -> bool:
+    """Recognize recovery language without treating its negation as evidence.
+
+    A phrase such as "not temporary" is strong evidence *against* the temporary
+    recovery route.  The former substring check saw the word "temporary" and
+    incorrectly routed permanent ADL needs to Independent Living plus short-term
+    care.
+    """
+    if re.search(r"\b(?:not|no|never|isn't|is not|doesn't|does not)\s+(?:expected\s+to\s+)?(?:be\s+)?temporary\b", text):
+        return False
+    return _contains(text, "expected to walk", "should walk again", "return to walking", "expected to recover", "temporary", "short-term", "short term")
+
+
 def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
     query = _norm(natural_language_query)
     hi = _hi(questionnaire_state)
@@ -101,7 +114,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")
     spine_or_back = _contains(query, "spine", "spinal", "back surgery", "back operation")
     rehab = _contains(query, "rehab", "rehabilitation", "physical therapy", "physiotherapy", "pt ", " pt", "occupational therapy")
-    expected_recovery = _contains(query, "expected to walk", "should walk again", "return to walking", "expected to recover", "temporary", "short-term", "short term")
+    expected_recovery = _affirmatively_mentions_temporary_recovery(query)
     duration = _duration_months(query)
     if duration is not None and duration <= 6:
         expected_recovery = True
