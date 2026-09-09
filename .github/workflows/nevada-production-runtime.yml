@@ -102,11 +102,21 @@ jobs:
           from copy import deepcopy
 
           import app.services.human_intelligence_runtime_verified as hi_runtime
+          import app.services.must_ai_nice_pipeline as must_pipeline
           from app.services.patient_decision_engine import run_patient_decision_engine
 
           os.environ['OPTIME_SEMANTIC_AI_ENABLED'] = '1'
           os.environ['OPTIME_SEMANTIC_AI_REQUIRED'] = '1'
           os.environ['OPTIME_AI_CANDIDATE_RANKING_REQUIRED'] = '1'
+
+          def unavailable_required_ranking(rows, **_kwargs):
+              return list(rows), {
+                  'status': 'REQUIRED_BUT_UNAVAILABLE',
+                  'candidate_count': len(rows),
+                  'closed_world_validated': True,
+              }
+
+          must_pipeline.rank_must_eligible_candidates = unavailable_required_ranking
 
           VALLEY_CITIES = {
               'las vegas', 'henderson', 'north las vegas', 'paradise',
