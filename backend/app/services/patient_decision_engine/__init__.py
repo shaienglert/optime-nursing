@@ -376,6 +376,12 @@ def run_patient_decision_engine(
     for row in results:
         canonical_id = str(row.get("canonical_facility_id") or "")
         canonical_row = canonical_index.get(canonical_id) or {}
+        # Keep the governed memory-care fact on the returned record.  The care-setting
+        # gate already uses this canonical field; returning it makes the resulting
+        # recommendation explainable and prevents downstream consumers from having to
+        # infer a confirmed capability from a fit label alone.
+        if "memory_care_classification" in canonical_row:
+            row["memory_care_classification"] = canonical_row["memory_care_classification"]
         row["care_setting_fit"] = _care_setting_fit(context, row, canonical_row)
         if canonical_id in regulatory:
             row["regulatory_history"] = regulatory[canonical_id]
