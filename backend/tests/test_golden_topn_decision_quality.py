@@ -40,10 +40,7 @@ def _run_ready(questionnaire: dict, query: str, limit: int = 5) -> dict:
         side_effect=lambda result, questionnaire_state, natural_language_query: result,
     ):
         refresh_runtime_cache("golden_topn_case")
-        result = run_patient_decision_engine(questionnaire, query, limit=limit)
-        if not result.get("results"):
-            print("GOLDEN_TOPN_EMPTY_RESULT_DIAGNOSTIC=", result.get("decision_intelligence"))
-        return result
+        return run_patient_decision_engine(questionnaire, query, limit=limit)
 
 
 def _modalities(row: dict) -> set[str]:
