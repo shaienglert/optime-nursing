@@ -34,6 +34,26 @@ when it has a geography, period, source URL, source scope and capture time.
 - The displayed source scope must state exclusions, especially the difference
   between CMS skilled nursing and the broader senior-living market.
 
+## Non-competitor evidence rule (mandatory)
+
+**A placement-company competitor is never an evidence or editorial source.**
+Articles, market reports, facility facts, statistics, recommendation inputs, and
+customer-facing guidance must not cite, summarize, paraphrase, or derive claims
+from A Place for Mom, Caring.com, Seniorly, or any substantially similar paid
+senior-care placement/referral marketplace.
+
+Those sites may be read only by the isolated Competitive Intelligence Agent to
+record what a competitor publicly says about itself. That observation is labelled
+as competitor intelligence and cannot be promoted into a market fact, facility
+claim, ranking input, research citation, or public article.
+
+Allowed source classes for articles and factual claims are: government and
+regulatory bodies, original datasets, peer-reviewed research, academic and
+clinical institutions, recognized independent professional associations, and the
+facility/operator's own site only for claims about that facility (subject to the
+separate verification rules). If no permitted source supports a claim, the claim
+is omitted or marked unavailable.
+
 ## Refresh policy
 
 - CMS public datasets: refresh only when the stored CMS snapshot is older than
