@@ -5,13 +5,17 @@ on:
     branches: [main]
     paths:
       - 'scripts/run_nevada_pca_full_operational_sweep.py'
+      - 'scripts/enrich_nevada_pca_operational_primary_sources_v3.py'
       - 'scripts/enrich_nevada_pca_operational_primary_sources_v4.py'
+      - 'scripts/promote_nevada_pca_full_sweep_safe.py'
       - 'scripts/materialize_nevada_pca_valley_registry.py'
       - '.github/workflows/nevada-pca-full-operational-sweep.yml'
   pull_request:
     paths:
       - 'scripts/run_nevada_pca_full_operational_sweep.py'
+      - 'scripts/enrich_nevada_pca_operational_primary_sources_v3.py'
       - 'scripts/enrich_nevada_pca_operational_primary_sources_v4.py'
+      - 'scripts/promote_nevada_pca_full_sweep_safe.py'
       - 'scripts/materialize_nevada_pca_valley_registry.py'
       - '.github/workflows/nevada-pca-full-operational-sweep.yml'
   workflow_dispatch:
@@ -30,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
-      PYTHONPATH: backend
+      PYTHONPATH: backend:.:scripts
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -57,7 +61,7 @@ jobs:
           PY
       - name: Build governed remaining research queue
         run: python scripts/build_nevada_pca_operational_research_queue.py
-      - name: Run full operational research sweep
+      - name: Run full operational research sweep with V3 extended enrichment
         run: python scripts/run_nevada_pca_full_operational_sweep.py --chunk-size 25 --workers 4 --throttle 0.05
       - name: Gate full-sweep completeness and integrity
         run: |
@@ -89,6 +93,29 @@ jobs:
             'remaining_after_staging': r['remaining_after_verified_staging'],
           }, indent=2))
           PY
+      - name: Build safe strong-identity promotion candidates
+        run: python scripts/promote_nevada_pca_full_sweep_safe.py
+      - name: Gate safe promotion staging semantics
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path('reports/NEVADA_PCA_SAFE_AUTO_PROMOTIONS.json').read_text())
+          assert p['schema_version']=='nevada-pca-safe-auto-promotions-v1.2.0', p
+          for row in p['records']:
+              assert row['identity_verified'] is True, row
+              assert row['identity_basis'] in {
+                  'PRIMARY_SOURCE_EXACT_PHONE',
+                  'PRIMARY_SOURCE_STRONG_ADDRESS_CITY',
+                  'PRIMARY_SOURCE_EXACT_LICENSE_ROOT',
+              }, row
+              assert row['hourly_rate']=='UNKNOWN', row
+              for field in ('bathing_assistance','dressing_assistance','transfer_assistance','workers_comp_verified'):
+                  assert row[field] in (True, 'UNKNOWN'), (field, row)
+          print(json.dumps({
+              'safe_promotion_candidates': p['candidate_count'],
+              'rejected_weak_identity': p['rejected_weak_identity_count'],
+          }, indent=2))
+          PY
       - name: Upload complete PCA database and research package
         uses: actions/upload-artifact@v4
         with:
@@ -101,3 +128,4 @@ jobs:
             reports/NEVADA_HCQC_PERSONAL_CARE_AGENCIES.json
             reports/NEVADA_PCA_OPERATIONAL_RESEARCH_QUEUE.json
             reports/NEVADA_PCA_OPERATIONAL_FULL_SWEEP.json
+            reports/NEVADA_PCA_SAFE_AUTO_PROMOTIONS.json
