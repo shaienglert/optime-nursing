@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppQuestionnaireProvider } from "@/context/questionnaire-provider";
 import { SiteHeader } from "@/components/brand/site-header";
-import { UnderstandingTreeCompanion } from "@/components/brand/understanding-tree-companion";
 import { ProcessContinuityBridge } from "@/components/process/process-continuity-bridge";
 
 const geistSans = Geist({
@@ -64,7 +63,6 @@ export default function RootLayout({
         <AppQuestionnaireProvider>
           <ProcessContinuityBridge>
             <SiteHeader />
-            <UnderstandingTreeCompanion />
             <div className="flex-1">{children}</div>
           </ProcessContinuityBridge>
         </AppQuestionnaireProvider>
