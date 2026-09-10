@@ -9,21 +9,23 @@ type OptimeStaticLogoProps = {
 export function OptimeStaticLogo({
   href = "/",
   className = "",
-  subtitle = "Evidence-guided family decisions",
+  subtitle = "Finding You the Right Way",
 }: OptimeStaticLogoProps) {
   return (
-    <Link href={href} className={`inline-flex items-center gap-3 ${className}`.trim()} aria-label="OPTIME Home">
-      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#bdd5cc] bg-white shadow-[0_10px_24px_-16px_rgba(30,84,70,0.42)]">
-        <svg viewBox="0 0 64 64" className="h-6 w-6" role="img" aria-hidden="true">
-          <rect x="8" y="8" width="48" height="48" rx="12" fill="#f4fbf8" stroke="#7db5a3" strokeWidth="3" />
-          <path d="M20 20 H44 V32 H32 V44 H20 Z" fill="none" stroke="#2f7f6d" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M32 44 H44" fill="none" stroke="#57a18f" strokeWidth="4" strokeLinecap="round" />
-          <path d="M44 44 L50 44" fill="none" stroke="#57a18f" strokeWidth="4" strokeLinecap="round" />
-        </svg>
-      </span>
-      <span className="leading-tight">
-        <span className="block text-sm font-semibold tracking-[0.18em] text-[#204d43]">OPTIME</span>
-        <span className="block text-[11px] text-[#5e786f]">{subtitle}</span>
+    <Link href={href} className={`inline-flex items-center gap-3 ${className}`.trim()} aria-label="Oomnik Home">
+      <span className="leading-tight text-[#0b2850]">
+        <span className="flex items-end font-black tracking-tight" aria-label="Oomnik">
+          <span className="relative mr-[1px] inline-flex items-center">
+            <span className="inline-block h-[22px] w-[22px] rounded-full border-[5px] border-current" />
+            <span className="absolute -left-[2px] -top-[5px] h-[8px] w-[14px] rotate-[-18deg] rounded-full border-t-[4px] border-current" />
+          </span>
+          <span className="relative mr-[2px] inline-flex items-center">
+            <span className="inline-block h-[22px] w-[22px] rounded-full border-[5px] border-current" />
+            <span className="absolute -right-[3px] -top-[5px] h-[8px] w-[14px] rotate-[18deg] rounded-full border-t-[4px] border-current" />
+          </span>
+          <span className="text-[25px] font-black leading-[22px] tracking-[-0.055em]">mnik</span>
+        </span>
+        <span className="mt-1 block text-[11px] font-medium tracking-[0.01em] text-[#0b2850]">{subtitle}</span>
       </span>
     </Link>
   );
