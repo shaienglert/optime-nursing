@@ -68,6 +68,7 @@ from app.services.demographic_market_metrics_service import (
     start_demographic_market_metrics_scheduler,
 )
 from app.services.nevada_facility_scope import NEVADA_STATE_CODE, purge_non_nevada_facilities
+from app.services.nevada_runtime_facility_import import import_las_vegas_runtime_facilities
 
 
 from app.services.schema_migrations import ensure_deferred_report_schema
@@ -95,7 +96,7 @@ from app.services.facility_profile_portal import (
     save_capabilities,
     search_claimable_facilities,
 )
-from app.services.provider_portal_demo import ensure_opticare_demo
+from app.services.provider_portal_demo import DEMO_CMS_ID, ensure_opticare_demo
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.evidence_source_integrity import (
     audit_traceability,
@@ -1461,19 +1462,14 @@ def startup() -> None:
     try:
         purge_summary = purge_non_nevada_facilities(db)
         logger.info("nevada_facility_scope_enforced %s", purge_summary)
-        state = NEVADA_STATE_CODE
-        limit = env_int("OPTIME_IMPORT_LIMIT", 100)
-        should_reingest = os.getenv("OPTIME_REINGEST_ON_STARTUP", "0") == "1"
-        has_facilities = (db.query(func.count(Facility.id)).scalar() or 0) > 0
-        if should_reingest or not has_facilities:
-            app.state.import_summary = run_phase1_ingestion(db, state=state, limit=limit)
-        else:
-            app.state.import_summary = {
-                "facilities_imported": int(db.query(func.count(Facility.id)).scalar() or 0),
-                "missing_records": 0,
-                "failed_mappings": 0,
-                "score_distributions": {},
-            }
+        runtime_import = import_las_vegas_runtime_facilities(db)
+        app.state.import_summary = {
+            "facilities_imported": runtime_import["facilities_imported"],
+            "missing_records": 0,
+            "failed_mappings": 0,
+            "score_distributions": {},
+            **runtime_import,
+        }
 
         # Prepared knowledge reports can be generated lazily to keep startup memory bounded.
         eager_reports = os.getenv("OPTIME_EAGER_REPORTS_ON_STARTUP", "0") == "1"
@@ -1748,7 +1744,9 @@ async def get_governance_runtime_context(db: Session = Depends(get_db)):
     candidate_policy_payload = _load_json_file(candidate_policy_path)
     canonical_payload = _load_json_file(canonical_path)
 
-    facilities = db.query(Facility).filter(Facility.state == NEVADA_STATE_CODE).order_by(Facility.id.asc()).all()
+    facilities = db.query(Facility).filter(
+        Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
+    ).order_by(Facility.id.asc()).all()
     profile_rows = db.query(FacilityIntelligenceProfile).filter(
         FacilityIntelligenceProfile.facility_id.in_([facility.id for facility in facilities])
     ).all() if facilities else []
@@ -1836,7 +1834,9 @@ async def get_governance_runtime_context(db: Session = Depends(get_db)):
 
 @app.get("/facilities", response_model=List[FacilityListOut])
 async def get_facilities(q: Optional[str] = Query(default=None), db: Session = Depends(get_db)):
-    query = db.query(Facility).filter(Facility.state == NEVADA_STATE_CODE)
+    query = db.query(Facility).filter(
+        Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
+    )
 
     term = (q or "").strip()
     if term:
@@ -1927,7 +1927,9 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
 
 @app.get("/facilities/{id}", response_model=FacilityDetailsOut)
 async def get_facility(id: int, db: Session = Depends(get_db)):
-    facility = db.query(Facility).filter(Facility.id == id, Facility.state == NEVADA_STATE_CODE).first()
+    facility = db.query(Facility).filter(
+        Facility.id == id, Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
+    ).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
 
@@ -2417,7 +2419,9 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
 
     ccn_to_facility_id = {
         str(facility.cms_id): int(facility.id)
-        for facility in db.query(Facility.id, Facility.cms_id).filter(Facility.state == NEVADA_STATE_CODE).all()
+        for facility in db.query(Facility.id, Facility.cms_id).filter(
+            Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
+        ).all()
     }
     for result in response.get("results", []):
         source_identity_ids = result.get("source_identity_ids") or {}
