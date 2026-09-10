@@ -13,7 +13,7 @@ from app.services.cms_service import (
 SOURCE_NAME = "CMS Provider Information (Staffing Fields)"
 
 
-def import_staffing(db: Session, ccn_to_facility_id: dict, state: str = "FL") -> None:
+def import_staffing(db: Session, ccn_to_facility_id: dict, state: str = "NV") -> None:
     file_path = download_dataset(CMS_PROVIDER_DATASET_ID, "provider_information.csv")
 
     db.query(Staffing).delete()

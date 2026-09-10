@@ -14,7 +14,7 @@ SOURCE_NAME = "CMS Health Deficiencies"
 _SERIOUS_CODES = {"G", "H", "I", "J", "K", "L"}
 
 
-def import_inspections(db: Session, ccn_to_facility_id: dict, state: str = "FL") -> None:
+def import_inspections(db: Session, ccn_to_facility_id: dict, state: str = "NV") -> None:
     file_path = download_dataset(CMS_INSPECTION_DATASET_ID, "inspection_citations.csv")
 
     db.query(Inspection).delete()

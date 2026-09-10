@@ -13,7 +13,7 @@ from app.services.cms_service import (
 )
 
 
-def import_provider_information(db: Session, state: str = "FL", limit: int = 100) -> Tuple[Dict[str, int], dict]:
+def import_provider_information(db: Session, state: str = "NV", limit: int = 100) -> Tuple[Dict[str, int], dict]:
     file_path = download_dataset(CMS_PROVIDER_DATASET_ID, "provider_information.csv")
 
     existing = db.query(Facility).filter(Facility.state == state).all()

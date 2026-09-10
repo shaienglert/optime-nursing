@@ -12,7 +12,7 @@ from app.services.cms_service import (
 SOURCE_NAME = "CMS MDS Quality Measures"
 
 
-def import_quality(db: Session, ccn_to_facility_id: dict, state: str = "FL") -> None:
+def import_quality(db: Session, ccn_to_facility_id: dict, state: str = "NV") -> None:
     file_path = download_dataset(CMS_QUALITY_DATASET_ID, "quality_measures.csv")
 
     db.query(QualityMeasure).delete()

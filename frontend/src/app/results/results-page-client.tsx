@@ -704,7 +704,7 @@ export function ResultsPageClient() {
             <div>
               <p className="inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(index)}</p>
               <h3 className="mt-2 text-xl font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
-              <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
+              <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "NV"}</p>
               <p className="mt-1 text-xs font-semibold text-[#2f6d3e]">
                 {recommendation.rank_display || `#${index + 1}`}
                 {recommendation.rank_tie_status === "JOINT_RANK" ? " (Tied)" : ""}
@@ -813,7 +813,7 @@ export function ResultsPageClient() {
             ) : null}
 
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${recommendation.facility_name} ${recommendation.city || "Florida"}`)}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${recommendation.facility_name} ${recommendation.city || "Nevada"}`)}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex rounded-full border border-[#dccfb9] px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]"
@@ -955,7 +955,7 @@ export function ResultsPageClient() {
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
                             <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
-                            <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
+                            <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "NV"}</p>
                           </div>
                           <button
                             type="button"
@@ -1056,7 +1056,7 @@ export function ResultsPageClient() {
                               </div>
                               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
                               <p className="mt-1 text-sm font-semibold text-[#2f2a24]">{recommendation.facility_name}</p>
-                              <p className="mt-1 text-xs text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "FL"}</p>
+                              <p className="mt-1 text-xs text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "NV"}</p>
                               <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Image source: ${imageInfo.sourceLabel}` : "No verified facility image available"}</p>
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {recommendation.canonical_facility_id ? (

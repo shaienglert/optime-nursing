@@ -67,6 +67,7 @@ from app.services.demographic_market_metrics_service import (
     collect_official_demographic_market_metrics,
     start_demographic_market_metrics_scheduler,
 )
+from app.services.nevada_facility_scope import NEVADA_STATE_CODE, purge_non_nevada_facilities
 
 
 from app.services.schema_migrations import ensure_deferred_report_schema
@@ -1110,7 +1111,7 @@ def _build_provider_row_map(facilities: List[Facility], state: str) -> Dict[str,
     return row_map
 
 
-def _calculate_scores(db: Session, state: str = "FL") -> dict:
+def _calculate_scores(db: Session, state: str = NEVADA_STATE_CODE) -> dict:
     facilities = db.query(Facility).filter(Facility.state == state).order_by(Facility.id.asc()).all()
     provider_rows = _build_provider_row_map(facilities, state)
 
@@ -1213,7 +1214,7 @@ def _calculate_scores(db: Session, state: str = "FL") -> dict:
     }
 
 
-def run_phase1_ingestion(db: Session, state: str = "FL", limit: int = 100) -> dict:
+def run_phase1_ingestion(db: Session, state: str = NEVADA_STATE_CODE, limit: int = 100) -> dict:
     ccn_to_facility_id, provider_summary = import_provider_information(db, state=state, limit=limit)
     staffing_summary = import_staffing_data(db, ccn_to_facility_id, state=state)
     quality_summary = import_quality_data(db, ccn_to_facility_id, state=state)
@@ -1458,7 +1459,9 @@ def startup() -> None:
     ensure_agent_knowledge_report_snapshot_schema(engine)
     db = SessionLocal()
     try:
-        state = os.getenv("OPTIME_IMPORT_STATE", "FL")
+        purge_summary = purge_non_nevada_facilities(db)
+        logger.info("nevada_facility_scope_enforced %s", purge_summary)
+        state = NEVADA_STATE_CODE
         limit = env_int("OPTIME_IMPORT_LIMIT", 100)
         should_reingest = os.getenv("OPTIME_REINGEST_ON_STARTUP", "0") == "1"
         has_facilities = (db.query(func.count(Facility.id)).scalar() or 0) > 0
@@ -1745,7 +1748,7 @@ async def get_governance_runtime_context(db: Session = Depends(get_db)):
     candidate_policy_payload = _load_json_file(candidate_policy_path)
     canonical_payload = _load_json_file(canonical_path)
 
-    facilities = db.query(Facility).filter(Facility.state == "FL").order_by(Facility.id.asc()).all()
+    facilities = db.query(Facility).filter(Facility.state == NEVADA_STATE_CODE).order_by(Facility.id.asc()).all()
     profile_rows = db.query(FacilityIntelligenceProfile).filter(
         FacilityIntelligenceProfile.facility_id.in_([facility.id for facility in facilities])
     ).all() if facilities else []
@@ -1833,7 +1836,7 @@ async def get_governance_runtime_context(db: Session = Depends(get_db)):
 
 @app.get("/facilities", response_model=List[FacilityListOut])
 async def get_facilities(q: Optional[str] = Query(default=None), db: Session = Depends(get_db)):
-    query = db.query(Facility).filter(Facility.state == "FL")
+    query = db.query(Facility).filter(Facility.state == NEVADA_STATE_CODE)
 
     term = (q or "").strip()
     if term:
@@ -1924,7 +1927,7 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
 
 @app.get("/facilities/{id}", response_model=FacilityDetailsOut)
 async def get_facility(id: int, db: Session = Depends(get_db)):
-    facility = db.query(Facility).filter(Facility.id == id, Facility.state == "FL").first()
+    facility = db.query(Facility).filter(Facility.id == id, Facility.state == NEVADA_STATE_CODE).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
 
@@ -2414,7 +2417,7 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
 
     ccn_to_facility_id = {
         str(facility.cms_id): int(facility.id)
-        for facility in db.query(Facility.id, Facility.cms_id).filter(Facility.state == "FL").all()
+        for facility in db.query(Facility.id, Facility.cms_id).filter(Facility.state == NEVADA_STATE_CODE).all()
     }
     for result in response.get("results", []):
         source_identity_ids = result.get("source_identity_ids") or {}
