@@ -99,7 +99,7 @@ function ChoiceLink({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`group relative mr-5 mt-3 inline-flex items-center text-left text-lg font-medium transition ${
+      className={`group relative mr-5 mt-4 inline-flex min-h-12 items-center text-left text-2xl font-medium leading-8 transition ${
         selected ? "text-[#183f35]" : "text-[#315f53] hover:text-[#183f35]"
       }`}
     >
@@ -238,20 +238,22 @@ export default function HomePage() {
           </nav>
 
           <div className="pt-20 sm:pt-28">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3a7969]">Finding You the Right Way</p>
+            <p className="text-base font-semibold uppercase tracking-[0.16em] text-[#3a7969]">Welcome to Oomnik</p>
             <h1 className="mt-5 max-w-5xl text-5xl font-semibold leading-[1.03] tracking-[-0.05em] text-[#1e2e28] sm:text-7xl lg:text-[5.5rem]">
-              The right senior living decision starts with understanding the person.
+              A difficult decision deserves time, care, and the right guidance.
             </h1>
             <p className="mt-7 max-w-3xl text-lg leading-8 text-[#52645d] sm:text-xl">
-              Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.
+              Choosing senior living for yourself or someone you love can feel overwhelming. There are many practical, personal, and emotional considerations — and no two situations are the same.
             </p>
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-[#52645d] sm:text-xl">Answer a few questions so we can understand your situation. We will research the options that fit you specifically, explain what is known and what still needs checking, and prepare a clear summary with recommendations. If information is missing, we will follow up with the communities; when you are ready, we can also help coordinate visits. You only need to tell us what matters. We take it from there, in the way that works for you.</p>
 
             <div className="mt-14 max-w-4xl border-l-2 border-[#a9c7bd] pl-6 sm:pl-9">
               {heroStep === "relationship" && (
                 <div>
-                  <p className="text-sm font-medium text-[#648077]">First, tell us who this decision is for.</p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">Who are you looking for?</h2>
-                  <div className="mt-3">
+                  <p className="text-xl font-medium leading-8 text-[#52645d]">Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.</p>
+                  <h2 className="mt-5 text-5xl font-semibold leading-[1.08] tracking-[-0.04em] text-[#22332d] sm:text-6xl">First, tell us who this decision is for.</h2>
+                  <h3 className="mt-8 text-3xl font-semibold leading-tight tracking-[-0.03em] text-[#315f53] sm:text-4xl">Who are you looking for?</h3>
+                  <div className="mt-5">
                     {RELATIONSHIP_OPTIONS.map((option) => (
                       <ChoiceLink key={option.label} label={option.label} onClick={() => chooseRelationship(option.label, option.value)} />
                     ))}
@@ -303,10 +305,10 @@ export default function HomePage() {
               )}
             </div>
 
-            <button type="button" onClick={() => document.getElementById("describe")?.scrollIntoView({ behavior: "smooth" })} className="mt-12 text-sm font-medium text-[#5a756c] underline decoration-[#a8beb6] underline-offset-4 hover:text-[#315f53]">
+            <button type="button" onClick={() => document.getElementById("describe")?.scrollIntoView({ behavior: "smooth" })} className="mt-12 text-2xl font-medium leading-8 text-[#315f53] underline decoration-[#8fb4a8] decoration-2 underline-offset-8 hover:text-[#183f35]">
               Or tell the story in your own words
             </button>
-            <p className="mt-8 max-w-3xl text-sm leading-6 text-[#64766f]">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
+            <p className="mt-10 max-w-3xl text-lg leading-8 text-[#52645d]">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
           </div>
         </div>
       </section>
