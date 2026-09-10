@@ -39,11 +39,36 @@ from app.services.decision_research_worker import _fetch, _search_result_urls
 
 logger = logging.getLogger(__name__)
 
-_SKIP_DOMAINS = (
-    "aplaceformom.com", "caring.com", "seniorly.com", "yelp.com", "facebook.com",
+_COMPETITOR_PLACEMENT_DOMAINS = (
+    "aplaceformom.com",
+    "caring.com",
+    "seniorly.com",
+)
+
+# This list is intentionally separate from the general low-quality/social-source
+# filter below.  Competitor sites may be observed by the dedicated competitive
+# intelligence service, but they must never become evidence for an OPTIME article,
+# market metric, facility claim, or recommendation.
+_SKIP_DOMAINS = _COMPETITOR_PLACEMENT_DOMAINS + (
+    "yelp.com", "facebook.com",
     "instagram.com", "linkedin.com", "youtube.com", "google.com", "pinterest.com",
     "indeed.com", "glassdoor.com", "reddit.com", "wikipedia.org",
 )
+
+
+def is_disallowed_article_source(url: str) -> bool:
+    """Return whether a URL is barred from evidence or editorial use.
+
+    Placement competitors are deliberately not a source class.  Their public
+    pages can be monitored only by ``competitive_intelligence_service`` for
+    competitor-change observation; they cannot support a factual claim anywhere
+    customer-facing or decision-making.
+    """
+    domain = urlparse(url).netloc.lower().split(":", 1)[0]
+    return bool(domain) and any(
+        domain == blocked or domain.endswith(f".{blocked}")
+        for blocked in _COMPETITOR_PLACEMENT_DOMAINS
+    )
 
 _MAX_RESULTS_PER_QUERY = 5
 
@@ -298,7 +323,11 @@ def run_market_supply_intelligence_cycle(db: Session, *, query_specs: Optional[L
             if checked >= _MAX_RESULTS_PER_QUERY:
                 break
             domain = urlparse(url).netloc.lower()
-            if not domain or any(domain.endswith(skip) for skip in _SKIP_DOMAINS):
+            if (
+                not domain
+                or is_disallowed_article_source(url)
+                or any(domain == skip or domain.endswith(f".{skip}") for skip in _SKIP_DOMAINS)
+            ):
                 continue
             checked += 1
             try:

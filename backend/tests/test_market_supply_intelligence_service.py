@@ -11,6 +11,7 @@ from app.services.competitive_intelligence_service import AGENT_KEY
 from app.services.market_supply_intelligence_service import (
     QUERIES,
     _extract_market_supply_items,
+    is_disallowed_article_source,
     run_las_vegas_market_supply_pilot,
     run_market_supply_intelligence_cycle,
 )
@@ -83,6 +84,27 @@ class MarketSupplyIntelligenceServiceTests(unittest.TestCase):
             with patch(
                 "app.services.market_supply_intelligence_service._search_result_urls",
                 return_value=[("https://www.facebook.com/some-post", "irrelevant")],
+            ), patch("app.services.market_supply_intelligence_service._fetch") as mock_fetch:
+                run_market_supply_intelligence_cycle(db)
+            mock_fetch.assert_not_called()
+        finally:
+            db.close()
+
+    def test_placement_competitors_are_never_eligible_article_sources(self) -> None:
+        for url in (
+            "https://www.aplaceformom.com/senior-living-news/example",
+            "https://caring.com/resources/example",
+            "https://research.seniorly.com/example",
+        ):
+            self.assertTrue(is_disallowed_article_source(url))
+        self.assertFalse(is_disallowed_article_source("https://www.cms.gov/example"))
+
+    def test_placement_competitor_domains_are_never_fetched_for_market_evidence(self) -> None:
+        db = _db()
+        try:
+            with patch(
+                "app.services.market_supply_intelligence_service._search_result_urls",
+                return_value=[("https://research.seniorly.com/report", "report")],
             ), patch("app.services.market_supply_intelligence_service._fetch") as mock_fetch:
                 run_market_supply_intelligence_cycle(db)
             mock_fetch.assert_not_called()
