@@ -309,6 +309,7 @@ export default function HomePage() {
               Or tell the story in your own words
             </button>
             <p className="mt-12 max-w-4xl text-4xl font-semibold leading-[1.12] tracking-[-0.035em] text-[#1e4f43] sm:text-5xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
+            <p className="mt-7 text-5xl font-semibold leading-none tracking-[-0.05em] text-[#1e2e28] sm:text-6xl">Oomnik <span className="font-normal text-[#315f53]">— Finding You the Right Way.</span></p>
           </div>
         </div>
       </section>
