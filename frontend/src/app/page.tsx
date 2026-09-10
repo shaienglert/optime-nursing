@@ -238,7 +238,7 @@ export default function HomePage() {
           </nav>
 
           <div className="pt-20 sm:pt-28">
-            <p className="text-base font-semibold uppercase tracking-[0.16em] text-[#3a7969]">Welcome to Oomnik</p>
+            <p className="text-5xl font-semibold leading-none tracking-[-0.04em] text-[#1e4f43] sm:text-6xl">Welcome to Oomnik</p>
             <h1 className="mt-5 max-w-5xl text-5xl font-semibold leading-[1.03] tracking-[-0.05em] text-[#1e2e28] sm:text-7xl lg:text-[5.5rem]">
               A difficult decision deserves time, care, and the right guidance.
             </h1>
@@ -308,7 +308,7 @@ export default function HomePage() {
             <button type="button" onClick={() => document.getElementById("describe")?.scrollIntoView({ behavior: "smooth" })} className="mt-12 text-2xl font-medium leading-8 text-[#315f53] underline decoration-[#8fb4a8] decoration-2 underline-offset-8 hover:text-[#183f35]">
               Or tell the story in your own words
             </button>
-            <p className="mt-10 max-w-3xl text-lg leading-8 text-[#52645d]">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
+            <p className="mt-12 max-w-4xl text-4xl font-semibold leading-[1.12] tracking-[-0.035em] text-[#1e4f43] sm:text-5xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
           </div>
         </div>
       </section>
