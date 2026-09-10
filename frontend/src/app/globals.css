@@ -105,3 +105,6 @@ body {
     --ring: #0b5fff;
   }
 }
+
+html[data-font-scale="large"] { font-size: 112.5%; }
+html[data-font-scale="x-large"] { font-size: 125%; }
