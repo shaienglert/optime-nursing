@@ -136,12 +136,14 @@ def _load_miami_dade_cms_ids() -> set[str]:
     return cms_ids
 
 
-def _load_miami_dade_facilities(db: Session) -> List[Facility]:
-    cms_ids = _load_miami_dade_cms_ids()
-    query = db.query(Facility).filter(Facility.state == "FL")
-    if cms_ids:
-        query = query.filter(Facility.cms_id.in_(sorted(cms_ids)))
-    return query.order_by(Facility.name.asc()).all()
+def _load_nevada_facilities(db: Session) -> List[Facility]:
+    """Limit live discovery to the Nevada market, without a legacy county list."""
+    return (
+        db.query(Facility)
+        .filter(Facility.state == "NV")
+        .order_by(Facility.name.asc())
+        .all()
+    )
 
 
 def _facility_record(facility: Facility, registry: Dict[str, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -1286,7 +1288,7 @@ def _unknown_state_for_facility(db: Session, facility: Facility) -> Dict[str, in
 def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligence", facility_ids: Optional[List[int]] = None) -> Dict[str, Any]:
     _ensure_external_tables(db)
     registry = _load_source_registry()
-    facilities = _load_miami_dade_facilities(db)
+    facilities = _load_nevada_facilities(db)
     if facility_ids:
         wanted = set(facility_ids)
         facilities = [facility for facility in facilities if facility.id in wanted]

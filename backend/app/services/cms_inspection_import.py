@@ -13,7 +13,7 @@ from app.services.cms_service import (
 _SERIOUS_CODES = {"G", "H", "I", "J", "K", "L"}
 
 
-def import_inspection_data(db: Session, ccn_to_facility_id: dict, state: str = "FL") -> dict:
+def import_inspection_data(db: Session, ccn_to_facility_id: dict, state: str = "NV") -> dict:
     file_path = download_dataset(CMS_INSPECTION_DATASET_ID, "inspection_citations.csv")
 
     db.query(Inspection).delete()

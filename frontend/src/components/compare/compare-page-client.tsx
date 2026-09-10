@@ -604,7 +604,7 @@ export function ComparePageClient() {
               <article key={facilityId} className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.25)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5f7f6b]">Comparison overview</p>
                 <h2 className="mt-2 text-xl font-semibold text-[#2f2a24]">{facilityName}</h2>
-                <p className="mt-1 text-sm text-[#6d655b]">{recommendation?.city || "City unknown"}, {recommendation?.state || "FL"}</p>
+                <p className="mt-1 text-sm text-[#6d655b]">{recommendation?.city || "City unknown"}, {recommendation?.state || "NV"}</p>
                 <div className="mt-4 space-y-2 text-sm text-[#4f473d]">
                   <p><span className="font-semibold text-[#2f2a24]">Patient Match:</span> {summary.patientMatch}</p>
                   <p><span className="font-semibold text-[#2f2a24]">Quality & Safety:</span> {summary.qualitySafety}</p>

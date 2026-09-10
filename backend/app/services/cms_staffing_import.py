@@ -11,7 +11,7 @@ from app.services.cms_service import (
 )
 
 
-def import_staffing_data(db: Session, ccn_to_facility_id: dict, state: str = "FL") -> dict:
+def import_staffing_data(db: Session, ccn_to_facility_id: dict, state: str = "NV") -> dict:
     file_path = download_dataset(CMS_PROVIDER_DATASET_ID, "provider_information.csv")
 
     db.query(Staffing).delete()

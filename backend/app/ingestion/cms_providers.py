@@ -15,7 +15,7 @@ from app.services.cms_service import (
 SOURCE_NAME = "CMS Provider Information"
 
 
-def import_providers(db: Session, state: str = "FL", limit: int = 100) -> Dict[str, int]:
+def import_providers(db: Session, state: str = "NV", limit: int = 100) -> Dict[str, int]:
     file_path = download_dataset(CMS_PROVIDER_DATASET_ID, "provider_information.csv")
 
     db.query(Facility).filter(Facility.state == state).delete()
