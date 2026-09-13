@@ -1,0 +1,69 @@
+{
+  "scope": "Las Vegas Valley, Nevada only",
+  "source": "checksum-validated Las Vegas runtime projection plus verified housing overlays",
+  "facilities": 377,
+  "facility_types": {
+    "ASSISTED_LIVING_RFG": 313,
+    "SKILLED_NURSING": 40,
+    "INDEPENDENT_LIVING": 24
+  },
+  "evidence_coverage": {
+    "active_or_governed_identity": 375,
+    "license_expiration": 351,
+    "regulatory_detail_url": 362,
+    "licensed_or_certified_capacity": 353,
+    "phone": 353,
+    "cms_quality_profile": 37,
+    "official_provider_website": 16,
+    "provider_housing_evidence": 15,
+    "independent_living_primary_evidence": 12,
+    "memory_care_confirmed": 183
+  },
+  "evidence_coverage_by_type": {
+    "ASSISTED_LIVING_RFG": {
+      "facilities": 313,
+      "active_or_governed_identity": 313,
+      "license_expiration": 313,
+      "regulatory_detail_url": 313,
+      "licensed_or_certified_capacity": 313,
+      "phone": 313,
+      "cms_quality_profile": 0,
+      "official_provider_website": 4,
+      "provider_housing_evidence": 4,
+      "independent_living_primary_evidence": 0,
+      "memory_care_confirmed": 183
+    },
+    "INDEPENDENT_LIVING": {
+      "facilities": 24,
+      "active_or_governed_identity": 24,
+      "license_expiration": 0,
+      "regulatory_detail_url": 11,
+      "licensed_or_certified_capacity": 0,
+      "phone": 0,
+      "cms_quality_profile": 0,
+      "official_provider_website": 11,
+      "provider_housing_evidence": 11,
+      "independent_living_primary_evidence": 12,
+      "memory_care_confirmed": 0
+    },
+    "SKILLED_NURSING": {
+      "facilities": 40,
+      "active_or_governed_identity": 38,
+      "license_expiration": 38,
+      "regulatory_detail_url": 38,
+      "licensed_or_certified_capacity": 40,
+      "phone": 40,
+      "cms_quality_profile": 37,
+      "official_provider_website": 1,
+      "provider_housing_evidence": 0,
+      "independent_living_primary_evidence": 0,
+      "memory_care_confirmed": 0
+    }
+  },
+  "recommendation_policy": "Missing material service evidence remains UNKNOWN and blocks final recommendation; it never becomes a positive inference.",
+  "research_priority": [
+    "Resolve current-license status for any record lacking active/governed identity.",
+    "Obtain official-provider evidence for medication, ADL, memory care, rehabilitation, pricing, availability and Medicaid only when relevant to a client MUST.",
+    "Use regulatory and CMS quality facts as governed tie-break evidence, not paid-placement signals."
+  ]
+}
