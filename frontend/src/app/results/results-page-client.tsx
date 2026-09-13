@@ -1194,7 +1194,13 @@ export function ResultsPageClient() {
         ) : null}
 
         <div className="py-10 text-center text-sm text-[#6d655b]">
-          {isLoading ? "Loading communities..." : apiLoadError ? "Decision API unavailable" : recommendations.length > 0 ? "End of recommendations" : "No communities available"}
+          {isLoading
+            ? "Loading communities..."
+            : apiLoadError
+              ? "Decision API unavailable"
+              : recommendations.length > 0
+                ? "End of recommendations"
+                : "No verified communities are ready to compare yet. We need to verify the missing facility details first."}
         </div>
       </section>
 
