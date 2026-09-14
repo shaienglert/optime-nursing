@@ -44,31 +44,37 @@ export function SimpleResultsPageClient() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError(null);
-    const cached = loadDecisionResponseCache<DecisionEngineResponse>(decisionRequestKey);
-    const load = cached
-      ? Promise.resolve(cached)
-      : fetchPatientDecisionRecommendations({
-          questionnaire_state: state as unknown as Record<string, unknown>,
-          natural_language_query: naturalLanguageQuery,
-          limit: 50,
-        }).then((value) => {
-          saveDecisionResponseCache(decisionRequestKey, value);
-          return value;
+    // A home-page answer is saved immediately before navigation.  Give React a
+    // short settling window so the results request uses that final state rather
+    // than sending both the previous and the just-updated questionnaire.
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      const cached = loadDecisionResponseCache<DecisionEngineResponse>(decisionRequestKey);
+      const load = cached
+        ? Promise.resolve(cached)
+        : fetchPatientDecisionRecommendations({
+            questionnaire_state: state as unknown as Record<string, unknown>,
+            natural_language_query: naturalLanguageQuery,
+            limit: 50,
+          }).then((value) => {
+            saveDecisionResponseCache(decisionRequestKey, value);
+            return value;
+          });
+      void load
+        .then((value) => {
+          if (active) setResponse(value);
+        })
+        .catch((cause) => {
+          if (active) setError(cause instanceof Error ? cause.message : "We could not load the recommendations.");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
         });
-    void load
-      .then((value) => {
-        if (active) setResponse(value);
-      })
-      .catch((cause) => {
-        if (active) setError(cause instanceof Error ? cause.message : "We could not load the recommendations.");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    }, 300);
     return () => {
       active = false;
+      window.clearTimeout(timer);
     };
   }, [decisionRequestKey, naturalLanguageQuery, state]);
 
@@ -112,76 +118,3 @@ export function SimpleResultsPageClient() {
             </div>
           )}
         </section>
-
-        {top.length > 0 ? (
-          <section className="mt-8 grid gap-6">
-            {top.map((item, index) => {
-              const why = (item.explanation?.why_matches || []).map(cleanText).filter(Boolean).slice(0, 3);
-              const verify = (item.explanation?.needs_verification || []).map(cleanText).filter(Boolean).slice(0, 3);
-              return (
-                <article key={item.canonical_facility_id} className="rounded-[2rem] border border-[#ded6c9] bg-white p-7 shadow-sm sm:p-9">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-lg font-semibold text-[#3e7868]">#{index + 1} current match</p>
-                      <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{item.facility_name}</h2>
-                      <p className="mt-2 text-lg text-[#627069]">{[item.city, item.state].filter(Boolean).join(", ")}</p>
-                    </div>
-                    <div className="flex flex-col items-start gap-2 sm:items-end">
-                      <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">Meets verified must-haves</span>
-                      <Link
-                        href={`/facility/canonical?canonical=${encodeURIComponent(item.canonical_facility_id)}&back=${encodeURIComponent(`/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`}
-                        className="rounded-full border border-[#315f53] px-4 py-2 text-base font-semibold text-[#315f53] hover:bg-[#f4fbf7]"
-                      >
-                        View full listing →
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="mt-7 grid gap-5 lg:grid-cols-2">
-                    <div className="rounded-2xl bg-[#f4f8f6] p-6">
-                      <h3 className="text-2xl font-semibold">Why it fits</h3>
-                      {why.length ? (
-                        <ul className="mt-3 space-y-3 text-xl leading-8">{why.map((text) => <li key={text}>✓ {text}</li>)}</ul>
-                      ) : (
-                        <p className="mt-3 text-xl leading-8 text-[#596761]">It passed the required-care and location checks. We are still building the plain-language explanation.</p>
-                      )}
-                    </div>
-
-                    <div className="rounded-2xl bg-[#fff7e7] p-6">
-                      <h3 className="text-2xl font-semibold">What we still want to confirm</h3>
-                      {verify.length ? (
-                        <ul className="mt-3 space-y-3 text-xl leading-8">{verify.map((text) => <li key={text}>• {text}</li>)}</ul>
-                      ) : (
-                        <p className="mt-3 text-xl leading-8">No critical verification item is currently flagged.</p>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </section>
-        ) : null}
-
-        {pending.length > 0 ? (
-          <section className="mt-8 rounded-[2rem] border border-[#ead9b4] bg-[#fffaf0] p-7 sm:p-9">
-            <h2 className="text-3xl font-semibold">Other promising places we are still checking</h2>
-            <p className="mt-3 text-xl leading-8 text-[#655a45]">
-              These places are not being presented as recommendations yet because one or more important facts still need verification.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {pending.slice(0, 8).map((item) => (
-                <span key={item.canonical_facility_id} className="rounded-full border border-[#ddcda9] bg-white px-4 py-2 text-lg">{item.facility_name}</span>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="mt-8 flex flex-wrap gap-4 pb-10">
-          <Link href={detailsHref} className="rounded-2xl border-2 border-[#315f53] px-6 py-4 text-xl font-semibold text-[#315f53]">See detailed comparison</Link>
-          <Link href={personalReportHref} className="rounded-2xl border-2 border-[#315f53] px-6 py-4 text-xl font-semibold text-[#315f53]">See your personal report</Link>
-          <Link href="/adaptive-interview?review=1&next=/results" className="rounded-2xl border border-[#cfc6b7] bg-white px-6 py-4 text-xl font-semibold">Change answers</Link>
-        </section>
-      </div>
-    </main>
-  );
-}
