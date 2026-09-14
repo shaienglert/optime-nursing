@@ -114,6 +114,27 @@ def _reconcile_medication_must(row: dict[str, Any]) -> None:
     )
 
 
+def _ranking_basis(row: dict[str, Any]) -> dict[str, Any]:
+    """The specific, already-verified signals that actually separate this row from
+    its neighbors in intent_rank_key's ordering -- rating, regulatory grade, and
+    evidence completeness, not the flat needs-coverage match_score. Two rows can
+    carry an identical match_score while ranking apart on these; without this field
+    that gap was invisible to the client, who saw only a tied score with no visible
+    reason for the order.
+    """
+    fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+    reputation = fit.get("public_reputation") if isinstance(fit.get("public_reputation"), dict) else {}
+    history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}
+    return {
+        "rating": reputation.get("rating", "UNKNOWN"),
+        "review_count": reputation.get("review_count", "UNKNOWN"),
+        "latest_regulatory_grade": history.get("latest_known_grade", "UNKNOWN"),
+        "disciplinary_action_on_record": history.get("disciplinary_action", "UNKNOWN"),
+        "nice_preferences_matched": len(fit.get("nice_match") or []),
+        "verified_evidence_items": fit.get("relevant_evidence_known_count", 0),
+    }
+
+
 def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict[str, Any], natural_language_query: str, limit: int) -> dict[str, Any]:
     from app.services.client_intent_runtime import intent_rank_key
     from app.services.combined_care_solution_runtime import attach_combined_care_solutions
@@ -128,11 +149,20 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
     indexed = list(enumerate(rows))
     indexed.sort(key=lambda pair: (*intent_rank_key(pair[1]), pair[0]))
     rows = [row for _, row in indexed]
+    # intent_rank_key's last element is the facility-name tiebreaker used only to make
+    # sort order deterministic -- it isn't a real signal, so two rows are a genuine
+    # tie only if everything *before* that element matches.
+    substantive_keys = [intent_rank_key(row)[:-1] for row in rows]
     for position, row in enumerate(rows, start=1):
         row["rank_position"] = position
         row["rank_display"] = f"#{position}"
-        row["rank_tie_status"] = "UNIQUE_RANK"
-        row["tied_with"] = []
+        tied_indexes = [
+            other for other, key in enumerate(substantive_keys)
+            if other != position - 1 and key == substantive_keys[position - 1]
+        ]
+        row["rank_tie_status"] = "JOINT_RANK" if tied_indexes else "UNIQUE_RANK"
+        row["tied_with"] = [rows[i].get("facility_name") for i in tied_indexes]
+        row["ranking_basis"] = _ranking_basis(row)
         row.setdefault("explanation", {})["combined_care_solution"] = row.get("combined_care_solution") or {}
     selected = rows[: max(0, int(limit or 0))]
     result["results"] = selected
