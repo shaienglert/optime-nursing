@@ -16,6 +16,14 @@ DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "las_vegas_supplier_c
 PUBLIC_STATUSES = {"LIMITED", "VERIFIED"}
 VALID_STATUSES = {"CANDIDATE", "LIMITED", "VERIFIED", "SUSPENDED", "CLOSED"}
 VALID_INVOLVEMENT = {"DIRECT_LINK", "DIRECTORY", "PROFESSIONAL_REFERRAL", "OUTCOME_CRITICAL"}
+CANONICAL_SECTORS = {
+    "MOVE_MANAGEMENT", "MOVING_PACKING", "CONTENTS_EXIT", "CLEANING_SETUP",
+    "PROPERTY_TRANSITION", "MOVE_TRANSPORT", "ROOM_RETAIL", "CONNECTIVITY",
+    "DME_MOBILITY", "HOME_CARE", "PRIVATE_DUTY_NURSING", "HOME_HEALTH_THERAPY",
+    "PHARMACY_MEDICATION", "ROUTINE_TRANSPORT", "SAFETY_MONITORING", "TECH_SUPPORT",
+    "SENIOR_FITNESS", "COMPANIONSHIP", "MEALS_NUTRITION", "MOBILE_PERSONAL_HEALTH",
+    "PERSONAL_CARE_LIFESTYLE", "PET_SUPPORT", "HOSPICE_PALLIATIVE",
+}
 
 _last_cycle: dict[str, Any] | None = None
 logger = logging.getLogger(__name__)
@@ -75,6 +83,14 @@ def run_supplier_intelligence_cycle() -> dict[str, Any]:
     sector_counts = Counter(sector for record in accepted for sector in record["sector_ids"])
     status_counts = Counter(record["publication"]["status"] for record in accepted)
     unresolved = sum(len(record.get("unknown_fields", [])) for record in accepted)
+    coverage_gaps = sorted(CANONICAL_SECTORS - set(sector_counts))
+    next_queue = [
+        "Verify regulated suppliers against Nevada/CMS licensing sources",
+        "Resolve branch-specific Google, Yelp and BBB rating observations",
+        "Contact outcome-critical suppliers for capacity, price, start date and backup coverage",
+    ]
+    if coverage_gaps:
+        next_queue.append("Expand uncovered canonical sectors")
     _last_cycle = {
         "agent": "supplier-intelligence-agent",
         "market": payload.get("market"),
@@ -86,14 +102,10 @@ def run_supplier_intelligence_cycle() -> dict[str, Any]:
         "outcome_critical_records": sum(1 for record in accepted if record["involvement"] == "OUTCOME_CRITICAL"),
         "unresolved_fields": unresolved,
         "sector_counts": dict(sorted(sector_counts.items())),
+        "coverage_gaps": coverage_gaps,
         "status_counts": dict(sorted(status_counts.items())),
         "rejected": rejected,
-        "next_queue": [
-            "Verify regulated suppliers against Nevada/CMS licensing sources",
-            "Resolve branch-specific Google, Yelp and BBB rating observations",
-            "Contact outcome-critical suppliers for capacity, price, start date and backup coverage",
-            "Expand uncovered sectors without changing organic ordering for commercial partners",
-        ],
+        "next_queue": next_queue,
     }
     return deepcopy(_last_cycle)
 
@@ -128,6 +140,7 @@ def supplier_coverage() -> dict[str, Any]:
         "public_supplier_count": cycle["public_records"],
         "sector_count": len(cycle["sector_counts"]),
         "sector_counts": cycle["sector_counts"],
+        "coverage_gaps": cycle["coverage_gaps"],
         "status_counts": cycle["status_counts"],
         "unresolved_fields": cycle["unresolved_fields"],
         "last_cycle_at": cycle["started_at"],
