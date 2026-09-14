@@ -270,7 +270,12 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
                     return _attach_pipeline_trace(_blocked_interview_result(profile, profile_readiness))
                 _mark_client_ready_for_research(profile_decision, profile_readiness)
 
-            internal_limit = max(500, int(limit or 50))
+            # The lower-level engine still scores the full Nevada market before it
+            # ranks candidates. This cap applies only to the candidate pool that
+            # reaches the expensive evidence and audit stages. Carrying hundreds of
+            # rows through those stages wrote thousands of records for one family
+            # search and could restart the production web worker.
+            internal_limit = max(60, min(100, int(limit or 50)))
             result = original(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=internal_limit)
             stage_started = _mark("run_patient_decision_engine_deterministic_ms", stage_started)
             if not isinstance(result, dict):
