@@ -142,3 +142,39 @@ test('results default view is readable and does not expose internal evidence jar
   await expect(page.getByText(/POTENTIALLY_ELIGIBLE/i)).toHaveCount(0);
   await expect(page.getByText(/^Not verified$/i)).toHaveCount(0);
 });
+
+
+test('free-text adaptive answers become canonical client facts before the next decision step', async ({ page }) => {
+  await mockBackend(page);
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify({
+      relationship: '', ageGroup: '', assistanceLevel: '', memoryStatus: '', budget: 0,
+      referenceLocationValue: '', referenceAddress: '', notes: '',
+      humanIntelligenceV2: {
+        personalityProfile: { communitySizePreference: '' },
+        familyProfile: { socialInteractionNeed: '', griefSupportInterest: '', widowStatus: '' },
+        socialProfile: { preferredSocialIntensity: '' },
+        transitionRiskProfile: { attitudeTowardMove: '' },
+        languageProfile: { preferredSpokenLanguage: '', nativeLanguage: '' },
+        culturalProfile: { religionImportance: '' },
+        scoringEngine: { adaptiveSignals: [] },
+      },
+    }));
+  });
+
+  await page.goto('http://127.0.0.1:3000/adaptive-interview');
+  await page.getByLabel('Your answer').fill('Las Vegas');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('What monthly housing-and-care budget are you comfortable with?')).toBeVisible();
+
+  await page.getByLabel('Your answer').fill('$8,000 per month');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByRole('button', { name: 'More active' })).toBeVisible();
+
+  const stored = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem('optime.questionnaire.session') || '{}'));
+  expect(stored.referenceLocationValue).toBe('Las Vegas');
+  expect(stored.budget).toBe(8000);
+
+  await page.getByRole('button', { name: 'More active' }).click();
+  await expect(page).toHaveURL(/\/results/);
+});
