@@ -358,6 +358,41 @@ def latest_signals(db: Session) -> List[CompetitiveIntelligenceSignal]:
     ).all()
 
 
+def seconds_since_last_cycle(db: Session, record_type: str) -> Optional[float]:
+    """Seconds since the most recent AgentKnowledgeRecord of this record_type was
+    written, or None if this agent has never completed a cycle.
+
+    Used so a process restart (e.g. a Render redeploy) doesn't reset a scheduler's
+    clock and fire an extra unscheduled cycle -- every restart otherwise re-runs
+    _runner() from a cold thread with no memory of when it last actually ran.
+    """
+    latest = (
+        db.query(AgentKnowledgeRecord)
+        .filter(AgentKnowledgeRecord.agent_key == AGENT_KEY, AgentKnowledgeRecord.record_type == record_type)
+        .order_by(AgentKnowledgeRecord.created_at.desc())
+        .first()
+    )
+    if latest is None or latest.created_at is None:
+        return None
+    created = latest.created_at
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - created).total_seconds()
+
+
+def startup_delay_seconds(record_type: str, interval: int) -> float:
+    """How long a scheduler thread should sleep before its first cycle this
+    process, given the last real cycle already on record. 0 means run immediately
+    (first-ever run, or the interval has already fully elapsed)."""
+    from app.database import SessionLocal
+
+    with SessionLocal() as db:
+        elapsed = seconds_since_last_cycle(db, record_type)
+    if elapsed is None:
+        return 0.0
+    return max(0.0, interval - elapsed)
+
+
 _DEFAULT_INTERVAL_SECONDS = 6 * 60 * 60
 
 
@@ -367,6 +402,11 @@ def start_competitive_intelligence_scheduler() -> None:
     configurable via OPTIME_COMPETITIVE_INTEL_INTERVAL_SECONDS (default 6 hours).
     A failed cycle is logged and the loop keeps going -- one bad fetch must not kill
     the schedule.
+
+    The first cycle in a given process only runs immediately if the last recorded
+    cycle is already older than `interval` (or none exists yet); otherwise the
+    thread sleeps for the remaining time first, so a Render redeploy mid-interval
+    doesn't reset the clock and fire an extra unscheduled cycle.
     """
     import os
     import threading
@@ -375,6 +415,14 @@ def start_competitive_intelligence_scheduler() -> None:
 
     def _runner() -> None:
         from app.database import SessionLocal
+
+        try:
+            delay = startup_delay_seconds("competitive_intelligence_cycle", interval)
+            if delay > 0:
+                logger.info("competitive_intelligence_cycle_deferred seconds=%s", delay)
+                time.sleep(delay)
+        except Exception:
+            logger.exception("competitive_intelligence_startup_delay_check_failed")
 
         while True:
             try:

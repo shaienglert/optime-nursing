@@ -34,7 +34,7 @@ from sqlalchemy.orm import Session
 
 from app.models.agent_execution import AgentJobRun, AgentKnowledgeRecord, AgentWorker
 from app.models.competitive_intelligence import MarketSupplySignal
-from app.services.competitive_intelligence_service import AGENT_KEY, _visible_text
+from app.services.competitive_intelligence_service import AGENT_KEY, _visible_text, startup_delay_seconds
 from app.services.decision_research_worker import _fetch, _search_result_urls
 
 logger = logging.getLogger(__name__)
@@ -422,7 +422,14 @@ _DEFAULT_WEEKLY_INTERVAL_SECONDS = 7 * 24 * 60 * 60
 def start_market_supply_intelligence_scheduler() -> None:
     """Separate weekly-cadence thread, same shape as competitive_intelligence_
     service.start_competitive_intelligence_scheduler. Configurable via
-    OPTIME_MARKET_SUPPLY_INTERVAL_SECONDS (default 7 days)."""
+    OPTIME_MARKET_SUPPLY_INTERVAL_SECONDS (default 7 days).
+
+    Like the competitive-intelligence scheduler, the first cycle in a given process
+    only runs immediately if the last recorded cycle is already older than
+    `interval` (or none exists yet) -- otherwise the thread sleeps for the
+    remaining time first, so a Render redeploy mid-week doesn't reset the clock and
+    turn a weekly job into a near-daily one.
+    """
     import os
     import threading
 
@@ -430,6 +437,14 @@ def start_market_supply_intelligence_scheduler() -> None:
 
     def _runner() -> None:
         from app.database import SessionLocal
+
+        try:
+            delay = startup_delay_seconds("market_supply_intelligence_cycle", interval)
+            if delay > 0:
+                logger.info("market_supply_intelligence_cycle_deferred seconds=%s", delay)
+                time.sleep(delay)
+        except Exception:
+            logger.exception("market_supply_intelligence_startup_delay_check_failed")
 
         while True:
             try:

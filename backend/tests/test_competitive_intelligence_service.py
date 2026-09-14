@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from app.database import Base, SessionLocal, engine
@@ -12,6 +13,8 @@ from app.services.competitive_intelligence_service import (
     COMPETITORS,
     extract_signals,
     run_competitive_intelligence_cycle,
+    seconds_since_last_cycle,
+    startup_delay_seconds,
 )
 
 Base.metadata.create_all(bind=engine)
@@ -173,6 +176,99 @@ class RunCycleTests(unittest.TestCase):
                 self.assertEqual(row["http_status"], 403)
         finally:
             db.close()
+
+
+class RestartResilienceTests(unittest.TestCase):
+    """Covers the scheduler restart bug: a process restart must not reset the
+    clock and fire an extra cycle when a real cycle already ran recently."""
+
+    def tearDown(self) -> None:
+        db = _db()
+        try:
+            db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.agent_key == AGENT_KEY).delete()
+            db.commit()
+        finally:
+            db.close()
+
+    def test_seconds_since_last_cycle_is_none_when_no_record_exists(self) -> None:
+        db = _db()
+        try:
+            self.assertIsNone(seconds_since_last_cycle(db, "competitive_intelligence_cycle"))
+        finally:
+            db.close()
+
+    def test_seconds_since_last_cycle_reflects_a_recent_record(self) -> None:
+        db = _db()
+        try:
+            recent = datetime.now(timezone.utc) - timedelta(minutes=10)
+            db.add(
+                AgentKnowledgeRecord(
+                    agent_key=AGENT_KEY,
+                    record_type="competitive_intelligence_cycle",
+                    entity_key="test",
+                    summary="test",
+                    payload_json="{}",
+                    confidence=0.5,
+                    source="LIVE_WEB_FETCH",
+                    created_at=recent,
+                )
+            )
+            db.commit()
+
+            elapsed = seconds_since_last_cycle(db, "competitive_intelligence_cycle")
+            self.assertIsNotNone(elapsed)
+            self.assertAlmostEqual(elapsed, 600, delta=30)
+        finally:
+            db.close()
+
+    def test_startup_delay_is_zero_when_no_prior_cycle_exists(self) -> None:
+        self.assertEqual(startup_delay_seconds("competitive_intelligence_cycle", 21600), 0.0)
+
+    def test_startup_delay_is_zero_once_the_interval_has_fully_elapsed(self) -> None:
+        db = _db()
+        try:
+            stale = datetime.now(timezone.utc) - timedelta(hours=7)
+            db.add(
+                AgentKnowledgeRecord(
+                    agent_key=AGENT_KEY,
+                    record_type="competitive_intelligence_cycle",
+                    entity_key="test",
+                    summary="test",
+                    payload_json="{}",
+                    confidence=0.5,
+                    source="LIVE_WEB_FETCH",
+                    created_at=stale,
+                )
+            )
+            db.commit()
+        finally:
+            db.close()
+
+        self.assertEqual(startup_delay_seconds("competitive_intelligence_cycle", 21600), 0.0)
+
+    def test_startup_delay_defers_a_cycle_that_already_ran_recently(self) -> None:
+        db = _db()
+        try:
+            recent = datetime.now(timezone.utc) - timedelta(minutes=10)
+            db.add(
+                AgentKnowledgeRecord(
+                    agent_key=AGENT_KEY,
+                    record_type="competitive_intelligence_cycle",
+                    entity_key="test",
+                    summary="test",
+                    payload_json="{}",
+                    confidence=0.5,
+                    source="LIVE_WEB_FETCH",
+                    created_at=recent,
+                )
+            )
+            db.commit()
+        finally:
+            db.close()
+
+        delay = startup_delay_seconds("competitive_intelligence_cycle", 21600)
+        # ~6h interval minus ~10 minutes already elapsed
+        self.assertAlmostEqual(delay, 21600 - 600, delta=30)
 
 
 if __name__ == "__main__":
