@@ -44,31 +44,37 @@ export function SimpleResultsPageClient() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError(null);
-    const cached = loadDecisionResponseCache<DecisionEngineResponse>(decisionRequestKey);
-    const load = cached
-      ? Promise.resolve(cached)
-      : fetchPatientDecisionRecommendations({
-          questionnaire_state: state as unknown as Record<string, unknown>,
-          natural_language_query: naturalLanguageQuery,
-          limit: 50,
-        }).then((value) => {
-          saveDecisionResponseCache(decisionRequestKey, value);
-          return value;
+    // A home-page answer is saved immediately before navigation.  Give React a
+    // short settling window so the results request uses that final state rather
+    // than sending both the previous and the just-updated questionnaire.
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      const cached = loadDecisionResponseCache<DecisionEngineResponse>(decisionRequestKey);
+      const load = cached
+        ? Promise.resolve(cached)
+        : fetchPatientDecisionRecommendations({
+            questionnaire_state: state as unknown as Record<string, unknown>,
+            natural_language_query: naturalLanguageQuery,
+            limit: 50,
+          }).then((value) => {
+            saveDecisionResponseCache(decisionRequestKey, value);
+            return value;
+          });
+      void load
+        .then((value) => {
+          if (active) setResponse(value);
+        })
+        .catch((cause) => {
+          if (active) setError(cause instanceof Error ? cause.message : "We could not load the recommendations.");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
         });
-    void load
-      .then((value) => {
-        if (active) setResponse(value);
-      })
-      .catch((cause) => {
-        if (active) setError(cause instanceof Error ? cause.message : "We could not load the recommendations.");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    }, 300);
     return () => {
       active = false;
+      window.clearTimeout(timer);
     };
   }, [decisionRequestKey, naturalLanguageQuery, state]);
 
