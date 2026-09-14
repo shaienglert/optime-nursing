@@ -71,7 +71,7 @@ export function SimpleResultsPageClient() {
         .finally(() => {
           if (active) setLoading(false);
         });
-    }, 300);
+    }, 1000);
     return () => {
       active = false;
       window.clearTimeout(timer);
