@@ -4,6 +4,7 @@
 | --- | --- | --- | --- | --- | --- |
 | Clinical Knowledge Agent | Clinical care requirements | OPTIME Clinical Intelligence | v1.0 | Specified | Clinical Knowledge |
 | Provider Intelligence Agent | Provider verified capabilities | OPTIME Provider Intelligence | v1.0 | Specified | Provider Repository |
+| Supplier Intelligence Agent | Las Vegas move and quality-of-life suppliers | Oomnik Supplier Intelligence | v1.0 | Specified | Supplier Repository |
 | Clinical Evidence Agent | Evidence repository | OPTIME Evidence Intelligence | v1.0 | Specified | Evidence Repository |
 | Activities Intelligence Agent | Activity and engagement fit | OPTIME Lifestyle Intelligence | v1.0 | Specified | Activities Knowledge |
 | Nutrition Intelligence Agent | Dietary and nutrition support | OPTIME Nutrition Intelligence | v1.0 | Specified | Nutrition Knowledge |

@@ -20,6 +20,14 @@
 | Provider Intelligence Agent | GetKnowledge | Return structured knowledge objects in Recommendation Engine-safe format. |
 | Provider Intelligence Agent | GetEvidence | Return linked evidence objects with trust, freshness, and provenance. |
 | Provider Intelligence Agent | GetHealth | Return status, growth, freshness, queue, and incident metrics. |
+| Supplier Intelligence Agent | Discover | Discover Las Vegas Valley suppliers inside the canonical sector and source-routing rules. |
+| Supplier Intelligence Agent | Verify | Verify supplier identity, geography, licensing, rating branch match, and publication gates. |
+| Supplier Intelligence Agent | Refresh | Refresh a supplier or sector while preserving prior observations and conflicts. |
+| Supplier Intelligence Agent | Search | Search prepared supplier records by sector, service need, geography, and evidence state. |
+| Supplier Intelligence Agent | Explain | Explain display eligibility with evidence, freshness, unknowns, conflicts, and commercial disclosure. |
+| Supplier Intelligence Agent | GetEvidence | Return source-specific license, rating, facility-referral, and feedback evidence. |
+| Supplier Intelligence Agent | GetCoverage | Return candidate, verified, published, stale, and suspended counts by sector. |
+| Supplier Intelligence Agent | GetHealth | Return discovery, verification, freshness, conflict, and outcome-critical backup health. |
 | Clinical Evidence Agent | Ask | Answer a scoped domain question using prepared verified knowledge only. |
 | Clinical Evidence Agent | Search | Search owned knowledge objects, provider objects, and evidence metadata. |
 | Clinical Evidence Agent | Explain | Explain a conclusion with traceable knowledge, evidence, freshness, and confidence. |
