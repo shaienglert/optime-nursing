@@ -159,6 +159,12 @@ from app.services.market_supply_intelligence_service import (
     start_market_supply_intelligence_scheduler,
 )
 from app.services.runtime_sync_service import get_runtime_sync_status
+from app.services.supplier_intelligence_service import (
+    run_supplier_intelligence_cycle,
+    start_supplier_intelligence_scheduler,
+    supplier_catalog,
+    supplier_coverage,
+)
 
 app = FastAPI(
     title="OPTIME Nursing API",
@@ -1504,6 +1510,7 @@ def startup() -> None:
     start_official_market_metrics_scheduler()
     # Annual official state/Census population projections for 65+ and 75+ market context.
     start_demographic_market_metrics_scheduler()
+    start_supplier_intelligence_scheduler()
     logger.info(
         "startup_completed facilities_imported=%s origins=%s",
         app.state.import_summary.get("facilities_imported"),
@@ -2277,6 +2284,25 @@ async def post_run_market_supply_intelligence_now(db: Session = Depends(get_db),
 @app.post("/market-supply-intelligence/las-vegas/run-now", response_model=MarketSupplyCycleOut)
 async def post_run_las_vegas_market_supply_pilot(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return run_las_vegas_market_supply_pilot(db)
+
+
+@app.get("/supplier-intelligence/catalog")
+async def get_supplier_intelligence_catalog(
+    sector: Optional[str] = Query(default=None, min_length=2, max_length=80),
+    q: Optional[str] = Query(default=None, min_length=2, max_length=120),
+):
+    """Public prepared supplier candidates; never performs request-time research."""
+    return supplier_catalog(sector=sector, query=q, include_candidates=False)
+
+
+@app.get("/supplier-intelligence/coverage")
+async def get_supplier_intelligence_coverage():
+    return supplier_coverage()
+
+
+@app.post("/supplier-intelligence/run-now")
+async def post_run_supplier_intelligence_now(_: None = Depends(require_admin_token)):
+    return run_supplier_intelligence_cycle()
 
 
 @app.get("/market-intelligence/report", response_model=MarketReportOut)
