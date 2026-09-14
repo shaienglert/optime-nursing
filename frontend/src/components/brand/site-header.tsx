@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FontSizeControl } from "@/components/brand/font-size-control";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 
 const NAV_LINKS = [
@@ -29,6 +30,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
+        <FontSizeControl />
       </div>
     </header>
   );

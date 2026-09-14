@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppQuestionnaireProvider } from "@/context/questionnaire-provider";
 import { SiteHeader } from "@/components/brand/site-header";
-import { UnderstandingTreeCompanion } from "@/components/brand/understanding-tree-companion";
 import { ProcessContinuityBridge } from "@/components/process/process-continuity-bridge";
 
 const geistSans = Geist({
@@ -21,26 +20,26 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optime-nursing.verc
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "OPTIME | Find the Right Senior Care, Based on What Matters",
-    template: "%s | OPTIME",
+    default: "Oomnik | Finding You the Right Way",
+    template: "%s | Oomnik",
   },
   description:
-    "OPTIME helps families compare senior care and nursing home options using care needs, verified evidence, quality signals, and the details that matter to each family.",
-  applicationName: "OPTIME",
+    "Oomnik helps families make a clear, evidence-based senior living decision using care needs, verified evidence, and the details that matter to each family.",
+  applicationName: "Oomnik",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     url: "/",
-    siteName: "OPTIME",
-    title: "OPTIME | Find the Right Senior Care, Based on What Matters",
+    siteName: "Oomnik",
+    title: "Oomnik | Finding You the Right Way",
     description:
       "Compare senior care options using care needs, verified evidence, quality signals, and family-specific priorities.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OPTIME | Find the Right Senior Care, Based on What Matters",
+    title: "Oomnik | Finding You the Right Way",
     description:
       "Compare senior care options using care needs, verified evidence, quality signals, and family-specific priorities.",
   },
@@ -64,7 +63,6 @@ export default function RootLayout({
         <AppQuestionnaireProvider>
           <ProcessContinuityBridge>
             <SiteHeader />
-            <UnderstandingTreeCompanion />
             <div className="flex-1">{children}</div>
           </ProcessContinuityBridge>
         </AppQuestionnaireProvider>

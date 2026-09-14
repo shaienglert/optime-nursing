@@ -5,13 +5,11 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { fetchPatientDecisionRecommendations, fetchPatientNeedsProfile } from "@/lib/api";
+import { fetchPatientNeedsProfile } from "@/lib/api";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
 
 const EXAMPLE_QUERY =
   "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
-
-const PATIENT_CASE_ID_SESSION_KEY = "optime.patient.case.id";
 
 const RELATIONSHIP_OPTIONS = [
   { label: "me", value: "Myself" },
@@ -57,27 +55,6 @@ const MEMORY_OPTIONS = [
 
 type HeroStep = "relationship" | "age" | "assistance" | "memory";
 
-function loadPatientCaseId(): number | undefined {
-  if (typeof window === "undefined") return undefined;
-  try {
-    const raw = window.sessionStorage.getItem(PATIENT_CASE_ID_SESSION_KEY);
-    if (!raw) return undefined;
-    const value = Number(JSON.parse(raw));
-    return Number.isFinite(value) && value > 0 ? value : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function savePatientCaseId(value: number): void {
-  if (typeof window === "undefined" || !Number.isFinite(value) || value <= 0) return;
-  try {
-    window.sessionStorage.setItem(PATIENT_CASE_ID_SESSION_KEY, JSON.stringify(value));
-  } catch {
-    // Best-effort continuity only.
-  }
-}
-
 function personCopy(label: string): string {
   if (label === "me") return "you";
   if (label === "a couple") return "both of you";
@@ -99,7 +76,7 @@ function ChoiceLink({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`group relative mr-5 mt-3 inline-flex items-center text-left text-lg font-medium transition ${
+      className={`group relative mr-5 mt-4 inline-flex min-h-12 items-center text-left text-2xl font-medium transition ${
         selected ? "text-[#183f35]" : "text-[#315f53] hover:text-[#183f35]"
       }`}
     >
@@ -199,20 +176,10 @@ export default function HomePage() {
       router.push(`/adaptive-interview?next=${encodeURIComponent(resultsUrl)}`);
 
       const canonicalQuestionnaire = nextQuestionnaire as Record<string, unknown>;
-      const currentPatientCaseId = loadPatientCaseId();
-      void Promise.allSettled([
-        fetchPatientNeedsProfile({ questionnaire_state: canonicalQuestionnaire, natural_language_query: normalized }),
-        fetchPatientDecisionRecommendations({
-          patient_case_id: currentPatientCaseId,
-          questionnaire_state: canonicalQuestionnaire,
-          natural_language_query: normalized,
-          limit: 50,
-        }),
-      ]).then(([, recommendationResult]) => {
-        if (recommendationResult.status === "fulfilled" && typeof recommendationResult.value.patient_case_id === "number") {
-          savePatientCaseId(recommendationResult.value.patient_case_id);
-        }
-      });
+      // Warm only the light profile endpoint here. The results page owns the single
+      // recommendation request; sending the same ranking request from both screens
+      // caused concurrent work and could exhaust the production web worker.
+      void fetchPatientNeedsProfile({ questionnaire_state: canonicalQuestionnaire, natural_language_query: normalized });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "We could not continue right now. Please try again.");
     } finally {
@@ -230,7 +197,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden border-b border-[#dbe4df] bg-[radial-gradient(circle_at_12%_8%,rgba(219,239,229,0.88),transparent_33%),radial-gradient(circle_at_90%_0%,rgba(255,232,202,0.72),transparent_36%),linear-gradient(180deg,#fbfaf7_0%,#f7f4ee_100%)]">
         <div className="mx-auto max-w-6xl px-5 pb-24 pt-6 sm:px-8 lg:px-12 lg:pb-32">
           <nav className="flex items-center justify-between" aria-label="Main navigation">
-            <Link href="/" className="text-xl font-semibold tracking-[-0.03em] text-[#1e4f43]">OPTIME</Link>
+            <Link href="/" className="text-xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Oomnik</Link>
             <div className="flex items-center gap-3 text-sm font-medium">
               <Link href="/workspace" className="hidden px-3 py-2 text-[#486057] hover:text-[#234f43] sm:inline-flex">My workspace</Link>
               <Link href="/intake" className="border-b border-[#6c9c8e] px-1 py-2 text-[#315f53] transition hover:border-[#244f43] hover:text-[#244f43]">Continue where I left off</Link>
@@ -238,19 +205,20 @@ export default function HomePage() {
           </nav>
 
           <div className="pt-20 sm:pt-28">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3a7969]">Finding You the Right Way</p>
+            <p className="text-2xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Welcome to Oomnik</p>
             <h1 className="mt-5 max-w-5xl text-5xl font-semibold leading-[1.03] tracking-[-0.05em] text-[#1e2e28] sm:text-7xl lg:text-[5.5rem]">
-              The right senior living decision starts with understanding the person.
+              A difficult decision deserves time, care, and the right guidance.
             </h1>
-            <p className="mt-7 max-w-3xl text-lg leading-8 text-[#52645d] sm:text-xl">
-              Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.
+            <p className="mt-7 max-w-4xl text-xl leading-9 text-[#52645d] sm:text-2xl sm:leading-10">
+              Choosing senior living has many important dimensions. Answer a few questions, and Oomnik will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
             </p>
 
             <div className="mt-14 max-w-4xl border-l-2 border-[#a9c7bd] pl-6 sm:pl-9">
               {heroStep === "relationship" && (
                 <div>
-                  <p className="text-sm font-medium text-[#648077]">First, tell us who this decision is for.</p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">Who are you looking for?</h2>
+                  <p className="text-xl font-medium text-[#52645d]">Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.</p>
+                  <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">First, tell us who this decision is for.</h2>
+                  <p className="mt-5 text-2xl font-medium text-[#315f53]">Who are you looking for?</p>
                   <div className="mt-3">
                     {RELATIONSHIP_OPTIONS.map((option) => (
                       <ChoiceLink key={option.label} label={option.label} onClick={() => chooseRelationship(option.label, option.value)} />
@@ -303,19 +271,20 @@ export default function HomePage() {
               )}
             </div>
 
-            <button type="button" onClick={() => document.getElementById("describe")?.scrollIntoView({ behavior: "smooth" })} className="mt-12 text-sm font-medium text-[#5a756c] underline decoration-[#a8beb6] underline-offset-4 hover:text-[#315f53]">
+            <button type="button" onClick={() => document.getElementById("describe")?.scrollIntoView({ behavior: "smooth" })} className="mt-12 text-2xl font-medium text-[#315f53] underline decoration-[#a8beb6] underline-offset-4 hover:text-[#183f35]">
               Or tell the story in your own words
             </button>
-            <p className="mt-8 max-w-3xl text-sm leading-6 text-[#64766f]">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
+            <p className="mt-12 max-w-5xl text-3xl font-medium leading-tight tracking-[-0.04em] text-[#20342c] sm:text-4xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
+            <p className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-[#1e4f43] sm:text-5xl">Oomnik — Finding You the Right Way.</p>
           </div>
         </div>
       </section>
 
       <section id="describe" className="mx-auto max-w-6xl px-5 py-24 sm:px-8 lg:px-12">
         <div className="max-w-4xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3a7969]">Your story matters</p>
+          <p className="text-xl font-semibold tracking-[-0.02em] text-[#3a7969]">Your story matters</p>
           <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">Tell us anything the questions may not capture.</h2>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#5a6d65]">Use your own words. OPTIME will combine the story with the answers already saved.</p>
+          <p className="mt-5 max-w-2xl text-xl leading-9 text-[#5a6d65]">Use your own words. Oomnik will combine the story with the answers already saved.</p>
           <form onSubmit={submit} className="mt-10 max-w-4xl">
             <label htmlFor="family-case" className="sr-only">Describe your family situation</label>
             <textarea id="family-case" value={query} onChange={(event) => setQuery(event.target.value)} rows={6} placeholder={EXAMPLE_QUERY} className="w-full resize-none border-0 border-b-2 border-[#a8beb6] bg-transparent px-0 py-5 text-xl leading-9 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#315f53] focus:ring-0" />
@@ -351,7 +320,7 @@ export default function HomePage() {
 
       <footer className="bg-[#f4f1eb]">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-8 text-sm text-[#66766f] sm:px-8 md:flex-row md:items-center md:justify-between lg:px-12">
-          <p>© {new Date().getFullYear()} OPTIME. Finding You the Right Way.</p>
+          <p>© {new Date().getFullYear()} Oomnik. Finding You the Right Way.</p>
           <div className="flex flex-wrap gap-5">
             <Link href="/workspace" className="hover:text-[#254d42]">Workspace</Link>
             <Link href="/profiles" className="hover:text-[#254d42]">Saved profiles</Link>

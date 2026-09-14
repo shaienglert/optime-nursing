@@ -1,8 +1,13 @@
+import app.main  # noqa: F401 -- registers all models before creating the local test schema
+from app.database import Base, engine
 from app.services.semantic_intent_ai import (
     _explicit_user_text_answered_dimensions,
     _question_reasks_answered_dimension,
     interpret_client_intent_with_ai,
 )
+
+
+Base.metadata.create_all(bind=engine)
 
 
 def _packet(question: str, readiness: str = "NEEDS_CLARIFICATION"):

@@ -2062,10 +2062,19 @@ export async function fetchPatientNeedsProfile(
   return postJson<typeof payload, PatientNeedsProfile>("/decision-engine/patient-needs-profile", payload);
 }
 
+const decisionRecommendationRequests = new Map<string, Promise<DecisionEngineResponse>>();
+
 export async function fetchPatientDecisionRecommendations(
   payload: DecisionEngineRequest
 ): Promise<DecisionEngineResponse> {
-  return postJson<DecisionEngineRequest, DecisionEngineResponse>("/decision-engine/recommendations", payload);
+  const key = JSON.stringify(payload);
+  const existing = decisionRecommendationRequests.get(key);
+  if (existing) return existing;
+
+  const request = postJson<DecisionEngineRequest, DecisionEngineResponse>("/decision-engine/recommendations", payload)
+    .finally(() => decisionRecommendationRequests.delete(key));
+  decisionRecommendationRequests.set(key, request);
+  return request;
 }
 
 export async function fetchPersonalDecisionReport(
