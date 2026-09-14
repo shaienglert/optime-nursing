@@ -27,6 +27,9 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+html[data-font-scale="large"] { font-size: 112.5%; }
+html[data-font-scale="x-large"] { font-size: 125%; }
+
 ::selection {
   background: #d9e5d8;
   color: #2f2a24;
