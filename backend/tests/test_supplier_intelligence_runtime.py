@@ -35,7 +35,9 @@ class SupplierIntelligenceRuntimeTests(unittest.TestCase):
         for record in payload["records"]:
             self.assertIn("HOSPICE_PALLIATIVE", record["sector_ids"])
             self.assertIn(record["publication"]["status"], {"LIMITED", "VERIFIED"})
-            self.assertEqual(record["ratings"], [])
+        nathan = next(record for record in payload["records"] if record["supplier_id"] == "nathan-adelson-hospice")
+        self.assertEqual(nathan["licenses"][0]["identifier"], "291500")
+        self.assertEqual(nathan["ratings"][0]["source"], "CMS Hospice CAHPS")
 
     def test_coverage_proves_agent_has_started(self) -> None:
         response = self.client.get("/supplier-intelligence/coverage")
@@ -44,6 +46,9 @@ class SupplierIntelligenceRuntimeTests(unittest.TestCase):
         self.assertGreater(payload["supplier_count"], 0)
         self.assertEqual(payload["sector_count"], 23)
         self.assertEqual(payload["coverage_gaps"], [])
+        self.assertGreaterEqual(payload["official_credentials"], 5)
+        self.assertGreaterEqual(payload["records_with_official_credentials"], 5)
+        self.assertGreaterEqual(payload["records_with_quality_evidence"], 3)
         self.assertIsNotNone(payload["last_cycle_at"])
 
 

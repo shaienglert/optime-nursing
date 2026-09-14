@@ -83,6 +83,11 @@ def run_supplier_intelligence_cycle() -> dict[str, Any]:
     sector_counts = Counter(sector for record in accepted for sector in record["sector_ids"])
     status_counts = Counter(record["publication"]["status"] for record in accepted)
     unresolved = sum(len(record.get("unknown_fields", [])) for record in accepted)
+    official_credentials = sum(len(record.get("licenses", [])) for record in accepted)
+    records_with_official_credentials = sum(1 for record in accepted if record.get("licenses"))
+    records_with_quality_evidence = sum(
+        1 for record in accepted if record.get("ratings") or record.get("quality_metrics")
+    )
     coverage_gaps = sorted(CANONICAL_SECTORS - set(sector_counts))
     next_queue = [
         "Verify regulated suppliers against Nevada/CMS licensing sources",
@@ -101,6 +106,9 @@ def run_supplier_intelligence_cycle() -> dict[str, Any]:
         "public_records": sum(1 for record in accepted if record["publication"]["status"] in PUBLIC_STATUSES),
         "outcome_critical_records": sum(1 for record in accepted if record["involvement"] == "OUTCOME_CRITICAL"),
         "unresolved_fields": unresolved,
+        "official_credentials": official_credentials,
+        "records_with_official_credentials": records_with_official_credentials,
+        "records_with_quality_evidence": records_with_quality_evidence,
         "sector_counts": dict(sorted(sector_counts.items())),
         "coverage_gaps": coverage_gaps,
         "status_counts": dict(sorted(status_counts.items())),
@@ -143,6 +151,9 @@ def supplier_coverage() -> dict[str, Any]:
         "coverage_gaps": cycle["coverage_gaps"],
         "status_counts": cycle["status_counts"],
         "unresolved_fields": cycle["unresolved_fields"],
+        "official_credentials": cycle["official_credentials"],
+        "records_with_official_credentials": cycle["records_with_official_credentials"],
+        "records_with_quality_evidence": cycle["records_with_quality_evidence"],
         "last_cycle_at": cycle["started_at"],
     }
 
