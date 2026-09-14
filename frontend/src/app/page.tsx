@@ -5,13 +5,11 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { fetchPatientDecisionRecommendations, fetchPatientNeedsProfile } from "@/lib/api";
+import { fetchPatientNeedsProfile } from "@/lib/api";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
 
 const EXAMPLE_QUERY =
   "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
-
-const PATIENT_CASE_ID_SESSION_KEY = "optime.patient.case.id";
 
 const RELATIONSHIP_OPTIONS = [
   { label: "me", value: "Myself" },
@@ -56,27 +54,6 @@ const MEMORY_OPTIONS = [
 ] as const;
 
 type HeroStep = "relationship" | "age" | "assistance" | "memory";
-
-function loadPatientCaseId(): number | undefined {
-  if (typeof window === "undefined") return undefined;
-  try {
-    const raw = window.sessionStorage.getItem(PATIENT_CASE_ID_SESSION_KEY);
-    if (!raw) return undefined;
-    const value = Number(JSON.parse(raw));
-    return Number.isFinite(value) && value > 0 ? value : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function savePatientCaseId(value: number): void {
-  if (typeof window === "undefined" || !Number.isFinite(value) || value <= 0) return;
-  try {
-    window.sessionStorage.setItem(PATIENT_CASE_ID_SESSION_KEY, JSON.stringify(value));
-  } catch {
-    // Best-effort continuity only.
-  }
-}
 
 function personCopy(label: string): string {
   if (label === "me") return "you";
@@ -199,20 +176,10 @@ export default function HomePage() {
       router.push(`/adaptive-interview?next=${encodeURIComponent(resultsUrl)}`);
 
       const canonicalQuestionnaire = nextQuestionnaire as Record<string, unknown>;
-      const currentPatientCaseId = loadPatientCaseId();
-      void Promise.allSettled([
-        fetchPatientNeedsProfile({ questionnaire_state: canonicalQuestionnaire, natural_language_query: normalized }),
-        fetchPatientDecisionRecommendations({
-          patient_case_id: currentPatientCaseId,
-          questionnaire_state: canonicalQuestionnaire,
-          natural_language_query: normalized,
-          limit: 50,
-        }),
-      ]).then(([, recommendationResult]) => {
-        if (recommendationResult.status === "fulfilled" && typeof recommendationResult.value.patient_case_id === "number") {
-          savePatientCaseId(recommendationResult.value.patient_case_id);
-        }
-      });
+      // Warm only the light profile endpoint here. The results page owns the single
+      // recommendation request; sending the same ranking request from both screens
+      // caused concurrent work and could exhaust the production web worker.
+      void fetchPatientNeedsProfile({ questionnaire_state: canonicalQuestionnaire, natural_language_query: normalized });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "We could not continue right now. Please try again.");
     } finally {
