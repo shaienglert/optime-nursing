@@ -11,6 +11,17 @@ export function canonicalizeAdaptiveFact(state: QuestionnaireState, targetFactKe
   const normalized = answer.trim().toLowerCase();
 
   switch (targetFactKey) {
+    case "market_location":
+    case "location":
+    case "city_or_metro_area":
+      next.referenceLocationValue = answer;
+      next.referenceLocationType = "City or metro area";
+      break;
+    case "monthly_budget": {
+      const numericBudget = Number(answer.replace(/[^0-9.]/g, ""));
+      if (Number.isFinite(numericBudget) && numericBudget > 0) next.budget = numericBudget;
+      break;
+    }
     case "community_size_preference":
       next.humanIntelligenceV2.personalityProfile.communitySizePreference = answer;
       break;
