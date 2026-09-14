@@ -4,6 +4,7 @@
 | --- | --- | --- | --- |
 | Clinical Knowledge | Clinical Knowledge Agent | Clinical Evidence Agent; Provider Intelligence Agent; Outcome Learning Agent; Knowledge Graph Agent | Primary owner of all clinical requirement knowledge objects. |
 | Provider Repository | Provider Intelligence Agent | Activities Intelligence Agent; Nutrition Intelligence Agent; Data Quality & Trust Agent; Knowledge Graph Agent | Primary owner of provider identity and prepared provider profile objects. |
+| Supplier Repository | Supplier Intelligence Agent | Provider Intelligence Agent; Outcome Learning Agent; Data Quality & Trust Agent; Knowledge Graph Agent | Primary owner of non-facility supplier identity, sector, branch-specific ratings, license observations, and prepared supplier profile objects. |
 | Evidence Repository | Clinical Evidence Agent | Clinical Knowledge Agent; Outcome Learning Agent; Knowledge Graph Agent; Narrative Intelligence Agent | Primary owner of evidence object quality and provenance. |
 | Activities Knowledge | Activities Intelligence Agent | Provider Intelligence Agent; Narrative Intelligence Agent; Outcome Learning Agent; Knowledge Graph Agent | Primary owner of activity and engagement program knowledge. |
 | Nutrition Knowledge | Nutrition Intelligence Agent | Clinical Knowledge Agent; Provider Intelligence Agent; Knowledge Graph Agent | Primary owner of dietary support and menu accommodation knowledge. |
