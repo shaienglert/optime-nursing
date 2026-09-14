@@ -51,6 +51,19 @@ class SupplierIntelligenceRuntimeTests(unittest.TestCase):
         self.assertGreaterEqual(payload["records_with_quality_evidence"], 3)
         self.assertIsNotNone(payload["last_cycle_at"])
 
+    def test_dme_catalog_keeps_license_evidence_separate_from_case_readiness(self) -> None:
+        response = self.client.get("/supplier-intelligence/catalog?sector=DME_MOBILITY")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertGreaterEqual(payload["count"], 3)
+        guardian = next(record for record in payload["records"] if record["supplier_id"] == "guardian-dme-las-vegas")
+        self.assertEqual(guardian["licenses"][0]["identifier"], "MP03188")
+        self.assertEqual(guardian["publication"]["status"], "LIMITED")
+        self.assertFalse(guardian["critical_readiness"]["capacity_confirmed"])
+        partner = next(record for record in payload["records"] if record["supplier_id"] == "dme-healthcare-partners-las-vegas")
+        self.assertEqual(partner["licenses"][0]["identifier"], "MP03105")
+        self.assertTrue(partner["conflicts"])
+
 
 if __name__ == "__main__":
     unittest.main()
