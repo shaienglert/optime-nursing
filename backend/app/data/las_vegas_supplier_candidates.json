@@ -1,0 +1,177 @@
+{
+  "market": "LAS_VEGAS_VALLEY",
+  "observed_at": "2026-09-14T00:00:00Z",
+  "records": [
+    {
+      "supplier_id": "brightstar-care-las-vegas",
+      "legal_name": null,
+      "brand_name": "BrightStar Care of Las Vegas",
+      "sector_ids": ["HOME_CARE", "PRIVATE_DUTY_NURSING"],
+      "branch": {"address": null, "phone": "702-982-2273", "website": "https://www.brightstarcare.com/locations/las-vegas/", "service_area": ["Las Vegas", "Summerlin", "Spring Valley", "Southern Highlands"], "las_vegas_valley_verified": true},
+      "services": ["personalized home care", "skilled nursing", "personal care"],
+      "payment_options": ["private pay", "long-term care insurance", "VA benefits", "some commercial insurance"],
+      "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}},
+      "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["LICENSE_NOT_VERIFIED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null},
+      "evidence_refs": ["https://www.brightstarcare.com/locations/las-vegas/"],
+      "unknown_fields": ["legal_name", "address", "license", "independent_ratings", "current_capacity", "price"], "conflicts": [],
+      "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local service verified from first-party source; license, ratings and capacity pending"]}
+    },
+    {
+      "supplier_id": "visiting-angels-las-vegas",
+      "legal_name": null, "brand_name": "Visiting Angels Las Vegas", "sector_ids": ["HOME_CARE", "COMPANIONSHIP"],
+      "branch": {"address": null, "phone": "702-562-3322", "website": "https://www.visitingangels.com/vegas/private-duty-care", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["personal care", "private caregivers", "companionship"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["LICENSE_NOT_VERIFIED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.visitingangels.com/vegas/private-duty-care"],
+      "unknown_fields": ["legal_name", "address", "license", "independent_ratings", "current_capacity", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local branch and services found; regulated evidence and readiness pending"]}
+    },
+    {
+      "supplier_id": "nurse-next-door-las-vegas",
+      "legal_name": null, "brand_name": "Nurse Next Door Las Vegas", "sector_ids": ["HOME_CARE", "COMPANIONSHIP"],
+      "branch": {"address": null, "phone": "702-663-8000", "website": "https://www.nursenextdoor.com/location/las-vegas", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["personal care", "meal preparation", "24-hour home care", "dementia support", "post-surgery care"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["LICENSE_NOT_VERIFIED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.nursenextdoor.com/location/las-vegas"],
+      "unknown_fields": ["legal_name", "address", "license", "independent_ratings", "current_capacity", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local service verified from first-party source; license and readiness pending"]}
+    },
+    {
+      "supplier_id": "maxim-healthcare-las-vegas",
+      "legal_name": null, "brand_name": "Maxim Healthcare Las Vegas Regional Office", "sector_ids": ["HOME_CARE", "PRIVATE_DUTY_NURSING"],
+      "branch": {"address": null, "phone": null, "website": "https://www.maximhealthcare.com/maxim-healthcare-locations/las-vegas-nv-regional-office/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["home healthcare", "private duty nursing", "personal care"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["LICENSE_NOT_VERIFIED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.maximhealthcare.com/maxim-healthcare-locations/las-vegas-nv-regional-office/"],
+      "unknown_fields": ["legal_name", "address", "phone", "license", "independent_ratings", "current_capacity", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local office and service claims found; license and readiness pending"]}
+    },
+    {
+      "supplier_id": "advanced-home-health-hospice-las-vegas",
+      "legal_name": null, "brand_name": "Advanced Home Health and Hospice of Las Vegas", "sector_ids": ["HOME_HEALTH_THERAPY", "HOSPICE_PALLIATIVE"],
+      "branch": {"address": null, "phone": "702-967-6160", "website": "https://homehealthandhospice.com/las-vegas/", "service_area": ["Henderson", "Las Vegas Valley"], "las_vegas_valley_verified": true},
+      "services": ["home health nursing", "rehabilitation", "medication management", "wound care", "gait and balance training"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CMS_AND_LICENSE_NOT_VERIFIED", "REFERRAL_REQUIREMENTS_UNKNOWN"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://homehealthandhospice.com/las-vegas/"],
+      "unknown_fields": ["legal_name", "address", "license", "CMS_record", "independent_ratings", "eligibility", "current_capacity"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local clinical services found; official CMS/license verification pending"]}
+    },
+    {
+      "supplier_id": "move-4-less-las-vegas",
+      "legal_name": null, "brand_name": "Move 4 Less", "sector_ids": ["MOVING_PACKING", "MOVE_MANAGEMENT", "CONTENTS_EXIT"],
+      "branch": {"address": null, "phone": "702-381-1200", "website": "https://move4lessmoving.com/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["moving", "packing", "storage", "senior moving"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["TRANSPORT_LICENSE_NOT_VERIFIED", "INSURANCE_NOT_VERIFIED", "MOVE_DATE_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://move4lessmoving.com/"],
+      "unknown_fields": ["legal_name", "address", "license", "insurance", "independent_ratings", "current_capacity", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local move services found; licensing, insurance and independent ratings pending"]}
+    },
+    {
+      "supplier_id": "dme-of-las-vegas",
+      "legal_name": "DME of Las Vegas LLC", "brand_name": "DME of Las Vegas", "sector_ids": ["DME_MOBILITY"],
+      "branch": {"address": "4904 Camino Al Norte, Unit #336241, North Las Vegas, NV 89031", "phone": "866-233-3220", "website": "https://www.dmelasvegas.com/", "service_area": ["North Las Vegas", "Las Vegas Valley"], "las_vegas_valley_verified": true},
+      "services": ["durable medical equipment", "prescription equipment", "shipping"], "payment_options": ["Medicare may apply", "medical insurance may apply"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["MEDICARE_SUPPLIER_STATUS_NOT_VERIFIED", "ITEM_AVAILABILITY_UNKNOWN"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.dmelasvegas.com/"],
+      "unknown_fields": ["license", "Medicare_supplier_status", "independent_ratings", "specific_item_availability", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local identity and DME service found; official supplier status and inventory pending"]}
+    },
+    {
+      "supplier_id": "gmt-care-las-vegas",
+      "legal_name": null, "brand_name": "GMT Care", "sector_ids": ["MOVE_TRANSPORT", "ROUTINE_TRANSPORT"],
+      "branch": {"address": null, "phone": null, "website": "https://www.nevada211.org/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["non-emergency ground transportation", "ambulatory transportation", "wheelchair transportation"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "NEVADA_211_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["IDENTITY_NOT_FULLY_RESOLVED", "NTA_AUTHORITY_NOT_VERIFIED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.nevada211.org/"],
+      "unknown_fields": ["legal_name", "address", "phone", "direct_website", "license", "independent_ratings", "current_capacity", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "CANDIDATE", "reasons": ["Discovered through Nevada 211; canonical identity and transport authority pending"]}
+    },
+    {
+      "supplier_id": "helping-hands-vegas-valley-transport",
+      "legal_name": null, "brand_name": "Helping Hands of Vegas Valley", "sector_ids": ["ROUTINE_TRANSPORT"],
+      "branch": {"address": "3680 S. Maryland Parkway, Suite 526, Las Vegas, NV 89169", "phone": "702-633-7264", "website": "https://hhovv.org/", "service_area": ["Las Vegas Valley"], "las_vegas_valley_verified": true},
+      "services": ["transportation for assessed clients age 60+", "non-ambulatory transport"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "PROFESSIONAL_REFERRAL", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://hhovv.org/"],
+      "unknown_fields": ["legal_name", "license_or_exemption", "independent_ratings", "eligibility_details", "availability", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local nonprofit service and eligibility headline found; operating details pending"]}
+    },
+    {
+      "supplier_id": "catholic-charities-meals-on-wheels-las-vegas",
+      "legal_name": "Catholic Charities of Southern Nevada", "brand_name": "Meals on Wheels Las Vegas", "sector_ids": ["MEALS_NUTRITION"],
+      "branch": {"address": "1501 Las Vegas Blvd North, Las Vegas, NV 89101", "phone": "702-385-2662", "website": "https://www.catholiccharities.com/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["home-delivered meals for homebound seniors"], "payment_options": ["eligibility-based program"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "ELIGIBILITY_BASED", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CLIENT_ELIGIBILITY_NOT_CONFIRMED", "DIET_FIT_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.catholiccharities.com/"],
+      "unknown_fields": ["eligibility_details", "diet_options", "current_capacity", "start_date"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local meal program found; resident eligibility and diet fit must be confirmed"]}
+    },
+    {
+      "supplier_id": "chefs-for-seniors-las-vegas-henderson",
+      "legal_name": null, "brand_name": "Chefs for Seniors Las Vegas and Henderson", "sector_ids": ["MEALS_NUTRITION"],
+      "branch": {"address": null, "phone": null, "website": "https://chefsforseniors.com/", "service_area": ["Las Vegas", "Henderson"], "las_vegas_valley_verified": true},
+      "services": ["in-home personal chef", "diabetes-friendly meals", "low-sodium meals", "kidney-friendly meals", "soft foods", "vegetarian meals"], "payment_options": ["private pay"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["LOCAL_OPERATOR_IDENTITY_PENDING", "FACILITY_ACCESS_NOT_CONFIRMED", "DIET_FIT_NOT_CLINICALLY_VERIFIED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://chefsforseniors.com/"],
+      "unknown_fields": ["local_legal_name", "address", "phone", "health_permit", "independent_ratings", "facility_access", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local service area and diet options found; local operator and facility access pending"]}
+    },
+    {
+      "supplier_id": "lifestation-nevada",
+      "legal_name": null, "brand_name": "LifeStation", "sector_ids": ["SAFETY_MONITORING"],
+      "branch": {"address": null, "phone": null, "website": "https://www.lifestation.com/", "service_area": ["Nevada", "Las Vegas Valley"], "las_vegas_valley_verified": true},
+      "services": ["24/7 medical alert", "GPS", "fall detection", "caregiver text alerts"], "payment_options": ["private pay", "possible insurance discount"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["FACILITY_COMPATIBILITY_NOT_CONFIRMED", "MONITORING_CERTIFICATIONS_NOT_VERIFIED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.lifestation.com/"],
+      "unknown_fields": ["legal_name", "monitoring_certifications", "independent_ratings", "facility_compatibility", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Nevada coverage and product claims found; certifications and facility compatibility pending"]}
+    },
+    {
+      "supplier_id": "amore-hospice-care-las-vegas",
+      "legal_name": null, "brand_name": "Amore Hospice Care", "sector_ids": ["HOSPICE_PALLIATIVE"],
+      "branch": {"address": null, "phone": "702-330-0440", "website": "https://amorehospicecare.com/palliative-care/", "service_area": ["Las Vegas", "Clark County", "Henderson", "North Las Vegas", "Summerlin", "Green Valley"], "las_vegas_valley_verified": true},
+      "services": ["in-home palliative care", "hospice", "bereavement groups", "dementia program", "24/7 phone coverage"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CMS_AND_LICENSE_NOT_VERIFIED", "PATIENT_ELIGIBILITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://amorehospicecare.com/palliative-care/"],
+      "unknown_fields": ["legal_name", "address", "license", "CMS_record", "independent_ratings", "current_capacity", "payment"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local palliative and hospice services found; official regulatory verification pending"]}
+    },
+    {
+      "supplier_id": "nathan-adelson-hospice",
+      "legal_name": "Nathan Adelson Hospice", "brand_name": "Nathan Adelson Hospice / Elaine Wynn Palliative Care", "sector_ids": ["HOSPICE_PALLIATIVE"],
+      "branch": {"address": "1201 Nevada State Drive, Henderson, NV 89002", "phone": "702-947-6972", "website": "https://www.nah.org/what-we-do/center-for-compassionate-care/elaine-wynn-palliative-care", "service_area": ["Southern Nevada", "Henderson", "Las Vegas Valley"], "las_vegas_valley_verified": true},
+      "services": ["hospice", "palliative care"], "payment_options": ["Medicare accepted for hospice as reported by provider"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CMS_AND_LICENSE_NOT_VERIFIED", "PATIENT_ELIGIBILITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.nah.org/what-we-do/center-for-compassionate-care/elaine-wynn-palliative-care", "https://www.dpbh.nv.gov/boards/pcqladvisorycouncil/pcqlresources/"],
+      "unknown_fields": ["license", "CMS_record", "independent_ratings", "current_capacity", "palliative_payment_terms"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Provider and Nevada state resource establish local service; CMS/license and capacity pending"]}
+    },
+    {
+      "supplier_id": "procare-hospice-nevada",
+      "legal_name": null, "brand_name": "ProCare Hospice of Nevada", "sector_ids": ["HOSPICE_PALLIATIVE"],
+      "branch": {"address": "8025 Amigo Street, Las Vegas, NV 89123", "phone": "702-380-8300", "website": "https://procarehospice.com/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["hospice", "14-bed inpatient unit", "24/7 phone coverage"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CMS_AND_LICENSE_NOT_VERIFIED", "PATIENT_ELIGIBILITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://procarehospice.com/"],
+      "unknown_fields": ["legal_name", "license", "CMS_record", "independent_ratings", "current_capacity", "payment"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local identity and service found; official regulatory verification pending"]}
+    }
+  ]
+}

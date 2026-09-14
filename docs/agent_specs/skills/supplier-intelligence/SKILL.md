@@ -46,3 +46,13 @@ The launch market is Las Vegas Valley: Las Vegas, North Las Vegas, Henderson, Bo
 
 Return canonical supplier records, evidence records, unresolved conflicts, coverage gaps, freshness status, and a publication decision with explicit reasons. For outcome-critical suppliers, also return readiness and continuity fields required by the record contract.
 
+## Operational runtime
+
+The first live Las Vegas candidate inventory is stored in `backend/app/data/las_vegas_supplier_candidates.json` and processed by `backend/app/services/supplier_intelligence_service.py`.
+
+- `POST /supplier-intelligence/run-now` validates and indexes the prepared discovery queue; it is admin protected.
+- `GET /supplier-intelligence/catalog` exposes only `LIMITED` and `VERIFIED` records and supports `sector` and `q` filters.
+- `GET /supplier-intelligence/coverage` reports current supplier and sector coverage.
+- A background worker starts with the API and runs immediately, then every 24 hours by default (`OPTIME_SUPPLIER_INTELLIGENCE_INTERVAL_SECONDS`).
+
+The live cycle must keep candidates out of the public endpoint until local service is established. It must not promote a regulated or outcome-critical supplier to `VERIFIED` until the applicable official evidence and readiness fields pass.
