@@ -45,24 +45,24 @@
     {
       "supplier_id": "maxim-healthcare-las-vegas",
       "legal_name": null, "brand_name": "Maxim Healthcare Las Vegas Regional Office", "sector_ids": ["HOME_CARE", "PRIVATE_DUTY_NURSING"],
-      "branch": {"address": null, "phone": null, "website": "https://www.maximhealthcare.com/maxim-healthcare-locations/las-vegas-nv-regional-office/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
-      "services": ["home healthcare", "private duty nursing", "personal care"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "branch": {"address": "3930 Howard Hughes Pkwy, Las Vegas, NV 89169", "phone": "702-560-2192", "website": "https://www.maximhealthcare.com/maxim-healthcare-locations/las-vegas-nv-regional-office/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["home healthcare", "private duty nursing", "personal care"], "payment_options": [], "licenses": [{"authority": "CMS", "credential_type": "Medicare home health certification", "identifier": "297085", "status": "ACTIVE_IN_CURRENT_CMS_DATASET", "certification_date": "1997-07-14", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/6jpm-sxkc"}], "ratings": [], "quality_metrics": [{"source": "CMS Home Health Care Agencies", "metric": "quality_of_patient_care_star_rating", "value": null, "status": "NOT_REPORTED_SMALL_SAMPLE", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/6jpm-sxkc"}], "facility_referrals": [],
       "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
-      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["LICENSE_NOT_VERIFIED", "CAPACITY_NOT_CONFIRMED"]},
-      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.maximhealthcare.com/maxim-healthcare-locations/las-vegas-nv-regional-office/"],
-      "unknown_fields": ["legal_name", "address", "phone", "license", "independent_ratings", "current_capacity", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
-      "publication": {"status": "LIMITED", "reasons": ["Local office and service claims found; license and readiness pending"]}
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "CMS_NURSING_ONLY_PLUS_FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CAPACITY_NOT_CONFIRMED", "NON_CMS_SERVICE_SCOPE_NOT_VERIFIED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.maximhealthcare.com/maxim-healthcare-locations/las-vegas-nv-regional-office/", "https://data.cms.gov/provider-data/dataset/6jpm-sxkc"],
+      "unknown_fields": ["legal_name", "independent_ratings", "current_capacity", "price", "personal_care_license"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["CMS confirms the Las Vegas home-health branch and nursing service; capacity, personal-care scope and independent ratings remain unverified"]}
     },
     {
       "supplier_id": "advanced-home-health-hospice-las-vegas",
       "legal_name": null, "brand_name": "Advanced Home Health and Hospice of Las Vegas", "sector_ids": ["HOME_HEALTH_THERAPY", "HOSPICE_PALLIATIVE"],
-      "branch": {"address": null, "phone": "702-967-6160", "website": "https://homehealthandhospice.com/las-vegas/", "service_area": ["Henderson", "Las Vegas Valley"], "las_vegas_valley_verified": true},
-      "services": ["home health nursing", "rehabilitation", "medication management", "wound care", "gait and balance training"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "branch": {"address": "10561 Jeffreys Street, Suite 105, Henderson, NV 89052", "phone": "702-967-6160", "website": "https://homehealthandhospice.com/las-vegas/", "service_area": ["Henderson", "Las Vegas Valley"], "las_vegas_valley_verified": true},
+      "services": ["home health nursing", "rehabilitation", "medication management", "wound care", "gait and balance training"], "payment_options": [], "licenses": [{"authority": "CMS", "credential_type": "Medicare home health certification", "identifier": "297198", "status": "ACTIVE_IN_CURRENT_CMS_DATASET", "certification_date": "2012-10-18", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/6jpm-sxkc"}], "ratings": [], "quality_metrics": [{"source": "CMS Home Health Care Agencies", "metric": "quality_of_patient_care_star_rating", "value": 3.5, "scale": 5, "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/6jpm-sxkc"}], "facility_referrals": [],
       "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
-      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CMS_AND_LICENSE_NOT_VERIFIED", "REFERRAL_REQUIREMENTS_UNKNOWN"]},
-      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://homehealthandhospice.com/las-vegas/"],
-      "unknown_fields": ["legal_name", "address", "license", "CMS_record", "independent_ratings", "eligibility", "current_capacity"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
-      "publication": {"status": "LIMITED", "reasons": ["Local clinical services found; official CMS/license verification pending"]}
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "CMS_HOME_HEALTH_CONFIRMED_HOSPICE_UNCONFIRMED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["HOSPICE_CERTIFICATION_NOT_MATCHED_TO_LAS_VEGAS", "REFERRAL_REQUIREMENTS_UNKNOWN", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://homehealthandhospice.com/las-vegas/", "https://data.cms.gov/provider-data/dataset/6jpm-sxkc", "https://data.cms.gov/provider-data/dataset/yc9t-dgbk"],
+      "unknown_fields": ["legal_name", "independent_ratings", "eligibility", "current_capacity", "Las_Vegas_hospice_certification"], "conflicts": ["CMS confirms Advanced Home Care in Henderson as home health CCN 297198; the CMS hospice dataset match found for the brand is in Reno, not Las Vegas"], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["CMS confirms the Henderson home-health agency and publishes a 3.5/5 quality rating; Las Vegas hospice certification and current intake readiness remain unverified"]}
     },
     {
       "supplier_id": "move-4-less-las-vegas",
@@ -142,36 +142,36 @@
     },
     {
       "supplier_id": "amore-hospice-care-las-vegas",
-      "legal_name": null, "brand_name": "Amore Hospice Care", "sector_ids": ["HOSPICE_PALLIATIVE"],
-      "branch": {"address": null, "phone": "702-330-0440", "website": "https://amorehospicecare.com/palliative-care/", "service_area": ["Las Vegas", "Clark County", "Henderson", "North Las Vegas", "Summerlin", "Green Valley"], "las_vegas_valley_verified": true},
-      "services": ["in-home palliative care", "hospice", "bereavement groups", "dementia program", "24/7 phone coverage"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "legal_name": "Amore Hospice Care", "brand_name": "Amore Hospice Care", "sector_ids": ["HOSPICE_PALLIATIVE"],
+      "branch": {"address": "3821 West Charleston Boulevard, Suite 110, Las Vegas, NV 89102", "phone": "702-858-3574", "website": "https://amorehospicecare.com/palliative-care/", "service_area": ["Las Vegas", "Clark County", "Henderson", "North Las Vegas", "Summerlin", "Green Valley"], "las_vegas_valley_verified": true},
+      "services": ["in-home palliative care", "hospice", "bereavement groups", "dementia program", "24/7 phone coverage"], "payment_options": [], "licenses": [{"authority": "CMS", "credential_type": "Medicare hospice certification", "identifier": "291637", "status": "ACTIVE_IN_CURRENT_CMS_DATASET", "certification_date": "2023-03-11", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/yc9t-dgbk"}], "ratings": [], "facility_referrals": [],
       "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
-      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CMS_AND_LICENSE_NOT_VERIFIED", "PATIENT_ELIGIBILITY_NOT_CONFIRMED"]},
-      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://amorehospicecare.com/palliative-care/"],
-      "unknown_fields": ["legal_name", "address", "license", "CMS_record", "independent_ratings", "current_capacity", "payment"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
-      "publication": {"status": "LIMITED", "reasons": ["Local palliative and hospice services found; official regulatory verification pending"]}
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "CMS_HOSPICE_CONFIRMED_PALLIATIVE_FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["PATIENT_ELIGIBILITY_NOT_CONFIRMED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://amorehospicecare.com/palliative-care/", "https://data.cms.gov/provider-data/dataset/yc9t-dgbk"],
+      "unknown_fields": ["independent_ratings", "current_capacity", "payment", "palliative_scope_certification"], "conflicts": ["CMS telephone differs from the number currently shown on the provider website; CMS number retained as official-identity evidence"], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["CMS confirms Medicare hospice certification; eligibility, current intake capacity, palliative scope and independent ratings remain unverified"]}
     },
     {
       "supplier_id": "nathan-adelson-hospice",
       "legal_name": "Nathan Adelson Hospice", "brand_name": "Nathan Adelson Hospice / Elaine Wynn Palliative Care", "sector_ids": ["HOSPICE_PALLIATIVE"],
       "branch": {"address": "1201 Nevada State Drive, Henderson, NV 89002", "phone": "702-947-6972", "website": "https://www.nah.org/what-we-do/center-for-compassionate-care/elaine-wynn-palliative-care", "service_area": ["Southern Nevada", "Henderson", "Las Vegas Valley"], "las_vegas_valley_verified": true},
-      "services": ["hospice", "palliative care"], "payment_options": ["Medicare accepted for hospice as reported by provider"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "services": ["hospice", "palliative care"], "payment_options": ["Medicare hospice certification confirmed by CMS"], "licenses": [{"authority": "CMS", "credential_type": "Medicare hospice certification", "identifier": "291500", "status": "ACTIVE_IN_CURRENT_CMS_DATASET", "certification_date": "1987-06-02", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/yc9t-dgbk"}], "ratings": [{"source": "CMS Hospice CAHPS", "branch_identity": "CCN 291500", "rating": 3, "scale": 5, "review_count": "NOT_PUBLISHED_BY_CMS", "review_count_semantics": "CMS does not publish a respondent count in this dataset", "measurement_period": "2023-10-01/2025-09-30", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/gxki-hrr8"}], "facility_referrals": [],
       "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
-      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CMS_AND_LICENSE_NOT_VERIFIED", "PATIENT_ELIGIBILITY_NOT_CONFIRMED"]},
-      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.nah.org/what-we-do/center-for-compassionate-care/elaine-wynn-palliative-care", "https://www.dpbh.nv.gov/boards/pcqladvisorycouncil/pcqlresources/"],
-      "unknown_fields": ["license", "CMS_record", "independent_ratings", "current_capacity", "palliative_payment_terms"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
-      "publication": {"status": "LIMITED", "reasons": ["Provider and Nevada state resource establish local service; CMS/license and capacity pending"]}
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "CMS_HOSPICE_CONFIRMED_PALLIATIVE_FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["PATIENT_ELIGIBILITY_NOT_CONFIRMED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.nah.org/what-we-do/center-for-compassionate-care/elaine-wynn-palliative-care", "https://www.dpbh.nv.gov/boards/pcqladvisorycouncil/pcqlresources/", "https://data.cms.gov/provider-data/dataset/yc9t-dgbk", "https://data.cms.gov/provider-data/dataset/gxki-hrr8"],
+      "unknown_fields": ["current_capacity", "palliative_payment_terms", "patient_eligibility", "Nevada_state_license_number"], "conflicts": ["CMS main hospice location is 4141 University Center Drive, Las Vegas; the Oomnik record also presents the provider's Henderson palliative-care location"], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["CMS confirms Medicare hospice certification and a 3/5 CAHPS family-caregiver rating; current capacity and eligibility remain unverified"]}
     },
     {
       "supplier_id": "procare-hospice-nevada",
-      "legal_name": null, "brand_name": "ProCare Hospice of Nevada", "sector_ids": ["HOSPICE_PALLIATIVE"],
+      "legal_name": "ProCare Hospice of Nevada, LLC", "brand_name": "ProCare Hospice of Nevada", "sector_ids": ["HOSPICE_PALLIATIVE"],
       "branch": {"address": "8025 Amigo Street, Las Vegas, NV 89123", "phone": "702-380-8300", "website": "https://procarehospice.com/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
-      "services": ["hospice", "14-bed inpatient unit", "24/7 phone coverage"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "services": ["hospice", "14-bed inpatient unit", "24/7 phone coverage"], "payment_options": [], "licenses": [{"authority": "CMS", "credential_type": "Medicare hospice certification", "identifier": "291534", "status": "ACTIVE_IN_CURRENT_CMS_DATASET", "certification_date": "2013-07-03", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/yc9t-dgbk"}], "ratings": [{"source": "CMS Hospice CAHPS", "branch_identity": "CCN 291534", "rating": 3, "scale": 5, "review_count": "NOT_PUBLISHED_BY_CMS", "review_count_semantics": "CMS does not publish a respondent count in this dataset", "measurement_period": "2023-10-01/2025-09-30", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://data.cms.gov/provider-data/dataset/gxki-hrr8"}], "facility_referrals": [],
       "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
-      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["CMS_AND_LICENSE_NOT_VERIFIED", "PATIENT_ELIGIBILITY_NOT_CONFIRMED"]},
-      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://procarehospice.com/"],
-      "unknown_fields": ["legal_name", "license", "CMS_record", "independent_ratings", "current_capacity", "payment"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
-      "publication": {"status": "LIMITED", "reasons": ["Local identity and service found; official regulatory verification pending"]}
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "CMS_HOSPICE_CONFIRMED_INPATIENT_DETAILS_FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["PATIENT_ELIGIBILITY_NOT_CONFIRMED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://procarehospice.com/", "https://data.cms.gov/provider-data/dataset/yc9t-dgbk", "https://data.cms.gov/provider-data/dataset/gxki-hrr8"],
+      "unknown_fields": ["current_capacity", "payment", "inpatient_unit_license", "Nevada_state_license_number"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["CMS confirms the entity, Las Vegas address, Medicare hospice certification and a 3/5 CAHPS rating; current capacity and eligibility remain unverified"]}
     },
     {
       "supplier_id": "superb-maids-las-vegas",
@@ -225,14 +225,14 @@
     },
     {
       "supplier_id": "assist-care-pharmacy-las-vegas",
-      "legal_name": null, "brand_name": "Assist Care Pharmacy", "sector_ids": ["PHARMACY_MEDICATION"],
-      "branch": {"address": null, "phone": null, "website": "https://assistcarepharmacy.com/", "service_area": ["Las Vegas", "Henderson", "Southern Nevada"], "las_vegas_valley_verified": true},
-      "services": ["medication delivery", "organized compliance packaging", "refill support", "care-home and assisted-living pharmacy"], "payment_options": ["facility monthly billing reported"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "legal_name": "Assist Care Pharmacy, LLC", "brand_name": "Assist Care Pharmacy", "sector_ids": ["PHARMACY_MEDICATION"],
+      "branch": {"address": "3045 E Post Rd, Las Vegas, NV 89120", "phone": null, "website": "https://assistcarepharmacy.com/", "service_area": ["Las Vegas", "Henderson", "Southern Nevada"], "las_vegas_valley_verified": true},
+      "services": ["medication delivery", "organized compliance packaging", "refill support", "care-home and assisted-living pharmacy"], "payment_options": ["facility monthly billing reported"], "licenses": [{"authority": "Nevada State Board of Pharmacy", "credential_type": "Pharmacy", "identifier": "PH01387", "status": "ACTIVE", "effective_date": "2024-11-01", "expiration_date": "2026-10-31", "original_issue_date": "1999-08-10", "observed_at": "2026-09-14T00:00:00Z", "source_url": "https://int.bop.nv.gov/license-verification/"}], "ratings": [], "facility_referrals": [],
       "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
-      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["NEVADA_PHARMACY_LICENSE_NOT_VERIFIED", "PRESCRIPTION_TRANSFER_NOT_CONFIRMED", "FACILITY_INTEGRATION_NOT_CONFIRMED"]},
-      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://assistcarepharmacy.com/"],
-      "unknown_fields": ["legal_name", "address", "phone", "Nevada_pharmacy_license", "independent_ratings", "insurance_networks", "current_capacity", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
-      "publication": {"status": "LIMITED", "reasons": ["Local delivery and packaging services found; pharmacy license and resident-specific integration pending"]}
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "NEVADA_PHARMACY_LICENSE_CONFIRMED_SERVICES_FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["PRESCRIPTION_TRANSFER_NOT_CONFIRMED", "FACILITY_INTEGRATION_NOT_CONFIRMED", "CAPACITY_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://assistcarepharmacy.com/", "https://int.bop.nv.gov/license-verification/"],
+      "unknown_fields": ["phone", "independent_ratings", "insurance_networks", "current_capacity", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Nevada confirms active pharmacy license PH01387 through 2026-10-31; prescription transfer, facility integration and current capacity remain unverified"]}
     },
     {
       "supplier_id": "mmts-it-las-vegas-senior-support",
