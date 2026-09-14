@@ -172,6 +172,117 @@
       "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://procarehospice.com/"],
       "unknown_fields": ["legal_name", "license", "CMS_record", "independent_ratings", "current_capacity", "payment"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
       "publication": {"status": "LIMITED", "reasons": ["Local identity and service found; official regulatory verification pending"]}
+    },
+    {
+      "supplier_id": "superb-maids-las-vegas",
+      "legal_name": null, "brand_name": "Superb Maids", "sector_ids": ["CLEANING_SETUP"],
+      "branch": {"address": null, "phone": "702-721-8858", "website": "https://superbmaids.net/", "service_area": ["Las Vegas", "Henderson"], "las_vegas_valley_verified": true},
+      "services": ["move-in cleaning", "move-out cleaning", "home and apartment cleaning", "post-construction cleaning"], "payment_options": ["private pay"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "DIRECTORY", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://superbmaids.net/"],
+      "unknown_fields": ["legal_name", "address", "business_license", "insurance", "branch_specific_ratings", "current_availability", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local move-cleaning service found; legal identity, insurance and independent ratings pending"]}
+    },
+    {
+      "supplier_id": "huntington-ellis-las-vegas-relocation",
+      "legal_name": null, "brand_name": "huntington & ellis", "sector_ids": ["PROPERTY_TRANSITION"],
+      "branch": {"address": null, "phone": null, "website": "https://huntingtonandellis.com/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["home sale", "home purchase", "relocation assistance", "virtual tours", "remote transactions"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "PROFESSIONAL_REFERRAL", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://huntingtonandellis.com/"],
+      "unknown_fields": ["legal_name", "address", "phone", "Nevada_broker_license", "senior_specialist_credentials", "independent_ratings", "fees"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Las Vegas relocation service found; Nevada license and senior-specialist credentials pending"]}
+    },
+    {
+      "supplier_id": "ikea-las-vegas",
+      "legal_name": null, "brand_name": "IKEA Las Vegas", "sector_ids": ["ROOM_RETAIL"],
+      "branch": {"address": "6500 IKEA Way, Las Vegas, NV 89148", "phone": null, "website": "https://www.ikea.com/us/en/stores/las-vegas/", "service_area": ["Las Vegas Valley"], "las_vegas_valley_verified": true},
+      "services": ["furniture", "home goods", "click and collect", "delivery subject to address"], "payment_options": ["direct purchase from retailer"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "DIRECT_LINK", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.ikea.com/us/en/stores/las-vegas/"],
+      "unknown_fields": ["phone", "branch_specific_ratings", "resident_address_delivery", "facility_access", "assembly_availability", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local store verified; delivery, assembly and facility access must be checked directly by customer"]}
+    },
+    {
+      "supplier_id": "cox-internet-las-vegas",
+      "legal_name": null, "brand_name": "Cox Internet Las Vegas", "sector_ids": ["CONNECTIVITY"],
+      "branch": {"address": null, "phone": null, "website": "https://www.cox.com/residential/local/services/nv/las-vegas/internet.html", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["home internet", "equipment", "installation subject to address"], "payment_options": ["direct contract with carrier"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "DIRECT_LINK", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.cox.com/residential/local/services/nv/las-vegas/internet.html"],
+      "unknown_fields": ["phone", "branch_specific_ratings", "resident_address_availability", "facility_contract_restrictions", "installation_date", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Las Vegas service page found; customer must verify exact address and facility restrictions directly"]}
+    },
+    {
+      "supplier_id": "quantum-fiber-las-vegas",
+      "legal_name": null, "brand_name": "Quantum Fiber Las Vegas", "sector_ids": ["CONNECTIVITY"],
+      "branch": {"address": null, "phone": null, "website": "https://www.quantumfiber.com/local/nv/las-vegas", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["fiber internet", "installation subject to address"], "payment_options": ["direct contract with carrier"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "DIRECT_LINK", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.quantumfiber.com/local/nv/las-vegas"],
+      "unknown_fields": ["phone", "branch_specific_ratings", "resident_address_availability", "facility_contract_restrictions", "installation_date", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Las Vegas service page found; exact-address availability and facility restrictions pending"]}
+    },
+    {
+      "supplier_id": "assist-care-pharmacy-las-vegas",
+      "legal_name": null, "brand_name": "Assist Care Pharmacy", "sector_ids": ["PHARMACY_MEDICATION"],
+      "branch": {"address": null, "phone": null, "website": "https://assistcarepharmacy.com/", "service_area": ["Las Vegas", "Henderson", "Southern Nevada"], "las_vegas_valley_verified": true},
+      "services": ["medication delivery", "organized compliance packaging", "refill support", "care-home and assisted-living pharmacy"], "payment_options": ["facility monthly billing reported"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "OUTCOME_CRITICAL",
+      "critical_readiness": {"capacity_confirmed": false, "service_scope": "FIRST_PARTY_REPORTED", "quoted_price_status": "UNKNOWN", "start_date_status": "UNKNOWN", "backup_coverage": "UNKNOWN", "last_confirmation": null, "unresolved_blockers": ["NEVADA_PHARMACY_LICENSE_NOT_VERIFIED", "PRESCRIPTION_TRANSFER_NOT_CONFIRMED", "FACILITY_INTEGRATION_NOT_CONFIRMED"]},
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://assistcarepharmacy.com/"],
+      "unknown_fields": ["legal_name", "address", "phone", "Nevada_pharmacy_license", "independent_ratings", "insurance_networks", "current_capacity", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local delivery and packaging services found; pharmacy license and resident-specific integration pending"]}
+    },
+    {
+      "supplier_id": "mmts-it-las-vegas-senior-support",
+      "legal_name": "MMTS LLC", "brand_name": "MMTS IT", "sector_ids": ["TECH_SUPPORT"],
+      "branch": {"address": null, "phone": "702-829-6914", "website": "https://mmts-it.com/", "service_area": ["Las Vegas", "Clark County", "Summerlin", "Henderson", "Spring Valley", "Green Valley", "North Las Vegas", "Enterprise"], "las_vegas_valley_verified": true},
+      "services": ["in-home senior technology help", "computer support", "printer support", "network support", "device and online-safety help"], "payment_options": ["private pay"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "DIRECTORY", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://mmts-it.com/"],
+      "unknown_fields": ["address", "business_license", "insurance", "background_check_policy", "branch_specific_ratings", "facility_access", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Senior-focused local service found; business safeguards and independent ratings pending"]}
+    },
+    {
+      "supplier_id": "city-las-vegas-adaptive-recreation-b-fitness",
+      "legal_name": "City of Las Vegas", "brand_name": "B Fitness Adaptive Recreation", "sector_ids": ["SENIOR_FITNESS"],
+      "branch": {"address": null, "phone": "702-229-5177", "website": "https://www.lasvegasnevada.gov/Government/Departments/Parks-Recreation/Adaptive-Recreation", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["adaptive fitness for adults with diverse abilities", "certified-trainer program"], "payment_options": ["municipal program terms apply"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "PROFESSIONAL_REFERRAL", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.lasvegasnevada.gov/Government/Departments/Parks-Recreation/Adaptive-Recreation"],
+      "unknown_fields": ["program_location", "schedule", "eligibility", "accessibility_details", "current_capacity", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Official city program found; current schedule, eligibility and capacity pending"]}
+    },
+    {
+      "supplier_id": "ted-cohen-dpm-mobile-wound-care-las-vegas",
+      "legal_name": null, "brand_name": "Ted Cohen, DPM Mobile Wound Care", "sector_ids": ["MOBILE_PERSONAL_HEALTH"],
+      "branch": {"address": null, "phone": null, "website": "https://www.tedcohendpm.com/", "service_area": ["Las Vegas area"], "las_vegas_valley_verified": true},
+      "services": ["mobile podiatry", "mobile wound care"], "payment_options": [], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "PROFESSIONAL_REFERRAL", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://www.tedcohendpm.com/"],
+      "unknown_fields": ["legal_name", "address", "phone", "Nevada_podiatry_license", "insurance_networks", "independent_ratings", "facility_access", "current_capacity"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Mobile Las Vegas service found; professional license and facility access pending"]}
+    },
+    {
+      "supplier_id": "blys-mobile-hair-las-vegas",
+      "legal_name": null, "brand_name": "Blys Las Vegas", "sector_ids": ["PERSONAL_CARE_LIFESTYLE"],
+      "branch": {"address": null, "phone": null, "website": "https://getblys.com/", "service_area": ["Las Vegas"], "las_vegas_valley_verified": true},
+      "services": ["mobile hairdresser", "in-home beauty services", "same-day booking subject to availability"], "payment_options": ["direct booking with platform"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "DIRECTORY", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://getblys.com/"],
+      "unknown_fields": ["local_provider_identity", "Nevada_cosmetology_license", "background_check_policy", "branch_specific_ratings", "facility_access", "current_availability", "case_specific_price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Las Vegas marketplace coverage found; customer must verify the individual professional and facility access"]}
+    },
+    {
+      "supplier_id": "all-creatures-pet-sitting-las-vegas",
+      "legal_name": null, "brand_name": "All Creatures Pet Sitting", "sector_ids": ["PET_SUPPORT"],
+      "branch": {"address": "2620 Regatta Dr, Suite 102, Las Vegas, NV 89128", "phone": "702-508-1900", "website": "https://acpslv.com/", "service_area": ["Las Vegas", "Henderson"], "las_vegas_valley_verified": true},
+      "services": ["pet sitting", "dog walking", "special-needs pet care", "licensed veterinary technicians on request"], "payment_options": ["private pay"], "licenses": [], "ratings": [], "facility_referrals": [],
+      "oomnik_feedback": {"status": "NOT_YET_AVAILABLE", "verified_review_count": 0, "dimensions": {}}, "involvement": "DIRECTORY", "critical_readiness": null,
+      "commercial_relationship": {"status": "NONE_KNOWN", "disclosure": null}, "evidence_refs": ["https://acpslv.com/", "https://www.southernnevadapets.com/"],
+      "unknown_fields": ["legal_name", "business_license", "insurance_evidence", "staff_credentials", "independent_ratings", "facility_pet_policy_compatibility", "current_availability", "price"], "conflicts": [], "freshness": {"last_verified_at": "2026-09-14T00:00:00Z", "status": "FRESH"},
+      "publication": {"status": "LIMITED", "reasons": ["Local pet services and professional-association listing found; safeguards and facility compatibility pending"]}
     }
   ]
 }
