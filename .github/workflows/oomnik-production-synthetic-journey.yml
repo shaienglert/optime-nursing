@@ -7,6 +7,11 @@ on:
     paths:
       - '.github/workflows/oomnik-production-synthetic-journey.yml'
       - 'frontend/tests/browser/production-synthetic-journey.spec.cjs'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/oomnik-production-synthetic-journey.yml'
+      - 'frontend/tests/browser/production-synthetic-journey.spec.cjs'
   workflow_dispatch:
     inputs:
       scenario:
