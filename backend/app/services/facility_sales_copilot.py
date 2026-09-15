@@ -120,8 +120,8 @@ APPROVED_KNOWLEDGE = [
     {
         "id": "successful_placement",
         "title": "When a placement becomes payable",
-        "keywords": ["successful", "60 days", "payable", "death", "left", "move out", "refund"],
-        "answer": "A placement is treated as successful after 60 days. If the resident dies within the first 60 days, the approved commercial term is 59% of the applicable placement fee. Other early departures are handled under Oomnik's responsibility, subject to the signed agreement.",
+        "keywords": ["successful", "60 days", "payable", "death", "death before 60 days", "dies before 60 days", "resident dies", "left", "move out", "refund"],
+        "answer": "A placement is treated as successful after 60 days. If the resident dies within the first 60 days, the approved commercial term is 50% of the applicable placement fee ($999.50 on the standard $1,999 fee). Other early departures are handled under Oomnik's responsibility, subject to the signed agreement.",
         "proof": "For a live contract discussion, read the exact agreement language rather than paraphrasing legal terms.",
     },
     {

@@ -44,3 +44,10 @@ def test_sixty_day_pitch_explains_aligned_incentive_without_guarantee() -> None:
     result = ask_sales_copilot("Why do you wait 60 days to charge?", transport=lambda _: {})
     assert "successful match" in result["answer"].lower()
     assert "successful_match_incentive" in result["knowledge_ids"]
+
+
+def test_death_before_day_sixty_uses_approved_half_fee() -> None:
+    result = ask_sales_copilot("What happens to the fee if the resident dies before 60 days?", transport=lambda _: {})
+    assert "50%" in result["answer"]
+    assert "$999.50" in result["answer"]
+    assert "59%" not in result["answer"]
