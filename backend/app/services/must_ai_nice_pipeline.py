@@ -226,7 +226,7 @@ def apply_must_ai_nice_pipeline(
         fit["nice_fit_scores"] = dict(legacy.get("nice_fit_scores") or {})
     structured_nice_summary = attach_nice_coverage(audit_rows, audit_intent)
 
-    selected = [] if ai_failure_block else ranked
+    selected = [] if ai_failure_block else ranked[: max(0, int(limit or 0))]
     if _env_true("OPTIME_LIVE_PREFERENCE_VERIFICATION"):
         dynamic_summary, nice_complete_rows = _verify_dynamic_preferences_in_waves(
             [] if ai_failure_block else ranked, dynamic_preferences, len(ranked)
@@ -396,7 +396,7 @@ def apply_must_ai_nice_pipeline(
     if ai_failure_block:
         decision["ai_ranking_failure"] = {
             "status": ai_status.get("status"),
-            "candidate_count": len(rankable),
+            "candidate_count": len(live_shortlist),
             "deterministic_order_exposed": False,
             "rule": "AI-owned ranking failure must fail closed rather than masquerade as an AI recommendation.",
         }
