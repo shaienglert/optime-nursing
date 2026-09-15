@@ -1,4 +1,5 @@
 name: Oomnik Production Synthetic Journey
+# Production run trigger: scenario 1
 
 on:
   push:
