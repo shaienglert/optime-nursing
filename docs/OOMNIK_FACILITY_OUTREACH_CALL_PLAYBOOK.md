@@ -107,12 +107,22 @@ The assisted workflow is:
 3. Founding Launch Offer: a community completing the required onboarding within the first 90 days after launch receives its first placement without an Oomnik placement fee; the facility funds the approved $500 Welcome benefit.
 4. Later successful placements: the standard Oomnik placement fee is $1,999 after 60 days. The $500 Welcome Package is funded $250 by the facility and $250 by Oomnik.
 5. The Welcome Package is available only through a participating facility that has registered, signed the Oomnik facility agreement, and completed the required onboarding. A non-participating facility may appear in an objective comparison but does not receive or advertise the Oomnik Welcome Package.
-6. The Welcome Package supports approved resident transition needs. Its approved uses and administration are governed by the agreement and client-facing terms.
-7. Successful placement: after 60 days.
-8. Death within 60 days: 50% of the applicable placement fee ($999.50 on the standard $1,999 fee).
-9. Another early departure: handled under Oomnik's responsibility, subject to the signed agreement.
-10. Payment does not influence ranking.
-11. The agreement—not a verbal statement—controls final commercial and legal obligations.
+6. The Welcome Package is limited to eligible private-pay placements. It is not available when the placement or related care is funded in whole or in part by Medicare, Medicaid, the VA or another government health care program.
+7. The Welcome Package supports approved non-medical resident transition needs. Its approved uses and administration are governed by the agreement and client-facing terms.
+8. Successful placement: after 60 days.
+9. Death within 60 days: 50% of the applicable placement fee ($999.50 on the standard $1,999 fee).
+10. Another early departure: handled under Oomnik's responsibility, subject to the signed agreement.
+11. Payment does not influence ranking.
+12. The agreement—not a verbal statement—controls final commercial and legal obligations.
+
+### Welcome Package eligibility gate
+
+Before presenting the Welcome Package as available, confirm both:
+
+1. `FACILITY_ELIGIBLE`: the facility is registered with Oomnik, has signed the facility agreement and completed required onboarding.
+2. `PRIVATE_PAY_ELIGIBLE`: neither the placement nor the related care is funded in whole or in part by Medicare, Medicaid, the VA or another government health care program.
+
+If either condition is false or unknown, do not promise the package. State that eligibility must first be confirmed.
 
 ## 7. Professional bridge phrases
 
