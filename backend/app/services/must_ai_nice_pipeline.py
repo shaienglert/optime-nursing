@@ -59,6 +59,52 @@ def _resolve_nice_wave_search_cap() -> int:
     return max(10, min(200, int(os.getenv("OPTIME_NICE_WAVE_SEARCH_MAX_CANDIDATES", "40"))))
 
 
+def _resolve_interactive_shortlist_limit(requested_limit: int) -> int:
+    """Keep live AI work to the shortlist a family can use now."""
+    configured = int(os.getenv("OPTIME_INTERACTIVE_SHORTLIST_LIMIT", "10"))
+    return max(5, min(20, configured, max(5, int(requested_limit or 0))))
+
+
+def _defer_dynamic_preference_verification(
+    rows: List[Dict[str, Any]], dynamic_preferences: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Preserve unknown preference evidence without blocking a live search."""
+    preferences = list(dynamic_preferences.get("preferences") or [])
+    for row in rows:
+        assessments = [
+            {
+                "preference_id": str(pref.get("preference_id")),
+                "status": "UNKNOWN",
+                "supporting_claim_ids": [],
+                "reason": "Facility-specific preference evidence is still being researched.",
+                "provider_question_if_unknown": f"Please verify whether this community satisfies: {pref.get('semantic_meaning')}",
+            }
+            for pref in preferences
+        ]
+        row["dynamic_preference_fit"] = {
+            "status": "PENDING_EVIDENCE_RESEARCH",
+            "assessments": assessments,
+            "required_preference_ids": [str(pref.get("preference_id")) for pref in preferences],
+        }
+        row["nice_to_have_coverage"] = {
+            "status": "NICE_UNVERIFIED",
+            "required": [str(pref.get("preference_id")) for pref in preferences],
+            "verified_match": [],
+            "unresolved": [str(pref.get("preference_id")) for pref in preferences],
+            "verified_match_count": 0,
+            "required_count": len(preferences),
+            "source": "PENDING_GOVERNED_EVIDENCE_RESEARCH",
+        }
+    return {
+        "status": "DEFERRED_TO_EVIDENCE_RESEARCH",
+        "preference_count": len(preferences),
+        "nice_complete_candidate_count": 0,
+        "verification_required_count": len(rows) if preferences else 0,
+        "verification_execution": "NOT_RUN_IN_LIVE_SEARCH",
+        "rule": "Unknown preference evidence is shown as research-needed; it is never treated as a mismatch.",
+    }
+
+
 def _verify_dynamic_preferences_in_waves(
     ranked: List[Dict[str, Any]],
     dynamic_preferences: Dict[str, Any],
@@ -144,15 +190,20 @@ def apply_must_ai_nice_pipeline(
 
     # Pending candidates are ranked together with eligible ones: a MUST item with no
     # evidence yet is not a veto, so it must not silently disappear from the shortlist.
+    # The full universe remains gated and enters evidence research. Live candidate AI
+    # works only on the small shortlist that can be shown usefully right now.
     rankable = eligible + pending
+    rankable.sort(key=_fallback_key)
+    interactive_shortlist_limit = _resolve_interactive_shortlist_limit(limit)
+    live_shortlist = rankable[:interactive_shortlist_limit]
 
     audit_intent = deepcopy(client_intent)
-    _remove_legacy_nice_from_authoritative_path(rankable)
+    _remove_legacy_nice_from_authoritative_path(live_shortlist)
     ranking_intent = deepcopy(client_intent)
     ranking_intent["nice_to_haves"] = []
 
     ranked, ai_status = rank_must_eligible_candidates(
-        rankable,
+        live_shortlist,
         client_intent=ranking_intent,
         human_context=human_context,
         strategy=strategy,
@@ -160,7 +211,7 @@ def apply_must_ai_nice_pipeline(
     )
 
     ai_failure_block = (
-        bool(rankable)
+        bool(live_shortlist)
         and _env_true("OPTIME_SEMANTIC_AI_ENABLED")
         and _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED")
         and not _ai_ranking_succeeded(ai_status)
@@ -176,9 +227,15 @@ def apply_must_ai_nice_pipeline(
     structured_nice_summary = attach_nice_coverage(audit_rows, audit_intent)
 
     selected = [] if ai_failure_block else ranked[: max(0, int(limit or 0))]
-    dynamic_summary, nice_complete_rows = _verify_dynamic_preferences_in_waves(
-        [] if ai_failure_block else ranked, dynamic_preferences, max(0, int(limit or 0))
-    )
+    if _env_true("OPTIME_LIVE_PREFERENCE_VERIFICATION"):
+        dynamic_summary, nice_complete_rows = _verify_dynamic_preferences_in_waves(
+            [] if ai_failure_block else ranked, dynamic_preferences, len(ranked)
+        )
+    else:
+        dynamic_summary = _defer_dynamic_preference_verification(
+            [] if ai_failure_block else ranked, dynamic_preferences
+        )
+        nice_complete_rows = []
 
     if not dynamic_preferences.get("preference_count"):
         for row in selected:
@@ -252,14 +309,17 @@ def apply_must_ai_nice_pipeline(
         "order": [
             "DETERMINISTIC_MUST_GATE",
             "SEMANTIC_AI_DYNAMIC_PREFERENCE_MODEL",
-            "SEMANTIC_AI_RANK_MUST_ELIGIBLE",
-            "EVIDENCE_CLOSED_WORLD_PREFERENCE_VERIFICATION",
+            "SEMANTIC_AI_RANK_INTERACTIVE_SHORTLIST",
+            "EVIDENCE_RESEARCH_CONTINUES_AFTER_LIVE_RESPONSE",
             "PROVIDER_FACT_VERIFICATION",
             "AI_RERANK_AFTER_NEW_EVIDENCE",
         ],
         "must_eligible_count": len(eligible),
         "must_pending_verification_count": len(pending),
         "must_rejected_count": len(rejected),
+        "interactive_shortlist_limit": interactive_shortlist_limit,
+        "full_rankable_candidate_count": len(rankable),
+        "ranking_scope": "LIVE_SHORTLIST_ONLY_FULL_UNIVERSE_RESEARCH_CONTINUES",
         "candidate_dispositions": [
             {
                 "canonical_facility_id": row.get("canonical_facility_id"),
@@ -297,7 +357,7 @@ def apply_must_ai_nice_pipeline(
                     if preference_count and complete_selected
                     else (
                         (
-                            "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still unverified, so this ranking is provisional and direct provider verification can materially improve it."
+                            "The displayed facilities pass every verified MUST requirement. Some of your specific preferences are still being researched, so this ranking is provisional and direct provider verification can materially improve it."
                             + (
                                 f" We did find {len(complete_beyond_display)} facility(ies) further down the ranked list that fully match every preference you expressed; ask to see them if a complete preference match matters more than AI rank order."
                                 if complete_beyond_display
@@ -315,7 +375,7 @@ def apply_must_ai_nice_pipeline(
                 else ""
             )
         ),
-        "rule": "AI never decides MUST eligibility. When candidate AI ranking is required, failed ranking cannot silently degrade into a user-visible deterministic recommendation. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
+        "rule": "AI never decides MUST eligibility. The live response AI-ranks only the bounded shortlist while the full gated universe remains in evidence research. When candidate AI ranking is required, failed ranking cannot silently degrade into a user-visible deterministic recommendation. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
     }
     decision["must_gate"] = {
         **(decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}),
@@ -336,7 +396,7 @@ def apply_must_ai_nice_pipeline(
     if ai_failure_block:
         decision["ai_ranking_failure"] = {
             "status": ai_status.get("status"),
-            "candidate_count": len(rankable),
+            "candidate_count": len(live_shortlist),
             "deterministic_order_exposed": False,
             "rule": "AI-owned ranking failure must fail closed rather than masquerade as an AI recommendation.",
         }
