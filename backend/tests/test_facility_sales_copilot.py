@@ -112,3 +112,16 @@ def test_online_percentage_uses_latest_unverified_agent_record_with_date() -> No
     assert result["evidence"]["verification_status"] == "LATEST_UNVERIFIED"
     assert "not independently verified" in result["say_this"]
     assert "2026-09-15" in result["say_this"]
+
+
+def test_cost_objection_selects_outcome_economics_argument() -> None:
+    result = ask_sales_copilot("Why is your fee worth the cost?", transport=lambda _: {})
+    assert result["objection_guidance"]["category"] == "objection_cost"
+    assert result["objection_guidance"]["primary"]["id"] == "vacancy_economics"
+    assert "60 days" in result["say_this"]
+
+
+def test_no_staff_objection_routes_to_assisted_onboarding_argument() -> None:
+    result = ask_sales_copilot("We have no staff and no time to maintain another website", transport=lambda _: {})
+    assert result["objection_guidance"]["category"] == "objection_staff_time"
+    assert result["objection_guidance"]["primary"]["id"] == "assisted_onboarding"
