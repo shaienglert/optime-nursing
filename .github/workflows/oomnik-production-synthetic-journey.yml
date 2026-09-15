@@ -1,6 +1,9 @@
 name: Oomnik Production Synthetic Journey
 
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/oomnik-production-synthetic-journey.yml']
   workflow_dispatch:
     inputs:
       scenario:
