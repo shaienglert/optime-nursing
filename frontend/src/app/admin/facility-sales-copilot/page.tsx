@@ -153,6 +153,10 @@ export default function FacilitySalesCopilotPage() {
                   <p className="mt-1 text-xs text-slate-300">Data period: {answer.evidence.data_period} · Geography: {answer.evidence.geography} · Checked: {answer.evidence.checked_at}</p>
                   <a href={answer.evidence.source_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm underline">{answer.evidence.source_title} — {answer.evidence.source_publisher}</a>
                 </section> : null}
+                {answer.objection_guidance?.supporting.length ? <section className="rounded-2xl border border-sky-800/60 bg-sky-950/25 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">Use only if needed</p>
+                  <div className="mt-2 space-y-2">{answer.objection_guidance.supporting.map((item) => <p key={item.id} className="text-sm text-slate-200">“{item.line}”</p>)}</div>
+                </section> : null}
                 <section><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Next step</p><p className="mt-1 text-slate-200">{answer.next_step}</p></section>
               </article>
             ) : null}
