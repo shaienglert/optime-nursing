@@ -1,0 +1,41 @@
+from __future__ import annotations
+
+import unittest
+
+from app.services import patient_decision_engine as production_runtime
+
+
+class LaunchPracticalConstraintContractTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        # Follow the explicit production chain: integrated runtime -> governed
+        # facade -> legacy evidence core. Never rely on the ambiguous
+        # patient_decision_engine module/package name for private contracts.
+        cls.core = production_runtime._governed._legacy
+
+    def test_budget_and_pending_medicaid_survive_the_production_profile(self) -> None:
+        profile = production_runtime.build_patient_needs_profile(
+            {"budget": 5000},
+            "Her budget is $5,000 per month and Medicaid eligibility is pending.",
+        )
+        needs = {item["parameter_id"]: item for item in profile["needs"]}
+        self.assertIn("published_rates", needs)
+        self.assertIn("medicaid_attributes", needs)
+        self.assertIn("medicaid", profile["natural_language_mapping"]["extraction"]["recognized_tokens"])
+
+    def test_practical_gaps_are_visible_without_becoming_safety_failures(self) -> None:
+        needs = [
+            {"parameter_id": "published_rates", "requirement_level": "PREFERENCE", "desired_value": "KNOWN", "acceptable_values": ["KNOWN", "UNKNOWN"]},
+            {"parameter_id": "medicaid_attributes", "requirement_level": "PREFERENCE", "desired_value": "YES", "acceptable_values": ["YES", "UNKNOWN"]},
+        ]
+        eligibility = self.core._eligibility_from_needs(needs, {})
+        _strong, verify, _concerns = self.core._top_reasons(eligibility, [])
+
+        self.assertEqual("ELIGIBLE", eligibility["eligibility_status"])
+        self.assertEqual(2, len(eligibility["unknown_preferences"]))
+        self.assertIn("Current monthly pricing and fees must be confirmed against your stated budget", verify)
+        self.assertIn("Medicaid acceptance and the applicable payment pathway must be confirmed", verify)
+
+
+if __name__ == "__main__":
+    unittest.main()
