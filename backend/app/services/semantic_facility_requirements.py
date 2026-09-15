@@ -34,10 +34,20 @@ def extract_semantic_facility_requirements(result: Dict[str, Any]) -> List[Dict[
         if _upper(statement.get("knowledge_state")) != "KNOWN":
             continue
         mapped = [str(value or "").strip().lower() for value in statement.get("mapped_parameters") or []]
-        haystack = " ".join(mapped + [str(statement.get("raw_text") or "").lower(), str(statement.get("meaning") or "").lower()])
-        future_care = any(token in haystack for token in (
+        statement_text = " ".join([
+            str(statement.get("raw_text") or "").lower(),
+            str(statement.get("meaning") or "").lower(),
+        ])
+        haystack = " ".join(mapped + [statement_text])
+        # A model-selected questionnaire mapping is not proof that the client
+        # requested a future-care continuum.  Require the client's statement
+        # (or its semantic meaning) to say so explicitly.  This prevents a
+        # current memory-care need or pending Medicaid status from being
+        # converted into an unrelated continuum-of-care MUST.
+        future_care = any(token in statement_text for token in (
             "futurecare", "future_care", "future-care", "continuum", "aginginplace",
-            "aging_in_place", "avoidfuturemoves", "avoid_future_moves", "life plan",
+            "future care", "aging in place", "aging_in_place", "avoid future moves",
+            "avoidfuturemoves", "avoid_future_moves", "life plan",
         ))
         # Semantic AI may mark a clearly stated future-care requirement USED
         # because the client side is known; it must still be verified per facility.
