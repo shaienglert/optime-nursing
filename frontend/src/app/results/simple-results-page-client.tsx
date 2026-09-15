@@ -132,12 +132,13 @@ export function SimpleResultsPageClient() {
         {top.length > 0 ? (
           <section className="mt-8 grid gap-6">
             {top.map((item, index) => {
-              const aiReason = cleanText(item.ai_ranking?.reason || "");
-              const why = [aiReason, ...(item.explanation?.why_matches || []).map(cleanText)].filter(Boolean).slice(0, 3);
-              const verify = [
-                ...(item.ai_ranking?.information_deficits || []).map(cleanText),
-                ...(item.explanation?.needs_verification || []).map(cleanText),
-              ].filter(Boolean).slice(0, 3);
+              // The free-form ranking narrative sees a bounded claim sample and
+              // can therefore describe evidence as missing even when the full
+              // deterministic MUST gate verified it elsewhere.  Show only the
+              // canonical, structured explanation on the customer results page;
+              // keep AI ranking prose internal for audit and diagnostics.
+              const why = (item.explanation?.why_matches || []).map(cleanText).filter(Boolean).slice(0, 3);
+              const verify = (item.explanation?.needs_verification || []).map(cleanText).filter(Boolean).slice(0, 3);
               return (
                 <article key={item.canonical_facility_id} className="rounded-[2rem] border border-[#ded6c9] bg-white p-7 shadow-sm sm:p-9">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
