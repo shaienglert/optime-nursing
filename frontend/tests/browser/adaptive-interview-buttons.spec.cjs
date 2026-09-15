@@ -78,6 +78,7 @@ const decisionResponse = {
       matched_needs: [], unmet_verified_needs: [], unknown_critical_needs: [], preference_matches: [], evidence_certainty: 80,
       evidence_confidence: 80, quality_safety_score: 80, staffing_score: 75, capability_depth_score: 80,
       patient_relevant_outcomes_score: 80, practical_fit_score: 80, domain_breakdown: {},
+      ai_ranking: { reason: 'Medication support is not verified.', information_deficits: ['ADL support is not verified.'] },
       explanation: { why_matches: ['Bathing and dressing support is verified.'], needs_verification: ['Current availability should be confirmed.'], concerns: [], eligibility_reasons: [], availability_note: '', location_note: '' },
       parameter_badges: [], comparison_parameter_ids: [],
     },
@@ -150,6 +151,9 @@ test('results default view is readable and does not expose internal evidence jar
   await expect(page.getByText('Verified Community')).toBeVisible();
   await expect(page.getByText('Community Still Under Review')).toBeVisible();
   await expect(page.getByText('Meets verified must-haves')).toBeVisible();
+  await expect(page.getByText('Bathing and dressing support is verified.')).toBeVisible();
+  await expect(page.getByText('Medication support is not verified.')).toHaveCount(0);
+  await expect(page.getByText('ADL support is not verified.')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'See detailed comparison' })).toBeVisible();
   await expect(page.getByText(/CMS Placeholder/i)).toHaveCount(0);
   await expect(page.getByText(/POTENTIALLY_ELIGIBLE/i)).toHaveCount(0);
