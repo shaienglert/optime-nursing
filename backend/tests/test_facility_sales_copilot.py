@@ -134,3 +134,5 @@ def test_welcome_package_explains_first_and_later_placement_split() -> None:
     assert "community contributes $250" in result["say_this"]
     assert "Oomnik contributes $250" in result["say_this"]
     assert "$1,999" in result["say_this"]
+    assert "only through a participating community" in result["say_this"]
+    assert "non-participating community does not receive" in result["say_this"]
