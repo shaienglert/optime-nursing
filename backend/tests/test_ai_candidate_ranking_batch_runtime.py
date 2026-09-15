@@ -415,6 +415,50 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertEqual(ranked[0]["ai_ranking"]["rank_drivers"], [])
         self.assertEqual(ranked[0]["ai_ranking"]["citation_validation"], "PARTIAL")
 
+    def test_required_single_shot_contract_failure_recovers_with_closed_world_batch_scoring(self):
+        rows = self._rows(2)
+        calls = []
+
+        def transport(payload):
+            calls.append(payload)
+            candidates = payload["must_eligible_candidates"]
+            if "ranked_candidates" in payload["required_output"]:
+                first_id = candidates[0]["canonical_facility_id"]
+                return {"ranked_candidates": [
+                    {"canonical_facility_id": first_id, "reason": "duplicate", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
+                    {"canonical_facility_id": first_id, "reason": "duplicate", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
+                ]}
+            return {"scored_candidates": [
+                {
+                    "canonical_facility_id": item["canonical_facility_id"],
+                    "score": 90 - index,
+                    "reason": "governed recovery score",
+                    "information_deficits": [],
+                    "rank_drivers": [],
+                    "rank_risks": [],
+                }
+                for index, item in enumerate(candidates)
+            ]}
+
+        with patch.dict(os.environ, {
+            "OPTIME_SEMANTIC_AI_ENABLED": "1",
+            "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "1",
+        }, clear=False), patch(
+            "app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport
+        ):
+            ranked, status = rank_must_eligible_candidates(
+                rows,
+                client_intent={},
+                human_context={"dynamic_preference_model": {"preferences": []}},
+                strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual("AI_BATCH_RANKED_RECOVERY", status["status"])
+        self.assertTrue(status["closed_world_validated"])
+        self.assertEqual(["FAC-01", "FAC-02"], [row["canonical_facility_id"] for row in ranked])
+        self.assertGreaterEqual(len(calls), 3)
+
     def test_closed_world_violation_still_fails_closed_when_ranking_required(self):
         # Unlike a fabricated citation, a closed-world violation means the AI did not
         # return the exact supplied candidate set -- that is still a hard failure.
