@@ -73,11 +73,11 @@ def extract_semantic_facility_requirements(result: Dict[str, Any]) -> List[Dict[
 
 def _payload_verifies(payload: Dict[str, Any], key: str) -> bool | None:
     if key == "SEMANTIC_FUTURE_CARE_PATH":
-        values = (
-            payload.get("continuum_of_care_verified"),
-            payload.get("same_apartment_transition_verified"),
-        )
-        if True in values:
+        # A same-apartment transition only says that some support can be added
+        # without changing units.  It does not prove that the community offers
+        # a real progression of care levels.  Treating it as a continuum made
+        # independent-only housing look like a verified future-care pathway.
+        if payload.get("continuum_of_care_verified") is True:
             return True
         return None
     if key == "SEMANTIC_MOBILITY_LAYOUT":

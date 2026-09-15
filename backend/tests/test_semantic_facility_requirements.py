@@ -140,6 +140,43 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertIn("SEMANTIC_FUTURE_CARE_PATH", out["results"][1]["client_intent_fit"]["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", out["results"][1]["client_intent_fit"]["hard_gate"])
 
+    def test_same_apartment_transition_alone_does_not_prove_future_care_path(self) -> None:
+        result = {
+            "decision_intelligence": {
+                "human_intelligence": {
+                    "semantic_ai": {
+                        "result": {
+                            "statements": [{
+                                "raw_text": "a clear future-care path",
+                                "meaning": "continuum of care is required",
+                                "importance": "MUST",
+                                "knowledge_state": "KNOWN",
+                                "status": "USED",
+                                "mapped_parameters": ["futureCareProfile.continuumOfCarePreference"],
+                            }]
+                        }
+                    }
+                }
+            },
+            "results": [{
+                "canonical_facility_id": "INDEPENDENT_ONLY",
+                "facility_name": "Independent-only Community",
+                "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                "agent_person_fit_evidence": [{
+                    "payload": {
+                        "same_apartment_transition_verified": True,
+                        "continuum_of_care_verified": False,
+                    }
+                }],
+            }],
+        }
+
+        out = apply_semantic_facility_requirements(result, research_limit=0)
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertNotIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_pass"])
+        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
     def test_stamped_false_agent_evidence_never_hard_fails_a_semantic_must(self) -> None:
         # decision_research_worker.py stamps social_engagement_verified=False by default
         # on every research record, regardless of which dimension was actually
