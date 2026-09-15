@@ -31,7 +31,7 @@ export default function AdminIndexPage() {
             <p className="mt-2 text-sm text-slate-300">Review and approve draft emails asking facilities for room types, pricing, and availability before they send.</p>
           </Link>
 
-          <Link href="/admin/facility-sales-copilot" className="rounded-3xl border border-emerald-800/70 bg-emerald-950/30 p-6 hover:border-emerald-600">
+          <Link href="/partner-desk" className="rounded-3xl border border-emerald-800/70 bg-emerald-950/30 p-6 hover:border-emerald-600">
             <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Live Call Support</p>
             <h2 className="mt-2 text-xl font-semibold">Facility Sales Copilot</h2>
             <p className="mt-2 text-sm text-slate-300">Approved commercial answers, exact words to say, bridge phrases, disclosure protection, and escalation guidance.</p>
