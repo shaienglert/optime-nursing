@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.services.client_intent_runtime import evaluate_candidate_intent
+from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
 
 
 def _intent(*must_keys: str) -> dict:
@@ -48,3 +48,29 @@ def test_independent_living_with_verified_agent_evidence_still_passes():
     fit = evaluate_candidate_intent(row, _intent("ADL_SUPPORT_AVAILABLE"))
     assert fit["hard_gate"] == "PASS"
     assert "ADL_SUPPORT_AVAILABLE" in fit["must_pass"]
+
+
+def test_memory_need_becomes_an_explicit_client_intent_must():
+    intent = build_client_intent(
+        {},
+        "My mother has Alzheimer's and wanders at night. She needs secure memory care.",
+        {"signals": {"memory_care_needed": True}, "household": {}},
+        {},
+    )
+    keys = {item["key"] for item in intent["must_haves"]}
+    assert "SECURE_MEMORY_CARE_CONFIRMED" in keys
+
+
+def test_only_officially_confirmed_memory_care_passes_memory_must():
+    confirmed = evaluate_candidate_intent(
+        _row("ASSISTED_LIVING_RFG", memory_care_classification="CONFIRMED"),
+        _intent("SECURE_MEMORY_CARE_CONFIRMED"),
+    )
+    independent = evaluate_candidate_intent(
+        _row("INDEPENDENT_LIVING", memory_care_classification="UNKNOWN"),
+        _intent("SECURE_MEMORY_CARE_CONFIRMED"),
+    )
+    assert confirmed["hard_gate"] == "PASS"
+    assert "SECURE_MEMORY_CARE_CONFIRMED" in confirmed["must_pass"]
+    assert independent["hard_gate"] == "PENDING_VERIFICATION"
+    assert "SECURE_MEMORY_CARE_CONFIRMED" in independent["must_unknown"]

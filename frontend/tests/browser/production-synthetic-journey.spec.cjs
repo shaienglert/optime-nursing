@@ -60,6 +60,7 @@ test.describe('production synthetic journey', () => {
       await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 60_000 });
     }
 
+    let transientRetries = 0;
     for (let step = 0; step < 9; step += 1) {
       await page.waitForFunction(
         () => /\/results/.test(window.location.pathname)
@@ -74,6 +75,15 @@ test.describe('production synthetic journey', () => {
       const choices = page.locator('main button');
       const continueButton = page.getByRole('button', { name: /^Continue$/ });
       const answerBox = page.getByLabel('Your answer');
+
+      if (/API request failed \(50[234]\)/i.test(prompt)) {
+        if (transientRetries >= 1) throw new Error(`Adaptive interview remained unavailable after retry: ${prompt}`);
+        transientRetries += 1;
+        await page.getByRole('button', { name: /^Try again$/ }).click();
+        step -= 1;
+        await page.waitForTimeout(2_000);
+        continue;
+      }
 
       if (await answerBox.count()) {
         await answerBox.fill(scenario.answer(prompt));

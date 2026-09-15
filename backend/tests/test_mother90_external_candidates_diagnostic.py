@@ -52,19 +52,20 @@ class Mother90ExternalCandidateDiagnosticTests(unittest.TestCase):
         }
         print("MOTHER90_MEDICATION_MUST_DIAGNOSTIC=" + json.dumps(diagnostics, indent=2, default=str))
 
-        # What this test is named for still holds: no candidate whose medication support is
-        # unverified reaches the visible list. What changed is the other half. Five
-        # communities did verify it, and with the ranking model unavailable those five are
-        # shown as an unordered set rather than withheld -- a family whose mother needs
-        # daily medication is better served by five confirmed options than by a blank page.
+        # No candidate whose medication support is unverified may reach the visible list.
+        # The evidence corpus may contain zero or more verified candidates; the diagnostic
+        # must not force a recommendation merely to keep the page non-empty.
         shown = result.get("results") or []
-        self.assertTrue(shown, "verified candidates should survive a degraded run")
         for row in shown:
             self.assertEqual("MUST_ELIGIBLE", row.get("must_eligibility"))
             self.assertEqual([], (row.get("client_intent_fit") or {}).get("must_unknown") or [])
         self.assertEqual(len(shown), result.get("result_count"))
-        self.assertTrue(decision.get("canonical_decision_state", {}).get("is_degraded_result"))
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        if shown:
+            self.assertTrue(decision.get("canonical_decision_state", {}).get("is_degraded_result"))
+            self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        else:
+            self.assertFalse(decision.get("recommendation_execution_allowed"))
+            self.assertEqual("BLOCKED_EVIDENCE_COLLECTION", decision.get("recommendation_visibility"))
         self.assertTrue(pending)
         self.assertGreater(result.get("must_pending_verification_count") or 0, 0)
         self.assertTrue(
