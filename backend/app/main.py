@@ -32,6 +32,7 @@ import app.models.facility_room_offering
 import app.models.facility_outreach
 import app.models.placement_referral
 import app.models.competitive_intelligence
+import app.models.supplier_intelligence
 from app.models.agent_execution import (
     AgentKnowledgeRecord,
     AgentKnowledgeRefreshEvent,
@@ -158,10 +159,6 @@ from app.services.market_supply_intelligence_service import (
     run_market_supply_intelligence_cycle,
     start_market_supply_intelligence_scheduler,
 )
-from app.services.competitor_structural_research_service import (
-    run_competitor_structural_research_cycle,
-    start_competitor_structural_research_scheduler,
-)
 from app.services.runtime_sync_service import get_runtime_sync_status
 from app.services.supplier_intelligence_service import (
     run_supplier_intelligence_cycle,
@@ -169,6 +166,7 @@ from app.services.supplier_intelligence_service import (
     supplier_catalog,
     supplier_coverage,
 )
+from app.services.supplier_verification_agent import supplier_verification_status
 
 app = FastAPI(
     title="OPTIME Nursing API",
@@ -1510,8 +1508,6 @@ def startup() -> None:
     start_competitive_intelligence_scheduler()
     # Weekly: senior-living construction starts, planned openings, and occupancy rates.
     start_market_supply_intelligence_scheduler()
-    # Monthly: named competitors' service model, organizational scale, and ownership.
-    start_competitor_structural_research_scheduler()
     # Monthly public CMS snapshots for the market report, guarded by database freshness.
     start_official_market_metrics_scheduler()
     # Annual official state/Census population projections for 65+ and 75+ market context.
@@ -2238,15 +2234,6 @@ async def post_run_competitive_intelligence_now(db: Session = Depends(get_db), _
     return run_competitive_intelligence_cycle(db)
 
 
-@app.post("/competitor-structural-research/run-now", response_model=CompetitiveIntelligenceCycleOut)
-async def post_run_competitor_structural_research_now(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
-    """Service model, organizational scale, and ownership research -- deliberately
-    separate from /competitive-intelligence/run-now's homepage-change tracking.
-    Results land in the same competitive_intelligence_signals table and are visible
-    via GET /competitive-intelligence/signals (signal_type distinguishes them)."""
-    return run_competitor_structural_research_cycle(db)
-
-
 @app.get("/market-supply-intelligence/signals", response_model=List[MarketSupplySignalOut])
 async def get_market_supply_intelligence_signals(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return [
@@ -2318,6 +2305,11 @@ async def get_supplier_intelligence_coverage():
 @app.post("/supplier-intelligence/run-now")
 async def post_run_supplier_intelligence_now(_: None = Depends(require_admin_token)):
     return run_supplier_intelligence_cycle()
+
+
+@app.get("/supplier-intelligence/verification-status")
+async def get_supplier_verification_status(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    return supplier_verification_status(db)
 
 
 @app.get("/market-intelligence/report", response_model=MarketReportOut)

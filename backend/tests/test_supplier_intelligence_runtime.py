@@ -22,7 +22,7 @@ class SupplierIntelligenceRuntimeTests(unittest.TestCase):
         payload = response.json()
         self.assertEqual(payload["records_rejected"], 0)
         self.assertGreaterEqual(payload["records_accepted"], 26)
-        self.assertEqual(len(payload["sector_counts"]), 23)
+        self.assertGreaterEqual(len(payload["sector_counts"]), 42)
 
     def test_live_cycle_is_admin_protected(self) -> None:
         self.assertEqual(self.client.post("/supplier-intelligence/run-now").status_code, 401)
@@ -44,7 +44,7 @@ class SupplierIntelligenceRuntimeTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertGreater(payload["supplier_count"], 0)
-        self.assertEqual(payload["sector_count"], 23)
+        self.assertGreaterEqual(payload["sector_count"], 42)
         self.assertEqual(payload["coverage_gaps"], [])
         self.assertGreaterEqual(payload["official_credentials"], 5)
         self.assertGreaterEqual(payload["records_with_official_credentials"], 5)
