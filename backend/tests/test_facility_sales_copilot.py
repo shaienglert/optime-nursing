@@ -22,6 +22,31 @@ def test_unknown_question_does_not_guess() -> None:
     assert result["confidence"] == "UNKNOWN"
     assert result["escalation"] == "KNOWLEDGE_OWNER_REVIEW"
     assert result["disclosure_guard"] == "NO_APPROVED_ANSWER"
+    assert "What I can tell you with confidence" in result["say_this"]
+    assert "I should not guess" not in result["say_this"]
+
+
+def test_google_visibility_answer_is_confident_sales_language_without_guarantee() -> None:
+    result = ask_sales_copilot("Will OOMNIK be on the first page of Googlr search?", transport=lambda _: {})
+    assert "search_visibility_strategy" in result["knowledge_ids"]
+    assert result["say_this"].startswith("I believe Oomnik is strongly positioned")
+    assert "internal research institute" in result["say_this"]
+    assert "Google controls the final position and timetable" in result["say_this"]
+    assert "I can't promise" not in result["say_this"]
+
+
+def test_model_is_instructed_to_use_sales_first_style_for_every_answer() -> None:
+    captured = {}
+
+    def transport(payload):
+        captured.update(payload)
+        return {}
+
+    ask_sales_copilot("Why should our community join Oomnik?", transport=transport)
+    rules = " ".join(captured["mandatory_rules"])
+    assert "excellent salesperson" in rules
+    assert "Lead with the strongest positive" in rules
+    assert "I believe" in rules
 
 
 def test_secret_request_is_blocked_before_ai_call() -> None:
