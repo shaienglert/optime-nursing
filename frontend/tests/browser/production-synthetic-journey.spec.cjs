@@ -20,15 +20,18 @@ const baseUrl = process.env.OOMNIK_PRODUCTION_URL;
 
 test.describe('production synthetic journey', () => {
   test.skip(!baseUrl, 'Set OOMNIK_PRODUCTION_URL to run against the live site.');
+  test.setTimeout(300_000);
 
   test(`${chosen} reaches real results`, async ({ page }) => {
     const scenario = scenarios[chosen];
     if (!scenario) throw new Error(`Unknown scenario: ${chosen}`);
 
-    await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 60_000 });
-    await page.getByLabel('Describe your family situation').fill(scenario.story);
+    await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    const storyBox = page.getByLabel('Describe your family situation');
+    await expect(storyBox).toBeVisible({ timeout: 60_000 });
+    await storyBox.fill(scenario.story);
     await page.getByRole('button', { name: /See options that may fit/ }).click();
-    await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 30_000 });
+    await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 60_000 });
 
     for (let step = 0; step < 9; step += 1) {
       if (/\/results/.test(page.url())) break;
