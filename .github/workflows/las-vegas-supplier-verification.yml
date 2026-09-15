@@ -1,0 +1,59 @@
+name: Las Vegas Supplier Verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/las-vegas-supplier-verification.yml"
+      - "backend/app/data/las_vegas_supplier_candidates.json"
+      - "backend/app/services/supplier_verification_agent.py"
+      - "scripts/verify_las_vegas_suppliers.py"
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: Candidate suppliers to verify in this run
+        required: false
+        default: "40"
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: las-vegas-supplier-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime
+        run: python -m pip install --disable-pip-version-check -r backend/requirements.txt pytest httpx2
+
+      - name: Verify supplier evidence
+        env:
+          OOMNIK_SUPPLIER_VERIFY_BATCH_SIZE: ${{ github.event.inputs.batch_size || '40' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: PYTHONPATH=backend python scripts/verify_las_vegas_suppliers.py --persist-database
+
+      - name: Test verification contracts
+        run: PYTHONPATH=backend pytest -q backend/tests/test_supplier_verification_agent.py backend/tests/test_supplier_intelligence_runtime.py
+
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supplier-verification-${{ github.run_id }}
+          path: reports/LAS_VEGAS_SUPPLIER_VERIFICATION.json
+          if-no-files-found: error
+          retention-days: 30

@@ -23,6 +23,13 @@ CANONICAL_SECTORS = {
     "PHARMACY_MEDICATION", "ROUTINE_TRANSPORT", "SAFETY_MONITORING", "TECH_SUPPORT",
     "SENIOR_FITNESS", "COMPANIONSHIP", "MEALS_NUTRITION", "MOBILE_PERSONAL_HEALTH",
     "PERSONAL_CARE_LIFESTYLE", "PET_SUPPORT", "HOSPICE_PALLIATIVE",
+    "GROCERY_DELIVERY", "HOME_MODIFICATION", "ELDER_LAW", "ESTATE_PLANNING",
+    "GUARDIANSHIP", "MEDICAID_PLANNING", "MEDICARE_ADVISORY",
+    "MEDICARE_INSURANCE_ADVISOR", "FIDUCIARY_FINANCIAL_PLANNING",
+    "GERIATRIC_CARE_MANAGEMENT", "PATIENT_ADVOCACY", "PROFESSIONAL_GUARDIAN",
+    "THERAPY_REHAB", "HEARING_AUDIOLOGY", "VISION_OPTOMETRY",
+    "DENTAL_MOBILE_DENTAL", "PODIATRY", "BEHAVIORAL_GERIATRIC_PSYCHIATRY",
+    "DEMENTIA_RESPITE_ADULT_DAY",
 }
 
 _last_cycle: dict[str, Any] | None = None
@@ -43,11 +50,11 @@ def _record_errors(record: dict[str, Any]) -> list[str]:
         errors.append("sector_ids must not be empty")
     if record.get("involvement") not in VALID_INVOLVEMENT:
         errors.append("invalid involvement")
-    if (record.get("branch") or {}).get("las_vegas_valley_verified") is not True:
-        errors.append("Las Vegas Valley service must be verified")
     status = (record.get("publication") or {}).get("status")
     if status not in VALID_STATUSES:
         errors.append("invalid publication status")
+    if status in PUBLIC_STATUSES and (record.get("branch") or {}).get("las_vegas_valley_verified") is not True:
+        errors.append("public supplier must have verified Las Vegas Valley service")
     if record.get("involvement") == "OUTCOME_CRITICAL" and not record.get("critical_readiness"):
         errors.append("OUTCOME_CRITICAL supplier requires critical_readiness")
     if not record.get("evidence_refs"):
