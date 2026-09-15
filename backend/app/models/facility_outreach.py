@@ -50,3 +50,18 @@ class FacilityOutreachRequest(Base):
     requested_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     sent_at = Column(DateTime(timezone=True), nullable=True)
     responded_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class FacilitySalesCopilotInteraction(Base):
+    """Staff-only audit and learning queue for questions asked during facility calls."""
+
+    __tablename__ = "facility_sales_copilot_interactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    facility_name = Column(String(255), nullable=True, index=True)
+    call_stage = Column(String(80), nullable=True)
+    question = Column(Text, nullable=False)
+    answer_json = Column(Text, nullable=False)
+    confidence = Column(String(24), nullable=False)
+    escalation = Column(String(80), nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

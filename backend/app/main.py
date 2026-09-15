@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine
 from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
+from app.models.facility_outreach import FacilitySalesCopilotInteraction
 import app.models.clinical_evidence
 import app.models.agent_execution
 import app.models.external_discovery
@@ -97,6 +98,7 @@ from app.services.facility_profile_portal import (
     save_capabilities,
     search_claimable_facilities,
 )
+from app.services.facility_sales_copilot import ask_sales_copilot, sales_copilot_bootstrap
 from app.services.provider_portal_demo import DEMO_CMS_ID, ensure_opticare_demo
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.evidence_source_integrity import (
@@ -401,6 +403,24 @@ class RoomSubmissionIn(BaseModel):
 
 class FacilityOutreachSubmissionIn(BaseModel):
     room_types: List[RoomSubmissionIn]
+
+
+class FacilitySalesCopilotIn(BaseModel):
+    question: str = Field(min_length=2, max_length=2000)
+    facility_name: Optional[str] = Field(default=None, max_length=255)
+    call_stage: Optional[str] = Field(default=None, max_length=80)
+
+
+class FacilitySalesCopilotOut(BaseModel):
+    answer: str
+    say_this: str
+    bridge_phrase: str = ""
+    next_step: str
+    escalation: Optional[str] = None
+    confidence: str
+    knowledge_ids: List[str] = Field(default_factory=list)
+    disclosure_guard: str
+    ai_status: Optional[str] = None
 
 
 class PlacementReferralCreateIn(BaseModel):
@@ -2114,6 +2134,30 @@ async def post_approve_and_send_facility_outreach(request_id: int, db: Session =
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return _serialize_outreach_request(outreach, include_draft=False)
+
+
+@app.get("/facility-sales-copilot/bootstrap")
+async def get_facility_sales_copilot_bootstrap(_: None = Depends(require_admin_token)):
+    return sales_copilot_bootstrap()
+
+
+@app.post("/facility-sales-copilot/ask", response_model=FacilitySalesCopilotOut)
+async def post_facility_sales_copilot(payload: FacilitySalesCopilotIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    result = ask_sales_copilot(
+        payload.question,
+        facility_name=payload.facility_name,
+        call_stage=payload.call_stage,
+    )
+    db.add(FacilitySalesCopilotInteraction(
+        facility_name=payload.facility_name,
+        call_stage=payload.call_stage,
+        question=payload.question,
+        answer_json=json.dumps(result, ensure_ascii=False),
+        confidence=result["confidence"],
+        escalation=result.get("escalation"),
+    ))
+    db.commit()
+    return FacilitySalesCopilotOut(**result)
 
 
 @app.get("/facility-outreach/{response_token}", response_model=FacilityOutreachPublicStatusOut)

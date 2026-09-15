@@ -1991,6 +1991,27 @@ export type FacilityOutreachPublicStatus = {
   status: FacilityOutreachStatus;
 };
 
+export type FacilitySalesCopilotBootstrap = {
+  name: string;
+  purpose: string;
+  topics: Array<{ id: string; title: string }>;
+  bridge_phrases: string[];
+  sales_lines: Array<{ id: string; title: string; line: string }>;
+  rules: string[];
+};
+
+export type FacilitySalesCopilotAnswer = {
+  answer: string;
+  say_this: string;
+  bridge_phrase: string;
+  next_step: string;
+  escalation?: "LEGAL" | "PRIVACY_SECURITY" | "CUSTOM_COMMERCIAL" | "CLINICAL" | "KNOWLEDGE_OWNER_REVIEW" | "CONFIDENTIAL_INFORMATION_REQUEST" | null;
+  confidence: "HIGH" | "MEDIUM" | "UNKNOWN";
+  knowledge_ids: string[];
+  disclosure_guard: string;
+  ai_status?: string | null;
+};
+
 export type RoomSubmission = {
   room_type_name: string;
   description?: string;
@@ -2031,6 +2052,28 @@ export async function approveAndSendFacilityOutreach(requestId: number, adminTok
     throw new Error(`API request failed (${response.status})`);
   }
   return response.json() as Promise<FacilityOutreachRequest>;
+}
+
+export async function fetchFacilitySalesCopilotBootstrap(adminToken: string): Promise<FacilitySalesCopilotBootstrap> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), "/facility-sales-copilot/bootstrap"), {
+    headers: { "X-Admin-Token": adminToken },
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`API request failed (${response.status})`);
+  return response.json() as Promise<FacilitySalesCopilotBootstrap>;
+}
+
+export async function askFacilitySalesCopilot(
+  payload: { question: string; facility_name?: string; call_stage?: string },
+  adminToken: string,
+): Promise<FacilitySalesCopilotAnswer> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), "/facility-sales-copilot/ask"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Admin-Token": adminToken },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(`API request failed (${response.status})`);
+  return response.json() as Promise<FacilitySalesCopilotAnswer>;
 }
 
 export async function fetchFacilityOutreachPublicStatus(responseToken: string): Promise<FacilityOutreachPublicStatus> {
