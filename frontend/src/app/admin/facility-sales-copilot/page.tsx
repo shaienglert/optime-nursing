@@ -185,6 +185,31 @@ export default function FacilitySalesCopilotPage() {
           </p>
         </section>
 
+        {facilityRecord ? <section className="rounded-3xl border border-emerald-500/30 bg-white/[.06] p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-300">Facility Record</p><h2 className="mt-2 text-3xl font-black">{facilityRecord.facility.name}</h2><p className="mt-1 text-sm text-slate-300">{[facilityRecord.facility.address, facilityRecord.facility.city, facilityRecord.facility.state].filter(Boolean).join(", ")}</p></div>
+            <div className="flex gap-2 text-sm"><span className="rounded-full bg-sky-950 px-4 py-2">{facilityRecord.counts.timeline_events} activities</span><span className="rounded-full bg-violet-950 px-4 py-2">{facilityRecord.counts.documents} documents</span></div>
+          </div>
+          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+            <div className="rounded-2xl border border-slate-700 bg-slate-950/50 p-5">
+              <h3 className="font-semibold">Record a call, email or note</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2"><select value={eventType} onChange={(e) => setEventType(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"><option>CALL</option><option>EMAIL</option><option>WEBSITE</option><option>MEETING</option><option>NOTE</option></select><input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Facility contact" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" /></div>
+              <textarea value={eventSummary} onChange={(e) => setEventSummary(e.target.value)} rows={3} placeholder="What happened, what was agreed, and the next step" className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" />
+              <button type="button" onClick={saveEvent} disabled={loading || !eventSummary.trim()} className="mt-3 rounded-full bg-emerald-600 px-5 py-2 font-semibold disabled:opacity-50">Save activity</button>
+            </div>
+            <div className="rounded-2xl border border-slate-700 bg-slate-950/50 p-5">
+              <h3 className="font-semibold">Attach a document</h3><p className="mt-1 text-xs text-slate-400">Add a secure Drive, Dropbox or document-system link. File upload will follow encrypted storage.</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2"><select value={documentType} onChange={(e) => setDocumentType(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"><option>CONTRACT</option><option>ADDENDUM</option><option>LICENSE</option><option>CORRESPONDENCE</option><option>PRICING</option><option>INSURANCE</option><option>OTHER</option></select><input value={documentTitle} onChange={(e) => setDocumentTitle(e.target.value)} placeholder="Document title" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" /></div>
+              <input value={documentUrl} onChange={(e) => setDocumentUrl(e.target.value)} placeholder="https:// secure document link" className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" />
+              <button type="button" onClick={saveDocument} disabled={loading || !documentTitle.trim() || !documentUrl.trim()} className="mt-3 rounded-full bg-violet-600 px-5 py-2 font-semibold disabled:opacity-50">Attach to record</button>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <div><h3 className="font-semibold">Complete history</h3><div className="mt-3 max-h-80 space-y-3 overflow-y-auto">{facilityRecord.timeline.length ? facilityRecord.timeline.map((item) => <article key={item.id} className="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div className="flex justify-between gap-3 text-xs text-slate-400"><span>{item.event_type} · {item.direction}</span><time>{new Date(item.occurred_at).toLocaleString()}</time></div>{item.subject ? <p className="mt-2 font-semibold">{item.subject}</p> : null}<p className="mt-1 whitespace-pre-wrap text-sm text-slate-200">{item.summary}</p>{item.contact_name ? <p className="mt-2 text-xs text-sky-300">Contact: {item.contact_name}</p> : null}</article>) : <p className="text-sm text-slate-400">No activity recorded yet.</p>}</div></div>
+            <div><h3 className="font-semibold">Documents</h3><div className="mt-3 max-h-80 space-y-3 overflow-y-auto">{facilityRecord.documents.length ? facilityRecord.documents.map((item) => <a key={item.id} href={item.document_url} target="_blank" rel="noreferrer" className="block rounded-xl border border-slate-800 bg-slate-950/50 p-4 hover:border-violet-500"><span className="text-xs text-violet-300">{item.document_type} · {item.status}</span><span className="mt-1 block font-semibold">{item.title}</span><span className="mt-1 block text-xs text-slate-400">Added {new Date(item.created_at).toLocaleString()}</span></a>) : <p className="text-sm text-slate-400">No documents attached yet.</p>}</div></div>
+          </div>
+        </section> : null}
+
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)]">
           <div className="space-y-5">
             <form onSubmit={submit} className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
