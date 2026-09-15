@@ -161,6 +161,51 @@ class MustAiNicePipelineTests(unittest.TestCase):
         self.assertEqual(pipeline["interactive_shortlist_limit"], 10)
         self.assertEqual(pipeline["ranking_scope"], "LIVE_SHORTLIST_ONLY_FULL_UNIVERSE_RESEARCH_CONTINUES")
 
+    def test_rank_group_key_groups_by_ai_global_score_when_present(self):
+        # ai_ranking.global_score (set by the batched-scoring path -- see
+        # ai_candidate_ranking_runtime._batch_ai_rank) is the real signal two rows
+        # must share to be a genuine tie in an AI-ranked result: the deterministic
+        # fallback key is only ever consulted as *its* tiebreaker, not the client-
+        # visible ranking driver, so it must not itself define what counts as a tie
+        # once an AI score exists.
+        from app.services.must_ai_nice_pipeline import _rank_group_key
+
+        row_a = _row("A", "PASS")
+        row_a["ai_ranking"] = {"status": "AI_BATCH_SCORED", "global_score": 70.0}
+        row_b = _row("B", "PASS", grade="D")  # deliberately different deterministic key
+        row_b["ai_ranking"] = {"status": "AI_BATCH_SCORED", "global_score": 70.0}
+        row_c = _row("C", "PASS")
+        row_c["ai_ranking"] = {"status": "AI_BATCH_SCORED", "global_score": 55.0}
+
+        self.assertEqual(_rank_group_key(row_a), _rank_group_key(row_b))
+        self.assertNotEqual(_rank_group_key(row_a), _rank_group_key(row_c))
+
+    def test_rank_group_key_falls_back_to_deterministic_key_without_an_ai_score(self):
+        from app.services.must_ai_nice_pipeline import _rank_group_key
+
+        identical_a = _row("A", "PASS")
+        identical_b = _row("B", "PASS")  # same grade/rating/evidence as A, different name only
+        different = _row("C", "PASS", grade="D")
+
+        self.assertEqual(_rank_group_key(identical_a), _rank_group_key(identical_b))
+        self.assertNotEqual(_rank_group_key(identical_a), _rank_group_key(different))
+
+    def test_deterministic_fallback_rows_that_differ_only_by_name_are_reported_as_joint_rank(self):
+        # AI disabled entirely -> pure deterministic fallback path (no ai_ranking
+        # global_score at all). Two rows identical on every real ranking signal
+        # should still be recognized as tied, not hidden behind the alphabetical
+        # tiebreaker that only exists to make sort() deterministic.
+        rows = [_row("A", "PASS"), _row("B", "PASS")]
+        result = {"results": rows, "decision_intelligence": {"client_intent": {"nice_to_haves": []}, "human_intelligence": {}, "living_strategy": {}}}
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "0"}, clear=False):
+            out = apply_must_ai_nice_pipeline(result, {}, "", 5)
+
+        for row in out["results"]:
+            self.assertEqual(row["ai_ranking"]["status"], "DETERMINISTIC_FALLBACK")
+            self.assertNotIn("global_score", row["ai_ranking"])
+            self.assertEqual(row["rank_tie_status"], "JOINT_RANK")
+        self.assertEqual(set(out["results"][0]["tied_with"] + out["results"][1]["tied_with"]), {"A", "B"})
+
 
 if __name__ == "__main__":
     unittest.main()

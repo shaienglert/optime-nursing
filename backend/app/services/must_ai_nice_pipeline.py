@@ -34,6 +34,24 @@ def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     return (*person_fit_sort_key(row), *intent_rank_key(row))
 
 
+def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
+    """The value two rows must share to be a genuine tie in the *actual* order this
+    pipeline produced.
+
+    This stage re-sorts and re-assigns rank_position after _apply_combined_care_layer
+    already ran (see app/services/__init__.py) -- its own rank_tie_status there does
+    not survive here. When AI ranking succeeded, the real sort key was the AI's
+    global_score (see ai_candidate_ranking_runtime._batch_ai_rank); when it did not,
+    the real sort key was _fallback_key. Either way, the trailing facility-name
+    tiebreaker isn't a real signal, so it's excluded from what counts as a tie.
+    """
+    ai_ranking = row.get("ai_ranking") if isinstance(row.get("ai_ranking"), dict) else {}
+    global_score = ai_ranking.get("global_score")
+    if isinstance(global_score, (int, float)):
+        return ("AI_SCORE", round(float(global_score), 3))
+    return ("DETERMINISTIC", *_fallback_key(row)[:-1])
+
+
 def _remove_legacy_nice_from_authoritative_path(rows: List[Dict[str, Any]]) -> None:
     for row in rows:
         fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
@@ -249,11 +267,16 @@ def apply_must_ai_nice_pipeline(
                 "source": "DYNAMIC_SEMANTIC_PREFERENCE_MODEL",
             }
 
+    group_keys = [_rank_group_key(row) for row in ranked]
     for position, row in enumerate(ranked, start=1):
         row["rank_position"] = position
         row["rank_display"] = f"#{position}"
-        row["rank_tie_status"] = "UNIQUE_RANK"
-        row["tied_with"] = []
+        tied_indexes = [
+            other for other, key in enumerate(group_keys)
+            if other != position - 1 and key == group_keys[position - 1]
+        ]
+        row["rank_tie_status"] = "JOINT_RANK" if tied_indexes else "UNIQUE_RANK"
+        row["tied_with"] = [ranked[i].get("facility_name") for i in tied_indexes]
         row.setdefault("explanation", {})["selection_pipeline"] = {
             "stage_1": "MUST_ELIGIBLE_DETERMINISTIC",
             "stage_2": ai_status.get("status"),
