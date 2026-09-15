@@ -73,6 +73,13 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if signals.get("medication_support_needed"):
         add_must("MEDICATION_SUPPORT_AVAILABLE", "The resident explicitly needs medication-management support; a facility cannot be called eligible until this capability is verified.", "verified medication-support evidence")
 
+    if signals.get("memory_care_needed"):
+        add_must(
+            "SECURE_MEMORY_CARE_CONFIRMED",
+            "The resident has a stated dementia/wandering safety need and requires an officially confirmed memory-care setting; ordinary assisted or independent living is not sufficient.",
+            "Nevada official-detail memory-care classification",
+        )
+
     if signals.get("rehabilitation_need_detected"):
         add_must("REHAB_PATH_AVAILABLE", "The recovery plan requires access to appropriate rehabilitation/PT/OT, either onsite or through a verified external pathway.", "rehab/PT/OT evidence")
 
@@ -180,6 +187,11 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # exclude facilities with no real negative finding. In-house-vs-external-agency
             # delivery is a ranking signal (see combined_care_solution_runtime.py), never a gate.
             if any(p.get("medication_support_verified") is True for p in payloads):
+                must_pass.append(key)
+            else:
+                must_unknown.append(key)
+        elif key == "SECURE_MEMORY_CARE_CONFIRMED":
+            if str(row.get("memory_care_classification") or "").strip().upper() == "CONFIRMED":
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
