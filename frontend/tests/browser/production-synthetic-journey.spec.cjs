@@ -34,7 +34,15 @@ test.describe('production synthetic journey', () => {
     await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 60_000 });
 
     for (let step = 0; step < 9; step += 1) {
+      await page.waitForFunction(
+        () => /\/results/.test(window.location.pathname)
+          || Boolean(document.querySelector('#decision-answer'))
+          || Boolean(document.querySelector('main button')),
+        undefined,
+        { timeout: 90_000 },
+      );
       if (/\/results/.test(page.url())) break;
+
       const prompt = await page.locator('main').innerText({ timeout: 45_000 });
       const choices = page.locator('main button');
       const continueButton = page.getByRole('button', { name: /^Continue$/ });
