@@ -135,6 +135,32 @@ class MustAiNicePipelineTests(unittest.TestCase):
             self.assertIn("provisional_ranking_note", row)
         self.assertIn("still have at least one MUST requirement pending", out["decision_intelligence"]["facility_selection_pipeline"]["client_statement"])
 
+    def test_live_search_ai_is_bounded_to_the_display_shortlist(self):
+        rows = [_row(f"F-{index:02d}", "PASS") for index in range(15)]
+        result = {
+            "results": rows,
+            "decision_intelligence": {
+                "client_intent": {"nice_to_haves": []},
+                "human_intelligence": {},
+                "living_strategy": {},
+            },
+        }
+        captured = []
+
+        def rank_shortlist(candidate_rows, **_kwargs):
+            captured.extend(row["canonical_facility_id"] for row in candidate_rows)
+            return list(reversed(candidate_rows)), {"status": "AI_RANKED"}
+
+        with patch("app.services.must_ai_nice_pipeline.rank_must_eligible_candidates", side_effect=rank_shortlist):
+            out = apply_must_ai_nice_pipeline(result, {}, "", 50)
+
+        self.assertEqual(len(captured), 10)
+        self.assertEqual(out["result_count"], 10)
+        pipeline = out["decision_intelligence"]["facility_selection_pipeline"]
+        self.assertEqual(pipeline["full_rankable_candidate_count"], 15)
+        self.assertEqual(pipeline["interactive_shortlist_limit"], 10)
+        self.assertEqual(pipeline["ranking_scope"], "LIVE_SHORTLIST_ONLY_FULL_UNIVERSE_RESEARCH_CONTINUES")
+
 
 if __name__ == "__main__":
     unittest.main()
