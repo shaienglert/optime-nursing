@@ -66,7 +66,7 @@ This demonstrates aligned incentives. It is not a guarantee that every placement
 3. First successful placement: Oomnik placement fee waived; facility funds the approved $500 Welcome benefit.
 4. Later successful placements: standard Oomnik placement fee is $1,999; applicable Welcome contribution is controlled by the agreement.
 5. Successful placement: after 60 days.
-6. Death within 60 days: 59% of the applicable placement fee.
+6. Death within 60 days: 50% of the applicable placement fee ($999.50 on the standard $1,999 fee).
 7. Another early departure: handled under Oomnik's responsibility, subject to the signed agreement.
 8. Payment does not influence ranking.
 9. The agreement—not a verbal statement—controls final commercial and legal obligations.
