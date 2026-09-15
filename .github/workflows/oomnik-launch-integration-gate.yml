@@ -1,0 +1,41 @@
+name: Oomnik Launch Integration Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/app/services/**'
+      - 'backend/tests/**'
+      - 'frontend/src/app/results/**'
+      - 'frontend/tests/browser/**'
+      - 'scripts/validate_oomnik_launch_contract.cjs'
+      - 'docs/OOMNIK_LAUNCH_GOVERNANCE.md'
+      - '.github/workflows/oomnik-*.yml'
+
+concurrency:
+  group: oomnik-nursing-launch-gate
+  cancel-in-progress: false
+
+jobs:
+  canonical-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install backend contract dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Verify ten-scenario launch contract
+        run: node scripts/validate_oomnik_launch_contract.cjs
+      - name: Verify decision and evidence contracts
+        env:
+          PYTHONPATH: backend
+        run: python -m unittest backend.tests.test_launch_practical_constraints backend.tests.test_client_intent_runtime backend.tests.test_semantic_facility_requirements backend.tests.test_main_decision_runtime_contract -v
+      - name: Verify frontend types
+        working-directory: frontend
+        run: npm install && npm run typecheck

@@ -290,6 +290,20 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     normalized = _normalize(text)
     extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
 
+    if "medicaid" in normalized:
+        _add_need(
+            needs_by_id,
+            "medicaid_attributes",
+            "PREFERENCE",
+            "YES",
+            ["YES", "UNKNOWN"],
+            "FACILITY",
+            "natural_language.medicaid",
+            1.0,
+            "Medicaid/payment pathway must be confirmed",
+        )
+        extraction_meta["recognized_tokens"].append("medicaid")
+
     def present(token: str) -> bool:
         token = token.lower()
         if token in {"pt", "ot"}:
@@ -453,6 +467,7 @@ def _eligibility_from_needs(
     unmet_verified_needs = []
     unknown_critical_needs = []
     preference_matches = []
+    unknown_preferences = []
 
     for need in needs:
         status, reason = _evaluate_need(need, row_by_param)
@@ -475,6 +490,8 @@ def _eligibility_from_needs(
         else:
             if need["requirement_level"] in {"REQUIRED", "HIGH"}:
                 unknown_critical_needs.append(entry)
+            elif need["requirement_level"] == "PREFERENCE":
+                unknown_preferences.append(entry)
 
     required_high_failures = [entry for entry in unmet_verified_needs if entry["requirement_level"] in {"REQUIRED", "HIGH"}]
     required_high_unknown = [entry for entry in unknown_critical_needs if entry["requirement_level"] in {"REQUIRED", "HIGH"}]
@@ -515,6 +532,11 @@ def _eligibility_from_needs(
         "unmet_verified_needs": unmet_verified_needs,
         "unknown_critical_needs": unknown_critical_needs,
         "preference_matches": preference_matches,
+        "unknown_preferences": unknown_preferences,
+        "practical_verification_required": {
+            "budget": any(item["parameter_id"] == "published_rates" for item in needs),
+            "medicaid": any(item["parameter_id"] == "medicaid_attributes" for item in needs),
+        },
         "reasons": reasons,
     }
 
@@ -1168,6 +1190,12 @@ def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) 
 
     if any(row["parameter_id"] == "current_availability" for row in table_rows):
         verify.append("Current availability must be confirmed directly with the facility")
+
+    practical = eligibility.get("practical_verification_required") or {}
+    if practical.get("budget"):
+        verify.append("Current monthly pricing and fees must be confirmed against your stated budget")
+    if practical.get("medicaid"):
+        verify.append("Medicaid acceptance and the applicable payment pathway must be confirmed")
 
     return strong, verify, concerns
 

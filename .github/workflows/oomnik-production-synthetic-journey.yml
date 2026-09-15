@@ -1,14 +1,11 @@
 name: Oomnik Production Synthetic Journey
-# Production run trigger: scenario 1
+# This workflow validates deployed production, never un-deployed PR code.
 
 on:
+  schedule:
+    # Ten live journeys against the current production database every Monday.
+    - cron: '17 6 * * 1'
   push:
-    branches: [main]
-    paths:
-      - '.github/workflows/oomnik-production-synthetic-journey.yml'
-      - 'frontend/tests/browser/production-synthetic-journey.spec.cjs'
-      - 'backend/app/services/**'
-  pull_request:
     branches: [main]
     paths:
       - '.github/workflows/oomnik-production-synthetic-journey.yml'
@@ -21,12 +18,21 @@ on:
         required: true
         default: memory_mom
         type: choice
-        options: [memory_mom, independent_mom]
+        options: [all, independent_mom, memory_mom, post_stroke_dad, rehab_couple, independent_low_budget, parkinsons_support, dialysis_transport, hospice_family, celiac_assisted, spanish_speaking_dad]
+
+concurrency:
+  group: oomnik-production-canonical-journey
+  cancel-in-progress: false
 
 jobs:
   run-live-journey:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        scenario: ${{ fromJSON((github.event_name == 'schedule' || inputs.scenario == 'all') && '["independent_mom","memory_mom","post_stroke_dad","rehab_couple","independent_low_budget","parkinsons_support","dialysis_transport","hospice_family","celiac_assisted","spanish_speaking_dad"]' || format('["{0}"]', inputs.scenario || 'memory_mom')) }}
     defaults:
       run:
         working-directory: frontend
@@ -41,12 +47,12 @@ jobs:
       - name: Run one synthetic family through production
         env:
           OOMNIK_PRODUCTION_URL: https://optime-nursing.vercel.app
-          OOMNIK_SCENARIO: ${{ inputs.scenario || 'memory_mom' }}
+          OOMNIK_SCENARIO: ${{ matrix.scenario }}
         run: npx playwright test tests/browser/production-synthetic-journey.spec.cjs --reporter=line --workers=1
       - name: Preserve Playwright diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: production-synthetic-journey-diagnostics
+          name: production-synthetic-journey-${{ matrix.scenario }}-diagnostics
           path: frontend/test-results
           if-no-files-found: ignore
