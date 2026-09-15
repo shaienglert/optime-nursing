@@ -337,6 +337,13 @@ export type DecisionEngineRecommendation = {
   rank_tie_status?: "UNIQUE" | "JOINT_RANK";
   rank_display?: string;
   tied_with?: string[];
+  must_eligibility?: "MUST_ELIGIBLE" | "MUST_PENDING_VERIFICATION" | "MUST_REJECTED";
+  ai_ranking?: {
+    status?: string;
+    rank?: number;
+    reason?: string;
+    information_deficits?: string[];
+  };
   domain_breakdown: Record<string, number>;
   explanation: {
     why_matches: string[];
