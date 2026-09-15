@@ -118,7 +118,7 @@ export default function FacilityOutreachAdminPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/facility-sales-copilot" className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">
+            <Link href="/partner-desk" className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">
               Open Sales Copilot
             </Link>
             <Link href="/admin" className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-slate-500">

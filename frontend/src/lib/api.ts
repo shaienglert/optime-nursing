@@ -2072,7 +2072,7 @@ export async function approveAndSendFacilityOutreach(requestId: number, adminTok
   return response.json() as Promise<FacilityOutreachRequest>;
 }
 
-export async function fetchFacilitySalesCopilotBootstrap(adminToken: string): Promise<FacilitySalesCopilotBootstrap> {
+export async function fetchFacilitySalesCopilotBootstrap(salesDeskToken: string): Promise<FacilitySalesCopilotBootstrap> {
   const response = await fetch(joinApiUrl(getApiBaseUrl(), "/facility-sales-copilot/bootstrap"), {
     headers: { "X-Admin-Token": adminToken },
     cache: "no-store",

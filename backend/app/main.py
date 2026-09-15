@@ -1118,6 +1118,18 @@ def require_admin_token(x_admin_token: Optional[str] = Header(default=None)) -> 
         raise HTTPException(status_code=401, detail="Missing or invalid admin token")
 
 
+def require_sales_desk_token(x_sales_desk_token: Optional[str] = Header(default=None)) -> None:
+    """Grant access only to the facility sales copilot.
+
+    Sales representatives must never receive the broader admin credential. This
+    separate, fail-closed credential cannot authorize outreach sends or any other
+    admin endpoint.
+    """
+    expected = os.getenv("OOMNIK_SALES_DESK_TOKEN", "").strip()
+    if not expected or not x_sales_desk_token or x_sales_desk_token != expected:
+        raise HTTPException(status_code=401, detail="Missing or invalid Sales Desk access code")
+
+
 def _get_measure_score(measures: List[QualityMeasure], keywords: List[str]) -> Optional[float]:
     values: List[float] = []
     for measure in measures:
@@ -2144,7 +2156,7 @@ async def get_facility_sales_copilot_bootstrap(db: Session = Depends(get_db), _:
 
 
 @app.post("/facility-sales-copilot/ask", response_model=FacilitySalesCopilotOut)
-async def post_facility_sales_copilot(payload: FacilitySalesCopilotIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+async def post_facility_sales_copilot(payload: FacilitySalesCopilotIn, db: Session = Depends(get_db), _: None = Depends(require_sales_desk_token)):
     publish_initial_online_lead_observation(db)
     result = ask_sales_copilot(
         payload.question,

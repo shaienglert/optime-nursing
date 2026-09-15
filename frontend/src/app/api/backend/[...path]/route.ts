@@ -22,6 +22,9 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
   // `Authorization` silently turned every admin dashboard request into a 401.
   const adminToken = request.headers.get("x-admin-token");
   if (adminToken) headers.set("x-admin-token", adminToken);
+  // The Partner Desk uses a narrowly scoped credential, never the admin token.
+  const salesDeskToken = request.headers.get("x-sales-desk-token");
+  if (salesDeskToken) headers.set("x-sales-desk-token", salesDeskToken);
 
   const hasBody = !["GET", "HEAD"].includes(request.method);
 

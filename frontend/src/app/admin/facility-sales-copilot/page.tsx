@@ -11,7 +11,7 @@ import {
 } from "@/lib/api";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 
-const TOKEN_KEY = "optime.admin.token";
+const TOKEN_KEY = "oomnik.sales-desk.token";
 
 export default function FacilitySalesCopilotPage() {
   const [token, setToken] = useState("");
@@ -31,7 +31,7 @@ export default function FacilitySalesCopilotPage() {
         setToken(saved);
         setTokenInput(saved);
       } catch {
-        // Staff may still enter the token for this session.
+        // The representative may enter the dedicated Sales Desk code.
       }
     });
   }, []);
@@ -79,11 +79,13 @@ export default function FacilitySalesCopilotPage() {
     return (
       <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dff7ed_0,#f7fbf9_38%,#e7eef8_100%)] px-6 py-14 text-[#0b2850]">
         <section className="mx-auto max-w-md space-y-5 rounded-[2rem] border border-white/80 bg-white/85 p-8 shadow-[0_30px_90px_rgba(11,40,80,.18)] backdrop-blur-xl">
-          <div className="scale-[1.55] origin-left"><OptimeStaticLogo href="/admin/facility-sales-copilot" /></div>
+          <div className="scale-[1.55] origin-left"><OptimeStaticLogo href="/partner-desk" /></div>
           <p className="pt-4 text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">Partner desk · Staff only</p>
           <h1 className="text-3xl font-black tracking-tight">Your live facility sales command center.</h1>
           <p className="text-sm leading-6 text-slate-600">Approved answers, commercial terms, market evidence, and objection handling—built for the team introducing the next generation of senior-living matching.</p>
-          <input type="password" value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlock()} placeholder="Admin token" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
+          <label className="block text-sm font-semibold text-slate-700">Sales Desk access code
+            <input type="password" autoComplete="current-password" value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlock()} placeholder="Sales access code" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white" />
+          </label>
           <button type="button" onClick={unlock} className="w-full rounded-xl bg-[#0b2850] px-4 py-3 font-semibold text-white shadow-lg hover:bg-[#123b70]">Enter Partner Desk</button>
           {error ? <p className="text-sm text-rose-300">{error}</p> : null}
         </section>
@@ -97,12 +99,12 @@ export default function FacilitySalesCopilotPage() {
         <header className="overflow-hidden rounded-[2rem] border border-white/15 bg-white/[.07] p-7 shadow-[0_25px_80px_rgba(0,0,0,.35)] backdrop-blur-xl sm:p-10">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div>
-              <div className="inline-block rounded-2xl bg-white px-5 py-3 shadow-xl"><div className="scale-[1.45] origin-left pr-24"><OptimeStaticLogo href="/admin/facility-sales-copilot" /></div></div>
+              <div className="inline-block rounded-2xl bg-white px-5 py-3 shadow-xl"><div className="scale-[1.45] origin-left pr-24"><OptimeStaticLogo href="/partner-desk" /></div></div>
               <p className="mt-8 text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">Oomnik Partner Desk · Las Vegas</p>
               <h1 className="mt-3 max-w-4xl text-4xl font-black leading-tight tracking-[-0.04em] sm:text-6xl">Build the matching platform every community will want to join.</h1>
               <p className="mt-4 max-w-3xl text-lg text-slate-300">Finding You the Right Way. Give every facility conversation the confidence, evidence, and polish of a category-defining company.</p>
             </div>
-            <Link href="/admin" className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm text-white hover:bg-white/20">Back to Admin</Link>
+            <Link href="/" className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm text-white hover:bg-white/20">Oomnik Home</Link>
           </div>
         </header>
 
