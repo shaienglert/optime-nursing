@@ -29,13 +29,25 @@ def extract_semantic_facility_requirements(result: Dict[str, Any]) -> List[Dict[
     for statement in statements:
         if not isinstance(statement, dict):
             continue
-        if _upper(statement.get("importance")) != "MUST" or _upper(statement.get("status")) != "RESEARCH_REQUIRED":
+        if _upper(statement.get("importance")) != "MUST":
             continue
         if _upper(statement.get("knowledge_state")) != "KNOWN":
             continue
         mapped = [str(value or "").strip().lower() for value in statement.get("mapped_parameters") or []]
         haystack = " ".join(mapped + [str(statement.get("raw_text") or "").lower(), str(statement.get("meaning") or "").lower()])
-        if any(token in haystack for token in ("gluten", "cross_contact", "cross-contact", "dietary", "allergy")):
+        future_care = any(token in haystack for token in (
+            "futurecare", "future_care", "future-care", "continuum", "aginginplace",
+            "aging_in_place", "avoidfuturemoves", "avoid_future_moves", "life plan",
+        ))
+        # Semantic AI may mark a clearly stated future-care requirement USED
+        # because the client side is known; it must still be verified per facility.
+        if _upper(statement.get("status")) != "RESEARCH_REQUIRED" and not (
+            future_care and _upper(statement.get("status")) == "USED"
+        ):
+            continue
+        if future_care:
+            key, dimension = "SEMANTIC_FUTURE_CARE_PATH", "recovery_transition"
+        elif any(token in haystack for token in ("gluten", "cross_contact", "cross-contact", "dietary", "allergy")):
             key, dimension = "SEMANTIC_DIETARY_SAFETY", "dietary_safety"
         elif any(token in haystack for token in ("all_daily_meals", "full_meal", "meal_plan", "all daily meals")):
             key, dimension = "SEMANTIC_ALL_DAILY_MEALS", "meal_service"
@@ -60,6 +72,14 @@ def extract_semantic_facility_requirements(result: Dict[str, Any]) -> List[Dict[
 
 
 def _payload_verifies(payload: Dict[str, Any], key: str) -> bool | None:
+    if key == "SEMANTIC_FUTURE_CARE_PATH":
+        values = (
+            payload.get("continuum_of_care_verified"),
+            payload.get("same_apartment_transition_verified"),
+        )
+        if True in values:
+            return True
+        return None
     if key == "SEMANTIC_MOBILITY_LAYOUT":
         value = payload.get("mobility_layout_verified")
     elif key == "SEMANTIC_DIETARY_SAFETY":
