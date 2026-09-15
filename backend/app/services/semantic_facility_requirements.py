@@ -100,11 +100,10 @@ def _row_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
 def _row_verifies_future_care(row: Dict[str, Any]) -> bool:
     """Accept continuum proof only from the evidence record that owns that claim.
 
-    Agent research records contain a snapshot of many boolean fields.  Reading
-    every historical snapshot with an ``any(True)`` rule allowed an unrelated or
-    stale record to prove a current future-care MUST.  Provider-curated evidence,
-    an explicit life-plan modality, or a trusted agent record produced for the
-    recovery-transition dimension are the only positive paths here.
+    Agent research records contain model-interpreted snapshots and are useful for
+    deciding what Oomnik should verify next, but they are not authoritative enough
+    to settle this safety-relevant MUST. Provider-curated primary evidence or an
+    explicit life-plan modality are the only positive paths here.
     """
     provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
     evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else {}
@@ -115,17 +114,6 @@ def _row_verifies_future_care(row: Dict[str, Any]) -> bool:
     if "LIFE_PLAN_CCRC" in modalities:
         return True
 
-    agent_evidence = row.get("agent_person_fit_evidence") if isinstance(row.get("agent_person_fit_evidence"), list) else []
-    for item in agent_evidence:
-        if not isinstance(item, dict):
-            continue
-        payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
-        if str(payload.get("dimension") or "").strip().lower() != "recovery_transition":
-            continue
-        if payload.get("continuum_of_care_verified") is not True:
-            continue
-        if governed_evidence_runtime.is_governed_positive_source(item.get("source"), payload):
-            return True
     return False
 
 
