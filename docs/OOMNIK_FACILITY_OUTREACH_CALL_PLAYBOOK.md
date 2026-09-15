@@ -105,12 +105,13 @@ The assisted workflow is:
 1. Launch geography: Las Vegas Valley.
 2. Categories: Independent Living, Assisted Living, Memory Care, and Skilled Nursing.
 3. Founding Launch Offer: a community completing the required onboarding within the first 90 days after launch receives its first placement without an Oomnik placement fee; the facility funds the approved $500 Welcome benefit.
-4. Later successful placements: standard Oomnik placement fee is $1,999; applicable Welcome contribution is controlled by the agreement.
-5. Successful placement: after 60 days.
-6. Death within 60 days: 50% of the applicable placement fee ($999.50 on the standard $1,999 fee).
-7. Another early departure: handled under Oomnik's responsibility, subject to the signed agreement.
-8. Payment does not influence ranking.
-9. The agreement—not a verbal statement—controls final commercial and legal obligations.
+4. Later successful placements: the standard Oomnik placement fee is $1,999 after 60 days. The $500 Welcome Package is funded $250 by the facility and $250 by Oomnik.
+5. The Welcome Package is part of the placement offer and supports approved resident transition needs. Its approved uses and administration are governed by the agreement and client-facing terms.
+6. Successful placement: after 60 days.
+7. Death within 60 days: 50% of the applicable placement fee ($999.50 on the standard $1,999 fee).
+8. Another early departure: handled under Oomnik's responsibility, subject to the signed agreement.
+9. Payment does not influence ranking.
+10. The agreement—not a verbal statement—controls final commercial and legal obligations.
 
 ## 7. Professional bridge phrases
 
