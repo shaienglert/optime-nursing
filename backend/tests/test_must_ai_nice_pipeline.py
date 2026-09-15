@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 
 from app.services.ai_candidate_ranking_runtime import rank_must_eligible_candidates
-from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
+from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline, _has_differentiating_evidence
 
 
 def _row(cid: str, gate: str, nice_match=None, nice_unknown=None, grade="A"):
@@ -28,6 +28,15 @@ def _row(cid: str, gate: str, nice_match=None, nice_unknown=None, grade="A"):
         },
         "regulatory_history": {"latest_known_grade": grade, "disciplinary_action": "N", "grade_counts": {grade: 1}},
     }
+
+
+def _thin_row(cid: str, gate: str = "PASS"):
+    """A row with no NICE match/unknown, no known rating/review count, no known
+    regulatory grade, and no confirmed disciplinary action -- nothing for AI-blended
+    judgment to differentiate on."""
+    row = _row(cid, gate, grade=None)
+    row["regulatory_history"]["disciplinary_action"] = "N"
+    return row
 
 
 class MustAiNicePipelineTests(unittest.TestCase):
@@ -205,6 +214,66 @@ class MustAiNicePipelineTests(unittest.TestCase):
             self.assertNotIn("global_score", row["ai_ranking"])
             self.assertEqual(row["rank_tie_status"], "JOINT_RANK")
         self.assertEqual(set(out["results"][0]["tied_with"] + out["results"][1]["tied_with"]), {"A", "B"})
+
+
+class DeterministicWaterfallThinEvidenceTests(unittest.TestCase):
+    def test_has_differentiating_evidence_is_false_for_a_wholly_thin_pool(self):
+        rows = [_thin_row("A"), _thin_row("B"), _thin_row("C")]
+        self.assertFalse(_has_differentiating_evidence(rows, {"preference_count": 0}))
+
+    def test_has_differentiating_evidence_is_true_with_nice_preferences(self):
+        rows = [_thin_row("A"), _thin_row("B")]
+        self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 2}))
+
+    def test_has_differentiating_evidence_is_true_if_any_row_has_a_known_rating(self):
+        rows = [_thin_row("A"), _thin_row("B")]
+        rows[1]["client_intent_fit"]["public_reputation"]["rating"] = 3.5
+        self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 0}))
+
+    def test_has_differentiating_evidence_is_true_if_any_row_has_a_known_grade(self):
+        rows = [_thin_row("A"), _row("B", "PASS", grade="C")]
+        self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 0}))
+
+    def test_has_differentiating_evidence_is_true_with_confirmed_disciplinary_action(self):
+        rows = [_thin_row("A")]
+        rows[0]["regulatory_history"]["disciplinary_action"] = "Y"
+        self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 0}))
+
+    def test_thin_evidence_pool_skips_ai_and_uses_the_deterministic_waterfall(self):
+        rows = [_thin_row("A"), _thin_row("B"), _thin_row("C")]
+        result = {"results": rows, "decision_intelligence": {"client_intent": {"nice_to_haves": []}, "human_intelligence": {}, "living_strategy": {}}}
+        with patch.dict(
+            os.environ,
+            {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "1"},
+            clear=False,
+        ), patch("app.services.must_ai_nice_pipeline.rank_must_eligible_candidates") as mock_rank:
+            out = apply_must_ai_nice_pipeline(result, {}, "", 5)
+
+        mock_rank.assert_not_called()
+        self.assertEqual(out["result_count"], 3)
+        for row in out["results"]:
+            self.assertEqual(row["ai_ranking"]["status"], "DETERMINISTIC_THIN_EVIDENCE_WATERFALL")
+        pipeline = out["decision_intelligence"]["facility_selection_pipeline"]
+        self.assertEqual(pipeline["ai_ranking"]["status"], "DETERMINISTIC_THIN_EVIDENCE_WATERFALL")
+        self.assertNotIn("ai_ranking_failure", out["decision_intelligence"])
+
+    def test_one_facility_with_a_known_rating_is_enough_to_call_ai_for_the_whole_pool(self):
+        rows = [_thin_row("A"), _thin_row("B")]
+        rows[1]["client_intent_fit"]["public_reputation"]["rating"] = 4.2
+        result = {"results": rows, "decision_intelligence": {"client_intent": {"nice_to_haves": []}, "human_intelligence": {}, "living_strategy": {}}}
+        packet = {"ranked_candidates": [
+            {"canonical_facility_id": "B", "reason": "x", "information_deficits": []},
+            {"canonical_facility_id": "A", "reason": "x", "information_deficits": []},
+        ]}
+        with patch.dict(
+            os.environ,
+            {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "1"},
+            clear=False,
+        ), patch("app.services.ai_candidate_ranking_runtime._default_transport", return_value=packet):
+            out = apply_must_ai_nice_pipeline(result, {}, "", 5)
+
+        self.assertEqual([r["canonical_facility_id"] for r in out["results"]], ["B", "A"])
+        self.assertEqual(out["results"][0]["ai_ranking"]["status"], "AI_RANKED")
 
 
 if __name__ == "__main__":
