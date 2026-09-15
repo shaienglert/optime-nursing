@@ -10,12 +10,18 @@ import { loadDecisionResponseCache, saveDecisionResponseCache } from "@/lib/sear
 
 const TOP_COUNT = 5;
 
-function personLabel(relationship: string): string {
+function personLabel(relationship: string, query: string): string {
   if (relationship === "Myself") return "you";
   if (relationship === "Couple") return "both of you";
   if (relationship === "Mom") return "Mom";
   if (relationship === "Dad") return "Dad";
-  return relationship || "your loved one";
+  if (relationship) return relationship;
+  const text = query.toLowerCase();
+  if (/\b(my\s+)?mother\b|\bmom\b/.test(text)) return "Mom";
+  if (/\b(my\s+)?father\b|\bdad\b/.test(text)) return "Dad";
+  if (/\b(my\s+)?wife\b/.test(text)) return "your wife";
+  if (/\b(my\s+)?husband\b/.test(text)) return "your husband";
+  return "your loved one";
 }
 
 function cleanText(value: string): string {
@@ -79,15 +85,19 @@ export function SimpleResultsPageClient() {
   }, [decisionRequestKey, naturalLanguageQuery, state]);
 
   const eligible = useMemo(
-    () => (response?.results || []).filter((item) => item.eligibility_status === "ELIGIBLE"),
+    () => (response?.results || []).filter((item) => item.must_eligibility
+      ? item.must_eligibility === "MUST_ELIGIBLE"
+      : item.eligibility_status === "ELIGIBLE"),
     [response],
   );
   const pending = useMemo(
-    () => (response?.results || []).filter((item) => item.eligibility_status !== "ELIGIBLE" && item.eligibility_status !== "INELIGIBLE"),
+    () => (response?.results || []).filter((item) => item.must_eligibility
+      ? item.must_eligibility === "MUST_PENDING_VERIFICATION"
+      : item.eligibility_status !== "ELIGIBLE" && item.eligibility_status !== "INELIGIBLE"),
     [response],
   );
   const top = eligible.slice(0, TOP_COUNT);
-  const relationship = personLabel(state.relationship);
+  const relationship = personLabel(state.relationship, naturalLanguageQuery);
   const detailsHref = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const personalReportHref = `/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
@@ -122,8 +132,12 @@ export function SimpleResultsPageClient() {
         {top.length > 0 ? (
           <section className="mt-8 grid gap-6">
             {top.map((item, index) => {
-              const why = (item.explanation?.why_matches || []).map(cleanText).filter(Boolean).slice(0, 3);
-              const verify = (item.explanation?.needs_verification || []).map(cleanText).filter(Boolean).slice(0, 3);
+              const aiReason = cleanText(item.ai_ranking?.reason || "");
+              const why = [aiReason, ...(item.explanation?.why_matches || []).map(cleanText)].filter(Boolean).slice(0, 3);
+              const verify = [
+                ...(item.ai_ranking?.information_deficits || []).map(cleanText),
+                ...(item.explanation?.needs_verification || []).map(cleanText),
+              ].filter(Boolean).slice(0, 3);
               return (
                 <article key={item.canonical_facility_id} className="rounded-[2rem] border border-[#ded6c9] bg-white p-7 shadow-sm sm:p-9">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
