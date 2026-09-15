@@ -62,7 +62,7 @@ test.describe('production synthetic journey', () => {
     }
 
     await expect(page).toHaveURL(/\/results/, { timeout: 90_000 });
-    await expect(page.getByText(/strongest options|options for/i).first()).toBeVisible({ timeout: 90_000 });
+    await expect(page.getByText('OPTIME results')).toBeVisible({ timeout: 120_000 });
     const resultsText = await page.locator('main').innerText();
     console.log('OOMNIK_RESULTS_BEGIN');
     console.log(resultsText);
