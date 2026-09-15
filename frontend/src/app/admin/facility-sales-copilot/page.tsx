@@ -6,8 +6,14 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   FacilitySalesCopilotAnswer,
   FacilitySalesCopilotBootstrap,
+  FacilityRecord,
+  FacilityRecordSearchResult,
+  addFacilityRecordDocument,
+  addFacilityRecordEvent,
   askFacilitySalesCopilot,
+  fetchFacilityRecord,
   fetchFacilitySalesCopilotBootstrap,
+  searchFacilityRecords,
 } from "@/lib/api";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 
@@ -18,6 +24,15 @@ export default function FacilitySalesCopilotPage() {
   const [tokenInput, setTokenInput] = useState("");
   const [question, setQuestion] = useState("");
   const [facilityName, setFacilityName] = useState("");
+  const [facilityResults, setFacilityResults] = useState<FacilityRecordSearchResult[]>([]);
+  const [selectedFacilityId, setSelectedFacilityId] = useState("");
+  const [facilityRecord, setFacilityRecord] = useState<FacilityRecord | null>(null);
+  const [eventSummary, setEventSummary] = useState("");
+  const [eventType, setEventType] = useState("CALL");
+  const [contactName, setContactName] = useState("");
+  const [documentTitle, setDocumentTitle] = useState("");
+  const [documentType, setDocumentType] = useState("CONTRACT");
+  const [documentUrl, setDocumentUrl] = useState("");
   const [callStage, setCallStage] = useState("FOLLOW_UP_AFTER_EMAIL");
   const [bootstrap, setBootstrap] = useState<FacilitySalesCopilotBootstrap | null>(null);
   const [answer, setAnswer] = useState<FacilitySalesCopilotAnswer | null>(null);
@@ -50,6 +65,19 @@ export default function FacilitySalesCopilotPage() {
     return () => { active = false; };
   }, [token]);
 
+  useEffect(() => {
+    if (!token || facilityName.trim().length < 2 || selectedFacilityId) return;
+    const timer = window.setTimeout(() => {
+      searchFacilityRecords(facilityName.trim(), token).then(setFacilityResults).catch(() => setFacilityResults([]));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [facilityName, selectedFacilityId, token]);
+
+  useEffect(() => {
+    if (!token || !selectedFacilityId) return;
+    fetchFacilityRecord(selectedFacilityId, token).then(setFacilityRecord).catch((err) => setError(err instanceof Error ? err.message : "Unable to load facility record."));
+  }, [selectedFacilityId, token]);
+
   function unlock() {
     const value = tokenInput.trim();
     if (!value) return;
@@ -65,6 +93,7 @@ export default function FacilitySalesCopilotPage() {
     try {
       setAnswer(await askFacilitySalesCopilot({
         question: question.trim(),
+        canonical_facility_id: selectedFacilityId || undefined,
         facility_name: facilityName.trim() || undefined,
         call_stage: callStage,
       }, token));
@@ -73,6 +102,37 @@ export default function FacilitySalesCopilotPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function selectFacility(facility: FacilityRecordSearchResult) {
+    setSelectedFacilityId(facility.canonical_facility_id);
+    setFacilityName(facility.facility_name);
+    setFacilityResults([]);
+  }
+
+  async function saveEvent() {
+    if (!selectedFacilityId || !eventSummary.trim()) return;
+    setLoading(true); setError(null);
+    try {
+      setFacilityRecord(await addFacilityRecordEvent(selectedFacilityId, {
+        event_type: eventType, channel: eventType === "EMAIL" ? "EMAIL" : eventType === "WEBSITE" ? "WEBSITE" : "PHONE",
+        direction: eventType === "NOTE" ? "INTERNAL" : "OUTBOUND", summary: eventSummary.trim(), contact_name: contactName.trim() || undefined,
+      }, token));
+      setEventSummary("");
+    } catch (err) { setError(err instanceof Error ? err.message : "Unable to save activity."); }
+    finally { setLoading(false); }
+  }
+
+  async function saveDocument() {
+    if (!selectedFacilityId || !documentTitle.trim() || !documentUrl.trim()) return;
+    setLoading(true); setError(null);
+    try {
+      setFacilityRecord(await addFacilityRecordDocument(selectedFacilityId, {
+        title: documentTitle.trim(), document_type: documentType, document_url: documentUrl.trim(),
+      }, token));
+      setDocumentTitle(""); setDocumentUrl("");
+    } catch (err) { setError(err instanceof Error ? err.message : "Unable to save document."); }
+    finally { setLoading(false); }
   }
 
   if (!token || !bootstrap) {
@@ -125,12 +185,42 @@ export default function FacilitySalesCopilotPage() {
           </p>
         </section>
 
+        {facilityRecord ? <section className="rounded-3xl border border-emerald-500/30 bg-white/[.06] p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-300">Facility Record</p><h2 className="mt-2 text-3xl font-black">{facilityRecord.facility.name}</h2><p className="mt-1 text-sm text-slate-300">{[facilityRecord.facility.address, facilityRecord.facility.city, facilityRecord.facility.state].filter(Boolean).join(", ")}</p></div>
+            <div className="flex gap-2 text-sm"><span className="rounded-full bg-sky-950 px-4 py-2">{facilityRecord.counts.timeline_events} activities</span><span className="rounded-full bg-violet-950 px-4 py-2">{facilityRecord.counts.documents} documents</span></div>
+          </div>
+          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+            <div className="rounded-2xl border border-slate-700 bg-slate-950/50 p-5">
+              <h3 className="font-semibold">Record a call, email or note</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2"><select value={eventType} onChange={(e) => setEventType(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"><option>CALL</option><option>EMAIL</option><option>WEBSITE</option><option>MEETING</option><option>NOTE</option></select><input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Facility contact" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" /></div>
+              <textarea value={eventSummary} onChange={(e) => setEventSummary(e.target.value)} rows={3} placeholder="What happened, what was agreed, and the next step" className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" />
+              <button type="button" onClick={saveEvent} disabled={loading || !eventSummary.trim()} className="mt-3 rounded-full bg-emerald-600 px-5 py-2 font-semibold disabled:opacity-50">Save activity</button>
+            </div>
+            <div className="rounded-2xl border border-slate-700 bg-slate-950/50 p-5">
+              <h3 className="font-semibold">Attach a document</h3><p className="mt-1 text-xs text-slate-400">Add a secure Drive, Dropbox or document-system link. File upload will follow encrypted storage.</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2"><select value={documentType} onChange={(e) => setDocumentType(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"><option>CONTRACT</option><option>ADDENDUM</option><option>LICENSE</option><option>CORRESPONDENCE</option><option>PRICING</option><option>INSURANCE</option><option>OTHER</option></select><input value={documentTitle} onChange={(e) => setDocumentTitle(e.target.value)} placeholder="Document title" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" /></div>
+              <input value={documentUrl} onChange={(e) => setDocumentUrl(e.target.value)} placeholder="https:// secure document link" className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" />
+              <button type="button" onClick={saveDocument} disabled={loading || !documentTitle.trim() || !documentUrl.trim()} className="mt-3 rounded-full bg-violet-600 px-5 py-2 font-semibold disabled:opacity-50">Attach to record</button>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <div><h3 className="font-semibold">Complete history</h3><div className="mt-3 max-h-80 space-y-3 overflow-y-auto">{facilityRecord.timeline.length ? facilityRecord.timeline.map((item) => <article key={item.id} className="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div className="flex justify-between gap-3 text-xs text-slate-400"><span>{item.event_type} · {item.direction}</span><time>{new Date(item.occurred_at).toLocaleString()}</time></div>{item.subject ? <p className="mt-2 font-semibold">{item.subject}</p> : null}<p className="mt-1 whitespace-pre-wrap text-sm text-slate-200">{item.summary}</p>{item.contact_name ? <p className="mt-2 text-xs text-sky-300">Contact: {item.contact_name}</p> : null}</article>) : <p className="text-sm text-slate-400">No activity recorded yet.</p>}</div></div>
+            <div><h3 className="font-semibold">Documents</h3><div className="mt-3 max-h-80 space-y-3 overflow-y-auto">{facilityRecord.documents.length ? facilityRecord.documents.map((item) => <a key={item.id} href={item.document_url} target="_blank" rel="noreferrer" className="block rounded-xl border border-slate-800 bg-slate-950/50 p-4 hover:border-violet-500"><span className="text-xs text-violet-300">{item.document_type} · {item.status}</span><span className="mt-1 block font-semibold">{item.title}</span><span className="mt-1 block text-xs text-slate-400">Added {new Date(item.created_at).toLocaleString()}</span></a>) : <p className="text-sm text-slate-400">No documents attached yet.</p>}</div></div>
+          </div>
+        </section> : null}
+
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)]">
           <div className="space-y-5">
             <form onSubmit={submit} className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="text-sm text-slate-300">Facility name
-                  <input value={facilityName} onChange={(e) => setFacilityName(e.target.value)} placeholder="Optional" className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white" />
+                <label className="relative text-sm text-slate-300">Facility record
+                  <input value={facilityName} onChange={(e) => { setFacilityName(e.target.value); setSelectedFacilityId(""); setFacilityRecord(null); }} placeholder="Search a Las Vegas facility" className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white" />
+                  {facilityResults.length ? <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-700 bg-slate-950 shadow-2xl">
+                    {facilityResults.map((facility) => <button key={facility.canonical_facility_id} type="button" onClick={() => selectFacility(facility)} className="block w-full border-b border-slate-800 px-4 py-3 text-left hover:bg-slate-800">
+                      <span className="block font-semibold text-white">{facility.facility_name}</span><span className="text-xs text-slate-400">{facility.city}, {facility.state} · {facility.canonical_type || "Type unknown"}</span>
+                    </button>)}
+                  </div> : null}
                 </label>
                 <label className="text-sm text-slate-300">Call stage
                   <select value={callStage} onChange={(e) => setCallStage(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white">

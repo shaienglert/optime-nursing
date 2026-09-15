@@ -2030,6 +2030,24 @@ export type FacilitySalesCopilotAnswer = {
   } | null;
 };
 
+export type FacilityRecordSearchResult = {
+  canonical_facility_id: string;
+  facility_name: string;
+  city?: string | null;
+  state?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  canonical_type?: string | null;
+};
+
+export type FacilityRecord = {
+  canonical_facility_id: string;
+  facility: { name: string; address?: string | null; city?: string | null; state?: string | null; zip?: string | null; phone?: string | null; website?: string | null; canonical_type?: string | null; match_status?: string | null };
+  documents: Array<{ id: number; title: string; document_type: string; document_url: string; status: string; effective_date?: string | null; expiration_date?: string | null; notes?: string | null; added_by?: string | null; created_at: string }>;
+  timeline: Array<{ id: string | number; event_type: string; channel: string; direction: string; subject?: string | null; summary: string; representative_name?: string | null; contact_name?: string | null; source: string; occurred_at: string; created_at: string }>;
+  counts: { documents: number; timeline_events: number };
+};
+
 export type RoomSubmission = {
   room_type_name: string;
   description?: string;
@@ -2074,7 +2092,7 @@ export async function approveAndSendFacilityOutreach(requestId: number, adminTok
 
 export async function fetchFacilitySalesCopilotBootstrap(salesDeskToken: string): Promise<FacilitySalesCopilotBootstrap> {
   const response = await fetch(joinApiUrl(getApiBaseUrl(), "/facility-sales-copilot/bootstrap"), {
-    headers: { "X-Admin-Token": adminToken },
+    headers: { "X-Sales-Desk-Token": salesDeskToken },
     cache: "no-store",
   });
   if (!response.ok) throw new Error(`API request failed (${response.status})`);
@@ -2082,16 +2100,48 @@ export async function fetchFacilitySalesCopilotBootstrap(salesDeskToken: string)
 }
 
 export async function askFacilitySalesCopilot(
-  payload: { question: string; facility_name?: string; call_stage?: string },
-  adminToken: string,
+  payload: { question: string; canonical_facility_id?: string; facility_name?: string; call_stage?: string },
+  salesDeskToken: string,
 ): Promise<FacilitySalesCopilotAnswer> {
   const response = await fetch(joinApiUrl(getApiBaseUrl(), "/facility-sales-copilot/ask"), {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Admin-Token": adminToken },
+    headers: { "Content-Type": "application/json", "X-Sales-Desk-Token": salesDeskToken },
     body: JSON.stringify(payload),
   });
   if (!response.ok) throw new Error(`API request failed (${response.status})`);
   return response.json() as Promise<FacilitySalesCopilotAnswer>;
+}
+
+export async function searchFacilityRecords(query: string, salesDeskToken: string): Promise<FacilityRecordSearchResult[]> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), `/facility-records/search?q=${encodeURIComponent(query)}&limit=25`), {
+    headers: { "X-Sales-Desk-Token": salesDeskToken }, cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`API request failed (${response.status})`);
+  return response.json() as Promise<FacilityRecordSearchResult[]>;
+}
+
+export async function fetchFacilityRecord(canonicalFacilityId: string, salesDeskToken: string): Promise<FacilityRecord> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), `/facility-records/${encodeURIComponent(canonicalFacilityId)}`), {
+    headers: { "X-Sales-Desk-Token": salesDeskToken }, cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`API request failed (${response.status})`);
+  return response.json() as Promise<FacilityRecord>;
+}
+
+export async function addFacilityRecordEvent(canonicalFacilityId: string, payload: Record<string, unknown>, salesDeskToken: string): Promise<FacilityRecord> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), `/facility-records/${encodeURIComponent(canonicalFacilityId)}/events`), {
+    method: "POST", headers: { "Content-Type": "application/json", "X-Sales-Desk-Token": salesDeskToken }, body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(`API request failed (${response.status})`);
+  return response.json() as Promise<FacilityRecord>;
+}
+
+export async function addFacilityRecordDocument(canonicalFacilityId: string, payload: Record<string, unknown>, salesDeskToken: string): Promise<FacilityRecord> {
+  const response = await fetch(joinApiUrl(getApiBaseUrl(), `/facility-records/${encodeURIComponent(canonicalFacilityId)}/documents`), {
+    method: "POST", headers: { "Content-Type": "application/json", "X-Sales-Desk-Token": salesDeskToken }, body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(`API request failed (${response.status})`);
+  return response.json() as Promise<FacilityRecord>;
 }
 
 export async function fetchFacilityOutreachPublicStatus(responseToken: string): Promise<FacilityOutreachPublicStatus> {

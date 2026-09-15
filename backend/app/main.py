@@ -3,7 +3,7 @@ import json
 import hashlib
 import logging
 import time
-from datetime import datetime
+from datetime import date, datetime
 
 # Uvicorn configures its own named loggers (uvicorn, uvicorn.error, uvicorn.access) but
 # never touches the root logger, so any application logger.info()/warning() call was
@@ -31,6 +31,7 @@ import app.models.knowledge_fabric
 import app.models.personal_report_case
 import app.models.facility_room_offering
 import app.models.facility_outreach
+import app.models.facility_relationship
 import app.models.placement_referral
 import app.models.competitive_intelligence
 import app.models.supplier_intelligence
@@ -149,6 +150,7 @@ from app.services.personal_decision_report_contract import ReportContractViolati
 from app.services.personal_report_case_service import case_inputs, create_case, get_case_by_token, save_snapshot
 from app.services.facility_room_service import list_room_types
 from app.services import facility_outreach_service
+from app.services import facility_relationship_service
 from app.services import placement_referral_service
 from app.services.competitive_intelligence_service import (
     latest_signals as competitive_intelligence_latest_signals,
@@ -407,6 +409,7 @@ class FacilityOutreachSubmissionIn(BaseModel):
 
 class FacilitySalesCopilotIn(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
+    canonical_facility_id: Optional[str] = Field(default=None, max_length=64)
     facility_name: Optional[str] = Field(default=None, max_length=255)
     call_stage: Optional[str] = Field(default=None, max_length=80)
 
@@ -423,6 +426,28 @@ class FacilitySalesCopilotOut(BaseModel):
     ai_status: Optional[str] = None
     evidence: Optional[Dict[str, Any]] = None
     objection_guidance: Optional[Dict[str, Any]] = None
+
+
+class FacilityRelationshipEventIn(BaseModel):
+    event_type: str = Field(default="NOTE", max_length=32)
+    channel: str = Field(default="OTHER", max_length=32)
+    direction: str = Field(default="INTERNAL", max_length=16)
+    subject: Optional[str] = Field(default=None, max_length=255)
+    summary: str = Field(min_length=1, max_length=10000)
+    representative_name: Optional[str] = Field(default=None, max_length=160)
+    contact_name: Optional[str] = Field(default=None, max_length=160)
+    occurred_at: Optional[datetime] = None
+
+
+class FacilityRelationshipDocumentIn(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+    document_type: str = Field(default="OTHER", max_length=40)
+    document_url: str = Field(min_length=8, max_length=4000)
+    status: str = Field(default="ACTIVE", max_length=32)
+    effective_date: Optional[date] = None
+    expiration_date: Optional[date] = None
+    notes: Optional[str] = Field(default=None, max_length=4000)
+    added_by: Optional[str] = Field(default=None, max_length=160)
 
 
 class PlacementReferralCreateIn(BaseModel):
@@ -2155,6 +2180,37 @@ async def get_facility_sales_copilot_bootstrap(db: Session = Depends(get_db), _:
     return sales_copilot_bootstrap(db)
 
 
+@app.get("/facility-records/search")
+async def get_facility_record_search(q: str = Query(default="", max_length=200), limit: int = Query(default=20, ge=1, le=100), _: None = Depends(require_sales_desk_token)):
+    return facility_relationship_service.search_facilities(q, limit)
+
+
+@app.get("/facility-records/{canonical_facility_id}")
+async def get_facility_record(canonical_facility_id: str, db: Session = Depends(get_db), _: None = Depends(require_sales_desk_token)):
+    try:
+        return facility_relationship_service.facility_record(db, canonical_facility_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/facility-records/{canonical_facility_id}/events")
+async def post_facility_record_event(canonical_facility_id: str, payload: FacilityRelationshipEventIn, db: Session = Depends(get_db), _: None = Depends(require_sales_desk_token)):
+    try:
+        facility_relationship_service.add_event(db, canonical_facility_id, payload.model_dump())
+        return facility_relationship_service.facility_record(db, canonical_facility_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/facility-records/{canonical_facility_id}/documents")
+async def post_facility_record_document(canonical_facility_id: str, payload: FacilityRelationshipDocumentIn, db: Session = Depends(get_db), _: None = Depends(require_sales_desk_token)):
+    try:
+        facility_relationship_service.add_document(db, canonical_facility_id, payload.model_dump())
+        return facility_relationship_service.facility_record(db, canonical_facility_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.post("/facility-sales-copilot/ask", response_model=FacilitySalesCopilotOut)
 async def post_facility_sales_copilot(payload: FacilitySalesCopilotIn, db: Session = Depends(get_db), _: None = Depends(require_sales_desk_token)):
     publish_initial_online_lead_observation(db)
@@ -2173,6 +2229,16 @@ async def post_facility_sales_copilot(payload: FacilitySalesCopilotIn, db: Sessi
         escalation=result.get("escalation"),
     ))
     db.commit()
+    if payload.canonical_facility_id:
+        try:
+            facility_relationship_service.add_event(db, payload.canonical_facility_id, {
+                "event_type": "SALES_COPILOT", "channel": "INTERNAL", "direction": "AUTOMATED",
+                "subject": payload.question[:255],
+                "summary": f"Question: {payload.question}\nApproved response: {result['say_this']}",
+                "source": "SALES_COPILOT",
+            })
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
     return FacilitySalesCopilotOut(**result)
 
 
