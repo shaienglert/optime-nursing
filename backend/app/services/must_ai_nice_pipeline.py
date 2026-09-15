@@ -18,6 +18,15 @@ from __future__ import annotations
 7. When AI candidate ranking is explicitly required, an unavailable AI ranking fails
    closed: deterministic ordering may remain in diagnostics but is never exposed as a
    recommendation.
+8. AI-blended judgment is skipped -- not attempted and not failed -- when a candidate
+   pool has no real evidence for it to differentiate on: no NICE preferences to
+   verify, and no candidate has any known rating, review count, regulatory grade, or
+   disciplinary record. Forcing an AI score in that situation would produce a
+   plausible-looking number with nothing real behind it. The client-specified order
+   for this case -- MUST already applied, then NICE, then regulatory grade, then
+   reviews -- is exactly what the deterministic governed key (intent_rank_key)
+   computes, so it is used directly and shown as the actual recommendation, not
+   quarantined as a failure-mode diagnostic.
 """
 
 from copy import deepcopy
@@ -50,6 +59,59 @@ def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     if isinstance(global_score, (int, float)):
         return ("AI_SCORE", round(float(global_score), 3))
     return ("DETERMINISTIC", *_fallback_key(row)[:-1])
+
+
+def _has_differentiating_evidence(rows: List[Dict[str, Any]], dynamic_preferences: Dict[str, Any]) -> bool:
+    """Whether this candidate pool has anything real for AI-blended judgment to
+    differentiate on, beyond MUST (already the gate before this is ever called).
+
+    If a client has NICE preferences, verifying them against governed evidence is
+    real differentiating work an AI can meaningfully do. Otherwise, this checks the
+    same raw signals intent_rank_key ranks on (rating, review count, regulatory
+    grade, disciplinary record) -- if not one candidate in the pool has any of
+    these on record, there is nothing for the AI to have a real opinion about, and
+    asking it for one just produces noise dressed up as judgment.
+    """
+    if dynamic_preferences.get("preference_count"):
+        return True
+    for row in rows:
+        fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+        reputation = fit.get("public_reputation") if isinstance(fit.get("public_reputation"), dict) else {}
+        history = row.get("regulatory_history") if isinstance(row.get("regulatory_history"), dict) else {}
+        if isinstance(reputation.get("rating"), (int, float)):
+            return True
+        if isinstance(reputation.get("review_count"), int):
+            return True
+        grade = str(history.get("latest_known_grade") or "").upper()
+        if grade and grade != "UNKNOWN":
+            return True
+        if str(history.get("disciplinary_action") or "").upper() == "Y":
+            return True
+    return False
+
+
+def _deterministic_waterfall_rank(rows: List[Dict[str, Any]]) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """Rank by the governed deterministic key directly -- see module docstring
+    point 8. Same ai_ranking row shape as the AI paths (minus global_score, which
+    _rank_group_key correctly reads as "no AI score, use the deterministic key" for
+    tie detection -- exactly the right behavior here too)."""
+    ranked = sorted(rows, key=_fallback_key)
+    for position, row in enumerate(ranked, start=1):
+        row["ai_ranking"] = {
+            "status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL",
+            "rank": position,
+            "reason": "No NICE preferences and no candidate in this set has any known rating, review count, regulatory grade, or disciplinary record. Ranked by the governed deterministic order (MUST, then NICE, then regulatory grade, then reviews) instead of AI-blended judgment, which would have nothing real to differentiate on.",
+            "information_deficits": [],
+            "rank_drivers": [],
+            "rank_risks": [],
+        }
+    ai_status = {
+        "status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL",
+        "candidate_count": len(ranked),
+        "closed_world_validated": True,
+        "reason": "No differentiating evidence available for AI judgment in this candidate pool.",
+    }
+    return ranked, ai_status
 
 
 def _remove_legacy_nice_from_authoritative_path(rows: List[Dict[str, Any]]) -> None:
@@ -220,16 +282,21 @@ def apply_must_ai_nice_pipeline(
     ranking_intent = deepcopy(client_intent)
     ranking_intent["nice_to_haves"] = []
 
-    ranked, ai_status = rank_must_eligible_candidates(
-        live_shortlist,
-        client_intent=ranking_intent,
-        human_context=human_context,
-        strategy=strategy,
-        deterministic_fallback_key=_fallback_key,
-    )
+    thin_evidence_bypass = bool(live_shortlist) and not _has_differentiating_evidence(live_shortlist, dynamic_preferences)
+    if thin_evidence_bypass:
+        ranked, ai_status = _deterministic_waterfall_rank(live_shortlist)
+    else:
+        ranked, ai_status = rank_must_eligible_candidates(
+            live_shortlist,
+            client_intent=ranking_intent,
+            human_context=human_context,
+            strategy=strategy,
+            deterministic_fallback_key=_fallback_key,
+        )
 
     ai_failure_block = (
-        bool(live_shortlist)
+        not thin_evidence_bypass
+        and bool(live_shortlist)
         and _env_true("OPTIME_SEMANTIC_AI_ENABLED")
         and _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED")
         and not _ai_ranking_succeeded(ai_status)

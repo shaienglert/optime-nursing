@@ -45,9 +45,8 @@ def _fixtures() -> list[dict]:
     provider_unknown.update(
         # No candidate has passed every MUST yet (eligible=0): pending provider
         # evidence is still a genuine block, and legacy_execution=True below is
-        # a real conflict here -- contrast with must-pass-awaiting-ranking and
-        # deterministic-fallback-not-ai-complete, where eligible > 0 already
-        # moves the canonical phase to AI_RANKING.
+        # a real conflict here -- contrast with must-pass-awaiting-ranking, where
+        # eligible > 0 already moves the canonical phase to AI_RANKING.
         must_eligible_count=0,
         must_pending_verification_count=2,
         must_rejected_count=1,
@@ -119,6 +118,18 @@ def _fixtures() -> list[dict]:
         },
     }
 
+    thin_evidence_waterfall = _base()
+    thin_evidence_waterfall.update(must_eligible_count=5, must_pending_verification_count=0, must_rejected_count=2)
+    thin_evidence_waterfall["decision_intelligence"]["facility_selection_pipeline"] = {
+        # AI-blended judgment deliberately skipped (must_ai_nice_pipeline.py's
+        # _has_differentiating_evidence): no NICE preferences, no candidate with any
+        # known rating/grade/disciplinary record. This is a real, complete governed
+        # ranking (MUST, then NICE, then regulatory grade, then reviews) -- unlike
+        # DETERMINISTIC_FALLBACK, it must reach a real recommendation phase.
+        "ai_ranking": {"status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL"},
+        "dynamic_preferences": {"preference_count": 0, "nice_complete_candidate_count": 0, "verification_required_count": 0},
+    }
+
     ambiguous = {"decision_intelligence": {}, "results": []}
 
     return [
@@ -148,14 +159,22 @@ def _fixtures() -> list[dict]:
         {"id": "no-eligible-candidates", "payload": no_eligible, "phase": DecisionPhase.MUST_EVALUATION, "next": "EXPAND_OR_REVISE_STRATEGY"},
         {"id": "must-pass-awaiting-ranking", "payload": ranking, "phase": DecisionPhase.AI_RANKING, "next": "RUN_AI_RANKING"},
         {
+            # Stale until now: this used to expect AI_RANKING/RUN_AI_RANKING with a
+            # legacy conflict, but test_canonical_decision_state.py's
+            # test_deterministic_fallback_shows_an_unranked_eligible_set documents
+            # this was deliberately resolved in favour of showing an unranked
+            # eligible set (never implying an order the model didn't actually
+            # produce) -- with no legacy conflict, since recommendation_execution_
+            # allowed=True in the payload now agrees with the canonical conclusion.
             "id": "deterministic-fallback-not-ai-complete",
             "payload": deterministic_fallback,
-            "phase": DecisionPhase.AI_RANKING,
-            "next": "RUN_AI_RANKING",
-            "conflicts": {"LEGACY_VISIBILITY_SHOWS_PREMATURE_RECOMMENDATION"},
+            "phase": DecisionPhase.UNRANKED_ELIGIBLE_SET,
+            "next": "SHOW_UNRANKED_ELIGIBLE_SET_WITH_DEGRADATION_NOTICE",
+            "conflicts": set(),
         },
         {"id": "ranked-with-nice-unknowns", "payload": nice_unknown, "phase": DecisionPhase.PROVISIONAL_RECOMMENDATION, "next": "SHOW_PROVISIONAL_RECOMMENDATION"},
         {"id": "complete-decision", "payload": final, "phase": DecisionPhase.FINAL_RECOMMENDATION, "next": "SHOW_FINAL_RECOMMENDATION"},
+        {"id": "thin-evidence-waterfall-is-complete", "payload": thin_evidence_waterfall, "phase": DecisionPhase.FINAL_RECOMMENDATION, "next": "SHOW_FINAL_RECOMMENDATION"},
         {
             "id": "ambiguous-payload",
             "payload": ambiguous,

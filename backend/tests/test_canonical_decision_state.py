@@ -133,6 +133,27 @@ def test_complete_pipeline_reaches_final_recommendation():
     assert state.can_show_recommendations is True
 
 
+def test_deterministic_thin_evidence_waterfall_is_a_complete_ranking_not_a_fallback():
+    """Distinct from DETERMINISTIC_FALLBACK: this status means AI was deliberately
+    skipped because the candidate pool had no NICE preferences and no known rating/
+    grade/disciplinary record to differentiate on, not that AI was unavailable. The
+    governed deterministic key still produced a real, meaningful order (MUST, then
+    NICE, then regulatory grade, then reviews), so this must reach a real
+    recommendation phase like AI_RANKED does -- never the "unranked set, no order
+    implied" treatment DETERMINISTIC_FALLBACK gets.
+    """
+    result = base_result()
+    result.update({"must_eligible_count": 5, "must_pending_verification_count": 0, "must_rejected_count": 2})
+    result["decision_intelligence"]["facility_selection_pipeline"] = {
+        "ai_ranking": {"status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL"},
+        "dynamic_preferences": {"preference_count": 0, "nice_complete_candidate_count": 0, "verification_required_count": 0},
+    }
+    state = derive_canonical_decision_state(result)
+    assert state.phase is DecisionPhase.FINAL_RECOMMENDATION
+    assert state.can_show_recommendations is True
+    assert state.is_degraded_result is False
+
+
 def test_deterministic_fallback_shows_an_unranked_eligible_set():
     """Recorded as a legacy divergence during the shadow rollout; now resolved in favour
     of showing the set.
