@@ -17,14 +17,19 @@ def _new_referral_code() -> str:
 class PlacementReferral(Base):
     """OPTIME's commission mechanism, end to end, for one client-facility referral.
 
-    OPTIME is paid only on confirmed 60-day retention, never on the referral itself.
-    The client's $500 benefit and the facility's $250 commission credit aren't just
-    incentives -- redeeming the benefit is what makes the facility confirm the real
-    entry date, which is the only signal this whole mechanism runs on. Everything
-    about commission status (billable_status property below) is derived from that
-    one date plus an optional departure report, never from a running scheduler --
-    a missed cron job must never silently cost OPTIME a payment or overcharge a
-    facility.
+    OPTIME is paid only on confirmed 60-day retention (or a qualifying earlier
+    outcome), never on the referral itself. The client's $500 Welcome Package
+    benefit isn't just an incentive -- redeeming it is what makes the facility
+    confirm the real entry date, which is the only signal this whole mechanism
+    runs on.
+
+    The fee amount is no longer stored here: it depends on this placement's
+    outcome, this facility's placement number, and Founding Launch Offer
+    eligibility (see placement_referral_service.py's billable_status /
+    commission_due_cents), so it's computed fresh every time rather than fixed
+    at creation. A missed cron job must never silently cost OPTIME a payment or
+    overcharge a facility -- everything here is still a pure function of stored
+    dates plus sibling-referral state, never a running scheduler.
     """
 
     __tablename__ = "placement_referrals"
@@ -33,10 +38,6 @@ class PlacementReferral(Base):
     referral_code = Column(String(32), nullable=False, unique=True, index=True, default=_new_referral_code)
     canonical_facility_id = Column(String(64), nullable=False, index=True)
     case_token = Column(String(32), nullable=True, index=True)
-
-    benefit_amount_cents = Column(Integer, nullable=False, default=50000)
-    facility_credit_amount_cents = Column(Integer, nullable=False, default=25000)
-    commission_amount_cents = Column(Integer, nullable=False)
 
     entry_confirmed_at = Column(DateTime(timezone=True), nullable=True)
     entry_confirmed_by = Column(String(255), nullable=True)
