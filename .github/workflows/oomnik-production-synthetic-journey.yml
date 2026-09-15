@@ -1,0 +1,32 @@
+name: Oomnik Production Synthetic Journey
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Synthetic scenario identifier
+        required: true
+        default: independent_mom
+        type: choice
+        options: [independent_mom]
+
+jobs:
+  run-live-journey:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npm install --no-save @playwright/test@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - name: Run one synthetic family through production
+        env:
+          OOMNIK_PRODUCTION_URL: https://optime-nursing-git-main-turtules.vercel.app
+          OOMNIK_SCENARIO: ${{ inputs.scenario }}
+        run: npx playwright test tests/browser/production-synthetic-journey.spec.cjs --reporter=line --workers=1
