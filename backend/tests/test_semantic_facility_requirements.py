@@ -103,6 +103,43 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         }
         self.assertEqual([], extract_semantic_facility_requirements(payload))
 
+    def test_used_future_care_must_is_still_verified_per_facility(self) -> None:
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "a clear future-care path",
+                    "meaning": "continuum of care is required",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["futureCareProfile.continuumOfCarePreference"],
+                    "research_task": "verify the future-care pathway",
+                }]
+            }}}},
+            "results": [
+                {
+                    "canonical_facility_id": "CONTINUUM",
+                    "facility_name": "Continuum Community",
+                    "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                    "agent_person_fit_evidence": [{"payload": {"continuum_of_care_verified": True}}],
+                },
+                {
+                    "canonical_facility_id": "UNKNOWN",
+                    "facility_name": "Unknown Community",
+                    "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                    "agent_person_fit_evidence": [],
+                },
+            ],
+        }
+
+        requirements = extract_semantic_facility_requirements(result)
+        self.assertEqual(["SEMANTIC_FUTURE_CARE_PATH"], [item["key"] for item in requirements])
+        out = apply_semantic_facility_requirements(result, research_limit=0)
+        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", out["results"][0]["client_intent_fit"]["must_pass"])
+        self.assertEqual("PASS", out["results"][0]["client_intent_fit"]["hard_gate"])
+        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", out["results"][1]["client_intent_fit"]["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", out["results"][1]["client_intent_fit"]["hard_gate"])
+
     def test_stamped_false_agent_evidence_never_hard_fails_a_semantic_must(self) -> None:
         # decision_research_worker.py stamps social_engagement_verified=False by default
         # on every research record, regardless of which dimension was actually
