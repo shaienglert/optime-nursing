@@ -121,7 +121,7 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
                     "canonical_facility_id": "CONTINUUM",
                     "facility_name": "Continuum Community",
                     "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
-                    "agent_person_fit_evidence": [{"payload": {"continuum_of_care_verified": True}}],
+                    "provider_housing_evidence": {"evidence": {"continuum_of_care_verified": True}},
                 },
                 {
                     "canonical_facility_id": "UNKNOWN",
@@ -174,6 +174,38 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         out = apply_semantic_facility_requirements(result, research_limit=0)
         fit = out["results"][0]["client_intent_fit"]
         self.assertNotIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_pass"])
+        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
+    def test_unrelated_historical_agent_record_cannot_prove_future_care_path(self) -> None:
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "future care path",
+                    "meaning": "continuum required",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["continuumOfCarePreference"],
+                }]
+            }}}},
+            "results": [{
+                "canonical_facility_id": "STALE",
+                "facility_name": "Independent Housing",
+                "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                "agent_person_fit_evidence": [{
+                    "source": "OFFICIAL_PROVIDER_WEBSITE",
+                    "payload": {
+                        "dimension": "social_engagement",
+                        "official_identity_verified": True,
+                        "continuum_of_care_verified": True,
+                    },
+                }],
+            }],
+        }
+
+        out = apply_semantic_facility_requirements(result, research_limit=0)
+        fit = out["results"][0]["client_intent_fit"]
         self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
