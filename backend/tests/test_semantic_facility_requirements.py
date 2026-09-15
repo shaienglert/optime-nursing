@@ -177,6 +177,23 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
+    def test_future_care_mapping_alone_does_not_create_continuum_must(self) -> None:
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "Medicaid eligibility is pending",
+                    "meaning": "Payment source may change if Medicaid is approved.",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["futureCarePreference"],
+                }]
+            }}}},
+            "results": [],
+        }
+
+        self.assertEqual([], extract_semantic_facility_requirements(result))
+
     def test_unrelated_historical_agent_record_cannot_prove_future_care_path(self) -> None:
         result = {
             "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
