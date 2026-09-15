@@ -2151,7 +2151,7 @@ async def post_approve_and_send_facility_outreach(request_id: int, db: Session =
 
 
 @app.get("/facility-sales-copilot/bootstrap")
-async def get_facility_sales_copilot_bootstrap(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+async def get_facility_sales_copilot_bootstrap(db: Session = Depends(get_db), _: None = Depends(require_sales_desk_token)):
     return sales_copilot_bootstrap(db)
 
 
