@@ -6,8 +6,14 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   FacilitySalesCopilotAnswer,
   FacilitySalesCopilotBootstrap,
+  FacilityRecord,
+  FacilityRecordSearchResult,
+  addFacilityRecordDocument,
+  addFacilityRecordEvent,
   askFacilitySalesCopilot,
+  fetchFacilityRecord,
   fetchFacilitySalesCopilotBootstrap,
+  searchFacilityRecords,
 } from "@/lib/api";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 
@@ -18,6 +24,15 @@ export default function FacilitySalesCopilotPage() {
   const [tokenInput, setTokenInput] = useState("");
   const [question, setQuestion] = useState("");
   const [facilityName, setFacilityName] = useState("");
+  const [facilityResults, setFacilityResults] = useState<FacilityRecordSearchResult[]>([]);
+  const [selectedFacilityId, setSelectedFacilityId] = useState("");
+  const [facilityRecord, setFacilityRecord] = useState<FacilityRecord | null>(null);
+  const [eventSummary, setEventSummary] = useState("");
+  const [eventType, setEventType] = useState("CALL");
+  const [contactName, setContactName] = useState("");
+  const [documentTitle, setDocumentTitle] = useState("");
+  const [documentType, setDocumentType] = useState("CONTRACT");
+  const [documentUrl, setDocumentUrl] = useState("");
   const [callStage, setCallStage] = useState("FOLLOW_UP_AFTER_EMAIL");
   const [bootstrap, setBootstrap] = useState<FacilitySalesCopilotBootstrap | null>(null);
   const [answer, setAnswer] = useState<FacilitySalesCopilotAnswer | null>(null);
@@ -50,6 +65,19 @@ export default function FacilitySalesCopilotPage() {
     return () => { active = false; };
   }, [token]);
 
+  useEffect(() => {
+    if (!token || facilityName.trim().length < 2 || selectedFacilityId) return;
+    const timer = window.setTimeout(() => {
+      searchFacilityRecords(facilityName.trim(), token).then(setFacilityResults).catch(() => setFacilityResults([]));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [facilityName, selectedFacilityId, token]);
+
+  useEffect(() => {
+    if (!token || !selectedFacilityId) return;
+    fetchFacilityRecord(selectedFacilityId, token).then(setFacilityRecord).catch((err) => setError(err instanceof Error ? err.message : "Unable to load facility record."));
+  }, [selectedFacilityId, token]);
+
   function unlock() {
     const value = tokenInput.trim();
     if (!value) return;
@@ -65,6 +93,7 @@ export default function FacilitySalesCopilotPage() {
     try {
       setAnswer(await askFacilitySalesCopilot({
         question: question.trim(),
+        canonical_facility_id: selectedFacilityId || undefined,
         facility_name: facilityName.trim() || undefined,
         call_stage: callStage,
       }, token));
@@ -73,6 +102,37 @@ export default function FacilitySalesCopilotPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function selectFacility(facility: FacilityRecordSearchResult) {
+    setSelectedFacilityId(facility.canonical_facility_id);
+    setFacilityName(facility.facility_name);
+    setFacilityResults([]);
+  }
+
+  async function saveEvent() {
+    if (!selectedFacilityId || !eventSummary.trim()) return;
+    setLoading(true); setError(null);
+    try {
+      setFacilityRecord(await addFacilityRecordEvent(selectedFacilityId, {
+        event_type: eventType, channel: eventType === "EMAIL" ? "EMAIL" : eventType === "WEBSITE" ? "WEBSITE" : "PHONE",
+        direction: eventType === "NOTE" ? "INTERNAL" : "OUTBOUND", summary: eventSummary.trim(), contact_name: contactName.trim() || undefined,
+      }, token));
+      setEventSummary("");
+    } catch (err) { setError(err instanceof Error ? err.message : "Unable to save activity."); }
+    finally { setLoading(false); }
+  }
+
+  async function saveDocument() {
+    if (!selectedFacilityId || !documentTitle.trim() || !documentUrl.trim()) return;
+    setLoading(true); setError(null);
+    try {
+      setFacilityRecord(await addFacilityRecordDocument(selectedFacilityId, {
+        title: documentTitle.trim(), document_type: documentType, document_url: documentUrl.trim(),
+      }, token));
+      setDocumentTitle(""); setDocumentUrl("");
+    } catch (err) { setError(err instanceof Error ? err.message : "Unable to save document."); }
+    finally { setLoading(false); }
   }
 
   if (!token || !bootstrap) {
@@ -129,8 +189,13 @@ export default function FacilitySalesCopilotPage() {
           <div className="space-y-5">
             <form onSubmit={submit} className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="text-sm text-slate-300">Facility name
-                  <input value={facilityName} onChange={(e) => setFacilityName(e.target.value)} placeholder="Optional" className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white" />
+                <label className="relative text-sm text-slate-300">Facility record
+                  <input value={facilityName} onChange={(e) => { setFacilityName(e.target.value); setSelectedFacilityId(""); setFacilityRecord(null); }} placeholder="Search a Las Vegas facility" className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white" />
+                  {facilityResults.length ? <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-700 bg-slate-950 shadow-2xl">
+                    {facilityResults.map((facility) => <button key={facility.canonical_facility_id} type="button" onClick={() => selectFacility(facility)} className="block w-full border-b border-slate-800 px-4 py-3 text-left hover:bg-slate-800">
+                      <span className="block font-semibold text-white">{facility.facility_name}</span><span className="text-xs text-slate-400">{facility.city}, {facility.state} · {facility.canonical_type || "Type unknown"}</span>
+                    </button>)}
+                  </div> : null}
                 </label>
                 <label className="text-sm text-slate-300">Call stage
                   <select value={callStage} onChange={(e) => setCallStage(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white">
