@@ -125,3 +125,12 @@ def test_no_staff_objection_routes_to_assisted_onboarding_argument() -> None:
     result = ask_sales_copilot("We have no staff and no time to maintain another website", transport=lambda _: {})
     assert result["objection_guidance"]["category"] == "objection_staff_time"
     assert result["objection_guidance"]["primary"]["id"] == "assisted_onboarding"
+
+
+def test_welcome_package_explains_first_and_later_placement_split() -> None:
+    result = ask_sales_copilot("Who pays the $500 Welcome Package after the first placement?", transport=lambda _: {})
+    assert result["objection_guidance"]["category"] == "objection_welcome_package"
+    assert "community pays the full $500" in result["say_this"]
+    assert "community contributes $250" in result["say_this"]
+    assert "Oomnik contributes $250" in result["say_this"]
+    assert "$1,999" in result["say_this"]

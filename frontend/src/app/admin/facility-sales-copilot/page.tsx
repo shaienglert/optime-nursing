@@ -9,6 +9,7 @@ import {
   askFacilitySalesCopilot,
   fetchFacilitySalesCopilotBootstrap,
 } from "@/lib/api";
+import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 
 const TOKEN_KEY = "optime.admin.token";
 
@@ -76,13 +77,14 @@ export default function FacilitySalesCopilotPage() {
 
   if (!token || !bootstrap) {
     return (
-      <main className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
-        <section className="mx-auto max-w-md space-y-4 rounded-3xl border border-slate-800 bg-slate-900 p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">Staff only</p>
-          <h1 className="text-2xl font-semibold">Facility Sales Copilot</h1>
-          <p className="text-sm text-slate-400">Enter the admin token. This tool contains approved commercial guidance and is not public.</p>
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dff7ed_0,#f7fbf9_38%,#e7eef8_100%)] px-6 py-14 text-[#0b2850]">
+        <section className="mx-auto max-w-md space-y-5 rounded-[2rem] border border-white/80 bg-white/85 p-8 shadow-[0_30px_90px_rgba(11,40,80,.18)] backdrop-blur-xl">
+          <div className="scale-[1.55] origin-left"><OptimeStaticLogo href="/admin/facility-sales-copilot" /></div>
+          <p className="pt-4 text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">Partner desk · Staff only</p>
+          <h1 className="text-3xl font-black tracking-tight">Your live facility sales command center.</h1>
+          <p className="text-sm leading-6 text-slate-600">Approved answers, commercial terms, market evidence, and objection handling—built for the team introducing the next generation of senior-living matching.</p>
           <input type="password" value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlock()} placeholder="Admin token" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
-          <button type="button" onClick={unlock} className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold hover:bg-emerald-500">Open Copilot</button>
+          <button type="button" onClick={unlock} className="w-full rounded-xl bg-[#0b2850] px-4 py-3 font-semibold text-white shadow-lg hover:bg-[#123b70]">Enter Partner Desk</button>
           {error ? <p className="text-sm text-rose-300">{error}</p> : null}
         </section>
       </main>
@@ -90,16 +92,25 @@ export default function FacilitySalesCopilotPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-5 py-8 text-slate-100 sm:px-10">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_10%_0%,#173f70_0,#071a33_34%,#030b17_100%)] px-5 py-8 text-slate-100 sm:px-10">
       <section className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">Live facility call support</p>
-            <h1 className="mt-2 text-3xl font-semibold">Oomnik Facility Sales Copilot</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-300">Type the caller's question exactly. Read only the green “Say this” answer aloud. Escalate when instructed.</p>
+        <header className="overflow-hidden rounded-[2rem] border border-white/15 bg-white/[.07] p-7 shadow-[0_25px_80px_rgba(0,0,0,.35)] backdrop-blur-xl sm:p-10">
+          <div className="flex flex-wrap items-start justify-between gap-6">
+            <div>
+              <div className="inline-block rounded-2xl bg-white px-5 py-3 shadow-xl"><div className="scale-[1.45] origin-left pr-24"><OptimeStaticLogo href="/admin/facility-sales-copilot" /></div></div>
+              <p className="mt-8 text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">Oomnik Partner Desk · Las Vegas</p>
+              <h1 className="mt-3 max-w-4xl text-4xl font-black leading-tight tracking-[-0.04em] sm:text-6xl">Build the matching platform every community will want to join.</h1>
+              <p className="mt-4 max-w-3xl text-lg text-slate-300">Finding You the Right Way. Give every facility conversation the confidence, evidence, and polish of a category-defining company.</p>
+            </div>
+            <Link href="/admin" className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm text-white hover:bg-white/20">Back to Admin</Link>
           </div>
-          <Link href="/admin" className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300">Back to Admin</Link>
         </header>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          <article className="rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-6"><p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-300">Founding offer</p><p className="mt-3 text-3xl font-black">$0 Oomnik fee</p><p className="mt-2 text-sm text-slate-300">First placement for qualifying communities onboarding in the 90-day launch window. Facility funds the $500 Welcome Package.</p></article>
+          <article className="rounded-3xl border border-sky-400/30 bg-sky-400/10 p-6"><p className="text-xs font-bold uppercase tracking-[.18em] text-sky-300">Standard placement</p><p className="mt-3 text-3xl font-black">$1,999 after 60 days</p><p className="mt-2 text-sm text-slate-300">Outcome-aligned fee. From placement two onward, the Welcome Package is split $250 facility / $250 Oomnik.</p></article>
+          <article className="rounded-3xl border border-violet-400/30 bg-violet-400/10 p-6"><p className="text-xs font-bold uppercase tracking-[.18em] text-violet-300">Resident benefit</p><p className="mt-3 text-3xl font-black">$500 Welcome Package</p><p className="mt-2 text-sm text-slate-300">A defined part of the Oomnik placement offer, supporting approved transition needs—not an unrelated promotion.</p></article>
+        </section>
 
         <section className="rounded-3xl border border-sky-700/70 bg-sky-950/30 p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">How to ask Oomnik during a call</p>
