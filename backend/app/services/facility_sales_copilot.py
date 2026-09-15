@@ -51,9 +51,45 @@ SALES_LINES = [
         "title": "Why participate now",
         "line": "The question is not whether families will expect better digital decision support; it is whether your community's real strengths will be accurately represented when they do. Joining early lets you help us document those strengths correctly without buying influence over the match.",
     },
+    {
+        "id": "information_advantage",
+        "title": "Why a complete profile matters",
+        "line": "Oomnik can only recognize and explain a match from information it can support. When two communities otherwise fit the same need, complete, relevant, verified information is stronger than missing information. Missing information is not a negative claim, but an UNKNOWN cannot outrank proven evidence for that need. A complete profile helps your real advantages be seen.",
+    },
+    {
+        "id": "founding_offer",
+        "title": "The 90-day Founding Launch Offer",
+        "line": "Communities that complete onboarding during the first 90 days after launch qualify for Oomnik's Founding Launch Offer: their first placement carries no Oomnik placement fee. The facility still funds the approved $500 Welcome benefit for that resident.",
+    },
+    {
+        "id": "assisted_onboarding",
+        "title": "We can do the profile work with you",
+        "line": "You do not need to assign someone to build the profile alone. We can schedule a guided online session, complete the fields with your authorized contact, use the materials you already maintain, and send the completed information back for confirmation. You remain the source and approve what is published; we handle the structured entry work.",
+    },
 ]
 
 APPROVED_KNOWLEDGE = [
+    {
+        "id": "information_completeness_and_match",
+        "title": "How profile information affects matching",
+        "keywords": ["fill profile", "complete profile", "more information", "missing information", "profile advantage", "why provide details", "how ranking works", "information affect ranking"],
+        "answer": "Oomnik can only recognize and explain a match from information supported by the profile and governed evidence. When two communities otherwise fit the same client need, complete, relevant, verified information is stronger than missing information: an UNKNOWN cannot outrank proven evidence for that need. Missing information is not treated as a negative fact, and unrelated fields do not create artificial points. Complete, current, verifiable information allows genuine advantages to be recognized and ranked.",
+        "proof": "Relevant proven information receives priority over UNKNOWN; unrelated box-filling does not improve the match.",
+    },
+    {
+        "id": "founding_launch_offer",
+        "title": "90-day Founding Launch Offer",
+        "keywords": ["90 days", "launch offer", "founding", "promotion", "first placement free", "free placement", "deadline"],
+        "answer": "A community that completes the required onboarding during the first 90 days after Oomnik's launch qualifies for the Founding Launch Offer: its first placement carries no Oomnik placement fee. The facility still funds the approved $500 Welcome benefit for that resident. Eligibility and dates are confirmed in the facility agreement.",
+        "proof": "Do not promise eligibility until registration, agreement, profile verification, and the applicable launch window have been confirmed.",
+    },
+    {
+        "id": "assisted_profile_onboarding",
+        "title": "Assisted onboarding for facilities without staff time",
+        "keywords": ["no staff", "no time", "cannot maintain", "manage website", "fill it for us", "too much work", "who will update", "help with profile", "assisted onboarding"],
+        "answer": "The facility does not have to build the profile alone. Oomnik can arrange a guided online session in which the representative structures the information using the facility's existing materials and the authorized contact's answers. Oomnik sends the completed information back for confirmation; the facility remains the source and approves what may be published.",
+        "proof": "The representative may assist with entry but may not invent, infer, or approve a facility claim on the facility's behalf.",
+    },
     {
         "id": "vision",
         "title": "Oomnik vision",
@@ -107,8 +143,8 @@ APPROVED_KNOWLEDGE = [
         "id": "first_placement",
         "title": "First placement offer",
         "keywords": ["first placement", "free", "trial", "welcome", "500"],
-        "answer": "The first successful placement is free of Oomnik's placement fee. The participating facility funds the approved $500 Welcome benefit for that resident.",
-        "proof": "This is the approved launch offer; final obligations are governed by the signed facility agreement.",
+        "answer": "Under the 90-day Founding Launch Offer, a community that completes the required onboarding within the launch window receives its first placement without an Oomnik placement fee. The participating facility funds the approved $500 Welcome benefit for that resident.",
+        "proof": "Eligibility is time-limited and depends on completing the required onboarding; final obligations are governed by the signed facility agreement.",
     },
     {
         "id": "standard_fee",

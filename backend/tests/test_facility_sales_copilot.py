@@ -51,3 +51,22 @@ def test_death_before_day_sixty_uses_approved_half_fee() -> None:
     assert "50%" in result["answer"]
     assert "$999.50" in result["answer"]
     assert "59%" not in result["answer"]
+
+
+def test_profile_completeness_enables_proven_match_without_buying_rank() -> None:
+    result = ask_sales_copilot("Why should we fill the complete profile and how does information affect ranking?", transport=lambda _: {})
+    assert "information_completeness_and_match" in result["knowledge_ids"]
+    assert "UNKNOWN cannot outrank proven evidence" in result["answer"]
+    assert "unrelated fields do not create artificial points" in result["answer"]
+
+
+def test_no_staff_objection_offers_assisted_onboarding() -> None:
+    result = ask_sales_copilot("We have no staff and no time to manage another website", transport=lambda _: {})
+    assert "assisted_profile_onboarding" in result["knowledge_ids"]
+    assert "guided online session" in result["answer"]
+
+
+def test_ninety_day_founding_offer_is_time_limited() -> None:
+    result = ask_sales_copilot("What is the 90 day launch promotion?", transport=lambda _: {})
+    assert "founding_launch_offer" in result["knowledge_ids"]
+    assert "first placement" in result["answer"]
