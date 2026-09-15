@@ -470,9 +470,9 @@ export default function FacilitySalesCopilotPage() {
           </article>
         </section>
 
-        <section className="order-8 rounded-3xl border border-sky-700/70 bg-sky-950/30 p-6">
+        <section className="order-8 rounded-3xl border border-sky-700/70 bg-sky-950/30 p-6 sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">
-            How to ask Oomnik during a call
+            How to use the Oomnik engine
           </p>
           <h2 className="mt-2 text-xl font-semibold">
             Write the caller's question exactly as it was asked
@@ -494,7 +494,7 @@ export default function FacilitySalesCopilotPage() {
         </section>
 
         {facilityRecord ? (
-          <section className="order-9 rounded-3xl border border-emerald-500/30 bg-white/[.06] p-6">
+          <section className="order-10 rounded-3xl border border-emerald-500/30 bg-white/[.06] p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-300">
@@ -711,7 +711,49 @@ export default function FacilitySalesCopilotPage() {
           </div>
         </section>
 
-        <div className="order-7 grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,.65fr)]">
+        <section className="order-7 rounded-[2rem] border border-amber-400/30 bg-amber-950/20 p-7 sm:p-10">
+          <p className="font-bold uppercase tracking-[0.2em] text-amber-300">
+            Call rules · Read before using the engine
+          </p>
+          <div className="mt-5 grid gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-slate-700 bg-slate-950/45 p-6">
+              <h2 className="text-3xl font-black text-white">Call rules</h2>
+              <ol className="mt-5 space-y-4 text-lg leading-8 text-slate-200">
+                {bootstrap.rules.map((rule, index) => (
+                  <li key={rule} className="flex gap-3">
+                    <span className="font-bold text-amber-300">
+                      {index + 1}.
+                    </span>
+                    <span>{rule}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="rounded-2xl border border-slate-700 bg-slate-950/45 p-6">
+              <h2 className="text-3xl font-black text-white">
+                Professional bridge phrases
+              </h2>
+              <p className="mt-2 text-lg text-slate-300">
+                Use one of these when you need time to verify an answer. Click
+                to copy.
+              </p>
+              <div className="mt-5 grid gap-3">
+                {bootstrap.bridge_phrases.map((phrase) => (
+                  <button
+                    key={phrase}
+                    type="button"
+                    onClick={() => navigator.clipboard?.writeText(phrase)}
+                    className="w-full rounded-xl border border-slate-700 p-4 text-left text-lg leading-7 text-slate-200 hover:border-amber-500"
+                  >
+                    “{phrase}”
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="order-9">
           <div className="space-y-5">
             <form
               onSubmit={submit}
@@ -874,34 +916,6 @@ export default function FacilitySalesCopilotPage() {
               </article>
             ) : null}
           </div>
-
-          <aside className="space-y-5">
-            <section className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5">
-              <h2 className="font-semibold">Call rules</h2>
-              <ol className="mt-3 space-y-2 text-sm text-slate-300">
-                {bootstrap.rules.map((rule, index) => (
-                  <li key={rule}>
-                    {index + 1}. {rule}
-                  </li>
-                ))}
-              </ol>
-            </section>
-            <section className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5">
-              <h2 className="font-semibold">Professional bridge phrases</h2>
-              <div className="mt-3 space-y-3">
-                {bootstrap.bridge_phrases.map((phrase) => (
-                  <button
-                    key={phrase}
-                    type="button"
-                    onClick={() => navigator.clipboard?.writeText(phrase)}
-                    className="w-full rounded-xl border border-slate-700 p-3 text-left text-sm text-slate-300 hover:border-emerald-600"
-                  >
-                    “{phrase}”
-                  </button>
-                ))}
-              </div>
-            </section>
-          </aside>
         </div>
       </section>
     </main>
