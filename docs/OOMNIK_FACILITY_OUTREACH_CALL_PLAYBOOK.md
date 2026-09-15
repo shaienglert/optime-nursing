@@ -182,3 +182,11 @@ For every unanswered question, record: facility, caller name and role, exact que
 ## 11. Close
 
 > Thank you. The next step is [AGREED ACTION]. I have recorded [KEY QUESTION OR REQUIREMENT]. You should receive [ONLY AN APPROVED, REALISTIC FOLLOW-UP—DO NOT INVENT A DEADLINE]. Is there anything else the decision-maker needs in order to review the program?
+
+
+## 12. Partner Desk access
+
+- Representatives use `/partner-desk`; they do not enter or receive an Oomnik admin password or admin API token.
+- Access is granted with the dedicated Sales Desk code only. That code authorizes the sales copilot and nothing else.
+- Never paste the Sales Desk code into an email to a facility or disclose it during a call.
+- If access should be removed, rotate `OOMNIK_SALES_DESK_TOKEN`; do not change or share the admin credential.
