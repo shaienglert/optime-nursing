@@ -1997,6 +1997,7 @@ export type FacilitySalesCopilotBootstrap = {
   topics: Array<{ id: string; title: string }>;
   bridge_phrases: string[];
   sales_lines: Array<{ id: string; title: string; line: string }>;
+  how_to_use: string[];
   rules: string[];
 };
 

@@ -38,6 +38,8 @@ def test_bootstrap_contains_live_call_training() -> None:
     assert len(result["topics"]) >= 15
     assert len(result["bridge_phrases"]) >= 6
     assert len(result["sales_lines"]) >= 6
+    assert len(result["how_to_use"]) >= 7
+    assert any("exactly" in step for step in result["how_to_use"])
 
 
 def test_sixty_day_pitch_explains_aligned_incentive_without_guarantee() -> None:

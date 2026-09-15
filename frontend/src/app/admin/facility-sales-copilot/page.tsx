@@ -101,6 +101,17 @@ export default function FacilitySalesCopilotPage() {
           <Link href="/admin" className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300">Back to Admin</Link>
         </header>
 
+        <section className="rounded-3xl border border-sky-700/70 bg-sky-950/30 p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">How to ask Oomnik during a call</p>
+          <h2 className="mt-2 text-xl font-semibold">Write the caller's question exactly as it was asked</h2>
+          <ol className="mt-4 grid gap-2 text-sm text-slate-200 sm:grid-cols-2">
+            {bootstrap.how_to_use.map((step, index) => <li key={step} className="rounded-xl bg-slate-950/50 p-3"><span className="mr-2 font-semibold text-sky-300">{index + 1}.</span>{step}</li>)}
+          </ol>
+          <p className="mt-4 rounded-xl border border-amber-700/50 bg-amber-950/30 p-3 text-sm text-amber-100">
+            Example: “The facility says it has no employee available to maintain its profile. What should I offer?”
+          </p>
+        </section>
+
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)]">
           <div className="space-y-5">
             <form onSubmit={submit} className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/80 p-6">

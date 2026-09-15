@@ -4,6 +4,21 @@
 
 The representative follows up after Oomnik's introductory email. The goal is to reach the right decision-maker, explain the program accurately, answer approved commercial questions, and secure the next onboarding step. The representative does not provide legal, clinical, privacy, security, or custom-contract advice.
 
+### How to ask Oomnik a question during the call
+
+1. Open the staff-only Oomnik Facility Sales Copilot.
+2. Enter the facility name and select the current call stage.
+3. Type the facility's question exactly as the caller asked it. Do not shorten or reinterpret it.
+4. Click **Get approved answer**.
+5. Read only the green **Say this** response aloud.
+6. If **If you need time** appears, use that sentence while the question is escalated.
+7. Follow the displayed **Next step** and record any promised follow-up.
+8. If the answer is UNKNOWN or marked **Escalate**, never improvise or promise an unapproved deadline.
+
+Example:
+
+> The facility says it has no employee available to maintain its profile. What should I offer?
+
 ## 2. Opening
 
 > Hello, this is [NAME] calling from Oomnik. We recently sent an introduction about our Las Vegas Valley senior-living decision and matching service. Did I reach the person responsible for partnerships, admissions, or community marketing?
