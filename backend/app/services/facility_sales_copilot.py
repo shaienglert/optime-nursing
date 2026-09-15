@@ -96,6 +96,8 @@ SALES_LINES = [
     {"id": "early_no_fit", "title": "An early no-fit saves resources", "line": "If your community is not appropriate for a resident, identifying that early protects your team, the family, and the resident from investing in a process that should not continue."},
     {"id": "outcome_learning", "title": "Outcome reporting improves matching", "line": "When facilities report contact, tour, assessment, decision, and move-in outcomes, Oomnik can identify where a process succeeded or failed and improve future matching within its governed learning process."},
     {"id": "master_pitch", "title": "Complete Oomnik value statement", "line": "Oomnik does not ask you to buy visibility. It asks you to document what your community genuinely does well so the right family can find it. The more complete, relevant, and verifiable your information is, the more accurately we can match an appropriate resident to your community. We earn our standard placement fee only after the resident has remained for 60 days, because a lead is not our definition of success; a sustainable match is."},
+    {"id": "welcome_package", "title": "The $500 Welcome Package", "line": "Every qualifying Oomnik placement includes a $500 Welcome Package for the resident's approved transition needs. On the first placement, the community pays the full $500 and pays no Oomnik placement fee. From the second successful placement onward, the community contributes $250 and Oomnik contributes $250; the standard Oomnik placement fee is $1,999 and is earned after 60 days."},
+    {"id": "welcome_alignment", "title": "Why the Welcome Package matters", "line": "The Welcome Package is part of the Oomnik offer, not an unrelated promotion. It gives the resident practical support around the move and gives the community, Oomnik, and the family a shared start focused on a successful transition."},
 ]
 
 OBJECTION_ARGUMENTS = [
@@ -107,6 +109,7 @@ OBJECTION_ARGUMENTS = [
     {"id": "objection_existing_channels", "keywords": ["already have", "website", "crm", "referrals", "marketing agency", "competitor", "other channels"], "sales_line_ids": ["additional_channel", "unknown_terminology", "research_before_sales"]},
     {"id": "objection_small_community", "keywords": ["small", "independent", "chain", "advertising budget", "cannot compete"], "sales_line_ids": ["independent_competes", "deeper_than_category", "founding_market"]},
     {"id": "objection_why_oomnik", "keywords": ["why oomnik", "different", "what makes", "why join", "why participate"], "sales_line_ids": ["master_pitch", "qualified_not_more", "deeper_than_category"]},
+    {"id": "objection_welcome_package", "keywords": ["welcome package", "welcome benefit", "who pays", "500", "250", "resident benefit"], "sales_line_ids": ["welcome_package", "welcome_alignment", "outcome_payment"]},
 ]
 
 
@@ -201,8 +204,15 @@ APPROVED_KNOWLEDGE = [
         "id": "standard_fee",
         "title": "Standard placement fee",
         "keywords": ["price", "fee", "cost", "commission", "1999", "additional placement"],
-        "answer": "After the first placement, the standard Oomnik fee is $1,999 for each successful placement. The applicable Welcome benefit contribution and all payment details are confirmed in the facility agreement.",
-        "proof": "Do not improvise discounts, credits, taxes, payment dates, or exceptions during the call.",
+        "answer": "After the first placement, the standard Oomnik fee is $1,999 for each successful placement and is earned after 60 days. The $500 Welcome Package is funded $250 by the facility and $250 by Oomnik. Final payment details are confirmed in the facility agreement.",
+        "proof": "The facility's later-placement obligation is the $1,999 Oomnik fee plus its $250 Welcome Package contribution. Do not improvise discounts, taxes, payment dates, or exceptions.",
+    },
+    {
+        "id": "welcome_package_terms",
+        "title": "$500 Welcome Package funding",
+        "keywords": ["welcome package", "welcome benefit", "who pays", "500", "250", "split welcome", "resident benefit"],
+        "answer": "The Welcome Package is a $500 resident transition benefit included with a qualifying Oomnik placement. For the first placement under the Founding Launch Offer, the facility funds the full $500 and pays no Oomnik placement fee. From the second successful placement onward, the facility contributes $250 and Oomnik contributes $250; the standard $1,999 Oomnik placement fee is earned after 60 days. Approved uses and administration are governed by the agreement and client-facing terms.",
+        "proof": "Describe the funding split precisely. Do not promise specific products, cash, reimbursements, tax treatment, or eligibility outside the approved written terms.",
     },
     {
         "id": "successful_placement",
