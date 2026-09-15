@@ -422,6 +422,7 @@ class FacilitySalesCopilotOut(BaseModel):
     disclosure_guard: str
     ai_status: Optional[str] = None
     evidence: Optional[Dict[str, Any]] = None
+    objection_guidance: Optional[Dict[str, Any]] = None
 
 
 class PlacementReferralCreateIn(BaseModel):
