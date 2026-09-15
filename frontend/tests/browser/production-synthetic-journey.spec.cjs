@@ -26,6 +26,11 @@ test.describe('production synthetic journey', () => {
     const scenario = scenarios[chosen];
     if (!scenario) throw new Error(`Unknown scenario: ${chosen}`);
 
+    const recommendationResponse = page.waitForResponse(
+      (response) => response.url().includes('/decision-engine/recommendations')
+        && response.request().method() === 'POST',
+      { timeout: 240_000 },
+    );
     await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     const storyBox = page.getByLabel('Describe your family situation');
     await expect(storyBox).toBeVisible({ timeout: 60_000 });
@@ -76,6 +81,22 @@ test.describe('production synthetic journey', () => {
     console.log('OOMNIK_RESULTS_BEGIN');
     console.log(resultsText);
     console.log('OOMNIK_RESULTS_END');
+    const recommendationPayload = await (await recommendationResponse).json();
+    console.log('OOMNIK_DECISION_JSON_BEGIN');
+    console.log(JSON.stringify({
+      result_count: recommendationPayload.result_count,
+      patient_needs_profile: recommendationPayload.patient_needs_profile,
+      facility_selection_pipeline: recommendationPayload.decision_intelligence?.facility_selection_pipeline,
+      results: (recommendationPayload.results || []).slice(0, 10).map((item) => ({
+        canonical_facility_id: item.canonical_facility_id,
+        facility_name: item.facility_name,
+        eligibility_status: item.eligibility_status,
+        must_eligibility: item.must_eligibility,
+        ai_ranking: item.ai_ranking,
+        client_intent_fit: item.client_intent_fit,
+      })),
+    }));
+    console.log('OOMNIK_DECISION_JSON_END');
     expect(resultsText.length).toBeGreaterThan(200);
   });
 });
