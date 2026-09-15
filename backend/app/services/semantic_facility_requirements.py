@@ -187,6 +187,11 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
             trace: List[Dict[str, Any]] = []
             for requirement in requirements:
                 key = str(requirement["key"])
+                # This function runs before and after asynchronous research.  A
+                # previous pass must never survive a later evidence refresh.
+                passed = [value for value in passed if value != key]
+                unknown = [value for value in unknown if value != key]
+                failed = [value for value in failed if value != key]
                 # Never hard-fail entry on unverified agent evidence: decision_research_worker.py
                 # stamps every *_verified field False by default on every research pass,
                 # regardless of which specific dimension was actually requested, so a False
