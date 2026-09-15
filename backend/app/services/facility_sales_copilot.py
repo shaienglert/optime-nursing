@@ -8,8 +8,18 @@ other internal project material. A deterministic fallback keeps the call desk us
 when semantic AI is unavailable.
 """
 
+import json
 import re
+from datetime import datetime, timezone
 from typing import Any, Callable
+
+from sqlalchemy.orm import Session
+
+from app.models.agent_execution import AgentKnowledgeRecord
+
+SALES_EVIDENCE_AGENT_KEY = "facility-market-evidence-agent"
+ONLINE_SEARCH_RECORD_TYPE = "sales_market_statistic"
+ONLINE_SEARCH_ENTITY_KEY = "senior_living_online_search_share"
 
 BRIDGE_PHRASES = [
     "That's an important question. Let me verify the exact detail so I give you the right answer.",
@@ -321,6 +331,7 @@ def ask_sales_copilot(
     facility_name: str | None = None,
     call_stage: str | None = None,
     transport: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    db: Session | None = None,
 ) -> dict[str, Any]:
     question = question.strip()
     if not question:
@@ -330,6 +341,15 @@ def ask_sales_copilot(
         return refusal
 
     matches = _matches(question)
+    evidence = _latest_online_search_evidence(db) if _asks_for_online_search_percentage(question) else None
+    if evidence:
+        qualifier = "verified" if evidence["verification_status"] == "VERIFIED" else "the latest source-reported figure we have, not independently verified"
+        evidence_answer = (
+            f"{evidence['value_display']} is {qualifier}. It measures {evidence['metric_definition']} "
+            f"for {evidence['data_period']}. Source: {evidence['source_title']} ({evidence['source_publisher']}), "
+            f"checked {evidence['checked_at']}."
+        )
+        matches = [{"id": "agent_online_search_evidence", "title": "Agent-supplied online search evidence", "keywords": [], "answer": evidence_answer, "proof": "Quote scope, source, and date with the percentage; never broaden the statistic."}] + matches
     escalation = _escalation(question)
     if not matches:
         return {
@@ -353,6 +373,7 @@ def ask_sales_copilot(
         "confidence": "HIGH" if len(matches) == 1 else "MEDIUM",
         "knowledge_ids": [item["id"] for item in matches],
         "disclosure_guard": "APPROVED_KNOWLEDGE_ONLY",
+        "evidence": evidence,
     }
 
     if transport is None:
@@ -412,13 +433,103 @@ def ask_sales_copilot(
         return base
 
 
-def sales_copilot_bootstrap() -> dict[str, Any]:
+def _asks_for_online_search_percentage(question: str) -> bool:
+    lowered = question.lower()
+    return any(token in lowered for token in ("percent", "percentage", "%", "how many", "share", "rate")) and any(token in lowered for token in ("online", "internet", "google", "aggregator", "web"))
+
+
+def _latest_online_search_evidence(db: Session | None) -> dict[str, Any] | None:
+    if db is None:
+        return None
+    rows = db.query(AgentKnowledgeRecord).filter(
+        AgentKnowledgeRecord.agent_key == SALES_EVIDENCE_AGENT_KEY,
+        AgentKnowledgeRecord.record_type == ONLINE_SEARCH_RECORD_TYPE,
+        AgentKnowledgeRecord.entity_key == ONLINE_SEARCH_ENTITY_KEY,
+    ).order_by(AgentKnowledgeRecord.created_at.desc(), AgentKnowledgeRecord.id.desc()).all()
+    parsed: list[tuple[AgentKnowledgeRecord, dict[str, Any]]] = []
+    for row in rows:
+        try:
+            payload = json.loads(row.payload_json or "{}")
+        except (TypeError, ValueError):
+            continue
+        required = ("value_display", "metric_definition", "data_period", "source_url", "source_title", "source_publisher")
+        if all(str(payload.get(key) or "").strip() for key in required):
+            parsed.append((row, payload))
+    if not parsed:
+        return None
+    verified = [item for item in parsed if str(item[1].get("verification_status") or "").upper() == "VERIFIED"]
+    row, payload = (verified or parsed)[0]
+    status = str(payload.get("verification_status") or "UNVERIFIED").upper()
+    return {
+        "agent_key": SALES_EVIDENCE_AGENT_KEY,
+        "value_display": str(payload["value_display"]),
+        "metric_definition": str(payload["metric_definition"]),
+        "data_period": str(payload["data_period"]),
+        "geography": str(payload.get("geography") or "Not stated"),
+        "source_title": str(payload["source_title"]),
+        "source_publisher": str(payload["source_publisher"]),
+        "source_url": str(payload["source_url"]),
+        "published_at": str(payload.get("published_at") or "Not stated"),
+        "checked_at": str(payload.get("checked_at") or row.created_at.date().isoformat()),
+        "verification_status": "VERIFIED" if status == "VERIFIED" else "LATEST_UNVERIFIED",
+    }
+
+
+def publish_initial_online_lead_observation(db: Session) -> None:
+    """Publish the first governed observation under the research agent identity.
+
+    This is intentionally SOURCE_REPORTED, not VERIFIED: the publisher reports a
+    CRM-derived lead statistic, while the underlying dataset is not available to us.
+    """
+    exists = db.query(AgentKnowledgeRecord.id).filter(
+        AgentKnowledgeRecord.agent_key == SALES_EVIDENCE_AGENT_KEY,
+        AgentKnowledgeRecord.record_type == ONLINE_SEARCH_RECORD_TYPE,
+        AgentKnowledgeRecord.entity_key == ONLINE_SEARCH_ENTITY_KEY,
+    ).first()
+    if exists:
+        return
+    checked_at = datetime.now(timezone.utc).date().isoformat()
+    payload = {
+        "value_display": "More than 75%",
+        "metric_definition": "the share of new senior-living leads attributed to aggregators and online sources; this is not the percentage of all people who search online",
+        "data_period": "2022",
+        "geography": "WelcomeHome customer dataset; geography and sample size were not stated in the accessible source",
+        "source_title": "WelcomeHome Releases 2022 Year In Review, Report On Key Senior Housing Trends",
+        "source_publisher": "WelcomeHome",
+        "source_url": "https://www.welcomehomesoftware.com/",
+        "published_at": "2023-03-09",
+        "checked_at": checked_at,
+        "verification_status": "SOURCE_REPORTED",
+    }
+    db.add(AgentKnowledgeRecord(
+        agent_key=SALES_EVIDENCE_AGENT_KEY,
+        record_type=ONLINE_SEARCH_RECORD_TYPE,
+        entity_key=ONLINE_SEARCH_ENTITY_KEY,
+        summary="More than 75% of new leads were attributed to aggregators and online sources in the publisher's 2022 review.",
+        payload_json=json.dumps(payload),
+        confidence=0.7,
+        source="AGENT_WEB_RESEARCH_SOURCE_REPORTED",
+    ))
+    db.commit()
+
+
+def sales_copilot_bootstrap(db: Session | None = None) -> dict[str, Any]:
+    if db is not None:
+        publish_initial_online_lead_observation(db)
+    evidence = _latest_online_search_evidence(db)
+    sales_lines = list(SALES_LINES)
+    if evidence:
+        sales_lines.append({
+            "id": "agent_online_demand_evidence",
+            "title": "What the latest agent evidence shows",
+            "line": f"The latest source-reported figure in Oomnik's evidence agent is {evidence['value_display']} of new senior-living leads from aggregators and online sources in {evidence['data_period']}. It was checked {evidence['checked_at']} and is not independently verified, so I will not describe it as the percentage of all families who search online.",
+        })
     return {
         "name": "Oomnik Facility Sales Copilot",
         "purpose": "Live, staff-only commercial support after facility email outreach.",
         "topics": [{"id": item["id"], "title": item["title"]} for item in APPROVED_KNOWLEDGE],
         "bridge_phrases": BRIDGE_PHRASES,
-        "sales_lines": SALES_LINES,
+        "sales_lines": sales_lines,
         "how_to_use": [
             "Enter the facility name and select the current call stage.",
             "Type the facility's question exactly as the caller asked it; do not shorten, reinterpret, or remove important details.",

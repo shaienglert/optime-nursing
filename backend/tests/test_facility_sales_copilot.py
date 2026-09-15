@@ -1,4 +1,10 @@
 from app.services.facility_sales_copilot import ask_sales_copilot, sales_copilot_bootstrap
+from app.database import Base
+from app.models.agent_execution import AgentKnowledgeRecord
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import json
 
 
 def test_ranking_answer_is_independent_of_payment() -> None:
@@ -72,3 +78,37 @@ def test_ninety_day_founding_offer_is_time_limited() -> None:
     result = ask_sales_copilot("What is the 90 day launch promotion?", transport=lambda _: {})
     assert "founding_launch_offer" in result["knowledge_ids"]
     assert "first placement" in result["answer"]
+
+
+def test_online_percentage_uses_latest_unverified_agent_record_with_date() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    db = sessionmaker(bind=engine)()
+    db.add(AgentKnowledgeRecord(
+        agent_key="facility-market-evidence-agent",
+        record_type="sales_market_statistic",
+        entity_key="senior_living_online_search_share",
+        summary="Latest source-reported observation",
+        payload_json=json.dumps({
+            "value_display": "More than 75%",
+            "metric_definition": "the share of new senior-living leads from aggregators and online sources",
+            "data_period": "2022",
+            "geography": "United States customer dataset",
+            "source_title": "2022 Year in Review",
+            "source_publisher": "WelcomeHome",
+            "source_url": "https://www.welcomehomesoftware.com/",
+            "published_at": "2023-03-09",
+            "checked_at": "2026-09-15",
+            "verification_status": "SOURCE_REPORTED",
+        }),
+        confidence=0.7,
+        source="LIVE_WEB_RESEARCH",
+    ))
+    db.commit()
+
+    result = ask_sales_copilot("What percentage of prospects search online?", db=db, transport=lambda _: {})
+
+    assert result["evidence"]["value_display"] == "More than 75%"
+    assert result["evidence"]["verification_status"] == "LATEST_UNVERIFIED"
+    assert "not independently verified" in result["say_this"]
+    assert "2026-09-15" in result["say_this"]

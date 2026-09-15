@@ -98,7 +98,7 @@ from app.services.facility_profile_portal import (
     save_capabilities,
     search_claimable_facilities,
 )
-from app.services.facility_sales_copilot import ask_sales_copilot, sales_copilot_bootstrap
+from app.services.facility_sales_copilot import ask_sales_copilot, publish_initial_online_lead_observation, sales_copilot_bootstrap
 from app.services.provider_portal_demo import DEMO_CMS_ID, ensure_opticare_demo
 from app.services.intelligence_agent import UPDATE_FREQUENCY, run_intelligence_collection
 from app.services.evidence_source_integrity import (
@@ -421,6 +421,7 @@ class FacilitySalesCopilotOut(BaseModel):
     knowledge_ids: List[str] = Field(default_factory=list)
     disclosure_guard: str
     ai_status: Optional[str] = None
+    evidence: Optional[Dict[str, Any]] = None
 
 
 class PlacementReferralCreateIn(BaseModel):
@@ -2137,16 +2138,18 @@ async def post_approve_and_send_facility_outreach(request_id: int, db: Session =
 
 
 @app.get("/facility-sales-copilot/bootstrap")
-async def get_facility_sales_copilot_bootstrap(_: None = Depends(require_admin_token)):
-    return sales_copilot_bootstrap()
+async def get_facility_sales_copilot_bootstrap(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    return sales_copilot_bootstrap(db)
 
 
 @app.post("/facility-sales-copilot/ask", response_model=FacilitySalesCopilotOut)
 async def post_facility_sales_copilot(payload: FacilitySalesCopilotIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    publish_initial_online_lead_observation(db)
     result = ask_sales_copilot(
         payload.question,
         facility_name=payload.facility_name,
         call_stage=payload.call_stage,
+        db=db,
     )
     db.add(FacilitySalesCopilotInteraction(
         facility_name=payload.facility_name,
