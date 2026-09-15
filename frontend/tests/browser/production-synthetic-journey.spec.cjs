@@ -13,9 +13,22 @@ const scenarios = {
       return 'No additional preference beyond what I described.';
     },
   },
+  memory_mom: {
+    story: "My mother is 84 and has advancing Alzheimer's disease. She needs constant supervision, help with bathing, dressing, toileting and medication management, and she sometimes wanders at night. She lives in the Las Vegas Valley. She needs a secure memory-care setting with 24/7 staff. Her budget is about $5,000 per month and Medicaid eligibility is pending.",
+    answer: (question) => {
+      const text = question.toLowerCase();
+      if (/city|area|location|market/.test(text)) return 'Las Vegas Valley';
+      if (/budget|cost|monthly|afford|medicaid/.test(text)) return '$5,000 per month; Medicaid eligibility is pending.';
+      if (/memory|cognitive|dementia|alzheimer|wander/.test(text)) return "Advancing Alzheimer's with nighttime wandering; she needs a secured memory-care setting.";
+      if (/care|support|adl|bathing|dressing|toilet|medication|supervision/.test(text)) return 'Hands-on ADL help, medication management and awake 24/7 supervision are required.';
+      if (/safety|secure|night/.test(text)) return 'A secured environment and staff able to respond at all hours are required.';
+      return 'No additional preference beyond the safety, memory-care and budget requirements described.';
+    },
+    forbiddenVerifiedFacilities: ['Revel Vegas', 'STEWART PINES II SENIOR APTS'],
+  },
 };
 
-const chosen = process.env.OOMNIK_SCENARIO || 'independent_mom';
+const chosen = process.env.OOMNIK_SCENARIO || 'memory_mom';
 const baseUrl = process.env.OOMNIK_PRODUCTION_URL;
 
 test.describe('production synthetic journey', () => {
@@ -82,6 +95,17 @@ test.describe('production synthetic journey', () => {
     console.log(resultsText);
     console.log('OOMNIK_RESULTS_END');
     const recommendationPayload = await (await recommendationResponse).json();
+    const verifiedResults = (recommendationPayload.results || []).filter((item) =>
+      item.must_eligibility
+        ? item.must_eligibility === 'MUST_ELIGIBLE'
+        : item.eligibility_status === 'ELIGIBLE',
+    );
+    for (const facilityName of scenario.forbiddenVerifiedFacilities || []) {
+      expect(
+        verifiedResults.some((item) => item.facility_name === facilityName),
+        `${facilityName} must not be verified for ${chosen}`,
+      ).toBe(false);
+    }
     console.log('OOMNIK_DECISION_JSON_BEGIN');
     console.log(JSON.stringify({
       result_count: recommendationPayload.result_count,
