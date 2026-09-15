@@ -2011,6 +2011,11 @@ export type FacilitySalesCopilotAnswer = {
   knowledge_ids: string[];
   disclosure_guard: string;
   ai_status?: string | null;
+  evidence?: {
+    agent_key: string; value_display: string; metric_definition: string; data_period: string;
+    geography: string; source_title: string; source_publisher: string; source_url: string;
+    published_at: string; checked_at: string; verification_status: "VERIFIED" | "LATEST_UNVERIFIED";
+  } | null;
 };
 
 export type RoomSubmission = {
