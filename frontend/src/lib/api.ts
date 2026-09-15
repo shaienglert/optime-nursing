@@ -2092,7 +2092,7 @@ export async function approveAndSendFacilityOutreach(requestId: number, adminTok
 
 export async function fetchFacilitySalesCopilotBootstrap(salesDeskToken: string): Promise<FacilitySalesCopilotBootstrap> {
   const response = await fetch(joinApiUrl(getApiBaseUrl(), "/facility-sales-copilot/bootstrap"), {
-    headers: { "X-Admin-Token": adminToken },
+    headers: { "X-Sales-Desk-Token": salesDeskToken },
     cache: "no-store",
   });
   if (!response.ok) throw new Error(`API request failed (${response.status})`);
@@ -2101,11 +2101,11 @@ export async function fetchFacilitySalesCopilotBootstrap(salesDeskToken: string)
 
 export async function askFacilitySalesCopilot(
   payload: { question: string; canonical_facility_id?: string; facility_name?: string; call_stage?: string },
-  adminToken: string,
+  salesDeskToken: string,
 ): Promise<FacilitySalesCopilotAnswer> {
   const response = await fetch(joinApiUrl(getApiBaseUrl(), "/facility-sales-copilot/ask"), {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Admin-Token": adminToken },
+    headers: { "Content-Type": "application/json", "X-Sales-Desk-Token": salesDeskToken },
     body: JSON.stringify(payload),
   });
   if (!response.ok) throw new Error(`API request failed (${response.status})`);
