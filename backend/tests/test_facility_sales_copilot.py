@@ -5,6 +5,10 @@ from app.models.agent_execution import AgentKnowledgeRecord
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import json
+import os
+from unittest.mock import patch
+
+from fastapi.testclient import TestClient
 
 
 def test_ranking_answer_is_independent_of_payment() -> None:
@@ -137,3 +141,22 @@ def test_welcome_package_explains_first_and_later_placement_split() -> None:
     assert "through a participating community" in result["say_this"]
     assert "eligible private-pay placement" in result["say_this"]
     assert "Medicare, Medicaid, the VA" in result["say_this"]
+
+
+def test_sales_copilot_uses_sales_only_credential() -> None:
+    from app.main import app
+
+    with patch.dict(os.environ, {
+        "OOMNIK_SALES_DESK_TOKEN": "sales-only-test-code",
+        "OPTIME_ADMIN_TOKEN": "admin-test-token",
+    }):
+        client = TestClient(app)
+        assert client.get("/facility-sales-copilot/bootstrap").status_code == 401
+        assert client.get(
+            "/facility-sales-copilot/bootstrap",
+            headers={"X-Admin-Token": "admin-test-token"},
+        ).status_code == 401
+        assert client.get(
+            "/facility-sales-copilot/bootstrap",
+            headers={"X-Sales-Desk-Token": "sales-only-test-code"},
+        ).status_code == 200
