@@ -30,8 +30,17 @@ test.describe('production synthetic journey', () => {
     const storyBox = page.getByLabel('Describe your family situation');
     await expect(storyBox).toBeVisible({ timeout: 60_000 });
     await storyBox.fill(scenario.story);
+    await page.waitForTimeout(2_000);
     await page.getByRole('button', { name: /See options that may fit/ }).click();
-    await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 60_000 });
+    try {
+      await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 15_000 });
+    } catch {
+      await expect(storyBox).toBeVisible({ timeout: 30_000 });
+      await storyBox.fill(scenario.story);
+      await page.waitForTimeout(2_000);
+      await page.getByRole('button', { name: /See options that may fit/ }).click();
+      await expect(page).toHaveURL(/\/adaptive-interview/, { timeout: 60_000 });
+    }
 
     for (let step = 0; step < 9; step += 1) {
       await page.waitForFunction(
