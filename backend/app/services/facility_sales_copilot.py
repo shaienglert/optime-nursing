@@ -419,6 +419,15 @@ def sales_copilot_bootstrap() -> dict[str, Any]:
         "topics": [{"id": item["id"], "title": item["title"]} for item in APPROVED_KNOWLEDGE],
         "bridge_phrases": BRIDGE_PHRASES,
         "sales_lines": SALES_LINES,
+        "how_to_use": [
+            "Enter the facility name and select the current call stage.",
+            "Type the facility's question exactly as the caller asked it; do not shorten, reinterpret, or remove important details.",
+            "Click Get approved answer.",
+            "Read only the green Say this response aloud to the facility.",
+            "If an If you need time message appears, use it while the question is escalated for confirmation.",
+            "Follow the displayed Next step and record any promised follow-up.",
+            "If the answer is marked UNKNOWN or Escalate, never improvise an answer or promise a deadline that has not been approved.",
+        ],
         "rules": [
             "Never guess or invent a promise.",
             "Never promise ranking, volume, publication, exclusivity, or an unapproved discount.",
