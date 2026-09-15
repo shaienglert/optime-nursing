@@ -97,6 +97,38 @@ def _row_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     return governed_evidence_runtime.agent_and_provider_payloads(row)
 
 
+def _row_verifies_future_care(row: Dict[str, Any]) -> bool:
+    """Accept continuum proof only from the evidence record that owns that claim.
+
+    Agent research records contain a snapshot of many boolean fields.  Reading
+    every historical snapshot with an ``any(True)`` rule allowed an unrelated or
+    stale record to prove a current future-care MUST.  Provider-curated evidence,
+    an explicit life-plan modality, or a trusted agent record produced for the
+    recovery-transition dimension are the only positive paths here.
+    """
+    provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
+    evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else {}
+    if evidence.get("continuum_of_care_verified") is True:
+        return True
+
+    modalities = {_upper(value) for value in row.get("housing_modalities") or []}
+    if "LIFE_PLAN_CCRC" in modalities:
+        return True
+
+    agent_evidence = row.get("agent_person_fit_evidence") if isinstance(row.get("agent_person_fit_evidence"), list) else []
+    for item in agent_evidence:
+        if not isinstance(item, dict):
+            continue
+        payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+        if str(payload.get("dimension") or "").strip().lower() != "recovery_transition":
+            continue
+        if payload.get("continuum_of_care_verified") is not True:
+            continue
+        if governed_evidence_runtime.is_governed_positive_source(item.get("source"), payload):
+            return True
+    return False
+
+
 def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int = 0) -> bool:
     canonical_id = str(row.get("canonical_facility_id") or "").strip()
     if not canonical_id:
@@ -163,7 +195,8 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 # ADL/MEDICATION/REHAB/RECOVERY_TRANSITION gates in client_intent_runtime.py:
                 # agent evidence may only confirm a MUST (PASS), never exclude on it (FAIL).
                 verdicts = [_payload_verifies(payload, key) for payload in payloads]
-                if True in verdicts:
+                verified = _row_verifies_future_care(row) if key == "SEMANTIC_FUTURE_CARE_PATH" else True in verdicts
+                if verified:
                     if key not in passed: passed.append(key)
                     status = "PASS"
                 else:
