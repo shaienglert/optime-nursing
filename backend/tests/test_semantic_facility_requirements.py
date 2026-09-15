@@ -209,6 +209,37 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
+    def test_recalculation_removes_stale_semantic_pass(self) -> None:
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "future care path",
+                    "meaning": "continuum required",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["continuumOfCarePreference"],
+                }]
+            }}}},
+            "results": [{
+                "canonical_facility_id": "STALE-PASS",
+                "facility_name": "Independent-only Community",
+                "client_intent_fit": {
+                    "must_pass": ["LICENSE_CURRENTLY_VALID", "SEMANTIC_FUTURE_CARE_PATH"],
+                    "must_unknown": [],
+                    "must_fail": [],
+                    "hard_gate": "PASS",
+                },
+                "agent_person_fit_evidence": [],
+            }],
+        }
+
+        out = apply_semantic_facility_requirements(result, research_limit=0)
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertNotIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_pass"])
+        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
     def test_stamped_false_agent_evidence_never_hard_fails_a_semantic_must(self) -> None:
         # decision_research_worker.py stamps social_engagement_verified=False by default
         # on every research record, regardless of which dimension was actually
