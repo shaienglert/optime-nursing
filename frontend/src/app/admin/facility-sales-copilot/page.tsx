@@ -147,6 +147,12 @@ export default function FacilitySalesCopilotPage() {
                   <p className="mt-2 text-xl leading-relaxed text-white">“{answer.say_this}”</p>
                 </section>
                 {answer.bridge_phrase ? <section className="rounded-2xl border border-amber-700/60 bg-amber-950/30 p-4"><p className="text-xs uppercase tracking-[0.18em] text-amber-300">If you need time</p><p className="mt-2 text-amber-50">“{answer.bridge_phrase}”</p></section> : null}
+                {answer.evidence ? <section className={`rounded-2xl border p-4 ${answer.evidence.verification_status === "VERIFIED" ? "border-emerald-700/60 bg-emerald-950/30" : "border-amber-700/60 bg-amber-950/30"}`}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em]">Agent evidence · {answer.evidence.verification_status.replaceAll("_", " ")}</p>
+                  <p className="mt-2 text-sm">{answer.evidence.value_display} — {answer.evidence.metric_definition}</p>
+                  <p className="mt-1 text-xs text-slate-300">Data period: {answer.evidence.data_period} · Geography: {answer.evidence.geography} · Checked: {answer.evidence.checked_at}</p>
+                  <a href={answer.evidence.source_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm underline">{answer.evidence.source_title} — {answer.evidence.source_publisher}</a>
+                </section> : null}
                 <section><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Next step</p><p className="mt-1 text-slate-200">{answer.next_step}</p></section>
               </article>
             ) : null}
