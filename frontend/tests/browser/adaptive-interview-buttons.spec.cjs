@@ -115,6 +115,19 @@ async function seedQuestionnaire(page) {
   }, questionnaireState());
 }
 
+test('home free-text entry opens the adaptive interview', async ({ page }) => {
+  await mockBackend(page);
+  await page.goto('http://127.0.0.1:3000/');
+
+  await page.getByLabel('Describe your family situation').fill(
+    'My mother is 82, lives in Las Vegas, is fully independent, and wants music, gardening, Hebrew, and a future-care path within an $8,000 monthly budget.',
+  );
+  await page.getByRole('button', { name: /See options that may fit/ }).click();
+
+  await expect(page).toHaveURL(/\/adaptive-interview\?next=/);
+  await expect(page.getByText('What city or area should we search in for Mom?')).toBeVisible();
+});
+
 test('AI silently consumes questionnaire facts and only asks genuinely missing information', async ({ page }) => {
   await mockBackend(page);
   await seedQuestionnaire(page);
