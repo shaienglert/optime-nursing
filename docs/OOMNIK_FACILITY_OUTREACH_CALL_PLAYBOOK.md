@@ -59,11 +59,37 @@ This demonstrates aligned incentives. It is not a guarantee that every placement
 
 > The question is not whether families will expect better digital decision support; it is whether your community's real strengths will be accurately represented when they do. Joining early lets you help us document those strengths correctly without buying influence over the match.
 
+### Why filling the profile matters
+
+> Oomnik can only recognize and explain a match from information it can support. When two communities otherwise fit the same need, complete, relevant, verified information is stronger than missing information. Missing information is not a negative claim, but an UNKNOWN cannot outrank proven evidence for that need. A complete profile helps your real advantages be seen.
+
+The accurate message is: **more relevant, verified information enables more genuine case-specific matches to be recognized, explained, and ranked above an otherwise comparable UNKNOWN.** Unrelated box-filling does not create artificial ranking points.
+
+### The 90-day Founding Launch Offer
+
+> Communities that complete onboarding during the first 90 days after launch qualify for Oomnik's Founding Launch Offer: their first placement carries no Oomnik placement fee. The facility still funds the approved $500 Welcome benefit for that resident.
+
+Do not promise eligibility until the required registration, agreement, verified profile, and applicable dates are confirmed.
+
+### Assisted Onboarding: “We do not have anyone to maintain another website”
+
+> You do not need to assign someone to build the profile alone. We can schedule a guided online session, complete the fields with your authorized contact, use the materials you already maintain, and send the completed information back for confirmation. You remain the source and approve what is published; we handle the structured entry work.
+
+The assisted workflow is:
+
+1. Book a guided online profile session.
+2. Ask the facility to have its existing rate sheet, service list, room information, admission criteria, authorized photos, license information, and current availability available.
+3. The Oomnik representative enters the information while the authorized facility contact answers.
+4. Every unsupported item remains UNKNOWN.
+5. Send the structured profile back to the facility for confirmation.
+6. Publish only the fields the facility has confirmed and Oomnik is authorized to use.
+7. Agree on a lightweight update method: portal update, scheduled review call, or an approved structured update channel that is actually enabled.
+
 ## 6. Approved commercial summary
 
 1. Launch geography: Las Vegas Valley.
 2. Categories: Independent Living, Assisted Living, Memory Care, and Skilled Nursing.
-3. First successful placement: Oomnik placement fee waived; facility funds the approved $500 Welcome benefit.
+3. Founding Launch Offer: a community completing the required onboarding within the first 90 days after launch receives its first placement without an Oomnik placement fee; the facility funds the approved $500 Welcome benefit.
 4. Later successful placements: standard Oomnik placement fee is $1,999; applicable Welcome contribution is controlled by the agreement.
 5. Successful placement: after 60 days.
 6. Death within 60 days: 50% of the applicable placement fee ($999.50 on the standard $1,999 fee).
@@ -97,6 +123,12 @@ This demonstrates aligned incentives. It is not a guarantee that every placement
 ### “Why should we give you pricing and availability?”
 
 > Families need current information to decide whether a conversation is realistic. Accurate pricing, availability, and care limits reduce avoidable inquiries and prevent Oomnik from presenting an unsupported option.
+
+### “We do not have anyone to maintain another website.”
+
+> You do not need to. We can complete the structured profile with your authorized contact during a guided online session, using information you already maintain. You review and approve the finished profile, and together we choose the lightest update method your team can realistically support.
+
+Then offer a specific assisted-onboarding appointment. Do not leave the caller with a general promise to “help later.”
 
 ### “Send me something.”
 
