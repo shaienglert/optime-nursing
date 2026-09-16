@@ -178,8 +178,8 @@ def process_pending_reports(db: Session, limit: int = 25) -> Dict[str, Any]:
                 else:
                     os.environ["OPTIME_CANONICAL_MARKET"] = previous_market
 
-        decision = result.get("decision_intelligence") or {}
-        canonical = decision.get("canonical_decision_state") or {}
+        from app.services.canonical_decision_state import canonical_state_payload
+        canonical = canonical_state_payload(result)
         rows_out = result.get("results") or []
 
         # The whole promise was a studied comparison. A second unranked set is not that,

@@ -2,11 +2,9 @@ from __future__ import annotations
 
 """Canonical decision-state model for OPTIME Nursing.
 
-This module is intentionally shadow-only in its first migration phase: it derives one
-normalized state from the current decision payload without changing production control
-flow. The goal is to remove semantic overload from legacy fields such as
-``decision_readiness``, ``recommendation_execution_allowed``, ``recommendation_visibility``
-and ``decision_finality`` before any caller is migrated to use this state as authority.
+All recommendation control decisions must be read from ``canonical_decision_state``.
+The older readiness, execution, visibility and finality fields are compatibility mirrors
+only; they may be emitted for older clients, but they are never decision authorities.
 """
 
 from dataclasses import asdict, dataclass
@@ -125,8 +123,39 @@ class CanonicalDecisionState:
         payload["system"] = self.system.value
         payload["can_show_recommendations"] = self.can_show_recommendations
         payload["is_degraded_result"] = self.is_degraded_result
-        payload["version"] = "canonical-decision-state-v1-shadow"
+        payload["version"] = "canonical-decision-state-v2-authority"
         return payload
+
+
+class CanonicalDecisionStateError(RuntimeError):
+    """Raised when a control boundary receives a payload not sealed by the authority."""
+
+
+def canonical_state_payload(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the authoritative state or fail closed.
+
+    Control-flow callers must not silently fall back to legacy fields.  Requiring the
+    authoritative marker makes a missing finalization step observable instead of letting
+    a stale compatibility mirror decide whether a family sees recommendations.
+    """
+
+    decision = _decision_payload(result)
+    state = decision.get("canonical_decision_state")
+    if not isinstance(state, dict) or state.get("authoritative") is not True:
+        raise CanonicalDecisionStateError("CANONICAL_DECISION_STATE_NOT_AUTHORITATIVE")
+    return state
+
+
+def canonical_can_show_recommendations(result: Dict[str, Any]) -> bool:
+    return canonical_state_payload(result).get("can_show_recommendations") is True
+
+
+def canonical_client_is_complete(result: Dict[str, Any]) -> bool:
+    return _upper(canonical_state_payload(result).get("client")) == ClientState.COMPLETE.value
+
+
+def canonical_is_final(result: Dict[str, Any]) -> bool:
+    return _upper(canonical_state_payload(result).get("finality")) == DecisionFinality.FINAL.value
 
 
 def _upper(value: Any, default: str = "") -> str:
@@ -545,7 +574,7 @@ def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str
             **state.to_dict(),
             "legacy_conflicts": legacy_state_conflicts(state),
             "authoritative": True,
-            "migration_rule": "phase-3: canonical state is the sole global decision-control writer",
+            "migration_rule": "canonical state is the sole global decision-control authority; legacy fields are read-only compatibility mirrors",
         },
     )
     return result
@@ -553,9 +582,14 @@ def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str
 
 __all__ = [
     "CanonicalDecisionState",
+    "CanonicalDecisionStateError",
     "DecisionPhase",
     "apply_canonical_decision_state_authority",
     "attach_canonical_decision_state_shadow",
+    "canonical_can_show_recommendations",
+    "canonical_client_is_complete",
+    "canonical_is_final",
+    "canonical_state_payload",
     "derive_canonical_decision_state",
     "legacy_state_conflicts",
 ]

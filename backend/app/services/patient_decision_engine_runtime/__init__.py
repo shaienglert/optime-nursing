@@ -99,6 +99,15 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
         "adaptive_questions": human_context.get("adaptive_questions") or [],
         "production_principle": "client intent first; verified MUST gate; NICE-TO-HAVE ordering; then objective government/regulatory evidence, public reputation and relevant evidence completeness; UNKNOWN material facts trigger questions or research",
     }
+    # Seal the interview outcome in the same authority used by the recommendation
+    # pipeline.  Consumers can now decide whether to advance without reading the raw
+    # semantic-AI readiness signal directly.
+    from app.services.canonical_decision_state import apply_canonical_decision_state_authority
+    envelope = apply_canonical_decision_state_authority({
+        "decision_intelligence": profile["decision_intelligence"],
+        "results": [],
+    })
+    profile["decision_intelligence"] = envelope["decision_intelligence"]
     return profile
 
 
@@ -401,7 +410,7 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
         "success_factor_policy": presearch_policy,
         "person_fit_rank_effect": _rank_effect(has_explicit_person_fit_preference(human_context), _social_priority_is_explicit_high(human_context)),
         "agent_evidence_bridge": agent_bridge,
-        "decision_finality": finality,
+        "provider_evidence_finality": finality,
         "must_gate": {"survivors": len(survivors), "rejected": len(rejected), "selected_must_unknown_count": selected_must_unknown},
         "ranking_order": ["CLIENT_INTENT", "MUST_GATE", "NICE_TO_HAVE", "GOVERNMENT_REGULATORY_DATA", "PUBLIC_REPUTATION", "RELEVANT_EVIDENCE_COMPLETENESS"],
         "facility_person_fit_evidence": "Only market-scoped governed evidence may affect fit. Missing MUST facility evidence becomes agent research; missing resident intent becomes a question.",

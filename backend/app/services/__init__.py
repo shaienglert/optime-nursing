@@ -183,17 +183,15 @@ def _decision_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
     return profile.get("decision_intelligence") if isinstance(profile.get("decision_intelligence"), dict) else {}
 
 
-def _readiness_from_decision(decision: dict[str, Any]) -> str:
-    direct = str(decision.get("decision_readiness") or "").upper()
-    if direct:
-        return direct
-    human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
-    return str(human.get("decision_readiness") or "UNKNOWN").upper()
+def _canonical_client_complete(decision: dict[str, Any]) -> bool:
+    from app.services.canonical_decision_state import canonical_client_is_complete
+
+    return canonical_client_is_complete({"decision_intelligence": decision})
 
 
-def _client_interview_blocked(readiness: str) -> bool:
+def _client_interview_blocked(client_complete: bool) -> bool:
     """Only unresolved client intent blocks matching; facility research is downstream work."""
-    return readiness not in {"READY", "NEEDS_RESEARCH"}
+    return not client_complete
 
 
 def _mark_client_ready_for_research(decision: dict[str, Any], readiness: str) -> None:
@@ -246,8 +244,10 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
 
 
 def _suppress_unverified_recommendations(result: dict[str, Any]) -> dict[str, Any]:
+    from app.services.canonical_decision_state import canonical_can_show_recommendations
+
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
-    if decision.get("recommendation_execution_allowed") is True:
+    if canonical_can_show_recommendations(result):
         return result
     candidate_count = len(result.get("results") or [])
     decision["research_candidate_count"] = candidate_count
@@ -281,6 +281,8 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             return
 
         def wrapped(questionnaire_state: dict[str, Any], natural_language_query: str = "", limit: int = 50):
+            from app.services.canonical_decision_state import apply_canonical_decision_state_authority
+
             stage_started = time.perf_counter()
             stage_timings: dict[str, float] = {}
 
@@ -294,10 +296,12 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             profile_readiness = "UNKNOWN"
             if isinstance(profile, dict):
                 profile_decision = _decision_from_profile(profile)
-                profile_readiness = _readiness_from_decision(profile_decision)
-                if _client_interview_blocked(profile_readiness):
+                profile_complete = _canonical_client_complete(profile_decision)
+                if _client_interview_blocked(profile_complete):
                     logger.info("decision_pipeline_stage_timings_ms (blocked at profile) %s", stage_timings)
-                    return _attach_pipeline_trace(_blocked_interview_result(profile, profile_readiness))
+                    return _attach_pipeline_trace(_blocked_interview_result(profile, "CANONICAL_CLIENT_INCOMPLETE"))
+                human = profile_decision.get("human_intelligence") if isinstance(profile_decision.get("human_intelligence"), dict) else {}
+                profile_readiness = str(human.get("decision_readiness") or "READY").upper()
                 _mark_client_ready_for_research(profile_decision, profile_readiness)
 
             # The lower-level engine still scores the full Nevada market before it
@@ -310,15 +314,16 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             stage_started = _mark("run_patient_decision_engine_deterministic_ms", stage_started)
             if not isinstance(result, dict):
                 return result
+            result = apply_canonical_decision_state_authority(result)
             decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
-            readiness = _readiness_from_decision(decision)
-            if _client_interview_blocked(readiness):
+            if _client_interview_blocked(_canonical_client_complete(decision)):
                 runtime_profile = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else profile
                 logger.info("decision_pipeline_stage_timings_ms (blocked at result) %s", stage_timings)
-                return _attach_pipeline_trace(_blocked_interview_result(runtime_profile or {}, readiness))
+                return _attach_pipeline_trace(_blocked_interview_result(runtime_profile or {}, "CANONICAL_CLIENT_INCOMPLETE"))
+            human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
+            readiness = str(human.get("decision_readiness") or "READY").upper()
             _mark_client_ready_for_research(decision, readiness)
 
-            from app.services.canonical_decision_state import apply_canonical_decision_state_authority
             from app.services.semantic_facility_requirements import apply_semantic_facility_requirements
             from app.services.ai_process_owner_guard_patch import attach_ai_process_owner_guarded
             from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
@@ -332,6 +337,9 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             stage_started = _mark("apply_combined_care_layer_ms", stage_started)
             result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
             stage_started = _mark("apply_must_ai_nice_pipeline_ms", stage_started)
+            # Re-seal after the MUST/ranking stages before the process owner reads
+            # phase or visibility.  Raw pipeline facts may change; control state may
+            # only change through this authority boundary.
             result = apply_canonical_decision_state_authority(result)
             result = attach_ai_process_owner_guarded(result, questionnaire_state, natural_language_query)
             stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)

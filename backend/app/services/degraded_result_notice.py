@@ -20,6 +20,8 @@ not have to ask for: the fact that this is not the normal answer.
 
 from typing import Any, Dict, List, Optional
 
+from app.services.canonical_decision_state import canonical_state_payload
+
 NOTICE_VERSION = "degraded-result-notice-v1"
 
 HEADLINE = "These communities meet your requirements. We have not yet studied them for you."
@@ -68,8 +70,7 @@ def build_degraded_notice(result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     decision = result.get("decision_intelligence")
     decision = decision if isinstance(decision, dict) else {}
-    canonical = decision.get("canonical_decision_state")
-    canonical = canonical if isinstance(canonical, dict) else {}
+    canonical = canonical_state_payload(result)
 
     if not canonical.get("is_degraded_result"):
         return None

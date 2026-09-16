@@ -107,11 +107,9 @@ function summarize(payload: any) {
   const intelligence = intelligenceOf(payload);
   const human = humanOf(payload);
   return {
-    decisionReadiness: human?.decision_readiness ?? intelligence?.decision_readiness ?? null,
+    canonicalDecisionState: intelligence?.canonical_decision_state ?? null,
     adaptiveQuestions: (human?.adaptive_questions || intelligence?.adaptive_questions || []).map((q: any) => ({ questionKey: q?.question_key ?? null, question: q?.question ?? q?.prompt ?? null })),
     semanticAI: human?.semantic_ai ?? intelligence?.semantic_ai ?? null,
-    decisionFinality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
-    recommendationExecutionAllowed: intelligence?.recommendation_execution_allowed ?? null,
     mustGate: intelligence?.must_gate ?? null,
     resultCount: payload?.result_count ?? null,
     top5: (payload?.results || []).slice(0, 5).map((row: any) => ({
@@ -142,7 +140,8 @@ async function runMultiTurn(scenario: Scenario) {
     const summary = summarize(payload);
     turns.push({ turn: turn + 1, inputAdaptiveSignals: state.humanIntelligenceV2.scoringEngine.adaptiveSignals, output: summary });
 
-    if (summary.decisionReadiness === "READY" || summary.decisionReadiness === "NEEDS_RESEARCH") break;
+    if (summary.canonicalDecisionState?.authoritative === true
+        && summary.canonicalDecisionState?.client === "COMPLETE") break;
     const questions = humanOf(payload)?.adaptive_questions || intelligenceOf(payload)?.adaptive_questions || [];
     const nextQuestion = questions.find((q: any) => q?.question_key && !answeredKeys.has(String(q.question_key)));
     if (!nextQuestion) break;
@@ -154,17 +153,20 @@ async function runMultiTurn(scenario: Scenario) {
   }
 
   const final = summarize(finalPayload || {});
+  const clientComplete = final.canonicalDecisionState?.authoritative === true
+    && final.canonicalDecisionState?.client === "COMPLETE";
+  const canShow = final.canonicalDecisionState?.can_show_recommendations === true;
   return {
     id: scenario.id,
     input: { questionnaire_state: scenario.questionnaire_state, natural_language_query: scenario.natural_language_query },
     turns,
     final,
     assertions: {
-      noRecommendationsBeforeReady: turns.every((row) => row.output.decisionReadiness === "READY" || Number(row.output.resultCount || 0) === 0),
-      reachedReady: final.decisionReadiness === "READY",
-      stoppedForResearch: final.decisionReadiness === "NEEDS_RESEARCH",
-      recommendationsOnlyIfReady: Number(final.resultCount || 0) === 0 || final.decisionReadiness === "READY",
-      recommendationExecutionAllowedOnlyIfReady: final.recommendationExecutionAllowed !== true || final.decisionReadiness === "READY",
+      noRecommendationsBeforeReady: turns.every((row) => row.output.canonicalDecisionState?.client === "COMPLETE" || Number(row.output.resultCount || 0) === 0),
+      reachedReady: clientComplete,
+      stoppedForResearch: clientComplete && !canShow,
+      recommendationsOnlyIfReady: Number(final.resultCount || 0) === 0 || clientComplete,
+      recommendationExecutionAllowedOnlyIfReady: !canShow || clientComplete,
     },
   };
 }

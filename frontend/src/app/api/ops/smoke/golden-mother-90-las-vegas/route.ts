@@ -59,10 +59,10 @@ export async function GET() {
       niceCoverage: row?.semantic_preference_coverage ?? row?.nice_to_have_coverage ?? null,
       aiRanking: row?.ai_ranking ?? null,
     }));
-    const readiness = human?.decision_readiness ?? intelligence?.decision_readiness ?? null;
+    const canonical = intelligence?.canonical_decision_state ?? {};
     const bereavement = human?.signals?.recent_bereavement?.value ?? null;
     const assertions = {
-      clientInterviewComplete: readiness === "READY",
+      clientInterviewComplete: canonical?.authoritative === true && canonical?.client === "COMPLETE",
       recentBereavementPreserved: String(bereavement || "").toUpperCase() === "YES",
       producedFiveVisibleCandidates: top5.length === 5,
       noHardMustFailuresVisible: top5.every((row: any) => row.hardGate !== "FAIL"),
@@ -73,9 +73,7 @@ export async function GET() {
     const passed = Object.values(assertions).every(Boolean);
     const diagnostic = {
       elapsedMs,
-      decisionReadiness: readiness,
-      decisionFinality: intelligence?.decision_finality ?? null,
-      recommendationExecutionAllowed: intelligence?.recommendation_execution_allowed ?? null,
+      canonicalDecisionState: canonical,
       facilityResearchState: intelligence?.facility_research_state ?? null,
       recentBereavement: bereavement,
       resultCount: payload?.result_count ?? rows.length,

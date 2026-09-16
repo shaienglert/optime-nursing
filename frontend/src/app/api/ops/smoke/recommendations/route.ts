@@ -94,10 +94,10 @@ type Recommendation = {
 type DecisionIntelligence = {
   version?: string;
   human_intelligence?: { decision_readiness?: string; adaptive_questions?: Array<{ question_key?: string }> };
+  canonical_decision_state?: { authoritative?: boolean; client?: string; phase?: string; finality?: string; can_show_recommendations?: boolean };
   person_fit_rank_effect?: string;
   success_factor_policy?: { factors?: unknown[] };
   agent_evidence_bridge?: { status?: string; tasks_queued?: number; decision_finality?: string; material_gaps?: unknown[] };
-  decision_finality?: string;
   ranking_order?: string[];
   must_gate?: { survivors?: number; rejected?: number; selected_must_unknown_count?: number };
   strategy_universe?: { status?: string };
@@ -152,7 +152,8 @@ async function runConversation(persona: PersonaKey) {
   for (let turn = 1; turn <= 8; turn += 1) {
     const intelligence = intelligenceOf(payload);
     const questions = intelligence?.human_intelligence?.adaptive_questions || [];
-    if (intelligence?.human_intelligence?.decision_readiness === "READY" || questions.length === 0) break;
+    if (intelligence?.canonical_decision_state?.authoritative === true
+        && intelligence?.canonical_decision_state?.client === "COMPLETE") break;
     const questionKey = String(questions[0]?.question_key || "");
     if (!questionKey || seen.has(questionKey)) break;
     seen.add(questionKey);
@@ -173,12 +174,11 @@ function fingerprint(payload: RecommendationPayload) {
     decision_intelligence_version: intelligence?.version ?? null,
     care_setting_policy_version: payload.care_setting_policy?.version ?? null,
     location_city: payload.patient_needs_profile?.location_city ?? null,
-    decision_readiness: intelligence?.human_intelligence?.decision_readiness ?? null,
+    canonical_decision_state: intelligence?.canonical_decision_state ?? null,
     adaptive_question_keys: (intelligence?.human_intelligence?.adaptive_questions || []).map((q) => q.question_key),
     person_fit_rank_effect: intelligence?.person_fit_rank_effect ?? null,
     agent_bridge_status: intelligence?.agent_evidence_bridge?.status ?? null,
     agent_tasks_queued: intelligence?.agent_evidence_bridge?.tasks_queued ?? null,
-    decision_finality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
     ranking_order: intelligence?.ranking_order ?? null,
     strategy_universe_status: intelligence?.strategy_universe?.status ?? null,
     must_gate: intelligence?.must_gate ?? null,

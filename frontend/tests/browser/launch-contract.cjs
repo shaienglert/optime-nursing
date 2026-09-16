@@ -25,24 +25,23 @@ function validateLaunchContract({ scenarioName, scenario, payload, resultsText }
     if ((fit.must_unknown || []).length) violations.push(`${item.facility_name}: verified card has unknown MUST`);
   }
 
-  // Until the readiness sources are migrated into one authority, require them
-  // to agree at the public recommendation boundary.
   const decision = payload.decision_intelligence || {};
-  const humanReadiness = payload.patient_needs_profile?.decision_intelligence?.human_intelligence?.decision_readiness
-    || payload.patient_needs_profile?.decision_intelligence?.decision_readiness;
-  if (humanReadiness && humanReadiness !== 'READY' && verified.length) {
-    violations.push(`verified results exist while human readiness is ${humanReadiness}`);
-  }
-  if (decision.recommendation_execution_allowed === false && verified.length) {
-    violations.push('verified results exist while recommendation execution is blocked');
-  }
   const canonical = decision.canonical_decision_state || {};
+  if (canonical.authoritative !== true) violations.push('canonical decision state is not authoritative');
+  if (verified.length && canonical.can_show_recommendations !== true) {
+    violations.push('verified results exist while canonical visibility is blocked');
+  }
   if (verified.length && canonical.phase && !['PROVISIONAL_RECOMMENDATION', 'FINAL_RECOMMENDATION'].includes(canonical.phase)) {
     violations.push(`verified results conflict with canonical phase ${canonical.phase}`);
   }
-  const pipelineRanking = decision.facility_selection_pipeline?.ai_ranking;
-  if (verified.length && pipelineRanking?.required === true && pipelineRanking?.status && pipelineRanking.status !== 'COMPLETE') {
-    violations.push(`verified results conflict with AI ranking status ${pipelineRanking.status}`);
+  if (verified.length && canonical.ranking !== 'COMPLETE') {
+    violations.push(`verified results conflict with canonical ranking ${canonical.ranking}`);
+  }
+  // Legacy fields remain output mirrors during migration, never authorities.  A
+  // disagreement is still a serialization defect and must be visible immediately.
+  if (typeof decision.recommendation_execution_allowed === 'boolean'
+      && decision.recommendation_execution_allowed !== canonical.can_show_recommendations) {
+    violations.push('legacy execution mirror diverges from canonical visibility');
   }
   for (const facilityName of scenario.forbiddenVerifiedFacilities || []) {
     if (verified.some((item) => item.facility_name === facilityName)) violations.push(`forbidden verified facility: ${facilityName}`);

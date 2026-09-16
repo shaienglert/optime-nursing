@@ -168,7 +168,7 @@ function eligibilitySummary(status: DecisionEngineRecommendation["eligibility_st
 function summarizeVerificationNeeds(recommendation: DecisionEngineRecommendation): string {
   const items = recommendation.explanation.needs_verification || [];
   if (items.length === 0) return "No critical verification items flagged right now.";
-  return items.slice(0, 2).join("; ");
+  return items.slice(0, 3).join("; ");
 }
 
 function recommendationFitLabel(band: DecisionEngineRecommendation["match_band"]): string {
@@ -664,7 +664,7 @@ export function ResultsPageClient() {
     const isFavorite = favoriteCanonicalIds.includes(recommendation.canonical_facility_id);
     const imageInfo = getRecommendationImage(recommendation);
     const importantStrengths = recommendation.explanation.why_matches.slice(0, isMoreResults ? 4 : 2);
-    const importantVerificationItems = recommendation.explanation.needs_verification.slice(0, 2);
+    const importantVerificationItems = recommendation.explanation.needs_verification.slice(0, 3);
     const topBoundary = topRecommendations[TOP_RECOMMENDATION_COUNT - 1] || null;
     const belowTopFiveDecision = topBoundary
       ? rankingDifferenceByPair.get(`${topBoundary.canonical_facility_id}::${recommendation.canonical_facility_id}`)

@@ -10,7 +10,12 @@ const good = {
   patient_needs_profile: { decision_intelligence: { client_intent: { must_haves } } },
   decision_intelligence: {
     recommendation_execution_allowed: true,
-    canonical_decision_state: { phase: 'PROVISIONAL_RECOMMENDATION' },
+    canonical_decision_state: {
+      authoritative: true,
+      phase: 'PROVISIONAL_RECOMMENDATION',
+      ranking: 'COMPLETE',
+      can_show_recommendations: true,
+    },
     facility_selection_pipeline: { ai_ranking: { required: true, status: 'COMPLETE' } },
     client_statement_accounting: { dropped_count: 0, coverage_percent: 100 },
   },
@@ -32,8 +37,14 @@ assert.throws(() => validateLaunchContract({
 
 assert.throws(() => validateLaunchContract({
   scenarioName: 'memory_mom', scenario,
-  payload: { ...good, decision_intelligence: { ...good.decision_intelligence, recommendation_execution_allowed: false } },
+  payload: {
+    ...good,
+    decision_intelligence: {
+      ...good.decision_intelligence,
+      canonical_decision_state: { ...good.decision_intelligence.canonical_decision_state, can_show_recommendations: false },
+    },
+  },
   resultsText: 'Medication management is supported. Help with daily activities is supported. Memory care is supported. Confirm availability, pricing and Medicaid.',
-}), /recommendation execution is blocked/);
+}), /canonical visibility is blocked|legacy execution mirror diverges/);
 
 console.log('OOMNIK_LAUNCH_CONTRACT=PASS scenarios=10 contradiction_guard=PASS coverage_guard=PASS');

@@ -83,7 +83,8 @@ export async function GET() {
       .map((row: any) => row?.strategy_id);
 
     const assertions = {
-      reachedReady: intelligence?.human_intelligence?.decision_readiness === "READY" || intelligence?.decision_readiness === "READY",
+      reachedReady: intelligence?.canonical_decision_state?.authoritative === true
+        && intelligence?.canonical_decision_state?.client === "COMPLETE",
       independentLivingRepresentedInTop5: independentCount >= 1,
       smallCareHomesDoNotDominateTop5: smallCareHomeCount <= 2,
       leadingStrategyRecognizesIndependentLiving: leadingStrategies.some((value: string) =>
@@ -97,8 +98,7 @@ export async function GET() {
         status: passed ? "PASS" : "FAIL",
         caseId: "GOLDEN-INDEPENDENT-LAS-VEGAS-82-8K",
         clientText: CLIENT_TEXT,
-        decisionReadiness: intelligence?.human_intelligence?.decision_readiness ?? intelligence?.decision_readiness ?? null,
-        decisionFinality: intelligence?.decision_finality ?? null,
+        canonicalDecisionState: intelligence?.canonical_decision_state ?? null,
         semanticAiStatus: semanticAi?.status ?? null,
         semanticAiError: semanticAi?.error ?? null,
         semanticAiRequired: semanticAi?.required ?? null,
