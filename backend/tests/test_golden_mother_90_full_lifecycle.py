@@ -112,8 +112,14 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
                 (row.get("client_intent_fit") or {}).get("must_unknown") or [],
             )
         self.assertGreater(pending_result.get("must_pending_verification_count") or 0, 0)
+        # The stated $8,000 budget is itself an unverified facility-owned MUST now (see
+        # semantic_facility_requirements.py's SEMANTIC_BUDGET_VERIFICATION bucket), so a
+        # candidate can land in the pending bucket on budget alone even when its
+        # medication support already has real verified evidence -- this asserts the
+        # medication gate is still doing its job (something is pending on it), not that
+        # it is the only possible reason to be pending.
         self.assertTrue(
-            all(
+            any(
                 "MEDICATION_SUPPORT_AVAILABLE" in (item.get("must_unknown") or [])
                 for item in (pending_result.get("must_pending_verification_candidates") or [])
             )
@@ -136,7 +142,13 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         # PENDING_VERIFICATION. Patching the one shared function both modules call
         # keeps this test representative of a real verified finding, which really does
         # flow through both readers identically now.
-        verified_medication_payload = [{"medication_support_verified": True}]
+        # published_rates_verified: the client stated an explicit $8,000/month budget,
+        # which is now (correctly) its own facility-owned MUST -- see
+        # semantic_facility_requirements.py's SEMANTIC_BUDGET_VERIFICATION bucket.
+        # Without it this fixture's candidates would stay PENDING_VERIFICATION on
+        # budget alone, never reaching the ranking/degraded-result lifecycle this test
+        # actually exercises.
+        verified_medication_payload = [{"medication_support_verified": True, "published_rates_verified": True}]
         with patch.dict(os.environ, {
             "OPTIME_SEMANTIC_AI_ENABLED": "1",
             "OPTIME_SEMANTIC_AI_REQUIRED": "1",
