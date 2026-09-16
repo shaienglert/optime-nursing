@@ -1,6 +1,6 @@
 {
   "generated_at_utc": "2026-07-21T15:01:12+00:00",
-  "record_count": 59,
+  "record_count": 61,
   "missing_registry_definitions": [],
   "records": [
     {
@@ -1609,6 +1609,70 @@
         "coverage_source": "reports/FLORIDA_PARAMETER_COVERAGE_MATRIX.json",
         "legacy_source": "recovered_governed_report",
         "legacy_raw_field": "recovered_governed_report"
+      }
+    },
+    {
+      "parameter_id": "private_caregiver_allowed",
+      "family": "HOUSING_CONTINUITY",
+      "display_name": "Existing private caregiver permitted",
+      "consumer_description": "Whether the community permits a resident's existing private caregiver to provide support on site.",
+      "value_type": "BOOLEAN_STATUS",
+      "allowed_values": [
+        "YES",
+        "NO",
+        "UNKNOWN",
+        "LIMITED"
+      ],
+      "applicable_scope": "FACILITY",
+      "source_priority": [
+        "DIRECT_FACILITY_CONFIRMATION"
+      ],
+      "freshness_rule": "Direct facility confirmation required; keep as UNKNOWN until the community confirms its policy and conditions.",
+      "ranking_eligibility": true,
+      "hard_filter_eligibility": true,
+      "requires_facility_confirmation": true,
+      "dynamic": false,
+      "personalization_tags": [
+        "caregiver",
+        "care-continuity",
+        "private-duty"
+      ],
+      "recovered_from": {
+        "coverage_source": "provider_portal",
+        "legacy_source": "new_canonical_requirement",
+        "legacy_raw_field": "housing_private_caregiver_allowed"
+      }
+    },
+    {
+      "parameter_id": "live_in_caregiver_accommodation",
+      "family": "HOUSING_CONTINUITY",
+      "display_name": "Overnight / live-in caregiver accommodation",
+      "consumer_description": "Whether the community permits an existing private caregiver to stay overnight or live in the resident's unit.",
+      "value_type": "BOOLEAN_STATUS",
+      "allowed_values": [
+        "YES",
+        "NO",
+        "UNKNOWN",
+        "LIMITED"
+      ],
+      "applicable_scope": "UNIT",
+      "source_priority": [
+        "DIRECT_FACILITY_CONFIRMATION"
+      ],
+      "freshness_rule": "Direct facility confirmation required; this is unit- and policy-dependent and must remain UNKNOWN without current evidence.",
+      "ranking_eligibility": true,
+      "hard_filter_eligibility": true,
+      "requires_facility_confirmation": true,
+      "dynamic": true,
+      "personalization_tags": [
+        "caregiver",
+        "care-continuity",
+        "live-in"
+      ],
+      "recovered_from": {
+        "coverage_source": "provider_portal",
+        "legacy_source": "new_canonical_requirement",
+        "legacy_raw_field": "housing_live_in_caregiver_accommodation"
       }
     }
   ]
