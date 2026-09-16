@@ -63,6 +63,30 @@ def _widow_case() -> tuple[str, dict]:
 
 
 class CanonicalGapPolicyPersonaTests(unittest.TestCase):
+    def test_explicit_rehab_and_personal_care_facts_resolve_rehab_gap_before_ai_can_block(self) -> None:
+        query = (
+            "My father recently had a stroke. He needs hands-on help with bathing, dressing and transfers, "
+            "medication management, and PT, OT and speech therapy. We need Las Vegas and can spend $17,000 monthly."
+        )
+        state = {"budget": 17000, "referenceLocationValue": "Las Vegas", "medicareStatus": "Not sure"}
+        question = "Does he need skilled PT, OT or speech rehabilitation, personal-care help, or both?"
+        asking = _packet(
+            readiness="NEEDS_CLARIFICATION",
+            question=question,
+            statement=_statement(
+                raw_text="The rehabilitation level is unclear.",
+                mapped_parameters=["rehab_level_needed"],
+                question=question,
+            ),
+        )
+
+        context = _run(query, asking, state)
+
+        self.assertEqual("READY", context["decision_readiness"])
+        self.assertEqual([], context["adaptive_questions"])
+        self.assertIn("rehab_level_needed", context["canonical_gap_policy"]["resolved_gap_keys"])
+        self.assertNotIn("rehab_level_needed", context["canonical_gap_policy"]["blocking_gap_keys"])
+
     def test_couple_readiness_is_identical_when_ai_invents_cohabitation_clarification(self) -> None:
         query, state = _couple_case()
         question = "Must they share one apartment, or is living on the same campus enough?"
