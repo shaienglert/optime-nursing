@@ -79,6 +79,11 @@ export type HumanIntelligenceV2 = {
   foodProfile: {
     dietaryPreferences: string[];
   };
+  caregiverProfile: {
+    carePlan: string;
+    existingCaregiverOvernightNeed: string;
+    existingCaregiverSupportSchedule: string;
+  };
   familyCultureProfile: {
     involvementExpectation: string;
     decisionRole: string;
@@ -257,6 +262,11 @@ const DEFAULT_STATE: QuestionnaireState = {
     },
     foodProfile: {
       dietaryPreferences: [],
+    },
+    caregiverProfile: {
+      carePlan: "",
+      existingCaregiverOvernightNeed: "",
+      existingCaregiverSupportSchedule: "",
     },
     familyCultureProfile: {
       involvementExpectation: "",
