@@ -76,7 +76,12 @@ class SemanticAiLearningCenterContractTests(unittest.TestCase):
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "0", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False):
             context = build_human_intelligence_context({}, "I want a luxury community with strong social life")
         self.assertEqual("REQUIRED_BUT_DISABLED", context["semantic_ai"]["status"])
-        self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
+        self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
+        self.assertEqual(1, len(context["adaptive_questions"]))
+        self.assertEqual(
+            context["readiness_guardian"]["client_owned_blockers"][0]["fact_key"],
+            context["adaptive_questions"][0]["target_fact_key"],
+        )
 
     def test_invalid_ai_cannot_claim_ready_with_unresolved_statement(self) -> None:
         bad = {"statements": [{"raw_text": "unknown preference", "meaning": "unknown", "importance": "UNKNOWN", "knowledge_state": "UNKNOWN", "status": "ASKED", "mapped_parameters": [], "clarification_question": "What do you mean?", "research_task": None}], "decision_readiness": "READY"}

@@ -282,12 +282,33 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
         self.assertEqual([], context["adaptive_questions"])
 
-    def test_required_ai_unavailable_never_falls_back_to_fixed_questions(self) -> None:
+    def test_required_ai_unavailable_preserves_canonical_blocker_and_fallback(self) -> None:
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "0", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False):
             context = build_human_intelligence_context(self._state(), "recently widowed")
-        self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
-        self.assertEqual([], context["adaptive_questions"])
+        self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
+        self.assertEqual(1, len(context["adaptive_questions"]))
+        self.assertEqual(
+            context["readiness_guardian"]["client_owned_blockers"][0]["fact_key"],
+            context["adaptive_questions"][0]["target_fact_key"],
+        )
         self.assertEqual("REQUIRED_BUT_DISABLED", context["semantic_ai"]["status"])
+
+    def test_semantic_ai_exception_cannot_decide_readiness_or_remove_blocker_question(self) -> None:
+        state = self._state()
+        state.update({"budget": 17000, "referenceLocationValue": "Las Vegas"})
+        query = (
+            "My father recently had a stroke and needs bathing, dressing, transfers, medication management, "
+            "PT, OT and speech therapy in Las Vegas for $17,000 monthly."
+        )
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
+            side_effect=RuntimeError("temporary model failure"),
+        ):
+            context = build_human_intelligence_context(state, query)
+        self.assertEqual("FAILED", context["semantic_ai"]["status"])
+        self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
+        self.assertEqual("medicare_status", context["adaptive_questions"][0]["target_fact_key"])
+        self.assertEqual("DETERMINISTIC_CANONICAL_FALLBACK", context["adaptive_questions"][0]["question_owner"])
 
     def test_answered_semantic_question_is_not_reissued(self) -> None:
         question = "What monthly budget would be comfortable?"

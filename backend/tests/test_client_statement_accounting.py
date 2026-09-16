@@ -15,9 +15,13 @@ class ClientStatementAccountingTests(unittest.TestCase):
         self.assertEqual(0, accounting["dropped_count"])
         self.assertTrue(all(row["status"] in {"USED", "ASKED", "RESEARCH_REQUIRED", "NOT_DECISION_RELEVANT"} for row in accounting["statements"]))
         self.assertTrue(any("pottery studio" in row["statement"].lower() for row in accounting["unresolved_parameters"]))
-        # No-drop identifies the unresolved fact but does not script a question.
-        # Semantic AI owns question selection under this Guardian constraint.
-        self.assertEqual([], context["adaptive_questions"])
+        # No-drop identifies the unresolved fact. When semantic wording is
+        # unavailable, deterministic policy preserves the highest-priority blocker.
+        self.assertEqual(1, len(context["adaptive_questions"]))
+        self.assertEqual(
+            context["readiness_guardian"]["client_owned_blockers"][0]["fact_key"],
+            context["adaptive_questions"][0]["target_fact_key"],
+        )
         self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
         self.assertTrue(context["material_unknown_policy"]["no_silent_drop"])
         self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
@@ -27,7 +31,11 @@ class ClientStatementAccountingTests(unittest.TestCase):
         accounting = context["user_statement_accounting"]
         self.assertEqual(0, accounting["dropped_count"])
         self.assertEqual("ASKED", accounting["unresolved_parameters"][0]["status"])
-        self.assertEqual([], context["adaptive_questions"])
+        self.assertEqual(1, len(context["adaptive_questions"]))
+        self.assertEqual(
+            context["readiness_guardian"]["client_owned_blockers"][0]["fact_key"],
+            context["adaptive_questions"][0]["target_fact_key"],
+        )
         self.assertTrue(context["interview_policy"]["hard_coded_question_generation_forbidden"])
 
     def test_hebrew_unknown_parameter_is_preserved(self) -> None:

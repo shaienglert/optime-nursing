@@ -289,17 +289,58 @@ def _canonical_fallback_result(base_result: Dict[str, Any], blocker: Dict[str, A
     }
 
 
+def _apply_canonical_policy_without_ai(
+    context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str
+) -> Dict[str, Any]:
+    """Preserve policy authority when semantic extraction/wording is unavailable."""
+    guardian_gaps = list(((context.get("readiness_guardian") or {}).get("client_owned_blockers") or []))
+    gap_policy = assess_gaps(
+        guardian_gaps=guardian_gaps,
+        ai_result={},
+        questionnaire_state=questionnaire_state,
+        user_text=natural_language_query,
+    )
+    blocking_keys = set(gap_policy.get("blocking_gap_keys") or [])
+    blockers = [row for row in guardian_gaps if str(row.get("fact_key") or "") in blocking_keys]
+    context["canonical_gap_policy"] = gap_policy
+    context["readiness_guardian"]["client_owned_blockers"] = blockers
+    context["readiness_guardian"]["ready_veto_active"] = bool(blockers) or bool(gap_policy.get("escalation_required"))
+    context["adaptive_questions"] = []
+    if blockers and blockers[0].get("answer_options"):
+        blocker = blockers[0]
+        fallback = _canonical_fallback_result({}, blocker)
+        question_text = str(fallback["next_question"])
+        question = _base._question(
+            _semantic_question_key(question_text),
+            question_text,
+            "Canonical policy selected the highest-priority unresolved client fact while semantic wording was unavailable.",
+            [str(value) for value in blocker.get("decision_dimensions") or ["client_intent_completeness"]],
+            [str(value) for value in blocker.get("answer_options") or []],
+        )
+        question["target_fact_key"] = str(blocker.get("fact_key") or "required_information")
+        question["question_owner"] = "DETERMINISTIC_CANONICAL_FALLBACK"
+        context["adaptive_questions"] = [question]
+        context["decision_readiness"] = "NEEDS_CLARIFICATION"
+        context["readiness_guardian"]["selected_fact_key"] = question["target_fact_key"]
+        context["readiness_guardian"]["fallback_reason"] = "SEMANTIC_AI_UNAVAILABLE"
+    elif gap_policy.get("escalation_required"):
+        context["decision_readiness"] = "NEEDS_CLARIFICATION"
+    elif blockers:
+        context["decision_readiness"] = "NEEDS_RESEARCH"
+    else:
+        context["decision_readiness"] = "READY"
+    return context
+
+
 def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     required = os.getenv("OPTIME_SEMANTIC_AI_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
     context["semantic_ai"] = {"enabled": enabled, "required": required, "status": "DISABLED"}
 
     if not enabled:
-        context["adaptive_questions"] = []
-        context["decision_readiness"] = "NEEDS_RESEARCH" if required else "NEEDS_CLARIFICATION"
         if required:
             context["semantic_ai"]["status"] = "REQUIRED_BUT_DISABLED"
-        return context
+        return _apply_canonical_policy_without_ai(context, questionnaire_state, natural_language_query)
 
     try:
         result = _call_semantic_ai(context, questionnaire_state, natural_language_query)
@@ -465,8 +506,7 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             "status": "FAILED",
             "error": str(exc),
         }
-        context["adaptive_questions"] = []
-        context["decision_readiness"] = "NEEDS_RESEARCH" if required else "NEEDS_CLARIFICATION"
+        _apply_canonical_policy_without_ai(context, questionnaire_state, natural_language_query)
     return context
 
 
