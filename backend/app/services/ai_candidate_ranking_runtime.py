@@ -102,6 +102,13 @@ def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_con
     return {
         "role": "OPTIME_NURSING_AI_CANDIDATE_RANKER",
         "mission": "Rank only facilities that have already passed every deterministic MUST requirement, using the resident-specific semantic preference model plus supplied governed evidence.",
+        "global_rubric": {
+            "90_100": "Exceptionally strong fit supported by governed evidence across the resident's important preferences and relevant quality/safety dimensions, with few material information deficits.",
+            "75_89": "Strong fit with meaningful governed support and manageable information deficits.",
+            "55_74": "Plausible fit but mixed or incomplete governed support; important provider facts may still change the result.",
+            "35_54": "Weakly supported fit or meaningful verified concerns, while still passing deterministic MUST requirements.",
+            "0_34": "Very weak resident-specific fit because of verified negative evidence; never use missing evidence alone to justify a low score.",
+        },
         "rules": [
             "Do not change MUST eligibility; every supplied candidate is MUST_ELIGIBLE.",
             "Return the supplied output template as a complete replacement: preserve every canonical_facility_id exactly once, in the same order, and fill only its non-ID fields. Never omit, add, rename, or duplicate an ID.",
@@ -113,6 +120,7 @@ def _prompt(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], human_con
             "Explain the main governed evidence that distinguishes each candidate and explicitly identify information deficits.",
             "Do not invent price, availability, staffing, services, activities, reputation, or regulatory facts.",
             "For rank_drivers and rank_risks, cite only claim_id values that appear in that exact candidate's governed_claim_ledger; leave a list empty rather than inventing or guessing a citation.",
+            "Also fill `score` with a 0-100 resident-specific fit score on the supplied global_rubric scale, using the same absolute rubric you would use in isolation for that candidate. This score is supporting evidence for a stable tiebreak between closely-matched candidates; your explicit ordering remains authoritative for candidates that are not closely matched.",
         ],
         "client_intent": client_intent,
         "human_context": human_context,
@@ -156,6 +164,7 @@ def _ranking_output_template(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]
     return [
         {
             "canonical_facility_id": str(row["canonical_facility_id"]),
+            "score": 0,
             "reason": "fill with a governed explanation",
             "information_deficits": [],
             "rank_drivers": [],
@@ -179,7 +188,25 @@ def _scoring_output_template(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]
     ]
 
 
-def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _resolve_single_shot_tie_band() -> float:
+    """Single-shot mode asks the AI for one holistic ordering, not per-candidate
+    scores, so unlike batched scoring it has no stabilizing mechanism at all: two
+    calls with byte-identical input can return a different relative order for two
+    closely-matched candidates even at temperature=0 (confirmed live: two back-to-back
+    production calls swapped the bottom two ranked candidates, each carrying a
+    different governed reason, on the exact same candidate set). Candidates whose
+    AI-provided scores land within this many points of each other are treated as the
+    same tier and resolved by the governed MUST/NICE/grade/reviews key instead of the
+    AI's fine-grained score, so the swap can no longer happen for closely-matched pairs.
+    Candidates scored further apart than this keep the AI's own explicit ordering."""
+    return max(0.0, min(20.0, float(os.getenv("OPTIME_AI_RANKING_SINGLE_SHOT_TIE_BAND", "3.0"))))
+
+
+def _score_tier(score: float, band: float) -> int:
+    return int(score // band) if band > 0 else int(score)
+
+
+def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]], deterministic_fallback_key=None) -> List[Dict[str, Any]]:
     supplied = {str(row.get("canonical_facility_id") or "") for row in rows if row.get("canonical_facility_id")}
     ranked = packet.get("ranked_candidates") if isinstance(packet.get("ranked_candidates"), list) else []
     ids = [str(item.get("canonical_facility_id") or "") for item in ranked if isinstance(item, dict)]
@@ -187,20 +214,50 @@ def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> List[Dict[s
         _log_closed_world_mismatch("AI_CANDIDATE_RANKING_CLOSED_WORLD_VIOLATION", supplied, ids)
         raise RuntimeError("AI_CANDIDATE_RANKING_CLOSED_WORLD_VIOLATION")
     by_id = {str(row.get("canonical_facility_id")): row for row in rows}
-    ordered: List[Dict[str, Any]] = []
-    for position, item in enumerate(ranked, start=1):
+    entries: List[Dict[str, Any]] = []
+    for ai_position, item in enumerate(ranked, start=1):
         canonical_id = str(item.get("canonical_facility_id"))
         row = by_id[canonical_id]
         drivers, risks, citation_stripped = _validated_citations("AI_CANDIDATE_RANKING_INVALID_CLAIM_CITATION", canonical_id, item, _claim_ids(row))
+        try:
+            score = float(item.get("score"))
+            if score < 0 or score > 100:
+                score = None
+        except (TypeError, ValueError):
+            score = None
+        entries.append({
+            "row": row,
+            "ai_position": ai_position,
+            "score": score,
+            "reason": str(item.get("reason") or ""),
+            "information_deficits": [str(v) for v in item.get("information_deficits") or []],
+            "drivers": drivers,
+            "risks": risks,
+            "citation_stripped": citation_stripped,
+        })
+
+    # Only every candidate carrying a valid score unlocks the stabilizing re-sort --
+    # a partial response (older prompt contract, or a repair pass that dropped the
+    # field) falls back to trusting the AI's own returned order untouched, exactly as
+    # before this field existed.
+    if entries and deterministic_fallback_key is not None and all(entry["score"] is not None for entry in entries):
+        band = _resolve_single_shot_tie_band()
+        entries.sort(key=lambda entry: (-_score_tier(entry["score"], band), *deterministic_fallback_key(entry["row"]), entry["ai_position"]))
+
+    ordered: List[Dict[str, Any]] = []
+    for position, entry in enumerate(entries, start=1):
+        row = entry["row"]
         row["ai_ranking"] = {
             "status": "AI_RANKED",
             "rank": position,
-            "reason": str(item.get("reason") or ""),
-            "information_deficits": [str(v) for v in item.get("information_deficits") or []],
-            "rank_drivers": drivers,
-            "rank_risks": risks,
-            "citation_validation": "PARTIAL" if citation_stripped else "FULL",
+            "reason": entry["reason"],
+            "information_deficits": entry["information_deficits"],
+            "rank_drivers": entry["drivers"],
+            "rank_risks": entry["risks"],
+            "citation_validation": "PARTIAL" if entry["citation_stripped"] else "FULL",
         }
+        if entry["score"] is not None:
+            row["ai_ranking"]["global_score"] = entry["score"]
         ordered.append(row)
     return ordered
 
@@ -432,7 +489,12 @@ def rank_must_eligible_candidates(rows: List[Dict[str, Any]], client_intent: Dic
                 len(json.dumps(single_shot_prompt, ensure_ascii=False)),
                 claim_limit,
             )
-            ordered, contract_repair_applied = _validated_ai_response(single_shot_prompt, rows, _validate, output_key="ranked_candidates")
+            ordered, contract_repair_applied = _validated_ai_response(
+                single_shot_prompt,
+                rows,
+                lambda packet, rows, _key=deterministic_fallback_key: _validate(packet, rows, deterministic_fallback_key=_key),
+                output_key="ranked_candidates",
+            )
             return ordered, {"status": "AI_RANKED", "candidate_count": len(ordered), "closed_world_validated": True, "contract_repair_applied": contract_repair_applied, "evidence_model": "GENERIC_GOVERNED_CLAIM_LEDGER", "preference_model": "DYNAMIC_SEMANTIC_PREFERENCES", "unknown_policy": "INFORMATION_DEFICIT_NOT_NEGATIVE"}
         except Exception as exc:
             fallback_reason = str(exc)
