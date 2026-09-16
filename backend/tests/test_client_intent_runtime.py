@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
+from app.services.living_strategy_runtime import build_living_strategy_context
 
 
 def _intent(*must_keys: str) -> dict:
@@ -74,3 +75,36 @@ def test_only_officially_confirmed_memory_care_passes_memory_must():
     assert "SECURE_MEMORY_CARE_CONFIRMED" in confirmed["must_pass"]
     assert independent["hard_gate"] == "PENDING_VERIFICATION"
     assert "SECURE_MEMORY_CARE_CONFIRMED" in independent["must_unknown"]
+
+
+def _must_keys_for_story(story: str) -> set[str]:
+    strategy = build_living_strategy_context({}, story)
+    intent = build_client_intent({}, story, strategy, {})
+    return {item["key"] for item in intent["must_haves"]}
+
+
+def test_dialysis_launch_story_preserves_valley_and_adl_musts():
+    keys = _must_keys_for_story(
+        "My 81-year-old father needs assistance with daily activities and transportation "
+        "to dialysis three times a week. He needs medication support, lives near Henderson, "
+        "and has a $7,500 monthly budget."
+    )
+    assert {"LICENSE_CURRENTLY_VALID", "LAS_VEGAS", "ADL_SUPPORT_AVAILABLE", "MEDICATION_SUPPORT_AVAILABLE"} <= keys
+
+
+def test_hospice_launch_story_preserves_adl_must():
+    keys = _must_keys_for_story(
+        "My mother is 88 and needs substantial daily assistance and medication management. "
+        "Her doctor is discussing hospice. We need a calm Las Vegas Valley community that "
+        "can coordinate with hospice and keep family closely involved. Budget is $9,000 monthly."
+    )
+    assert {"LICENSE_CURRENTLY_VALID", "LAS_VEGAS", "ADL_SUPPORT_AVAILABLE", "MEDICATION_SUPPORT_AVAILABLE"} <= keys
+
+
+def test_spanish_launch_story_preserves_adl_must():
+    keys = _must_keys_for_story(
+        "My 80-year-old father speaks mainly Spanish. He needs light daily assistance and "
+        "medication reminders, wants frequent family visits and an active social setting in "
+        "the Las Vegas Valley, with a budget of $6,000 per month."
+    )
+    assert {"LICENSE_CURRENTLY_VALID", "LAS_VEGAS", "ADL_SUPPORT_AVAILABLE", "MEDICATION_SUPPORT_AVAILABLE"} <= keys
