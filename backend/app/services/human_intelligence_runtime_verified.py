@@ -285,13 +285,15 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         # Only attach/validate a fixed target when Guardian supplied an answer
         # contract. Other semantic clarifications remain AI-owned free-form questions.
         declared_fact_key = str(result.get("selected_fact_key") or "").strip()
-        answered_fact_keys = _answered_fact_keys(questionnaire_state)
-        already_answered_unstructured = "semantic_ai_unstructured_fact" in answered_fact_keys
         has_semantic_trace = isinstance(result.get("statements"), list) and bool(result.get("statements"))
         question_matches_blocker = (
             _question_matches_guardian_target(result, blockers[0]) and bool(declared_fact_key or has_semantic_trace)
         ) if blockers else True
-        needs_target_repair = not question_matches_blocker and bool(declared_fact_key or already_answered_unstructured)
+        # A model-authored question may never displace the deterministic blocker.
+        # Wording remains AI-owned, but its declared semantic target must match
+        # the canonical gap from the first turn; there is no free unstructured
+        # question before resolving a blocking client fact.
+        needs_target_repair = not question_matches_blocker
         if readiness == "NEEDS_CLARIFICATION" and blockers and blockers[0].get("answer_options") and needs_target_repair:
             selected_blocker = blockers[0]
             repair_packet = {
