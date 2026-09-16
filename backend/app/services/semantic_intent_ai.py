@@ -121,6 +121,24 @@ def _request_with_retry(url: str, headers: Dict[str, str], request_json: Dict[st
     raise RuntimeError(f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={max_attempts}:timeout={timeout_seconds}:{last_error}")
 
 
+def _resolve_temperature() -> Optional[float]:
+    """0 by default -- decision_readiness is a classification, not creative writing,
+    and needs reproducible behavior across calls on the same input. Confirmed live:
+    two back-to-back production calls with byte-identical input flipped between
+    READY and NEEDS_CLARIFICATION with no temperature set (the provider default,
+    typically 0.7-1.0, applies). Set OPTIME_SEMANTIC_AI_TEMPERATURE to tune, or to
+    the literal string "unset" to omit the parameter entirely -- some models
+    (reasoning-only ones in particular) reject the field outright rather than
+    ignoring it."""
+    raw = os.getenv("OPTIME_SEMANTIC_AI_TEMPERATURE", "0").strip()
+    if raw.lower() == "unset":
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return 0.0
+
+
 def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     url = os.getenv("OPTIME_SEMANTIC_AI_URL", "").strip()
     model = os.getenv("OPTIME_SEMANTIC_AI_MODEL", "").strip()
@@ -149,6 +167,9 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
         }
+    temperature = _resolve_temperature()
+    if temperature is not None:
+        request_json["temperature"] = temperature
     response = _request_with_retry(url, headers, request_json)
     if not response.ok:
         raise RuntimeError(f"SEMANTIC_AI_HTTP_{response.status_code}:{response.text[:500]}")
