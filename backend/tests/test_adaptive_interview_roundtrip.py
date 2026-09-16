@@ -121,6 +121,54 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertEqual("What monthly budget are you comfortable with?", question["question"])
         self.assertTrue(question["answer_options"])
 
+    def test_guardian_retries_misaligned_wording_without_exposing_wrong_gap(self) -> None:
+        bad = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": "Is he still in rehabilitation?",
+            "statements": [{
+                "raw_text": "Rehab timing is unclear.", "importance": "MUST", "knowledge_state": "UNKNOWN",
+                "status": "ASKED", "clarification_question": "Is he still in rehabilitation?",
+                "research_task": None, "mapped_parameters": ["rehab_timing"],
+            }],
+        }
+        repaired = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": "What monthly budget are you comfortable with?",
+            "selected_fact_key": "monthly_budget",
+            "statements": [{
+                "raw_text": "Budget is not known.", "importance": "MUST", "knowledge_state": "UNKNOWN",
+                "status": "ASKED", "clarification_question": "What monthly budget are you comfortable with?",
+                "research_task": None, "mapped_parameters": ["monthly_affordability"],
+            }],
+        }
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
+            side_effect=[bad, bad, repaired],
+        ) as model:
+            context = build_human_intelligence_context(self._state(), "My father needs senior living in Las Vegas.")
+        question = context["adaptive_questions"][0]
+        self.assertEqual(3, model.call_count)
+        self.assertEqual("monthly_budget", question["target_fact_key"])
+        self.assertNotIn("rehabilitation", question["question"].lower())
+
+    def test_guardian_suppresses_question_when_all_targeted_wording_attempts_fail(self) -> None:
+        bad = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": "Is he still in rehabilitation?",
+            "statements": [{
+                "raw_text": "Rehab timing is unclear.", "importance": "MUST", "knowledge_state": "UNKNOWN",
+                "status": "ASKED", "clarification_question": "Is he still in rehabilitation?",
+                "research_task": None, "mapped_parameters": ["rehab_timing"],
+            }],
+        }
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=bad
+        ) as model:
+            context = build_human_intelligence_context(self._state(), "My father needs senior living in Las Vegas.")
+        self.assertEqual(4, model.call_count)
+        self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
+        self.assertEqual([], context["adaptive_questions"])
+
     def test_explicit_semantic_fact_answer_resolves_guardian_blocker_without_scripted_question(self) -> None:
         state = self._state()
         state["budget"] = 6500
