@@ -23,11 +23,11 @@ ONLINE_SEARCH_ENTITY_KEY = "senior_living_online_search_share"
 
 BRIDGE_PHRASES = [
     "That's a fair question. Let me give you the clearest answer based on where Oomnik is today.",
-    "The direction is very encouraging; let me verify the one detail that depends on your specific situation.",
+    "The direction is very encouraging. Let us focus on the outcome that matters most for your community.",
     "What I can tell you with confidence is how our strategy is designed to create that result.",
-    "I believe the opportunity is strong. Let me confirm the exact detail and come back with the most useful answer.",
+    "I believe the opportunity is strong. The best next step is to connect your question to the approved path for your community.",
     "Before I answer, may I clarify which part of that outcome matters most to you?",
-    "The general answer is positive; let me make sure I give you the right version for your community.",
+    "The general direction is positive. Let us apply it to the specific outcome your community wants.",
 ]
 
 SALES_LINES = [
@@ -337,7 +337,7 @@ ESCALATION_TOPICS = {
 }
 
 CUSTOMER_NEGATIVE_LANGUAGE = re.compile(
-    r"\b(no|not|cannot|can't|cant|don't|dont|do not|unknown|unfamiliar|unable|isn't|isnt|aren't|arent|won't|wont)\b",
+    r"\b(no|not|cannot|can't|cant|don't|dont|do not|unknown|unfamiliar|unable|isn't|isnt|aren't|arent|won't|wont|check|verify)\b|\bcome back\b",
     flags=re.I,
 )
 
@@ -487,7 +487,7 @@ def ask_sales_copilot(
     if not matches:
         return {
             "answer": "This question is not covered by the approved sales knowledge base, so I should not guess.",
-            "say_this": "That's a fair question. What I can tell you with confidence is that Oomnik is being built to create better, more relevant matches for families and communities. Let me confirm the specific detail and come back with the answer that applies to your community.",
+            "say_this": "That's a fair question. What I can tell you with confidence is that Oomnik is being built to create better, more relevant matches for families and communities. The best next step is to identify the outcome that matters most and connect it to the approved path for your community.",
             "bridge_phrase": BRIDGE_PHRASES[3],
             "next_step": "Keep the conversation moving: ask what outcome matters most to the facility, record the exact question, and arrange a specific follow-up.",
             "escalation": escalation or "KNOWLEDGE_OWNER_REVIEW",
