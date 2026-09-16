@@ -35,6 +35,7 @@ test.describe('production synthetic journey', () => {
     }
 
     let transientRetries = 0;
+    let clarificationRetries = 0;
     for (let step = 0; step < 9; step += 1) {
       await page.waitForFunction(
         () => /\/results/.test(window.location.pathname)
@@ -53,6 +54,15 @@ test.describe('production synthetic journey', () => {
       if (/API request failed \(50[234]\)/i.test(prompt)) {
         if (transientRetries >= 1) throw new Error(`Adaptive interview remained unavailable after retry: ${prompt}`);
         transientRetries += 1;
+        await page.getByRole('button', { name: /^Try again$/ }).click();
+        step -= 1;
+        await page.waitForTimeout(2_000);
+        continue;
+      }
+
+      if (/no useful next question was returned/i.test(prompt)) {
+        if (clarificationRetries >= 2) throw new Error(`Adaptive interview returned no usable clarification after retries: ${prompt}`);
+        clarificationRetries += 1;
         await page.getByRole('button', { name: /^Try again$/ }).click();
         step -= 1;
         await page.waitForTimeout(2_000);
