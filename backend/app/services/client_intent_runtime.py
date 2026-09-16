@@ -56,7 +56,29 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     ))
 
     city = str(questionnaire_state.get("locationCity") or questionnaire_state.get("city") or "").strip().upper()
-    las_vegas_requested = "las vegas" in query or city == "LAS VEGAS"
+    # The product market is the Las Vegas Valley, not only the incorporated city.
+    # Preserve a stated valley location such as Henderson as the canonical market
+    # MUST instead of dropping location merely because the words "Las Vegas" were
+    # not repeated in free text.
+    las_vegas_valley_terms = (
+        "las vegas",
+        "henderson",
+        "north las vegas",
+        "summerlin",
+        "clark county",
+    )
+    las_vegas_valley_cities = {
+        "LAS VEGAS",
+        "HENDERSON",
+        "NORTH LAS VEGAS",
+        "SUMMERLIN",
+        "PARADISE",
+        "SPRING VALLEY",
+        "ENTERPRISE",
+        "WINCHESTER",
+        "SUNRISE MANOR",
+    }
+    las_vegas_requested = any(term in query for term in las_vegas_valley_terms) or city in las_vegas_valley_cities
     city_limits_only = any(token in query for token in ("las vegas city limits", "city limits only", "within las vegas city", "only in las vegas city"))
     if las_vegas_requested:
         if city_limits_only:
