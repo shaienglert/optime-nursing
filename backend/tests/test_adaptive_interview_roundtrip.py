@@ -60,7 +60,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertTrue(context["readiness_guardian"]["client_owned_blockers"])
         self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
 
-    def test_guardian_rejects_unaligned_question_even_without_selected_fact_key(self) -> None:
+    def test_guardian_allows_one_unstructured_question_without_selected_fact_key(self) -> None:
         bad = {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": "What level of care is needed day to day?",
@@ -74,15 +74,19 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=bad
         ):
             context = build_human_intelligence_context(self._state(), "My father needs senior living in Las Vegas.")
-        self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
-        self.assertEqual([], context["adaptive_questions"])
-        self.assertTrue(context["readiness_guardian"]["question_target_repair_applied"])
-        self.assertEqual(
-            "AI_DID_NOT_ALIGN_QUESTION_TO_GUARDIAN_TARGET",
-            context["readiness_guardian"]["question_target_repair_resolution"],
-        )
+        question = context["adaptive_questions"][0]
+        self.assertEqual("semantic_ai_unstructured_fact", question["target_fact_key"])
+        self.assertEqual("What level of care is needed day to day?", question["question"])
+        self.assertEqual([], question["answer_options"])
 
     def test_guardian_repairs_question_without_selected_fact_key_to_blocker(self) -> None:
+        state = self._state()
+        state["humanIntelligenceV2"]["scoringEngine"]["adaptiveSignals"] = [{
+            "questionKey": "semantic-ai-unstructured-1",
+            "answer": "No additional preference.",
+            "signalType": "decision-interview",
+            "impactExplanation": "Question: Has he left the hospital yet? | Target fact: semantic_ai_unstructured_fact | explicit client answer",
+        }]
         bad = {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": "Has he left the hospital yet?",
@@ -101,7 +105,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", side_effect=[bad, repaired]
         ):
-            context = build_human_intelligence_context(self._state(), "My father needs senior living in Las Vegas.")
+            context = build_human_intelligence_context(state, "My father needs senior living in Las Vegas.")
         question = context["adaptive_questions"][0]
         self.assertEqual("monthly_budget", question["target_fact_key"])
         self.assertEqual("What monthly budget are you comfortable with?", question["question"])
