@@ -96,6 +96,7 @@ from app.services.facility_profile_portal import (
     add_photo,
     deactivate_photo,
     facility_profile_snapshot,
+    public_provider_profile,
     recompute_completeness,
     save_capabilities,
     search_claimable_facilities,
@@ -3274,6 +3275,17 @@ async def provider_portal_opticare_demo(db: Session = Depends(get_db)):
 async def provider_facility_profile(facility_id: int, db: Session = Depends(get_db)):
     try:
         return facility_profile_snapshot(db, facility_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@app.get("/canonical-facilities/{canonical_facility_id}/community-confirmed-profile")
+async def canonical_facility_community_confirmed_profile(
+    canonical_facility_id: str,
+    db: Session = Depends(get_db),
+):
+    try:
+        return public_provider_profile(db, canonical_facility_id)
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
 

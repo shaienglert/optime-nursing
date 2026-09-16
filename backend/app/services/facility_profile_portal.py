@@ -41,6 +41,7 @@ from app.models.facility_questionnaire import (
     FACILITY_QUESTIONNAIRE_V1,
     facility_questionnaire_v1_flat,
 )
+from app.services.facility_parameter_service import get_canonical_facility_index, invalidate_runtime_cache
 from app.services.provider_identity import (
     CATEGORY_ACTIVITIES,
     CATEGORY_MEDICAL,
@@ -308,6 +309,45 @@ def facility_profile_snapshot(db: Session, facility_id: int) -> Dict[str, object
     }
 
 
+
+def public_provider_profile(db: Session, canonical_facility_id: str) -> Dict[str, object]:
+    """Public, provenance-preserving view of information a community confirmed itself."""
+    canonical = get_canonical_facility_index().get(str(canonical_facility_id or "").strip())
+    if not canonical:
+        raise ValueError(f"Canonical facility '{canonical_facility_id}' was not found.")
+    identifiers = {
+        str(value or "").strip()
+        for value in (
+            canonical_facility_id,
+            canonical.get("cms_ccn"),
+            canonical.get("nevada_license_id"),
+            canonical.get("business_license_id"),
+        )
+        if str(value or "").strip()
+    }
+    facility = db.query(Facility).filter(Facility.cms_id.in_(list(identifiers))).one_or_none()
+    if facility is None:
+        return {"canonical_facility_id": canonical_facility_id, "facility_id": None, "confirmed_fields": []}
+    rows = db.query(FacilityCapability).filter(
+        FacilityCapability.facility_id == facility.id,
+        FacilityCapability.source == PORTAL_SOURCE,
+        FacilityCapability.value != AnswerState.UNKNOWN,
+    ).order_by(FacilityCapability.verified_at.desc()).all()
+    return {
+        "canonical_facility_id": canonical_facility_id,
+        "facility_id": facility.id,
+        "confirmed_fields": [
+            {
+                "key": row.capability,
+                "label": (_QUESTION_INDEX.get(row.capability) or {}).get("label", row.capability.replace("_", " ").title()),
+                "value": row.value.value,
+                "source": "Community confirmed",
+                "verified_at": row.verified_at.isoformat() if row.verified_at else None,
+            }
+            for row in rows
+        ],
+    }
+
 def save_capabilities(
     db: Session,
     facility_id: int,
@@ -385,6 +425,8 @@ def save_capabilities(
         updated += 1
 
     db.commit()
+    if any(key.startswith("housing_private_caregiver") or key.startswith("housing_live_in_caregiver") for key in normalized):
+        invalidate_runtime_cache()
     return {
         "updated": updated,
         "unchanged": unchanged,
