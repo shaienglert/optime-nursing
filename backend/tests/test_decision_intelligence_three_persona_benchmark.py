@@ -52,7 +52,7 @@ class ThreePersonaSemanticDecisionBenchmark(unittest.TestCase):
         self.assertTrue({"dining.quality", "lifestyle.activities", "environment.landscaping", "lifestyle.outings", "care.future_continuum"}.issubset(mapped))
         self.assertEqual(0, semantic["result"]["dropped_statement_count"])
 
-    def test_walker_100m_no_wheelchair_requires_compact_layout_question_before_ranking(self) -> None:
+    def test_walker_layout_gap_is_preserved_without_ai_blocking_ranking(self) -> None:
         query = "Man age 80 uses a walker, can walk only about 100 meters, refuses wheelchair use, otherwise independent, wants senior living in Las Vegas."
         question = "Would you prefer a compact community or central building where your apartment, dining, activities and main services are within short walking distances?"
         result = {
@@ -69,13 +69,12 @@ class ThreePersonaSemanticDecisionBenchmark(unittest.TestCase):
             "dropped_statement_count": 0,
             "governance": {"ai_based": True, "learning_center_consulted": True},
         }
-        context = self._run(query, result)
-        self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
-        self.assertEqual(1, len(context["adaptive_questions"]))
-        self.assertTrue(context["adaptive_questions"][0]["question_key"].startswith("semantic_ai_high_information_question:"))
-        self.assertIn("short walking distances", context["adaptive_questions"][0]["question"].lower())
+        context = self._run(query, result, {"budget": 8000, "referenceLocationValue": "Las Vegas"})
+        self.assertEqual("READY", context["decision_readiness"])
+        self.assertEqual([], context["adaptive_questions"])
+        self.assertTrue(any("compact_layout" in value for value in context["semantic_ai"]["result"]["statements"][0]["mapped_parameters"]))
 
-    def test_widow_gluten_allergy_and_no_cooking_become_safety_and_meal_requirements(self) -> None:
+    def test_widow_gluten_and_meal_requirements_survive_without_ai_controlling_readiness(self) -> None:
         query = "75-year-old widow, currently independent, wants luxury, loves company and games, has a gluten allergy and does not cook."
         question = "Do you require all daily meals to be provided with a medically safe gluten-free protocol, including cross-contact controls?"
         result = {
@@ -96,15 +95,15 @@ class ThreePersonaSemanticDecisionBenchmark(unittest.TestCase):
             "dropped_statement_count": 0,
             "governance": {"ai_based": True, "learning_center_consulted": True},
         }
-        context = self._run(query, result)
+        context = self._run(query, result, {"budget": 8000, "referenceLocationValue": "Las Vegas"})
         statements = context["semantic_ai"]["result"]["statements"]
         allergy = next(s for s in statements if s["raw_text"] == "gluten allergy")
         no_cook = next(s for s in statements if s["raw_text"] == "does not cook")
         self.assertEqual("MUST", allergy["importance"])
         self.assertEqual("MUST", no_cook["importance"])
-        self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
-        self.assertEqual(1, len(context["adaptive_questions"]))
-        self.assertIn("cross-contact", context["adaptive_questions"][0]["question"])
+        self.assertEqual("READY", context["decision_readiness"])
+        self.assertEqual([], context["adaptive_questions"])
+        self.assertIn("diet.cross_contact_control", no_cook["mapped_parameters"])
 
 
 if __name__ == "__main__":
