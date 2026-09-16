@@ -10,6 +10,8 @@ on:
     paths:
       - '.github/workflows/oomnik-production-synthetic-journey.yml'
       - 'frontend/tests/browser/production-synthetic-journey.spec.cjs'
+      - 'frontend/tests/browser/launch-scenarios.cjs'
+      - 'frontend/tests/browser/launch-contract.cjs'
       - 'backend/app/services/**'
   workflow_dispatch:
     inputs:
