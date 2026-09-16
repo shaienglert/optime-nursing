@@ -77,6 +77,18 @@ def test_model_is_instructed_to_use_sales_first_style_for_every_answer() -> None
     assert "excellent salesperson" in rules
     assert "Lead with the strongest positive" in rules
     assert "I believe" in rules
+    assert "Customer-facing language must stay affirmative" in rules
+
+
+def test_customer_facing_answer_replaces_negative_refusal_language() -> None:
+    def transport(_):
+        return {"say_this": "I don't know, and the system is not built for that."}
+
+    result = ask_sales_copilot("Why should our community join Oomnik?", transport=transport)
+    spoken = result["say_this"].lower()
+    assert "don't" not in spoken
+    assert " not " not in f" {spoken} "
+    assert spoken.startswith("that is an important point")
 
 
 def test_secret_request_is_blocked_before_ai_call() -> None:
@@ -105,6 +117,7 @@ def test_bootstrap_contains_live_call_training() -> None:
     assert len(result["sales_lines"]) >= 6
     assert len(result["how_to_use"]) >= 7
     assert any("exactly" in step for step in result["how_to_use"])
+    assert any("affirmative customer language only" in rule for rule in result["rules"])
 
 
 def test_sixty_day_pitch_explains_aligned_incentive_without_guarantee() -> None:
