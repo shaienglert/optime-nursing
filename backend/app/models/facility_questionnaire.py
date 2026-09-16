@@ -36,6 +36,8 @@ FACILITY_QUESTIONNAIRE_V1: Dict[str, List[Dict[str, str]]] = {
         {"key": "housing_studio", "label": "Studio"},
         {"key": "housing_one_bedroom", "label": "One bedroom"},
         {"key": "housing_pets_allowed", "label": "Pets allowed"},
+        {"key": "housing_private_caregiver_allowed", "label": "Resident may bring an existing private caregiver"},
+        {"key": "housing_live_in_caregiver_accommodation", "label": "Overnight / live-in caregiver accommodation is permitted"},
     ],
     "Accessibility": [
         {"key": "accessibility_walker_support", "label": "Walker support"},
