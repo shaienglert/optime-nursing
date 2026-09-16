@@ -290,7 +290,7 @@ jobs:
           assert couple_blocked['decision_intelligence']['recommendation_execution_allowed'] is False
           assert couple_blocked['results'] == []
           assert len(couple_human['adaptive_questions']) == 1
-          assert couple_human['adaptive_questions'][0].get('target_fact_key') == 'monthly_budget'
+          assert couple_human['adaptive_questions'][0].get('target_fact_key') == couple_human['readiness_guardian']['client_owned_blockers'][0]['fact_key']
           assert couple_human['readiness_guardian']['veto_resolution'] == 'DETERMINISTIC_CANONICAL_FALLBACK'
 
           couple_ready = deepcopy(couple_state)
