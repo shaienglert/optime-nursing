@@ -10,7 +10,7 @@ def test_trace_keeps_must_lineage_when_visibility_is_blocked():
         "results": [],
         "decision_intelligence": {
             "recommendation_execution_allowed": False,
-            "canonical_decision_state": {"phase": "SYSTEM_BLOCKED", "reason": "required AI ranking did not complete", "next_action": "RECOVER_SYSTEM", "must": "PASS"},
+            "canonical_decision_state": {"phase": "SYSTEM_BLOCKED", "reason": "required AI ranking did not complete", "next_action": "RECOVER_SYSTEM", "must": "PASS", "authoritative": True},
             "facility_selection_pipeline": {
                 "ai_ranking": {"status": "AI_CANDIDATE_RANKING_REQUIRED_FAILED"},
                 "candidate_dispositions": [

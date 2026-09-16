@@ -124,6 +124,7 @@ class CanonicalDecisionState:
         payload["can_show_recommendations"] = self.can_show_recommendations
         payload["is_degraded_result"] = self.is_degraded_result
         payload["version"] = "canonical-decision-state-v2-authority"
+        payload["authoritative"] = True
         return payload
 
 
@@ -267,7 +268,7 @@ def _ranking_state(decision: Dict[str, Any]) -> RankingState:
     # not a failure -- but nothing then claimed it, so it fell through to NOT_STARTED and a
     # completed MUST gate was hidden behind "requires validated AI ranking". 374 eligible
     # candidates, nothing shown, and no message saying why.
-    if status in {"DETERMINISTIC_FALLBACK", "REQUIRED_BUT_UNAVAILABLE"}:
+    if status in {"DETERMINISTIC_FALLBACK", "REQUIRED_BUT_UNAVAILABLE", "AI_RANKING_ERROR", "FAILED"}:
         return RankingState.UNAVAILABLE_HARD_CRITERIA_ONLY
     if status and status not in {"NO_MUST_ELIGIBLE_CANDIDATES"}:
         return RankingState.FAILED
@@ -277,20 +278,9 @@ def _ranking_state(decision: Dict[str, Any]) -> RankingState:
 
 
 def _system_failure(decision: Dict[str, Any], human: Dict[str, Any]) -> tuple[SystemHealth, str]:
-    semantic = human.get("semantic_ai") if isinstance(human.get("semantic_ai"), dict) else {}
-    semantic_status = _upper(semantic.get("status"))
-    if semantic_status in {"FAILED", "REQUIRED_BUT_DISABLED"} and bool(semantic.get("required")):
-        return SystemHealth.BLOCKED, f"required semantic AI unavailable: {semantic_status}"
-
-    owner = decision.get("process_owner") if isinstance(decision.get("process_owner"), dict) else {}
-    owner_status = _upper(owner.get("status"))
-    if bool(owner.get("required")) and owner_status in {"FAILED", "REQUIRED_BUT_DISABLED"}:
-        return SystemHealth.BLOCKED, f"required AI process owner unavailable: {owner_status}"
-
-    pipeline = decision.get("facility_selection_pipeline")
-    if isinstance(pipeline, dict) and pipeline.get("ai_ranking_fail_closed") is True:
-        return SystemHealth.BLOCKED, "required AI ranking did not complete"
-
+    # AI components may enrich extraction, wording and ordering, but their failure is
+    # not a system blocker. Canonical facts, MUST eligibility and deterministic gap
+    # policy continue to control readiness, visibility, escalation and zero-result behavior.
     return SystemHealth.HEALTHY, ""
 
 

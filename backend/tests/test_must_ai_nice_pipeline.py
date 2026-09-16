@@ -121,6 +121,22 @@ class MustAiNicePipelineTests(unittest.TestCase):
         self.assertEqual([r["canonical_facility_id"] for r in out["results"]], ["C", "B"])
         self.assertEqual(out["must_eligible_count"], 3)
 
+    def test_ai_ranking_failure_never_turns_verified_candidates_into_zero_results(self):
+        rows = [_row("A", "PASS"), _row("B", "PASS"), _row("C", "PENDING_VERIFICATION")]
+        result = {"results": rows, "decision_intelligence": {"client_intent": {"nice_to_haves": []}, "human_intelligence": {}, "living_strategy": {}}}
+        failed_status = {"status": "AI_RANKING_ERROR", "error": "temporary model failure"}
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "1"}, clear=False), patch(
+            "app.services.must_ai_nice_pipeline.rank_must_eligible_candidates",
+            return_value=(rows, failed_status),
+        ):
+            out = apply_must_ai_nice_pipeline(result, {}, "", 5)
+        self.assertEqual(3, out["result_count"])
+        self.assertEqual(["A", "B", "C"], [row["canonical_facility_id"] for row in out["results"]])
+        pipeline = out["decision_intelligence"]["facility_selection_pipeline"]
+        self.assertTrue(pipeline["ai_ranking_degraded"])
+        self.assertFalse(pipeline["ai_ranking_fail_closed"])
+        self.assertTrue(out["decision_intelligence"]["ai_ranking_failure"]["deterministic_order_exposed"])
+
     def test_zero_eligible_but_pending_candidates_are_still_ranked_and_shown(self):
         # No candidate has fully passed MUST yet, but two have unresolved (not
         # failed) evidence -- these must not be dropped to an empty shortlist.

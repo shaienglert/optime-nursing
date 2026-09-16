@@ -98,10 +98,11 @@ class DegradedStateTests(unittest.TestCase):
         self.assertFalse(state.is_degraded_result)
         self.assertIn(state.phase, {DecisionPhase.PROVISIONAL_RECOMMENDATION, DecisionPhase.FINAL_RECOMMENDATION})
 
-    def test_a_genuine_ranking_failure_still_blocks(self) -> None:
+    def test_a_genuine_ranking_failure_degrades_without_erasing_verified_candidates(self) -> None:
         state = derive_canonical_decision_state(_payload("AI_RANKING_ERROR"))
-        self.assertIs(state.ranking, RankingState.FAILED)
-        self.assertFalse(state.can_show_recommendations)
+        self.assertIs(state.ranking, RankingState.UNAVAILABLE_HARD_CRITERIA_ONLY)
+        self.assertTrue(state.can_show_recommendations)
+        self.assertTrue(state.is_degraded_result)
 
     def test_no_eligible_candidates_is_not_a_degraded_result(self) -> None:
         state = derive_canonical_decision_state(_payload("DETERMINISTIC_FALLBACK", eligible=0, pending=0))

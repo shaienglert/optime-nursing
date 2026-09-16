@@ -15,9 +15,8 @@ from __future__ import annotations
    later can only hold or improve the candidate's rank, never worsen it. Only an
    explicit MUST_FAIL (governed evidence contradicts a requirement) is excluded.
 6. Provider verification can add governed claims and trigger an AI rerank later.
-7. When AI candidate ranking is explicitly required, an unavailable AI ranking fails
-   closed: deterministic ordering may remain in diagnostics but is never exposed as a
-   recommendation.
+7. An unavailable AI ranking never erases the deterministic MUST-qualified set. The
+   verified eligible rows remain visible as a degraded, explicitly unranked result.
 8. AI-blended judgment is skipped -- not attempted and not failed -- when a candidate
    pool has no real evidence for it to differentiate on: no NICE preferences to
    verify, and no candidate has any known rating, review count, regulatory grade, or
@@ -294,7 +293,7 @@ def apply_must_ai_nice_pipeline(
             deterministic_fallback_key=_fallback_key,
         )
 
-    ai_failure_block = (
+    ai_ranking_degraded = (
         not thin_evidence_bypass
         and bool(live_shortlist)
         and _env_true("OPTIME_SEMANTIC_AI_ENABLED")
@@ -311,14 +310,14 @@ def apply_must_ai_nice_pipeline(
         fit["nice_fit_scores"] = dict(legacy.get("nice_fit_scores") or {})
     structured_nice_summary = attach_nice_coverage(audit_rows, audit_intent)
 
-    selected = [] if ai_failure_block else ranked[: max(0, int(limit or 0))]
+    selected = ranked[: max(0, int(limit or 0))]
     if _env_true("OPTIME_LIVE_PREFERENCE_VERIFICATION"):
         dynamic_summary, nice_complete_rows = _verify_dynamic_preferences_in_waves(
-            [] if ai_failure_block else ranked, dynamic_preferences, len(ranked)
+            ranked, dynamic_preferences, len(ranked)
         )
     else:
         dynamic_summary = _defer_dynamic_preference_verification(
-            [] if ai_failure_block else ranked, dynamic_preferences
+            ranked, dynamic_preferences
         )
         nice_complete_rows = []
 
@@ -423,7 +422,8 @@ def apply_must_ai_nice_pipeline(
         ],
         "ai_ranking": ai_status,
         "ai_ranking_required": _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED"),
-        "ai_ranking_fail_closed": ai_failure_block,
+        "ai_ranking_fail_closed": False,
+        "ai_ranking_degraded": ai_ranking_degraded,
         "dynamic_preferences": dynamic_summary,
         "legacy_structured_nice_audit": structured_nice_summary,
         "legacy_structured_nice_authoritative": False,
@@ -433,8 +433,8 @@ def apply_must_ai_nice_pipeline(
         "nice_complete_beyond_display_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_beyond_display],
         "client_statement": (
             (
-                "We cannot present a recommendation yet because the required AI ranking did not complete successfully. The deterministic candidate order is retained only for diagnostics and is not exposed as a recommendation."
-                if ai_failure_block
+                "The ranking enhancement was unavailable. We are showing facilities that meet the verified hard requirements as an explicitly degraded, unranked set; provider details still require confirmation."
+                if ai_ranking_degraded
                 else (
                     (
                         f"We currently have {len(complete_selected)} top-ranked facilities that pass every MUST requirement and have governed evidence matching every specific preference you expressed. This ranking can still change when we verify missing provider facts directly with the facilities."
@@ -461,11 +461,11 @@ def apply_must_ai_nice_pipeline(
             )
             + (
                 f" {pending_in_display_count} of the facilities shown still have at least one MUST requirement pending verification rather than confirmed -- they are ranked on the evidence available today, unverified items are not counted against them, and confirming those items can only hold or improve their position, never worsen it."
-                if pending_in_display_count and not ai_failure_block
+                if pending_in_display_count and not ai_ranking_degraded
                 else ""
             )
         ),
-        "rule": "AI never decides MUST eligibility. The live response AI-ranks only the bounded shortlist while the full gated universe remains in evidence research. When candidate AI ranking is required, failed ranking cannot silently degrade into a user-visible deterministic recommendation. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
+        "rule": "AI never decides MUST eligibility or whether verified candidates disappear. If AI ranking is unavailable, the deterministic MUST-qualified set remains visible as degraded and unranked. MATCH/MISMATCH requires governed facility claims; otherwise the preference remains UNKNOWN.",
     }
     decision["must_gate"] = {
         **(decision.get("must_gate") if isinstance(decision.get("must_gate"), dict) else {}),
@@ -483,12 +483,13 @@ def apply_must_ai_nice_pipeline(
         "AI_RERANK",
     ]
 
-    if ai_failure_block:
+    if ai_ranking_degraded:
         decision["ai_ranking_failure"] = {
             "status": ai_status.get("status"),
             "candidate_count": len(live_shortlist),
-            "deterministic_order_exposed": False,
-            "rule": "AI-owned ranking failure must fail closed rather than masquerade as an AI recommendation.",
+            "deterministic_order_exposed": True,
+            "presentation": "DEGRADED_UNRANKED_ELIGIBLE_SET",
+            "rule": "AI ranking failure may remove AI ordering, but it may not erase the deterministic MUST-qualified candidate set.",
         }
     result["decision_intelligence"] = decision
     return result

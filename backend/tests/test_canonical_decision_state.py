@@ -33,11 +33,11 @@ def test_client_blocker_beats_legacy_ready():
     assert state.next_action == "ASK_CLIENT"
 
 
-def test_ai_failure_is_system_blocked():
+def test_ai_failure_does_not_override_canonical_policy():
     result = base_result()
     result["decision_intelligence"]["human_intelligence"]["semantic_ai"] = {"required": True, "status": "FAILED"}
     state = derive_canonical_decision_state(result)
-    assert state.phase is DecisionPhase.SYSTEM_BLOCKED
+    assert state.phase is not DecisionPhase.SYSTEM_BLOCKED
 
 
 def test_pending_must_routes_to_evidence_collection_before_ranking_runs():
@@ -192,17 +192,15 @@ def test_canonical_authority_overwrites_legacy_global_controls():
         recommendation_execution_allowed=True,
         recommendation_visibility="PROVISIONAL_RANKING_VISIBLE",
         decision_finality="PROVISIONAL_PENDING_PROVIDER_VERIFICATION",
-        # A model that errored outright, rather than one that was merely unavailable: the
-        # unavailable case now legitimately shows an unranked set, so proving that canonical
-        # state overrides legacy needs a status that genuinely blocks.
+        # A model error removes AI ordering but must not erase verified candidates.
         facility_selection_pipeline={"ai_ranking": {"status": "AI_RANKING_ERROR"}},
     )
 
     out = apply_canonical_decision_state_authority(result)
     decision = out["decision_intelligence"]
     assert decision["canonical_decision_state"]["authoritative"] is True
-    assert decision["recommendation_execution_allowed"] is False
-    assert decision["recommendation_visibility"] == "BLOCKED_AI_RANKING"
+    assert decision["recommendation_execution_allowed"] is True
+    assert decision["recommendation_visibility"] == "UNRANKED_ELIGIBLE_SET_VISIBLE"
 
 
 def test_control_readers_fail_closed_without_authoritative_canonical_state():

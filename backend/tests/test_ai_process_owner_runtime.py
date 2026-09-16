@@ -144,7 +144,7 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
         self.assertEqual(owner["prior_process_state"]["lastEvent"], "COMPARE_RETURNED")
         self.assertEqual(owner["prior_process_state"]["shortlistFacilityIds"], ["FAC-1", "FAC-2"])
 
-    def test_process_owner_rejects_invented_facility_identity(self):
+    def test_process_owner_rejects_invented_identity_without_overriding_canonical_execution(self):
         ai_packet = self._packet()
         ai_packet["process_summary"] = "Invented option."
         ai_packet["proposed_solutions"] = [
@@ -157,9 +157,9 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
         owner = result["decision_intelligence"]["process_owner"]
         self.assertEqual(owner["status"], "FAILED")
         self.assertIn("UNGOVERNED_FACILITY_IDS", owner["error"])
-        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
 
-    def test_process_owner_rejects_final_recommendation_when_decision_is_provisional_or_must_unknown(self):
+    def test_process_owner_rejects_premature_action_without_overriding_canonical_execution(self):
         provisional = copy.deepcopy(self._result())
         provisional["decision_intelligence"]["decision_finality"] = "PROVISIONAL_PENDING_PROVIDER_VERIFICATION"
         provisional["decision_intelligence"]["must_gate"]["selected_must_unknown_count"] = 1
@@ -172,15 +172,15 @@ class AIProcessOwnerRuntimeTests(unittest.TestCase):
         owner = result["decision_intelligence"]["process_owner"]
         self.assertEqual(owner["status"], "FAILED")
         self.assertIn("PREMATURE_RECOMMENDATION", owner["error"])
-        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
 
-    def test_required_process_owner_failure_blocks_recommendation(self):
+    def test_required_process_owner_failure_is_recorded_without_overriding_canonical_execution(self):
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_PROCESS_OWNER_REQUIRED": "1"}, clear=False), patch(
             "app.services.ai_process_owner_runtime._default_transport", side_effect=RuntimeError("AI unavailable")
         ):
             result = attach_ai_process_owner(self._result(), {}, "Find the best option")
         self.assertEqual(result["decision_intelligence"]["process_owner"]["status"], "FAILED")
-        self.assertFalse(result["decision_intelligence"]["recommendation_execution_allowed"])
+        self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
 
 
 if __name__ == "__main__":
