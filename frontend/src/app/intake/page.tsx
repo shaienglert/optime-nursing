@@ -77,6 +77,14 @@ const religionImportanceOptions = ["Not important", "Somewhat important", "Impor
 
 const yesNoOptions = ["Yes", "No", "Sometimes"];
 
+const caregiverPlanOptions = [
+  "The community should provide the ongoing help",
+  "We have an existing caregiver who should continue",
+  "We need help finding a private caregiver",
+  "Not sure yet",
+];
+const caregiverOvernightOptions = ["Must stay overnight / live in", "Daytime only", "Not sure yet"];
+
 const languageOptions = ["English", "Hebrew", "Spanish", "Russian", "French", "Portuguese", "Arabic", "Other"];
 
 const languageCatalogOptions = [
@@ -806,6 +814,9 @@ export default function Home() {
   const [otherInterests, setOtherInterests] = useState("");
   const [notes, setNotes] = useState("");
   const [medicalDocumentsAvailable, setMedicalDocumentsAvailable] = useState(false);
+  const [caregiverPlan, setCaregiverPlan] = useState("");
+  const [existingCaregiverOvernightNeed, setExistingCaregiverOvernightNeed] = useState("");
+  const [existingCaregiverSupportSchedule, setExistingCaregiverSupportSchedule] = useState("");
   const [showAuditMode, setShowAuditMode] = useState(false);
 
   const relationshipLabel = relationshipCopy(relationship);
@@ -830,6 +841,8 @@ export default function Home() {
   const primaryAssistanceLevel = useMemo(() => pickPrimaryAssistanceLevel(assistanceLevels), [assistanceLevels]);
   const shouldAskRecentHospitalizationFollowUps = recentHospitalization === "Yes" || assistanceLevels.includes("Skilled nursing care");
   const shouldAskFutureCarePreference = primaryAssistanceLevel === "Fully independent";
+  const shouldAskCaregiverContinuity = assistanceLevels.some((level) => level !== "Fully independent");
+  const needsExistingCaregiverContinuity = caregiverPlan === "We have an existing caregiver who should continue";
   const isJewishBranch = faithTraditions.includes("Jewish");
   const isChristianBranch = faithTraditions.some((faith) => ["Catholic", "Protestant", "Orthodox Christian"].includes(faith));
   const isMuslimBranch = faithTraditions.includes("Muslim");
@@ -1236,6 +1249,9 @@ export default function Home() {
     setOtherInterests(String(source.otherInterests || ""));
     setNotes(String(source.notes || ""));
     setMedicalDocumentsAvailable(Boolean(source.medicalDocumentsAvailable));
+    setCaregiverPlan(String(source.caregiverPlan || ""));
+    setExistingCaregiverOvernightNeed(String(source.existingCaregiverOvernightNeed || ""));
+    setExistingCaregiverSupportSchedule(String(source.existingCaregiverSupportSchedule || ""));
 
     hasRestoredDraft.current = true;
   }, [questionnaireState]);
@@ -1347,6 +1363,9 @@ export default function Home() {
       otherInterests,
       notes,
       medicalDocumentsAvailable,
+      caregiverPlan,
+      existingCaregiverOvernightNeed,
+      existingCaregiverSupportSchedule,
       recommendationReadiness: aiProgressPercent,
       aiUnderstanding: aiThinkingMessage,
       extractedResidentProfile: {
@@ -1459,6 +1478,9 @@ export default function Home() {
     otherInterests,
     notes,
     medicalDocumentsAvailable,
+    caregiverPlan,
+    existingCaregiverOvernightNeed,
+    existingCaregiverSupportSchedule,
     aiProgressPercent,
     aiThinkingMessage,
     primaryAssistanceLevel,
@@ -1644,6 +1666,11 @@ export default function Home() {
         },
         foodProfile: {
           dietaryPreferences,
+        },
+        caregiverProfile: {
+          carePlan: caregiverPlan,
+          existingCaregiverOvernightNeed,
+          existingCaregiverSupportSchedule,
         },
         familyCultureProfile: {
           involvementExpectation: familyInvolvementExpectation,
@@ -2040,6 +2067,34 @@ export default function Home() {
                 ))}
               </div>
             </article>
+
+            {shouldAskCaregiverContinuity ? (
+              <article className="rounded-2xl border border-[#dbe4d5] bg-[#f8fcf5] p-5">
+                <h3 className="text-lg font-semibold text-[#2f2a24]">3A. Who should provide the ongoing help?</h3>
+                <p className="mt-1 text-sm text-[#6c6358]">We will only present a community as a full match when its policy supports this care plan.</p>
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  {caregiverPlanOptions.map((option) => (
+                    <OptionChip key={option} label={option} isActive={caregiverPlan === option} onClick={() => setCaregiverPlan(option)} />
+                  ))}
+                </div>
+                {needsExistingCaregiverContinuity ? (
+                  <div className="mt-5 grid gap-4 rounded-2xl border border-[#d7decd] bg-white p-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">Will the caregiver need to stay overnight or live in the resident's unit?</p>
+                      <div className="mt-3 flex flex-wrap gap-2.5">
+                        {caregiverOvernightOptions.map((option) => (
+                          <OptionChip key={option} label={option} isActive={existingCaregiverOvernightNeed === option} onClick={() => setExistingCaregiverOvernightNeed(option)} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#5e5346]">What support schedule is needed?</p>
+                      <input value={existingCaregiverSupportSchedule} onChange={(event) => setExistingCaregiverSupportSchedule(event.target.value)} className="mt-2 w-full rounded-xl border border-[#dfd4c3] px-4 py-3 text-base text-[#52483d] outline-none ring-[#87a79b] transition focus:ring-2" placeholder="e.g. daily, nights, 24/7" />
+                    </div>
+                  </div>
+                ) : null}
+              </article>
+            ) : null}
 
             {shouldAskFutureCarePreference ? (
               <article className="rounded-2xl border border-[#dbe4d5] bg-[#f8fcf5] p-5">
