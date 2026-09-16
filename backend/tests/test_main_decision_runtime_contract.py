@@ -171,9 +171,12 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         unknowns = set(strategy_guardian["material_unknowns"])
         for required in ("medicare_status", "move_timing_vs_rehab", "monthly_budget", "ccrc_entrance_fee_tolerance"):
             self.assertIn(required, unknowns)
-        self.assertEqual(1, len(human["adaptive_questions"]))
-        self.assertTrue(human["adaptive_questions"][0]["question_key"].startswith("semantic_ai_high_information_question:"))
-        self.assertTrue(human["adaptive_questions"][0].get("target_fact_key"))
+        self.assertEqual("NEEDS_RESEARCH", human["decision_readiness"])
+        self.assertEqual([], human["adaptive_questions"])
+        self.assertEqual(
+            "AI_DID_NOT_ALIGN_QUESTION_TO_GUARDIAN_TARGET",
+            human["readiness_guardian"]["question_target_repair_resolution"],
+        )
         self.assertEqual([], result["results"])
         self.assertEqual("PENDING_CLIENT_INPUT_REQUIRED", result["decision_intelligence"]["decision_finality"])
 

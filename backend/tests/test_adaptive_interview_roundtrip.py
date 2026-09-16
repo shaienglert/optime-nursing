@@ -31,12 +31,12 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
                 return build_human_intelligence_context(state, query)
 
     def test_ai_chooses_exactly_one_next_question(self) -> None:
-        question = "Which daily social environment would feel most comfortable?"
+        question = "What monthly budget would be comfortable?"
         context = self._run(self._state(), {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": question,
             "statements": [],
-        })
+        }, "My father needs senior living in Las Vegas.")
         self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
         self.assertTrue(context["interview_policy"]["hard_coded_question_generation_forbidden"])
         self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
@@ -45,7 +45,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertTrue(row["question_key"].startswith("semantic_ai_high_information_question:"))
         self.assertEqual(question, row["question"])
         self.assertTrue(row.get("target_fact_key"))
-        self.assertNotIn(row["question_key"], {"community_size_preference", "social_interaction_preference", "move_participation"})
+        self.assertEqual("monthly_budget", row["target_fact_key"])
 
     def test_guardian_rejects_ai_ready_when_material_client_fact_is_unresolved(self) -> None:
         context = self._run(self._state(), {
@@ -169,6 +169,32 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
         self.assertEqual([], context["adaptive_questions"])
 
+    def test_guardian_deterministically_binds_medicare_wording_when_ai_omits_gap_metadata(self) -> None:
+        state = self._state()
+        state.update({"budget": 17000, "referenceLocationValue": "Las Vegas"})
+        query = (
+            "My father recently had a stroke and needs hands-on bathing, dressing and transfer help, "
+            "plus PT, OT and speech therapy in Las Vegas for up to $17,000 monthly."
+        )
+        bad = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": "Is he still in rehabilitation?",
+            "statements": [],
+        }
+        medicare_wording_only = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": "Does he have Original Medicare, Medicare Advantage, no Medicare, or are you not sure?",
+            "statements": [],
+        }
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
+            side_effect=[bad, medicare_wording_only],
+        ):
+            context = build_human_intelligence_context(state, query)
+        question = context["adaptive_questions"][0]
+        self.assertEqual("medicare_status", question["target_fact_key"])
+        self.assertEqual(["Original Medicare", "Medicare Advantage", "No Medicare", "Not sure"], question["answer_options"])
+
     def test_explicit_semantic_fact_answer_resolves_guardian_blocker_without_scripted_question(self) -> None:
         state = self._state()
         state["budget"] = 6500
@@ -229,23 +255,23 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertEqual("REQUIRED_BUT_DISABLED", context["semantic_ai"]["status"])
 
     def test_answered_semantic_question_is_not_reissued(self) -> None:
-        question = "What matters most about the social environment?"
+        question = "What monthly budget would be comfortable?"
         first = self._run(self._state(), {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": question,
             "statements": [],
-        })
+        }, "My father needs senior living in Las Vegas.")
         key = first["adaptive_questions"][0]["question_key"]
         target = first["adaptive_questions"][0].get("target_fact_key")
         state = self._state()
         state["humanIntelligenceV2"]["scoringEngine"]["adaptiveSignals"] = [
-            {"questionKey": key, "answer": "Quiet but friendly", "signalType": "decision-interview", "impactExplanation": f"Target fact: {target}"}
+            {"questionKey": key, "answer": "$6,500 per month", "signalType": "decision-interview", "impactExplanation": f"Target fact: {target}"}
         ]
         second = self._run(state, {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": question,
             "statements": [],
-        })
+        }, "My father needs senior living in Las Vegas.")
         self.assertEqual([], second["adaptive_questions"])
 
 
