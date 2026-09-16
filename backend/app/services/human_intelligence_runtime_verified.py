@@ -264,6 +264,31 @@ def _question_matches_guardian_target(result: Dict[str, Any], target: Dict[str, 
     return bool(target_key) and (declared == target_key or bool(mapped & allowed_mappings) or wording_matches)
 
 
+def _canonical_fallback_result(base_result: Dict[str, Any], blocker: Dict[str, Any]) -> Dict[str, Any]:
+    """Create neutral wording from the policy-owned gap contract."""
+    fact_key = str(blocker.get("fact_key") or "required_information")
+    options = [str(value) for value in blocker.get("answer_options") or []]
+    readable_fact = fact_key.replace("_", " ")
+    fallback_question = f"Which option best describes {readable_fact}: {', '.join(options)}?"
+    return {
+        **base_result,
+        "decision_readiness": "NEEDS_CLARIFICATION",
+        "next_question": fallback_question,
+        "selected_fact_key": fact_key,
+        "statements": [{
+            "raw_text": str(blocker.get("reason") or readable_fact),
+            "meaning": str(blocker.get("reason") or readable_fact),
+            "importance": "MUST",
+            "knowledge_state": "UNKNOWN",
+            "status": "ASKED",
+            "gap_key": fact_key,
+            "mapped_parameters": [fact_key],
+            "clarification_question": fallback_question,
+            "research_task": None,
+        }],
+    }
+
+
 def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     required = os.getenv("OPTIME_SEMANTIC_AI_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
@@ -327,26 +352,7 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
                 context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
             else:
                 fact_key = str(selected_blocker.get("fact_key") or "required_information")
-                options = [str(value) for value in selected_blocker.get("answer_options") or []]
-                readable_fact = fact_key.replace("_", " ")
-                fallback_question = f"Which option best describes {readable_fact}: {', '.join(options)}?"
-                result = {
-                    **repaired,
-                    "decision_readiness": "NEEDS_CLARIFICATION",
-                    "next_question": fallback_question,
-                    "selected_fact_key": fact_key,
-                    "statements": [{
-                        "raw_text": str(selected_blocker.get("reason") or readable_fact),
-                        "meaning": str(selected_blocker.get("reason") or readable_fact),
-                        "importance": "MUST",
-                        "knowledge_state": "UNKNOWN",
-                        "status": "ASKED",
-                        "gap_key": fact_key,
-                        "mapped_parameters": [fact_key],
-                        "clarification_question": fallback_question,
-                        "research_task": None,
-                    }],
-                }
+                result = _canonical_fallback_result(repaired, selected_blocker)
                 readiness = "NEEDS_CLARIFICATION"
                 context["readiness_guardian"]["selected_fact_key"] = fact_key
                 context["readiness_guardian"]["question_target_repair_resolution"] = "DETERMINISTIC_CANONICAL_FALLBACK"
@@ -358,25 +364,34 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
                 "highest_priority_fact_key": selected_blocker.get("fact_key"),
                 "instruction": "Ask exactly one concise question that resolves the highest-priority client-owned fact key. Do not copy deterministic wording because none is supplied. Do not return READY until the fact is answered or explicitly acknowledged as unknown/not sure.",
             }
-            second_result = _call_semantic_ai(
-                context,
-                questionnaire_state,
-                natural_language_query,
-                readiness_veto=veto_packet,
-            )
-            second_readiness = str(second_result.get("decision_readiness") or "NEEDS_CLARIFICATION").upper()
-            second_question = str(second_result.get("next_question") or "").strip()
-            if second_readiness == "NEEDS_CLARIFICATION" and second_question:
+            second_result: Dict[str, Any] = {}
+            veto_succeeded = False
+            for attempt in range(1, 4):
+                second_result = _call_semantic_ai(
+                    context,
+                    questionnaire_state,
+                    natural_language_query,
+                    readiness_veto=veto_packet,
+                )
+                if (
+                    str(second_result.get("decision_readiness") or "").upper() == "NEEDS_CLARIFICATION"
+                    and _question_matches_guardian_target(second_result, selected_blocker)
+                ):
+                    veto_succeeded = True
+                    context["readiness_guardian"]["veto_wording_attempts"] = attempt
+                    break
+            if veto_succeeded:
                 result = second_result
-                readiness = second_readiness
+                readiness = "NEEDS_CLARIFICATION"
                 context["readiness_guardian"]["veto_applied"] = True
                 context["readiness_guardian"]["veto_resolution"] = "RETURNED_TO_SEMANTIC_AI_FOR_NEXT_BEST_QUESTION"
                 context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
             else:
-                result = second_result
-                readiness = "NEEDS_RESEARCH"
+                result = _canonical_fallback_result(second_result, selected_blocker)
+                readiness = "NEEDS_CLARIFICATION"
                 context["readiness_guardian"]["veto_applied"] = True
-                context["readiness_guardian"]["veto_resolution"] = "AI_DID_NOT_RESOLVE_GUARDIAN_VETO"
+                context["readiness_guardian"]["veto_resolution"] = "DETERMINISTIC_CANONICAL_FALLBACK"
+                context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
 
         # Re-evaluate after any AI wording repair.  This deterministic policy is
         # the sole authority for blocking, final client readiness and escalation;
