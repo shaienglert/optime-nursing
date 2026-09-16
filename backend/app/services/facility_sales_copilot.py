@@ -127,7 +127,7 @@ APPROVED_KNOWLEDGE = [
     {
         "id": "search_visibility_strategy",
         "title": "Google and organic search visibility",
-        "keywords": ["google", "googlr", "seo", "search engine", "search result", "first page", "page one", "organic traffic", "rank on google", "visibility online"],
+        "keywords": ["google", "googlr", "seo", "search engine", "search result", "first page", "page one", "organic traffic", "rank on google", "visibility online", "people find you", "families find you", "find oomnik", "discover oomnik", "reach families", "attract families"],
         "answer": "I believe Oomnik is strongly positioned to reach the first page for relevant senior-living searches. Google tends to reward useful, original, authoritative content, and Oomnik is being built around an internal research institute, detailed Las Vegas facility information, original professional articles, and decision tools that answer the questions families actually ask. Google controls the final position and timetable, but our strategy is designed to give Oomnik a strong and growing organic presence.",
         "proof": "Present this as a confident professional belief supported by Oomnik's content and product strategy, not as a guaranteed Google position or deadline.",
     },
@@ -342,6 +342,50 @@ def _tokens(text: str) -> set[str]:
     return {part for part in re.findall(r"[a-z0-9]+", text.lower()) if len(part) > 2 and part not in stop}
 
 
+def _question_role_context(question: str) -> dict[str, Any]:
+    """Resolve call participants before interpreting the caller's quoted words."""
+    lowered = question.lower()
+    facility_reference = bool(re.search(
+        r"\b(our|my)\s+(facility|community|profile|listing|rooms?|services?|website)\b",
+        lowered,
+    ))
+    return {
+        "representative": "The person using this copilot; an Oomnik facility-sales representative.",
+        "caller": "A facility representative speaking to Oomnik.",
+        "default_you_referent": "Oomnik",
+        "caller_we_referent": "The caller's facility",
+        "families_people_users_referent": "Families or residents searching for senior-living help.",
+        "explicit_facility_reference_detected": facility_reference,
+        "resolution_rule": (
+            "Inside caller_question, 'you', 'your company', 'your platform', or 'your website' means Oomnik by default. "
+            "'We', 'our', or 'my' means the caller's facility. Only phrases such as 'your facility/community/profile' "
+            "refer to the facility. Explicit nouns override pronouns."
+        ),
+    }
+
+
+def _intent_priority(question: str, knowledge_id: str) -> int:
+    """Give discourse-aware intents priority over coincidental keyword overlap."""
+    lowered = question.lower()
+    facility_reference = bool(re.search(
+        r"\b(our|my)\s+(facility|community|profile|listing|rooms?|services?|website)\b",
+        lowered,
+    ))
+    discovery_language = bool(re.search(
+        r"\b(find|discover|reach|attract|hear about|know about|traffic|visibility|market(?:ing)?)\b",
+        lowered,
+    ))
+    oomnik_reference = bool(re.search(
+        r"\b(you|your company|your platform|your site|your website|oomnik)\b",
+        lowered,
+    ))
+    if knowledge_id == "search_visibility_strategy" and discovery_language and oomnik_reference and not facility_reference:
+        return 100
+    if knowledge_id == "value_facility" and discovery_language and facility_reference:
+        return 100
+    return 0
+
+
 def _matches(question: str, limit: int = 4) -> list[dict[str, Any]]:
     lowered = question.lower()
     question_tokens = _tokens(question)
@@ -355,7 +399,7 @@ def _matches(question: str, limit: int = 4) -> list[dict[str, Any]]:
             or (" " not in phrase and re.search(rf"\b{re.escape(phrase)}\b", lowered))
         )
         token_hits = len(question_tokens & _tokens(" ".join(phrases) + " " + item["title"]))
-        score = phrase_hits + token_hits
+        score = phrase_hits + token_hits + _intent_priority(question, item["id"])
         if score:
             scored.append((score, item))
     return [item for _, item in sorted(scored, key=lambda row: (-row[0], row[1]["id"]))[:limit]]
@@ -465,9 +509,12 @@ def ask_sales_copilot(
         "facility_name": facility_name or "UNKNOWN",
         "call_stage": call_stage or "UNKNOWN",
         "caller_question": question,
+        "conversation_roles": _question_role_context(question),
         "approved_knowledge": matches,
         "approved_objection_guidance": objection,
         "mandatory_rules": [
+            "Resolve speakers before answering: the user of this copilot is Oomnik's representative and the caller is a facility representative. In the caller's quoted question, 'you/your company/your platform/your website' means Oomnik by default; 'we/our/my' means the facility. Explicit nouns override pronouns.",
+            "Answer the entity the caller actually asked about. Never silently change an Oomnik demand-generation question into an answer about completing the facility profile, or the reverse. If the referent is genuinely ambiguous, ask one short clarifying question.",
             "Use only approved_knowledge. Never add a fact, promise, number, discount, deadline, legal interpretation, facility fact, or product capability.",
             "Sound like an excellent salesperson, not a lawyer or a compliance notice. Lead with the strongest positive approved commercial reason and answer the caller's real concern.",
             "For future outcomes outside Oomnik's control, use confident expectation language such as 'I believe', 'we expect', or 'our strategy is designed to'; explain the supporting reasons and name the external dependency once.",
