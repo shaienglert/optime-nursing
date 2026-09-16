@@ -35,6 +35,36 @@ def test_google_visibility_answer_is_confident_sales_language_without_guarantee(
     assert "I can't promise" not in result["say_this"]
 
 
+def test_you_in_facility_call_means_oomnik_not_the_facility_profile() -> None:
+    result = ask_sales_copilot("How do you make sure that people will find you?", transport=lambda _: {})
+    assert result["knowledge_ids"][0] == "search_visibility_strategy"
+    assert "Oomnik" in result["say_this"]
+    assert "Google" in result["say_this"]
+    assert "your profile" not in result["say_this"].lower()
+    assert "published after your approval" not in result["say_this"].lower()
+
+
+def test_our_facility_is_not_mistaken_for_oomnik() -> None:
+    result = ask_sales_copilot("How do you make sure people will find our facility?", transport=lambda _: {})
+    assert result["knowledge_ids"][0] == "value_facility"
+    assert result["knowledge_ids"][0] != "search_visibility_strategy"
+
+
+def test_model_receives_explicit_call_roles_and_pronoun_rules() -> None:
+    captured = {}
+
+    def transport(payload):
+        captured.update(payload)
+        return {}
+
+    ask_sales_copilot("How do people find you?", transport=transport)
+    assert captured["conversation_roles"]["default_you_referent"] == "Oomnik"
+    assert captured["conversation_roles"]["caller_we_referent"] == "The caller's facility"
+    rules = " ".join(captured["mandatory_rules"])
+    assert "Resolve speakers before answering" in rules
+    assert "Never silently change an Oomnik demand-generation question" in rules
+
+
 def test_model_is_instructed_to_use_sales_first_style_for_every_answer() -> None:
     captured = {}
 
