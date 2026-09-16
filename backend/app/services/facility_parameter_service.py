@@ -9,6 +9,8 @@ import threading
 from typing import Any, Dict, List, Optional
 
 from app.services.canonical_universe import configured_canonical_market, resolve_canonical_universe_path
+from app.database import SessionLocal
+from app.models.facility import AnswerState, Facility, FacilityCapability
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -272,6 +274,41 @@ def _synthesize_nevada_evidence(canonical_rows: List[Dict[str, Any]], generated_
     return rows
 
 
+
+def _provider_portal_evidence(canonical_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Expose direct provider answers as canonical, attributed evidence."""
+    identifiers: Dict[str, str] = {}
+    for row in canonical_rows:
+        canonical_id = str(row.get("canonical_id") or "").strip()
+        if not canonical_id:
+            continue
+        for value in (canonical_id, row.get("cms_ccn"), row.get("nevada_license_id"), row.get("business_license_id")):
+            key = str(value or "").strip().lower()
+            if key and key not in identifiers:
+                identifiers[key] = canonical_id
+    capability_map = {
+        "housing_private_caregiver_allowed": ("private_caregiver_allowed", "FACILITY"),
+        "housing_live_in_caregiver_accommodation": ("live_in_caregiver_accommodation", "UNIT"),
+    }
+    db = SessionLocal()
+    try:
+        output: List[Dict[str, Any]] = []
+        rows = db.query(Facility, FacilityCapability).join(FacilityCapability, FacilityCapability.facility_id == Facility.id).filter(FacilityCapability.capability.in_(list(capability_map.keys()))).all()
+        for facility, capability in rows:
+            if capability.value == AnswerState.UNKNOWN:
+                continue
+            canonical_id = identifiers.get(str(facility.cms_id or "").strip().lower())
+            if not canonical_id:
+                continue
+            parameter_id, scope = capability_map[capability.capability]
+            output.append(_evidence_row(canonical_id, parameter_id, capability.value.value, source="Facility-provided Oomnik profile", source_record_id=f"facility:{facility.id}:capability:{capability.id}", scope=scope, confidence="HIGH", evidence_strength="FACILITY_REPORTED", evidence_text="Direct facility confirmation in the Oomnik provider portal", evidence_date=capability.verified_at.isoformat() if capability.verified_at else None, provenance={"source_family": "Oomnik provider portal", "provider_answer": True, "facility_id": facility.id, "capability": capability.capability}))
+        return output
+    except Exception:
+        logger.exception("provider_portal_evidence_unavailable")
+        return []
+    finally:
+        db.close()
+
 def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Dict[str, Any]:
     registry_payload = _read_json(REGISTRY_PATH)
     canonical_path = resolve_canonical_universe_path(market)
@@ -285,6 +322,7 @@ def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Di
     else:
         evidence_generated_at = canonical_payload.get("generated_at_utc")
         evidence = _synthesize_nevada_evidence(canonical, evidence_generated_at)
+        evidence.extend(_provider_portal_evidence(canonical))
         evidence_payload = {
             "generated_at_utc": evidence_generated_at,
             "record_count": len(evidence),
@@ -373,6 +411,11 @@ def _load_runtime() -> Dict[str, Any]:
             payload["runtime_meta"]["runtime_version"],
         )
         return payload
+
+
+def invalidate_runtime_cache() -> None:
+    with _CACHE_LOCK:
+        _CACHE.clear()
 
 
 def get_parameter_registry_payload() -> Dict[str, Any]:
