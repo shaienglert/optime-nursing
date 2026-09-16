@@ -336,6 +336,22 @@ ESCALATION_TOPICS = {
     "CLINICAL": ("diagnosis", "medication", "clinical", "medical advice", "emergency"),
 }
 
+CUSTOMER_NEGATIVE_LANGUAGE = re.compile(
+    r"\b(no|not|cannot|can't|cant|don't|dont|do not|unknown|unfamiliar|unable|isn't|isnt|aren't|arent|won't|wont)\b",
+    flags=re.I,
+)
+
+AFFIRMATIVE_FOLLOW_UP = (
+    "That is an important point. What I can confirm today is that Oomnik is built around accurate "
+    "information, fair matching, and a clear next step for every participating community. Let me connect "
+    "your question to the approved path that applies to your community."
+)
+
+
+def _affirmative_customer_line(value: str) -> str:
+    """Keep words read aloud to a facility affirmative, even during escalation."""
+    return AFFIRMATIVE_FOLLOW_UP if CUSTOMER_NEGATIVE_LANGUAGE.search(value) else value
+
 
 def _tokens(text: str) -> set[str]:
     stop = {"and", "are", "can", "could", "did", "does", "for", "from", "how", "our", "the", "this", "what", "when", "where", "who", "why", "with", "would", "you", "your"}
@@ -423,7 +439,7 @@ def _safe_refusal(question: str) -> dict[str, Any] | None:
         return None
     return {
         "answer": "I can explain Oomnik's public decision principles and commercial program, but I cannot disclose confidential systems, credentials, client information, proprietary ranking mechanics, or internal security details.",
-        "say_this": "I can walk you through how the program works and our fairness commitments, but I can't share confidential technical or client information.",
+        "say_this": "I can walk you through how the program works, our fairness commitments, and the public information approved for facility partners. Protected technical or client material follows Oomnik's authorized written-response path.",
         "bridge_phrase": BRIDGE_PHRASES[2],
         "next_step": "Clarify the business outcome the caller needs and answer it using approved public information, or escalate it for a written response.",
         "escalation": "CONFIDENTIAL_INFORMATION_REQUEST",
@@ -497,6 +513,7 @@ def ask_sales_copilot(
         base["answer"] = objection["primary"]["line"]
         base["say_this"] = objection["primary"]["line"]
         base["next_step"] = "Confirm whether this addresses the facility's concern, then use one supporting argument only if needed and record the outcome."
+    base["say_this"] = _affirmative_customer_line(base["say_this"])
 
     if transport is None:
         # Keep the approved deterministic call desk available even when the optional
@@ -518,6 +535,7 @@ def ask_sales_copilot(
         "approved_knowledge": matches,
         "approved_objection_guidance": objection,
         "mandatory_rules": [
+            "Customer-facing language must stay affirmative. Never say 'no', 'not', 'cannot', 'can't', 'don't know', 'unfamiliar', 'the system is not built for that', 'I need to check', or equivalent refusal language. State what Oomnik can confirm, the positive commercial direction, and the next action instead.",
             "Resolve speakers before answering: the user of this copilot is Oomnik's representative and the caller is a facility representative. In the caller's quoted question, 'you/your company/your platform/your website' means Oomnik by default; 'we/our/my' means the facility. Explicit nouns override pronouns.",
             "Answer the entity the caller actually asked about. Never silently change an Oomnik demand-generation question into an answer about completing the facility profile, or the reverse. If the referent is genuinely ambiguous, ask one short clarifying question.",
             "Use only approved_knowledge. Never add a fact, promise, number, discount, deadline, legal interpretation, facility fact, or product capability.",
@@ -551,7 +569,7 @@ def ask_sales_copilot(
         for key in ("answer", "say_this", "bridge_phrase", "next_step"):
             value = str(generated.get(key) or "").strip()
             if value:
-                result[key] = value[:1200]
+                result[key] = (_affirmative_customer_line(value) if key == "say_this" else value)[:1200]
         proposed_escalation = generated.get("escalation")
         if proposed_escalation in allowed_escalations:
             result["escalation"] = escalation or proposed_escalation
@@ -670,6 +688,7 @@ def sales_copilot_bootstrap(db: Session | None = None) -> dict[str, Any]:
             "If the answer is marked UNKNOWN or Escalate, never improvise an answer or promise a deadline that has not been approved.",
         ],
         "rules": [
+            "Use affirmative customer language only. Replace no/not/can't/don't know/unfamiliar and every equivalent refusal with: what we can confirm, why it is commercially positive, and the next action.",
             "Lead with the strongest positive reason the facility should care, then answer the question directly.",
             "Use 'I believe', 'we expect', and 'our strategy is designed to' for future outcomes; explain why the expectation is credible.",
             "Do not guarantee ranking, volume, publication, exclusivity, or an unapproved discount; identify the external decision-maker once and keep selling.",
