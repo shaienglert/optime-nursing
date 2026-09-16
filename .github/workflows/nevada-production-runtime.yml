@@ -152,34 +152,40 @@ jobs:
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'NEEDS_CLARIFICATION',
               'next_question': clarification_question,
-              'statements': [],
+              'statements': [{
+                  'raw_text': 'Social-environment preference is unknown.',
+                  'meaning': 'Preferred social intensity can refine ranking.',
+                  'importance': 'NICE',
+                  'knowledge_state': 'UNKNOWN',
+                  'status': 'ASKED',
+                  'gap_key': 'loneliness_severity',
+                  'mapped_parameters': ['social_interaction_need_after_loss'],
+                  'clarification_question': clarification_question,
+                  'research_task': None,
+              }],
           }
-          blocked = run_patient_decision_engine(base, query, limit=5)
-          human = blocked['decision_intelligence']['human_intelligence']
-          assert human['decision_readiness'] == 'NEEDS_CLARIFICATION', human
+          nonblocking = run_patient_decision_engine(base, query, limit=5)
+          human = nonblocking['decision_intelligence']['human_intelligence']
+          assert human['decision_readiness'] == 'READY', human
           assert human['interview_policy']['owner'] == 'SEMANTIC_AI', human
           assert human['interview_policy']['hard_coded_question_generation_forbidden'] is True, human
-          assert len(human['adaptive_questions']) == 1, human['adaptive_questions']
-          only_question = human['adaptive_questions'][0]
-          assert only_question['question'] == clarification_question, only_question
-          assert only_question['question_key'].startswith('semantic_ai_high_information_question:'), only_question
-          assert only_question.get('target_fact_key'), only_question
-          assert blocked['result_count'] == 0 and blocked['results'] == []
-          assert blocked['decision_intelligence']['recommendation_execution_allowed'] is False
-          assert blocked['decision_intelligence']['decision_finality'] == 'PENDING_CLIENT_INPUT_REQUIRED'
+          assert human['adaptive_questions'] == []
+          assert any(
+              row['gap_key'] == 'loneliness_severity' and row['classification'] == 'IMPORTANT_NON_BLOCKING'
+              for row in human['canonical_gap_policy']['assessments']
+          )
+          # Results remain hidden here because semantic ranking is deliberately
+          # unavailable and required, not because the AI proposed a preference question.
+          assert nonblocking['result_count'] == 0 and nonblocking['results'] == []
+          assert nonblocking['decision_intelligence']['recommendation_execution_allowed'] is False
 
-          premature_answers = iter([
-              {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
-              {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': clarification_question, 'statements': []},
-          ])
-          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: next(premature_answers)
-          vetoed = run_patient_decision_engine(base, query, limit=5)
-          veto_human = vetoed['decision_intelligence']['human_intelligence']
-          assert veto_human['decision_readiness'] == 'NEEDS_CLARIFICATION', veto_human
-          assert veto_human['readiness_guardian']['veto_applied'] is True
-          assert veto_human['readiness_guardian']['veto_resolution'] == 'RETURNED_TO_SEMANTIC_AI_FOR_NEXT_BEST_QUESTION'
-          assert veto_human['readiness_guardian']['client_owned_blockers']
-          assert vetoed['results'] == [] and vetoed['result_count'] == 0
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
+              'decision_readiness': 'READY', 'next_question': None, 'statements': [],
+          }
+          ready_variant = run_patient_decision_engine(base, query, limit=5)
+          ready_human = ready_variant['decision_intelligence']['human_intelligence']
+          assert ready_human['decision_readiness'] == human['decision_readiness'] == 'READY'
+          assert ready_variant['result_count'] == nonblocking['result_count'] == 0
 
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
@@ -201,11 +207,11 @@ jobs:
           }
 
           output = {
-              'blocked_interview': {'question': clarification_question, 'result_count': 0},
-              'premature_ready_veto': {
-                  'decision_readiness': veto_human['decision_readiness'],
-                  'veto_resolution': veto_human['readiness_guardian']['veto_resolution'],
-                  'result_count': vetoed['result_count'],
+              'nonblocking_preference_variance': {
+                  'question': clarification_question,
+                  'decision_readiness': human['decision_readiness'],
+                  'ready_variant_readiness': ready_human['decision_readiness'],
+                  'result_count': nonblocking['result_count'],
               },
           }
           for key, persona in personas.items():
