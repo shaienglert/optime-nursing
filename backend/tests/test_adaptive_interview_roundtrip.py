@@ -53,12 +53,40 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             "next_question": None,
             "statements": [],
         }, "My father needs help bathing and dressing and has no dementia.")
-        self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
-        self.assertEqual([], context["adaptive_questions"])
+        self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
+        self.assertEqual(1, len(context["adaptive_questions"]))
+        self.assertEqual(
+            context["readiness_guardian"]["client_owned_blockers"][0]["fact_key"],
+            context["adaptive_questions"][0]["target_fact_key"],
+        )
         self.assertTrue(context["readiness_guardian"]["veto_applied"])
-        self.assertEqual("AI_DID_NOT_RESOLVE_GUARDIAN_VETO", context["readiness_guardian"]["veto_resolution"])
+        self.assertEqual("DETERMINISTIC_CANONICAL_FALLBACK", context["readiness_guardian"]["veto_resolution"])
         self.assertTrue(context["readiness_guardian"]["client_owned_blockers"])
         self.assertEqual("SEMANTIC_AI", context["interview_policy"]["owner"])
+
+    def test_guardian_veto_never_exposes_ai_question_for_a_different_gap(self) -> None:
+        ready = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        wrong_gap = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": "How recent was the stroke, and is he still in rehabilitation?",
+            "selected_fact_key": "stroke_recency",
+            "statements": [],
+        }
+        state = self._state()
+        state.update({"budget": 17000, "referenceLocationValue": "Las Vegas"})
+        query = (
+            "My father recently had a stroke and needs bathing, dressing, transfers, medication management, "
+            "PT, OT and speech therapy in Las Vegas for $17,000 monthly."
+        )
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
+            side_effect=[ready, wrong_gap, wrong_gap, wrong_gap],
+        ):
+            context = build_human_intelligence_context(state, query)
+        question = context["adaptive_questions"][0]
+        self.assertEqual("medicare_status", question["target_fact_key"])
+        self.assertNotIn("stroke", question["question"].lower())
+        self.assertEqual("DETERMINISTIC_CANONICAL_FALLBACK", context["readiness_guardian"]["veto_resolution"])
 
     def test_guardian_repairs_first_unstructured_question_to_canonical_blocker(self) -> None:
         bad = {

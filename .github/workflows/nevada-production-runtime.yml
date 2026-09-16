@@ -278,6 +278,8 @@ jobs:
           couple_answers = iter([
               {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
               {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': couple_question, 'statements': []},
+              {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': couple_question, 'statements': []},
+              {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': couple_question, 'statements': []},
           ])
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: next(couple_answers)
           couple_blocked = run_patient_decision_engine(couple_state, couple_query, limit=5)
@@ -288,7 +290,8 @@ jobs:
           assert couple_blocked['decision_intelligence']['recommendation_execution_allowed'] is False
           assert couple_blocked['results'] == []
           assert len(couple_human['adaptive_questions']) == 1
-          assert couple_human['adaptive_questions'][0].get('target_fact_key')
+          assert couple_human['adaptive_questions'][0].get('target_fact_key') == couple_human['readiness_guardian']['client_owned_blockers'][0]['fact_key']
+          assert couple_human['readiness_guardian']['veto_resolution'] == 'DETERMINISTIC_CANONICAL_FALLBACK'
 
           couple_ready = deepcopy(couple_state)
           couple_ready.update({
