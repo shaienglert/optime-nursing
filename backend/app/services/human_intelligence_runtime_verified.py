@@ -19,6 +19,7 @@ from functools import lru_cache
 from typing import Any, Dict, List
 
 from app.services import human_intelligence_runtime as _base
+from app.services.canonical_gap_policy import assess_gaps
 from app.services.client_statement_accounting import account_user_input
 from app.services.living_strategy_runtime import build_living_strategy_context
 from app.services.semantic_intent_ai import interpret_client_intent_with_ai
@@ -270,7 +271,15 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         result = _call_semantic_ai(context, questionnaire_state, natural_language_query)
         readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION").upper()
 
-        blockers = list(((context.get("readiness_guardian") or {}).get("client_owned_blockers") or []))
+        all_guardian_gaps = list(((context.get("readiness_guardian") or {}).get("client_owned_blockers") or []))
+        gap_policy = assess_gaps(
+            guardian_gaps=all_guardian_gaps,
+            ai_result=result,
+            questionnaire_state=questionnaire_state,
+            user_text=natural_language_query,
+        )
+        blocking_keys = set(gap_policy.get("blocking_gap_keys") or [])
+        blockers = [row for row in all_guardian_gaps if str(row.get("fact_key") or "") in blocking_keys]
         guardian_veto = readiness == "READY" and bool(blockers)
         selected_blocker: Dict[str, Any] | None = None
         # Only attach/validate a fixed target when Guardian supplied an answer
@@ -329,6 +338,32 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
                 readiness = "NEEDS_RESEARCH"
                 context["readiness_guardian"]["veto_applied"] = True
                 context["readiness_guardian"]["veto_resolution"] = "AI_DID_NOT_RESOLVE_GUARDIAN_VETO"
+
+        # Re-evaluate after any AI wording repair.  This deterministic policy is
+        # the sole authority for blocking, final client readiness and escalation;
+        # the model's decision_readiness is retained only inside its audit packet.
+        gap_policy = assess_gaps(
+            guardian_gaps=all_guardian_gaps,
+            ai_result=result,
+            questionnaire_state=questionnaire_state,
+            user_text=natural_language_query,
+        )
+        blocking_keys = set(gap_policy.get("blocking_gap_keys") or [])
+        has_question = bool(str(result.get("next_question") or "").strip())
+        if gap_policy.get("escalation_required"):
+            readiness = "NEEDS_CLARIFICATION"
+        elif blocking_keys:
+            readiness = "NEEDS_CLARIFICATION" if has_question else "NEEDS_RESEARCH"
+        else:
+            readiness = "READY"
+        context["canonical_gap_policy"] = gap_policy
+        context["readiness_guardian"]["client_owned_blockers"] = [
+            row for row in all_guardian_gaps if str(row.get("fact_key") or "") in blocking_keys
+        ]
+        context["readiness_guardian"]["nonblocking_gaps"] = [
+            row for row in gap_policy.get("assessments") or [] if row.get("classification") != "BLOCKING"
+        ]
+        context["readiness_guardian"]["ready_veto_active"] = bool(blocking_keys) or bool(gap_policy.get("escalation_required"))
 
         context["semantic_ai"] = {
             "enabled": True,
