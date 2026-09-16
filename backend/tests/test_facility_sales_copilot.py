@@ -47,7 +47,7 @@ def test_you_in_facility_call_means_oomnik_not_the_facility_profile() -> None:
 def test_our_facility_is_not_mistaken_for_oomnik() -> None:
     result = ask_sales_copilot("How do you make sure people will find our facility?", transport=lambda _: {})
     assert result["knowledge_ids"][0] == "value_facility"
-    assert result["knowledge_ids"][0] != "search_visibility_strategy"
+    assert "search_visibility_strategy" not in result["knowledge_ids"]
 
 
 def test_model_receives_explicit_call_roles_and_pronoun_rules() -> None:

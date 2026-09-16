@@ -389,8 +389,13 @@ def _intent_priority(question: str, knowledge_id: str) -> int:
 def _matches(question: str, limit: int = 4) -> list[dict[str, Any]]:
     lowered = question.lower()
     question_tokens = _tokens(question)
+    role_context = _question_role_context(question)
     scored = []
     for item in APPROVED_KNOWLEDGE:
+        if role_context["explicit_facility_reference_detected"] and item["id"] == "search_visibility_strategy":
+            # Do not give the semantic model Oomnik-SEO material when the caller
+            # explicitly asked how families will find the caller's own facility.
+            continue
         phrases = [str(value).lower() for value in item["keywords"]]
         phrase_hits = sum(
             3
