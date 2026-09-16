@@ -11,12 +11,13 @@ from collections import Counter
 from typing import Any, Dict
 
 from app.services.degraded_result_notice import attach_degraded_result_notice
+from app.services.canonical_decision_state import canonical_state_payload
 
 
 def attach_decision_pipeline_trace(result: Dict[str, Any]) -> Dict[str, Any]:
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     pipeline = decision.get("facility_selection_pipeline") if isinstance(decision.get("facility_selection_pipeline"), dict) else {}
-    canonical = decision.get("canonical_decision_state") if isinstance(decision.get("canonical_decision_state"), dict) else {}
+    canonical = canonical_state_payload(result)
     dispositions = pipeline.get("candidate_dispositions") if isinstance(pipeline.get("candidate_dispositions"), list) else []
     reason_counts = Counter(
         str(row.get("reason_code") or "UNKNOWN")
@@ -37,7 +38,7 @@ def attach_decision_pipeline_trace(result: Dict[str, Any]) -> Dict[str, Any]:
             "must": {"status": canonical.get("must"), "reason_counts": dict(sorted(reason_counts.items()))},
             "ai_ranking": dict(pipeline.get("ai_ranking") or {}),
             "visibility": {
-                "allowed": decision.get("recommendation_execution_allowed") is True,
+                "allowed": canonical.get("can_show_recommendations") is True,
                 "phase": canonical.get("phase"),
                 "reason": canonical.get("reason"),
                 "next_action": canonical.get("next_action"),

@@ -78,12 +78,9 @@ function summarize(payload: any) {
   const human = humanOf(payload);
   const questions = human?.adaptive_questions || intelligence?.adaptive_questions || [];
   return {
-    decisionReadiness: human?.decision_readiness ?? intelligence?.decision_readiness ?? null,
+    canonicalDecisionState: intelligence?.canonical_decision_state ?? null,
     adaptiveQuestions: questions.map((q: any) => ({ questionKey: q?.question_key ?? null, question: q?.question ?? q?.prompt ?? null })),
     semanticAI: human?.semantic_ai ?? intelligence?.semantic_ai ?? null,
-    decisionFinality: intelligence?.decision_finality ?? intelligence?.agent_evidence_bridge?.decision_finality ?? null,
-    recommendationExecutionAllowed: intelligence?.recommendation_execution_allowed ?? null,
-    recommendationVisibility: intelligence?.recommendation_visibility ?? null,
     researchCandidateCount: intelligence?.research_candidate_count ?? null,
     semanticFacilityRequirements: intelligence?.semantic_facility_requirements ?? null,
     agentEvidenceBridge: intelligence?.agent_evidence_bridge ?? null,
@@ -141,7 +138,10 @@ export async function GET(request: NextRequest) {
     const nextQuestion = output.adaptiveQuestions[0];
     let continueToken: string | null = null;
     let proposedAnswer: AnswerRecord | null = null;
-    if (output.decisionReadiness === "NEEDS_CLARIFICATION" && nextQuestion?.questionKey && nextQuestion?.question) {
+    const clientComplete = output.canonicalDecisionState?.authoritative === true
+      && output.canonicalDecisionState?.client === "COMPLETE";
+    const canShow = output.canonicalDecisionState?.can_show_recommendations === true;
+    if (!clientComplete && nextQuestion?.questionKey && nextQuestion?.question) {
       proposedAnswer = { questionKey: nextQuestion.questionKey, question: nextQuestion.question, answer: scriptedAnswer(id, nextQuestion.question), knowledgeState: "KNOWN" };
       continueToken = encodeAnswers([...answers.filter((row) => row.questionKey !== proposedAnswer!.questionKey), proposedAnswer]);
     }
@@ -156,9 +156,9 @@ export async function GET(request: NextRequest) {
       proposedAnswer,
       continueToken,
       assertions: {
-        noRecommendationBeforeReady: output.decisionReadiness === "READY" || Number(output.resultCount || 0) === 0,
-        recommendationExecutionOnlyIfReady: output.recommendationExecutionAllowed !== true || output.decisionReadiness === "READY",
-        noVisibleRecommendationsWhileExecutionBlocked: output.recommendationExecutionAllowed === true || (Number(output.resultCount || 0) === 0 && output.top5.length === 0),
+        noRecommendationBeforeReady: clientComplete || Number(output.resultCount || 0) === 0,
+        recommendationExecutionOnlyIfReady: !canShow || clientComplete,
+        noVisibleRecommendationsWhileExecutionBlocked: canShow || (Number(output.resultCount || 0) === 0 && output.top5.length === 0),
       },
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

@@ -14,9 +14,15 @@ All ten scenarios also run weekly against the live production application and it
 
 ## Decision-authority migration
 
-The target architecture is one canonical decision object. Today, readiness is still represented by `human_intelligence.decision_readiness`, `recommendation_execution_allowed`, `canonical_decision_state`, and `facility_selection_pipeline.ai_ranking`. The launch contract cross-checks these existing sources and blocks contradictory output. It does not pretend that the architectural migration is complete.
+`canonical_decision_state` is the only recommendation-control authority. It owns client completeness, lifecycle phase, MUST state, ranking state, finality, system health, next action, and whether recommendations may be shown.
 
-Consolidating these fields is a separate, staged architectural change. It requires an inventory of every reader/writer, compatibility fields during migration, and explicit owner approval before removing an authority.
+The other fields have narrower roles:
+
+- `human_intelligence.decision_readiness` is a raw interview-stage signal consumed by the authority;
+- `facility_selection_pipeline.ai_ranking` is a raw ranking-stage outcome consumed by the authority;
+- `recommendation_execution_allowed`, `recommendation_visibility`, and `decision_finality` are read-only compatibility mirrors emitted by the authority.
+
+Production control readers must use the canonical accessors and fail closed when the authoritative object is absent. They must never fall back to a compatibility mirror. The launch contract verifies that any emitted mirrors still agree with the canonical state, but disagreement cannot change control flow.
 
 The launch contract fails when:
 

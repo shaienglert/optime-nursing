@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Mapping, Sequence
 
+from app.services.canonical_decision_state import canonical_state_payload
+
 from app.services.personal_decision_report_contract import (
     ApprovedReportClaim,
     ClaimType,
@@ -162,7 +164,8 @@ def _why_recommendation_claims(decision_intelligence: Mapping[str, Any]) -> list
                 [ReportSection.WHY_RECOMMENDATION],
             )
         )
-    finality = decision_intelligence.get("decision_finality")
+    canonical = decision_intelligence.get("canonical_decision_state") or {}
+    finality = canonical.get("finality")
     if finality:
         claims.append(
             _claim(
@@ -262,7 +265,7 @@ def build_personal_decision_report(
 
     profile = decision_result.get("patient_needs_profile") or {}
     decision_intelligence = profile.get("decision_intelligence") or decision_result.get("decision_intelligence") or {}
-    canonical_state = decision_intelligence.get("canonical_decision_state") or {}
+    canonical_state = canonical_state_payload(dict(decision_result))
     can_show = bool(canonical_state.get("can_show_recommendations"))
 
     role = derive_user_role(questionnaire_state)

@@ -1,10 +1,15 @@
 from app.services.canonical_decision_state import (
+    CanonicalDecisionStateError,
     DecisionFinality,
     DecisionPhase,
     apply_canonical_decision_state_authority,
+    canonical_can_show_recommendations,
+    canonical_client_is_complete,
+    canonical_is_final,
     derive_canonical_decision_state,
     legacy_state_conflicts,
 )
+import pytest
 
 
 def base_result():
@@ -198,3 +203,28 @@ def test_canonical_authority_overwrites_legacy_global_controls():
     assert decision["canonical_decision_state"]["authoritative"] is True
     assert decision["recommendation_execution_allowed"] is False
     assert decision["recommendation_visibility"] == "BLOCKED_AI_RANKING"
+
+
+def test_control_readers_fail_closed_without_authoritative_canonical_state():
+    with pytest.raises(CanonicalDecisionStateError, match="NOT_AUTHORITATIVE"):
+        canonical_can_show_recommendations(base_result())
+
+
+def test_legacy_mirrors_cannot_override_canonical_control_decisions():
+    result = base_result()
+    result.update({"must_eligible_count": 5, "must_pending_verification_count": 0, "must_rejected_count": 2})
+    result["decision_intelligence"]["facility_selection_pipeline"] = {
+        "ai_ranking": {"status": "AI_BATCH_RANKED"},
+        "dynamic_preferences": {"preference_count": 0, "verification_required_count": 0},
+    }
+    apply_canonical_decision_state_authority(result)
+
+    # Simulate a stale late writer. Compatibility mirrors may be wrong, but no
+    # production control reader is permitted to consult them anymore.
+    result["decision_intelligence"]["recommendation_execution_allowed"] = False
+    result["decision_intelligence"]["decision_finality"] = "BLOCKED_SYSTEM"
+    result["decision_intelligence"]["human_intelligence"]["decision_readiness"] = "NEEDS_CLARIFICATION"
+
+    assert canonical_can_show_recommendations(result) is True
+    assert canonical_client_is_complete(result) is True
+    assert canonical_is_final(result) is True

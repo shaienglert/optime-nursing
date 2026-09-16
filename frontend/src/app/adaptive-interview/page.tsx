@@ -21,8 +21,12 @@ type AdaptiveQuestion = {
 type NeedsProfileWithDecisionIntelligence = PatientNeedsProfile & {
   decision_intelligence?: {
     human_intelligence?: { decision_readiness?: string; adaptive_questions?: AdaptiveQuestion[] };
-    decision_readiness?: string;
     adaptive_questions?: AdaptiveQuestion[];
+    canonical_decision_state?: {
+      authoritative?: boolean;
+      client?: string;
+      phase?: string;
+    };
   };
 };
 
@@ -36,7 +40,7 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
   const top = profile.decision_intelligence;
   const nested = top?.human_intelligence;
   return {
-    decision_readiness: top?.decision_readiness || nested?.decision_readiness,
+    canonical: top?.canonical_decision_state,
     adaptive_questions: top?.adaptive_questions || nested?.adaptive_questions || [],
   };
 }
@@ -123,12 +127,13 @@ export default function AdaptiveInterviewPage() {
       }))) as NeedsProfileWithDecisionIntelligence;
       const context = getDecisionContext(response);
 
-      if (context.decision_readiness === "READY" || context.decision_readiness === "NEEDS_RESEARCH") {
-        // NEEDS_RESEARCH means the client interview is done -- any remaining unknowns are
-        // facility-side research work, not something to keep asking the client about. The
-        // backend already treats this identically to READY (see _client_interview_blocked
-        // in app/services/__init__.py), so the frontend must too, or it dead-ends here with
-        // no adaptive_questions and no way to proceed.
+      if (context.canonical?.authoritative !== true) {
+        setError("The decision state could not be verified. Please try again.");
+        setBusy(false);
+        return;
+      }
+
+      if (context.canonical.client === "COMPLETE") {
         setQuestion(null);
         router.replace(destination);
         return;

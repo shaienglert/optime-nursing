@@ -13,6 +13,13 @@ import os
 from typing import Any, Dict, List
 
 from app.services.semantic_intent_ai import _default_transport
+from app.services.canonical_decision_state import (
+    DecisionPhase,
+    apply_canonical_decision_state_authority,
+    canonical_can_show_recommendations,
+    canonical_is_final,
+    canonical_state_payload,
+)
 
 
 _ALLOWED_PHASES = {"DISCOVERY", "CLARIFICATION", "RESEARCH", "COMPARE", "RECOMMEND", "FOLLOW_UP"}
@@ -72,20 +79,23 @@ def _decision_has_must_fail(result: Dict[str, Any]) -> bool:
 
 
 def _decision_is_final(result: Dict[str, Any]) -> bool:
-    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
-    finality = str(decision.get("decision_finality") or "UNKNOWN").upper()
-    return finality == "FINAL"
+    return canonical_is_final(result)
 
 
 def _phase(result: Dict[str, Any], questionnaire_state: Dict[str, Any] | None = None) -> str:
-    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
-    human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
-    readiness = str(human.get("decision_readiness") or decision.get("decision_readiness") or "UNKNOWN").upper()
-    if readiness == "NEEDS_CLARIFICATION":
+    canonical = canonical_state_payload(result)
+    canonical_phase = str(canonical.get("phase") or "")
+    if canonical_phase == DecisionPhase.CLIENT_INPUT_REQUIRED.value:
         return "CLARIFICATION"
-    if readiness == "NEEDS_RESEARCH":
+    if canonical_phase in {
+        DecisionPhase.EVIDENCE_COLLECTION.value,
+        DecisionPhase.MUST_EVALUATION.value,
+        DecisionPhase.AI_RANKING.value,
+        DecisionPhase.PREFERENCE_VERIFICATION.value,
+        DecisionPhase.SYSTEM_BLOCKED.value,
+    }:
         return "RESEARCH"
-    if decision.get("recommendation_execution_allowed") is not True:
+    if not canonical_can_show_recommendations(result):
         return "RESEARCH"
     if _decision_has_must_fail(result):
         return "RESEARCH"
@@ -141,8 +151,7 @@ def _prompt(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural
             "client_intent": patient.get("client_intent") or {},
         },
         "decision_state": {
-            "decision_finality": decision.get("decision_finality"),
-            "recommendation_execution_allowed": decision.get("recommendation_execution_allowed"),
+            "canonical_decision_state": canonical_state_payload(result),
             "strategy_universe": decision.get("strategy_universe") or {},
             "care_partner_layer": decision.get("care_partner_layer") or {},
             "must_gate": decision.get("must_gate") or {},
@@ -175,8 +184,7 @@ def _validate(packet: Dict[str, Any], result: Dict[str, Any], questionnaire_stat
     if action not in _ALLOWED_ACTIONS:
         raise RuntimeError(f"AI_PROCESS_OWNER_INVALID_ACTION:{action}")
 
-    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
-    if decision.get("recommendation_execution_allowed") is not True and action in {"COMPARE_OPTIONS", "PRESENT_RECOMMENDATION"}:
+    if not canonical_can_show_recommendations(result) and action in {"COMPARE_OPTIONS", "PRESENT_RECOMMENDATION"}:
         raise RuntimeError("AI_PROCESS_OWNER_ACTION_BEFORE_EXECUTION_ALLOWED")
     if _decision_has_must_fail(result) and action in {"COMPARE_OPTIONS", "PRESENT_RECOMMENDATION"}:
         raise RuntimeError("AI_PROCESS_OWNER_ACTION_WITH_MUST_FAIL")
@@ -213,6 +221,10 @@ def _validate(packet: Dict[str, Any], result: Dict[str, Any], questionnaire_stat
 
 
 def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
+    # This service is also a supported direct entry point in tests and diagnostics.
+    # Seal raw stage outputs before the first control read instead of falling back to
+    # legacy readiness/execution fields when the wider runtime wrapper is absent.
+    result = apply_canonical_decision_state_authority(result)
     decision = result.setdefault("decision_intelligence", {})
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     required = os.getenv("OPTIME_AI_PROCESS_OWNER_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
@@ -224,7 +236,6 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
             "phase": _phase(result, questionnaire_state),
             "prior_process_state": _continuity_state(questionnaire_state),
         }
-        from app.services.canonical_decision_state import apply_canonical_decision_state_authority
         return apply_canonical_decision_state_authority(result)
 
     try:
@@ -249,7 +260,6 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
             "prior_process_state": _continuity_state(questionnaire_state),
             "error": str(exc),
         }
-    from app.services.canonical_decision_state import apply_canonical_decision_state_authority
     return apply_canonical_decision_state_authority(result)
 
 

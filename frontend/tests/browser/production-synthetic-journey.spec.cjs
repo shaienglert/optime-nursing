@@ -79,7 +79,6 @@ test.describe('production synthetic journey', () => {
     console.log(resultsText);
     console.log('OOMNIK_RESULTS_END');
     const recommendationPayload = await (await recommendationResponse).json();
-    validateLaunchContract({ scenarioName: chosen, scenario, payload: recommendationPayload, resultsText });
     console.log('OOMNIK_DECISION_JSON_BEGIN');
     console.log(JSON.stringify({
       result_count: recommendationPayload.result_count,
@@ -95,6 +94,7 @@ test.describe('production synthetic journey', () => {
       })),
     }));
     console.log('OOMNIK_DECISION_JSON_END');
+    validateLaunchContract({ scenarioName: chosen, scenario, payload: recommendationPayload, resultsText });
     expect(resultsText.length).toBeGreaterThan(200);
   });
 });

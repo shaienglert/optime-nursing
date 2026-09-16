@@ -24,10 +24,17 @@ function questionnaireState() {
 
 function profileFor(body) {
   const signals = body?.questionnaire_state?.humanIntelligenceV2?.scoringEngine?.adaptiveSignals || [];
+  const interviewState = (complete = false) => ({
+    authoritative: true,
+    client: complete ? 'COMPLETE' : 'INCOMPLETE',
+    phase: complete ? 'MUST_EVALUATION' : 'CLIENT_INPUT_REQUIRED',
+    can_show_recommendations: false,
+  });
   if (signals.length === 0) {
     return {
       decision_intelligence: {
         decision_readiness: 'NEEDS_CLARIFICATION',
+        canonical_decision_state: interviewState(),
         adaptive_questions: [{
           question_key: 'known-location',
           question: 'What city or area should we search in for Mom?',
@@ -41,6 +48,7 @@ function profileFor(body) {
     return {
       decision_intelligence: {
         decision_readiness: 'NEEDS_CLARIFICATION',
+        canonical_decision_state: interviewState(),
         adaptive_questions: [{
           question_key: 'known-budget',
           question: 'What monthly housing-and-care budget are you comfortable with?',
@@ -54,6 +62,7 @@ function profileFor(body) {
     return {
       decision_intelligence: {
         decision_readiness: 'NEEDS_CLARIFICATION',
+        canonical_decision_state: interviewState(),
         adaptive_questions: [{
           question_key: 'new-fact',
           question: 'Would Mom prefer a quieter setting or a more active social environment?',
@@ -64,7 +73,13 @@ function profileFor(body) {
       },
     };
   }
-  return { decision_intelligence: { decision_readiness: 'READY', adaptive_questions: [] } };
+  return {
+    decision_intelligence: {
+      decision_readiness: 'READY',
+      canonical_decision_state: interviewState(true),
+      adaptive_questions: [],
+    },
+  };
 }
 
 const decisionResponse = {

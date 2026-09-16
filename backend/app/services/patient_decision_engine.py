@@ -290,6 +290,31 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     normalized = _normalize(text)
     extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
 
+    # A monthly budget stated in the opening story is just as explicit as one
+    # entered in a structured field.  The adaptive interview may carry the
+    # original story forward without copying it into questionnaire["budget"],
+    # so preserve the resulting pricing-verification requirement here.
+    has_explicit_budget = bool(
+        re.search(r"\$\s*\d[\d,]*(?:\.\d+)?", normalized)
+        or re.search(
+            r"\b(?:budget|spend|afford|monthly|per\s+month)\b[^.\n]{0,60}\b\d[\d,]*(?:\.\d+)?\b",
+            normalized,
+        )
+    )
+    if has_explicit_budget:
+        _add_need(
+            needs_by_id,
+            "published_rates",
+            "PREFERENCE",
+            "KNOWN",
+            ["KNOWN", "UNKNOWN"],
+            "FACILITY",
+            "natural_language.budget",
+            1.0,
+            "Current pricing must be checked against the stated budget",
+        )
+        extraction_meta["recognized_tokens"].append("budget")
+
     if "medicaid" in normalized:
         _add_need(
             needs_by_id,
@@ -1180,14 +1205,9 @@ def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) 
         row = row_by_param.get(item["parameter_id"], {})
         strong.append(f"{_display_parameter_label(item['parameter_id'])} is supported by {_display_source_label(row.get('source'))}")
 
+    # Practical decision blockers are placed first because result cards show a
+    # concise subset.  They must never be hidden behind a longer clinical list.
     verify = []
-    for item in eligibility["unknown_critical_needs"][:5]:
-        verify.append(f"{_display_parameter_label(item['parameter_id'])} is not yet verified")
-
-    concerns = []
-    for item in eligibility["unmet_verified_needs"][:5]:
-        concerns.append(f"{_display_parameter_label(item['parameter_id'])} has a verified gap")
-
     if any(row["parameter_id"] == "current_availability" for row in table_rows):
         verify.append("Current availability must be confirmed directly with the facility")
 
@@ -1196,6 +1216,13 @@ def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) 
         verify.append("Current monthly pricing and fees must be confirmed against your stated budget")
     if practical.get("medicaid"):
         verify.append("Medicaid acceptance and the applicable payment pathway must be confirmed")
+
+    for item in eligibility["unknown_critical_needs"][:5]:
+        verify.append(f"{_display_parameter_label(item['parameter_id'])} is not yet verified")
+
+    concerns = []
+    for item in eligibility["unmet_verified_needs"][:5]:
+        concerns.append(f"{_display_parameter_label(item['parameter_id'])} has a verified gap")
 
     return strong, verify, concerns
 
