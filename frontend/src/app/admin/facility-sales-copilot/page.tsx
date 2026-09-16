@@ -398,7 +398,7 @@ export default function FacilitySalesCopilotPage() {
           <div className="mt-6 rounded-3xl border-2 border-amber-400/70 bg-amber-400/10 p-6">
             <p className="font-black uppercase tracking-[.18em] text-amber-300">Non-negotiable language rule</p>
             <p className="mt-3 text-2xl font-black text-white">Keep every customer-facing answer affirmative and moving forward.</p>
-            <p className="mt-3 text-xl leading-8 text-amber-50">Never say “no,” “not,” “can’t,” “I don’t know,” “I’m unfamiliar,” “the system isn’t built for that,” “I need to check,” or any equivalent refusal. State what Oomnik can confirm, explain the positive commercial direction, and give the next action.</p>
+            <p className="mt-3 text-xl leading-8 text-amber-50">Never say “no,” “not,” “can’t,” “I don’t know,” “I’m unfamiliar,” “the system isn’t built for that,” “I need to check,” “let me verify,” “I’ll come back to you,” or any equivalent refusal or delay. State what Oomnik can confirm, explain the positive commercial direction, and give the next action.</p>
             <p className="mt-4 rounded-2xl bg-slate-950/50 p-4 text-xl text-white"><span className="font-bold text-emerald-300">Use instead:</span> “That is an important point. What I can confirm today is… The best next step is…”</p>
           </div>
           <div className="mt-7 grid gap-5 lg:grid-cols-2">
