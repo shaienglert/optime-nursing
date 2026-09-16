@@ -15,6 +15,7 @@ from typing import Any, Dict, List
 from app.services.semantic_intent_ai import _default_transport
 from app.services.canonical_decision_state import (
     DecisionPhase,
+    apply_canonical_decision_state_authority,
     canonical_can_show_recommendations,
     canonical_is_final,
     canonical_state_payload,
@@ -220,6 +221,10 @@ def _validate(packet: Dict[str, Any], result: Dict[str, Any], questionnaire_stat
 
 
 def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
+    # This service is also a supported direct entry point in tests and diagnostics.
+    # Seal raw stage outputs before the first control read instead of falling back to
+    # legacy readiness/execution fields when the wider runtime wrapper is absent.
+    result = apply_canonical_decision_state_authority(result)
     decision = result.setdefault("decision_intelligence", {})
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     required = os.getenv("OPTIME_AI_PROCESS_OWNER_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
@@ -231,7 +236,6 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
             "phase": _phase(result, questionnaire_state),
             "prior_process_state": _continuity_state(questionnaire_state),
         }
-        from app.services.canonical_decision_state import apply_canonical_decision_state_authority
         return apply_canonical_decision_state_authority(result)
 
     try:
@@ -256,7 +260,6 @@ def attach_ai_process_owner(result: Dict[str, Any], questionnaire_state: Dict[st
             "prior_process_state": _continuity_state(questionnaire_state),
             "error": str(exc),
         }
-    from app.services.canonical_decision_state import apply_canonical_decision_state_authority
     return apply_canonical_decision_state_authority(result)
 
 
