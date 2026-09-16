@@ -151,7 +151,7 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         self.assertEqual("monthly_budget", question["target_fact_key"])
         self.assertNotIn("rehabilitation", question["question"].lower())
 
-    def test_guardian_suppresses_question_when_all_targeted_wording_attempts_fail(self) -> None:
+    def test_guardian_uses_canonical_fallback_when_all_targeted_wording_attempts_fail(self) -> None:
         bad = {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": "Is he still in rehabilitation?",
@@ -166,8 +166,15 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         ) as model:
             context = build_human_intelligence_context(self._state(), "My father needs senior living in Las Vegas.")
         self.assertEqual(4, model.call_count)
-        self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
-        self.assertEqual([], context["adaptive_questions"])
+        self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
+        question = context["adaptive_questions"][0]
+        self.assertEqual("monthly_budget", question["target_fact_key"])
+        self.assertTrue(question["answer_options"])
+        self.assertNotIn("rehabilitation", question["question"].lower())
+        self.assertEqual(
+            "DETERMINISTIC_CANONICAL_FALLBACK",
+            context["readiness_guardian"]["question_target_repair_resolution"],
+        )
 
     def test_guardian_deterministically_binds_medicare_wording_when_ai_omits_gap_metadata(self) -> None:
         state = self._state()

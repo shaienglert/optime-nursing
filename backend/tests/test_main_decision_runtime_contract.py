@@ -171,10 +171,11 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         unknowns = set(strategy_guardian["material_unknowns"])
         for required in ("medicare_status", "move_timing_vs_rehab", "monthly_budget", "ccrc_entrance_fee_tolerance"):
             self.assertIn(required, unknowns)
-        self.assertEqual("NEEDS_RESEARCH", human["decision_readiness"])
-        self.assertEqual([], human["adaptive_questions"])
+        self.assertEqual("NEEDS_CLARIFICATION", human["decision_readiness"])
+        self.assertEqual(1, len(human["adaptive_questions"]))
+        self.assertEqual("medicare_status", human["adaptive_questions"][0]["target_fact_key"])
         self.assertEqual(
-            "AI_DID_NOT_ALIGN_QUESTION_TO_GUARDIAN_TARGET",
+            "DETERMINISTIC_CANONICAL_FALLBACK",
             human["readiness_guardian"]["question_target_repair_resolution"],
         )
         self.assertEqual([], result["results"])

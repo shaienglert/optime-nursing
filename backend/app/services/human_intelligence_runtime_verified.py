@@ -326,9 +326,30 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
                 readiness = "NEEDS_CLARIFICATION"
                 context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
             else:
-                readiness = "NEEDS_RESEARCH"
-                context["readiness_guardian"]["question_target_repair_resolution"] = "AI_DID_NOT_ALIGN_QUESTION_TO_GUARDIAN_TARGET"
-                suppress_misaligned_question = True
+                fact_key = str(selected_blocker.get("fact_key") or "required_information")
+                options = [str(value) for value in selected_blocker.get("answer_options") or []]
+                readable_fact = fact_key.replace("_", " ")
+                fallback_question = f"Which option best describes {readable_fact}: {', '.join(options)}?"
+                result = {
+                    **repaired,
+                    "decision_readiness": "NEEDS_CLARIFICATION",
+                    "next_question": fallback_question,
+                    "selected_fact_key": fact_key,
+                    "statements": [{
+                        "raw_text": str(selected_blocker.get("reason") or readable_fact),
+                        "meaning": str(selected_blocker.get("reason") or readable_fact),
+                        "importance": "MUST",
+                        "knowledge_state": "UNKNOWN",
+                        "status": "ASKED",
+                        "gap_key": fact_key,
+                        "mapped_parameters": [fact_key],
+                        "clarification_question": fallback_question,
+                        "research_task": None,
+                    }],
+                }
+                readiness = "NEEDS_CLARIFICATION"
+                context["readiness_guardian"]["selected_fact_key"] = fact_key
+                context["readiness_guardian"]["question_target_repair_resolution"] = "DETERMINISTIC_CANONICAL_FALLBACK"
         if guardian_veto:
             selected_blocker = blockers[0]
             veto_packet = {
