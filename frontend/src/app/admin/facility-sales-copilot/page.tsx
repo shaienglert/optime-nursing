@@ -341,7 +341,7 @@ export default function FacilitySalesCopilotPage() {
               onChange={(e) => setTokenInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && unlock()}
               placeholder="Sales access code"
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+              className="mt-2 w-full rounded-xl border border-[#d8e7e1] bg-white px-4 py-3 text-[#0b2850]"
             />
           </label>
           <button
@@ -358,9 +358,9 @@ export default function FacilitySalesCopilotPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_10%_0%,#173f70_0,#071a33_34%,#030b17_100%)] px-5 py-8 text-lg text-slate-100 sm:px-10 [&_.text-sm]:text-lg [&_.text-xs]:text-base">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dff7ed_0,#ffffff_42%,#eef4fb_100%)] px-5 py-8 text-lg text-[#173f35] sm:px-10 [&_.text-sm]:text-lg [&_.text-xs]:text-base">
       <section className="mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="order-1 overflow-hidden rounded-[2rem] border border-white/15 bg-white/[.07] p-7 shadow-[0_25px_80px_rgba(0,0,0,.35)] backdrop-blur-xl sm:p-10">
+        <header className="order-1 overflow-hidden rounded-[2rem] border border-[#d8e7e1] bg-white/95 p-7 shadow-[0_24px_70px_rgba(11,40,80,.10)] backdrop-blur-xl sm:p-10">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div>
               <div className="inline-block rounded-2xl bg-white px-5 py-3 shadow-xl">
@@ -368,20 +368,20 @@ export default function FacilitySalesCopilotPage() {
                   <OptimeStaticLogo href="/partner-desk" />
                 </div>
               </div>
-              <p className="mt-8 text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">
+              <p className="mt-8 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">
                 Oomnik Partner Desk · Las Vegas
               </p>
               <h1 className="mt-3 max-w-4xl text-4xl font-black leading-tight tracking-[-0.04em] sm:text-6xl">
                 Build the matching platform every community will want to join.
               </h1>
-              <p className="mt-4 max-w-3xl text-lg text-slate-300">
+              <p className="mt-4 max-w-3xl text-lg text-[#48645b]">
                 Finding You the Right Way. Give every facility conversation the
                 confidence, evidence, and polish of a category-defining company.
               </p>
             </div>
             <Link
               href="/"
-              className="rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm text-white hover:bg-white/20"
+              className="rounded-full border border-[#c9ded6] bg-white px-5 py-2 text-sm text-[#0b2850] hover:bg-[#eef7f3]"
             >
               Oomnik Home
             </Link>
@@ -389,26 +389,26 @@ export default function FacilitySalesCopilotPage() {
         </header>
 
         <section className="order-2 rounded-[2rem] border border-emerald-400/30 bg-emerald-400/[.08] p-7 sm:p-10">
-          <p className="font-bold uppercase tracking-[0.2em] text-emerald-300">
+          <p className="font-bold uppercase tracking-[0.2em] text-emerald-700">
             Facility outreach playbook · Read this first
           </p>
           <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
             Understand the story before using the answer engine.
           </h2>
           <div className="mt-6 rounded-3xl border-2 border-amber-400/70 bg-amber-400/10 p-6">
-            <p className="font-black uppercase tracking-[.18em] text-amber-300">Non-negotiable language rule</p>
-            <p className="mt-3 text-2xl font-black text-white">Keep every customer-facing answer affirmative and moving forward.</p>
-            <p className="mt-3 text-xl leading-8 text-amber-50">Never say “no,” “not,” “can’t,” “I don’t know,” “I’m unfamiliar,” “the system isn’t built for that,” “I need to check,” “let me verify,” “I’ll come back to you,” or any equivalent refusal or delay. State what Oomnik can confirm, explain the positive commercial direction, and give the next action.</p>
-            <p className="mt-4 rounded-2xl bg-slate-950/50 p-4 text-xl text-white"><span className="font-bold text-emerald-300">Use instead:</span> “That is an important point. What I can confirm today is… The best next step is…”</p>
+            <p className="font-black uppercase tracking-[.18em] text-amber-700">Non-negotiable language rule</p>
+            <p className="mt-3 text-2xl font-black text-[#0b2850]">Keep every customer-facing answer affirmative and moving forward.</p>
+            <p className="mt-3 text-xl leading-8 text-amber-950">Never say “no,” “not,” “can’t,” “I don’t know,” “I’m unfamiliar,” “the system isn’t built for that,” “I need to check,” “let me verify,” “I’ll come back to you,” or any equivalent refusal or delay. State what Oomnik can confirm, explain the positive commercial direction, and give the next action.</p>
+            <p className="mt-4 rounded-2xl bg-[#f7fbf9] p-4 text-xl text-[#0b2850]"><span className="font-bold text-emerald-700">Use instead:</span> “That is an important point. What I can confirm today is… The best next step is…”</p>
           </div>
           <div className="mt-7 grid gap-5 lg:grid-cols-2">
             {CORE_PLAYBOOK.map((section) => (
-              <article key={section.number} className="rounded-3xl border border-white/10 bg-slate-950/45 p-6">
-                <p className="font-bold uppercase tracking-[.18em] text-emerald-300">{section.number === "Opening" ? section.number : `Section ${section.number}`}</p>
+              <article key={section.number} className="rounded-3xl border border-[#d8e7e1] bg-white p-6">
+                <p className="font-bold uppercase tracking-[.18em] text-emerald-700">{section.number === "Opening" ? section.number : `Section ${section.number}`}</p>
                 <h3 className="mt-2 text-3xl font-black">{section.title}</h3>
-                <p className="mt-3 text-xl leading-8 text-slate-200">{section.summary}</p>
-                <ul className="mt-4 space-y-3 text-lg leading-7 text-slate-300">
-                  {section.points.map((point) => <li key={point} className="rounded-xl bg-white/[.04] p-3">{point}</li>)}
+                <p className="mt-3 text-xl leading-8 text-[#274a40]">{section.summary}</p>
+                <ul className="mt-4 space-y-3 text-lg leading-7 text-[#48645b]">
+                  {section.points.map((point) => <li key={point} className="rounded-xl bg-[#f7fbf9] p-3">{point}</li>)}
                 </ul>
               </article>
             ))}
@@ -416,14 +416,14 @@ export default function FacilitySalesCopilotPage() {
         </section>
 
         <section className="order-2 rounded-[2rem] border border-emerald-300/25 bg-gradient-to-br from-emerald-400/15 via-white/[.07] to-sky-400/10 p-7 sm:p-10">
-          <p className="font-bold uppercase tracking-[0.2em] text-emerald-300">
+          <p className="font-bold uppercase tracking-[0.2em] text-emerald-700">
             Start here · The Oomnik story
           </p>
           <h2 className="mt-3 max-w-5xl text-4xl font-black leading-tight tracking-[-0.03em] sm:text-5xl">
             Senior living has plenty of listings. Families need a better
             decision.
           </h2>
-          <div className="mt-6 grid gap-6 text-xl leading-9 text-slate-200 lg:grid-cols-2">
+          <div className="mt-6 grid gap-6 text-xl leading-9 text-[#274a40] lg:grid-cols-2">
             <p>
               Oomnik is building the decision and matching platform for senior
               living. We turn a family's needs, priorities, budget and risks
@@ -436,7 +436,7 @@ export default function FacilitySalesCopilotPage() {
               the resident has remained for 60 days.
             </p>
           </div>
-          <p className="mt-6 rounded-2xl border border-white/15 bg-slate-950/40 p-5 text-2xl font-bold text-white">
+          <p className="mt-6 rounded-2xl border border-[#d8e7e1] bg-white p-5 text-2xl font-bold text-[#0b2850]">
             The more complete and current a community's information is, the
             better Oomnik can identify the right person for it. Missing
             information is never invented—but the engine cannot match on facts
@@ -444,14 +444,14 @@ export default function FacilitySalesCopilotPage() {
           </p>
         </section>
 
-        <section className="order-3 rounded-[2rem] border border-white/15 bg-white/[.06] p-7 sm:p-10">
-          <p className="font-bold uppercase tracking-[0.2em] text-sky-300">
+        <section className="order-3 rounded-[2rem] border border-[#d8e7e1] bg-white p-7 sm:p-10">
+          <p className="font-bold uppercase tracking-[0.2em] text-sky-700">
             Know the market
           </p>
           <h2 className="mt-2 text-4xl font-black">
             What facilities already encounter
           </h2>
-          <p className="mt-4 max-w-5xl text-xl leading-8 text-slate-300">
+          <p className="mt-4 max-w-5xl text-xl leading-8 text-[#48645b]">
             The representative should never dismiss competitors. Each model
             solves part of the problem. The commercial conversation is about the
             meaningful difference Oomnik adds: explainable, information-led
@@ -461,15 +461,15 @@ export default function FacilitySalesCopilotPage() {
             {COMPETITORS.map((competitor) => (
               <article
                 key={competitor.name}
-                className="rounded-2xl border border-slate-700 bg-slate-950/45 p-5"
+                className="rounded-2xl border border-[#d8e7e1] bg-white p-5"
               >
-                <h3 className="text-2xl font-bold text-white">
+                <h3 className="text-2xl font-bold text-[#0b2850]">
                   {competitor.name}
                 </h3>
-                <p className="mt-2 font-semibold text-sky-300">
+                <p className="mt-2 font-semibold text-sky-700">
                   {competitor.model}
                 </p>
-                <p className="mt-3 leading-7 text-slate-300">
+                <p className="mt-3 leading-7 text-[#48645b]">
                   {competitor.strength}
                 </p>
               </article>
@@ -477,30 +477,30 @@ export default function FacilitySalesCopilotPage() {
           </div>
         </section>
 
-        <section className="order-4 rounded-[2rem] border border-violet-400/25 bg-violet-950/20 p-7 sm:p-10">
-          <p className="font-bold uppercase tracking-[0.2em] text-violet-300">
+        <section className="order-4 rounded-[2rem] border border-violet-400/25 bg-violet-50 p-7 sm:p-10">
+          <p className="font-bold uppercase tracking-[0.2em] text-violet-700">
             The Oomnik difference
           </p>
           <h2 className="mt-2 text-4xl font-black">
             The points that matter in a sales conversation
           </h2>
-          <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-700">
+          <div className="mt-6 overflow-x-auto rounded-2xl border border-[#d8e7e1]">
             <table className="w-full min-w-[800px] text-left text-lg">
-              <thead className="bg-slate-950/80">
+              <thead className="bg-[#eef7f3]">
                 <tr>
                   <th className="p-4">Topic</th>
-                  <th className="p-4 text-emerald-300">Oomnik</th>
-                  <th className="p-4 text-slate-300">Common market approach</th>
+                  <th className="p-4 text-emerald-700">Oomnik</th>
+                  <th className="p-4 text-[#48645b]">Common market approach</th>
                 </tr>
               </thead>
               <tbody>
                 {DIFFERENCES.map(([topic, oomnik, market]) => (
-                  <tr key={topic} className="border-t border-slate-700">
-                    <th className="p-4 align-top text-white">{topic}</th>
-                    <td className="p-4 align-top leading-7 text-slate-100">
+                  <tr key={topic} className="border-t border-[#d8e7e1]">
+                    <th className="p-4 align-top text-[#0b2850]">{topic}</th>
+                    <td className="p-4 align-top leading-7 text-[#173f35]">
                       {oomnik}
                     </td>
-                    <td className="p-4 align-top leading-7 text-slate-300">
+                    <td className="p-4 align-top leading-7 text-[#48645b]">
                       {market}
                     </td>
                   </tr>
@@ -512,31 +512,31 @@ export default function FacilitySalesCopilotPage() {
 
         <section className="order-5 grid gap-4 md:grid-cols-3">
           <article className="rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-6">
-            <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-300">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-700">
               Founding offer
             </p>
             <p className="mt-3 text-3xl font-black">$0 Oomnik fee</p>
-            <p className="mt-2 text-sm text-slate-300">
+            <p className="mt-2 text-sm text-[#48645b]">
               First placement for qualifying communities onboarding in the
               90-day launch window. Facility funds the $500 Welcome Package.
             </p>
           </article>
           <article className="rounded-3xl border border-sky-400/30 bg-sky-400/10 p-6">
-            <p className="text-xs font-bold uppercase tracking-[.18em] text-sky-300">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-sky-700">
               Standard placement
             </p>
             <p className="mt-3 text-3xl font-black">$1,999 after 60 days</p>
-            <p className="mt-2 text-sm text-slate-300">
+            <p className="mt-2 text-sm text-[#48645b]">
               Outcome-aligned fee. From placement two onward, the Welcome
               Package is split $250 facility / $250 Oomnik.
             </p>
           </article>
           <article className="rounded-3xl border border-violet-400/30 bg-violet-400/10 p-6">
-            <p className="text-xs font-bold uppercase tracking-[.18em] text-violet-300">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-violet-700">
               Participating · Private pay only
             </p>
             <p className="mt-3 text-3xl font-black">$500 Welcome Package</p>
-            <p className="mt-2 text-sm text-slate-300">
+            <p className="mt-2 text-sm text-[#48645b]">
               Requires a registered participating facility and an eligible
               private-pay placement. Not available for Medicare, Medicaid, VA,
               or other government-funded placements.
@@ -544,40 +544,40 @@ export default function FacilitySalesCopilotPage() {
           </article>
         </section>
 
-        <section className="order-8 rounded-3xl border border-sky-700/70 bg-sky-950/30 p-6 sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">
+        <section className="order-8 rounded-3xl border border-sky-300/70 bg-sky-50 p-6 sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
             How to use the Oomnik engine
           </p>
           <h2 className="mt-2 text-xl font-semibold">
             Write the caller's question exactly as it was asked
           </h2>
-          <ol className="mt-4 grid gap-2 text-sm text-slate-200 sm:grid-cols-2">
+          <ol className="mt-4 grid gap-2 text-sm text-[#274a40] sm:grid-cols-2">
             {bootstrap.how_to_use.map((step, index) => (
-              <li key={step} className="rounded-xl bg-slate-950/50 p-3">
-                <span className="mr-2 font-semibold text-sky-300">
+              <li key={step} className="rounded-xl bg-[#f7fbf9] p-3">
+                <span className="mr-2 font-semibold text-sky-700">
                   {index + 1}.
                 </span>
                 {step}
               </li>
             ))}
           </ol>
-          <p className="mt-4 rounded-xl border border-amber-700/50 bg-amber-950/30 p-3 text-sm text-amber-100">
+          <p className="mt-4 rounded-xl border border-amber-300/50 bg-amber-50 p-3 text-sm text-amber-900">
             Example: “The facility says it has no employee available to maintain
             its profile. What should I offer?”
           </p>
         </section>
 
         {facilityRecord ? (
-          <section className="order-10 rounded-3xl border border-emerald-500/30 bg-white/[.06] p-6">
+          <section className="order-10 rounded-3xl border border-emerald-500/30 bg-white p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-300">
+                <p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-700">
                   Facility Record
                 </p>
                 <h2 className="mt-2 text-3xl font-black">
                   {facilityRecord.facility.name}
                 </h2>
-                <p className="mt-1 text-sm text-slate-300">
+                <p className="mt-1 text-sm text-[#48645b]">
                   {[
                     facilityRecord.facility.address,
                     facilityRecord.facility.city,
@@ -588,22 +588,22 @@ export default function FacilitySalesCopilotPage() {
                 </p>
               </div>
               <div className="flex gap-2 text-sm">
-                <span className="rounded-full bg-sky-950 px-4 py-2">
+                <span className="rounded-full bg-sky-100 px-4 py-2 text-sky-800">
                   {facilityRecord.counts.timeline_events} activities
                 </span>
-                <span className="rounded-full bg-violet-950 px-4 py-2">
+                <span className="rounded-full bg-violet-100 px-4 py-2 text-violet-800">
                   {facilityRecord.counts.documents} documents
                 </span>
               </div>
             </div>
             <div className="mt-6 grid gap-5 lg:grid-cols-2">
-              <div className="rounded-2xl border border-slate-700 bg-slate-950/50 p-5">
+              <div className="rounded-2xl border border-[#d8e7e1] bg-[#f7fbf9] p-5">
                 <h3 className="font-semibold">Record a call, email or note</h3>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <select
                     value={eventType}
                     onChange={(e) => setEventType(e.target.value)}
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"
+                    className="rounded-xl border border-[#d8e7e1] bg-white px-3 py-2"
                   >
                     <option>CALL</option>
                     <option>EMAIL</option>
@@ -615,7 +615,7 @@ export default function FacilitySalesCopilotPage() {
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                     placeholder="Facility contact"
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"
+                    className="rounded-xl border border-[#d8e7e1] bg-white px-3 py-2"
                   />
                 </div>
                 <textarea
@@ -623,20 +623,20 @@ export default function FacilitySalesCopilotPage() {
                   onChange={(e) => setEventSummary(e.target.value)}
                   rows={3}
                   placeholder="What happened, what was agreed, and the next step"
-                  className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"
+                  className="mt-3 w-full rounded-xl border border-[#d8e7e1] bg-white px-3 py-2"
                 />
                 <button
                   type="button"
                   onClick={saveEvent}
                   disabled={loading || !eventSummary.trim()}
-                  className="mt-3 rounded-full bg-emerald-600 px-5 py-2 font-semibold disabled:opacity-50"
+                  className="mt-3 rounded-full bg-[#0b6b57] px-5 py-2 font-semibold text-white disabled:opacity-50"
                 >
                   Save activity
                 </button>
               </div>
-              <div className="rounded-2xl border border-slate-700 bg-slate-950/50 p-5">
+              <div className="rounded-2xl border border-[#d8e7e1] bg-[#f7fbf9] p-5">
                 <h3 className="font-semibold">Attach a document</h3>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-[#647c73]">
                   Add a secure Drive, Dropbox or document-system link. File
                   upload will follow encrypted storage.
                 </p>
@@ -644,7 +644,7 @@ export default function FacilitySalesCopilotPage() {
                   <select
                     value={documentType}
                     onChange={(e) => setDocumentType(e.target.value)}
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"
+                    className="rounded-xl border border-[#d8e7e1] bg-white px-3 py-2"
                   >
                     <option>CONTRACT</option>
                     <option>ADDENDUM</option>
@@ -658,14 +658,14 @@ export default function FacilitySalesCopilotPage() {
                     value={documentTitle}
                     onChange={(e) => setDocumentTitle(e.target.value)}
                     placeholder="Document title"
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"
+                    className="rounded-xl border border-[#d8e7e1] bg-white px-3 py-2"
                   />
                 </div>
                 <input
                   value={documentUrl}
                   onChange={(e) => setDocumentUrl(e.target.value)}
                   placeholder="https:// secure document link"
-                  className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"
+                  className="mt-3 w-full rounded-xl border border-[#d8e7e1] bg-white px-3 py-2"
                 />
                 <button
                   type="button"
@@ -673,7 +673,7 @@ export default function FacilitySalesCopilotPage() {
                   disabled={
                     loading || !documentTitle.trim() || !documentUrl.trim()
                   }
-                  className="mt-3 rounded-full bg-violet-600 px-5 py-2 font-semibold disabled:opacity-50"
+                  className="mt-3 rounded-full bg-[#0b2850] px-5 py-2 font-semibold text-white disabled:opacity-50"
                 >
                   Attach to record
                 </button>
@@ -687,9 +687,9 @@ export default function FacilitySalesCopilotPage() {
                     facilityRecord.timeline.map((item) => (
                       <article
                         key={item.id}
-                        className="rounded-xl border border-slate-800 bg-slate-950/50 p-4"
+                        className="rounded-xl border border-[#d8e7e1] bg-[#f7fbf9] p-4"
                       >
-                        <div className="flex justify-between gap-3 text-xs text-slate-400">
+                        <div className="flex justify-between gap-3 text-xs text-[#647c73]">
                           <span>
                             {item.event_type} · {item.direction}
                           </span>
@@ -700,18 +700,18 @@ export default function FacilitySalesCopilotPage() {
                         {item.subject ? (
                           <p className="mt-2 font-semibold">{item.subject}</p>
                         ) : null}
-                        <p className="mt-1 whitespace-pre-wrap text-sm text-slate-200">
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-[#274a40]">
                           {item.summary}
                         </p>
                         {item.contact_name ? (
-                          <p className="mt-2 text-xs text-sky-300">
+                          <p className="mt-2 text-xs text-sky-700">
                             Contact: {item.contact_name}
                           </p>
                         ) : null}
                       </article>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-[#647c73]">
                       No activity recorded yet.
                     </p>
                   )}
@@ -727,21 +727,21 @@ export default function FacilitySalesCopilotPage() {
                         href={item.document_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="block rounded-xl border border-slate-800 bg-slate-950/50 p-4 hover:border-violet-500"
+                        className="block rounded-xl border border-[#d8e7e1] bg-[#f7fbf9] p-4 hover:border-violet-500"
                       >
-                        <span className="text-xs text-violet-300">
+                        <span className="text-xs text-violet-700">
                           {item.document_type} · {item.status}
                         </span>
                         <span className="mt-1 block font-semibold">
                           {item.title}
                         </span>
-                        <span className="mt-1 block text-xs text-slate-400">
+                        <span className="mt-1 block text-xs text-[#647c73]">
                           Added {new Date(item.created_at).toLocaleString()}
                         </span>
                       </a>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-[#647c73]">
                       No documents attached yet.
                     </p>
                   )}
@@ -751,17 +751,17 @@ export default function FacilitySalesCopilotPage() {
           </section>
         ) : null}
 
-        <section className="order-6 rounded-[2rem] border border-emerald-400/30 bg-emerald-950/25 p-7 sm:p-10">
+        <section className="order-6 rounded-[2rem] border border-emerald-400/30 bg-emerald-50 p-7 sm:p-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="font-bold uppercase tracking-[0.2em] text-emerald-300">
+              <p className="font-bold uppercase tracking-[0.2em] text-emerald-700">
                 Sales lines
               </p>
               <h2 className="mt-2 text-4xl font-black">
                 Use one strong line, then listen
               </h2>
             </div>
-            <p className="max-w-xl text-lg text-slate-300">
+            <p className="max-w-xl text-lg text-[#48645b]">
               Click any line to copy it. Use the idea naturally—never recite the
               entire list.
             </p>
@@ -772,12 +772,12 @@ export default function FacilitySalesCopilotPage() {
                 key={item.id}
                 type="button"
                 onClick={() => navigator.clipboard?.writeText(item.line)}
-                className="rounded-2xl border border-emerald-700/70 bg-slate-950/45 p-6 text-left transition hover:-translate-y-0.5 hover:border-emerald-400"
+                className="rounded-2xl border border-emerald-300/70 bg-white p-6 text-left transition hover:-translate-y-0.5 hover:border-emerald-400"
               >
-                <span className="block font-bold uppercase tracking-[0.12em] text-emerald-300">
+                <span className="block font-bold uppercase tracking-[0.12em] text-emerald-700">
                   {item.title}
                 </span>
-                <span className="mt-3 block text-xl leading-8 text-white">
+                <span className="mt-3 block text-xl leading-8 text-[#0b2850]">
                   “{item.line}”
                 </span>
               </button>
@@ -785,17 +785,17 @@ export default function FacilitySalesCopilotPage() {
           </div>
         </section>
 
-        <section className="order-7 rounded-[2rem] border border-amber-400/30 bg-amber-950/20 p-7 sm:p-10">
-          <p className="font-bold uppercase tracking-[0.2em] text-amber-300">
+        <section className="order-7 rounded-[2rem] border border-amber-400/30 bg-amber-50 p-7 sm:p-10">
+          <p className="font-bold uppercase tracking-[0.2em] text-amber-700">
             Call rules · Read before using the engine
           </p>
           <div className="mt-5 grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-slate-700 bg-slate-950/45 p-6">
-              <h2 className="text-3xl font-black text-white">Call rules</h2>
-              <ol className="mt-5 space-y-4 text-lg leading-8 text-slate-200">
+            <div className="rounded-2xl border border-[#d8e7e1] bg-white p-6">
+              <h2 className="text-3xl font-black text-[#0b2850]">Call rules</h2>
+              <ol className="mt-5 space-y-4 text-lg leading-8 text-[#274a40]">
                 {bootstrap.rules.map((rule, index) => (
                   <li key={rule} className="flex gap-3">
-                    <span className="font-bold text-amber-300">
+                    <span className="font-bold text-amber-700">
                       {index + 1}.
                     </span>
                     <span>{rule}</span>
@@ -803,13 +803,13 @@ export default function FacilitySalesCopilotPage() {
                 ))}
               </ol>
             </div>
-            <div className="rounded-2xl border border-slate-700 bg-slate-950/45 p-6">
-              <h2 className="text-3xl font-black text-white">
+            <div className="rounded-2xl border border-[#d8e7e1] bg-white p-6">
+              <h2 className="text-3xl font-black text-[#0b2850]">
                 Professional bridge phrases
               </h2>
-              <p className="mt-2 text-lg text-slate-300">
-                Use one of these when you need time to verify an answer. Click
-                to copy.
+              <p className="mt-2 text-lg text-[#48645b]">
+                Use one of these to keep the conversation positive and moving
+                toward a concrete next step. Click to copy.
               </p>
               <div className="mt-5 grid gap-3">
                 {bootstrap.bridge_phrases.map((phrase) => (
@@ -817,7 +817,7 @@ export default function FacilitySalesCopilotPage() {
                     key={phrase}
                     type="button"
                     onClick={() => navigator.clipboard?.writeText(phrase)}
-                    className="w-full rounded-xl border border-slate-700 p-4 text-left text-lg leading-7 text-slate-200 hover:border-amber-500"
+                    className="w-full rounded-xl border border-[#d8e7e1] p-4 text-left text-lg leading-7 text-[#274a40] hover:border-amber-500"
                   >
                     “{phrase}”
                   </button>
@@ -831,10 +831,10 @@ export default function FacilitySalesCopilotPage() {
           <div className="space-y-5">
             <form
               onSubmit={submit}
-              className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/80 p-6"
+              className="space-y-4 rounded-3xl border border-[#d8e7e1] bg-white p-6"
             >
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="relative text-sm text-slate-300">
+                <label className="relative text-sm text-[#48645b]">
                   Facility record
                   <input
                     value={facilityName}
@@ -844,21 +844,21 @@ export default function FacilitySalesCopilotPage() {
                       setFacilityRecord(null);
                     }}
                     placeholder="Search a Las Vegas facility"
-                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                    className="mt-1 w-full rounded-xl border border-[#d8e7e1] bg-white px-4 py-3 text-[#0b2850]"
                   />
                   {facilityResults.length ? (
-                    <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-700 bg-slate-950 shadow-2xl">
+                    <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-[#d8e7e1] bg-white shadow-2xl">
                       {facilityResults.map((facility) => (
                         <button
                           key={facility.canonical_facility_id}
                           type="button"
                           onClick={() => selectFacility(facility)}
-                          className="block w-full border-b border-slate-800 px-4 py-3 text-left hover:bg-slate-800"
+                          className="block w-full border-b border-[#d8e7e1] px-4 py-3 text-left hover:bg-[#eef7f3]"
                         >
-                          <span className="block font-semibold text-white">
+                          <span className="block font-semibold text-[#0b2850]">
                             {facility.facility_name}
                           </span>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-[#647c73]">
                             {facility.city}, {facility.state} ·{" "}
                             {facility.canonical_type || "Type unknown"}
                           </span>
@@ -867,12 +867,12 @@ export default function FacilitySalesCopilotPage() {
                     </div>
                   ) : null}
                 </label>
-                <label className="text-sm text-slate-300">
+                <label className="text-sm text-[#48645b]">
                   Call stage
                   <select
                     value={callStage}
                     onChange={(e) => setCallStage(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                    className="mt-1 w-full rounded-xl border border-[#d8e7e1] bg-white px-4 py-3 text-[#0b2850]"
                   >
                     <option value="FOLLOW_UP_AFTER_EMAIL">
                       Follow-up after email
@@ -886,31 +886,31 @@ export default function FacilitySalesCopilotPage() {
                   </select>
                 </label>
               </div>
-              <label className="block text-sm text-slate-300">
+              <label className="block text-sm text-[#48645b]">
                 What did the facility ask?
                 <textarea
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   rows={5}
                   placeholder="Example: “Does paying Oomnik improve our ranking?”"
-                  className="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                  className="mt-1 w-full rounded-2xl border border-[#d8e7e1] bg-white px-4 py-3 text-[#0b2850]"
                 />
               </label>
               <button
                 disabled={loading || !question.trim()}
-                className="rounded-full bg-emerald-600 px-6 py-3 font-semibold hover:bg-emerald-500 disabled:opacity-50"
+                className="rounded-full bg-[#0b6b57] px-6 py-3 font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
               >
                 {loading ? "Preparing answer…" : "Get approved answer"}
               </button>
             </form>
 
             {error ? (
-              <p className="rounded-2xl border border-rose-800 bg-rose-950/40 p-4 text-sm text-rose-200">
+              <p className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800">
                 {error}
               </p>
             ) : null}
             {answer ? (
-              <article className="space-y-4 rounded-3xl border border-emerald-700 bg-emerald-950/25 p-6">
+              <article className="space-y-4 rounded-3xl border border-emerald-300 bg-emerald-50 p-6">
                 <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em]">
                   <span className="rounded-full bg-emerald-800 px-3 py-1 text-emerald-100">
                     {answer.confidence} confidence
@@ -922,26 +922,26 @@ export default function FacilitySalesCopilotPage() {
                   ) : null}
                 </div>
                 <section>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
                     Say this
                   </p>
-                  <p className="mt-2 text-xl leading-relaxed text-white">
+                  <p className="mt-2 text-xl leading-relaxed text-[#0b2850]">
                     “{answer.say_this}”
                   </p>
                 </section>
                 {answer.bridge_phrase ? (
-                  <section className="rounded-2xl border border-amber-700/60 bg-amber-950/30 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-amber-300">
+                  <section className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-amber-700">
                       If you need time
                     </p>
-                    <p className="mt-2 text-amber-50">
+                    <p className="mt-2 text-amber-950">
                       “{answer.bridge_phrase}”
                     </p>
                   </section>
                 ) : null}
                 {answer.evidence ? (
                   <section
-                    className={`rounded-2xl border p-4 ${answer.evidence.verification_status === "VERIFIED" ? "border-emerald-700/60 bg-emerald-950/30" : "border-amber-700/60 bg-amber-950/30"}`}
+                    className={`rounded-2xl border p-4 ${answer.evidence.verification_status === "VERIFIED" ? "border-emerald-300/60 bg-emerald-50" : "border-amber-300/60 bg-amber-50"}`}
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.18em]">
                       Agent evidence ·{" "}
@@ -951,7 +951,7 @@ export default function FacilitySalesCopilotPage() {
                       {answer.evidence.value_display} —{" "}
                       {answer.evidence.metric_definition}
                     </p>
-                    <p className="mt-1 text-xs text-slate-300">
+                    <p className="mt-1 text-xs text-[#48645b]">
                       Data period: {answer.evidence.data_period} · Geography:{" "}
                       {answer.evidence.geography} · Checked:{" "}
                       {answer.evidence.checked_at}
@@ -968,13 +968,13 @@ export default function FacilitySalesCopilotPage() {
                   </section>
                 ) : null}
                 {answer.objection_guidance?.supporting.length ? (
-                  <section className="rounded-2xl border border-sky-800/60 bg-sky-950/25 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
+                  <section className="rounded-2xl border border-sky-300/60 bg-sky-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
                       Use only if needed
                     </p>
                     <div className="mt-2 space-y-2">
                       {answer.objection_guidance.supporting.map((item) => (
-                        <p key={item.id} className="text-sm text-slate-200">
+                        <p key={item.id} className="text-sm text-[#274a40]">
                           “{item.line}”
                         </p>
                       ))}
@@ -982,10 +982,10 @@ export default function FacilitySalesCopilotPage() {
                   </section>
                 ) : null}
                 <section>
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                  <p className="text-xs uppercase tracking-[0.18em] text-[#647c73]">
                     Next step
                   </p>
-                  <p className="mt-1 text-slate-200">{answer.next_step}</p>
+                  <p className="mt-1 text-[#274a40]">{answer.next_step}</p>
                 </section>
               </article>
             ) : null}
