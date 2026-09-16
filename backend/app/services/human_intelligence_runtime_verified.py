@@ -294,6 +294,7 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         # the canonical gap from the first turn; there is no free unstructured
         # question before resolving a blocking client fact.
         needs_target_repair = not question_matches_blocker
+        suppress_misaligned_question = False
         if readiness == "NEEDS_CLARIFICATION" and blockers and blockers[0].get("answer_options") and needs_target_repair:
             selected_blocker = blockers[0]
             repair_packet = {
@@ -302,17 +303,23 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
                 "allowed_answer_options": selected_blocker.get("answer_options") or [],
                 "instruction": "Ask exactly one concise question that resolves highest_priority_fact_key. Its wording, selected_fact_key, mapped_parameters, and answer options must all describe that same fact. Do not ask a different fact with this fact's answer options.",
             }
-            repaired = _call_semantic_ai(context, questionnaire_state, natural_language_query, readiness_veto=repair_packet)
-            if str(repaired.get("decision_readiness") or "").upper() == "NEEDS_CLARIFICATION" and _question_matches_guardian_target(repaired, selected_blocker):
-                result = repaired
+            repaired = result
+            repair_succeeded = False
+            for attempt in range(1, 4):
+                repaired = _call_semantic_ai(context, questionnaire_state, natural_language_query, readiness_veto=repair_packet)
+                if str(repaired.get("decision_readiness") or "").upper() == "NEEDS_CLARIFICATION" and _question_matches_guardian_target(repaired, selected_blocker):
+                    repair_succeeded = True
+                    context["readiness_guardian"]["question_target_repair_attempts"] = attempt
+                    break
+            result = repaired
+            context["readiness_guardian"]["question_target_repair_applied"] = True
+            if repair_succeeded:
                 readiness = "NEEDS_CLARIFICATION"
-                context["readiness_guardian"]["question_target_repair_applied"] = True
                 context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
             else:
-                result = repaired
                 readiness = "NEEDS_RESEARCH"
-                context["readiness_guardian"]["question_target_repair_applied"] = True
                 context["readiness_guardian"]["question_target_repair_resolution"] = "AI_DID_NOT_ALIGN_QUESTION_TO_GUARDIAN_TARGET"
+                suppress_misaligned_question = True
         if guardian_veto:
             selected_blocker = blockers[0]
             veto_packet = {
@@ -351,8 +358,10 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             user_text=natural_language_query,
         )
         blocking_keys = set(gap_policy.get("blocking_gap_keys") or [])
-        has_question = bool(str(result.get("next_question") or "").strip())
-        if gap_policy.get("escalation_required"):
+        has_question = bool(str(result.get("next_question") or "").strip()) and not suppress_misaligned_question
+        if suppress_misaligned_question:
+            readiness = "NEEDS_RESEARCH"
+        elif gap_policy.get("escalation_required"):
             readiness = "NEEDS_CLARIFICATION"
         elif blocking_keys:
             readiness = "NEEDS_CLARIFICATION" if has_question else "NEEDS_RESEARCH"
@@ -376,7 +385,7 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         context["decision_readiness"] = readiness
         context["adaptive_questions"] = []
 
-        next_question = str(result.get("next_question") or "").strip()
+        next_question = "" if suppress_misaligned_question else str(result.get("next_question") or "").strip()
         if readiness == "NEEDS_CLARIFICATION" and next_question:
             question_key = _semantic_question_key(next_question)
             answered_keys = _answered_adaptive_keys(questionnaire_state)
