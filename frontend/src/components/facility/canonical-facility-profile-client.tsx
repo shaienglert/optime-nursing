@@ -21,6 +21,12 @@ type RegulatoryHistory = {
   [key: string]: unknown;
 };
 
+type CommunityConfirmedProfile = {
+  canonical_facility_id: string;
+  facility_id: number | null;
+  confirmed_fields: Array<{ key: string; label: string; value: string; source: string; verified_at: string | null }>;
+};
+
 type RegulatoryResponse = {
   canonical_facility_id: string;
   facility_name?: string | null;
@@ -80,6 +86,7 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
   const [table, setTable] = useState<FacilityParameterTable | null>(null);
   const [regulatory, setRegulatory] = useState<RegulatoryResponse | null>(null);
   const [rooms, setRooms] = useState<FacilityRooms | null>(null);
+  const [communityConfirmed, setCommunityConfirmed] = useState<CommunityConfirmedProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [outreachState, setOutreachState] = useState<"idle" | "requesting" | "sent" | "no_contact" | "error">("idle");
@@ -96,22 +103,27 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
           fetchFacilityRooms(canonicalFacilityId).catch(() => null),
         ]);
         let regulatoryPayload: RegulatoryResponse | null = null;
+        let communityConfirmedPayload: CommunityConfirmedProfile | null = null;
         try {
-          const response = await fetch(`/api/backend/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/regulatory-history`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            cache: "no-store",
-          });
-          if (response.ok) {
-            regulatoryPayload = await response.json() as RegulatoryResponse;
-          }
+          const [regulatoryResponse, communityResponse] = await Promise.all([
+            fetch(`/api/backend/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/regulatory-history`, {
+              method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store",
+            }),
+            fetch(`/api/backend/canonical-facilities/${encodeURIComponent(canonicalFacilityId)}/community-confirmed-profile`, {
+              method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store",
+            }),
+          ]);
+          if (regulatoryResponse.ok) regulatoryPayload = await regulatoryResponse.json() as RegulatoryResponse;
+          if (communityResponse.ok) communityConfirmedPayload = await communityResponse.json() as CommunityConfirmedProfile;
         } catch {
           regulatoryPayload = null;
+          communityConfirmedPayload = null;
         }
 
         if (!mounted) return;
         setTable(parameterTable);
         setRegulatory(regulatoryPayload);
+        setCommunityConfirmed(communityConfirmedPayload);
         setRooms(roomsPayload);
       } catch (err) {
         if (mounted) setError(err instanceof Error ? err.message : "Unable to load canonical facility profile.");
@@ -225,6 +237,22 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
             </div>
           )}
         </section>
+
+        {communityConfirmed?.confirmed_fields.length ? (
+          <section className="rounded-3xl border border-[#cfe2d8] bg-[#f7fcf8] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#315f53]">Confirmed by this community</p>
+            <p className="mt-1 text-sm text-[#5d6c62]">Information entered and confirmed by the community. It is shown with its source and verification date.</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {communityConfirmed.confirmed_fields.map((field) => (
+                <article key={field.key} className="rounded-2xl border border-[#d9e9df] bg-white p-4">
+                  <p className="text-sm font-semibold text-[#332f29]">{field.label}</p>
+                  <p className="mt-2 text-lg font-semibold text-[#315f53]">{displayValue(field.value)}</p>
+                  <p className="mt-2 text-xs text-[#6d655b]">{field.source}{field.verified_at ? ` · Confirmed ${new Date(field.verified_at).toLocaleDateString()}` : ""}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-[#e8ddcc] bg-white p-5">
