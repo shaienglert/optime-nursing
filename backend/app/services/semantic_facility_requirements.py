@@ -72,6 +72,18 @@ def extract_semantic_facility_requirements(result: Dict[str, Any]) -> List[Dict[
             "hebrew", "speak her language", "speak his language",
         )):
             key, dimension = "SEMANTIC_LANGUAGE_SUPPORT", "language_support"
+        elif any(token in haystack for token in (
+            "budget", "afford", "monthly_affordability", "published_rates", "total_monthly_cost",
+        )):
+            # No facility in this system's evidence schema carries a verified monthly
+            # rate yet (the supplier database has 0 fully-verified pricing records as of
+            # this writing) -- so this requirement will land in must_unknown and stay
+            # there until real pricing data exists. That is the correct, honest outcome:
+            # a stated budget must stop a false PASS/FINAL recommendation, not silently
+            # become a mere "prefer transparent pricing" preference as it was before.
+            key, dimension = "SEMANTIC_BUDGET_VERIFICATION", "budget_verification"
+        elif "medicaid" in haystack:
+            key, dimension = "SEMANTIC_MEDICAID_PATHWAY", "medicaid_pathway"
         else:
             key, dimension = "SEMANTIC_FACILITY_EVIDENCE", "semantic_facility_evidence"
         # Every recognized facility-capability bucket above is a governed domain this
@@ -122,6 +134,10 @@ def _payload_verifies(payload: Dict[str, Any], key: str) -> bool | None:
         value = payload.get("kosher_verified")
     elif key == "SEMANTIC_LANGUAGE_SUPPORT":
         value = payload.get("language_support_verified")
+    elif key == "SEMANTIC_BUDGET_VERIFICATION":
+        value = payload.get("published_rates_verified")
+    elif key == "SEMANTIC_MEDICAID_PATHWAY":
+        value = payload.get("medicaid_accepted_verified")
     else:
         value = None
     return value if isinstance(value, bool) else None

@@ -181,8 +181,8 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         result = {
             "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
                 "statements": [{
-                    "raw_text": "Medicaid eligibility is pending",
-                    "meaning": "Payment source may change if Medicaid is approved.",
+                    "raw_text": "A family financial review is pending",
+                    "meaning": "Payment source may change pending a family financial review.",
                     "importance": "MUST",
                     "knowledge_state": "KNOWN",
                     "status": "USED",
@@ -383,6 +383,97 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         fit = out["results"][0]["client_intent_fit"]
         self.assertIn("SEMANTIC_LANGUAGE_SUPPORT", fit["must_unknown"])
         self.assertIn("SEMANTIC_KOSHER_DIET", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
+    def test_used_budget_must_survives_to_the_gate(self) -> None:
+        # Reproduces the live finding for budget_constrained_high_adl: Semantic AI
+        # tags the stated monthly budget as MUST/KNOWN/USED. Before this fix, budget
+        # only ever became a PREFERENCE-level "prefer transparent pricing" need in
+        # patient_decision_engine.py's _map_financial(), so a facility with no pricing
+        # evidence at all still showed a full PASS/FINAL recommendation to a family
+        # who explicitly said their budget was tight.
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [
+                    {
+                        "raw_text": "Our budget is tight",
+                        "meaning": "affordability is a hard constraint",
+                        "importance": "MUST",
+                        "knowledge_state": "KNOWN",
+                        "status": "USED",
+                        "mapped_parameters": ["budget_tightness"],
+                    },
+                    {
+                        "raw_text": "around $3,000 a month",
+                        "meaning": "stated monthly budget is $3,000",
+                        "importance": "MUST",
+                        "knowledge_state": "KNOWN",
+                        "status": "USED",
+                        "mapped_parameters": ["monthly_affordability"],
+                    },
+                ]
+            }}}},
+            "results": [{
+                "canonical_facility_id": "NO-PRICE-EVIDENCE",
+                "facility_name": "Generic Community",
+                "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                "agent_person_fit_evidence": [],
+            }],
+        }
+
+        requirements = extract_semantic_facility_requirements(result)
+        self.assertEqual(["SEMANTIC_BUDGET_VERIFICATION"], [item["key"] for item in requirements])
+
+        out = apply_semantic_facility_requirements(result, research_limit=0)
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
+    def test_context_level_medicaid_mention_is_not_promoted(self) -> None:
+        # Live behavior for the same persona: Semantic AI classified Medicaid
+        # eligibility as CONTEXT, not MUST ("may qualify" is not a firm requirement).
+        # The importance filter at the top of extract_semantic_facility_requirements
+        # already excludes non-MUST statements -- this asserts the new Medicaid bucket
+        # doesn't change that for a statement the AI itself did not mark MUST.
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "She may qualify for Medicaid",
+                    "meaning": "possible future Medicaid eligibility",
+                    "importance": "CONTEXT",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["medicaid_eligibility"],
+                }]
+            }}}},
+            "results": [],
+        }
+        self.assertEqual([], extract_semantic_facility_requirements(result))
+
+    def test_used_explicit_medicaid_requirement_survives_to_the_gate(self) -> None:
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "the facility must accept Medicaid",
+                    "meaning": "Medicaid acceptance is a hard requirement",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["medicaid_requirement"],
+                }]
+            }}}},
+            "results": [{
+                "canonical_facility_id": "NO-MEDICAID-EVIDENCE",
+                "facility_name": "Generic Community",
+                "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                "agent_person_fit_evidence": [],
+            }],
+        }
+        requirements = extract_semantic_facility_requirements(result)
+        self.assertEqual(["SEMANTIC_MEDICAID_PATHWAY"], [item["key"] for item in requirements])
+        out = apply_semantic_facility_requirements(result, research_limit=0)
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertIn("SEMANTIC_MEDICAID_PATHWAY", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
     def test_stamped_false_agent_evidence_never_hard_fails_a_semantic_must(self) -> None:
