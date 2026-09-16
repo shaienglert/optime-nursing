@@ -123,6 +123,8 @@ DISPLAY_PARAMETER_LABELS = {
     "published_rates": "Transparent pricing",
     "transportation": "Transportation support",
     "medicare_attributes": "Medicare acceptance",
+    "private_caregiver_allowed": "Existing private caregiver permitted",
+    "live_in_caregiver_accommodation": "Overnight / live-in caregiver accommodation",
 }
 
 _DECISION_RESULT_CACHE: Dict[str, Dict[str, Any]] = {}
@@ -279,6 +281,24 @@ def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[s
         _add_need(needs_by_id, "transportation", "PREFERENCE", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.distanceFromFamily", 0.8, "Transportation support preferred")
 
 
+def _map_caregiver_continuity(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
+    caregiver = questionnaire.get("humanIntelligenceV2", {}).get("caregiverProfile", {})
+    plan = _normalize(caregiver.get("carePlan"))
+    overnight = _normalize(caregiver.get("existingCaregiverOvernightNeed"))
+    if plan != "we have an existing caregiver who should continue":
+        return
+    _add_need(
+        needs_by_id, "private_caregiver_allowed", "REQUIRED", "YES", ["YES"],
+        "FACILITY", "questionnaire.caregiverProfile.carePlan", 1.0,
+        "Existing private caregiver must be permitted to continue care on site",
+    )
+    if overnight == "must stay overnight / live in":
+        _add_need(
+            needs_by_id, "live_in_caregiver_accommodation", "REQUIRED", "YES", ["YES"],
+            "UNIT", "questionnaire.caregiverProfile.existingCaregiverOvernightNeed", 1.0,
+            "Existing caregiver must be permitted to stay overnight or live in the resident's unit",
+        )
+
 def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     budget = questionnaire.get("budget")
     if budget not in (None, "", 0):
@@ -402,6 +422,7 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     _map_memory(questionnaire_state, needs_by_id)
     _map_rehab(questionnaire_state, needs_by_id)
     _map_personal_preferences(questionnaire_state, needs_by_id)
+    _map_caregiver_continuity(questionnaire_state, needs_by_id)
     _map_financial(questionnaire_state, needs_by_id)
 
     nl_meta = _map_natural_language(natural_language_query or "", needs_by_id)
