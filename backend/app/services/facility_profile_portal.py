@@ -41,6 +41,7 @@ from app.models.facility_questionnaire import (
     FACILITY_QUESTIONNAIRE_V1,
     facility_questionnaire_v1_flat,
 )
+from app.services.facility_parameter_service import invalidate_runtime_cache
 from app.services.provider_identity import (
     CATEGORY_ACTIVITIES,
     CATEGORY_MEDICAL,
@@ -385,6 +386,8 @@ def save_capabilities(
         updated += 1
 
     db.commit()
+    if any(key.startswith("housing_private_caregiver") or key.startswith("housing_live_in_caregiver") for key in normalized):
+        invalidate_runtime_cache()
     return {
         "updated": updated,
         "unchanged": unchanged,
