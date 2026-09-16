@@ -33,6 +33,7 @@ import app.models.facility_room_offering
 import app.models.facility_outreach
 import app.models.facility_relationship
 import app.models.placement_referral
+import app.models.facility_agreement
 import app.models.competitive_intelligence
 import app.models.supplier_intelligence
 from app.models.agent_execution import (
@@ -152,6 +153,7 @@ from app.services.facility_room_service import list_room_types
 from app.services import facility_outreach_service
 from app.services import facility_relationship_service
 from app.services import placement_referral_service
+from app.services import facility_agreement_service
 from app.services.competitive_intelligence_service import (
     latest_signals as competitive_intelligence_latest_signals,
     run_competitive_intelligence_cycle,
@@ -470,14 +472,27 @@ class PlacementReferralOut(BaseModel):
     canonical_facility_id: str
     facility_name: str
     billable_status: str
+    placement_number: Optional[int] = None
+    is_founding_facility: bool
     benefit_amount: float
-    facility_credit_amount: float
-    commission_amount: float
+    facility_welcome_contribution: float
+    oomnik_welcome_contribution: float
     commission_due: float
+    net_income: float
     entry_confirmed_at: Optional[str] = None
     departure_date: Optional[str] = None
     departure_reason: Optional[str] = None
     created_at: str
+
+
+class FacilityAgreementOut(BaseModel):
+    canonical_facility_id: str
+    onboarding_completed_at: Optional[str] = None
+    is_founding_facility: bool
+
+
+class FacilityAgreementMarkCompleteIn(BaseModel):
+    completed_at: Optional[str] = None
 
 
 class CompetitiveIntelligenceSignalOut(BaseModel):
@@ -2269,17 +2284,20 @@ async def post_facility_outreach_submission(response_token: str, payload: Facili
     )
 
 
-def _serialize_placement_referral(referral) -> PlacementReferralOut:
-    status = placement_referral_service.billable_status(referral)
+def _serialize_placement_referral(db: Session, referral) -> PlacementReferralOut:
+    status = placement_referral_service.billable_status(db, referral)
     return PlacementReferralOut(
         referral_code=referral.referral_code,
         canonical_facility_id=referral.canonical_facility_id,
         facility_name=facility_outreach_service.facility_name_for(referral.canonical_facility_id),
         billable_status=status,
-        benefit_amount=referral.benefit_amount_cents / 100,
-        facility_credit_amount=referral.facility_credit_amount_cents / 100,
-        commission_amount=referral.commission_amount_cents / 100,
-        commission_due=placement_referral_service.commission_due_cents(referral) / 100,
+        placement_number=placement_referral_service.placement_number(db, referral),
+        is_founding_facility=placement_referral_service.is_founding_facility(db, referral.canonical_facility_id),
+        benefit_amount=placement_referral_service.WELCOME_PACKAGE_CENTS / 100,
+        facility_welcome_contribution=placement_referral_service.facility_welcome_contribution_cents(db, referral) / 100,
+        oomnik_welcome_contribution=placement_referral_service.oomnik_welcome_contribution_cents(db, referral) / 100,
+        commission_due=placement_referral_service.commission_due_cents(db, referral) / 100,
+        net_income=placement_referral_service.net_income_cents(db, referral) / 100,
         entry_confirmed_at=referral.entry_confirmed_at.isoformat() if referral.entry_confirmed_at else None,
         departure_date=referral.departure_date.isoformat() if referral.departure_date else None,
         departure_reason=referral.departure_reason,
@@ -2301,7 +2319,7 @@ async def post_create_placement_referral(payload: PlacementReferralCreateIn, db:
     referral = placement_referral_service.create_referral(
         db, canonical_facility_id=payload.canonical_facility_id, case_token=payload.case_token
     )
-    return _serialize_placement_referral(referral)
+    return _serialize_placement_referral(db, referral)
 
 
 @app.get("/placement-referrals/{referral_code}", response_model=PlacementReferralOut)
@@ -2309,7 +2327,7 @@ async def get_placement_referral(referral_code: str, db: Session = Depends(get_d
     referral = placement_referral_service.get_referral_by_code(db, referral_code)
     if referral is None:
         raise HTTPException(status_code=404, detail="Unknown referral code")
-    return _serialize_placement_referral(referral)
+    return _serialize_placement_referral(db, referral)
 
 
 @app.post("/placement-referrals/{referral_code}/confirm-entry", response_model=PlacementReferralOut)
@@ -2321,7 +2339,7 @@ async def post_confirm_placement_entry(referral_code: str, payload: PlacementRef
         )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail="Unknown referral code") from exc
-    return _serialize_placement_referral(referral)
+    return _serialize_placement_referral(db, referral)
 
 
 @app.post("/placement-referrals/{referral_code}/report-departure", response_model=PlacementReferralOut)
@@ -2335,7 +2353,38 @@ async def post_report_placement_departure(referral_code: str, payload: Placement
         detail = "Unknown referral code" if str(exc) == "unknown_referral_code" else str(exc)
         status_code = 404 if str(exc) == "unknown_referral_code" else 422
         raise HTTPException(status_code=status_code, detail=detail) from exc
-    return _serialize_placement_referral(referral)
+    return _serialize_placement_referral(db, referral)
+
+
+def _serialize_facility_agreement(db: Session, canonical_facility_id: str) -> FacilityAgreementOut:
+    agreement = facility_agreement_service.get_agreement(db, canonical_facility_id)
+    return FacilityAgreementOut(
+        canonical_facility_id=canonical_facility_id,
+        onboarding_completed_at=agreement.onboarding_completed_at.isoformat() if agreement and agreement.onboarding_completed_at else None,
+        is_founding_facility=placement_referral_service.is_founding_facility(db, canonical_facility_id),
+    )
+
+
+@app.get("/facility-agreements/{canonical_facility_id}", response_model=FacilityAgreementOut)
+async def get_facility_agreement(canonical_facility_id: str, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    if canonical_facility_id not in get_canonical_facility_index():
+        raise HTTPException(status_code=404, detail="Canonical facility not found")
+    return _serialize_facility_agreement(db, canonical_facility_id)
+
+
+@app.post("/facility-agreements/{canonical_facility_id}/mark-onboarding-complete", response_model=FacilityAgreementOut)
+async def post_mark_facility_onboarding_complete(
+    canonical_facility_id: str, payload: FacilityAgreementMarkCompleteIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)
+):
+    """Staff-only: records that a facility has registered, signed the Oomnik
+    agreement, and completed a verified profile -- there is no self-serve
+    facility portal yet. This is the only input to Founding Launch Offer
+    eligibility (placement_referral_service.is_founding_facility)."""
+    if canonical_facility_id not in get_canonical_facility_index():
+        raise HTTPException(status_code=404, detail="Canonical facility not found")
+    completed_at = _parse_iso_datetime(payload.completed_at, field_name="completed_at") if payload.completed_at else None
+    facility_agreement_service.mark_onboarding_complete(db, canonical_facility_id, completed_at=completed_at)
+    return _serialize_facility_agreement(db, canonical_facility_id)
 
 
 @app.get("/competitive-intelligence/signals", response_model=List[CompetitiveIntelligenceSignalOut])
