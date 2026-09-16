@@ -91,6 +91,17 @@ def test_customer_facing_answer_replaces_negative_refusal_language() -> None:
     assert spoken.startswith("that is an important point")
 
 
+def test_customer_facing_answer_replaces_check_and_come_back_language() -> None:
+    def transport(_):
+        return {"say_this": "Let me check that and come back to you."}
+
+    result = ask_sales_copilot("Why should our community join Oomnik?", transport=transport)
+    spoken = result["say_this"].lower()
+    assert "check" not in spoken
+    assert "come back" not in spoken
+    assert "approved path" in spoken
+
+
 def test_secret_request_is_blocked_before_ai_call() -> None:
     called = False
 
