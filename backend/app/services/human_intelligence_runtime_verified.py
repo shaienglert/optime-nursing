@@ -275,7 +275,8 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         selected_blocker: Dict[str, Any] | None = None
         # Only attach/validate a fixed target when Guardian supplied an answer
         # contract. Other semantic clarifications remain AI-owned free-form questions.
-        if readiness == "NEEDS_CLARIFICATION" and blockers and str(result.get("selected_fact_key") or "").strip() and blockers[0].get("answer_options") and not _question_matches_guardian_target(result, blockers[0]):
+        declared_fact_key = str(result.get("selected_fact_key") or "").strip()
+        if readiness == "NEEDS_CLARIFICATION" and blockers and blockers[0].get("answer_options") and (not declared_fact_key or not _question_matches_guardian_target(result, blockers[0])):
             selected_blocker = blockers[0]
             repair_packet = {
                 "reason": "AI_QUESTION_TARGET_DOES_NOT_MATCH_GUARDIAN_BLOCKER",
