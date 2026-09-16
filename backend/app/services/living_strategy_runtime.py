@@ -130,7 +130,28 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     explicit_independence = _contains(query, "fully independent", "completely independent", "independent with bathing", "independent with dressing", "independent with toileting", "independent with transfers") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "fully independent", "independent")
     no_adl_support = explicit_independence or _contains(query, "no adl support", "no help with daily activities", "does not need help with daily activities", "doesn't need help with daily activities", "no personal care support")
     no_medication_support = (explicit_independence and _contains(query, "medication", "medications", "medicine")) or _contains(query, "no medication support", "no medication assistance", "does not need medication support", "doesn't need medication support")
-    adl = (not no_adl_support) and (_contains(query, "bathing", "dressing", "shower", "toileting", "adl", "personal care") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance"))
+    # Keep explicit, ordinary-language ADL statements canonical even when the
+    # client does not name a specific task.  The launch journeys exposed three
+    # equivalent phrases ("assistance with daily activities", "substantial
+    # daily assistance", and "light daily assistance") that were accounted for
+    # as client statements but were not promoted into the strategy signal.  The
+    # downstream MUST gate therefore silently lost ADL_SUPPORT_AVAILABLE.
+    adl = (not no_adl_support) and (
+        _contains(
+            query,
+            "bathing",
+            "dressing",
+            "shower",
+            "toileting",
+            "adl",
+            "personal care",
+            "daily assistance",
+            "daily activities",
+            "activities of daily living",
+            "daily living assistance",
+        )
+        or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance")
+    )
     medication = (not no_medication_support) and _contains(query, "medication", "medications", "medicine")
     high_social = _contains(query, "culture", "cultural", "classes", "activities", "social", "clubs", "lectures", "music", "art", "events")
 
