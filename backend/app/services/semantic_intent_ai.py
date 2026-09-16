@@ -18,6 +18,7 @@ from typing import Any, Callable, Dict, List, Optional
 import requests
 
 from app.services.learning_center_advisor import build_learning_center_advice
+from app.services.canonical_gap_policy import normalize_gap_key
 
 SEMANTIC_AI_SYSTEM_RULES = [
     "Understand the client before recommending anything.",
@@ -25,15 +26,15 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Separate explicit facts from inferences.",
     "Never convert an inference into a fact without confirmation or evidence.",
     "Classify decision relevance as MUST, NICE, CONTEXT, or UNKNOWN.",
-    "Only client-owned information that is MUST or otherwise decision-critical may block READY and generate the next clarification question.",
-    "NICE or CONTEXT ambiguity must remain UNKNOWN/AMBIGUOUS without blocking READY unless the client explicitly elevates it to a requirement.",
+    "Identify unresolved client-owned information with a stable gap_key; deterministic policy, not the model, decides whether it blocks READY.",
+    "NICE or CONTEXT ambiguity must remain UNKNOWN/AMBIGUOUS; the model may propose a question but may not grant it blocking authority.",
     "If material decision-critical information owned by the client is unknown or ambiguous, ASK the client instead of delegating it to facility research.",
     "Treat prior adaptiveSignals with explicit client answers as client evidence. Never re-ask a dimension that those answers already resolve, even with different wording.",
     "Treat explicit free-text client statements as client evidence too. Never ask a dimension again when the user's original text already answers it clearly.",
     "The target market/location is a minimum client-owned decision dimension. Absence is UNKNOWN and READY is forbidden until the client has supplied enough location information to select the search market.",
     "The affordability envelope/budget is a minimum client-owned decision dimension. Absence is UNKNOWN and READY is forbidden until the client has supplied a usable monthly budget or explicitly declined to set one.",
     "Facility-specific facts such as availability, price, unit route distance, meal delivery, dietary safety, current activities, or service capability may remain RESEARCH_REQUIRED after client intent is understood.",
-    "decision_readiness means CLIENT-INTENT readiness. READY is allowed when no material client clarification remains, even if downstream facility evidence still requires research.",
+    "decision_readiness is a raw advisory interview signal retained for audit; canonical deterministic gap policy owns final readiness.",
     "If domain or facility evidence is missing, request research and consult the Learning Center.",
     "UNKNOWN must remain UNKNOWN until resolved.",
     "Do not invent facility capabilities, prices, availability, reputation, or regulatory facts.",
@@ -49,7 +50,7 @@ def _required_output_schema() -> Dict[str, Any]:
         "constraints": ["string"],
         "concerns": ["string"],
         "implications": [{"derived_from": ["string"], "implication": "string", "certainty": "POSSIBLE|LIKELY|CONFIRMED", "requires_confirmation": True}],
-        "statements": [{"raw_text": "string", "meaning": "string", "importance": "MUST|NICE|CONTEXT|UNKNOWN", "knowledge_state": "KNOWN|UNKNOWN|AMBIGUOUS", "status": "USED|ASKED|RESEARCH_REQUIRED|NOT_DECISION_RELEVANT", "mapped_parameters": ["string"], "clarification_question": "string|null", "research_task": "string|null"}],
+        "statements": [{"raw_text": "string", "meaning": "string", "importance": "MUST|NICE|CONTEXT|UNKNOWN", "knowledge_state": "KNOWN|UNKNOWN|AMBIGUOUS", "status": "USED|ASKED|RESEARCH_REQUIRED|NOT_DECISION_RELEVANT", "gap_key": "stable_snake_case_key|null", "mapped_parameters": ["string"], "clarification_question": "string|null", "research_task": "string|null"}],
         "next_question": "string|null",
         "research_requests": ["string"],
         "decision_readiness": "READY|NEEDS_CLARIFICATION|NEEDS_RESEARCH",
@@ -73,6 +74,8 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             "field_length_rule": "Keep meaning, implication, clarification_question and research_task concise; usually one sentence each.",
             "question_priority_rule": "Ask only one highest-information unresolved MUST/decision-critical client question. Do not ask NICE/CONTEXT questions merely to improve ranking.",
             "asked_statement_rule": "If any statement has status ASKED, copy the exact next_question into that statement's clarification_question. There may be at most one ASKED statement per turn.",
+            "gap_key_rule": "Every ASKED statement must identify one stable snake_case gap_key. The key identifies the unresolved fact only; it does not decide whether the gap blocks recommendations.",
+            "authority_rule": "The model extracts facts, identifies gaps, and phrases questions. Canonical deterministic policy alone decides blocking classification, final readiness, zero-result behavior, and escalation.",
             "adaptive_answer_rule": "Prior adaptiveSignals are part of the client record. If an adaptive signal contains an explicit answer, treat that dimension as answered and do not ask it again using a paraphrase.",
             "free_text_answer_rule": "Explicit statements in user_text are also part of the client record. Do not ask again about a dimension already answered there, including explicit negative statements such as no mobility limitation or no memory concerns.",
             "minimum_readiness_dimensions": {
@@ -187,6 +190,11 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
             raise RuntimeError(f"SEMANTIC_AI_INVALID_KNOWLEDGE:{idx}")
         if statement.get("status") == "ASKED" and not str(statement.get("clarification_question") or "").strip():
             raise RuntimeError(f"SEMANTIC_AI_ASKED_WITHOUT_QUESTION:{idx}")
+        if statement.get("status") == "ASKED":
+            gap_key = normalize_gap_key(statement.get("gap_key") or statement.get("target_fact_key"))
+            if not gap_key:
+                gap_key = next((normalize_gap_key(value) for value in statement.get("mapped_parameters") or [] if normalize_gap_key(value)), "semantic_ai_unregistered_gap")
+            statement["gap_key"] = gap_key
         if statement.get("status") == "RESEARCH_REQUIRED" and not str(statement.get("research_task") or "").strip():
             raise RuntimeError(f"SEMANTIC_AI_RESEARCH_WITHOUT_TASK:{idx}")
 

@@ -48,24 +48,35 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
             with patch("app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result):
                 return run_patient_decision_engine(questionnaire, BASE_QUERY, limit=limit)
 
-    def test_clarification_blocks_all_facility_ranking(self):
+    def test_ai_preference_question_cannot_block_facility_ranking(self):
         question = "What kind of community environment would feel most comfortable for him?"
         result = self._run(_questionnaire(), {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": question,
-            "statements": [],
+            "statements": [{
+                "raw_text": "Community environment preference is unknown.",
+                "meaning": "Community size is a preference.",
+                "importance": "NICE",
+                "knowledge_state": "UNKNOWN",
+                "status": "ASKED",
+                "gap_key": "community_size_preference",
+                "mapped_parameters": ["community_size_preference"],
+                "clarification_question": question,
+                "research_task": None,
+            }],
         })
         intelligence = result["decision_intelligence"]
         human = intelligence["human_intelligence"]
-        self.assertEqual("NEEDS_CLARIFICATION", human["decision_readiness"])
+        self.assertEqual("READY", human["decision_readiness"])
         self.assertEqual("SEMANTIC_AI", intelligence["interview_owner"])
-        self.assertFalse(intelligence["recommendation_execution_allowed"])
-        self.assertEqual("PENDING_CLIENT_INPUT_REQUIRED", intelligence["decision_finality"])
-        self.assertEqual([], result["results"])
-        self.assertEqual(0, result["result_count"])
-        self.assertEqual(0, result["total_candidates_scored"])
-        self.assertEqual(1, len(human["adaptive_questions"]))
-        self.assertTrue(human["adaptive_questions"][0]["question_key"].startswith("semantic_ai_high_information_question:"))
+        self.assertTrue(intelligence["recommendation_execution_allowed"])
+        self.assertNotEqual("PENDING_CLIENT_INPUT_REQUIRED", intelligence["decision_finality"])
+        self.assertGreater(result["result_count"], 0)
+        self.assertEqual([], human["adaptive_questions"])
+        self.assertTrue(any(
+            row["gap_key"] == "community_size_preference" and row["classification"] == "PREFERENCE"
+            for row in human["canonical_gap_policy"]["assessments"]
+        ))
 
     def test_explicit_large_community_preference_affects_rank_after_ai_ready(self):
         result = self._run(

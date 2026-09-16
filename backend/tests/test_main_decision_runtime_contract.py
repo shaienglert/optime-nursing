@@ -54,12 +54,18 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
     def test_pre_ranking_decision_intelligence_survives_patient_needs_response_model(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
-        question = "What would make the move feel most comfortable for him?"
-        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []}
+        question = "What monthly housing-and-care budget is comfortable?"
+        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "selected_fact_key": "monthly_budget", "statements": [{
+            "raw_text": "The monthly budget is missing.", "meaning": "Affordability is unresolved.", "importance": "MUST",
+            "knowledge_state": "UNKNOWN", "status": "ASKED", "gap_key": "monthly_budget",
+            "mapped_parameters": ["monthly_affordability"], "clarification_question": question, "research_task": None,
+        }]}
+        state = self._questionnaire()
+        state.pop("budget")
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
         ):
-            profile = decision.build_patient_needs_profile(self._questionnaire(), self._query())
+            profile = decision.build_patient_needs_profile(state, self._query())
         serialized = main.PatientNeedsProfileOut.model_validate(profile).model_dump()
         intelligence = serialized["decision_intelligence"]
         self.assertEqual(intelligence["version"], "decision-intelligence-runtime-v3.1")
@@ -73,12 +79,18 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
     def test_non_ready_interview_survives_fastapi_response_model_without_recommendations(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
-        question = "Which part of the transition needs clarification first?"
-        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []}
+        question = "What monthly housing-and-care budget is comfortable?"
+        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "selected_fact_key": "monthly_budget", "statements": [{
+            "raw_text": "The monthly budget is missing.", "meaning": "Affordability is unresolved.", "importance": "MUST",
+            "knowledge_state": "UNKNOWN", "status": "ASKED", "gap_key": "monthly_budget",
+            "mapped_parameters": ["monthly_affordability"], "clarification_question": question, "research_task": None,
+        }]}
+        state = self._questionnaire()
+        state.pop("budget")
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
         ):
-            result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
+            result = decision.run_patient_decision_engine(state, self._query(), limit=5)
         serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()
         top_decision = serialized["decision_intelligence"]
         self.assertEqual("PENDING_CLIENT_INPUT_REQUIRED", top_decision["decision_finality"])
