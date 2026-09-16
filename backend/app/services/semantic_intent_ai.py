@@ -314,7 +314,10 @@ def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any
     text_location = bool(re.search(r"\b(las vegas|north las vegas|henderson|nevada)\b", combined))
     raw_budget = questionnaire_state.get("budget")
     numeric_budget = isinstance(raw_budget, (int, float)) and float(raw_budget) > 0 and float(raw_budget) != 7000
-    text_budget = bool(re.search(r"(?:budget|monthly|per month|afford|cost)[^\n]{0,50}\$?\s*\d{3,6}|\$\s*\d{3,6}", combined))
+    text_budget = bool(re.search(
+        r"(?:budget|monthly|per month|afford|cost|spend|pay)[^\n]{0,50}\$?\s*\d[\d,]{2,}(?:\.\d+)?|\$\s*\d[\d,]{2,}(?:\.\d+)?",
+        combined,
+    ))
     explicit_no_limit = bool(re.search(r"\b(no budget limit|no monthly limit|do not want to set a budget|don't want to set a budget)\b", combined))
     return {"market_location": explicit_location or text_location, "monthly_affordability": numeric_budget or text_budget or explicit_no_limit}
 

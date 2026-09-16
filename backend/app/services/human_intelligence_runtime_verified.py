@@ -80,7 +80,7 @@ def _explicit_client_fact_keys(questionnaire_state: Dict[str, Any], natural_lang
 
     text = str(natural_language_query or "")
     amount = r"(?:\$\s*\d[\d,]*(?:\.\d+)?|\b\d[\d,]*(?:\.\d+)?\s*(?:usd|dollars?)\b)"
-    budget_language = r"(?:monthly\s+)?(?:housing(?:\s*(?:and|&)\s*care)?\s+)?(?:budget|affordability|afford|cost|price)"
+    budget_language = r"(?:monthly\s+)?(?:housing(?:\s*(?:and|&)\s*care)?\s+)?(?:budget|affordability|afford|cost|price|(?:can\s+)?spend|(?:can\s+)?pay)"
     has_explicit_budget = re.search(rf"{budget_language}[^.\n]{{0,80}}?{amount}", text, flags=re.IGNORECASE)
     has_explicit_no_limit = re.search(
         r"\b(?:no\s+(?:monthly\s+)?budget\s+limit|no\s+limit\s+on\s+(?:the\s+)?budget|do\s+not\s+want\s+to\s+set\s+a\s+budget|don't\s+want\s+to\s+set\s+a\s+budget)\b",

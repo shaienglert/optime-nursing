@@ -110,6 +110,18 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             [row["fact_key"] for row in context["readiness_guardian"]["client_owned_blockers"]],
         )
 
+    def test_spending_limit_resolves_monthly_budget_guardian_blocker(self) -> None:
+        context = self._run(self._state(), {
+            "decision_readiness": "READY",
+            "next_question": None,
+            "statements": [],
+        }, "My father lives in Las Vegas and we can spend up to $17,000 per month.")
+        self.assertIn("monthly_budget", context["readiness_guardian"]["acknowledged_fact_keys"])
+        self.assertNotIn(
+            "monthly_budget",
+            [row["fact_key"] for row in context["readiness_guardian"]["client_owned_blockers"]],
+        )
+
     def test_needs_research_blocks_without_scripted_question(self) -> None:
         context = self._run(self._state(), {
             "decision_readiness": "NEEDS_RESEARCH",

@@ -80,6 +80,17 @@ class SemanticAiMinimumDimensionRepairTests(unittest.TestCase):
         self.assertEqual(result["decision_readiness"], "READY")
         self.assertNotIn("minimum_dimension_repair", result)
 
+    def test_comma_formatted_spending_limit_is_a_known_budget(self):
+        first = packet(readiness="READY", statements=[])
+        with patch("app.services.semantic_intent_ai._default_transport", return_value=first) as mocked:
+            result = interpret_client_intent_with_ai(
+                user_text="My father needs care in Las Vegas and we can spend up to $17,000 per month.",
+                questionnaire_state={},
+            )
+        self.assertEqual(mocked.call_count, 1)
+        self.assertEqual(result["decision_readiness"], "READY")
+        self.assertNotIn("minimum_dimension_repair", result)
+
 
 if __name__ == "__main__":
     unittest.main()
