@@ -459,6 +459,85 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertEqual(["FAC-01", "FAC-02"], [row["canonical_facility_id"] for row in ranked])
         self.assertGreaterEqual(len(calls), 3)
 
+    def test_single_shot_close_scores_are_resolved_by_the_governed_key_not_ai_order(self):
+        # Reproduces the live production finding: two back-to-back calls with the same
+        # 10-candidate set swapped the bottom two positions even at temperature=0,
+        # because single-shot mode has no per-candidate score to stabilize on. Two
+        # candidates scored 2 points apart (inside the default 3-point tie band) must
+        # land in governed-key order regardless of which order the AI listed them in.
+        rows = self._rows(2)
+
+        def transport(payload):
+            candidates = payload["must_eligible_candidates"]
+            ids = [item["canonical_facility_id"] for item in candidates]
+            # AI lists FAC-02 before FAC-01 and scores them within the tie band.
+            return {"ranked_candidates": [
+                {"canonical_facility_id": ids[1], "score": 41, "reason": "r2", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
+                {"canonical_facility_id": ids[0], "score": 39, "reason": "r1", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
+            ]}
+
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1"}, clear=False), patch(
+            "app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport
+        ):
+            ranked, status = rank_must_eligible_candidates(
+                rows, client_intent={}, human_context={"dynamic_preference_model": {"preferences": []}}, strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual(status["status"], "AI_RANKED")
+        # The governed key is alphabetical by ID here, so FAC-01 must lead despite the
+        # AI listing FAC-02 first and scoring it higher.
+        self.assertEqual(["FAC-01", "FAC-02"], [row["canonical_facility_id"] for row in ranked])
+        self.assertEqual(ranked[0]["ai_ranking"]["global_score"], 39)
+
+    def test_single_shot_well_separated_scores_keep_the_ai_order(self):
+        # Candidates scored well outside the tie band are not close matches -- the
+        # AI's own explicit ordering (which may reflect evidence a coarse governed key
+        # cannot see) must not be overridden.
+        rows = self._rows(2)
+
+        def transport(payload):
+            candidates = payload["must_eligible_candidates"]
+            ids = [item["canonical_facility_id"] for item in candidates]
+            return {"ranked_candidates": [
+                {"canonical_facility_id": ids[1], "score": 90, "reason": "r2", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
+                {"canonical_facility_id": ids[0], "score": 20, "reason": "r1", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
+            ]}
+
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1"}, clear=False), patch(
+            "app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport
+        ):
+            ranked, status = rank_must_eligible_candidates(
+                rows, client_intent={}, human_context={"dynamic_preference_model": {"preferences": []}}, strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual(["FAC-02", "FAC-01"], [row["canonical_facility_id"] for row in ranked])
+
+    def test_single_shot_missing_scores_fall_back_to_ai_order_unchanged(self):
+        # Older/partial responses without the score field must behave exactly as
+        # before this fix -- no regression for a contract-repair pass that omits it.
+        rows = self._rows(2)
+
+        def transport(payload):
+            candidates = payload["must_eligible_candidates"]
+            ids = [item["canonical_facility_id"] for item in candidates]
+            return {"ranked_candidates": [
+                {"canonical_facility_id": ids[1], "reason": "r2", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
+                {"canonical_facility_id": ids[0], "reason": "r1", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
+            ]}
+
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1"}, clear=False), patch(
+            "app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport
+        ):
+            ranked, status = rank_must_eligible_candidates(
+                rows, client_intent={}, human_context={"dynamic_preference_model": {"preferences": []}}, strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual(["FAC-02", "FAC-01"], [row["canonical_facility_id"] for row in ranked])
+        self.assertNotIn("global_score", ranked[0]["ai_ranking"])
+
     def test_closed_world_violation_still_fails_closed_when_ranking_required(self):
         # Unlike a fabricated citation, a closed-world violation means the AI did not
         # return the exact supplied candidate set -- that is still a hard failure.
