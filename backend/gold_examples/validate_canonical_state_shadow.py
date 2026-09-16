@@ -65,11 +65,12 @@ def _fixtures() -> list[dict]:
         "status": "REQUIRED_BUT_DISABLED",
     }
 
-    ranking_fail_closed = _base()
-    ranking_fail_closed.update(must_eligible_count=5, must_pending_verification_count=0, must_rejected_count=1)
-    ranking_fail_closed["decision_intelligence"]["facility_selection_pipeline"] = {
-        "ai_ranking": {"status": "ERROR"},
-        "ai_ranking_fail_closed": True,
+    ranking_degraded = _base()
+    ranking_degraded.update(must_eligible_count=5, must_pending_verification_count=0, must_rejected_count=1)
+    ranking_degraded["decision_intelligence"]["facility_selection_pipeline"] = {
+        "ai_ranking": {"status": "AI_RANKING_ERROR"},
+        "ai_ranking_fail_closed": False,
+        "ai_ranking_degraded": True,
     }
 
     legacy_visibility_block = _base()
@@ -147,9 +148,14 @@ def _fixtures() -> list[dict]:
             "next": "RESEARCH_PROVIDER_EVIDENCE",
             "conflicts": {"LEGACY_EXECUTION_ALLOWS_PREMATURE_RECOMMENDATION"},
         },
-        {"id": "required-ai-failure", "payload": ai_failure, "phase": DecisionPhase.SYSTEM_BLOCKED, "next": "RECOVER_SYSTEM"},
-        {"id": "required-ai-disabled", "payload": ai_disabled, "phase": DecisionPhase.SYSTEM_BLOCKED, "next": "RECOVER_SYSTEM"},
-        {"id": "ranking-fail-closed", "payload": ranking_fail_closed, "phase": DecisionPhase.SYSTEM_BLOCKED, "next": "RECOVER_SYSTEM"},
+        {"id": "required-ai-failure-is-advisory", "payload": ai_failure, "phase": DecisionPhase.MUST_EVALUATION, "next": "EXPAND_OR_REVISE_STRATEGY"},
+        {"id": "required-ai-disabled-is-advisory", "payload": ai_disabled, "phase": DecisionPhase.MUST_EVALUATION, "next": "EXPAND_OR_REVISE_STRATEGY"},
+        {
+            "id": "ranking-failure-shows-unranked-eligible-set",
+            "payload": ranking_degraded,
+            "phase": DecisionPhase.UNRANKED_ELIGIBLE_SET,
+            "next": "SHOW_UNRANKED_ELIGIBLE_SET_WITH_DEGRADATION_NOTICE",
+        },
         {
             "id": "legacy-ai-visibility-is-observation",
             "payload": legacy_visibility_block,
