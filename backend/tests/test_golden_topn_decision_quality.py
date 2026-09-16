@@ -156,7 +156,7 @@ def test_golden_skilled_nursing_client_does_not_surface_residential_only_setting
     assert all((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL" for row in rows)
 
 
-def test_golden_90yo_recent_widow_social_music_case_blocks_then_ranks_after_preference_resolution():
+def test_golden_90yo_recent_widow_social_music_case_is_stable_across_ai_preference_variance():
     query = (
         "My mother is 90. Her husband died two months ago and she does not want to remain alone at home. "
         "She needs help with showering, dressing and medication management, but otherwise functions independently. "
@@ -172,27 +172,54 @@ def test_golden_90yo_recent_widow_social_music_case_blocks_then_ranks_after_pref
         "locationCity": "Las Vegas",
     }
     question = "Would she prefer a larger active community with many people and activities, a smaller intimate setting, or does she have no preference?"
-    ai_answers = iter([
+    ai_variants = [
         {"decision_readiness": "READY", "next_question": None, "statements": []},
-        {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []},
-    ])
-    with patch.dict(
-        os.environ,
-        {"OPTIME_CANONICAL_MARKET": "las-vegas", "OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"},
-        clear=False,
-    ), patch(
-        "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
-        side_effect=lambda **kwargs: next(ai_answers),
-    ):
-        refresh_runtime_cache("golden_90yo_widow_initial")
-        blocked = run_patient_decision_engine(base, query, limit=5)
-    human = blocked["decision_intelligence"]["human_intelligence"]
-    assert blocked["result_count"] == 0
-    assert blocked["results"] == []
-    assert blocked["decision_intelligence"]["recommendation_execution_allowed"] is False
-    assert human["decision_readiness"] == "NEEDS_CLARIFICATION"
-    assert human["readiness_guardian"]["veto_applied"] is True
-    assert human["adaptive_questions"][0]["question"] == question
+        {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": question,
+            "statements": [{
+                "raw_text": "Community size preference is unknown.",
+                "meaning": "Community size is a preference.",
+                "importance": "NICE",
+                "knowledge_state": "UNKNOWN",
+                "status": "ASKED",
+                "gap_key": "community_size_preference",
+                "mapped_parameters": ["community_size_preference"],
+                "clarification_question": question,
+                "research_task": None,
+            }],
+        },
+    ]
+    unconfigured_variants = []
+    for index, ai_result in enumerate(ai_variants):
+        with patch.dict(
+            os.environ,
+            {"OPTIME_CANONICAL_MARKET": "las-vegas", "OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"},
+            clear=False,
+        ), patch(
+            "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
+            return_value=ai_result,
+        ), patch(
+            "app.services.must_ai_nice_pipeline.rank_must_eligible_candidates",
+            side_effect=_deterministic_rank_for_quality_gate,
+        ), patch(
+            "app.services.ai_process_owner_guard_patch.attach_ai_process_owner_guarded",
+            side_effect=lambda result, questionnaire_state, natural_language_query: result,
+        ):
+            refresh_runtime_cache(f"golden_90yo_widow_ai_variant_{index}")
+            result = run_patient_decision_engine(base, query, limit=5)
+        human = result["decision_intelligence"]["human_intelligence"]
+        assert result["result_count"] == 5
+        assert result["decision_intelligence"]["recommendation_execution_allowed"] is True
+        assert human["decision_readiness"] == "READY"
+        assert human["adaptive_questions"] == []
+        if index == 1:
+            assert any(
+                row["gap_key"] == "community_size_preference" and row["classification"] == "PREFERENCE"
+                for row in human["canonical_gap_policy"]["assessments"]
+            )
+        unconfigured_variants.append([row.get("facility_name") for row in result["results"]])
+    assert unconfigured_variants[0] == unconfigured_variants[1]
 
     variants = {}
     for preference in ("Large community", "Small community", "No preference"):
