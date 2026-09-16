@@ -174,10 +174,11 @@ jobs:
               row['gap_key'] == 'loneliness_severity' and row['classification'] == 'IMPORTANT_NON_BLOCKING'
               for row in human['canonical_gap_policy']['assessments']
           )
-          # Results remain hidden here because semantic ranking is deliberately
-          # unavailable and required, not because the AI proposed a preference question.
-          assert nonblocking['result_count'] == 0 and nonblocking['results'] == []
-          assert nonblocking['decision_intelligence']['recommendation_execution_allowed'] is False
+          # Ranking AI is advisory: its unavailability must preserve the verified
+          # MUST-qualified set, explicitly labeled as degraded and unranked.
+          assert nonblocking['result_count'] == 5 and len(nonblocking['results']) == 5
+          assert nonblocking['decision_intelligence']['recommendation_execution_allowed'] is True
+          assert nonblocking['decision_intelligence']['canonical_decision_state']['phase'] == 'UNRANKED_ELIGIBLE_SET'
 
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
@@ -185,7 +186,7 @@ jobs:
           ready_variant = run_patient_decision_engine(base, query, limit=5)
           ready_human = ready_variant['decision_intelligence']['human_intelligence']
           assert ready_human['decision_readiness'] == human['decision_readiness'] == 'READY'
-          assert ready_variant['result_count'] == nonblocking['result_count'] == 0
+          assert ready_variant['result_count'] == nonblocking['result_count'] == 5
 
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
@@ -216,19 +217,19 @@ jobs:
           }
           for key, persona in personas.items():
               result = run_patient_decision_engine(**persona, limit=5)
-              # The interview is READY, but this workflow deliberately has no
-              # semantic ranking provider. With ranking explicitly required, a
-              # deterministic fallback is never releasable under the canonical state.
-              assert result['decision_intelligence']['recommendation_execution_allowed'] is False, key
+              # The interview is READY and the ranking provider is deliberately
+              # unavailable. Canonical authority still releases the verified
+              # MUST-qualified set without implying that AI ranked it.
+              assert result['decision_intelligence']['recommendation_execution_allowed'] is True, key
               assert result['decision_intelligence']['interview_owner'] == 'SEMANTIC_AI', key
-              assert result['result_count'] == 0, f'{key}: fallback recommendations must stay hidden'
+              assert result['result_count'] == 5, f'{key}: eligible candidates were erased by ranking AI failure'
               assert result['patient_needs_profile']['location_city'] == 'LAS VEGAS', f'{key}: location not governed'
               assert result['decision_intelligence']['ranking_order'] == EXPECTED_RANKING_ORDER
               human = result['decision_intelligence']['human_intelligence']
               assert human['decision_readiness'] == 'READY', human
               assert human['adaptive_questions'] == []
               assert human['signals']['recent_bereavement']['value'] == 'YES'
-              assert result['results'] == []
+              assert len(result['results']) == 5
               for row in result['results']:
                   assert str(row.get('state') or '').upper() == 'NV', f'{key}: non-NV result {row}'
                   assert str(row.get('city') or '').strip().lower() in VALLEY_CITIES, f'{key}: outside Valley {row}'
@@ -248,10 +249,10 @@ jobs:
 
           large = answered('Large community')
           small = answered('Small community')
-          assert large['decision_intelligence']['recommendation_execution_allowed'] is False
-          assert small['decision_intelligence']['recommendation_execution_allowed'] is False
-          assert large['results'] == []
-          assert small['results'] == []
+          assert large['decision_intelligence']['recommendation_execution_allowed'] is True
+          assert small['decision_intelligence']['recommendation_execution_allowed'] is True
+          assert len(large['results']) == 5
+          assert len(small['results']) == 5
           output['answered_variants'] = {
               'large_top5': [r['facility_name'] for r in large['results']],
               'small_top5': [r['facility_name'] for r in small['results']],
@@ -305,8 +306,8 @@ jobs:
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
           }
           couple = run_patient_decision_engine(couple_ready, couple_query + ' The clinical team says only personal-care help is needed, not skilled rehab. Our budget is $8,000 monthly; he has Original Medicare; we want to move during recovery and do not want a CCRC entrance fee.', limit=5)
-          assert couple['decision_intelligence']['recommendation_execution_allowed'] is False
-          assert couple['results'] == []
+          assert couple['decision_intelligence']['recommendation_execution_allowed'] is True
+          assert len(couple['results']) == couple['decision_intelligence']['facility_selection_pipeline']['must_eligible_count'] == 1
           strategy = couple['decision_intelligence']['living_strategy']
           assert strategy['household']['type'] == 'COUPLE', strategy
           assert strategy['signals']['spine_or_back_surgery'] is True
