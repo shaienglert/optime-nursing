@@ -49,14 +49,10 @@ def extract_semantic_facility_requirements(result: Dict[str, Any]) -> List[Dict[
             "future care", "aging in place", "aging_in_place", "avoid future moves",
             "avoidfuturemoves", "avoid_future_moves", "life plan",
         ))
-        # Semantic AI may mark a clearly stated future-care requirement USED
-        # because the client side is known; it must still be verified per facility.
-        if _upper(statement.get("status")) != "RESEARCH_REQUIRED" and not (
-            future_care and _upper(statement.get("status")) == "USED"
-        ):
-            continue
         if future_care:
             key, dimension = "SEMANTIC_FUTURE_CARE_PATH", "recovery_transition"
+        elif "kosher" in haystack:
+            key, dimension = "SEMANTIC_KOSHER_DIET", "kosher_diet"
         elif any(token in haystack for token in ("gluten", "cross_contact", "cross-contact", "dietary", "allergy")):
             key, dimension = "SEMANTIC_DIETARY_SAFETY", "dietary_safety"
         elif any(token in haystack for token in ("all_daily_meals", "full_meal", "meal_plan", "all daily meals")):
@@ -65,8 +61,30 @@ def extract_semantic_facility_requirements(result: Dict[str, Any]) -> List[Dict[
             key, dimension = "SEMANTIC_MOBILITY_LAYOUT", "mobility_layout"
         elif any(token in haystack for token in ("organized_activities", "isolation", "social", "card_games", "classes")):
             key, dimension = "SEMANTIC_SOCIAL_DELIVERY", "social_engagement"
+        elif any(token in haystack for token in (
+            "dialysis", "wound_care", "wound care", "nursing_support", "medical_complexity",
+            "clinical_acuity", "skilled_nursing_need", "iv_therapy", "catheter", "ventilator",
+            "tracheostomy", "oxygen_support", "complex medical",
+        )):
+            key, dimension = "SEMANTIC_CLINICAL_ACUITY", "clinical_acuity"
+        elif any(token in haystack for token in (
+            "primary_language", "language_access", "preferred_language", "language_support",
+            "hebrew", "speak her language", "speak his language",
+        )):
+            key, dimension = "SEMANTIC_LANGUAGE_SUPPORT", "language_support"
         else:
             key, dimension = "SEMANTIC_FACILITY_EVIDENCE", "semantic_facility_evidence"
+        # Every recognized facility-capability bucket above is a governed domain this
+        # module knows how to route to research and verify -- a client MUST landing in
+        # one of them must survive to the gate even when Semantic AI marks it USED
+        # (client-side understanding is settled; facility-side verification is not).
+        # An unrecognized statement (the generic SEMANTIC_FACILITY_EVIDENCE bucket) has
+        # no known verification path, so it stays on the original, more conservative
+        # RESEARCH_REQUIRED-only trigger rather than being promoted blind.
+        recognized_capability_bucket = key != "SEMANTIC_FACILITY_EVIDENCE"
+        status = _upper(statement.get("status"))
+        if status != "RESEARCH_REQUIRED" and not (recognized_capability_bucket and status == "USED"):
+            continue
         if key in seen:
             continue
         seen.add(key)
@@ -98,6 +116,12 @@ def _payload_verifies(payload: Dict[str, Any], key: str) -> bool | None:
         value = payload.get("all_daily_meals_verified")
     elif key == "SEMANTIC_SOCIAL_DELIVERY":
         value = payload.get("social_engagement_verified")
+    elif key == "SEMANTIC_CLINICAL_ACUITY":
+        value = payload.get("clinical_acuity_verified")
+    elif key == "SEMANTIC_KOSHER_DIET":
+        value = payload.get("kosher_verified")
+    elif key == "SEMANTIC_LANGUAGE_SUPPORT":
+        value = payload.get("language_support_verified")
     else:
         value = None
     return value if isinstance(value, bool) else None

@@ -289,6 +289,102 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
+    def test_used_dialysis_and_wound_care_musts_survive_to_the_gate(self) -> None:
+        # Reproduces the live finding: Semantic AI correctly tags dialysis coordination
+        # and wound care as MUST/KNOWN, but marks them USED (client-side fact is
+        # understood) rather than RESEARCH_REQUIRED -- before this fix that meant they
+        # were silently dropped and every facility, including plain independent living,
+        # passed the MUST gate with zero visibility into the unverified clinical need.
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [
+                    {
+                        "raw_text": "needs dialysis three times a week",
+                        "meaning": "resident requires dialysis coordination",
+                        "importance": "MUST",
+                        "knowledge_state": "KNOWN",
+                        "status": "USED",
+                        "mapped_parameters": ["dialysis_frequency", "dialysis_coordination"],
+                        "research_task": "verify dialysis coordination and transport support",
+                    },
+                    {
+                        "raw_text": "has a chronic wound that needs regular nursing care",
+                        "meaning": "resident requires wound care and nursing support",
+                        "importance": "MUST",
+                        "knowledge_state": "KNOWN",
+                        "status": "USED",
+                        "mapped_parameters": ["wound_care", "nursing_support"],
+                        "research_task": "verify wound care and nursing capability",
+                    },
+                ]
+            }}}},
+            "results": [
+                {
+                    "canonical_facility_id": "INDEPENDENT-LIVING",
+                    "facility_name": "Sunrise Independent Living",
+                    "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                    "agent_person_fit_evidence": [],
+                },
+                {
+                    "canonical_facility_id": "VERIFIED-DIALYSIS",
+                    "facility_name": "Verified Clinical Community",
+                    "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                    "agent_person_fit_evidence": [{"payload": {"clinical_acuity_verified": True}}],
+                },
+            ],
+        }
+
+        requirements = extract_semantic_facility_requirements(result)
+        self.assertEqual(["SEMANTIC_CLINICAL_ACUITY"], [item["key"] for item in requirements])
+
+        out = apply_semantic_facility_requirements(result, research_limit=0)
+        independent = out["results"][0]["client_intent_fit"]
+        self.assertIn("SEMANTIC_CLINICAL_ACUITY", independent["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", independent["hard_gate"])
+
+        verified = out["results"][1]["client_intent_fit"]
+        self.assertIn("SEMANTIC_CLINICAL_ACUITY", verified["must_pass"])
+        self.assertEqual("PASS", verified["hard_gate"])
+
+    def test_used_kosher_and_hebrew_musts_survive_to_the_gate(self) -> None:
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [
+                    {
+                        "raw_text": "speaks Hebrew as her first language",
+                        "meaning": "resident requires Hebrew-language communication",
+                        "importance": "MUST",
+                        "knowledge_state": "KNOWN",
+                        "status": "USED",
+                        "mapped_parameters": ["primary_language"],
+                    },
+                    {
+                        "raw_text": "and keeps kosher",
+                        "meaning": "resident requires kosher meals",
+                        "importance": "MUST",
+                        "knowledge_state": "KNOWN",
+                        "status": "USED",
+                        "mapped_parameters": ["dietary_restriction"],
+                    },
+                ]
+            }}}},
+            "results": [{
+                "canonical_facility_id": "NO-EVIDENCE",
+                "facility_name": "Generic Community",
+                "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                "agent_person_fit_evidence": [],
+            }],
+        }
+
+        requirements = extract_semantic_facility_requirements(result)
+        self.assertEqual({"SEMANTIC_LANGUAGE_SUPPORT", "SEMANTIC_KOSHER_DIET"}, {item["key"] for item in requirements})
+
+        out = apply_semantic_facility_requirements(result, research_limit=0)
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertIn("SEMANTIC_LANGUAGE_SUPPORT", fit["must_unknown"])
+        self.assertIn("SEMANTIC_KOSHER_DIET", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
     def test_stamped_false_agent_evidence_never_hard_fails_a_semantic_must(self) -> None:
         # decision_research_worker.py stamps social_engagement_verified=False by default
         # on every research record, regardless of which dimension was actually
