@@ -19,6 +19,53 @@ import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 
 const TOKEN_KEY = "oomnik.sales-desk.token";
 
+const CORE_PLAYBOOK = [
+  {
+    number: "Opening",
+    title: "The purpose of every facility conversation",
+    summary: "You are introducing Oomnik as the next generation of senior-living decision support: a platform built to help families understand their needs, compare relevant options, and make a successful match with the right community.",
+    points: [
+      "Opening script: “Hello, this is [NAME] calling from Oomnik. We recently sent an introduction to our Las Vegas Valley senior-living decision and matching service. Did I reach the person responsible for partnerships, admissions, or community marketing?”",
+      "If yes: “Thank you. Oomnik helps families clarify their needs and understand which communities may genuinely fit. We are building current, evidence-based facility profiles for Las Vegas Valley, and I would like to explain the launch program and confirm the best next step for your community.”",
+      "Lead with the future Oomnik is building, then connect that future to the facility's commercial reality.",
+      "The objective is a next step: agreement review, guided profile session, or a scheduled conversation with the decision-maker.",
+      "Use the word match deliberately. A lead, listing, or move-in is one step; a sustainable match is the product.",
+    ],
+  },
+  {
+    number: "1",
+    title: "Your role",
+    summary: "Follow Oomnik's introductory outreach, reach the right facility decision-maker, explain the program accurately, answer commercial questions with confidence, and secure the appropriate onboarding step.",
+    points: [
+      "Ask who owns referral partnerships, admissions, community marketing, and profile information.",
+      "Represent the commercial vision while routing clinical, legal, privacy, security, and custom-contract details through the approved follow-up path.",
+      "Record the caller's exact question and every agreed action in the facility record.",
+    ],
+  },
+  {
+    number: "3",
+    title: "The 30-second explanation",
+    summary: "Oomnik helps a family define care needs, budget, location, timing, and preferences, then compares relevant communities using current evidence. The result is an explained match: the right community for the resident and a more suitable resident for the community.",
+    points: [
+      "Complete, current, verified information helps genuine strengths be recognized for the right case.",
+      "Missing information remains UNKNOWN; relevant proven information can support a stronger explained match.",
+      "Commercial terms and matching decisions stay separate, preserving the credibility of every recommendation.",
+    ],
+  },
+  {
+    number: "5",
+    title: "Persuasive sales tools",
+    summary: "Use one strong idea at a time, tied to the concern the caller just raised. The goal is a conversation, not a speech.",
+    points: [
+      "Booking.com analogy: hospitality changed when customers could compare options clearly online. Senior living is moving in the same direction, with Oomnik focused on match rather than a simple listing.",
+      "Digital matching analogy: technology already helps people make highly personal choices. Oomnik applies that shift to senior living with stronger evidence, transparency, and safeguards.",
+      "Aligned incentive: Oomnik earns the standard fee only after 60 days because the commercial objective is a sustained outcome.",
+      "Why participate now: early participants can document their real strengths before digital decision support becomes the normal family expectation.",
+      "Why fill the profile: Oomnik can recognize only the advantages supported by current, relevant information. Proven information is stronger than UNKNOWN for that specific need.",
+    ],
+  },
+];
+
 const COMPETITORS = [
   {
     name: "A Place for Mom",
@@ -340,6 +387,33 @@ export default function FacilitySalesCopilotPage() {
             </Link>
           </div>
         </header>
+
+        <section className="order-2 rounded-[2rem] border border-emerald-400/30 bg-emerald-400/[.08] p-7 sm:p-10">
+          <p className="font-bold uppercase tracking-[0.2em] text-emerald-300">
+            Facility outreach playbook · Read this first
+          </p>
+          <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+            Understand the story before using the answer engine.
+          </h2>
+          <div className="mt-6 rounded-3xl border-2 border-amber-400/70 bg-amber-400/10 p-6">
+            <p className="font-black uppercase tracking-[.18em] text-amber-300">Non-negotiable language rule</p>
+            <p className="mt-3 text-2xl font-black text-white">Keep every customer-facing answer affirmative and moving forward.</p>
+            <p className="mt-3 text-xl leading-8 text-amber-50">Never say “no,” “not,” “can’t,” “I don’t know,” “I’m unfamiliar,” “the system isn’t built for that,” “I need to check,” or any equivalent refusal. State what Oomnik can confirm, explain the positive commercial direction, and give the next action.</p>
+            <p className="mt-4 rounded-2xl bg-slate-950/50 p-4 text-xl text-white"><span className="font-bold text-emerald-300">Use instead:</span> “That is an important point. What I can confirm today is… The best next step is…”</p>
+          </div>
+          <div className="mt-7 grid gap-5 lg:grid-cols-2">
+            {CORE_PLAYBOOK.map((section) => (
+              <article key={section.number} className="rounded-3xl border border-white/10 bg-slate-950/45 p-6">
+                <p className="font-bold uppercase tracking-[.18em] text-emerald-300">{section.number === "Opening" ? section.number : `Section ${section.number}`}</p>
+                <h3 className="mt-2 text-3xl font-black">{section.title}</h3>
+                <p className="mt-3 text-xl leading-8 text-slate-200">{section.summary}</p>
+                <ul className="mt-4 space-y-3 text-lg leading-7 text-slate-300">
+                  {section.points.map((point) => <li key={point} className="rounded-xl bg-white/[.04] p-3">{point}</li>)}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
 
         <section className="order-2 rounded-[2rem] border border-emerald-300/25 bg-gradient-to-br from-emerald-400/15 via-white/[.07] to-sky-400/10 p-7 sm:p-10">
           <p className="font-bold uppercase tracking-[0.2em] text-emerald-300">
