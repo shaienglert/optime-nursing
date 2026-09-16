@@ -236,23 +236,32 @@ def _question_matches_guardian_target(result: Dict[str, Any], target: Dict[str, 
     for backwards-compatible test doubles and cannot establish a contradiction.
     """
     statements = result.get("statements")
-    if not isinstance(statements, list) or not statements:
-        return True
     next_question = str(result.get("next_question") or "").strip()
     if not next_question:
         return True
+    target_key = str(target.get("fact_key") or "").strip()
+    text_patterns = {
+        "monthly_budget": r"\b(?:budget|monthly cost|afford|spend)\b",
+        "medicare_status": r"\b(?:medicare|insurance coverage)\b",
+        "market_location": r"\b(?:city|location|area|market|las vegas|henderson)\b",
+        "rehab_level_needed": r"\b(?:rehab|rehabilitation|pt|ot|speech therapy|personal care)\b",
+        "move_timing_vs_rehab": r"\b(?:move timing|when .*move|hospital|currently in rehab)\b",
+    }
+    wording_pattern = text_patterns.get(target_key)
+    wording_matches = bool(wording_pattern and re.search(wording_pattern, next_question.lower()))
+    if not isinstance(statements, list) or not statements:
+        return wording_matches
     asked = [row for row in statements if isinstance(row, dict) and str(row.get("status") or "").upper() == "ASKED"]
     if len(asked) != 1:
         return False
     asked_row = asked[0]
     declared = str(result.get("selected_fact_key") or asked_row.get("target_fact_key") or "").strip()
     mapped = {str(value).strip() for value in asked_row.get("mapped_parameters") or [] if str(value).strip()}
-    target_key = str(target.get("fact_key") or "").strip()
     semantic_aliases = {
         "monthly_budget": {"monthly_affordability", "budget"},
     }
     allowed_mappings = {target_key, *semantic_aliases.get(target_key, set())}
-    return bool(target_key) and (declared == target_key or bool(mapped & allowed_mappings))
+    return bool(target_key) and (declared == target_key or bool(mapped & allowed_mappings) or wording_matches)
 
 
 def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:

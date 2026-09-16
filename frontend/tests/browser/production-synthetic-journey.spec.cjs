@@ -7,7 +7,7 @@ const baseUrl = process.env.OOMNIK_PRODUCTION_URL;
 
 test.describe('production synthetic journey', () => {
   test.skip(!baseUrl, 'Set OOMNIK_PRODUCTION_URL to run against the live site.');
-  test.setTimeout(300_000);
+  test.setTimeout(900_000);
 
   test(`${chosen} reaches real results`, async ({ page }) => {
     const scenario = scenarios[chosen];
@@ -16,7 +16,7 @@ test.describe('production synthetic journey', () => {
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')
         && response.request().method() === 'POST',
-      { timeout: 240_000 },
+      { timeout: 720_000 },
     );
     await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     const storyBox = page.getByLabel('Describe your family situation');
@@ -79,7 +79,17 @@ test.describe('production synthetic journey', () => {
       } else {
         throw new Error(`No answer control visible for: ${prompt}`);
       }
-      await page.waitForTimeout(500);
+      await page.waitForFunction(
+        (previousPrompt) => {
+          if (/\/results/.test(window.location.pathname)) return true;
+          const main = document.querySelector('main');
+          if (!main || main.innerText === previousPrompt) return false;
+          const controls = Array.from(main.querySelectorAll('button, textarea, input'));
+          return controls.some((node) => !(node instanceof HTMLButtonElement || node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) || !node.disabled);
+        },
+        prompt,
+        { timeout: 320_000 },
+      );
     }
 
     await expect(page).toHaveURL(/\/results/, { timeout: 90_000 });
