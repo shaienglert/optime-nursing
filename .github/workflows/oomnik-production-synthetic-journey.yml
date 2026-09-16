@@ -34,7 +34,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        scenario: ${{ fromJSON((github.event_name == 'schedule' || inputs.scenario == 'all') && '["independent_mom","memory_mom","post_stroke_dad","rehab_couple","independent_low_budget","parkinsons_support","dialysis_transport","hospice_family","celiac_assisted","spanish_speaking_dad"]' || format('["{0}"]', inputs.scenario || 'memory_mom')) }}
+        scenario: ${{ fromJSON((github.event_name == 'schedule' || github.event_name == 'push' || inputs.scenario == 'all') && '["independent_mom","memory_mom","post_stroke_dad","rehab_couple","independent_low_budget","parkinsons_support","dialysis_transport","hospice_family","celiac_assisted","spanish_speaking_dad"]' || format('["{0}"]', inputs.scenario || 'memory_mom')) }}
     defaults:
       run:
         working-directory: frontend
