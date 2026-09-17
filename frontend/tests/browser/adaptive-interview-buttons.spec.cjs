@@ -10,6 +10,12 @@ function questionnaireState() {
     referenceLocationValue: 'Las Vegas Valley',
     referenceAddress: '',
     notes: 'Mom needs help with bathing and dressing and enjoys classical music and social company.',
+    questionnaireCompletion: {
+      mandatoryComplete: true,
+      conditionalFollowUpsComplete: true,
+      clientSummaryConfirmed: false,
+      confirmedAt: '',
+    },
     humanIntelligenceV2: {
       personalityProfile: { communitySizePreference: '' },
       familyProfile: { socialInteractionNeed: '', griefSupportInterest: '', widowStatus: '' },
@@ -131,7 +137,7 @@ async function seedQuestionnaire(page) {
   }, questionnaireState());
 }
 
-test('home free-text entry opens the adaptive interview', async ({ page }) => {
+test('home free-text entry cannot bypass the mandatory structured questionnaire', async ({ page }) => {
   await mockBackend(page);
   await page.goto('http://127.0.0.1:3000/');
 
@@ -140,8 +146,8 @@ test('home free-text entry opens the adaptive interview', async ({ page }) => {
   );
   await page.getByRole('button', { name: /See options that may fit/ }).click();
 
-  await expect(page).toHaveURL(/\/adaptive-interview\?next=/);
-  await expect(page.getByText('What city or area should we search in for Mom?')).toBeVisible();
+  await expect(page).toHaveURL(/\/intake$/);
+  await expect(page.getByRole('heading', { name: /We ask first\. We conclude only after you confirm\./i })).toBeVisible();
 });
 
 test('AI silently consumes questionnaire facts and only asks genuinely missing information', async ({ page }) => {
@@ -154,12 +160,20 @@ test('AI silently consumes questionnaire facts and only asks genuinely missing i
   await expect(page.getByText('Would Mom prefer a quieter setting or a more active social environment?')).toBeVisible();
 
   await page.getByRole('button', { name: 'More active' }).click();
+  await expect(page).toHaveURL(/\/intake-confirmation\?next=/);
+  await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible();
+  await page.getByRole('button', { name: /I confirm—show recommendations/i }).click();
   await expect(page).toHaveURL(/\/results/);
 });
 
 test('results default view is readable and does not expose internal evidence jargon', async ({ page }) => {
   await mockBackend(page);
-  await seedQuestionnaire(page);
+  const confirmed = questionnaireState();
+  confirmed.questionnaireCompletion.clientSummaryConfirmed = true;
+  confirmed.questionnaireCompletion.confirmedAt = '2026-09-17T00:00:00.000Z';
+  await page.addInitScript((state) => {
+    window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify(state));
+  }, confirmed);
   await page.goto('http://127.0.0.1:3000/results');
 
   await expect(page.getByRole('heading', { name: /The strongest options for Mom/i })).toBeVisible();
@@ -176,7 +190,7 @@ test('results default view is readable and does not expose internal evidence jar
 });
 
 
-test('free-text adaptive answers become canonical client facts before the next decision step', async ({ page }) => {
+test('direct adaptive-interview access is blocked until the structured questionnaire is complete', async ({ page }) => {
   await mockBackend(page);
   await page.addInitScript(() => {
     window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify({
@@ -195,18 +209,12 @@ test('free-text adaptive answers become canonical client facts before the next d
   });
 
   await page.goto('http://127.0.0.1:3000/adaptive-interview');
-  await page.getByLabel('Your answer').fill('Las Vegas');
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('What monthly housing-and-care budget are you comfortable with?')).toBeVisible();
+  await expect(page).toHaveURL(/\/intake$/);
+  await expect(page.getByText('Are there ongoing medical conditions or treatments the new community must manage or coordinate?')).toBeVisible();
 
-  await page.getByLabel('Your answer').fill('$8,000 per month');
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByRole('button', { name: 'More active' })).toBeVisible();
-
-  const stored = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem('optime.questionnaire.session') || '{}'));
-  expect(stored.referenceLocationValue).toBe('Las Vegas');
-  expect(stored.budget).toBe(8000);
-
-  await page.getByRole('button', { name: 'More active' }).click();
-  await expect(page).toHaveURL(/\/results/);
+  await page.getByRole('button', { name: 'Yes', exact: true }).nth(0).click();
+  await page.getByRole('button', { name: 'Dialysis', exact: true }).click();
+  await expect(page.getByLabel('Dialysis frequency')).toBeVisible();
+  await expect(page.getByLabel('Current dialysis center')).toBeVisible();
+  await expect(page.getByText('Is parking required at the residence?')).toBeVisible();
 });

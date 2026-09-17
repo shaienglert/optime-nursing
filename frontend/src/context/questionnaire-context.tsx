@@ -419,25 +419,21 @@ type QuestionnaireContextValue = {
 
 const QuestionnaireContext = createContext<QuestionnaireContextValue | undefined>(undefined);
 
+function mergeSavedState<T>(base: T, saved: unknown): T {
+  if (saved === undefined || saved === null) return base;
+  if (Array.isArray(base)) return (Array.isArray(saved) ? saved : base) as T;
+  if (typeof base !== "object" || base === null || typeof saved !== "object" || Array.isArray(saved)) return saved as T;
+
+  const merged: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  for (const [key, value] of Object.entries(saved as Record<string, unknown>)) {
+    merged[key] = key in merged ? mergeSavedState(merged[key], value) : value;
+  }
+  return merged as T;
+}
+
 function restoreQuestionnaireState(): QuestionnaireState {
   const saved = loadSessionJson<Partial<QuestionnaireState>>(QUESTIONNAIRE_SESSION_KEY);
-  if (!saved) return DEFAULT_STATE;
-
-  return {
-    ...DEFAULT_STATE,
-    ...saved,
-    moveLossConcerns: Array.isArray(saved.moveLossConcerns) ? saved.moveLossConcerns : [],
-    questionnaireCompletion: {
-      ...DEFAULT_STATE.questionnaireCompletion,
-      ...(saved.questionnaireCompletion || {}),
-    },
-    medicalCareProfile: {
-      ...DEFAULT_STATE.medicalCareProfile,
-      ...(saved.medicalCareProfile || {}),
-      needs: Array.isArray(saved.medicalCareProfile?.needs) ? saved.medicalCareProfile.needs : [],
-    },
-    humanIntelligenceV2: saved.humanIntelligenceV2 || DEFAULT_STATE.humanIntelligenceV2,
-  };
+  return saved ? mergeSavedState(DEFAULT_STATE, saved) : DEFAULT_STATE;
 }
 
 export function QuestionnaireProvider({ children }: { children: React.ReactNode }) {
