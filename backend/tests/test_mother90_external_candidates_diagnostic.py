@@ -5,7 +5,19 @@ import os
 import unittest
 from unittest.mock import patch
 
+from app.services import governed_evidence_runtime
 from app.services.patient_decision_engine import run_patient_decision_engine
+
+_real_agent_and_provider_payloads = governed_evidence_runtime.agent_and_provider_payloads
+
+
+def _payloads_with_verified_budget(row):
+    # This test is specifically about medication-support verification varying across
+    # the real, unmocked evidence corpus -- augment with a synthetic verified-budget
+    # payload rather than replacing real evidence, so a stated budget (now also a
+    # facility-owned MUST; see semantic_facility_requirements.py's
+    # SEMANTIC_BUDGET_VERIFICATION) doesn't mask what this test actually verifies.
+    return [*_real_agent_and_provider_payloads(row), {"published_rates_verified": True}]
 
 
 class Mother90ExternalCandidateDiagnosticTests(unittest.TestCase):
@@ -36,6 +48,8 @@ class Mother90ExternalCandidateDiagnosticTests(unittest.TestCase):
             "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "0",
         }, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ready_ai
+        ), patch(
+            "app.services.governed_evidence_runtime.agent_and_provider_payloads", side_effect=_payloads_with_verified_budget
         ):
             result = run_patient_decision_engine(state, query, limit=500)
 

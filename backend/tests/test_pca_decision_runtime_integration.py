@@ -30,6 +30,16 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         hi.setdefault("familyProfile", {}).setdefault("socialInteractionNeed", "Neither")
         hi.setdefault("transitionRiskProfile", {}).setdefault("attitudeTowardMove", "Cautious but open")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        # This fixture's story (a couple wanting to co-reside, post-spine-surgery
+        # recovery, a stated budget) adds several facility-owned MUSTs -- couple
+        # coresidence, a rehab path, recovery-transition compatibility, and now budget
+        # verification (see semantic_facility_requirements.py's
+        # SEMANTIC_BUDGET_VERIFICATION) -- none of which any facility in the real,
+        # unmocked Las Vegas data these tests run against has verified evidence for.
+        # This scenario already sits at the edge of surfacing any eligible candidate at
+        # all; verifying all of them (not just budget) restores the pre-existing shown
+        # state these tests exercise (the PCA/care-partner overlay), rather than masking
+        # a margin that budget alone tips into zero results.
         with patch.dict(
             os.environ,
             {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"},
@@ -37,6 +47,17 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         ), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai",
             return_value=ai_result,
+        ), patch(
+            "app.services.governed_evidence_runtime.agent_and_provider_payloads",
+            return_value=[{
+                "published_rates_verified": True,
+                "couple_coresidence_verified": True,
+                "same_apartment_transition_verified": True,
+                "rehab_verified": True,
+                "pt_ot_verified": True,
+                "outside_care_allowed_verified": True,
+                "continuum_of_care_verified": True,
+            }],
         ):
             result = run_patient_decision_engine(state, query, limit=limit)
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
