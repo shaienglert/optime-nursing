@@ -70,7 +70,7 @@ PARAMETERS = [
     "pt", "ot", "speech_therapy", "transportation", "published_rates",
     "current_availability", "languages", "kosher", "gluten_free",
     "religious_cultural_services", "activities", "accessibility",
-    "dialysis_arrangements", "wound_care",
+    "dialysis_arrangements", "wound_care", "respiratory_trach_vent",
 ]
 
 ILLUSTRATIONS = [
@@ -103,7 +103,7 @@ def yes_no(index: int, modulus: int, *, limited: bool = False) -> str:
 
 
 def capability_map(index: int, canonical_type: str) -> dict[str, object]:
-    care = canonical_type in {"ASSISTED_LIVING_RFG", "MEMORY_CARE", "SKILLED_NURSING", "CONTINUING_CARE", "SMALL_GROUP_HOME"}
+    care = canonical_type in {"ASSISTED_LIVING_RFG", "MEMORY_CARE", "SKILLED_NURSING", "REHABILITATION", "CONTINUING_CARE", "SMALL_GROUP_HOME"}
     skilled = canonical_type in {"SKILLED_NURSING", "REHABILITATION", "CONTINUING_CARE"}
     memory = canonical_type in {"MEMORY_CARE", "CONTINUING_CARE"}
     return {
@@ -126,8 +126,12 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
         "religious_cultural_services": yes_no(index, 5, limited=True),
         "activities": "YES",
         "accessibility": "YES" if care or skilled or index % 2 == 0 else "LIMITED",
-        "dialysis_arrangements": "YES" if skilled and index % 2 == 0 else ("LIMITED" if care and index % 6 == 0 else "NO"),
+        "dialysis_arrangements": "YES" if skilled and index % 3 != 0 else ("LIMITED" if care and index % 6 == 0 else "NO"),
         "wound_care": "YES" if skilled else ("LIMITED" if care and index % 5 == 0 else "NO"),
+        # Some residential settings can manage stable oxygen, while all skilled
+        # settings can; this gives oxygen-dependent personas a real parameter to
+        # match without treating a category label as a capability proxy.
+        "respiratory_trach_vent": "YES" if skilled or (care and index % 4 == 0) else "NO",
     }
 
 
@@ -182,7 +186,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "owner_profile_status": "COMPLETE_SYNTHETIC_PILOT",
             "source_identity_ids": {"synthetic_pilot_id": canonical_id},
         }
-        if archetype_id == "MEMORY_CARE":
+        if archetype_id in {"MEMORY_CARE", "CONTINUING_CARE"}:
             # Matches how real Nevada memory-care communities are recognized by
             # _care_setting_fit()/_memory_confirmed(): canonical_type ASSISTED_LIVING_RFG
             # plus this classification field, not a distinct canonical_type.
