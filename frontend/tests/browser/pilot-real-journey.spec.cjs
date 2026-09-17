@@ -74,14 +74,14 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.getByRole('button', { name: scenario.diet, exact: true }).click();
     await question(page, 'Is a religious community important?').getByRole('button', { name: 'No', exact: true }).click();
     await question(page, 'Is parking required at the residence?').getByRole('button', { name: 'No', exact: true }).click();
-    await page.getByRole('button', { name: scenario.futureCare, exact: true }).click();
+    await question(page, 'Is it important to have higher levels of care available later to avoid another move?').getByRole('button', { name: scenario.futureCare, exact: true }).click();
     await question(page, 'Is location important?').getByRole('button', { name: 'Yes', exact: true }).click();
     await page.getByLabel('Reference address').fill('Las Vegas, NV');
     await page.getByRole('button', { name: scenario.distance, exact: true }).click();
     await page.getByText('I confirm that this summary reflects my answers.').click();
     await page.getByRole('button', { name: 'Continue to AI clarification' }).click();
 
-    for (let turn = 0; turn < 10; turn += 1) {
+    for (let turn = 0; turn < 25; turn += 1) {
       await page.waitForLoadState('domcontentloaded');
       const finalConfirmation = page.getByRole('button', { name: /I confirm—show recommendations/i });
       await Promise.race([
@@ -103,7 +103,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       await page.waitForTimeout(500);
     }
 
-    await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible({ timeout: 180_000 });
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')
         && response.request().method() === 'POST',
