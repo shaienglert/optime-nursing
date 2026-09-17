@@ -46,6 +46,24 @@ ARCHETYPES = [
 PREFIXES = ["Desert", "Silver", "Sage", "Red Rock", "Sunrise", "Mojave", "Canyon", "Willow", "Harmony", "Mesa"]
 SUFFIXES = ["Gardens", "Commons", "House", "Village", "Court"]
 
+# backend/app/services/patient_decision_engine/__init__.py's _care_setting_fit() only
+# recognizes these three canonical_type values (the ones the real Nevada regulatory data
+# uses) -- a facility with any other canonical_type silently falls through to a generic
+# "verification required" rank tier regardless of its actual capabilities. Collapse the
+# richer archetype set onto this production-recognized taxonomy so ranking behaves the
+# same way it does against real data; the original archetype is kept in
+# `synthetic_archetype` for naming, pricing and capability variety.
+PRODUCTION_CANONICAL_TYPE = {
+    "INDEPENDENT_LIVING": "INDEPENDENT_LIVING",
+    "ACTIVE_ADULT_55_PLUS": "INDEPENDENT_LIVING",
+    "ASSISTED_LIVING_RFG": "ASSISTED_LIVING_RFG",
+    "MEMORY_CARE": "ASSISTED_LIVING_RFG",
+    "SKILLED_NURSING": "SKILLED_NURSING",
+    "REHABILITATION": "SKILLED_NURSING",
+    "CONTINUING_CARE": "ASSISTED_LIVING_RFG",
+    "SMALL_GROUP_HOME": "ASSISTED_LIVING_RFG",
+}
+
 PARAMETERS = [
     "adl_support", "medication_support", "transfer_assistance", "memory_care",
     "dementia_alz_programs", "nursing_24_7", "skilled_nursing_capabilities",
@@ -123,13 +141,14 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
 
     for offset in range(200):
         index = offset + 1
-        canonical_type, care_label, low, high = ARCHETYPES[offset % len(ARCHETYPES)]
+        archetype_id, care_label, low, high = ARCHETYPES[offset % len(ARCHETYPES)]
+        canonical_type = PRODUCTION_CANONICAL_TYPE[archetype_id]
         city, zip_code, base_lat, base_lon = CITIES[offset % len(CITIES)]
         canonical_id = f"PILOT-NV-{index:03d}"
         name = f"{PREFIXES[offset % len(PREFIXES)]} {SUFFIXES[(offset // len(PREFIXES)) % len(SUFFIXES)]} {care_label}"
         address = f"{1100 + index * 37} Pilot Mesa Avenue"
         capacity = 12 + ((index * 17) % 170)
-        capabilities = capability_map(index, canonical_type)
+        capabilities = capability_map(index, archetype_id)
         facility = {
             "canonical_id": canonical_id,
             "facility_name": name,
@@ -140,6 +159,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "latitude": round(base_lat + ((index % 7) - 3) * 0.006, 6),
             "longitude": round(base_lon + ((index % 9) - 4) * 0.006, 6),
             "canonical_type": canonical_type,
+            "synthetic_archetype": archetype_id,
             "housing_modalities": [care_label.upper().replace("-", "_").replace(" ", "_")],
             "licensed_capacity": capacity,
             "license_status": "SYNTHETIC_PILOT_ACTIVE",
@@ -152,9 +172,9 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "phone": f"+1-702-555-{100 + (index % 100):04d}",
             "admissions_email": f"admissions-{index:03d}@pilot.example.invalid",
             "website": f"https://pilot.example.invalid/communities/{canonical_id.lower()}",
-            "entrance_fee": 75000 + index * 2500 if canonical_type == "CONTINUING_CARE" else 0,
+            "entrance_fee": 75000 + index * 2500 if archetype_id == "CONTINUING_CARE" else 0,
             "community_size": "SMALL" if capacity < 45 else ("MEDIUM" if capacity < 100 else "LARGE"),
-            "minimum_age": 55 if canonical_type == "ACTIVE_ADULT_55_PLUS" else 62,
+            "minimum_age": 55 if archetype_id == "ACTIVE_ADULT_55_PLUS" else 62,
             "accepts_couples": index % 6 != 0,
             "accepts_resident_caregiver": index % 7 == 0,
             "parking_spaces_available": index % 5 != 0,
@@ -162,11 +182,16 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "owner_profile_status": "COMPLETE_SYNTHETIC_PILOT",
             "source_identity_ids": {"synthetic_pilot_id": canonical_id},
         }
+        if archetype_id == "MEMORY_CARE":
+            # Matches how real Nevada memory-care communities are recognized by
+            # _care_setting_fit()/_memory_confirmed(): canonical_type ASSISTED_LIVING_RFG
+            # plus this classification field, not a distinct canonical_type.
+            facility["memory_care_classification"] = "CONFIRMED"
         facilities.append(facility)
 
         monthly_mid = low + ((index * 173) % max(1, high - low))
         room_names = ["Private studio", "One-bedroom suite"]
-        if canonical_type in {"MEMORY_CARE", "SKILLED_NURSING", "REHABILITATION", "SMALL_GROUP_HOME"}:
+        if archetype_id in {"MEMORY_CARE", "SKILLED_NURSING", "REHABILITATION", "SMALL_GROUP_HOME"}:
             room_names = ["Private care room", "Shared companion room"]
         for room_offset, room_name in enumerate(room_names):
             rooms.append({
@@ -245,13 +270,13 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             elif capability == "accessibility_transfer_assistance":
                 value = capabilities["transfer_assistance"]
             elif capability == "continuum_memory_care":
-                value = "YES" if canonical_type in {"MEMORY_CARE", "CONTINUING_CARE"} else "NO"
+                value = "YES" if archetype_id in {"MEMORY_CARE", "CONTINUING_CARE"} else "NO"
             elif capability == "continuum_skilled_nursing":
-                value = "YES" if canonical_type in {"SKILLED_NURSING", "CONTINUING_CARE"} else "NO"
+                value = "YES" if archetype_id in {"SKILLED_NURSING", "CONTINUING_CARE"} else "NO"
             elif capability == "continuum_rehabilitation":
-                value = "YES" if canonical_type in {"REHABILITATION", "SKILLED_NURSING", "CONTINUING_CARE"} else "NO"
+                value = "YES" if archetype_id in {"REHABILITATION", "SKILLED_NURSING", "CONTINUING_CARE"} else "NO"
             elif capability == "continuum_on_campus_progression":
-                value = "YES" if canonical_type == "CONTINUING_CARE" else "NO"
+                value = "YES" if archetype_id == "CONTINUING_CARE" else "NO"
             else:
                 value = ["YES", "YES", "LIMITED", "NO"][(index + capability_offset) % 4]
             portal_capabilities.append({
