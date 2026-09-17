@@ -390,6 +390,11 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         nice_mismatches,
         0 if community_fit_known else 1,
         -float(community_fit) if community_fit_known else 0.0,
+        # Preserve the governed case-relevant match computed from verified
+        # resident needs (for example kosher meals, dialysis or wound care).
+        # The pre-agent ordering already uses this score; omitting it here made
+        # the final intent sort erase those distinctions.
+        -float(row.get("patient_match_score") or 0.0),
         disciplinary_order,
         grade_order,
         int(counts.get("D") or 0),
