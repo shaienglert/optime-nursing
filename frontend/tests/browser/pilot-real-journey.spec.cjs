@@ -1,4 +1,29 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const scenarioStart = Number(process.env.OOMNIK_SCENARIO_START || 0);
+const scenarioCount = Number(process.env.OOMNIK_SCENARIO_COUNT || 1);
+const expectedCohort = Number(process.env.OOMNIK_EXPECTED_COHORT || 0);
+
+function scenarioFor(index) {
+  const pick = (values, offset = 0) => values[(index + offset) % values.length];
+  return {
+    id: `pilot-${String(index + 1).padStart(3, '0')}`,
+    relationship: pick(['Mom', 'Dad', 'Grandma', 'Grandpa', 'Spouse', 'Myself', 'Relative', 'Friend']),
+    age: pick(['60-64', '65-69', '70-74', '75-79', '80-84', '85-89', '90-94', '95+'], 3),
+    budget: 3600 + ((index * 700) % 10500),
+    moveTiming: pick(['Immediately', 'Within 30 days', '1-3 months', '3-6 months', 'Planning ahead']),
+    attitude: pick(['Wants to move', 'Positive', 'Cautious but open', 'Anxious', 'Resistant'], 1),
+    social: pick(['Daily', 'Several times weekly', 'Weekly', 'Occasionally', 'Very little'], 2),
+    community: pick(['Small and familiar', 'Medium', 'Large and active', 'Quiet', 'No preference'], 3),
+    activities: [pick(['Music', 'Movies', 'Games', 'Exercise', 'Outdoor activities']), pick(['Religious life', 'Cultural activities', 'Classes', 'Volunteering'], 2)],
+    concerns: [pick(['Good food', 'Privacy', 'Independence', 'Social life', 'Proximity to family']), pick(['Daily routine', 'Space for visitors', 'A pet', 'Transportation'], 1)],
+    diet: pick(['Vegetarian', 'Vegan', 'Low sodium', 'Diabetic', 'Gluten free']),
+    futureCare: pick(['Required', 'Preferred', 'Not important', 'Not sure'], 1),
+    distance: pick(['10', '20', '30', '50', '100'], 2),
+  };
+}
 
 function question(page, text) {
   return page.getByText(text, { exact: true }).locator('..');
@@ -7,7 +32,9 @@ function question(page, text) {
 test.describe('real synthetic-pilot customer journey', () => {
   test.setTimeout(900_000);
 
-  test('completes the questionnaire, confirms the summary, and receives only pilot facilities', async ({ page }) => {
+  for (let scenarioIndex = scenarioStart; scenarioIndex < scenarioStart + scenarioCount; scenarioIndex += 1) {
+    const scenario = scenarioFor(scenarioIndex);
+    test(`${scenario.id} completes the real customer journey`, async ({ page }) => {
     page.setDefaultTimeout(15_000);
     const errors = [];
     page.on('console', (message) => {
@@ -17,8 +44,8 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.goto('http://127.0.0.1:3000/intake', { waitUntil: 'networkidle' });
     await expect(page.getByRole('heading', { name: /We ask first\. We conclude only after you confirm\./i })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Mom', exact: true }).click();
-    await page.getByRole('button', { name: '80-84', exact: true }).click();
+    await page.getByRole('button', { name: scenario.relationship, exact: true }).click();
+    await page.getByRole('button', { name: scenario.age, exact: true }).click();
     await page.getByRole('button', { name: 'Help with bathing', exact: true }).click();
     await page.getByRole('button', { name: 'Help with dressing', exact: true }).click();
     await page.getByRole('button', { name: 'Help with medications', exact: true }).click();
@@ -30,29 +57,26 @@ test.describe('real synthetic-pilot customer journey', () => {
     await question(page, 'Has there been a recent hospitalization?').getByRole('button', { name: 'No', exact: true }).click();
     await page.getByRole('button', { name: 'Not eligible', exact: true }).click();
 
-    await page.locator('input[type="range"]').evaluate((element) => {
-      element.value = '6500';
+    await page.locator('input[type="range"]').evaluate((element, budget) => {
+      element.value = String(budget);
       element.dispatchEvent(new Event('input', { bubbles: true }));
       element.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    await page.getByRole('button', { name: 'Within 30 days', exact: true }).click();
-    await page.getByRole('button', { name: 'Cautious but open', exact: true }).click();
-    await page.getByRole('button', { name: 'Daily', exact: true }).click();
-    await page.getByRole('button', { name: 'Medium', exact: true }).click();
-    await page.getByRole('button', { name: 'Music', exact: true }).click();
-    await page.getByRole('button', { name: 'Games', exact: true }).click();
-    await page.getByRole('button', { name: 'Outdoor activities', exact: true }).click();
-    await page.getByRole('button', { name: 'Good food', exact: true }).click();
-    await page.getByRole('button', { name: 'Social life', exact: true }).click();
-    await page.getByLabel('Anything specific we should preserve?').fill('Gluten-free meals, classical music, card games, and time outdoors.');
+    }, scenario.budget);
+    await page.getByRole('button', { name: scenario.moveTiming, exact: true }).click();
+    await page.getByRole('button', { name: scenario.attitude, exact: true }).click();
+    await page.getByRole('button', { name: scenario.social, exact: true }).click();
+    await page.getByRole('button', { name: scenario.community, exact: true }).click();
+    for (const activity of scenario.activities) await page.getByRole('button', { name: activity, exact: true }).click();
+    for (const concern of scenario.concerns) await page.getByRole('button', { name: concern, exact: true }).click();
+    await page.getByLabel('Anything specific we should preserve?').fill(`${scenario.id}: preserve familiar routines and preferred activities.`);
     await page.getByRole('button', { name: 'English', exact: true }).click();
-    await page.getByRole('button', { name: 'Gluten free', exact: true }).click();
+    await page.getByRole('button', { name: scenario.diet, exact: true }).click();
     await question(page, 'Is a religious community important?').getByRole('button', { name: 'No', exact: true }).click();
     await question(page, 'Is parking required at the residence?').getByRole('button', { name: 'No', exact: true }).click();
-    await page.getByRole('button', { name: 'Preferred', exact: true }).click();
+    await page.getByRole('button', { name: scenario.futureCare, exact: true }).click();
     await question(page, 'Is location important?').getByRole('button', { name: 'Yes', exact: true }).click();
     await page.getByLabel('Reference address').fill('Las Vegas, NV');
-    await page.getByRole('button', { name: '20', exact: true }).click();
+    await page.getByRole('button', { name: scenario.distance, exact: true }).click();
     await page.getByText('I confirm that this summary reflects my answers.').click();
     await page.getByRole('button', { name: 'Continue to AI clarification' }).click();
 
@@ -91,7 +115,8 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(response.status()).toBe(200);
     const payload = await response.json();
     const results = payload.results || [];
-    expect([50, 100, 150, 200]).toContain(payload.total_candidates_scored);
+    if (expectedCohort) expect(payload.total_candidates_scored).toBe(expectedCohort);
+    else expect([50, 100, 150, 200]).toContain(payload.total_candidates_scored);
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);
     expect(results.every((item) => String(item.canonical_facility_id || '').startsWith('PILOT-NV-'))).toBe(true);
@@ -99,7 +124,9 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(errors.filter((message) => !/favicon/i.test(message))).toEqual([]);
 
     console.log('OOMNIK_REAL_PILOT_RESULT_BEGIN');
-    console.log(JSON.stringify({
+    const runResult = {
+      scenario_id: scenario.id,
+      scenario,
       total_candidates_scored: payload.total_candidates_scored,
       result_count: payload.result_count,
       market_coverage_notice: payload.market_coverage_notice,
@@ -109,7 +136,11 @@ test.describe('real synthetic-pilot customer journey', () => {
         eligibility_status: item.eligibility_status,
         total_score: item.total_score,
       })),
-    }));
+    };
+    fs.mkdirSync(path.join(process.cwd(), 'pilot-results'), { recursive: true });
+    fs.writeFileSync(path.join(process.cwd(), 'pilot-results', `${scenario.id}.json`), `${JSON.stringify(runResult, null, 2)}\n`);
+    console.log(JSON.stringify(runResult));
     console.log('OOMNIK_REAL_PILOT_RESULT_END');
-  });
+    });
+  }
 });
