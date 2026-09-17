@@ -167,6 +167,8 @@ def _care_setting_context(profile: Dict[str, Any]) -> Dict[str, bool]:
             {"skilled_nursing_capabilities", "nursing_24_7", "post_stroke_neuro_evidence"},
         ),
         "requires_memory": _need_is_high_yes(needs, {"memory_care", "dementia_alz_programs"}),
+        "requires_rehab": _need_is_high_yes(needs, {"pt", "ot", "speech_therapy"}),
+        "requires_stroke": _need_is_high_yes(needs, {"post_stroke_neuro_evidence"}),
         "needs_residential_assistance": _need_is_high_yes(
             needs,
             {"adl_support", "medication_support", "transfer_assistance"},
@@ -185,17 +187,28 @@ def _care_setting_fit(
 ) -> Dict[str, str]:
     canonical_type = str(result.get("canonical_type") or canonical_row.get("canonical_type") or "UNKNOWN").upper()
 
-    if context["requires_skilled"]:
-        if canonical_type == "SKILLED_NURSING":
-            return {"status": "PRIMARY_FIT", "reason": "Skilled/24-7 clinical care is a stated high-priority need."}
-        return {"status": "INSUFFICIENT_SETTING", "reason": "The stated needs require a skilled clinical setting."}
+    archetype = str(canonical_row.get("synthetic_archetype") or "").upper()
 
+    # Memory safety is a distinct required capability. It must not disappear
+    # merely because the profile also contains a generic 24/7-care signal.
     if context["requires_memory"]:
         if canonical_type == "ASSISTED_LIVING_RFG" and _memory_confirmed(canonical_row):
             return {"status": "PRIMARY_FIT", "reason": "Memory care is required and officially confirmed for this residential setting."}
         if canonical_type == "SKILLED_NURSING":
-            return {"status": "POSSIBLE_FIT", "reason": "A skilled setting may be appropriate only if clinical needs also justify that intensity."}
+            return {"status": "POSSIBLE_FIT", "reason": "A skilled setting may fit only when its memory-care capability is also verified."}
         return {"status": "INSUFFICIENT_SETTING", "reason": "Required memory-care capability is not confirmed for this setting."}
+
+    if context["requires_rehab"] and not context["requires_stroke"]:
+        if archetype == "REHABILITATION":
+            return {"status": "PRIMARY_FIT", "reason": "A time-limited rehabilitation pathway is the stated high-priority need."}
+        if canonical_type == "SKILLED_NURSING":
+            return {"status": "POSSIBLE_FIT", "reason": "Skilled nursing may support rehabilitation, but a dedicated rehabilitation pathway is preferred."}
+        return {"status": "INSUFFICIENT_SETTING", "reason": "The stated recovery plan requires a verified rehabilitation pathway."}
+
+    if context["requires_skilled"]:
+        if canonical_type == "SKILLED_NURSING":
+            return {"status": "PRIMARY_FIT", "reason": "Skilled/24-7 clinical care is a stated high-priority need."}
+        return {"status": "INSUFFICIENT_SETTING", "reason": "The stated needs require a skilled clinical setting."}
 
     if context["needs_residential_assistance"]:
         if canonical_type == "ASSISTED_LIVING_RFG":
@@ -382,6 +395,10 @@ def run_patient_decision_engine(
         # infer a confirmed capability from a fit label alone.
         if "memory_care_classification" in canonical_row:
             row["memory_care_classification"] = canonical_row["memory_care_classification"]
+        if "synthetic_archetype" in canonical_row:
+            row["synthetic_archetype"] = canonical_row["synthetic_archetype"]
+        if "housing_modalities" in canonical_row:
+            row["housing_modalities"] = canonical_row["housing_modalities"]
         row["care_setting_fit"] = _care_setting_fit(context, row, canonical_row)
         if canonical_id in regulatory:
             row["regulatory_history"] = regulatory[canonical_id]

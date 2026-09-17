@@ -24,6 +24,55 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         module_file = Path(module.__file__).as_posix()
         self.assertTrue(module_file.endswith("/app/services/patient_decision_engine_runtime/__init__.py"), module_file)
 
+    def test_memory_supervision_does_not_become_skilled_nursing(self) -> None:
+        module = importlib.import_module("app.services.patient_decision_engine")
+        profile = module.build_patient_needs_profile(
+            {"assistanceLevel": "Help with bathing, 24/7 support required", "memoryStatus": "Significant memory issues"},
+            "Severe dementia requiring 24/7 supervision in a secure memory setting.",
+        )
+        ids = {item["parameter_id"] for item in profile["needs"]}
+        self.assertIn("memory_care", ids)
+        self.assertNotIn("skilled_nursing_capabilities", ids)
+        self.assertNotIn("nursing_24_7", ids)
+
+    def test_clinical_free_text_creates_case_relevant_parameters(self) -> None:
+        module = importlib.import_module("app.services.patient_decision_engine")
+        profile = module.build_patient_needs_profile(
+            {"assistanceLevel": "Help with medications", "memoryStatus": "No"},
+            "Needs dialysis, daily wound care, and continuous oxygen.",
+        )
+        by_id = {item["parameter_id"]: item for item in profile["needs"]}
+        self.assertEqual("REQUIRED", by_id["dialysis_arrangements"]["requirement_level"])
+        self.assertEqual("HIGH", by_id["wound_care"]["requirement_level"])
+        self.assertEqual("HIGH", by_id["respiratory_trach_vent"]["requirement_level"])
+
+    def test_governed_setting_routes_memory_and_rehab_separately(self) -> None:
+        module = importlib.import_module("app.services.patient_decision_engine")
+        governed = module._governed
+        memory = governed._care_setting_fit(
+            {"requires_memory": True, "requires_skilled": False, "requires_rehab": False, "requires_stroke": False, "needs_residential_assistance": True},
+            {"canonical_type": "ASSISTED_LIVING_RFG"},
+            {"memory_care_classification": "CONFIRMED", "synthetic_archetype": "MEMORY_CARE"},
+        )
+        rehab = governed._care_setting_fit(
+            {"requires_memory": False, "requires_skilled": False, "requires_rehab": True, "requires_stroke": False, "needs_residential_assistance": True},
+            {"canonical_type": "SKILLED_NURSING"},
+            {"synthetic_archetype": "REHABILITATION"},
+        )
+        self.assertEqual("PRIMARY_FIT", memory["status"])
+        self.assertEqual("PRIMARY_FIT", rehab["status"])
+
+    def test_ineligible_candidate_cannot_enter_visible_ranking(self) -> None:
+        module = importlib.import_module("app.services.patient_decision_engine")
+        self.assertFalse(module._is_rankable_candidate({
+            "eligibility_status": "INELIGIBLE",
+            "client_intent_fit": {"hard_gate": "PASS"},
+        }))
+        self.assertTrue(module._is_rankable_candidate({
+            "eligibility_status": "INSUFFICIENT_EVIDENCE",
+            "client_intent_fit": {"hard_gate": "PENDING_VERIFICATION"},
+        }))
+
     def test_public_import_exposes_nevada_governed_behavior_after_ai_ready(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
