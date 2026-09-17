@@ -174,11 +174,29 @@ export function StructuredIntake() {
       ...draft,
       assistanceLevel: assistance.join(", "),
       happinessPreferences: activities,
+      medicareStatus: rehabNeed === "Yes" ? draft.medicareStatus : "",
       questionnaireCompletion: {
         mandatoryComplete: true,
         conditionalFollowUpsComplete: true,
         clientSummaryConfirmed: false,
         confirmedAt: "",
+      },
+      // Clear answers to follow-up questions whose parent answer no longer requires them, so a
+      // reconsidered answer (e.g. medical needs Yes -> No, or assistance -> Fully independent)
+      // can't leave stale, contradictory facts in the profile shown on the confirmation screen
+      // and sent to the decision engine.
+      medicalCareProfile: {
+        ...draft.medicalCareProfile,
+        mobilityMethod: needsMobilityFollowUp ? draft.medicalCareProfile.mobilityMethod : "",
+        transferAssistance: needsMobilityFollowUp ? draft.medicalCareProfile.transferAssistance : "",
+        recentFalls: needsMobilityFollowUp ? draft.medicalCareProfile.recentFalls : "",
+        dialysisFrequency: needsDialysis ? draft.medicalCareProfile.dialysisFrequency : "",
+        dialysisCenter: needsDialysis ? draft.medicalCareProfile.dialysisCenter : "",
+        dialysisTransportation: needsDialysis ? draft.medicalCareProfile.dialysisTransportation : "",
+        oxygenUse: needsOxygen ? draft.medicalCareProfile.oxygenUse : "",
+        woundCareFrequency: needsWoundCare ? draft.medicalCareProfile.woundCareFrequency : "",
+        complexConditionDetails: needsComplexDetails ? draft.medicalCareProfile.complexConditionDetails : "",
+        physicianCoordination: needsMedicalDetails ? draft.medicalCareProfile.physicianCoordination : "",
       },
       humanIntelligenceV2: {
         ...draft.humanIntelligenceV2,
@@ -187,8 +205,8 @@ export function StructuredIntake() {
         languageProfile: { ...draft.humanIntelligenceV2.languageProfile, preferredSpokenLanguage: language, medicalDiscussionLanguage: medicalLanguage },
         foodProfile: { dietaryPreferences: dietary },
         personalityProfile: { ...draft.humanIntelligenceV2.personalityProfile, communitySizePreference: communityStyle },
-        transitionRiskProfile: { ...draft.humanIntelligenceV2.transitionRiskProfile, attitudeTowardMove: moveAttitude, recentHospitalization, hospitalizationRecency: hospitalTiming, postHospitalRehabNeed: rehabNeed, wanderingConcerns: memoryWandering },
-        futureCareProfile: { ...draft.humanIntelligenceV2.futureCareProfile, avoidFutureMovesPreference: continuum, continuumOfCarePreference: continuum, secureMemoryNeighborhoodNeed: secureMemory },
+        transitionRiskProfile: { ...draft.humanIntelligenceV2.transitionRiskProfile, attitudeTowardMove: moveAttitude, recentHospitalization, hospitalizationRecency: recentHospitalization === "Yes" ? hospitalTiming : "", postHospitalRehabNeed: recentHospitalization === "Yes" ? rehabNeed : "", wanderingConcerns: hasMemoryConcern ? memoryWandering : "" },
+        futureCareProfile: { ...draft.humanIntelligenceV2.futureCareProfile, avoidFutureMovesPreference: continuum, continuumOfCarePreference: continuum, secureMemoryNeighborhoodNeed: hasMemoryConcern ? secureMemory : "" },
       },
     };
     setState(next);
