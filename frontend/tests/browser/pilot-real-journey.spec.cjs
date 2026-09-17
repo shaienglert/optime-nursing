@@ -1,19 +1,18 @@
 const { test, expect } = require('@playwright/test');
 
+function question(page, text) {
+  return page.getByText(text, { exact: true }).locator('..');
+}
+
 test.describe('real synthetic-pilot customer journey', () => {
   test.setTimeout(900_000);
 
   test('completes the questionnaire, confirms the summary, and receives only pilot facilities', async ({ page }) => {
+    page.setDefaultTimeout(15_000);
     const errors = [];
     page.on('console', (message) => {
       if (message.type() === 'error') errors.push(message.text());
     });
-
-    const recommendationResponse = page.waitForResponse(
-      (response) => response.url().includes('/decision-engine/recommendations')
-        && response.request().method() === 'POST',
-      { timeout: 720_000 },
-    );
 
     await page.goto('http://127.0.0.1:3000/intake', { waitUntil: 'networkidle' });
     await expect(page.getByRole('heading', { name: /We ask first\. We conclude only after you confirm\./i })).toBeVisible();
@@ -23,12 +22,12 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.getByRole('button', { name: 'Help with bathing', exact: true }).click();
     await page.getByRole('button', { name: 'Help with dressing', exact: true }).click();
     await page.getByRole('button', { name: 'Help with medications', exact: true }).click();
-    await page.getByRole('button', { name: 'Independent', exact: true }).click();
-    await page.getByRole('button', { name: 'No', exact: true }).nth(0).click();
-    await page.getByRole('button', { name: 'No', exact: true }).nth(1).click();
-    await page.getByRole('button', { name: 'No', exact: true }).nth(2).click();
-    await page.getByRole('button', { name: 'No', exact: true }).nth(3).click();
-    await page.getByRole('button', { name: 'No', exact: true }).nth(4).click();
+    await question(page, 'How does the person move around?').getByRole('button', { name: 'Independent', exact: true }).click();
+    await question(page, 'Help with standing or transfers?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Any falls in the last six months?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Are there memory or confusion concerns?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Are there ongoing medical conditions or treatments the new community must manage or coordinate?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Has there been a recent hospitalization?').getByRole('button', { name: 'No', exact: true }).click();
     await page.getByRole('button', { name: 'Not eligible', exact: true }).click();
 
     await page.locator('input[type="range"]').evaluate((element) => {
@@ -48,10 +47,10 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.getByLabel('Anything specific we should preserve?').fill('Gluten-free meals, classical music, card games, and time outdoors.');
     await page.getByRole('button', { name: 'English', exact: true }).click();
     await page.getByRole('button', { name: 'Gluten free', exact: true }).click();
-    await page.getByRole('button', { name: 'No', exact: true }).nth(5).click();
-    await page.getByRole('button', { name: 'No', exact: true }).nth(6).click();
+    await question(page, 'Is a religious community important?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Is parking required at the residence?').getByRole('button', { name: 'No', exact: true }).click();
     await page.getByRole('button', { name: 'Preferred', exact: true }).click();
-    await page.getByRole('button', { name: 'Yes', exact: true }).last().click();
+    await question(page, 'Is location important?').getByRole('button', { name: 'Yes', exact: true }).click();
     await page.getByLabel('Reference address').fill('Las Vegas, NV');
     await page.getByRole('button', { name: '20', exact: true }).click();
     await page.getByText('I confirm that this summary reflects my answers.').click();
@@ -75,6 +74,11 @@ test.describe('real synthetic-pilot customer journey', () => {
 
     await expect(page).toHaveURL(/intake-confirmation/, { timeout: 180_000 });
     await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible();
+    const recommendationResponse = page.waitForResponse(
+      (response) => response.url().includes('/decision-engine/recommendations')
+        && response.request().method() === 'POST',
+      { timeout: 720_000 },
+    );
     await page.getByRole('button', { name: /I confirm—show recommendations/i }).click();
     await expect(page).toHaveURL(/\/results/, { timeout: 180_000 });
 
