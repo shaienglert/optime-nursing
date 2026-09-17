@@ -21,6 +21,7 @@ from app.services.facility_parameter_service import (
     get_personalized_parameter_order,
 )
 from app.services.canonical_universe import configured_canonical_market
+from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 
 
 REQUIREMENT_WEIGHTS = {
@@ -1370,6 +1371,8 @@ def _build_ranked_candidate_detail(
     ]
 
     match_score = min(100.0, round(scoring["match_score"] + geo_bonus, 2))
+    current_price = row_by_param.get("current_price") or {}
+    current_availability = row_by_param.get("current_availability") or {}
     return {
         "canonical_facility_id": canonical_id,
         "facility_name": table["facility_name"],
@@ -1382,6 +1385,10 @@ def _build_ranked_candidate_detail(
         "canonical_type": table.get("canonical_type"),
         "role_classification": table.get("role_classification"),
         "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
+        "synthetic_pilot": bool(canonical_meta.get("synthetic_pilot")),
+        "starting_monthly_price": _to_number(current_price.get("raw_value")),
+        "availability_status": str(current_availability.get("raw_value") or "UNKNOWN"),
+        "visual_media": build_visual_media_payload(get_facility_media_record(canonical_id)),
         "eligibility_status": eligibility["eligibility_status"],
         "match_score": match_score,
         "patient_match_score": match_score,

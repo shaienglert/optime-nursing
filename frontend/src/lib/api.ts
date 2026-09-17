@@ -312,6 +312,13 @@ export type DecisionEngineRecommendation = {
   role_classification?: string | null;
   source_identity_ids?: Record<string, string>;
   facility_profile_id?: number | null;
+  synthetic_pilot?: boolean;
+  starting_monthly_price?: number | null;
+  availability_status?: "YES" | "NO" | "LIMITED" | "UNKNOWN";
+  visual_media?: {
+    hero?: { url: string; category: string; source_note?: string };
+    gallery?: Array<{ url: string; category: string; source_note?: string }>;
+  } | null;
   eligibility_status: "ELIGIBLE" | "POTENTIALLY_ELIGIBLE" | "INSUFFICIENT_EVIDENCE" | "INELIGIBLE";
   match_score: number;
   patient_match_score: number;
