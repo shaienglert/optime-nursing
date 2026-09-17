@@ -73,6 +73,7 @@ from app.services.demographic_market_metrics_service import (
 )
 from app.services.nevada_facility_scope import NEVADA_STATE_CODE, purge_non_nevada_facilities
 from app.services.nevada_runtime_facility_import import import_las_vegas_runtime_facilities
+from app.services.canonical_universe import configured_canonical_market
 
 
 from app.services.schema_migrations import ensure_deferred_report_schema
@@ -1917,6 +1918,36 @@ async def get_governance_runtime_context(db: Session = Depends(get_db)):
 
 @app.get("/facilities", response_model=List[FacilityListOut])
 async def get_facilities(q: Optional[str] = Query(default=None), db: Session = Depends(get_db)):
+    if configured_canonical_market() == "synthetic-pilot":
+        term = (q or "").strip().lower()
+        payload: List[FacilityListOut] = []
+        for canonical_id, facility in get_canonical_facility_index().items():
+            searchable = " ".join(
+                str(facility.get(key) or "")
+                for key in ("facility_name", "city", "address", "zip", "canonical_type")
+            ).lower()
+            if term and term not in searchable:
+                continue
+
+            media_payload = build_visual_media_payload(get_facility_media_record(canonical_id))
+            payload.append(
+                FacilityListOut(
+                    id=int(facility.get("pilot_exposure_order") or len(payload) + 1),
+                    cms_id=canonical_id,
+                    name=str(facility.get("facility_name") or canonical_id),
+                    city=str(facility.get("city") or ""),
+                    state=str(facility.get("state") or "NV"),
+                    address=str(facility.get("address") or ""),
+                    zip_code=str(facility.get("zip") or ""),
+                    phone=str(facility.get("phone") or "") or None,
+                    beds=facility.get("licensed_capacity"),
+                    confidence_level="HIGH",
+                    visual_hero_image=media_payload["hero"] if media_payload else {},
+                    visual_gallery_images=media_payload["gallery"] if media_payload else [],
+                )
+            )
+        return payload
+
     query = db.query(Facility).filter(
         Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
     )
@@ -2010,6 +2041,45 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
 
 @app.get("/facilities/{id}", response_model=FacilityDetailsOut)
 async def get_facility(id: int, db: Session = Depends(get_db)):
+    if configured_canonical_market() == "synthetic-pilot":
+        facility = next(
+            (
+                row
+                for row in get_canonical_facility_index().values()
+                if int(row.get("pilot_exposure_order") or 0) == id
+            ),
+            None,
+        )
+        if not facility:
+            raise HTTPException(status_code=404, detail="Facility not found")
+
+        canonical_id = str(facility.get("canonical_id") or "")
+        media_payload = build_visual_media_payload(get_facility_media_record(canonical_id))
+        return FacilityDetailsOut(
+            id=id,
+            cms_id=canonical_id,
+            canonical_facility_id=canonical_id,
+            name=str(facility.get("facility_name") or canonical_id),
+            address=str(facility.get("address") or ""),
+            city=str(facility.get("city") or ""),
+            state=str(facility.get("state") or "NV"),
+            zip_code=str(facility.get("zip") or ""),
+            phone=str(facility.get("phone") or "") or None,
+            beds=facility.get("licensed_capacity"),
+            confidence_level="HIGH",
+            visual_hero_image=media_payload["hero"] if media_payload else {},
+            visual_gallery_images=media_payload["gallery"] if media_payload else [],
+            score_breakdown=ScoreBreakdownOut(
+                medical_quality_score=0.0,
+                staffing_score=0.0,
+                safety_score=0.0,
+                overall_optime_score=0.0,
+                medical_components={},
+                staffing_components={},
+                safety_components={},
+            ),
+        )
+
     facility = db.query(Facility).filter(
         Facility.id == id, Facility.state == NEVADA_STATE_CODE, Facility.cms_id != DEMO_CMS_ID
     ).first()
