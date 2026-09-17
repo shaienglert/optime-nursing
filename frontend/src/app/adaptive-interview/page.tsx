@@ -70,6 +70,11 @@ function existingAnswerFor(question: AdaptiveQuestion, state: QuestionnaireState
 
 function applyAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
   let next = cloneState(state);
+  next.questionnaireCompletion = {
+    ...next.questionnaireCompletion,
+    clientSummaryConfirmed: false,
+    confirmedAt: "",
+  };
   const targetFactKey = String(question.target_fact_key || "").trim();
   const signals = next.humanIntelligenceV2.scoringEngine.adaptiveSignals || [];
   next.humanIntelligenceV2.scoringEngine.adaptiveSignals = [
@@ -109,7 +114,7 @@ export default function AdaptiveInterviewPage() {
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [nextUrl, setNextUrl] = useState("/results");
+  const nextUrl = useRef("/results");
 
   async function continueDecision(currentState: QuestionnaireState, destination: string, depth = 0): Promise<void> {
     if (depth > 8) {
@@ -135,7 +140,7 @@ export default function AdaptiveInterviewPage() {
 
       if (context.canonical.client === "COMPLETE") {
         setQuestion(null);
-        router.replace(destination);
+        router.replace(`/intake-confirmation?next=${encodeURIComponent(destination)}`);
         return;
       }
 
@@ -165,10 +170,14 @@ export default function AdaptiveInterviewPage() {
   }
 
   useEffect(() => {
+    if (!state.questionnaireCompletion?.mandatoryComplete || !state.questionnaireCompletion?.conditionalFollowUpsComplete) {
+      router.replace("/intake");
+      return;
+    }
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("next");
     const destination = requested?.startsWith("/results") ? requested : "/results";
-    setNextUrl(destination);
+    nextUrl.current = destination;
     void continueDecision(cloneState(state), destination);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -194,7 +203,7 @@ export default function AdaptiveInterviewPage() {
       impact_explanation: `Question: ${question.question} | explicit client answer`,
       info_gain_score: question.information_gain === "HIGH" ? 1 : 0,
     }).catch(() => undefined);
-    await continueDecision(nextState, nextUrl);
+    await continueDecision(nextState, nextUrl.current);
   }
 
   const options = question?.answer_options || [];
@@ -209,7 +218,7 @@ export default function AdaptiveInterviewPage() {
         {error ? (
           <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-xl leading-8 text-rose-800">
             <p>{error}</p>
-            <button type="button" onClick={() => void continueDecision(cloneState(state), nextUrl)} className="mt-5 rounded-2xl bg-[#315f53] px-6 py-4 text-xl font-semibold text-white">Try again</button>
+            <button type="button" onClick={() => void continueDecision(cloneState(state), nextUrl.current)} className="mt-5 rounded-2xl bg-[#315f53] px-6 py-4 text-xl font-semibold text-white">Try again</button>
           </div>
         ) : null}
 

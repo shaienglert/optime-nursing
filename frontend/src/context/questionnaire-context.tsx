@@ -23,6 +23,32 @@ export type QuestionnaireState = {
   customDistanceMiles: string;
   otherInterests: string;
   notes: string;
+  parkingRequirement: string;
+  parkingVehicleCount: string;
+  moveLossConcerns: string[];
+  medicareStatus: string;
+  medicaidStatus: string;
+  moveTiming: string;
+  questionnaireCompletion: {
+    mandatoryComplete: boolean;
+    conditionalFollowUpsComplete: boolean;
+    clientSummaryConfirmed: boolean;
+    confirmedAt: string;
+  };
+  medicalCareProfile: {
+    hasOngoingMedicalNeeds: string;
+    needs: string[];
+    mobilityMethod: string;
+    transferAssistance: string;
+    recentFalls: string;
+    dialysisFrequency: string;
+    dialysisCenter: string;
+    dialysisTransportation: string;
+    oxygenUse: string;
+    woundCareFrequency: string;
+    complexConditionDetails: string;
+    physicianCoordination: string;
+  };
   humanIntelligenceV2: HumanIntelligenceV2;
 };
 
@@ -205,6 +231,32 @@ const DEFAULT_STATE: QuestionnaireState = {
   customDistanceMiles: "",
   otherInterests: "",
   notes: "",
+  parkingRequirement: "",
+  parkingVehicleCount: "",
+  moveLossConcerns: [],
+  medicareStatus: "",
+  medicaidStatus: "",
+  moveTiming: "",
+  questionnaireCompletion: {
+    mandatoryComplete: false,
+    conditionalFollowUpsComplete: false,
+    clientSummaryConfirmed: false,
+    confirmedAt: "",
+  },
+  medicalCareProfile: {
+    hasOngoingMedicalNeeds: "",
+    needs: [],
+    mobilityMethod: "",
+    transferAssistance: "",
+    recentFalls: "",
+    dialysisFrequency: "",
+    dialysisCenter: "",
+    dialysisTransportation: "",
+    oxygenUse: "",
+    woundCareFrequency: "",
+    complexConditionDetails: "",
+    physicianCoordination: "",
+  },
   humanIntelligenceV2: {
     socialProfile: {
       livingAloneDuration: "",
@@ -367,8 +419,29 @@ type QuestionnaireContextValue = {
 
 const QuestionnaireContext = createContext<QuestionnaireContextValue | undefined>(undefined);
 
+function restoreQuestionnaireState(): QuestionnaireState {
+  const saved = loadSessionJson<Partial<QuestionnaireState>>(QUESTIONNAIRE_SESSION_KEY);
+  if (!saved) return DEFAULT_STATE;
+
+  return {
+    ...DEFAULT_STATE,
+    ...saved,
+    moveLossConcerns: Array.isArray(saved.moveLossConcerns) ? saved.moveLossConcerns : [],
+    questionnaireCompletion: {
+      ...DEFAULT_STATE.questionnaireCompletion,
+      ...(saved.questionnaireCompletion || {}),
+    },
+    medicalCareProfile: {
+      ...DEFAULT_STATE.medicalCareProfile,
+      ...(saved.medicalCareProfile || {}),
+      needs: Array.isArray(saved.medicalCareProfile?.needs) ? saved.medicalCareProfile.needs : [],
+    },
+    humanIntelligenceV2: saved.humanIntelligenceV2 || DEFAULT_STATE.humanIntelligenceV2,
+  };
+}
+
 export function QuestionnaireProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<QuestionnaireState>(() => loadSessionJson<QuestionnaireState>(QUESTIONNAIRE_SESSION_KEY) || DEFAULT_STATE);
+  const [state, setState] = useState<QuestionnaireState>(restoreQuestionnaireState);
 
   useEffect(() => {
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, state);
