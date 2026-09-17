@@ -94,8 +94,8 @@ def _canonical_records_for_market(payload: Dict[str, Any], market: str) -> List[
         rows = [row for row in rows if row.get("is_las_vegas_valley") is True]
     elif market == "synthetic-pilot":
         requested_limit = int(os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50"))
-        if requested_limit not in {10, 50, 150, 200}:
-            raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 10, 50, 150, or 200")
+        if requested_limit not in {50, 100, 150, 200}:
+            raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 50, 100, 150, or 200")
         rows.sort(key=lambda row: int(row.get("pilot_exposure_order") or 999999))
         rows = rows[:requested_limit]
     return rows

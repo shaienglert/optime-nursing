@@ -31,7 +31,7 @@ assert(new Set(rooms.records.map((row) => row.availability_status)).size === 3, 
 assert(media.records.length === 200, 'each facility needs a media profile');
 assert(media.records.every((row) => row.gallery_images?.length === 5 && row.synthetic_pilot === true), 'each facility needs five labeled synthetic illustrations');
 assert(capabilities.records.length === 6600, 'each facility must have the complete 33-question provider capability profile');
-for (const limit of [10, 50, 150, 200]) {
+for (const limit of [50, 100, 150, 200]) {
   const exposed = canonical.records.slice().sort((a, b) => a.pilot_exposure_order - b.pilot_exposure_order).slice(0, limit);
   assert(exposed.length === limit, `cohort ${limit} must be reproducible`);
   assert(exposed.at(-1).pilot_exposure_order === limit, `cohort ${limit} must be nested and deterministic`);
@@ -44,6 +44,6 @@ console.log(JSON.stringify({
   rooms: rooms.records.length,
   mediaProfiles: media.records.length,
   providerCapabilities: capabilities.records.length,
-  cohorts: [50, 10, 150, 200],
+  cohorts: [50, 100, 150, 200],
   types: [...new Set(canonical.records.map((row) => row.canonical_type))],
 }, null, 2));
