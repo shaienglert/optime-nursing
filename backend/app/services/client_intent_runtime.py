@@ -125,6 +125,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("TRANSPORTATION_AND_OUTINGS", "Transportation/outings are part of the desired lifestyle.")
     if any(token in query for token in ("dining", "restaurant", "food")):
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
+    human_profile = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
+    food_profile = human_profile.get("foodProfile") if isinstance(human_profile.get("foodProfile"), dict) else {}
+    dietary_preferences = " ".join(str(value or "").lower() for value in food_profile.get("dietaryPreferences") or [])
+    if "kosher" in query or "kosher" in dietary_preferences:
+        add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
 
     return {
         "version": "client-intent-runtime-v1.6",
@@ -288,6 +293,17 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             if any(p.get("dining_verified") is True for p in payloads):
                 nice_match.append(key)
                 nice_fit_scores[key] = 100.0
+            else:
+                nice_unknown.append(key)
+        elif key == "KOSHER_MEALS":
+            matched = {str(item.get("parameter_id") or "") for item in row.get("matched_needs") or []}
+            gaps = {str(item.get("parameter_id") or "") for item in row.get("unmet_verified_needs") or []}
+            if "kosher" in matched:
+                nice_match.append(key)
+                nice_fit_scores[key] = 100.0
+            elif "kosher" in gaps:
+                nice_mismatch.append(key)
+                nice_fit_scores[key] = 0.0
             else:
                 nice_unknown.append(key)
         else:
