@@ -180,7 +180,8 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 hard_fail.append(key)
         elif key == "NO_FORCED_MEMORY_PLACEMENT":
-            if canonical_type in {"MEMORY_CARE_ONLY", "LOCKED_MEMORY_CARE_ONLY"}:
+            synthetic_archetype = _upper(row.get("synthetic_archetype"))
+            if canonical_type in {"MEMORY_CARE_ONLY", "LOCKED_MEMORY_CARE_ONLY"} or synthetic_archetype == "MEMORY_CARE":
                 hard_fail.append(key)
             else:
                 must_pass.append(key)
