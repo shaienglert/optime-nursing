@@ -21,7 +21,11 @@ assert(canonical.dataset_mode === 'SYNTHETIC_PILOT', 'canonical data must be lab
 assert(canonical.records.length === 200, 'pilot must contain exactly 200 facilities');
 assert(new Set(canonical.records.map((row) => row.canonical_id)).size === 200, 'pilot IDs must be unique');
 assert(canonical.records.every((row) => row.synthetic_pilot === true && row.truth_label.includes('FICTIONAL')), 'every facility must be visibly fictional');
-assert(new Set(canonical.records.map((row) => row.canonical_type)).size >= 8, 'pilot needs care-type diversity');
+// canonical_type is intentionally collapsed onto the 3 values backend/app/services/
+// patient_decision_engine's _care_setting_fit() recognizes (matching how real Nevada
+// data is coded); care-type diversity lives in synthetic_archetype instead.
+assert(new Set(canonical.records.map((row) => row.synthetic_archetype)).size >= 8, 'pilot needs care-type diversity');
+assert(new Set(canonical.records.map((row) => row.canonical_type)).size === 3, 'canonical_type must stay within the production-recognized taxonomy');
 assert(new Set(canonical.records.map((row) => row.city)).size >= 3, 'pilot needs geographic diversity');
 assert(evidence.records.length >= 4000, 'pilot needs broad parameter coverage');
 assert(evidence.records.every((row) => row.provenance?.synthetic_pilot === true), 'every evidence row must carry synthetic provenance');
