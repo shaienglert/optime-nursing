@@ -30,6 +30,7 @@ function question(page, text) {
 }
 
 test.describe('real synthetic-pilot customer journey', () => {
+  test.describe.configure({ mode: 'parallel' });
   test.setTimeout(900_000);
 
   for (let scenarioIndex = scenarioStart; scenarioIndex < scenarioStart + scenarioCount; scenarioIndex += 1) {
@@ -95,9 +96,9 @@ test.describe('real synthetic-pilot customer journey', () => {
         await answerBox.fill('No additional requirement; use the confirmed questionnaire answers.');
         await continueButton.click();
       } else {
-        const safeOption = page.getByRole('button', { name: /No preference|Not sure|More active|Las Vegas/i }).first();
-        await expect(safeOption).toBeVisible({ timeout: 120_000 });
-        await safeOption.click();
+        const offeredOption = page.locator('main section button').first();
+        await expect(offeredOption).toBeVisible({ timeout: 30_000 });
+        await offeredOption.click();
       }
       await page.waitForTimeout(500);
     }
