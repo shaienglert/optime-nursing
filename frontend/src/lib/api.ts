@@ -1704,16 +1704,26 @@ export function getApiBaseUrl(): string {
   throw new Error("API base URL is required on the server when NEXT_PUBLIC_API_URL is not set.");
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
-  const response = await fetch(joinApiUrl(getApiBaseUrl(), path), {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throw new Error(`API request failed (${response.status})`);
+async function fetchJson<T>(path: string, timeoutMs?: number): Promise<T> {
+  const controller = timeoutMs ? new AbortController() : null;
+  const timeout = controller
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
+
+  try {
+    const response = await fetch(joinApiUrl(getApiBaseUrl(), path), {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      signal: controller?.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`API request failed (${response.status})`);
+    }
+    return response.json() as Promise<T>;
+  } finally {
+    if (timeout) clearTimeout(timeout);
   }
-  return response.json() as Promise<T>;
 }
 
 async function postJson<TReq, TRes>(path: string, payload: TReq): Promise<TRes> {
@@ -1732,12 +1742,15 @@ async function postJson<TReq, TRes>(path: string, payload: TReq): Promise<TRes> 
 export async function fetchFacilities(searchText?: string): Promise<Facility[]> {
   let facilities: BackendFacility[] = [];
   try {
-    facilities = await fetchJson<BackendFacility[]>("/facilities");
-  } catch {
+    facilities = await fetchJson<BackendFacility[]>("/facilities", 15_000);
+  } catch (error) {
     if (shouldUseDevelopmentFallbackData()) {
       facilities = FALLBACK_BACKEND_FACILITIES;
     } else {
-      throw new Error("Unable to load facilities from production API.");
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Facilities are taking too long to load. Please try again.");
+      }
+      throw new Error("Unable to load facilities. Please try again.");
     }
   }
 
