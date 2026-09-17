@@ -117,7 +117,7 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
         "pt": "YES" if skilled or index % 3 == 0 else "NO",
         "ot": "YES" if skilled or index % 4 == 0 else "NO",
         "speech_therapy": "YES" if skilled or index % 7 == 0 else "NO",
-        "post_stroke_neuro_evidence": "YES" if canonical_type == "REHABILITATION" or (canonical_type == "SKILLED_NURSING" and index % 3 != 0) else "NO",
+        "post_stroke_neuro_evidence": "YES" if canonical_type == "REHABILITATION" or (canonical_type == "SKILLED_NURSING" and index % 5 == 0) else "NO",
         "transportation": yes_no(index, 6, limited=True),
         "published_rates": "YES",
         "current_availability": ["YES", "YES", "LIMITED", "NO", "YES"][index % 5],
