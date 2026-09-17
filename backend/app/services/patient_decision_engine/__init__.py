@@ -164,14 +164,18 @@ def _care_setting_context(profile: Dict[str, Any]) -> Dict[str, bool]:
     return {
         "requires_skilled": _need_is_high_yes(
             needs,
-            {"skilled_nursing_capabilities", "nursing_24_7", "post_stroke_neuro_evidence"},
+            # dialysis_arrangements/wound_care are real clinical-coordination needs, same
+            # tier as an explicit skilled-nursing statement -- not just "some medical need".
+            {"skilled_nursing_capabilities", "nursing_24_7", "post_stroke_neuro_evidence", "dialysis_arrangements", "wound_care"},
         ),
         "requires_memory": _need_is_high_yes(needs, {"memory_care", "dementia_alz_programs"}),
         "requires_rehab": _need_is_high_yes(needs, {"pt", "ot", "speech_therapy"}),
         "requires_stroke": _need_is_high_yes(needs, {"post_stroke_neuro_evidence"}),
         "needs_residential_assistance": _need_is_high_yes(
             needs,
-            {"adl_support", "medication_support", "transfer_assistance"},
+            # respiratory_trach_vent (continuous oxygen) rules out plain independent/active-
+            # adult living without forcing a full skilled-nursing setting on its own.
+            {"adl_support", "medication_support", "transfer_assistance", "respiratory_trach_vent"},
         ),
     }
 
