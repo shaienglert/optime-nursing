@@ -22,10 +22,28 @@ def _semantic_result(result: Dict[str, Any]) -> Dict[str, Any]:
     return semantic_result
 
 
-def extract_semantic_facility_requirements(result: Dict[str, Any]) -> List[Dict[str, Any]]:
-    statements = _semantic_result(result).get("statements") or []
+def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire_state: Dict[str, Any] | None = None) -> List[Dict[str, Any]]:
     requirements: List[Dict[str, Any]] = []
     seen: set[str] = set()
+
+    # A budget stated only in the structured questionnaire field (no matching
+    # free-text mention) never reaches Semantic AI's statements at all -- and stays
+    # invisible even when the AI call fails outright for an unrelated reason, since
+    # this check has no dependency on it succeeding. A client-stated monthly budget,
+    # in any form, always requires facility-side price verification.
+    budget = (questionnaire_state or {}).get("budget")
+    if budget not in (None, "", 0):
+        seen.add("SEMANTIC_BUDGET_VERIFICATION")
+        requirements.append({
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": ["budget"],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT",
+        })
+
+    statements = _semantic_result(result).get("statements") or []
     for statement in statements:
         if not isinstance(statement, dict):
             continue
@@ -211,8 +229,8 @@ def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candida
         db.close()
 
 
-def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_limit: int = 20) -> Dict[str, Any]:
-    requirements = extract_semantic_facility_requirements(result)
+def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_limit: int = 20, questionnaire_state: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    requirements = extract_semantic_facility_requirements(result, questionnaire_state)
     rows = list(result.get("results") or [])
     queued = 0
     if requirements:

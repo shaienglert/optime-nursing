@@ -44,8 +44,16 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         hi.setdefault("familyProfile", {}).setdefault("socialInteractionNeed", "Neither")
         hi.setdefault("transitionRiskProfile", {}).setdefault("attitudeTowardMove", "Cautious but open")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        # These fixtures state a budget (a required minimum client dimension), which is
+        # now also a facility-owned MUST (see semantic_facility_requirements.py's
+        # SEMANTIC_BUDGET_VERIFICATION). No facility in the real, unmocked Las Vegas data
+        # these tests run against has verified pricing evidence, so without this mock every
+        # candidate would gate to PENDING_VERIFICATION on budget alone -- unrelated to what
+        # these tests actually verify.
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ), patch(
+            "app.services.governed_evidence_runtime.agent_and_provider_payloads", return_value=[{"published_rates_verified": True}]
         ):
             return run_patient_decision_engine(questionnaire, query, limit=limit)
 

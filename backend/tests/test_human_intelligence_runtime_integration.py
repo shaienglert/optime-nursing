@@ -44,9 +44,16 @@ def _questionnaire(*, community_size: str = "", social_need: str = "", move_atti
 
 class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
     def _run(self, questionnaire: dict, ai_result: dict, limit: int = 5) -> dict:
+        # Every fixture here states a budget (a required minimum client dimension), which
+        # is now also a facility-owned MUST (see semantic_facility_requirements.py's
+        # SEMANTIC_BUDGET_VERIFICATION). No facility in the real, unmocked Las Vegas data
+        # these tests run against has verified pricing evidence, so without this mock every
+        # candidate would gate to PENDING_VERIFICATION on budget alone -- unrelated to what
+        # these tests actually verify (preference/ranking behavior).
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False):
             with patch("app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result):
-                return run_patient_decision_engine(questionnaire, BASE_QUERY, limit=limit)
+                with patch("app.services.governed_evidence_runtime.agent_and_provider_payloads", return_value=[{"published_rates_verified": True}]):
+                    return run_patient_decision_engine(questionnaire, BASE_QUERY, limit=limit)
 
     def test_ai_preference_question_cannot_block_facility_ranking(self):
         question = "What kind of community environment would feel most comfortable for him?"

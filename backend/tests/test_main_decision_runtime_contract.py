@@ -107,8 +107,19 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        # The fixture's stated budget (a required minimum client dimension -- removing
+        # it blocks the interview as incomplete before this test's actual scenario is
+        # even reached) is now also a facility-owned MUST (see
+        # semantic_facility_requirements.py's SEMANTIC_BUDGET_VERIFICATION). No facility
+        # in the real, unmocked Las Vegas data this test runs against has verified
+        # pricing evidence, so without this mock every candidate would gate to
+        # PENDING_VERIFICATION on budget alone -- unrelated to what this test actually
+        # verifies (MUST-complete-but-ranking-unavailable serialization survives the
+        # FastAPI response model).
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ), patch(
+            "app.services.governed_evidence_runtime.agent_and_provider_payloads", return_value=[{"published_rates_verified": True}]
         ):
             result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
         serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()

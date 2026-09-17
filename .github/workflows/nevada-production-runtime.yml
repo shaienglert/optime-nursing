@@ -103,11 +103,28 @@ jobs:
 
           import app.services.human_intelligence_runtime_verified as hi_runtime
           import app.services.must_ai_nice_pipeline as must_pipeline
+          import app.services.governed_evidence_runtime as evidence_runtime
           from app.services.patient_decision_engine import run_patient_decision_engine
 
           os.environ['OPTIME_SEMANTIC_AI_ENABLED'] = '1'
           os.environ['OPTIME_SEMANTIC_AI_REQUIRED'] = '1'
           os.environ['OPTIME_AI_CANDIDATE_RANKING_REQUIRED'] = '1'
+
+          # Every persona below states a budget, now also a facility-owned MUST (see
+          # semantic_facility_requirements.py's SEMANTIC_BUDGET_VERIFICATION). No
+          # facility in the real Nevada data this script runs against has verified
+          # pricing evidence, so without this every candidate would gate to
+          # PENDING_VERIFICATION on budget alone -- unrelated to what this verifier
+          # actually checks (interview/Guardian/Valley/READY contract behavior). This
+          # wraps the real evidence lookup rather than replacing it, so the exact,
+          # real-data-driven eligible counts these scenarios assert on (e.g. exactly
+          # one facility for the couple/rehab persona) are preserved.
+          _real_agent_and_provider_payloads = evidence_runtime.agent_and_provider_payloads
+
+          def _payloads_with_verified_budget(row):
+              return [*_real_agent_and_provider_payloads(row), {'published_rates_verified': True}]
+
+          evidence_runtime.agent_and_provider_payloads = _payloads_with_verified_budget
 
           def unavailable_required_ranking(rows, **_kwargs):
               return list(rows), {

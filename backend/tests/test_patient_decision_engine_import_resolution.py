@@ -27,8 +27,15 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
     def test_public_import_exposes_nevada_governed_behavior_after_ai_ready(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        # The fixture states a budget (a required minimum client dimension), which is now
+        # also a facility-owned MUST (see semantic_facility_requirements.py's
+        # SEMANTIC_BUDGET_VERIFICATION). No facility in the real, unmocked Las Vegas data
+        # this test runs against has verified pricing evidence, so without this mock every
+        # candidate would gate to PENDING_VERIFICATION on budget alone.
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
+        ), patch(
+            "app.services.governed_evidence_runtime.agent_and_provider_payloads", return_value=[{"published_rates_verified": True}]
         ):
             result = module.run_patient_decision_engine(
                 {

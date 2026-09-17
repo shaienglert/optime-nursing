@@ -476,6 +476,36 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertIn("SEMANTIC_MEDICAID_PATHWAY", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
+    def test_structured_questionnaire_budget_survives_even_without_ai_statements(self) -> None:
+        # Reproduces the live finding for recently_widowed_isolation_risk: the client's
+        # $5,000 budget was only ever in questionnaire_state.budget, with no matching
+        # free-text mention -- so it never reached Semantic AI's statements at all, and
+        # stayed invisible even when the AI call failed outright for an unrelated
+        # reason (SEMANTIC_AI_REPAIR_CLARIFICATION_WITHOUT_QUESTION in the live capture,
+        # meaning zero statements existed). This must not depend on the AI succeeding.
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"status": "FAILED", "error": "SOME_UNRELATED_FAILURE"}}},
+            "results": [{
+                "canonical_facility_id": "NO-PRICE-EVIDENCE",
+                "facility_name": "Generic Community",
+                "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                "agent_person_fit_evidence": [],
+            }],
+        }
+        requirements = extract_semantic_facility_requirements(result, {"budget": 5000})
+        self.assertEqual(["SEMANTIC_BUDGET_VERIFICATION"], [item["key"] for item in requirements])
+
+        out = apply_semantic_facility_requirements(result, research_limit=0, questionnaire_state={"budget": 5000})
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
+    def test_no_questionnaire_budget_and_no_ai_statement_creates_no_requirement(self) -> None:
+        result = {"decision_intelligence": {"human_intelligence": {"semantic_ai": {"status": "FAILED"}}}}
+        self.assertEqual([], extract_semantic_facility_requirements(result, {"budget": None}))
+        self.assertEqual([], extract_semantic_facility_requirements(result, {}))
+        self.assertEqual([], extract_semantic_facility_requirements(result, None))
+
     def test_stamped_false_agent_evidence_never_hard_fails_a_semantic_must(self) -> None:
         # decision_research_worker.py stamps social_engagement_verified=False by default
         # on every research record, regardless of which dimension was actually
