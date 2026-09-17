@@ -134,6 +134,14 @@ def _stable_final_intent_key(row: Dict[str, Any], original_index: int) -> tuple[
     return (*intent_rank_key(row), original_index)
 
 
+def _is_rankable_candidate(row: Dict[str, Any]) -> bool:
+    """Only candidates without a verified mismatch may be shown as recommendations."""
+    return (
+        ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")
+        and str(row.get("eligibility_status") or "") != "INELIGIBLE"
+    )
+
+
 def _social_priority_is_explicit_high(human_context: Dict[str, Any]) -> bool:
     signals = human_context.get("signals") if isinstance(human_context.get("signals"), dict) else {}
     social = signals.get("social_transition_priority") if isinstance(signals.get("social_transition_priority"), dict) else {}
@@ -348,7 +356,7 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
     rows = [row for _, row in indexed_pre_agent]
     _stage_started = _mark("pre_agent_sort_ms", _stage_started)
 
-    non_failed = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")]
+    non_failed = [row for row in rows if _is_rankable_candidate(row)]
     research_pool = _strategy_research_pool(non_failed, int(limit or 50))
     _stage_started = _mark("strategy_research_pool_ms", _stage_started)
     agent_bridge = attach_agent_evidence_and_queue_gaps(research_pool, human_context)
@@ -356,8 +364,8 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
 
     attach_client_intent_fit(rows, client_intent)
     _stage_started = _mark("attach_client_intent_fit_2_ms", _stage_started)
-    survivors = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")]
-    rejected = [row for row in rows if ((row.get("client_intent_fit") or {}).get("hard_gate") == "FAIL")]
+    survivors = [row for row in rows if _is_rankable_candidate(row)]
+    rejected = [row for row in rows if not _is_rankable_candidate(row)]
     indexed_final = list(enumerate(survivors))
     indexed_final.sort(key=lambda pair: _stable_final_intent_key(pair[1], pair[0]))
     ranked_survivors = [row for _, row in indexed_final]
