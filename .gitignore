@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 *.db
+database/synthetic_pilot/*.json
 .env
 node_modules/
 .next/

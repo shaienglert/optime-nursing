@@ -41,6 +41,7 @@ LAS_VEGAS_OVERLAY_VERSION = "verified-housing-overlay-v1"
 MARKET_UNIVERSE_FILES = {
     "florida": "florida_facility_universe_canonical.json",
     "nevada": "nevada_facility_universe_canonical.json",
+    "synthetic-pilot": "synthetic_pilot/facility_universe.json.gz.b64",
 }
 MARKET_ALIASES = {
     "fl": "florida",
@@ -49,6 +50,8 @@ MARKET_ALIASES = {
     "las vegas": "las-vegas",
     "las_vegas": "las-vegas",
     "las-vegas-nevada": "las-vegas",
+    "pilot": "synthetic-pilot",
+    "synthetic": "synthetic-pilot",
 }
 
 

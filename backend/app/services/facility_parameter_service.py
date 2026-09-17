@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import base64
+import gzip
 import hashlib
 import json
 import logging
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 import threading
@@ -15,6 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 DATABASE_DIR = REPO_ROOT / "database"
 REGISTRY_PATH = DATABASE_DIR / "optime_parameter_registry.json"
 FLORIDA_EVIDENCE_PATH = DATABASE_DIR / "florida_facility_parameter_evidence.json"
+PILOT_EVIDENCE_PATH = DATABASE_DIR / "synthetic_pilot" / "facility_parameter_evidence.json.gz.b64"
 # Backward-compatible public constant used by older runtime-sync code/tests.
 EVIDENCE_PATH = FLORIDA_EVIDENCE_PATH
 
@@ -30,6 +34,8 @@ _CACHE: Dict[str, Any] = {}
 
 
 def _read_json(path: Path) -> Dict[str, Any]:
+    if path.name.endswith(".gz.b64"):
+        return json.loads(gzip.decompress(base64.b64decode(path.read_text(encoding="ascii"))).decode("utf-8"))
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -86,14 +92,23 @@ def _canonical_records_for_market(payload: Dict[str, Any], market: str) -> List[
         # The Nevada canonical artifact is statewide. Production Las Vegas search must
         # never silently rank Reno/other Nevada facilities merely because they exist.
         rows = [row for row in rows if row.get("is_las_vegas_valley") is True]
+    elif market == "synthetic-pilot":
+        requested_limit = int(os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50"))
+        if requested_limit not in {10, 50, 150, 200}:
+            raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 10, 50, 150, or 200")
+        rows.sort(key=lambda row: int(row.get("pilot_exposure_order") or 999999))
+        rows = rows[:requested_limit]
     return rows
 
 
 def _signature(market: str) -> tuple[Any, ...]:
     canonical_path = resolve_canonical_universe_path(market)
     evidence_mtime = FLORIDA_EVIDENCE_PATH.stat().st_mtime if market == "florida" and FLORIDA_EVIDENCE_PATH.exists() else 0.0
+    if market == "synthetic-pilot" and PILOT_EVIDENCE_PATH.exists():
+        evidence_mtime = PILOT_EVIDENCE_PATH.stat().st_mtime
     return (
         market,
+        os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50") if market == "synthetic-pilot" else None,
         REGISTRY_PATH.stat().st_mtime,
         evidence_mtime,
         canonical_path.stat().st_mtime,
@@ -278,8 +293,9 @@ def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Di
     canonical_payload = _read_json(canonical_path)
     canonical = _canonical_records_for_market(canonical_payload, market)
 
-    if market == "florida":
-        evidence_payload = _read_json(FLORIDA_EVIDENCE_PATH)
+    if market in {"florida", "synthetic-pilot"}:
+        evidence_path = FLORIDA_EVIDENCE_PATH if market == "florida" else PILOT_EVIDENCE_PATH
+        evidence_payload = _read_json(evidence_path)
         evidence = list(evidence_payload.get("records") or [])
         evidence_generated_at = evidence_payload.get("generated_at_utc")
     else:
@@ -298,6 +314,11 @@ def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Di
         for row in canonical
         if str(row.get("canonical_id") or "").strip()
     }
+    if market == "synthetic-pilot":
+        evidence = [
+            row for row in evidence
+            if str(row.get("canonical_facility_id") or "") in canonical_by_id
+        ]
     evidence_lookup: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
     evidence_best_lookup: Dict[str, Dict[str, Dict[str, Any]]] = {}
     for row in evidence:

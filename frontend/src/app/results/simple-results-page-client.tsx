@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -106,6 +107,7 @@ export function SimpleResultsPageClient() {
     [response],
   );
   const top = eligible.slice(0, TOP_COUNT);
+  const syntheticPilot = (response?.results || []).some((item) => item.synthetic_pilot);
   const relationship = personLabel(state.relationship, naturalLanguageQuery);
   const detailsHref = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const personalReportHref = `/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
@@ -122,6 +124,7 @@ export function SimpleResultsPageClient() {
     <main className="min-h-screen bg-[#fffaf2] px-5 py-8 text-[#22332d] sm:px-8 lg:px-12">
       <div className="mx-auto max-w-6xl">
         <section className="rounded-[2rem] border border-[#e1d8c9] bg-white p-7 shadow-sm sm:p-10">
+          {syntheticPilot ? <div className="mb-6 rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-lg font-semibold text-amber-950">Pilot mode: every community, price, availability value and image on this page is synthetic test data—not a real facility.</div> : null}
           <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#437667]">OPTIME results</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">The strongest options for {relationship}</h1>
           <p className="mt-5 max-w-4xl text-xl leading-8 text-[#53635d]">
@@ -150,11 +153,13 @@ export function SimpleResultsPageClient() {
               const verify = (item.explanation?.needs_verification || []).map(cleanText).filter(Boolean).slice(0, 3);
               return (
                 <article key={item.canonical_facility_id} className="rounded-[2rem] border border-[#ded6c9] bg-white p-7 shadow-sm sm:p-9">
+                  {item.visual_media?.hero?.url ? <div className="mb-6 overflow-hidden rounded-2xl border border-[#ded6c9] bg-[#f4f0e8]"><Image src={item.visual_media.hero.url} alt={`Synthetic illustration for ${item.facility_name}`} width={1200} height={700} className="h-64 w-full object-cover" /><p className="px-4 py-2 text-sm text-[#6b6257]">{item.visual_media.hero.source_note || "Synthetic pilot illustration—not a real facility"}</p></div> : null}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-lg font-semibold text-[#3e7868]">#{index + 1} current match</p>
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{item.facility_name}</h2>
                       <p className="mt-2 text-lg text-[#627069]">{[item.city, item.state].filter(Boolean).join(", ")}</p>
+                      <p className="mt-2 text-lg font-semibold text-[#334b42]">{item.starting_monthly_price ? `Starting at $${item.starting_monthly_price.toLocaleString()} / month` : "Price not provided"} · Availability: {item.availability_status === "YES" ? "available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
                     </div>
                     <div className="flex flex-col items-start gap-2 sm:items-end">
                       <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">Meets verified must-haves</span>
