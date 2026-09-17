@@ -67,7 +67,7 @@ PRODUCTION_CANONICAL_TYPE = {
 PARAMETERS = [
     "adl_support", "medication_support", "transfer_assistance", "memory_care",
     "dementia_alz_programs", "nursing_24_7", "skilled_nursing_capabilities",
-    "pt", "ot", "speech_therapy", "transportation", "published_rates",
+    "pt", "ot", "speech_therapy", "post_stroke_neuro_evidence", "transportation", "published_rates",
     "current_availability", "languages", "kosher", "gluten_free",
     "religious_cultural_services", "activities", "accessibility",
     "dialysis_arrangements", "wound_care", "respiratory_trach_vent",
@@ -117,6 +117,7 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
         "pt": "YES" if skilled or index % 3 == 0 else "NO",
         "ot": "YES" if skilled or index % 4 == 0 else "NO",
         "speech_therapy": "YES" if skilled or index % 7 == 0 else "NO",
+        "post_stroke_neuro_evidence": "YES" if canonical_type == "REHABILITATION" or (canonical_type == "SKILLED_NURSING" and index % 3 != 0) else "NO",
         "transportation": yes_no(index, 6, limited=True),
         "published_rates": "YES",
         "current_availability": ["YES", "YES", "LIMITED", "NO", "YES"][index % 5],
