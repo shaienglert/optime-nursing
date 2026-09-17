@@ -21,6 +21,24 @@ from app.services.semantic_preference_runtime import build_facility_claim_ledger
 
 logger = logging.getLogger(__name__)
 
+_GATE_ORDER = {"PASS": 0, "PENDING_VERIFICATION": 1, "FAIL": 2}
+
+
+def _row_gate_order(row: Dict[str, Any]) -> int:
+    """A candidate whose client_intent_fit is still PENDING_VERIFICATION on some
+    MUST (e.g. an AI-identified clinical/budget/kosher/language requirement with no
+    facility evidence yet -- see semantic_facility_requirements.py) has literally no
+    proof it can serve the resident on that dimension. The AI ranking prompt has no
+    visibility into hard_gate at all, so nothing stopped it from ranking such a
+    candidate above one with zero unresolved requirements purely on other criteria
+    (live finding: an independent-living community with an empty matched_needs list
+    still ranked #1 for a dialysis persona, despite PENDING_VERIFICATION on dialysis
+    coordination). This makes hard_gate the absolute primary sort key ahead of the
+    AI's own score in both ranking paths below, so "no proof, no match" is a
+    deterministic guarantee rather than something the AI is merely asked to honor."""
+    fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+    return _GATE_ORDER.get(str(fit.get("hard_gate") or "PENDING_VERIFICATION").upper(), 1)
+
 
 def _log_closed_world_mismatch(label: str, supplied: set[str], returned_ids: List[str]) -> None:
     returned = set(returned_ids)
@@ -236,13 +254,24 @@ def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]], deterministic_
             "citation_stripped": citation_stripped,
         })
 
-    # Only every candidate carrying a valid score unlocks the stabilizing re-sort --
-    # a partial response (older prompt contract, or a repair pass that dropped the
-    # field) falls back to trusting the AI's own returned order untouched, exactly as
-    # before this field existed.
-    if entries and deterministic_fallback_key is not None and all(entry["score"] is not None for entry in entries):
+    # hard_gate always partitions first (see _row_gate_order) regardless of whether
+    # scores are present. Within the same gate tier: a fully-scored response unlocks
+    # the score-banded stabilizing re-sort; a partial response (older prompt
+    # contract, or a repair pass that dropped the field) falls back to the AI's own
+    # returned order within that tier, exactly as before this field existed.
+    if entries and deterministic_fallback_key is not None:
         band = _resolve_single_shot_tie_band()
-        entries.sort(key=lambda entry: (-_score_tier(entry["score"], band), *deterministic_fallback_key(entry["row"]), entry["ai_position"]))
+        all_scored = all(entry["score"] is not None for entry in entries)
+
+        def _sort_key(entry: Dict[str, Any]) -> tuple:
+            if all_scored:
+                return (_row_gate_order(entry["row"]), -_score_tier(entry["score"], band), *deterministic_fallback_key(entry["row"]), entry["ai_position"])
+            # No usable scores: partition by gate order only, and otherwise trust the
+            # AI's own relative order within each tier -- unchanged from before hard_gate
+            # was considered at all.
+            return (_row_gate_order(entry["row"]), entry["ai_position"])
+
+        entries.sort(key=_sort_key)
 
     ordered: List[Dict[str, Any]] = []
     for position, entry in enumerate(entries, start=1):
@@ -437,7 +466,12 @@ def _batch_ai_rank(rows: List[Dict[str, Any]], client_intent: Dict[str, Any], hu
         raise RuntimeError(f"AI_BATCHED_RANKING_CLOSED_WORLD_VIOLATION:missing={len(missing)}_of_{len(expected_ids)}")
 
     indexed = list(enumerate(rows))
-    indexed.sort(key=lambda pair: (-scored_by_id[str(pair[1].get("canonical_facility_id"))]["score"], *deterministic_fallback_key(pair[1]), pair[0]))
+    indexed.sort(key=lambda pair: (
+        _row_gate_order(pair[1]),
+        -scored_by_id[str(pair[1].get("canonical_facility_id"))]["score"],
+        *deterministic_fallback_key(pair[1]),
+        pair[0],
+    ))
     ordered = [row for _, row in indexed]
     for position, row in enumerate(ordered, start=1):
         canonical_id = str(row.get("canonical_facility_id"))

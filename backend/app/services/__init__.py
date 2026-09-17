@@ -328,7 +328,7 @@ class _IntegratedRuntimeLoader(importlib.machinery.SourceFileLoader):
             from app.services.ai_process_owner_guard_patch import attach_ai_process_owner_guarded
             from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
 
-            result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit))
+            result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit), questionnaire_state=questionnaire_state)
             stage_started = _mark("apply_semantic_facility_requirements_ms", stage_started)
             decision = result.setdefault("decision_intelligence", {})
             decision["interview_owner"] = "SEMANTIC_AI"
