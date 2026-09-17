@@ -46,12 +46,6 @@ function enforceAdminAuth(request: NextRequest) {
   return response;
 }
 
-/**
- * The legacy /intake questionnaire is no longer a production interview surface.
- * Client-intent clarification belongs to the governed Semantic AI interview.
- * Keep the route as a compatibility entry point for old bookmarks/sessions, but
- * never render the fixed questionnaire.
- */
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
@@ -59,15 +53,9 @@ export function proxy(request: NextRequest) {
     return enforceAdminAuth(request);
   }
 
-  if (pathname === "/intake") {
-    const target = new URL("/adaptive-interview", request.url);
-    target.searchParams.set("next", "/results");
-    return NextResponse.redirect(target);
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*", "/intake"],
+  matcher: ["/admin", "/admin/:path*"],
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
@@ -34,6 +34,7 @@ function cleanText(value: string): string {
 }
 
 export function SimpleResultsPageClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { state } = useQuestionnaire();
   const [response, setResponse] = useState<DecisionEngineResponse | null>(null);
@@ -49,6 +50,14 @@ export function SimpleResultsPageClient() {
   );
 
   useEffect(() => {
+    if (!state.questionnaireCompletion?.mandatoryComplete || !state.questionnaireCompletion?.conditionalFollowUpsComplete) {
+      router.replace("/intake");
+      return;
+    }
+    if (!state.questionnaireCompletion.clientSummaryConfirmed) {
+      router.replace(`/intake-confirmation?next=${encodeURIComponent(`/results?${searchParams.toString()}`)}`);
+      return;
+    }
     let active = true;
     // A home-page answer is saved immediately before navigation.  Give React a
     // short settling window so the results request uses that final state rather
@@ -82,7 +91,7 @@ export function SimpleResultsPageClient() {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [decisionRequestKey, naturalLanguageQuery, state]);
+  }, [decisionRequestKey, naturalLanguageQuery, router, searchParams, state]);
 
   const eligible = useMemo(
     () => (response?.results || []).filter((item) => item.must_eligibility

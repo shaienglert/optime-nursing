@@ -23,6 +23,32 @@ export type QuestionnaireState = {
   customDistanceMiles: string;
   otherInterests: string;
   notes: string;
+  parkingRequirement: string;
+  parkingVehicleCount: string;
+  moveLossConcerns: string[];
+  medicareStatus: string;
+  medicaidStatus: string;
+  moveTiming: string;
+  questionnaireCompletion: {
+    mandatoryComplete: boolean;
+    conditionalFollowUpsComplete: boolean;
+    clientSummaryConfirmed: boolean;
+    confirmedAt: string;
+  };
+  medicalCareProfile: {
+    hasOngoingMedicalNeeds: string;
+    needs: string[];
+    mobilityMethod: string;
+    transferAssistance: string;
+    recentFalls: string;
+    dialysisFrequency: string;
+    dialysisCenter: string;
+    dialysisTransportation: string;
+    oxygenUse: string;
+    woundCareFrequency: string;
+    complexConditionDetails: string;
+    physicianCoordination: string;
+  };
   humanIntelligenceV2: HumanIntelligenceV2;
 };
 
@@ -205,6 +231,32 @@ const DEFAULT_STATE: QuestionnaireState = {
   customDistanceMiles: "",
   otherInterests: "",
   notes: "",
+  parkingRequirement: "",
+  parkingVehicleCount: "",
+  moveLossConcerns: [],
+  medicareStatus: "",
+  medicaidStatus: "",
+  moveTiming: "",
+  questionnaireCompletion: {
+    mandatoryComplete: false,
+    conditionalFollowUpsComplete: false,
+    clientSummaryConfirmed: false,
+    confirmedAt: "",
+  },
+  medicalCareProfile: {
+    hasOngoingMedicalNeeds: "",
+    needs: [],
+    mobilityMethod: "",
+    transferAssistance: "",
+    recentFalls: "",
+    dialysisFrequency: "",
+    dialysisCenter: "",
+    dialysisTransportation: "",
+    oxygenUse: "",
+    woundCareFrequency: "",
+    complexConditionDetails: "",
+    physicianCoordination: "",
+  },
   humanIntelligenceV2: {
     socialProfile: {
       livingAloneDuration: "",
@@ -367,8 +419,25 @@ type QuestionnaireContextValue = {
 
 const QuestionnaireContext = createContext<QuestionnaireContextValue | undefined>(undefined);
 
+function mergeSavedState<T>(base: T, saved: unknown): T {
+  if (saved === undefined || saved === null) return base;
+  if (Array.isArray(base)) return (Array.isArray(saved) ? saved : base) as T;
+  if (typeof base !== "object" || base === null || typeof saved !== "object" || Array.isArray(saved)) return saved as T;
+
+  const merged: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  for (const [key, value] of Object.entries(saved as Record<string, unknown>)) {
+    merged[key] = key in merged ? mergeSavedState(merged[key], value) : value;
+  }
+  return merged as T;
+}
+
+function restoreQuestionnaireState(): QuestionnaireState {
+  const saved = loadSessionJson<Partial<QuestionnaireState>>(QUESTIONNAIRE_SESSION_KEY);
+  return saved ? mergeSavedState(DEFAULT_STATE, saved) : DEFAULT_STATE;
+}
+
 export function QuestionnaireProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<QuestionnaireState>(() => loadSessionJson<QuestionnaireState>(QUESTIONNAIRE_SESSION_KEY) || DEFAULT_STATE);
+  const [state, setState] = useState<QuestionnaireState>(restoreQuestionnaireState);
 
   useEffect(() => {
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, state);
