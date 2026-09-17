@@ -88,6 +88,24 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         self.assertEqual("FAIL", fit["hard_gate"])
         self.assertIn("NO_FORCED_MEMORY_PLACEMENT", fit["must_fail"])
 
+    def test_final_intent_sort_preserves_case_relevant_patient_match(self) -> None:
+        from app.services.client_intent_runtime import intent_rank_key
+
+        common = {
+            "canonical_type": "ASSISTED_LIVING_RFG",
+            "care_setting_fit": {"status": "PRIMARY_FIT"},
+            "client_intent_fit": {
+                "hard_gate": "PASS",
+                "nice_match": [],
+                "nice_mismatch": [],
+                "nice_fit_scores": {},
+                "public_reputation": {},
+            },
+        }
+        stronger = {**common, "facility_name": "Stronger", "patient_match_score": 92.0}
+        weaker = {**common, "facility_name": "Weaker", "patient_match_score": 70.0}
+        self.assertLess(intent_rank_key(stronger), intent_rank_key(weaker))
+
     def test_public_import_exposes_nevada_governed_behavior_after_ai_ready(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
