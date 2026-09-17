@@ -125,6 +125,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("TRANSPORTATION_AND_OUTINGS", "Transportation/outings are part of the desired lifestyle.")
     if any(token in query for token in ("dining", "restaurant", "food")):
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
+    human_profile = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
+    food_profile = human_profile.get("foodProfile") if isinstance(human_profile.get("foodProfile"), dict) else {}
+    dietary_preferences = " ".join(str(value or "").lower() for value in food_profile.get("dietaryPreferences") or [])
+    if "kosher" in query or "kosher" in dietary_preferences:
+        add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
 
     return {
         "version": "client-intent-runtime-v1.6",
@@ -290,6 +295,17 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
+        elif key == "KOSHER_MEALS":
+            matched = {str(item.get("parameter_id") or "") for item in row.get("matched_needs") or []}
+            gaps = {str(item.get("parameter_id") or "") for item in row.get("unmet_verified_needs") or []}
+            if "kosher" in matched:
+                nice_match.append(key)
+                nice_fit_scores[key] = 100.0
+            elif "kosher" in gaps:
+                nice_mismatch.append(key)
+                nice_fit_scores[key] = 0.0
+            else:
+                nice_unknown.append(key)
         else:
             nice_unknown.append(key)
 
@@ -390,11 +406,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         nice_mismatches,
         0 if community_fit_known else 1,
         -float(community_fit) if community_fit_known else 0.0,
-        # Preserve the governed case-relevant match computed from verified
-        # resident needs (for example kosher meals, dialysis or wound care).
-        # The pre-agent ordering already uses this score; omitting it here made
-        # the final intent sort erase those distinctions.
-        -float(row.get("patient_match_score") or 0.0),
         disciplinary_order,
         grade_order,
         int(counts.get("D") or 0),
