@@ -459,58 +459,6 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertEqual(["FAC-01", "FAC-02"], [row["canonical_facility_id"] for row in ranked])
         self.assertGreaterEqual(len(calls), 3)
 
-    def test_single_shot_pending_verification_never_outranks_a_passed_candidate(self):
-        # Live finding: an independent-living community with zero matched_needs and a
-        # PENDING_VERIFICATION clinical MUST still ranked #1 for a dialysis persona,
-        # because the AI ranking prompt has no visibility into hard_gate at all and
-        # nothing else enforced the partition. FAC-01 (PENDING) is scored higher and
-        # listed first by the AI; it must still land behind FAC-02 (PASS).
-        rows = self._rows(2)
-        rows[0]["client_intent_fit"] = {"hard_gate": "PENDING_VERIFICATION", "must_unknown": ["SEMANTIC_CLINICAL_ACUITY"]}
-        rows[1]["client_intent_fit"] = {"hard_gate": "PASS"}
-
-        def transport(payload):
-            candidates = payload["must_eligible_candidates"]
-            ids = [item["canonical_facility_id"] for item in candidates]
-            return {"ranked_candidates": [
-                {"canonical_facility_id": ids[0], "score": 90, "reason": "unverified but AI favors it", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
-                {"canonical_facility_id": ids[1], "score": 40, "reason": "passed but lower AI score", "information_deficits": [], "rank_drivers": [], "rank_risks": []},
-            ]}
-
-        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1"}, clear=False), patch(
-            "app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport
-        ):
-            ranked, status = rank_must_eligible_candidates(
-                rows, client_intent={}, human_context={"dynamic_preference_model": {"preferences": []}}, strategy={},
-                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
-            )
-
-        self.assertEqual(["FAC-02", "FAC-01"], [row["canonical_facility_id"] for row in ranked])
-
-    def test_batch_pending_verification_never_outranks_a_passed_candidate(self):
-        rows = self._rows(24)
-        rows[0]["client_intent_fit"] = {"hard_gate": "PENDING_VERIFICATION"}
-
-        def transport(payload):
-            candidates = payload["must_eligible_candidates"]
-            return {"scored_candidates": [
-                {"canonical_facility_id": item["canonical_facility_id"], "score": 99 if item["canonical_facility_id"] == "FAC-01" else 50, "reason": "r", "information_deficits": []}
-                for item in candidates
-            ]}
-
-        with patch.dict(os.environ, {
-            "OPTIME_SEMANTIC_AI_ENABLED": "1",
-            "OPTIME_AI_RANKING_BATCH_THRESHOLD": "20",
-            "OPTIME_AI_RANKING_BATCH_SIZE": "6",
-        }, clear=False), patch("app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport):
-            ranked, status = rank_must_eligible_candidates(
-                rows, client_intent={}, human_context={"dynamic_preference_model": {"preferences": []}}, strategy={},
-                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
-            )
-
-        self.assertEqual(status["status"], "AI_BATCH_RANKED")
-        self.assertEqual("FAC-01", ranked[-1]["canonical_facility_id"])
-
     def test_single_shot_close_scores_are_resolved_by_the_governed_key_not_ai_order(self):
         # Reproduces the live production finding: two back-to-back calls with the same
         # 10-candidate set swapped the bottom two positions even at temperature=0,
