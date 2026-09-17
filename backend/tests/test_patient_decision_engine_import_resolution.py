@@ -73,6 +73,21 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
             "client_intent_fit": {"hard_gate": "PENDING_VERIFICATION"},
         }))
 
+    def test_synthetic_memory_only_archetype_is_not_forced_on_cognitively_intact_resident(self) -> None:
+        from app.services.client_intent_runtime import evaluate_candidate_intent
+
+        fit = evaluate_candidate_intent(
+            {
+                "canonical_type": "ASSISTED_LIVING_RFG",
+                "synthetic_archetype": "MEMORY_CARE",
+                "city": "LAS VEGAS",
+                "state": "NV",
+            },
+            {"must_haves": [{"key": "NO_FORCED_MEMORY_PLACEMENT"}], "nice_to_haves": []},
+        )
+        self.assertEqual("FAIL", fit["hard_gate"])
+        self.assertIn("NO_FORCED_MEMORY_PLACEMENT", fit["must_fail"])
+
     def test_public_import_exposes_nevada_governed_behavior_after_ai_ready(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
