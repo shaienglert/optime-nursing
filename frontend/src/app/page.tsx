@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile } from "@/lib/api";
@@ -179,7 +180,7 @@ export default function HomePage() {
       // Persist before navigation. React state updates can otherwise lose a race
       // with the adaptive page mounting and make a valid story look empty.
       saveSessionJson(QUESTIONNAIRE_SESSION_KEY, nextQuestionnaire);
-      setState(nextQuestionnaire);
+      flushSync(() => setState(nextQuestionnaire));
 
       const params = new URLSearchParams();
       params.set("notes", normalized);
