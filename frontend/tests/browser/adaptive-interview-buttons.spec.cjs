@@ -147,7 +147,11 @@ test('home free-text entry starts the governed AI intake without forcing the man
   await page.getByRole('button', { name: /See options that may fit/ }).click();
 
   await expect(page).toHaveURL(/\/adaptive-interview/);
+  await page.waitForTimeout(1_000);
   await expect(page).not.toHaveURL(/\/intake$/);
+  const persisted = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem('optime.questionnaire.session') || '{}'));
+  expect(persisted.notes).toContain('My mother is 82');
+  expect(persisted.budget).toBe(8000);
 });
 
 test('AI silently consumes questionnaire facts and only asks genuinely missing information', async ({ page }) => {
