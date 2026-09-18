@@ -58,11 +58,12 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
   ];
   for (const key of stringKeys) {
     const value = patch[key];
-    if (typeof value === "string" && value.trim()) {
+    const current = next[key];
+    if (typeof value === "string" && value.trim() && value.trim() !== "Not sure" && !String(current || "").trim()) {
       (next as unknown as Record<string, unknown>)[key] = value.trim();
     }
   }
-  if (typeof patch.budget === "number" && Number.isFinite(patch.budget) && patch.budget > 0) {
+  if (next.budget <= 0 && typeof patch.budget === "number" && Number.isFinite(patch.budget) && patch.budget > 0) {
     next.budget = Math.round(patch.budget);
   }
 
@@ -76,12 +77,16 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
     ];
     for (const key of medicalStringKeys) {
       const value = source[key];
-      if (typeof value === "string" && value.trim()) {
+      const current = next.medicalCareProfile[key];
+      if (typeof value === "string" && value.trim() && value.trim() !== "Not sure" && !String(current || "").trim()) {
         (next.medicalCareProfile as unknown as Record<string, unknown>)[key] = value.trim();
       }
     }
     if (Array.isArray(source.needs)) {
-      next.medicalCareProfile.needs = source.needs.map(String).map((value) => value.trim()).filter(Boolean);
+      next.medicalCareProfile.needs = Array.from(new Set([
+        ...next.medicalCareProfile.needs,
+        ...source.needs.map(String).map((value) => value.trim()).filter(Boolean),
+      ]));
     }
   }
 
@@ -91,8 +96,12 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
     const mergeStrings = (target: Record<string, unknown>, candidate: unknown) => {
       if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return;
       for (const [key, value] of Object.entries(candidate as Record<string, unknown>)) {
-        if (typeof value === "string" && value.trim() && key in target) target[key] = value.trim();
-        if (Array.isArray(value) && key in target) target[key] = value.map(String).map((item) => item.trim()).filter(Boolean);
+        if (typeof value === "string" && value.trim() && value.trim() !== "Not sure" && key in target && !String(target[key] || "").trim()) {
+          target[key] = value.trim();
+        }
+        if (Array.isArray(value) && key in target && Array.isArray(target[key]) && (target[key] as unknown[]).length === 0) {
+          target[key] = value.map(String).map((item) => item.trim()).filter(Boolean);
+        }
       }
     };
     mergeStrings(next.humanIntelligenceV2.transitionRiskProfile as unknown as Record<string, unknown>, source.transitionRiskProfile);
