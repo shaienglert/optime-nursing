@@ -43,6 +43,7 @@ export function removeSessionKey(key: string): void {
 export function clearSearchSession(): void {
   removeSessionKey(QUESTIONNAIRE_SESSION_KEY);
   removeSessionKey(SEARCH_DRAFT_SESSION_KEY);
+  removeSessionKey(DECISION_RESPONSE_CACHE_SESSION_KEY);
 }
 
 export function loadCompareSelection(): string[] {
