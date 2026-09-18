@@ -16,16 +16,23 @@ function IntakeConfirmationContent() {
   const destination = searchParams.get("next")?.startsWith("/results") ? String(searchParams.get("next")) : "/results";
 
   useEffect(() => {
-    if (!state.questionnaireCompletion?.mandatoryComplete || !state.questionnaireCompletion?.conditionalFollowUpsComplete) {
+    const structuredComplete =
+      state.questionnaireCompletion?.mandatoryComplete &&
+      state.questionnaireCompletion?.conditionalFollowUpsComplete;
+    if (!structuredComplete && !state.notes?.trim()) {
       router.replace("/intake");
     }
-  }, [router, state.questionnaireCompletion]);
+  }, [router, state.notes, state.questionnaireCompletion]);
 
   function confirm() {
     setState({
       ...state,
       questionnaireCompletion: {
         ...state.questionnaireCompletion,
+        // Reaching this screen means the governed AI declared the client profile
+        // complete. Confirmation seals either the structured or narrative route.
+        mandatoryComplete: true,
+        conditionalFollowUpsComplete: true,
         clientSummaryConfirmed: true,
         confirmedAt: new Date().toISOString(),
       },
@@ -44,6 +51,7 @@ function IntakeConfirmationContent() {
         <p className="mt-5 max-w-3xl text-lg leading-8 text-[#5c665f]">This confirmed profile—not free-text guesses—will be the basis for research, matching, and the questions shown for each community.</p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          {state.notes?.trim() ? <div className="sm:col-span-2"><SummaryRow label="Story provided" value={state.notes} /></div> : null}
           <SummaryRow label="Person" value={[state.relationship, state.ageGroup].filter(Boolean).join(", ")} />
           <SummaryRow label="Daily support" value={state.assistanceLevel} />
           <SummaryRow label="Mobility" value={[medical.mobilityMethod, medical.transferAssistance ? `Transfers: ${medical.transferAssistance}` : "", medical.recentFalls ? `Falls: ${medical.recentFalls}` : ""].filter(Boolean).join("; ")} />
