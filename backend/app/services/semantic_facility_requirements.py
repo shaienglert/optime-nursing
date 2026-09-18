@@ -185,6 +185,24 @@ def _row_verifies_future_care(row: Dict[str, Any]) -> bool:
     return False
 
 
+def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any] | None) -> bool:
+    """A published_rates_verified flag only proves a facility discloses its rates --
+    it says nothing about whether that rate fits what the client can pay. Treating
+    disclosure alone as satisfying a stated budget let a facility priced far above
+    the client's budget reach a "final" recommendation. Accept the budget MUST as
+    verified only when the facility's own confirmed starting price is known and is
+    at or under what the client stated; otherwise this stays unknown/pending, same
+    as when no price is on file at all, until real pricing data exists to compare.
+    """
+    budget = (questionnaire_state or {}).get("budget")
+    price = row.get("starting_monthly_price")
+    if not isinstance(budget, (int, float)) or isinstance(budget, bool) or budget <= 0:
+        return False
+    if not isinstance(price, (int, float)) or isinstance(price, bool):
+        return False
+    return price <= budget
+
+
 def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int = 0) -> bool:
     canonical_id = str(row.get("canonical_facility_id") or "").strip()
     if not canonical_id:
@@ -256,7 +274,12 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 # ADL/MEDICATION/REHAB/RECOVERY_TRANSITION gates in client_intent_runtime.py:
                 # agent evidence may only confirm a MUST (PASS), never exclude on it (FAIL).
                 verdicts = [_payload_verifies(payload, key) for payload in payloads]
-                verified = _row_verifies_future_care(row) if key == "SEMANTIC_FUTURE_CARE_PATH" else True in verdicts
+                if key == "SEMANTIC_FUTURE_CARE_PATH":
+                    verified = _row_verifies_future_care(row)
+                elif key == "SEMANTIC_BUDGET_VERIFICATION":
+                    verified = (True in verdicts) or _row_verifies_budget(row, questionnaire_state)
+                else:
+                    verified = True in verdicts
                 if verified:
                     if key not in passed: passed.append(key)
                     status = "PASS"
