@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
+import { restoreQuestionnaireState, type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
 import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
 
@@ -170,10 +170,15 @@ export default function AdaptiveInterviewPage() {
   }
 
   useEffect(() => {
+    // A navigation can mount this page before React commits the provider update.
+    // The home page persists the complete snapshot first, so use that snapshot as
+    // the authority for this initial gate instead of redirecting on stale context.
+    const restoredState = restoreQuestionnaireState();
+    const initialState = restoredState.notes?.trim() ? restoredState : state;
     const structuredQuestionnaireComplete =
-      state.questionnaireCompletion?.mandatoryComplete &&
-      state.questionnaireCompletion?.conditionalFollowUpsComplete;
-    const hasOpeningStory = Boolean(state.notes?.trim());
+      initialState.questionnaireCompletion?.mandatoryComplete &&
+      initialState.questionnaireCompletion?.conditionalFollowUpsComplete;
+    const hasOpeningStory = Boolean(initialState.notes?.trim());
 
     // The story path is a real AI intake, not a shortcut into the manual form.
     // Semantic AI reads the narrative, accounts for every statement, and asks only
@@ -183,11 +188,12 @@ export default function AdaptiveInterviewPage() {
       router.replace("/intake");
       return;
     }
+    if (initialState !== state) setState(initialState);
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("next");
     const destination = requested?.startsWith("/results") ? requested : "/results";
     nextUrl.current = destination;
-    void continueDecision(cloneState(state), destination);
+    void continueDecision(cloneState(initialState), destination);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
