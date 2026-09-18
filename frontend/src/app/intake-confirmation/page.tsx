@@ -63,7 +63,14 @@ function IntakeConfirmationContent() {
           <SummaryRow label="Lifestyle priorities" value={[...state.happinessPreferences, ...state.moveLossConcerns].join(", ")} />
           <SummaryRow label="Language, diet, and religion" value={[hi.languageProfile.preferredSpokenLanguage, ...hi.foodProfile.dietaryPreferences, hi.culturalProfile.religionImportance === "Yes" ? hi.culturalProfile.faithTraditions.join(", ") : "No religious-community requirement"].filter(Boolean).join("; ")} />
           <SummaryRow label="Practical requirements" value={[`Parking: ${state.parkingRequirement}`, state.parkingVehicleCount, `Future care continuity: ${hi.futureCareProfile.continuumOfCarePreference}`].filter(Boolean).join("; ")} />
-          <SummaryRow label="Location" value={state.locationImportant === "No" ? "No location constraint" : `${state.referenceAddress}; within ${state.maximumDistanceMiles} miles`} />
+          <SummaryRow label="Location" value={
+            state.locationImportant === "No"
+              ? "No location constraint"
+              : [
+                  state.referenceAddress || state.referenceLocationValue,
+                  state.maximumDistanceMiles ? `within ${state.maximumDistanceMiles} miles` : "",
+                ].filter(Boolean).join("; ")
+          } />
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
