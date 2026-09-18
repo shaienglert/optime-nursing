@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile } from "@/lib/api";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
+import { QUESTIONNAIRE_SESSION_KEY, saveSessionJson } from "@/lib/search-session";
 
 const EXAMPLE_QUERY =
   "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
@@ -54,6 +55,20 @@ const MEMORY_OPTIONS = [
 ] as const;
 
 type HeroStep = "relationship" | "age" | "assistance" | "memory";
+
+function extractExplicitMonthlyBudget(text: string): number | null {
+  const patterns = [
+    /(?:budget|afford|spend|pay)[^.$\n]{0,60}\$\s*([\d,]+)/i,
+    /\$\s*([\d,]+)[^.$\n]{0,60}(?:per month|monthly|budget)/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    const amount = Number(match[1].replaceAll(",", ""));
+    if (Number.isFinite(amount) && amount > 0) return amount;
+  }
+  return null;
+}
 
 function personCopy(label: string): string {
   if (label === "me") return "you";
@@ -148,8 +163,12 @@ export default function HomePage() {
     setIsSubmitting(true);
 
     try {
+      const explicitBudget = extractExplicitMonthlyBudget(normalized);
       const nextQuestionnaire = {
         ...state,
+        // The untouched slider default is not a client statement. A budget written
+        // in the story is authoritative; otherwise leave it unknown until AI asks.
+        budget: explicitBudget ?? (state.questionnaireCompletion?.mandatoryComplete ? state.budget : 0),
         notes: normalized,
         locationImportant: state.locationImportant || "",
         referenceAddress: state.referenceAddress || "",
@@ -157,6 +176,9 @@ export default function HomePage() {
         customDistanceMiles: state.customDistanceMiles || "",
         otherInterests: state.otherInterests || "",
       };
+      // Persist before navigation. React state updates can otherwise lose a race
+      // with the adaptive page mounting and make a valid story look empty.
+      saveSessionJson(QUESTIONNAIRE_SESSION_KEY, nextQuestionnaire);
       setState(nextQuestionnaire);
 
       const params = new URLSearchParams();
