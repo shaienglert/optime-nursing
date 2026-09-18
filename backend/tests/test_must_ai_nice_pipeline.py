@@ -255,6 +255,20 @@ class DeterministicWaterfallThinEvidenceTests(unittest.TestCase):
         rows[0]["regulatory_history"]["disciplinary_action"] = "Y"
         self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 0}))
 
+    def test_has_differentiating_evidence_is_true_when_must_pass_differs(self):
+        # Same care-setting tier and no reputation/regulatory data, but one candidate
+        # already has a client-stated MUST (e.g. dialysis, wound care, memory care)
+        # confirmed and the other doesn't -- real, client-relevant differentiation
+        # the old reputation-only check missed entirely.
+        rows = [_thin_row("A"), _thin_row("B")]
+        rows[1]["client_intent_fit"]["must_pass"] = [*rows[1]["client_intent_fit"]["must_pass"], "SEMANTIC_CLINICAL_ACUITY"]
+        self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 0}))
+
+    def test_has_differentiating_evidence_is_true_when_care_setting_fit_status_differs(self):
+        rows = [_thin_row("A"), _thin_row("B")]
+        rows[1]["care_setting_fit"] = {"status": "POSSIBLE_FIT"}
+        self.assertTrue(_has_differentiating_evidence(rows, {"preference_count": 0}))
+
     def test_thin_evidence_pool_skips_ai_and_uses_the_deterministic_waterfall(self):
         rows = [_thin_row("A"), _thin_row("B"), _thin_row("C")]
         result = {"results": rows, "decision_intelligence": {"client_intent": {"nice_to_haves": []}, "human_intelligence": {}, "living_strategy": {}}}

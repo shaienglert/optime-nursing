@@ -86,6 +86,22 @@ def _has_differentiating_evidence(rows: List[Dict[str, Any]], dynamic_preference
             return True
         if str(history.get("disciplinary_action") or "").upper() == "Y":
             return True
+    # A client-stated MUST (dialysis, wound care, clinical acuity, memory care, kosher,
+    # language, budget, Medicaid -- see semantic_facility_requirements.py) that some
+    # candidates in this pool already have confirmed and others don't is real,
+    # client-relevant differentiation for the AI to reason about, even when none of
+    # them has a star rating or regulatory grade yet. Likewise a care-setting-fit tier
+    # split (e.g. some PRIMARY_FIT, some POSSIBLE_FIT) is a real distinction the
+    # alphabetical fallback order does not otherwise surface.
+    must_pass_signatures = {
+        tuple(sorted((row.get("client_intent_fit") or {}).get("must_pass") or []))
+        for row in rows
+    }
+    if len(must_pass_signatures) > 1:
+        return True
+    care_setting_statuses = {(row.get("care_setting_fit") or {}).get("status") for row in rows}
+    if len(care_setting_statuses) > 1:
+        return True
     return False
 
 

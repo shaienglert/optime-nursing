@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import base64
 import gzip
+import hashlib
 import json
 import sqlite3
 from datetime import datetime, timezone
@@ -45,6 +46,20 @@ ARCHETYPES = [
 
 PREFIXES = ["Desert", "Silver", "Sage", "Red Rock", "Sunrise", "Mojave", "Canyon", "Willow", "Harmony", "Mesa"]
 SUFFIXES = ["Gardens", "Commons", "House", "Village", "Court"]
+
+
+def _name_component_index(offset: int, salt: str, modulus: int) -> int:
+    # `offset % len(PREFIXES)` used to pick the prefix -- since len(PREFIXES)=10 and
+    # len(ARCHETYPES)=8 share a factor of 2, every archetype (offset % 8) always landed
+    # on the same 1-2 prefixes across all 200 facilities (e.g. every Continuing Care
+    # facility got "Canyon"/"Desert", every Memory Care facility got "Mesa"/"Mojave").
+    # Facility names then sort alphabetically by canonical_type by construction, so any
+    # tiebreak or shortlist cutoff by name (see must_ai_nice_pipeline.py's
+    # rankable[:interactive_shortlist_limit]) always favors the same handful of
+    # archetypes over others regardless of clinical fit. A hash-based index has no
+    # relationship to offset % len(ARCHETYPES), breaking that correlation.
+    digest = hashlib.sha256(f"{salt}-{offset}".encode("utf-8")).hexdigest()
+    return int(digest, 16) % modulus
 
 # backend/app/services/patient_decision_engine/__init__.py's _care_setting_fit() only
 # recognizes these three canonical_type values (the ones the real Nevada regulatory data
@@ -150,7 +165,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
         canonical_type = PRODUCTION_CANONICAL_TYPE[archetype_id]
         city, zip_code, base_lat, base_lon = CITIES[offset % len(CITIES)]
         canonical_id = f"PILOT-NV-{index:03d}"
-        name = f"{PREFIXES[offset % len(PREFIXES)]} {SUFFIXES[(offset // len(PREFIXES)) % len(SUFFIXES)]} {care_label}"
+        name = f"{PREFIXES[_name_component_index(offset, 'prefix', len(PREFIXES))]} {SUFFIXES[_name_component_index(offset, 'suffix', len(SUFFIXES))]} {care_label}"
         address = f"{1100 + index * 37} Pilot Mesa Avenue"
         capacity = 12 + ((index * 17) % 170)
         capabilities = capability_map(index, archetype_id)
