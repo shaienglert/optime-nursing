@@ -137,7 +137,7 @@ async function seedQuestionnaire(page) {
   }, questionnaireState());
 }
 
-test('home free-text entry cannot bypass the mandatory structured questionnaire', async ({ page }) => {
+test('home free-text entry starts the governed AI intake without forcing the manual questionnaire', async ({ page }) => {
   await mockBackend(page);
   await page.goto('http://127.0.0.1:3000/');
 
@@ -146,8 +146,8 @@ test('home free-text entry cannot bypass the mandatory structured questionnaire'
   );
   await page.getByRole('button', { name: /See options that may fit/ }).click();
 
-  await expect(page).toHaveURL(/\/intake$/);
-  await expect(page.getByRole('heading', { name: /We ask first\. We conclude only after you confirm\./i })).toBeVisible();
+  await expect(page).toHaveURL(/\/adaptive-interview/);
+  await expect(page).not.toHaveURL(/\/intake$/);
 });
 
 test('AI silently consumes questionnaire facts and only asks genuinely missing information', async ({ page }) => {
