@@ -1194,13 +1194,28 @@ export function ResultsPageClient() {
         ) : null}
 
         <div className="py-10 text-center text-sm text-[#6d655b]">
-          {isLoading
-            ? "Loading communities..."
-            : apiLoadError
-              ? "Decision API unavailable"
-              : recommendations.length > 0
-                ? "End of recommendations"
-                : "No verified communities are ready to compare yet. We need to verify the missing facility details first."}
+          {isLoading ? (
+            "Loading communities..."
+          ) : apiLoadError ? (
+            "Decision API unavailable"
+          ) : recommendations.length > 0 ? (
+            "End of recommendations"
+          ) : decisionResponse ? (
+            <div className="mx-auto max-w-2xl rounded-2xl border border-[#e3d2b4] bg-[#fff9ed] p-6 text-left">
+              <p className="text-lg font-semibold text-[#5f4827]">No facility is ready to recommend yet.</p>
+              <p className="mt-2 leading-6 text-[#6d5b3e]">
+                {decisionResponse.total_candidates_scored > 0
+                  ? `We reviewed ${decisionResponse.total_candidates_scored} facilities, but none passed every required condition with enough verified evidence. This is not the same as proving that no facility can help.`
+                  : "The request stopped before any facility reached the comparison stage. This can happen when a required client fact or market fact is still unresolved; it does not mean that no facility can help."}
+              </p>
+              <p className="mt-2 leading-6 text-[#6d5b3e]">Review the answers or ask us to verify the missing clinical and facility evidence before changing the care requirements.</p>
+              <Link href="/adaptive-interview?review=1&next=/results" className="mt-4 inline-flex font-semibold text-[#315f53] underline underline-offset-4">
+                Review the intake answers →
+              </Link>
+            </div>
+          ) : (
+            "No verified communities are ready to compare yet."
+          )}
         </div>
       </section>
 

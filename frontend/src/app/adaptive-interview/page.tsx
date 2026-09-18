@@ -170,7 +170,16 @@ export default function AdaptiveInterviewPage() {
   }
 
   useEffect(() => {
-    if (!state.questionnaireCompletion?.mandatoryComplete || !state.questionnaireCompletion?.conditionalFollowUpsComplete) {
+    const structuredQuestionnaireComplete =
+      state.questionnaireCompletion?.mandatoryComplete &&
+      state.questionnaireCompletion?.conditionalFollowUpsComplete;
+    const hasOpeningStory = Boolean(state.notes?.trim());
+
+    // The story path is a real AI intake, not a shortcut into the manual form.
+    // Semantic AI reads the narrative, accounts for every statement, and asks only
+    // for material missing facts. A visitor with neither a completed form nor a
+    // story still belongs in the structured questionnaire.
+    if (!structuredQuestionnaireComplete && !hasOpeningStory) {
       router.replace("/intake");
       return;
     }
