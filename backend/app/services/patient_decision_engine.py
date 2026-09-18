@@ -469,6 +469,16 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     no_clinical_support = any(phrase in normalized for phrase in (
         "no special medical or nursing needs", "no medical or nursing needs", "does not need nursing support", "doesn't need nursing support",
     ))
+    no_dialysis = any(phrase in normalized for phrase in (
+        "no dialysis", "not on dialysis", "does not need dialysis", "doesn't need dialysis",
+    ))
+    no_wound_care = any(phrase in normalized for phrase in (
+        "no wound", "no wounds", "no wound care", "does not need wound care", "doesn't need wound care",
+    ))
+    no_respiratory_support = any(phrase in normalized for phrase in (
+        "no oxygen", "not on oxygen", "no continuous oxygen", "no respiratory support",
+        "does not need oxygen", "doesn't need oxygen",
+    ))
 
     keyword_rules = [
         (["stroke", "neurolog"], ("post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")),
@@ -491,6 +501,9 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
         "transfer_assistance": no_transfer_support,
         "memory_care": no_memory_support,
         "nursing_24_7": no_clinical_support,
+        "dialysis_arrangements": no_dialysis,
+        "wound_care": no_wound_care,
+        "respiratory_trach_vent": no_respiratory_support,
     }
     for keywords, need_tuple in keyword_rules:
         parameter_id = need_tuple[0]
