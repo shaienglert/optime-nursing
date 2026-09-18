@@ -76,7 +76,9 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
     ];
     for (const key of medicalStringKeys) {
       const value = source[key];
-      if (typeof value === "string" && value.trim()) next.medicalCareProfile[key] = value.trim();
+      if (typeof value === "string" && value.trim()) {
+        (next.medicalCareProfile as unknown as Record<string, unknown>)[key] = value.trim();
+      }
     }
     if (Array.isArray(source.needs)) {
       next.medicalCareProfile.needs = source.needs.map(String).map((value) => value.trim()).filter(Boolean);
