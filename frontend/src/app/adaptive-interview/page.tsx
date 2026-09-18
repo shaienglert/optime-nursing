@@ -3,10 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
+import { restoreQuestionnaireState, type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
 import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
-import { loadSessionJson, QUESTIONNAIRE_SESSION_KEY } from "@/lib/search-session";
 
 type AdaptiveQuestion = {
   question_key: string;
@@ -174,8 +173,8 @@ export default function AdaptiveInterviewPage() {
     // A navigation can mount this page before React commits the provider update.
     // The home page persists the complete snapshot first, so use that snapshot as
     // the authority for this initial gate instead of redirecting on stale context.
-    const persistedState = loadSessionJson<QuestionnaireState>(QUESTIONNAIRE_SESSION_KEY);
-    const initialState = persistedState?.notes?.trim() ? persistedState : state;
+    const restoredState = restoreQuestionnaireState();
+    const initialState = restoredState.notes?.trim() ? restoredState : state;
     const structuredQuestionnaireComplete =
       initialState.questionnaireCompletion?.mandatoryComplete &&
       initialState.questionnaireCompletion?.conditionalFollowUpsComplete;
