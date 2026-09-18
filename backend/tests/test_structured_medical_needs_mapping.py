@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import json
+import re
 import unittest
+from pathlib import Path
 
-from app.services.patient_decision_engine import build_patient_needs_profile
+from app.services.patient_decision_engine import (
+    STRUCTURED_INTAKE_MAPPING_CONTRACT,
+    build_patient_needs_profile,
+)
 from app.services.patient_decision_engine_runtime import _governed
 
 
@@ -88,6 +94,56 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
             profile = build_patient_needs_profile({"assistanceLevel": label, "memoryStatus": "No"}, "")
             ids = {item["parameter_id"] for item in profile["needs"]}
             self.assertIn("adl_support", ids, f"{label!r} should register an ADL-support need")
+
+    def test_frontend_checkbox_options_are_exhaustively_classified(self) -> None:
+        repo_root = Path(__file__).resolve().parents[2]
+        source = (repo_root / "frontend/src/components/intake/structured-intake.tsx").read_text(encoding="utf-8")
+
+        def options_for(const_name: str) -> set[str]:
+            match = re.search(rf"const {const_name} = \\[(.*?)\\];", source, re.DOTALL)
+            self.assertIsNotNone(match, f"missing frontend option group {const_name}")
+            return set(re.findall(r'"([^"]+)"', match.group(1)))
+
+        self.assertEqual(
+            options_for("assistanceOptions"),
+            set(STRUCTURED_INTAKE_MAPPING_CONTRACT["assistanceLevel"]),
+        )
+        self.assertEqual(
+            options_for("medicalOptions"),
+            set(STRUCTURED_INTAKE_MAPPING_CONTRACT["medicalCareProfile.needs"]),
+        )
+
+    def test_every_need_contract_parameter_exists_in_canonical_registry(self) -> None:
+        repo_root = Path(__file__).resolve().parents[2]
+        registry = json.loads((repo_root / "database/optime_parameter_registry.json").read_text(encoding="utf-8"))
+        registry_ids = {row["parameter_id"] for row in registry["records"]}
+        for field, options in STRUCTURED_INTAKE_MAPPING_CONTRACT.items():
+            for label, rule in options.items():
+                self.assertIn(rule["classification"], {"NEED", "CONTEXT_ONLY", "NO_REQUIREMENT"})
+                if rule["classification"] == "NEED":
+                    self.assertTrue(rule["parameter_ids"], f"{field}.{label} must name a parameter")
+                for parameter_id in rule["parameter_ids"]:
+                    self.assertIn(parameter_id, registry_ids, f"{field}.{label} references unknown {parameter_id}")
+
+    def test_transfer_follow_up_is_not_dropped(self) -> None:
+        expected = {
+            "One person": "MEDIUM",
+            "Two people": "HIGH",
+            "Mechanical lift": "HIGH",
+        }
+        for answer, level in expected.items():
+            by_id = self._needs_by_id([], transferAssistance=answer)
+            self.assertEqual(level, by_id["transfer_assistance"]["requirement_level"])
+            self.assertIn("transferAssistance", by_id["transfer_assistance"]["user_evidence_source"])
+
+    def test_follow_ups_without_registry_parameters_are_explicit_context(self) -> None:
+        for field in (
+            "medicalCareProfile.mobilityMethod",
+            "medicalCareProfile.recentFalls",
+            "medicalCareProfile.physicianCoordination",
+        ):
+            for label, rule in STRUCTURED_INTAKE_MAPPING_CONTRACT[field].items():
+                self.assertIn(rule["classification"], {"CONTEXT_ONLY", "NO_REQUIREMENT"}, f"{field}.{label}")
 
 
 if __name__ == "__main__":
