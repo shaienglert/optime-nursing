@@ -41,6 +41,24 @@ for (const limit of [50, 100, 150, 200]) {
   assert(exposed.at(-1).pilot_exposure_order === limit, `cohort ${limit} must be nested and deterministic`);
 }
 
+// A name-prefix systematically tied to one archetype (e.g. every Continuing Care
+// facility named "Canyon"/"Desert", every Memory Care facility named "Mesa"/"Mojave")
+// meant every alphabetical tiebreak or shortlist cutoff by name -- see
+// must_ai_nice_pipeline.py's rankable[:interactive_shortlist_limit] -- always favored
+// the same archetypes regardless of clinical fit. Each archetype must draw from a real
+// spread of prefixes, not a narrow, name-correlated subset.
+{
+  const prefixesByArchetype = new Map();
+  for (const row of canonical.records) {
+    const prefix = row.facility_name.split(' ')[0];
+    if (!prefixesByArchetype.has(row.synthetic_archetype)) prefixesByArchetype.set(row.synthetic_archetype, new Set());
+    prefixesByArchetype.get(row.synthetic_archetype).add(prefix);
+  }
+  for (const [archetype, prefixes] of prefixesByArchetype) {
+    assert(prefixes.size >= 5, `${archetype} facility names must span at least 5 distinct prefixes, got ${prefixes.size}`);
+  }
+}
+
 console.log(JSON.stringify({
   status: 'PASS',
   facilities: canonical.records.length,
