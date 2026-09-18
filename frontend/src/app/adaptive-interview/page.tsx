@@ -59,7 +59,7 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
   for (const key of stringKeys) {
     const value = patch[key];
     if (typeof value === "string" && value.trim()) {
-      (next[key] as string) = value.trim();
+      (next as unknown as Record<string, unknown>)[key] = value.trim();
     }
   }
   if (typeof patch.budget === "number" && Number.isFinite(patch.budget) && patch.budget > 0) {
