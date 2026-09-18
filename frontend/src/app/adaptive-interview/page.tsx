@@ -173,8 +173,17 @@ export default function AdaptiveInterviewPage() {
     // A navigation can mount this page before React commits the provider update.
     // The home page persists the complete snapshot first, so use that snapshot as
     // the authority for this initial gate instead of redirecting on stale context.
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get("next");
+    const destination = requested?.startsWith("/results") ? requested : "/results";
+    const storyFromDestination = requested?.startsWith("/results")
+      ? new URL(requested, window.location.origin).searchParams.get("notes")?.trim() || ""
+      : "";
     const restoredState = restoreQuestionnaireState();
-    const initialState = restoredState.notes?.trim() ? restoredState : state;
+    const restoredOrCurrent = restoredState.notes?.trim() ? restoredState : state;
+    const initialState = !restoredOrCurrent.notes?.trim() && storyFromDestination
+      ? { ...restoredOrCurrent, notes: storyFromDestination }
+      : restoredOrCurrent;
     const structuredQuestionnaireComplete =
       initialState.questionnaireCompletion?.mandatoryComplete &&
       initialState.questionnaireCompletion?.conditionalFollowUpsComplete;
@@ -189,9 +198,6 @@ export default function AdaptiveInterviewPage() {
       return;
     }
     if (initialState !== state) setState(initialState);
-    const params = new URLSearchParams(window.location.search);
-    const requested = params.get("next");
-    const destination = requested?.startsWith("/results") ? requested : "/results";
     nextUrl.current = destination;
     void continueDecision(cloneState(initialState), destination);
     // eslint-disable-next-line react-hooks/exhaustive-deps
