@@ -609,6 +609,17 @@ export function ResultsPageClient() {
   };
 
   const backToSearch = () => {
+    // "Back to search" and "New search" both leave this completed case behind via
+    // the same home-page destination. Without also clearing state here, a family
+    // starting a new intake for a different person inherits the finished case's
+    // sessionStorage answers -- mergeSavedState() in questionnaire-context.tsx
+    // layers the new free-text story on top of the old structured answers field by
+    // field instead of replacing them, so the wrong relationship/age/needs can
+    // silently survive into someone else's profile.
+    clearSearchSession();
+    clearCompareSelection();
+    clearFavoriteFacilities();
+    resetState();
     router.push("/");
   };
 

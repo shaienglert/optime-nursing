@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
@@ -105,13 +105,25 @@ function ChoiceLink({
 
 export default function HomePage() {
   const router = useRouter();
-  const { state, setState } = useQuestionnaire();
-  const [query, setQuery] = useState(state.notes || "");
-  const [heroStep, setHeroStep] = useState<HeroStep>(state.relationship ? "age" : "relationship");
+  const { state, setState, resetState } = useQuestionnaire();
+  const [query, setQuery] = useState("");
+  const [heroStep, setHeroStep] = useState<HeroStep>("relationship");
   const [relationshipLabel, setRelationshipLabel] = useState("your loved one");
   const [selectedAssistance, setSelectedAssistance] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Landing on "/" is always the start of a new case -- "Continue where I left
+  // off" is the one sanctioned path back into an existing case, and it goes to
+  // /intake, not here. Without this, a previous case's relationship/age/needs
+  // silently persisted in sessionStorage, this page's own heroStep used to skip
+  // straight to "age" whenever a stale relationship was present, and every
+  // subsequent setState({ ...state, ... }) in this component spread that stale
+  // profile forward into whatever the client typed next.
+  useEffect(() => {
+    resetState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function chooseRelationship(label: string, value: string): void {
     setState({ ...state, relationship: value });
