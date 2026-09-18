@@ -1554,6 +1554,23 @@ def startup() -> None:
             **runtime_import,
         }
 
+        # A short-lived pilot-only seeder (since removed -- see PR #313) briefly wrote
+        # synthetic "published_rates_verified" AgentKnowledgeRecord rows tagged with
+        # this agent_key. Removing the seeding code does not remove rows it already
+        # wrote to a persistent database, and those stale rows would otherwise keep
+        # satisfying SEMANTIC_BUDGET_VERIFICATION for every pilot facility regardless
+        # of price -- silently defeating the numeric budget check PR #313 added. This
+        # is a no-op once the rows are gone.
+        stale_seed_agent_key = "synthetic_pilot_published_rates_seed"
+        removed = (
+            db.query(AgentKnowledgeRecord)
+            .filter(AgentKnowledgeRecord.agent_key == stale_seed_agent_key)
+            .delete(synchronize_session=False)
+        )
+        if removed:
+            db.commit()
+            logger.info("stale_pilot_seed_evidence_removed count=%s", removed)
+
         # Prepared knowledge reports can be generated lazily to keep startup memory bounded.
         eager_reports = os.getenv("OPTIME_EAGER_REPORTS_ON_STARTUP", "0") == "1"
         if eager_reports:
