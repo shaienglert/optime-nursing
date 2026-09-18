@@ -20,7 +20,11 @@ type AdaptiveQuestion = {
 
 type NeedsProfileWithDecisionIntelligence = PatientNeedsProfile & {
   decision_intelligence?: {
-    human_intelligence?: { decision_readiness?: string; adaptive_questions?: AdaptiveQuestion[] };
+    human_intelligence?: {
+      decision_readiness?: string;
+      adaptive_questions?: AdaptiveQuestion[];
+      semantic_ai?: { result?: { questionnaire_patch?: Record<string, unknown> } };
+    };
     adaptive_questions?: AdaptiveQuestion[];
     canonical_decision_state?: {
       authoritative?: boolean;
@@ -42,7 +46,65 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
   return {
     canonical: top?.canonical_decision_state,
     adaptive_questions: top?.adaptive_questions || nested?.adaptive_questions || [],
+    questionnaire_patch: nested?.semantic_ai?.result?.questionnaire_patch || {},
   };
+}
+
+function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Record<string, unknown>): QuestionnaireState {
+  const next = cloneState(state);
+  const stringKeys: Array<keyof QuestionnaireState> = [
+    "relationship", "ageGroup", "assistanceLevel", "memoryStatus",
+    "medicaidStatus", "referenceLocationValue",
+  ];
+  for (const key of stringKeys) {
+    const value = patch[key];
+    if (typeof value === "string" && value.trim()) {
+      (next[key] as string) = value.trim();
+    }
+  }
+  if (typeof patch.budget === "number" && Number.isFinite(patch.budget) && patch.budget > 0) {
+    next.budget = Math.round(patch.budget);
+  }
+
+  const medical = patch.medicalCareProfile;
+  if (medical && typeof medical === "object" && !Array.isArray(medical)) {
+    const source = medical as Record<string, unknown>;
+    const medicalStringKeys: Array<keyof QuestionnaireState["medicalCareProfile"]> = [
+      "hasOngoingMedicalNeeds", "mobilityMethod", "transferAssistance", "recentFalls",
+      "dialysisFrequency", "dialysisCenter", "dialysisTransportation", "oxygenUse",
+      "woundCareFrequency", "complexConditionDetails", "physicianCoordination",
+    ];
+    for (const key of medicalStringKeys) {
+      const value = source[key];
+      if (typeof value === "string" && value.trim()) next.medicalCareProfile[key] = value.trim();
+    }
+    if (Array.isArray(source.needs)) {
+      next.medicalCareProfile.needs = source.needs.map(String).map((value) => value.trim()).filter(Boolean);
+    }
+  }
+
+  const human = patch.humanIntelligenceV2;
+  if (human && typeof human === "object" && !Array.isArray(human)) {
+    const source = human as Record<string, unknown>;
+    const mergeStrings = (target: Record<string, unknown>, candidate: unknown) => {
+      if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return;
+      for (const [key, value] of Object.entries(candidate as Record<string, unknown>)) {
+        if (typeof value === "string" && value.trim() && key in target) target[key] = value.trim();
+        if (Array.isArray(value) && key in target) target[key] = value.map(String).map((item) => item.trim()).filter(Boolean);
+      }
+    };
+    mergeStrings(next.humanIntelligenceV2.transitionRiskProfile as unknown as Record<string, unknown>, source.transitionRiskProfile);
+    mergeStrings(next.humanIntelligenceV2.languageProfile as unknown as Record<string, unknown>, source.languageProfile);
+    mergeStrings(next.humanIntelligenceV2.foodProfile as unknown as Record<string, unknown>, source.foodProfile);
+    mergeStrings(next.humanIntelligenceV2.futureCareProfile as unknown as Record<string, unknown>, source.futureCareProfile);
+  }
+
+  next.questionnaireCompletion = {
+    ...next.questionnaireCompletion,
+    clientSummaryConfirmed: false,
+    confirmedAt: "",
+  };
+  return next;
 }
 
 function existingAnswerFor(question: AdaptiveQuestion, state: QuestionnaireState): string | null {
@@ -131,6 +193,8 @@ export default function AdaptiveInterviewPage() {
         natural_language_query: currentState.notes || "",
       }))) as NeedsProfileWithDecisionIntelligence;
       const context = getDecisionContext(response);
+      const hydratedState = applySemanticQuestionnairePatch(currentState, context.questionnaire_patch);
+      if (JSON.stringify(hydratedState) !== JSON.stringify(currentState)) setState(hydratedState);
 
       if (context.canonical?.authoritative !== true) {
         setError("The decision state could not be verified. Please try again.");
@@ -140,6 +204,7 @@ export default function AdaptiveInterviewPage() {
 
       if (context.canonical.client === "COMPLETE") {
         setQuestion(null);
+        setState(hydratedState);
         router.replace(`/intake-confirmation?next=${encodeURIComponent(destination)}`);
         return;
       }
@@ -151,10 +216,10 @@ export default function AdaptiveInterviewPage() {
         return;
       }
 
-      const existing = existingAnswerFor(nextQuestion, currentState);
+      const existing = existingAnswerFor(nextQuestion, hydratedState);
       if (existing && !autoResolved.current.has(nextQuestion.question_key)) {
         autoResolved.current.add(nextQuestion.question_key);
-        const resolvedState = applyAnswer(currentState, nextQuestion, existing);
+        const resolvedState = applyAnswer(hydratedState, nextQuestion, existing);
         setState(resolvedState);
         await continueDecision(resolvedState, destination, depth + 1);
         return;
