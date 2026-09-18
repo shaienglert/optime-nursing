@@ -431,7 +431,7 @@ function mergeSavedState<T>(base: T, saved: unknown): T {
   return merged as T;
 }
 
-function restoreQuestionnaireState(): QuestionnaireState {
+export function restoreQuestionnaireState(): QuestionnaireState {
   const saved = loadSessionJson<Partial<QuestionnaireState>>(QUESTIONNAIRE_SESSION_KEY);
   return saved ? mergeSavedState(DEFAULT_STATE, saved) : DEFAULT_STATE;
 }
