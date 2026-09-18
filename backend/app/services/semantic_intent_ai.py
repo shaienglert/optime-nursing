@@ -39,6 +39,8 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "UNKNOWN must remain UNKNOWN until resolved.",
     "Do not invent facility capabilities, prices, availability, reputation, or regulatory facts.",
     "Prefer one high-information clarification at a time.",
+    "Populate questionnaire_patch from explicit client facts using only the exact field names and allowed enum values in required_output. Omit unknown or merely inferred fields; never copy defaults as client facts.",
+    "Medical terms must be normalized into the structured taxonomy: for example CPAP/BiPAP/ventilator/cough-assist belongs in respiratory equipment details and Permanent medical equipment, dialysis in Dialysis, chronic wounds in Wound care, wheelchairs in mobilityMethod, and lift/two-person transfers in transferAssistance.",
     "Return a compact decision packet: preserve 100% statement accounting but avoid repetition and long prose.",
 ]
 
@@ -53,6 +55,40 @@ def _required_output_schema() -> Dict[str, Any]:
         "statements": [{"raw_text": "string", "meaning": "string", "importance": "MUST|NICE|CONTEXT|UNKNOWN", "knowledge_state": "KNOWN|UNKNOWN|AMBIGUOUS", "status": "USED|ASKED|RESEARCH_REQUIRED|NOT_DECISION_RELEVANT", "gap_key": "stable_snake_case_key|null", "mapped_parameters": ["string"], "clarification_question": "string|null", "research_task": "string|null"}],
         "next_question": "string|null",
         "research_requests": ["string"],
+        "questionnaire_patch": {
+            "relationship": "Mom|Dad|Grandma|Grandpa|Spouse|Myself|Couple|Relative|Friend",
+            "ageGroup": "60-64|65-69|70-74|75-79|80-84|85-89|90-94|95+",
+            "assistanceLevel": "Fully independent|Light assistance|Help with bathing|Help with dressing|Help with toileting|Help with medications|Daytime supervision|24/7 support required|Skilled nursing care",
+            "memoryStatus": "No|Occasionally forgetful|Mild memory issues|Significant memory issues|Not sure",
+            "budget": "positive monthly integer",
+            "medicaidStatus": "Approved|Application pending|May qualify|Not eligible|Not sure",
+            "referenceLocationValue": "explicit city/market string",
+            "medicalCareProfile": {
+                "hasOngoingMedicalNeeds": "No|Yes|Not sure",
+                "needs": ["Dialysis|Oxygen|Wound care|Injections or infusions|Complex medication management|Complex chronic condition|Permanent medical equipment|Nursing supervision"],
+                "mobilityMethod": "Independent|Cane|Walker|Wheelchair|Mostly in bed",
+                "transferAssistance": "No|One person|Two people|Mechanical lift|Not sure",
+                "recentFalls": "No|One|More than one|Not sure",
+                "dialysisFrequency": "explicit frequency string",
+                "oxygenUse": "At night|With activity|Continuously|Not sure",
+                "woundCareFrequency": "explicit frequency string",
+                "complexConditionDetails": "concise explicit conditions/equipment",
+                "physicianCoordination": "No|Yes|Not sure",
+            },
+            "humanIntelligenceV2": {
+                "transitionRiskProfile": {
+                    "recentHospitalization": "No|Yes|Not sure",
+                    "postHospitalRehabNeed": "No|Yes|Not sure",
+                    "wanderingConcerns": "No|Yes|Not sure",
+                },
+                "languageProfile": {
+                    "preferredSpokenLanguage": "explicit language",
+                    "nativeLanguage": "explicit language",
+                },
+                "foodProfile": {"dietaryPreferences": ["explicit dietary requirement"]},
+                "futureCareProfile": {"secureMemoryNeighborhoodNeed": "No|Yes|Not sure"},
+            },
+        },
         "decision_readiness": "READY|NEEDS_CLARIFICATION|NEEDS_RESEARCH",
     }
 
@@ -78,6 +114,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             "authority_rule": "The model extracts facts, identifies gaps, and phrases questions. Canonical deterministic policy alone decides blocking classification, final readiness, zero-result behavior, and escalation.",
             "adaptive_answer_rule": "Prior adaptiveSignals are part of the client record. If an adaptive signal contains an explicit answer, treat that dimension as answered and do not ask it again using a paraphrase.",
             "free_text_answer_rule": "Explicit statements in user_text are also part of the client record. Do not ask again about a dimension already answered there, including explicit negative statements such as no mobility limitation or no memory concerns.",
+            "questionnaire_patch_rule": "Write every explicit structured client fact into questionnaire_patch. Use only supplied schema keys and exact enum spellings. Omit unknowns and inferences. This patch is the canonical bridge from narrative intake into the same table used by the manual questionnaire.",
             "minimum_readiness_dimensions": {
                 "market_location": "Must be KNOWN from user_text, questionnaire_state, or prior adaptiveSignals before READY. If missing, ask the client.",
                 "monthly_affordability": "Must be KNOWN from user_text, questionnaire_state, or prior adaptiveSignals before READY. A client may explicitly say they have no budget limit or do not want to set one; silence is not a value.",
@@ -186,6 +223,14 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
+    patch = result.get("questionnaire_patch")
+    if patch is None:
+        # Backwards-compatible for deterministic test doubles and model providers
+        # that have not yet adopted the new contract; live prompts require it.
+        result["questionnaire_patch"] = {}
+    elif not isinstance(patch, dict):
+        raise RuntimeError("SEMANTIC_AI_INVALID_QUESTIONNAIRE_PATCH")
+
     statements = result.get("statements")
     if not isinstance(statements, list) or not statements:
         raise RuntimeError("SEMANTIC_AI_MISSING_STATEMENT_TRACE")
