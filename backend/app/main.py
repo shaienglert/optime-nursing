@@ -1554,11 +1554,6 @@ def startup() -> None:
             **runtime_import,
         }
 
-        if configured_canonical_market() == "synthetic-pilot":
-            from app.services.synthetic_pilot_evidence_seed import seed_synthetic_pilot_published_rates_evidence
-            seed_summary = seed_synthetic_pilot_published_rates_evidence(db)
-            logger.info("synthetic_pilot_evidence_seeded %s", seed_summary)
-
         # Prepared knowledge reports can be generated lazily to keep startup memory bounded.
         eager_reports = os.getenv("OPTIME_EAGER_REPORTS_ON_STARTUP", "0") == "1"
         if eager_reports:

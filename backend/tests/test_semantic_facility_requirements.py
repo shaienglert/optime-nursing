@@ -429,6 +429,67 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
+    def test_budget_verification_passes_when_facility_price_is_at_or_under_stated_budget(self) -> None:
+        # published_rates_verified alone only proves a facility discloses its rates --
+        # not that the rate fits the client. A facility with a known starting price at
+        # or under what the client stated should reach a real PASS, not stay pending
+        # forever just because no agent research record happens to exist.
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "around $3,000 a month",
+                    "meaning": "stated monthly budget is $3,000",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["monthly_affordability"],
+                }]
+            }}}},
+            "results": [{
+                "canonical_facility_id": "WITHIN-BUDGET",
+                "facility_name": "Affordable Community",
+                "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                "agent_person_fit_evidence": [],
+                "starting_monthly_price": 2800,
+            }],
+        }
+
+        out = apply_semantic_facility_requirements(result, research_limit=0, questionnaire_state={"budget": 3000})
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_pass"])
+        self.assertEqual("PASS", fit["hard_gate"])
+
+    def test_budget_verification_stays_pending_when_confirmed_price_exceeds_budget(self) -> None:
+        # A confirmed price that is clearly over budget must never be treated as
+        # satisfying the client's stated budget MUST -- that would turn a genuine
+        # mismatch into a false "final" recommendation, which is exactly the failure
+        # this MUST gate exists to prevent.
+        result = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "around $3,000 a month",
+                    "meaning": "stated monthly budget is $3,000",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["monthly_affordability"],
+                }]
+            }}}},
+            "results": [{
+                "canonical_facility_id": "OVER-BUDGET",
+                "facility_name": "Premium Memory Care",
+                "client_intent_fit": {"must_pass": [], "must_unknown": [], "must_fail": []},
+                "agent_person_fit_evidence": [],
+                "starting_monthly_price": 9500,
+            }],
+        }
+
+        out = apply_semantic_facility_requirements(result, research_limit=0, questionnaire_state={"budget": 3000})
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertNotIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_pass"])
+        self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
     def test_context_level_medicaid_mention_is_not_promoted(self) -> None:
         # Live behavior for the same persona: Semantic AI classified Medicaid
         # eligibility as CONTEXT, not MUST ("may qualify" is not a firm requirement).
