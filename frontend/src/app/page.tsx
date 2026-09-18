@@ -133,7 +133,12 @@ export default function HomePage() {
   }, []);
 
   function chooseRelationship(label: string, value: string): void {
-    setState({ ...state, relationship: value });
+    // "my husband" and "my wife" both map to the same "Spouse" relationship value
+    // (matching the single "Spouse" option in the structured intake form), so the
+    // gender implied by which one was picked would otherwise be discarded rather
+    // than staying on record as Not provided/unknown for whatever might use it.
+    const gender = label === "my mother" || label === "my wife" ? "Female" : label === "my father" || label === "my husband" ? "Male" : "";
+    setState({ ...state, relationship: value, gender });
     setRelationshipLabel(personCopy(label));
     setHeroStep("age");
   }
