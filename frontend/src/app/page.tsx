@@ -8,7 +8,7 @@ import { flushSync } from "react-dom";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile } from "@/lib/api";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
-import { QUESTIONNAIRE_SESSION_KEY, saveSessionJson } from "@/lib/search-session";
+import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
 
 const EXAMPLE_QUERY =
   "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
@@ -119,8 +119,15 @@ export default function HomePage() {
   // silently persisted in sessionStorage, this page's own heroStep used to skip
   // straight to "age" whenever a stale relationship was present, and every
   // subsequent setState({ ...state, ... }) in this component spread that stale
-  // profile forward into whatever the client typed next.
+  // profile forward into whatever the client typed next. Also clear the cached
+  // decision response/compare/favorite selections (not just the questionnaire
+  // itself) -- otherwise a stale recommendations payload from the previous case
+  // can still surface on /results and its comparison/report links even after
+  // the questionnaire state is clean, until a fresh fetch happens to overwrite it.
   useEffect(() => {
+    clearSearchSession();
+    clearCompareSelection();
+    clearFavoriteFacilities();
     resetState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
