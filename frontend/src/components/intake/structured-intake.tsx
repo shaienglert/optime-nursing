@@ -113,13 +113,18 @@ export function StructuredIntake() {
 
   function update(patch: Partial<QuestionnaireState>) {
     setDraft((current) => ({ ...current, ...patch }));
+    // Any answer change after checking "I confirm this summary reflects my
+    // answers" means that confirmation no longer reflects what's on screen.
+    setConfirmed(false);
   }
 
   function updateMedical(patch: Partial<QuestionnaireState["medicalCareProfile"]>) {
     setDraft((current) => ({ ...current, medicalCareProfile: { ...current.medicalCareProfile, ...patch } }));
+    setConfirmed(false);
   }
 
   function updateAssistance(next: string[]) {
+    setConfirmed(false);
     const added = next.find((item) => !assistance.includes(item));
     if (added === "Fully independent") {
       setAssistance(["Fully independent"]);
