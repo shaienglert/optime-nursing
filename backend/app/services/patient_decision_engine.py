@@ -241,9 +241,51 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
         _add_need(needs_by_id, "nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs 24/7 nursing")
         _add_need(needs_by_id, "transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs transfer assistance")
         _add_need(needs_by_id, "medication_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs medication support")
-    elif "bathing" in level or "light" in level or "assistance" in level:
+    elif (
+        "bathing" in level or "light" in level or "assistance" in level
+        or "dressing" in level or "toileting" in level or "medications" in level
+        or "supervision" in level or "24/7" in level
+    ):
+        # Every checkbox on the "daily assistance" question except "Fully independent"
+        # falls through to here unless it already matched the clinical branch above --
+        # each one is a real signal that daily-living support is needed, not just the
+        # two or three keywords this used to recognize.
         _add_need(needs_by_id, "adl_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 1.0, "Needs ADL support")
         _add_need(needs_by_id, "transfer_assistance", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.8, "May need transfer help")
+
+
+_STRUCTURED_MEDICAL_NEED_MAP = {
+    "dialysis": ("dialysis_arrangements", "REQUIRED"),
+    "wound care": ("wound_care", "HIGH"),
+    "nursing supervision": ("nursing_24_7", "HIGH"),
+    "injections or infusions": ("medication_support", "HIGH"),
+    "complex medication management": ("medication_support", "HIGH"),
+    # Deliberately mapped to the residential-assistance tier, not a skilled-nursing
+    # signal: neither a chronic condition label nor equipment alone tells us the
+    # facility needs a licensed nurse, only that daily support is required.
+    "complex chronic condition": ("adl_support", "HIGH"),
+    "permanent medical equipment": ("adl_support", "HIGH"),
+}
+
+
+def _map_structured_medical_needs(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
+    # The "Select every relevant need" checkboxes (medicalCareProfile.needs) were never
+    # translated into needs at all -- they only influenced matching if the AI happened to
+    # ask a follow-up question about them. A client who picked "Oxygen" or "Dialysis" but
+    # got no AI follow-up question was invisibly treated as having no clinical need.
+    medical = questionnaire.get("medicalCareProfile") or {}
+    selected = {str(item).strip().lower() for item in (medical.get("needs") or [])}
+    for label, (parameter_id, level) in _STRUCTURED_MEDICAL_NEED_MAP.items():
+        if label in selected:
+            _add_need(needs_by_id, parameter_id, level, "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.needs", 0.95, f"Requires {parameter_id.replace('_', ' ')}")
+
+    if "oxygen" in selected:
+        # Any regular supplemental-oxygen need rules out plain independent/active-adult
+        # living (it requires equipment and monitoring), but continuous use is what
+        # genuinely raises the bar toward a skilled clinical setting.
+        oxygen_use = _normalize(medical.get("oxygenUse"))
+        level = "HIGH" if oxygen_use == "continuously" else "MEDIUM"
+        _add_need(needs_by_id, "respiratory_trach_vent", level, "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.needs", 0.95, "Requires respiratory/oxygen support")
 
 
 def _map_memory(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
@@ -405,6 +447,7 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     needs_by_id: Dict[str, NeedItem] = {}
 
     _map_assistance_level(questionnaire_state, needs_by_id)
+    _map_structured_medical_needs(questionnaire_state, needs_by_id)
     _map_memory(questionnaire_state, needs_by_id)
     _map_rehab(questionnaire_state, needs_by_id)
     _map_personal_preferences(questionnaire_state, needs_by_id)
