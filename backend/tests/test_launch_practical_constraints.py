@@ -24,6 +24,23 @@ class LaunchPracticalConstraintContractTests(unittest.TestCase):
         self.assertIn("budget", profile["natural_language_mapping"]["extraction"]["recognized_tokens"])
         self.assertIn("medicaid", profile["natural_language_mapping"]["extraction"]["recognized_tokens"])
 
+    def test_negated_medicaid_does_not_become_a_preference(self) -> None:
+        profile = production_runtime.build_patient_needs_profile(
+            {"medicaidStatus": "Not eligible"},
+            "He has Medicare and is not applying for Medicaid.",
+        )
+        needs = {item["parameter_id"]: item for item in profile["needs"]}
+        self.assertNotIn("medicaid_attributes", needs)
+        self.assertNotIn("medicaid", profile["natural_language_mapping"]["extraction"]["recognized_tokens"])
+
+    def test_structured_medicaid_status_survives_without_keyword_in_story(self) -> None:
+        profile = production_runtime.build_patient_needs_profile(
+            {"medicaidStatus": "Application pending"},
+            "She needs help finding an appropriate community.",
+        )
+        needs = {item["parameter_id"]: item for item in profile["needs"]}
+        self.assertEqual("questionnaire.medicaidStatus", needs["medicaid_attributes"]["user_evidence_source"])
+
     def test_practical_gaps_are_visible_without_becoming_safety_failures(self) -> None:
         needs = [
             {"parameter_id": "published_rates", "requirement_level": "PREFERENCE", "desired_value": "KNOWN", "acceptable_values": ["KNOWN", "UNKNOWN"]},
