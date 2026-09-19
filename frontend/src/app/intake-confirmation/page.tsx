@@ -4,6 +4,7 @@ import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return <div className="rounded-2xl border border-[#d9e3df] bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5c786f]">{label}</p><p className="mt-2 text-base leading-7 text-[#293a34]">{value || "Not provided"}</p></div>;
@@ -75,7 +76,7 @@ function IntakeConfirmationContent() {
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={() => router.push("/intake")} className="rounded-full border border-[#76958a] bg-white px-7 py-4 text-base font-semibold text-[#315f53]">Change answers</button>
-          <button type="button" onClick={confirm} className="rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759]">I confirm—show recommendations</button>
+          <button type="button" onClick={confirm} className="inline-flex items-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759]"><OomnikMark size={16} /> I confirm—show recommendations</button>
         </div>
       </section>
     </main>

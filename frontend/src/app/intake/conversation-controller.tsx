@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { TreeOfUnderstanding } from "./tree-of-understanding";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 type UnderstandingDomain = {
   id: string;
@@ -384,6 +385,7 @@ export function ConversationController({ children }: { children: React.ReactNode
               disabled={isSearching}
               className="optime-conversation-next"
             >
+              {!isSearching && <OomnikMark size={16} className="mr-2 inline-block align-middle" />}
               {isSearching ? "Preparing results…" : isLastQuestion ? "View recommendations" : "Next"} →
             </button>
           ) : (
