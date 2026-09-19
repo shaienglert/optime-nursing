@@ -38,7 +38,7 @@ def _mentions_couple(text: str) -> bool:
         return True
     if re.search(r"\bmy (?:husband|wife|spouse|partner) and i\b", text):
         return True
-    if re.search(r"\b(?:parents|partners|spouses)\b[^.]{0,80}\b(?:together|same (?:community|home|room|unit)|remain together)\b", text):
+    if re.search(r"\b(?:parents|partners|spouses)\b[^.]{0,80}\b(?:together|same (?:community|home|room|unit)|remain together|remain near each other|stay near each other|live near each other)\b", text):
         return True
     return bool(re.search(r"\b(?:together|same (?:community|home|room|unit))\b[^.]{0,80}\b(?:parents|partners|spouses)\b", text))
 

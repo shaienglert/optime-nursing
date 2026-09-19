@@ -202,6 +202,36 @@ def _mark_client_ready_for_research(decision: dict[str, Any], readiness: str) ->
     decision["readiness_separation_rule"] = "Client readiness and facility evidence readiness are separate. Facility research never reopens a completed client interview."
 
 
+def _classify_facilities_before_ranking(profile: dict[str, Any]) -> dict[str, Any]:
+    """Classify the active market before client-readiness can block recommendation ranking.
+
+    This is inventory discovery, not matching or ranking: it intentionally exposes no
+    facility identities and makes no claim that a classified facility fits the client.
+    """
+    from app.services.facility_parameter_service import query_facility_knowledge_catalog
+
+    need_ids = sorted({
+        str(need.get("parameter_id") or "").strip()
+        for need in (profile.get("needs") or [])
+        if isinstance(need, dict) and str(need.get("requirement_level") or "").upper() == "HIGH"
+    })
+    query = query_facility_knowledge_catalog(required_parameter_ids=need_ids)
+    return {
+        "status": "COMPLETED_PRE_RANKING",
+        "catalog_version": query["catalog_version"],
+        "total_facilities_classified": query["total_facilities_known"],
+        "classification_counts": query["classification_counts"],
+        "required_parameter_ids": query["required_parameter_ids"],
+        "relevant_candidate_count": query["candidate_count"],
+        "verified_capability_match_count": query["verified_capability_match_count"],
+        "pending_verification_count": query["pending_verification_count"],
+        "excluded_explicit_negative_count": query["excluded_explicit_negative_count"],
+        "unknown_is_not_negative": True,
+        "identities_hidden_pending_client_input": True,
+        "rule": "The preclassified facility catalog is queried before client clarification; matching, ranking, and facility identities remain blocked.",
+    }
+
+
 def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[str, Any]:
     decision = _decision_from_profile(profile)
     human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
@@ -217,11 +247,13 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
         },
         "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
     }
+    discovery = _classify_facilities_before_ranking(profile)
     blocked = {
         "patient_needs_profile": profile,
         "results": [],
         "result_count": 0,
         "total_candidates_scored": 0,
+        "candidate_discovery": discovery,
         "availability_policy": "Recommendations are blocked until the governed AI interview has enough client evidence to begin research.",
         "care_setting_policy": {"status": "BLOCKED_PENDING_AI_INTERVIEW", "decision_intelligence": decision},
         "decision_intelligence": {
@@ -232,6 +264,7 @@ def _blocked_interview_result(profile: dict[str, Any], readiness: str) -> dict[s
         },
         "recommendation_audit_trace": {
             "blocked_before_facility_ranking": True,
+            "facility_classification_completed": True,
             "reason": readiness,
             "adaptive_questions": questions,
             "semantic_ai": semantic,

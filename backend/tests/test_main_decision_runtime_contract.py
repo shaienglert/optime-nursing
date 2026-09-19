@@ -99,6 +99,10 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertEqual([], serialized["results"])
         self.assertEqual(0, serialized["result_count"])
         self.assertEqual(0, serialized["total_candidates_scored"])
+        discovery = serialized["candidate_discovery"]
+        self.assertEqual("COMPLETED_PRE_RANKING", discovery["status"])
+        self.assertGreater(discovery["total_facilities_classified"], 0)
+        self.assertTrue(discovery["identities_hidden_pending_client_input"])
         self.assertTrue(serialized["recommendation_audit_trace"]["blocked_before_facility_ranking"])
         self.assertEqual(question, top_decision["process_owner"]["next_best_action"]["question"])
         self.assertEqual(question, serialized["recommendation_audit_trace"]["adaptive_questions"][0]["question"])

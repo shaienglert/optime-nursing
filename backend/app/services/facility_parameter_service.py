@@ -335,6 +335,44 @@ def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Di
             for parameter_id, rows in facility_rows.items()
         }
 
+    # Build the facility knowledge catalog once per governed artifact signature.
+    # Client requests query this index; they do not ask an LLM to rediscover or
+    # reclassify facilities from prose on every run.
+    facility_catalog: Dict[str, Dict[str, Any]] = {}
+    capability_value_index: Dict[str, Dict[str, set[str]]] = {}
+    classification_index: Dict[str, set[str]] = {}
+    for canonical_id, facility in canonical_by_id.items():
+        classification = str(
+            facility.get("synthetic_archetype")
+            or facility.get("canonical_type")
+            or "UNKNOWN"
+        ).strip().upper()
+        classification_index.setdefault(classification, set()).add(canonical_id)
+        capabilities: Dict[str, Dict[str, Any]] = {}
+        for parameter_id, best in evidence_best_lookup.get(canonical_id, {}).items():
+            value = best.get("value")
+            normalized_value = str(value if value is not None else "UNKNOWN").strip().upper()
+            if normalized_value in {"", "NONE"}:
+                normalized_value = "UNKNOWN"
+            capabilities[parameter_id] = {
+                "value": value,
+                "knowledge_state": "UNKNOWN" if normalized_value == "UNKNOWN" else "KNOWN",
+                "source": best.get("source"),
+                "last_verified": best.get("last_verified"),
+                "confidence": best.get("confidence"),
+                "evidence_strength": best.get("evidence_strength"),
+                "provenance": best.get("provenance") or {},
+            }
+            capability_value_index.setdefault(parameter_id, {}).setdefault(normalized_value, set()).add(canonical_id)
+        facility_catalog[canonical_id] = {
+            "canonical_facility_id": canonical_id,
+            "classification": classification,
+            "canonical_type": facility.get("canonical_type"),
+            "city": facility.get("city"),
+            "state": facility.get("state"),
+            "capabilities": capabilities,
+        }
+
     runtime_version = hashlib.sha256(
         json.dumps(
             {
@@ -359,6 +397,9 @@ def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Di
         "canonical_by_id": canonical_by_id,
         "evidence_lookup": evidence_lookup,
         "evidence_best_lookup": evidence_best_lookup,
+        "facility_catalog": facility_catalog,
+        "capability_value_index": capability_value_index,
+        "classification_index": classification_index,
         "runtime_meta": {
             "runtime_version": runtime_version,
             "runtime_timestamp": registry_payload.get("generated_at_utc") or evidence_generated_at or canonical_payload.get("generated_at_utc"),
@@ -400,16 +441,17 @@ def get_parameter_registry_payload() -> Dict[str, Any]:
     return _load_runtime()["registry_payload"]
 
 
-def get_runtime_metadata() -> Dict[str, Optional[str]]:
+def get_runtime_metadata() -> Dict[str, Any]:
     meta = _load_runtime().get("runtime_meta") or {}
     return {
         "runtime_version": str(meta.get("runtime_version") or ""),
         "runtime_timestamp": meta.get("runtime_timestamp"),
         "market": meta.get("market"),
+        "catalog_status": "PRECLASSIFIED",
     }
 
 
-def refresh_runtime_cache(reason: str = "manual") -> Dict[str, Optional[str]]:
+def refresh_runtime_cache(reason: str = "manual") -> Dict[str, Any]:
     market = _effective_market()
     with _CACHE_LOCK:
         _CACHE.pop(market, None)
@@ -419,6 +461,8 @@ def refresh_runtime_cache(reason: str = "manual") -> Dict[str, Optional[str]]:
         "runtime_version": str(meta.get("runtime_version") or ""),
         "runtime_timestamp": meta.get("runtime_timestamp"),
         "market": meta.get("market"),
+        "catalog_status": "PRECLASSIFIED",
+        "catalog_count": len(_load_runtime().get("facility_catalog") or {}),
     }
 
 
@@ -438,6 +482,8 @@ def get_runtime_cache_status() -> Dict[str, Any]:
             "runtime_timestamp": meta.get("runtime_timestamp"),
             "market": market,
             "canonical_count": meta.get("canonical_count"),
+            "catalog_count": len(payload.get("facility_catalog") or {}),
+            "catalog_status": "PRECLASSIFIED" if payload.get("facility_catalog") is not None else "NOT_LOADED",
             "evidence_count": meta.get("evidence_count"),
         }
 
@@ -448,6 +494,67 @@ def get_all_canonical_facility_ids() -> List[str]:
 
 def get_canonical_facility_index() -> Dict[str, Dict[str, Any]]:
     return _load_runtime()["canonical_by_id"]
+
+
+def get_facility_knowledge_catalog() -> Dict[str, Dict[str, Any]]:
+    """Return the preclassified, provenance-bearing catalog for the active market."""
+    return _load_runtime()["facility_catalog"]
+
+
+def query_facility_knowledge_catalog(
+    *,
+    required_parameter_ids: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Retrieve candidates from the prebuilt catalog before detailed scoring.
+
+    Only a governed, explicit NO removes a facility at this retrieval stage.
+    UNKNOWN remains a candidate pending verification, preserving the constitutional
+    rule that missing information is not negative evidence.
+    """
+    runtime = _load_runtime()
+    catalog = runtime["facility_catalog"]
+    all_ids = set(catalog)
+    requested = sorted({str(value).strip() for value in (required_parameter_ids or []) if str(value).strip()})
+    candidate_ids = set(all_ids)
+    excluded_by_parameter: Dict[str, int] = {}
+    for parameter_id in requested:
+        values = runtime["capability_value_index"].get(parameter_id, {})
+        explicitly_negative = set(values.get("NO", set()))
+        candidate_ids.difference_update(explicitly_negative)
+        excluded_by_parameter[parameter_id] = len(explicitly_negative)
+
+    verified = 0
+    pending = 0
+    for canonical_id in candidate_ids:
+        capabilities = catalog[canonical_id]["capabilities"]
+        if requested and all(
+            str((capabilities.get(parameter_id) or {}).get("value") or "UNKNOWN").strip().upper() == "YES"
+            for parameter_id in requested
+        ):
+            verified += 1
+        else:
+            pending += 1
+
+    classification_counts: Dict[str, int] = {}
+    for canonical_id in candidate_ids:
+        classification = str(catalog[canonical_id]["classification"])
+        classification_counts[classification] = classification_counts.get(classification, 0) + 1
+
+    ordered_ids = [canonical_id for canonical_id in catalog if canonical_id in candidate_ids]
+    return {
+        "status": "CATALOG_QUERY_COMPLETE",
+        "catalog_version": runtime["runtime_meta"].get("runtime_version"),
+        "total_facilities_known": len(all_ids),
+        "required_parameter_ids": requested,
+        "candidate_ids": ordered_ids,
+        "candidate_count": len(ordered_ids),
+        "verified_capability_match_count": verified,
+        "pending_verification_count": pending,
+        "excluded_explicit_negative_count": len(all_ids) - len(candidate_ids),
+        "excluded_by_parameter": excluded_by_parameter,
+        "classification_counts": dict(sorted(classification_counts.items())),
+        "unknown_is_not_negative": True,
+    }
 
 
 def _ordered_registry(
