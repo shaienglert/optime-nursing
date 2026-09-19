@@ -43,7 +43,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     });
 
     await page.goto('http://127.0.0.1:3000/intake', { waitUntil: 'networkidle' });
-    await expect(page.getByRole('heading', { name: /We ask first\. We conclude only after you confirm\./i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Let’s get to know the person behind the decision\./i })).toBeVisible();
 
     await page.getByRole('button', { name: scenario.relationship, exact: true }).click();
     await page.getByRole('button', { name: scenario.age, exact: true }).click();
