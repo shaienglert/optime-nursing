@@ -206,6 +206,42 @@ def _score_tier(score: float, band: float) -> int:
     return int(score // band) if band > 0 else int(score)
 
 
+_MUST_EVIDENCE_TERMS = {
+    "MEDICATION_SUPPORT_AVAILABLE": ("medication",),
+    "ADL_SUPPORT_AVAILABLE": ("adl", "daily activities", "bathing", "dressing", "toileting"),
+    "SECURE_MEMORY_CARE_CONFIRMED": ("memory care", "dementia", "secure memory"),
+}
+
+
+def _remove_deficits_contradicted_by_governed_evidence(row: Dict[str, Any], deficits: List[str]) -> List[str]:
+    """AI may describe a governed PASS as missing because its compact claim ledger
+    is not the eligibility authority. Never expose that contradiction to families.
+
+    Only explicit missing/unknown assertions are removed, and only when the
+    deterministic client-intent gate for the same capability is already PASS.
+    Other AI information deficits remain untouched.
+    """
+    fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+    passed = {str(value) for value in fit.get("must_pass") or []}
+    gates = fit.get("care_delivery_gates") if isinstance(fit.get("care_delivery_gates"), dict) else {}
+    passed.update(str(key) for key, gate in gates.items() if isinstance(gate, dict) and gate.get("status") == "PASS")
+    uncertainty_terms = ("not verified", "unverified", "unknown", "missing", "not confirmed", "no verified")
+
+    filtered: List[str] = []
+    for value in deficits:
+        text = str(value)
+        normalized = text.lower()
+        contradicted = any(
+            key in passed
+            and any(term in normalized for term in terms)
+            and any(term in normalized for term in uncertainty_terms)
+            for key, terms in _MUST_EVIDENCE_TERMS.items()
+        )
+        if not contradicted:
+            filtered.append(text)
+    return filtered
+
+
 def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]], deterministic_fallback_key=None) -> List[Dict[str, Any]]:
     supplied = {str(row.get("canonical_facility_id") or "") for row in rows if row.get("canonical_facility_id")}
     ranked = packet.get("ranked_candidates") if isinstance(packet.get("ranked_candidates"), list) else []
@@ -230,7 +266,9 @@ def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]], deterministic_
             "ai_position": ai_position,
             "score": score,
             "reason": str(item.get("reason") or ""),
-            "information_deficits": [str(v) for v in item.get("information_deficits") or []],
+            "information_deficits": _remove_deficits_contradicted_by_governed_evidence(
+                row, [str(v) for v in item.get("information_deficits") or []]
+            ),
             "drivers": drivers,
             "risks": risks,
             "citation_stripped": citation_stripped,
@@ -283,7 +321,9 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
         validated[canonical_id] = {
             "score": round(score, 3),
             "reason": str(item.get("reason") or ""),
-            "information_deficits": [str(v) for v in item.get("information_deficits") or []],
+            "information_deficits": _remove_deficits_contradicted_by_governed_evidence(
+                by_id[canonical_id], [str(v) for v in item.get("information_deficits") or []]
+            ),
             "rank_drivers": drivers,
             "rank_risks": risks,
             "citation_validation": "PARTIAL" if citation_stripped else "FULL",

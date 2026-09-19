@@ -58,10 +58,11 @@ _PARAMETER_ALIASES = {
 
 def canonical_client_facts(questionnaire_state: Dict[str, Any], user_text: str) -> Dict[str, Any]:
     text = " ".join(str(user_text or "").lower().split())
-    relationship = str(questionnaire_state.get("relationship") or "").lower()
     household_is_couple = bool(
-        relationship in {"spouse", "partner", "husband", "wife"}
-        or re.search(r"\b(?:married couple|couple|husband and wife|spouses?|partners?)\b", text)
+        re.search(r"\b(?:married couple|couple|husband and wife)\b", text)
+        or re.search(r"\bmy (?:husband|wife|spouse|partner) and i\b", text)
+        or re.search(r"\bboth (?:of us|parents|partners|spouses)\b", text)
+        or re.search(r"\b(?:parents|partners|spouses)\b[^.]{0,80}\b(?:together|same (?:community|home|room|unit)|remain together)\b", text)
     )
     different_care_needs = bool(
         household_is_couple

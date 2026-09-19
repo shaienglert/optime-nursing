@@ -28,5 +28,6 @@ def test_genuine_couple_mention_is_still_detected():
     assert _household_type("Looking for both parents to live in the same community") == "COUPLE"
 
 
-def test_relationship_field_still_forces_couple():
-    assert _household_type("Looking for senior housing", relationship="spouse") == "COUPLE"
+def test_relationship_field_identifies_beneficiary_not_two_residents():
+    assert _household_type("Looking for senior housing", relationship="spouse") == "SINGLE_OR_UNKNOWN"
+    assert _household_type("My husband needs help with medication", relationship="spouse") == "SINGLE_OR_UNKNOWN"
