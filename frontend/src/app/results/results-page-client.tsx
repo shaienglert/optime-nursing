@@ -1217,6 +1217,8 @@ export function ResultsPageClient() {
               <p className="mt-2 leading-6 text-[#6d5b3e]">
                 {decisionResponse.total_candidates_scored > 0
                   ? `We reviewed ${decisionResponse.total_candidates_scored} facilities, but none passed every required condition with enough verified evidence. This is not the same as proving that no facility can help.`
+                  : decisionResponse.candidate_discovery?.total_facilities_classified
+                    ? `We classified ${decisionResponse.candidate_discovery.total_facilities_classified} facilities before ranking. ${decisionResponse.candidate_discovery.relevant_candidate_count} are in potentially relevant care categories, but matching and facility names remain paused until the missing client answer is provided.`
                   : "The request stopped before any facility reached the comparison stage. This can happen when a required client fact or market fact is still unresolved; it does not mean that no facility can help."}
               </p>
               <p className="mt-2 leading-6 text-[#6d5b3e]">Review the answers or ask us to verify the missing clinical and facility evidence before changing the care requirements.</p>

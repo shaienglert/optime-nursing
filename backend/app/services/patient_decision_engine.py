@@ -15,10 +15,11 @@ logger = logging.getLogger(__name__)
 
 from app.services.facility_parameter_service import (
     compare_facility_parameter_tables,
-    get_all_canonical_facility_ids,
     get_canonical_facility_index,
+    query_facility_knowledge_catalog,
     get_facility_parameter_table,
     get_personalized_parameter_order,
+    get_runtime_metadata,
 )
 from app.services.canonical_universe import configured_canonical_market
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
@@ -1598,6 +1599,7 @@ def run_patient_decision_engine(
     cache_enabled = os.getenv("OPTIME_DECISION_RESULT_CACHE", "0") == "1"
     cache_key = json.dumps(
         {
+            "facility_catalog_version": get_runtime_metadata().get("runtime_version"),
             "questionnaire_state": questionnaire_state,
             "natural_language_query": natural_language_query,
             "limit": limit,
@@ -1642,7 +1644,14 @@ def run_patient_decision_engine(
     recommendation_registry = [row for row in ordered_registry if row["parameter_id"] in recommendation_parameter_ids]
 
     canonical_index = get_canonical_facility_index()
-    discovered_ids = get_all_canonical_facility_ids()
+    catalog_query = query_facility_knowledge_catalog(
+        required_parameter_ids=[
+            str(need.get("parameter_id") or "")
+            for need in needs
+            if isinstance(need, dict) and str(need.get("requirement_level") or "").upper() == "HIGH"
+        ],
+    )
+    discovered_ids = list(catalog_query["candidate_ids"])
 
     results = []
     requested_city = profile.get("location_city")
@@ -1783,6 +1792,19 @@ def run_patient_decision_engine(
         "results": detailed_top[:limit],
         "result_count": len(detailed_top[:limit]),
         "total_candidates_scored": len(results),
+        "candidate_discovery": {
+            "status": "COMPLETED_PRE_RANKING",
+            "catalog_version": catalog_query["catalog_version"],
+            "total_facilities_classified": catalog_query["total_facilities_known"],
+            "classification_counts": catalog_query["classification_counts"],
+            "required_parameter_ids": catalog_query["required_parameter_ids"],
+            "relevant_candidate_count": catalog_query["candidate_count"],
+            "verified_capability_match_count": catalog_query["verified_capability_match_count"],
+            "pending_verification_count": catalog_query["pending_verification_count"],
+            "excluded_explicit_negative_count": catalog_query["excluded_explicit_negative_count"],
+            "unknown_is_not_negative": True,
+            "identities_hidden_pending_client_input": False,
+        },
         "market_coverage_notice": _market_coverage_notice(requested_city),
         "availability_policy": "Current availability must be confirmed directly with the facility.",
         "tie_break_policy": {

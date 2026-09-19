@@ -386,6 +386,19 @@ export type DecisionEngineResponse = {
   results: DecisionEngineRecommendation[];
   result_count: number;
   total_candidates_scored: number;
+  candidate_discovery?: {
+    status: string;
+    catalog_version?: string;
+    total_facilities_classified: number;
+    classification_counts: Record<string, number>;
+    required_parameter_ids: string[];
+    relevant_candidate_count: number;
+    verified_capability_match_count: number;
+    pending_verification_count: number;
+    excluded_explicit_negative_count: number;
+    unknown_is_not_negative: boolean;
+    identities_hidden_pending_client_input: boolean;
+  };
   availability_policy: string;
   decision_intelligence?: Record<string, unknown>;
   recommendation_audit_trace?: Record<string, unknown>;
