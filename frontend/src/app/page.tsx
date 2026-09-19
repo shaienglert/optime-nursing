@@ -253,7 +253,7 @@ export default function HomePage() {
           </nav>
 
           <div className="flex justify-center pt-10">
-            <OptimeStaticLogo variant="primary" height={144} />
+            <OptimeStaticLogo variant="primary" height={288} />
           </div>
 
           <div className="pt-10 sm:pt-16">
