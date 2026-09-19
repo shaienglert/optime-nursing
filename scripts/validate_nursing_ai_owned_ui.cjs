@@ -19,7 +19,7 @@ if (!interview.includes('router.replace(`/intake-confirmation?next=')) throw new
 if (!interview.includes('questionnaireCompletion?.mandatoryComplete') || !interview.includes('conditionalFollowUpsComplete')) throw new Error('Adaptive interview must reject an incomplete structured questionnaire.');
 if (!interview.includes('We use everything you already told us.')) throw new Error('Interview must disclose the no-reask contract to the user.');
 
-for (const token of ['medicalCareProfile', 'moveLossConcerns', 'parkingRequirement', 'clientSummaryConfirmed: false', 'Continue to AI clarification']) {
+for (const token of ['medicalCareProfile', 'moveLossConcerns', 'parkingRequirement', 'clientSummaryConfirmed: false', 'Continue our conversation']) {
   if (!intake.includes(token)) throw new Error(`Mandatory structured intake contract missing: ${token}`);
 }
 for (const token of ['Please confirm what Oomnik understood.', 'clientSummaryConfirmed: true', 'I confirm—show recommendations']) {
