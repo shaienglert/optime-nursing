@@ -9,6 +9,8 @@ import { useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile } from "@/lib/api";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
 import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
+import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 const EXAMPLE_QUERY =
   "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
@@ -244,7 +246,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden border-b border-[#dbe4df] bg-[radial-gradient(circle_at_12%_8%,rgba(219,239,229,0.88),transparent_33%),radial-gradient(circle_at_90%_0%,rgba(255,232,202,0.72),transparent_36%),linear-gradient(180deg,#fbfaf7_0%,#f7f4ee_100%)]">
         <div className="mx-auto max-w-6xl px-5 pb-24 pt-6 sm:px-8 lg:px-12 lg:pb-32">
           <nav className="flex items-center justify-between" aria-label="Main navigation">
-            <Link href="/" className="text-xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Oomnik</Link>
+            <OptimeStaticLogo variant="compact" height={28} />
             <div className="flex items-center gap-3 text-sm font-medium">
               <Link href="/workspace" className="hidden px-3 py-2 text-[#486057] hover:text-[#234f43] sm:inline-flex">My workspace</Link>
               <Link href="/intake" className="border-b border-[#6c9c8e] px-1 py-2 text-[#315f53] transition hover:border-[#244f43] hover:text-[#244f43]">Continue where I left off</Link>
@@ -298,9 +300,9 @@ export default function HomePage() {
                     type="button"
                     disabled={selectedAssistance.length === 0}
                     onClick={continueAfterAssistance}
-                    className="mt-8 inline-flex items-center border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="mt-8 inline-flex items-center gap-2 border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Next <span className="ml-2">→</span>
+                    <OomnikMark size={18} /> Next <span className="ml-1">→</span>
                   </button>
                 </div>
               )}
@@ -322,7 +324,9 @@ export default function HomePage() {
               Or tell the story in your own words
             </button>
             <p className="mt-12 max-w-5xl text-3xl font-medium leading-tight tracking-[-0.04em] text-[#20342c] sm:text-4xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
-            <p className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-[#1e4f43] sm:text-5xl">Oomnik — Finding You the Right Way.</p>
+            <div className="mt-6">
+              <OptimeStaticLogo variant="primary" height={72} />
+            </div>
           </div>
         </div>
       </section>
@@ -336,8 +340,9 @@ export default function HomePage() {
             <label htmlFor="family-case" className="sr-only">Describe your family situation</label>
             <textarea id="family-case" value={query} onChange={(event) => setQuery(event.target.value)} rows={6} placeholder={EXAMPLE_QUERY} className="w-full resize-none border-0 border-b-2 border-[#a8beb6] bg-transparent px-0 py-5 text-xl leading-9 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#315f53] focus:ring-0" />
             {error && <p className="mt-4 text-sm text-[#8a4434]">{error}</p>}
-            <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex items-center border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:opacity-60">
-              {isSubmitting ? "Opening the AI interview..." : "See options that may fit"} <span className="ml-2">→</span>
+            <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex items-center gap-2 border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:opacity-60">
+              {!isSubmitting && <OomnikMark size={18} />}
+              {isSubmitting ? "Opening the AI interview..." : "See options that may fit"} <span className="ml-1">→</span>
             </button>
           </form>
         </div>
