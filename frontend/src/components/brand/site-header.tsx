@@ -18,7 +18,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-[#d8e7e1] bg-white/92 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
-        <OptimeStaticLogo />
+        <OptimeStaticLogo variant="primary" height={48} />
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((item) => (
             <Link
