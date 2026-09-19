@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { fetchPatientDecisionRecommendations, getApiBaseUrl } from "../src/lib/api";
+import { fetchPatientDecisionRecommendations, fetchPatientNeedsProfile, getApiBaseUrl } from "../src/lib/api";
 
 describe("getApiBaseUrl", () => {
   const env = process.env as Record<string, string | undefined>;
@@ -194,6 +194,34 @@ describe("getApiBaseUrl", () => {
     const [requestUrl, requestInit] = (fetchMock as unknown as { mock: { calls: unknown[][] } }).mock.calls[0] || [];
     expect(requestUrl).toBe("/api/backend/decision-engine/recommendations");
     expect((requestInit as { method?: string })?.method).toBe("POST");
+  });
+
+  it("coalesces simultaneous identical patient-needs profile requests", async () => {
+    env.NODE_ENV = "development";
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000";
+    (globalThis as { window?: { location: { origin: string; hostname: string } } }).window = {
+      location: { origin: "http://localhost:3000", hostname: "localhost" },
+    };
+
+    let resolveResponse!: (value: unknown) => void;
+    const pendingResponse = new Promise((resolve) => { resolveResponse = resolve; });
+    const fetchMock = vi.fn(() => pendingResponse) as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
+
+    const payload = {
+      questionnaire_state: { relationship: "Dad", ageGroup: "70-74" },
+      natural_language_query: "My father is fully independent.",
+    };
+    const first = fetchPatientNeedsProfile(payload);
+    const second = fetchPatientNeedsProfile(payload);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    resolveResponse({
+      ok: true,
+      status: 200,
+      json: async () => ({ needs: [], need_tags: [], priority_parameter_ids: [] }),
+    });
+    await expect(Promise.all([first, second])).resolves.toHaveLength(2);
   });
   
   it("surfaces an error when decision-engine endpoint returns 404", async () => {
