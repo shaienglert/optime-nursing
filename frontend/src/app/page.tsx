@@ -6,7 +6,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { fetchPatientNeedsProfile } from "@/lib/api";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
 import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
 
@@ -219,14 +218,8 @@ export default function HomePage() {
 
       // Do not hold the user's navigation hostage to recommendation generation.
       // The governed adaptive interview owns the next-question decision and can
-      // continue while profile/recommendation warming runs in the background.
+      // continue from the state persisted above.
       router.push(`/adaptive-interview?next=${encodeURIComponent(resultsUrl)}`);
-
-      const canonicalQuestionnaire = nextQuestionnaire as Record<string, unknown>;
-      // Warm only the light profile endpoint here. The results page owns the single
-      // recommendation request; sending the same ranking request from both screens
-      // caused concurrent work and could exhaust the production web worker.
-      void fetchPatientNeedsProfile({ questionnaire_state: canonicalQuestionnaire, natural_language_query: normalized });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "We could not continue right now. Please try again.");
     } finally {
