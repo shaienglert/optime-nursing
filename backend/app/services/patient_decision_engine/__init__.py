@@ -59,6 +59,19 @@ def _governed_map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str
             1.0,
             "Prefer transparent pricing",
         )
+    medicaid_status = _legacy._normalize(questionnaire.get("medicaidStatus"))
+    if medicaid_status in {"approved", "application pending", "may qualify", "not sure"}:
+        _legacy._add_need(
+            needs_by_id,
+            "medicaid_attributes",
+            "PREFERENCE",
+            "YES",
+            ["YES", "UNKNOWN"],
+            "FACILITY",
+            "questionnaire.medicaidStatus",
+            1.0,
+            "Medicaid/payment pathway must be confirmed",
+        )
 
 
 _legacy._map_financial = _governed_map_financial
