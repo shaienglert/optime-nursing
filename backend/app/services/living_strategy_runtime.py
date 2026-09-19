@@ -23,10 +23,6 @@ def _contains(text: str, *tokens: str) -> bool:
     return any(token in text for token in tokens)
 
 
-_COUPLE_NEGATION_WORDS = {"no", "not", "without", "single", "widow", "widower", "unmarried", "divorced"}
-_COUPLE_RELATIONSHIP_WORDS = ("husband", "wife", "spouse", "parents")
-
-
 def _mentions_couple(text: str) -> bool:
     """True only for a genuine couple/relationship signal.
 
@@ -38,15 +34,13 @@ def _mentions_couple(text: str) -> bool:
     """
     if re.search(r"\bcouple\b(?!\s+of\b)", text):
         return True
-    if _contains(text, "both of us", "both parents"):
+    if _contains(text, "both of us", "both parents", "husband and wife"):
         return True
-    for word in _COUPLE_RELATIONSHIP_WORDS:
-        for match in re.finditer(rf"\b{word}\b", text):
-            preceding_words = text[: match.start()].split()[-3:]
-            if any(negation in preceding_words for negation in _COUPLE_NEGATION_WORDS):
-                continue
-            return True
-    return False
+    if re.search(r"\bmy (?:husband|wife|spouse|partner) and i\b", text):
+        return True
+    if re.search(r"\b(?:parents|partners|spouses)\b[^.]{0,80}\b(?:together|same (?:community|home|room|unit)|remain together)\b", text):
+        return True
+    return bool(re.search(r"\b(?:together|same (?:community|home|room|unit))\b[^.]{0,80}\b(?:parents|partners|spouses)\b", text))
 
 
 def _first_known(questionnaire: Dict[str, Any], *keys: str) -> Any:
@@ -88,9 +82,10 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     transition = hi.get("transitionRiskProfile") if isinstance(hi.get("transitionRiskProfile"), dict) else {}
     finance = hi.get("financialProfile") if isinstance(hi.get("financialProfile"), dict) else {}
 
+    # `relationship` identifies who the search is for (for example, "my spouse");
+    # it does not mean two residents are moving. Require an explicit joint-move or
+    # co-residence statement before creating the COUPLE_CORESIDENCE hard gate.
     couple = _mentions_couple(query)
-    if _norm(questionnaire_state.get("relationship")) in {"wife", "husband", "spouse"}:
-        couple = True
 
     no_dementia = _contains(query, "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern", "does not need cognitive support", "doesn't need cognitive support", "no cognitive support") or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
     memory_care_needed = (

@@ -56,8 +56,13 @@ function validateLaunchContract({ scenarioName, scenario, payload, resultsText }
     ['help with daily activities is supported', 'adl support is not verified'],
     ['memory care is supported', 'memory care is not verified'],
   ];
-  for (const [positive, negative] of contradictionPairs) {
-    if (lower.includes(positive) && lower.includes(negative)) violations.push(`contradictory customer copy: ${positive} / ${negative}`);
+  for (const item of payload.results || []) {
+    const itemText = JSON.stringify(item).toLowerCase();
+    for (const [positive, negative] of contradictionPairs) {
+      if (itemText.includes(positive) && itemText.includes(negative)) {
+        violations.push(`${item.facility_name || item.canonical_facility_id}: contradictory customer copy: ${positive} / ${negative}`);
+      }
+    }
   }
 
   const accounting = payload.decision_intelligence?.client_statement_accounting

@@ -377,6 +377,40 @@ class BatchedAIRankingRuntimeTests(unittest.TestCase):
         self.assertEqual(["FAC-01", "FAC-02"], [row["canonical_facility_id"] for row in ranked])
         self.assertEqual(["FAC-01", "FAC-02"], calls[1]["contract_repair"]["candidate_ids_required_exactly_once"])
 
+    def test_ai_deficit_cannot_contradict_governed_medication_pass(self):
+        rows = self._rows(1)
+        rows[0]["client_intent_fit"] = {
+            "hard_gate": "PASS",
+            "must_pass": ["MEDICATION_SUPPORT_AVAILABLE"],
+            "care_delivery_gates": {"MEDICATION_SUPPORT_AVAILABLE": {"status": "PASS"}},
+        }
+
+        def transport(_payload):
+            return {"ranked_candidates": [{
+                "canonical_facility_id": "FAC-01",
+                "score": 70,
+                "reason": "governed rank",
+                "information_deficits": [
+                    "Medication support is not verified in the supplied ledger.",
+                    "Dialysis transportation is not verified in the supplied ledger.",
+                ],
+                "rank_drivers": [],
+                "rank_risks": [],
+            }]}
+
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1"}, clear=False), patch(
+            "app.services.ai_candidate_ranking_runtime._default_transport", side_effect=transport
+        ):
+            ranked, _status = rank_must_eligible_candidates(
+                rows, client_intent={}, human_context={"dynamic_preference_model": {"preferences": []}}, strategy={},
+                deterministic_fallback_key=lambda row: (str(row["canonical_facility_id"]),),
+            )
+
+        self.assertEqual(
+            ["Dialysis transportation is not verified in the supplied ledger."],
+            ranked[0]["ai_ranking"]["information_deficits"],
+        )
+
     def test_fabricated_claim_citation_is_stripped_but_score_and_rank_are_kept(self):
         # rank_drivers/rank_risks are optional supporting detail ("may be empty"), so a
         # single fabricated claim_id is not grounds to discard the whole candidate's
