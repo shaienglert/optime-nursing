@@ -1,28 +1,41 @@
-import Image from "next/image";
 import Link from "next/link";
 
 type OptimeStaticLogoProps = {
   href?: string;
   className?: string;
-  /** "compact" is the wordmark alone, for tight spaces (headers, inline nav).
-   *  "primary" also carries the "Finding You the Right Way" tagline baked into
-   *  the artwork, for large, uncontested spaces (hero sections, footers). */
   variant?: "compact" | "primary";
-  /** Rendered height in pixels; width is derived from the source aspect ratio. */
   height?: number;
 };
 
-const VARIANTS = {
-  compact: { src: "/brand/oomnik-compact.png", width: 512, height: 341 },
-  primary: { src: "/brand/oomnik-primary.png", width: 512, height: 286 },
-};
-
 export function OptimeStaticLogo({ href = "/", className = "", variant = "compact", height = 32 }: OptimeStaticLogoProps) {
-  const { src, width, height: naturalHeight } = VARIANTS[variant];
-  const renderedWidth = Math.round((width / naturalHeight) * height);
+  const scale = height / 32;
+  const wordSize = Math.max(22, Math.round(30 * scale));
+  const ring = Math.max(24, Math.round(31 * scale));
+  const stroke = Math.max(4, Math.round(5 * scale));
+  const gap = Math.max(3, Math.round(5 * scale));
+
   return (
-    <Link href={href} className={`inline-flex items-center ${className}`.trim()} aria-label="Oomnik Home">
-      <Image src={src} alt="Oomnik — Finding You the Right Way" width={renderedWidth} height={height} priority />
+    <Link
+      href={href}
+      className={`inline-flex flex-col items-start leading-none ${className}`.trim()}
+      aria-label="Oomnik Home"
+    >
+      <span className="inline-flex items-center font-semibold text-[#079ff2]" style={{ gap }}>
+        <span className="inline-flex items-center" aria-hidden="true">
+          <span className="inline-block rounded-full border-current" style={{ width: ring, height: ring, borderWidth: stroke }} />
+          <span className="inline-block rounded-full border-current" style={{ width: ring, height: ring, borderWidth: stroke, marginLeft: -stroke }} />
+        </span>
+        <span className="inline-flex items-baseline" style={{ gap, fontSize: wordSize, letterSpacing: "0.03em" }}>
+          <span>m</span><span>n</span>
+          <span className="relative">i<span className="absolute left-1/2 -translate-x-1/2 rounded-[2px] bg-gradient-to-br from-orange-400 to-pink-500" style={{ width: Math.max(5, Math.round(6*scale)), height: Math.max(5, Math.round(6*scale)), top: Math.round(-5*scale) }} /></span>
+          <span>k</span>
+        </span>
+      </span>
+      {variant === "primary" ? (
+        <span className="mt-1 whitespace-nowrap font-light text-[#168fe0]" style={{ fontSize: Math.max(9, Math.round(10*scale)), letterSpacing: "0.10em" }}>
+          Finding You the Right Way
+        </span>
+      ) : null}
     </Link>
   );
 }
