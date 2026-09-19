@@ -6,8 +6,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { fetchPatientNeedsProfile } from "@/lib/api";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
+import { buildResultsUrl } from "@/lib/results-url";
 import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
@@ -140,13 +140,13 @@ export default function HomePage() {
     // gender implied by which one was picked would otherwise be discarded rather
     // than staying on record as Not provided/unknown for whatever might use it.
     const gender = label === "my mother" || label === "my wife" ? "Female" : label === "my father" || label === "my husband" ? "Male" : "";
-    setState({ ...state, relationship: value, gender });
+    setState((current) => ({ ...current, relationship: value, gender }));
     setRelationshipLabel(personCopy(label));
     setHeroStep("age");
   }
 
   function chooseAge(label: string): void {
-    setState({ ...state, ageGroup: label.replaceAll("–", "-") });
+    setState((current) => ({ ...current, ageGroup: label.replaceAll("–", "-") }));
     setHeroStep("assistance");
   }
 
@@ -163,19 +163,20 @@ export default function HomePage() {
       (left, right) => ASSISTANCE_OPTIONS.indexOf(right as (typeof ASSISTANCE_OPTIONS)[number]) - ASSISTANCE_OPTIONS.indexOf(left as (typeof ASSISTANCE_OPTIONS)[number]),
     )[0];
     const supportSummary = selectedAssistance.map((item) => ASSISTANCE_VALUE_MAP[item]).join(", ");
-    const existingNotes = state.notes?.trim() || "";
-    const notes = [existingNotes, `Support needs selected: ${supportSummary}.`].filter(Boolean).join(" ");
-
-    setState({
-      ...state,
-      assistanceLevel: ASSISTANCE_VALUE_MAP[primaryLabel],
-      notes,
+    setState((current) => {
+      const existingNotes = current.notes?.trim() || "";
+      const notes = [existingNotes, `Support needs selected: ${supportSummary}.`].filter(Boolean).join(" ");
+      return {
+        ...current,
+        assistanceLevel: ASSISTANCE_VALUE_MAP[primaryLabel],
+        notes,
+      };
     });
     setHeroStep("memory");
   }
 
   function chooseMemory(value: string): void {
-    setState({ ...state, memoryStatus: value });
+    setState((current) => ({ ...current, memoryStatus: value }));
     router.push("/intake");
   }
 
@@ -191,44 +192,34 @@ export default function HomePage() {
 
     try {
       const explicitBudget = extractExplicitMonthlyBudget(normalized);
-      const nextQuestionnaire = {
-        ...state,
-        // The untouched slider default is not a client statement. A budget written
-        // in the story is authoritative; otherwise leave it unknown until AI asks.
-        budget: explicitBudget ?? (state.questionnaireCompletion?.mandatoryComplete ? state.budget : 0),
-        notes: normalized,
-        locationImportant: state.locationImportant || "",
-        referenceAddress: state.referenceAddress || "",
-        maximumDistanceMiles: state.maximumDistanceMiles || "",
-        customDistanceMiles: state.customDistanceMiles || "",
-        otherInterests: state.otherInterests || "",
-      };
+      let nextQuestionnaire = state;
+      // Flush every queued wizard answer before deriving the navigation target.
+      // Functional updates preserve rapid selections instead of spreading a stale
+      // context snapshot from the previous case back into the current one.
+      flushSync(() => setState((current) => {
+        nextQuestionnaire = {
+          ...current,
+          // The untouched slider default is not a client statement. A budget written
+          // in the story is authoritative; otherwise leave it unknown until AI asks.
+          budget: explicitBudget ?? (current.questionnaireCompletion?.mandatoryComplete ? current.budget : 0),
+          notes: normalized,
+          locationImportant: current.locationImportant || "",
+          referenceAddress: current.referenceAddress || "",
+          maximumDistanceMiles: current.maximumDistanceMiles || "",
+          customDistanceMiles: current.customDistanceMiles || "",
+          otherInterests: current.otherInterests || "",
+        };
+        return nextQuestionnaire;
+      }));
       // Persist before navigation. React state updates can otherwise lose a race
       // with the adaptive page mounting and make a valid story look empty.
       saveSessionJson(QUESTIONNAIRE_SESSION_KEY, nextQuestionnaire);
-      flushSync(() => setState(nextQuestionnaire));
-
-      const params = new URLSearchParams();
-      params.set("notes", normalized);
-      if (nextQuestionnaire.relationship) params.set("relationship", nextQuestionnaire.relationship);
-      if (nextQuestionnaire.ageGroup) params.set("age", nextQuestionnaire.ageGroup);
-      if (nextQuestionnaire.assistanceLevel) params.set("care", nextQuestionnaire.assistanceLevel);
-      if (nextQuestionnaire.memoryStatus) params.set("memory", nextQuestionnaire.memoryStatus);
-      if (nextQuestionnaire.budget) params.set("budget", String(nextQuestionnaire.budget));
-      if (nextQuestionnaire.distanceFromFamily) params.set("distanceStrategy", nextQuestionnaire.distanceFromFamily);
-
-      const resultsUrl = `/results?${params.toString()}`;
+      const resultsUrl = buildResultsUrl(nextQuestionnaire);
 
       // Do not hold the user's navigation hostage to recommendation generation.
       // The governed adaptive interview owns the next-question decision and can
-      // continue while profile/recommendation warming runs in the background.
+      // continue from the state persisted above.
       router.push(`/adaptive-interview?next=${encodeURIComponent(resultsUrl)}`);
-
-      const canonicalQuestionnaire = nextQuestionnaire as Record<string, unknown>;
-      // Warm only the light profile endpoint here. The results page owns the single
-      // recommendation request; sending the same ranking request from both screens
-      // caused concurrent work and could exhaust the production web worker.
-      void fetchPatientNeedsProfile({ questionnaire_state: canonicalQuestionnaire, natural_language_query: normalized });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "We could not continue right now. Please try again.");
     } finally {

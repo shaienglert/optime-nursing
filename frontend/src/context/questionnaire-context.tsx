@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 
 import { QUESTIONNAIRE_SESSION_KEY, loadSessionJson, removeSessionKey, saveSessionJson } from "@/lib/search-session";
 
@@ -413,7 +413,7 @@ const DEFAULT_STATE: QuestionnaireState = {
 
 type QuestionnaireContextValue = {
   state: QuestionnaireState;
-  setState: (next: QuestionnaireState) => void;
+  setState: Dispatch<SetStateAction<QuestionnaireState>>;
   resetState: () => void;
 };
 

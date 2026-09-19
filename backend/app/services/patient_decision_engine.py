@@ -396,6 +396,19 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedIte
     budget = questionnaire.get("budget")
     if budget not in (None, "", 0):
         _add_need(needs_by_id, "published_rates", "PREFERENCE", "KNOWN", ["KNOWN", "UNKNOWN"], "FACILITY", "questionnaire.budget", 1.0, "Prefer transparent pricing")
+    medicaid_status = _normalize(questionnaire.get("medicaidStatus"))
+    if medicaid_status in {"approved", "application pending", "may qualify", "not sure"}:
+        _add_need(
+            needs_by_id,
+            "medicaid_attributes",
+            "PREFERENCE",
+            "YES",
+            ["YES", "UNKNOWN"],
+            "FACILITY",
+            "questionnaire.medicaidStatus",
+            1.0,
+            "Medicaid/payment pathway must be confirmed",
+        )
     _add_need(needs_by_id, "medicare_attributes", "MEDIUM", "YES", ["YES", "UNKNOWN"], "FACILITY", "governed default", 0.7, "Medicare acceptance often relevant for skilled needs")
 
 
@@ -428,7 +441,14 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
         )
         extraction_meta["recognized_tokens"].append("budget")
 
-    if "medicaid" in normalized:
+    medicaid_negated = bool(
+        re.search(
+            r"\b(?:no|not|without|does\s+not|doesn't|will\s+not|won't)\b[^.!?\n]{0,50}\bmedicaid\b"
+            r"|\bmedicaid\b[^.!?\n]{0,40}\b(?:not\s+(?:needed|required|applicable)|isn't\s+(?:needed|required|applicable))\b",
+            normalized,
+        )
+    )
+    if "medicaid" in normalized and not medicaid_negated:
         _add_need(
             needs_by_id,
             "medicaid_attributes",
