@@ -136,6 +136,7 @@ from app.services.facility_parameter_service import (
     get_facility_parameter_table,
     get_parameter_registry_payload,
     get_personalized_parameter_order,
+    refresh_runtime_cache,
 )
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 from app.services.patient_decision_engine import (
@@ -638,6 +639,7 @@ class PatientDecisionEngineOut(BaseModel):
     results: List[Dict[str, Any]]
     result_count: int
     total_candidates_scored: int
+    candidate_discovery: Optional[Dict[str, Any]] = None
     market_coverage_notice: Optional[str] = None
     availability_policy: str
     care_setting_policy: Dict[str, Any] = Field(default_factory=dict)
@@ -1577,6 +1579,12 @@ def startup() -> None:
             ensure_reports_available(db)
     finally:
         db.close()
+
+    # Load and classify the complete active-market facility catalog before the
+    # service accepts recommendation work. Client requests query this governed
+    # index instead of rediscovering facilities from prose on demand.
+    app.state.facility_catalog = refresh_runtime_cache(reason="application_startup_preclassification")
+    logger.info("facility_catalog_preclassified %s", app.state.facility_catalog)
 
     # One-time SMTP validation email on deployment startup.
     print("SMTP_TEST: ATTEMPTING")
