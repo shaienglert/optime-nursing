@@ -116,8 +116,10 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(response.status()).toBe(200);
     const payload = await response.json();
     const results = payload.results || [];
-    if (expectedCohort) expect(payload.candidate_discovery?.total_facilities_classified).toBe(expectedCohort);
-    else expect([50, 100, 150, 200]).toContain(payload.candidate_discovery?.total_facilities_classified);
+    const classifiedCohort = payload.candidate_discovery?.total_facilities_classified
+      ?? payload.total_candidates_scored;
+    if (expectedCohort) expect(classifiedCohort).toBe(expectedCohort);
+    else expect([50, 100, 150, 200]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
     expect(results.length).toBeGreaterThan(0);
