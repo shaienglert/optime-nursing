@@ -4,6 +4,7 @@ import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
+import { buildResultsUrl } from "@/lib/results-url";
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return <div className="rounded-2xl border border-[#d9e3df] bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5c786f]">{label}</p><p className="mt-2 text-base leading-7 text-[#293a34]">{value || "Not provided"}</p></div>;
@@ -13,7 +14,7 @@ function IntakeConfirmationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { state, setState } = useQuestionnaire();
-  const destination = searchParams.get("next")?.startsWith("/results") ? String(searchParams.get("next")) : "/results";
+  const requestedDestination = searchParams.get("next")?.startsWith("/results") ? String(searchParams.get("next")) : "/results";
 
   useEffect(() => {
     const structuredComplete =
@@ -25,19 +26,24 @@ function IntakeConfirmationContent() {
   }, [router, state.notes, state.questionnaireCompletion]);
 
   function confirm() {
-    setState({
-      ...state,
-      questionnaireCompletion: {
-        ...state.questionnaireCompletion,
-        // Reaching this screen means the governed AI declared the client profile
-        // complete. Confirmation seals either the structured or narrative route.
-        mandatoryComplete: true,
-        conditionalFollowUpsComplete: true,
-        clientSummaryConfirmed: true,
-        confirmedAt: new Date().toISOString(),
-      },
+    let confirmedState = state;
+    setState((current) => {
+      confirmedState = {
+        ...current,
+        questionnaireCompletion: {
+          ...current.questionnaireCompletion,
+          // Reaching this screen means the governed AI declared the client profile
+          // complete. Confirmation seals either the structured or narrative route.
+          mandatoryComplete: true,
+          conditionalFollowUpsComplete: true,
+          clientSummaryConfirmed: true,
+          confirmedAt: new Date().toISOString(),
+        },
+      };
+      return confirmedState;
     });
-    router.replace(destination);
+    const requestedPathname = requestedDestination.split("?", 1)[0] || "/results";
+    router.replace(buildResultsUrl(confirmedState, requestedPathname));
   }
 
   const medical = state.medicalCareProfile;
