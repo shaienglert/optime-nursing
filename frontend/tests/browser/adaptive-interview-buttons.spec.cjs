@@ -214,7 +214,7 @@ test('direct adaptive-interview access is blocked until the structured questionn
 
   await page.goto('http://127.0.0.1:3000/adaptive-interview');
   await expect(page).toHaveURL(/\/intake$/);
-  await expect(page.getByText('Are there ongoing medical conditions or treatments the new community must manage or coordinate?')).toBeVisible();
+  await expect(page.getByText('Is there any ongoing medical care the community would need to provide or coordinate?')).toBeVisible();
 
   await page.getByRole('button', { name: 'Yes', exact: true }).nth(0).click();
   await page.getByRole('button', { name: 'Dialysis', exact: true }).click();

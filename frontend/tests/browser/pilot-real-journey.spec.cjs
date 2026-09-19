@@ -50,12 +50,12 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.getByRole('button', { name: 'Help with bathing', exact: true }).click();
     await page.getByRole('button', { name: 'Help with dressing', exact: true }).click();
     await page.getByRole('button', { name: 'Help with medications', exact: true }).click();
-    await question(page, 'How does the person move around?').getByRole('button', { name: 'Independent', exact: true }).click();
-    await question(page, 'Help with standing or transfers?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Any falls in the last six months?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Are there memory or confusion concerns?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Are there ongoing medical conditions or treatments the new community must manage or coordinate?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Has there been a recent hospitalization?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'How do they usually get around?').getByRole('button', { name: 'Independent', exact: true }).click();
+    await question(page, 'Do they need help getting up, sitting down, or transferring?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Have there been any falls in the last six months?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Have you noticed any changes in memory or confusion lately?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Is there any ongoing medical care the community would need to provide or coordinate?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Has there been a hospital stay recently?').getByRole('button', { name: 'No', exact: true }).click();
     await page.getByRole('button', { name: 'Not eligible', exact: true }).click();
 
     await page.locator('input[type="range"]').evaluate((element, budget) => {
@@ -72,14 +72,14 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.getByLabel('Anything specific we should preserve?').fill(`${scenario.id}: preserve familiar routines and preferred activities.`);
     await page.getByRole('button', { name: 'English', exact: true }).click();
     await page.getByRole('button', { name: scenario.diet, exact: true }).click();
-    await question(page, 'Is a religious community important?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Is parking required at the residence?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Is it important to have higher levels of care available later to avoid another move?').getByRole('button', { name: scenario.futureCare, exact: true }).click();
-    await question(page, 'Is location important?').getByRole('button', { name: 'Yes', exact: true }).click();
+    await question(page, 'Would a religious or faith community be important?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Will they need parking at the community?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Would you prefer a place that can provide more care later, so another move may be avoided?').getByRole('button', { name: scenario.futureCare, exact: true }).click();
+    await question(page, 'Does staying near a particular area or person matter?').getByRole('button', { name: 'Yes', exact: true }).click();
     await page.getByLabel('Reference address').fill('Las Vegas, NV');
     await page.getByRole('button', { name: scenario.distance, exact: true }).click();
-    await page.getByText('I confirm that this summary reflects my answers.').click();
-    await page.getByRole('button', { name: 'Continue to AI clarification' }).click();
+    await page.getByText('Yes — this reflects what I told Oomnik.').click();
+    await page.getByRole('button', { name: 'Continue our conversation' }).click();
 
     for (let turn = 0; turn < 25; turn += 1) {
       await page.waitForLoadState('domcontentloaded');
@@ -116,8 +116,10 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(response.status()).toBe(200);
     const payload = await response.json();
     const results = payload.results || [];
-    if (expectedCohort) expect(payload.total_candidates_scored).toBe(expectedCohort);
-    else expect([50, 100, 150, 200]).toContain(payload.total_candidates_scored);
+    if (expectedCohort) expect(payload.candidate_discovery?.total_facilities_classified).toBe(expectedCohort);
+    else expect([50, 100, 150, 200]).toContain(payload.candidate_discovery?.total_facilities_classified);
+    expect(payload.total_candidates_scored).toBeGreaterThan(0);
+    if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);
     expect(results.every((item) => String(item.canonical_facility_id || '').startsWith('PILOT-NV-'))).toBe(true);
