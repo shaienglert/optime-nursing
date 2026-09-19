@@ -13,8 +13,8 @@ type OptimeStaticLogoProps = {
 };
 
 const VARIANTS = {
-  compact: { src: "/brand/oomnik-compact.png", width: 510, height: 339 },
-  primary: { src: "/brand/oomnik-primary.png", width: 510, height: 284 },
+  compact: { src: "/brand/oomnik-compact.png", width: 2066, height: 595 },
+  primary: { src: "/brand/oomnik-primary.png", width: 2058, height: 651 },
 };
 
 export function OptimeStaticLogo({ href = "/", className = "", variant = "compact", height = 32 }: OptimeStaticLogoProps) {
