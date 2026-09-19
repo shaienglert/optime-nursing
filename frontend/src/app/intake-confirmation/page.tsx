@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { buildResultsUrl } from "@/lib/results-url";
 
@@ -81,7 +82,7 @@ function IntakeConfirmationContent() {
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={() => router.push("/intake")} className="rounded-full border border-[#76958a] bg-white px-7 py-4 text-base font-semibold text-[#315f53]">Change answers</button>
-          <button type="button" onClick={confirm} className="rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759]">I confirm—show recommendations</button>
+          <button type="button" onClick={confirm} className="inline-flex items-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759]"><OomnikMark size={16} /> I confirm—show recommendations</button>
         </div>
       </section>
     </main>

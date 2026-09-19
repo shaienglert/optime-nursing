@@ -1,32 +1,28 @@
+import Image from "next/image";
 import Link from "next/link";
 
 type OptimeStaticLogoProps = {
   href?: string;
   className?: string;
-  subtitle?: string;
+  /** "compact" is the wordmark alone, for tight spaces (headers, inline nav).
+   *  "primary" also carries the "Finding You the Right Way" tagline baked into
+   *  the artwork, for large, uncontested spaces (hero sections, footers). */
+  variant?: "compact" | "primary";
+  /** Rendered height in pixels; width is derived from the source aspect ratio. */
+  height?: number;
 };
 
-export function OptimeStaticLogo({
-  href = "/",
-  className = "",
-  subtitle = "Finding You the Right Way",
-}: OptimeStaticLogoProps) {
+const VARIANTS = {
+  compact: { src: "/brand/oomnik-compact.png", width: 512, height: 341 },
+  primary: { src: "/brand/oomnik-primary.png", width: 512, height: 286 },
+};
+
+export function OptimeStaticLogo({ href = "/", className = "", variant = "compact", height = 32 }: OptimeStaticLogoProps) {
+  const { src, width, height: naturalHeight } = VARIANTS[variant];
+  const renderedWidth = Math.round((width / naturalHeight) * height);
   return (
-    <Link href={href} className={`inline-flex items-center gap-3 ${className}`.trim()} aria-label="Oomnik Home">
-      <span className="leading-tight text-[#0b2850]">
-        <span className="flex items-end font-black tracking-tight" aria-label="Oomnik">
-          <span className="relative mr-[1px] inline-flex items-center">
-            <span className="inline-block h-[22px] w-[22px] rounded-full border-[5px] border-current" />
-            <span className="absolute -left-[2px] -top-[5px] h-[8px] w-[14px] rotate-[-18deg] rounded-full border-t-[4px] border-current" />
-          </span>
-          <span className="relative mr-[2px] inline-flex items-center">
-            <span className="inline-block h-[22px] w-[22px] rounded-full border-[5px] border-current" />
-            <span className="absolute -right-[3px] -top-[5px] h-[8px] w-[14px] rotate-[18deg] rounded-full border-t-[4px] border-current" />
-          </span>
-          <span className="text-[25px] font-black leading-[22px] tracking-[-0.055em]">mnik</span>
-        </span>
-        <span className="mt-1 block text-[11px] font-medium tracking-[0.01em] text-[#0b2850]">{subtitle}</span>
-      </span>
+    <Link href={href} className={`inline-flex items-center ${className}`.trim()} aria-label="Oomnik Home">
+      <Image src={src} alt="Oomnik — Finding You the Right Way" width={renderedWidth} height={height} priority />
     </Link>
   );
 }

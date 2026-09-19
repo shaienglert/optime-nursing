@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQuestionnaire, type QuestionnaireState } from "@/context/questionnaire-context";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 const assistanceOptions = [
   "Fully independent",
@@ -295,7 +296,7 @@ export function StructuredIntake() {
           </Section>
         </div>
 
-        <button type="button" onClick={continueToInterview} className="mt-8 w-full rounded-full bg-[#397a69] px-7 py-4 text-lg font-semibold text-white hover:bg-[#2f6759]">Continue to AI clarification</button>
+        <button type="button" onClick={continueToInterview} className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-lg font-semibold text-white hover:bg-[#2f6759]"><OomnikMark size={18} /> Continue to AI clarification</button>
       </div>
     </main>
   );

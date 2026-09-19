@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { restoreQuestionnaireState, type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
 import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 type AdaptiveQuestion = {
   question_key: string;
@@ -335,7 +336,7 @@ export default function AdaptiveInterviewPage() {
               <form className="mt-6" onSubmit={(event) => { event.preventDefault(); void submitAnswer(answer); }}>
                 <label htmlFor="decision-answer" className="text-xl font-semibold">Your answer</label>
                 <textarea id="decision-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={busy} rows={3} className="mt-3 w-full rounded-2xl border-2 border-[#d7ddd8] px-5 py-4 text-xl leading-8 outline-none focus:border-[#5c8b7d]" />
-                <button type="submit" disabled={busy || !answer.trim()} className="mt-4 rounded-2xl bg-[#315f53] px-7 py-4 text-xl font-semibold text-white disabled:opacity-50">{busy ? "Using your answer…" : "Continue"}</button>
+                <button type="submit" disabled={busy || !answer.trim()} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#315f53] px-7 py-4 text-xl font-semibold text-white disabled:opacity-50">{!busy && <OomnikMark size={18} />}{busy ? "Using your answer…" : "Continue"}</button>
               </form>
             )}
           </div>
