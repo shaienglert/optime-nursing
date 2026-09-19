@@ -220,5 +220,5 @@ test('direct adaptive-interview access is blocked until the structured questionn
   await page.getByRole('button', { name: 'Dialysis', exact: true }).click();
   await expect(page.getByLabel('Dialysis frequency')).toBeVisible();
   await expect(page.getByLabel('Current dialysis center')).toBeVisible();
-  await expect(page.getByText('Is parking required at the residence?')).toBeVisible();
+  await expect(page.getByText('Will they need parking at the community?')).toBeVisible();
 });
