@@ -2187,10 +2187,19 @@ export async function fetchPersonalizedParameterOrder(
   return postJson<PersonalizedParameterOrderRequest, PersonalizedParameterOrderResponse>("/canonical-facilities/personalized-parameter-order", payload);
 }
 
+const patientNeedsProfileRequests = new Map<string, Promise<PatientNeedsProfile>>();
+
 export async function fetchPatientNeedsProfile(
   payload: { questionnaire_state: Record<string, unknown>; natural_language_query?: string }
 ): Promise<PatientNeedsProfile> {
-  return postJson<typeof payload, PatientNeedsProfile>("/decision-engine/patient-needs-profile", payload);
+  const key = JSON.stringify(payload);
+  const existing = patientNeedsProfileRequests.get(key);
+  if (existing) return existing;
+
+  const request = postJson<typeof payload, PatientNeedsProfile>("/decision-engine/patient-needs-profile", payload)
+    .finally(() => patientNeedsProfileRequests.delete(key));
+  patientNeedsProfileRequests.set(key, request);
+  return request;
 }
 
 const decisionRecommendationRequests = new Map<string, Promise<DecisionEngineResponse>>();
