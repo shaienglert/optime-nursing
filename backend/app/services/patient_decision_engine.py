@@ -62,6 +62,10 @@ CITY_MARKETS = {
     "NORTH MIAMI": "florida",
 }
 
+MARKET_COVERAGE_ALIASES = {
+    "synthetic-pilot": "las-vegas",
+}
+
 MATCH_EVIDENCE_MULTIPLIER = {
     "REGULATORY_VERIFIED": 1.0,
     "VERIFIED": 0.95,
@@ -1406,7 +1410,8 @@ def _market_coverage_notice(requested_city: Optional[str]) -> Optional[str]:
         return None
     city_market = CITY_MARKETS.get(requested_city)
     active_market = configured_canonical_market()
-    if not city_market or city_market == active_market:
+    covered_market = MARKET_COVERAGE_ALIASES.get(active_market, active_market)
+    if not city_market or city_market == covered_market:
         return None
     return (
         f"This search covers the {active_market} market only. Your query mentions "

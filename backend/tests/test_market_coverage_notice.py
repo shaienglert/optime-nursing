@@ -53,6 +53,16 @@ class MarketCoverageNoticeTests(unittest.TestCase):
         )
         self.assertIsNone(result["market_coverage_notice"])
 
+    def test_synthetic_pilot_recognizes_las_vegas_as_its_covered_market(self) -> None:
+        with patch.dict(os.environ, {"OPTIME_CANONICAL_MARKET": "synthetic-pilot"}, clear=False):
+            refresh_runtime_cache("test_synthetic_pilot_market_alias")
+            result = self._run_ready(
+                {"assistanceLevel": "Needs assistance", "budget": 9900},
+                "Looking for assisted living in Las Vegas for my mother",
+            )
+
+        self.assertIsNone(result["market_coverage_notice"])
+
     def test_unrecognized_location_text_gets_no_notice(self) -> None:
         # A location we have no recognized-city mapping for must stay silent, not
         # produce a false claim about coverage.
