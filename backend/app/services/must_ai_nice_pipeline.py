@@ -350,15 +350,38 @@ def apply_must_ai_nice_pipeline(
             }
 
     group_keys = [_rank_group_key(row) for row in ranked]
+    first_position_by_group: Dict[tuple[Any, ...], int] = {}
+    for position, key in enumerate(group_keys, start=1):
+        first_position_by_group.setdefault(key, position)
+
+    existing_tie_breaks = {
+        (
+            str(item.get("higher_canonical_facility_id") or ""),
+            str(item.get("lower_canonical_facility_id") or ""),
+        ): item
+        for item in result.get("tie_break_decisions") or []
+        if isinstance(item, dict)
+    }
+    final_tie_breaks: List[Dict[str, Any]] = []
     for position, row in enumerate(ranked, start=1):
-        row["rank_position"] = position
-        row["rank_display"] = f"#{position}"
+        group_key = group_keys[position - 1]
+        rank_position = first_position_by_group[group_key]
         tied_indexes = [
             other for other, key in enumerate(group_keys)
-            if other != position - 1 and key == group_keys[position - 1]
+            if other != position - 1 and key == group_key
         ]
-        row["rank_tie_status"] = "JOINT_RANK" if tied_indexes else "UNIQUE_RANK"
+        is_joint_rank = bool(tied_indexes)
+        row["rank_position"] = rank_position
+        row["rank_display"] = f"Joint #{rank_position}" if is_joint_rank else f"#{rank_position}"
+        row["rank_tie_status"] = "JOINT_RANK" if is_joint_rank else "UNIQUE_RANK"
         row["tied_with"] = [ranked[i].get("facility_name") for i in tied_indexes]
+        if is_joint_rank:
+            row["tie_break_explanation_vs_next"] = {
+                "why_ranked_above": "No governed ranking difference was verified within this tied group.",
+                "deciding_dimension": "true_tie",
+                "remained_equal": ["final_authoritative_ranking_key"],
+                "remaining_unknown": [],
+            }
         row.setdefault("explanation", {})["selection_pipeline"] = {
             "stage_1": "MUST_ELIGIBLE_DETERMINISTIC",
             "stage_2": ai_status.get("status"),
@@ -389,12 +412,32 @@ def apply_must_ai_nice_pipeline(
                 ),
             }
 
+        if position < len(ranked):
+            following = ranked[position]
+            pair = (
+                str(row.get("canonical_facility_id") or ""),
+                str(following.get("canonical_facility_id") or ""),
+            )
+            if group_key == group_keys[position]:
+                final_tie_breaks.append({
+                    "higher_canonical_facility_id": pair[0],
+                    "lower_canonical_facility_id": pair[1],
+                    "decision_dimension": "true_tie",
+                    "reason": "No governed ranking difference was verified at this comparison step.",
+                    "equal_dimensions": ["final_authoritative_ranking_key"],
+                    "unknown_dimensions": [],
+                    "deterministic_display_order": True,
+                })
+            elif pair in existing_tie_breaks:
+                final_tie_breaks.append(existing_tie_breaks[pair])
+
     selected_ids = {str(row.get("canonical_facility_id")) for row in selected}
     complete_selected = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) in selected_ids]
     complete_beyond_display = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) not in selected_ids]
     pending_in_display_count = sum(1 for row in selected if row.get("must_eligibility") == "MUST_PENDING_VERIFICATION")
 
     result["results"] = selected
+    result["tie_break_decisions"] = final_tie_breaks
     result["result_count"] = len(selected)
     result["must_eligible_count"] = len(eligible)
     result["must_pending_verification_count"] = len(pending)
