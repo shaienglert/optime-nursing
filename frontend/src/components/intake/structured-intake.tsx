@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQuestionnaire, type QuestionnaireState } from "@/context/questionnaire-context";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
 import { QUESTIONNAIRE_SESSION_KEY, saveSessionJson } from "@/lib/search-session";
+import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 
 const assistanceOptions = [
   "Fully independent",
@@ -235,7 +236,12 @@ export function StructuredIntake() {
 
         <div className="mt-8 space-y-6">
           <Section title="Let’s start with who we’re helping">
-            <div><p className="text-sm font-semibold">Who are we finding the right place for?</p><Choices options={["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myself", "Couple", "Relative", "Friend"]} value={draft.relationship} onChange={(value) => update({ relationship: value })} /></div>
+            <div><p className="text-sm font-semibold">Who are we finding the right place for?</p><Choices options={["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myself", "Couple", "Relative", "Friend"]} value={draft.relationship} onChange={(value) => {
+              // A manual relationship change invalidates gender derived from the
+              // previous relationship (for example Dad -> Mom or Dad -> Spouse).
+              setDraft((current) => applyCanonicalIdentity({ ...current, gender: "" }, value));
+              setConfirmed(false);
+            }} /></div>
             <div><p className="text-sm font-semibold">About how old are they?</p><Choices options={["60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95+"]} value={draft.ageGroup} onChange={(value) => update({ ageGroup: value })} /></div>
             <div><p className="text-sm font-semibold">What kind of help makes everyday life easier? Choose anything that fits.</p><MultiChoices options={assistanceOptions} values={assistance} onChange={updateAssistance} /></div>
             {needsMobilityFollowUp ? <div className="grid gap-4 rounded-2xl bg-[#f1f6f3] p-4 sm:grid-cols-3"><div><p className="text-sm font-semibold">How do they usually get around?</p><Choices options={["Independent", "Cane", "Walker", "Wheelchair", "Mostly in bed"]} value={medical.mobilityMethod} onChange={(value) => updateMedical({ mobilityMethod: value })} /></div><div><p className="text-sm font-semibold">Do they need help getting up, sitting down, or transferring?</p><Choices options={["No", "One person", "Two people", "Mechanical lift", "Not sure"]} value={medical.transferAssistance} onChange={(value) => updateMedical({ transferAssistance: value })} /></div><div><p className="text-sm font-semibold">Have there been any falls in the last six months?</p><Choices options={["No", "One", "More than one", "Not sure"]} value={medical.recentFalls} onChange={(value) => updateMedical({ recentFalls: value })} /></div></div> : null}
