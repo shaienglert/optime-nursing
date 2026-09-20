@@ -544,7 +544,24 @@ def attach_human_person_fit(rows: List[Dict[str, Any]], human_context: Dict[str,
         beds = evidence.get("total_bed_count")
         if not isinstance(beds, int):
             beds = None
-        band = _base._community_size_band(beds)
+        source = "Nevada HCQC / ALiS official detail" if beds is not None else "UNKNOWN"
+        evidence_class = "REGULATORY_VERIFIED" if beds is not None else "UNKNOWN"
+        if row.get("synthetic_pilot") is True:
+            pilot_band = str(row.get("community_size") or "").strip().upper()
+            pilot_capacity = row.get("licensed_capacity")
+            if pilot_band in {"SMALL", "MEDIUM", "LARGE"}:
+                beds = pilot_capacity if isinstance(pilot_capacity, int) else None
+                band = {
+                    "SMALL": "SMALL_COMMUNITY",
+                    "MEDIUM": "MEDIUM_COMMUNITY",
+                    "LARGE": "LARGE_COMMUNITY",
+                }[pilot_band]
+                source = "Governed synthetic pilot catalog"
+                evidence_class = "SYNTHETIC_PILOT_VERIFIED"
+            else:
+                band = _base._community_size_band(beds)
+        else:
+            band = _base._community_size_band(beds)
         fit = _base._size_fit(preference, band)
         row["human_person_fit"] = {
             "community_size": {
@@ -552,8 +569,8 @@ def attach_human_person_fit(rows: List[Dict[str, Any]], human_context: Dict[str,
                 "community_size_band": band,
                 "preference": preference,
                 "fit_score": fit if fit is not None else "UNKNOWN",
-                "source": "Nevada HCQC / ALiS official detail" if beds is not None else "UNKNOWN",
-                "evidence_class": "REGULATORY_VERIFIED" if beds is not None else "UNKNOWN",
+                "source": source,
+                "evidence_class": evidence_class,
                 "policy_role": "EXPLICIT_PREFERENCE_CONGRUENCE_ONLY",
                 "not_a_quality_factor": True,
             },
