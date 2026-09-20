@@ -59,6 +59,45 @@ def _governed_map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str
             1.0,
             "Prefer transparent pricing",
         )
+        numeric_budget = _legacy._to_number(budget)
+        if numeric_budget is not None and numeric_budget > 0:
+            _legacy._add_need(
+                needs_by_id,
+                "current_price",
+                "MEDIUM",
+                numeric_budget,
+                [],
+                "FACILITY",
+                "questionnaire.budget",
+                1.0,
+                f"Starting monthly price should fit the ${numeric_budget:,.0f} budget",
+            )
+
+    move_timing = _legacy._normalize(questionnaire.get("moveTiming"))
+    if move_timing in {"immediately", "within 30 days"}:
+        _legacy._add_need(
+            needs_by_id,
+            "current_availability",
+            "HIGH",
+            "YES",
+            ["YES"],
+            "FACILITY",
+            "questionnaire.moveTiming",
+            1.0,
+            "Verified current availability is required for the requested move timing",
+        )
+    elif move_timing in {"1-3 months", "3-6 months"}:
+        _legacy._add_need(
+            needs_by_id,
+            "current_availability",
+            "PREFERENCE",
+            "YES",
+            ["YES", "LIMITED"],
+            "FACILITY",
+            "questionnaire.moveTiming",
+            0.9,
+            "Current or near-term availability is preferred",
+        )
     medicaid_status = _legacy._normalize(questionnaire.get("medicaidStatus"))
     if medicaid_status in {"approved", "application pending", "may qualify", "not sure"}:
         _legacy._add_need(
