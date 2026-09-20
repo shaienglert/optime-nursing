@@ -108,6 +108,8 @@ PRACTICAL_FIT_PARAMETER_IDS = {
     "kosher",
     "religious_cultural_services",
     "activities",
+    "current_price",
+    "current_availability",
 }
 
 DISPLAY_PARAMETER_LABELS = {
@@ -398,6 +400,45 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedIte
     budget = questionnaire.get("budget")
     if budget not in (None, "", 0):
         _add_need(needs_by_id, "published_rates", "PREFERENCE", "KNOWN", ["KNOWN", "UNKNOWN"], "FACILITY", "questionnaire.budget", 1.0, "Prefer transparent pricing")
+        numeric_budget = _to_number(budget)
+        if numeric_budget is not None and numeric_budget > 0:
+            _add_need(
+                needs_by_id,
+                "current_price",
+                "MEDIUM",
+                numeric_budget,
+                [],
+                "FACILITY",
+                "questionnaire.budget",
+                1.0,
+                f"Starting monthly price should fit the ${numeric_budget:,.0f} budget",
+            )
+
+    move_timing = _normalize(questionnaire.get("moveTiming"))
+    if move_timing in {"immediately", "within 30 days"}:
+        _add_need(
+            needs_by_id,
+            "current_availability",
+            "HIGH",
+            "YES",
+            ["YES"],
+            "FACILITY",
+            "questionnaire.moveTiming",
+            1.0,
+            "Verified current availability is required for the requested move timing",
+        )
+    elif move_timing in {"1-3 months", "3-6 months"}:
+        _add_need(
+            needs_by_id,
+            "current_availability",
+            "PREFERENCE",
+            "YES",
+            ["YES", "LIMITED"],
+            "FACILITY",
+            "questionnaire.moveTiming",
+            0.9,
+            "Current or near-term availability is preferred",
+        )
     medicaid_status = _normalize(questionnaire.get("medicaidStatus"))
     if medicaid_status in {"approved", "application pending", "may qualify", "not sure"}:
         _add_need(
@@ -597,6 +638,27 @@ def _evaluate_need(need: Dict[str, Any], row_by_param: Dict[str, Dict[str, Any]]
         return "UNKNOWN", "No evidence row available for this parameter."
 
     raw = row.get("raw_value")
+    if need["parameter_id"] == "current_price":
+        price = _to_number(raw)
+        budget = _to_number(need.get("desired_value"))
+        if price is None or budget is None:
+            return "UNKNOWN", "Current price or budget is not numeric."
+        if price <= budget:
+            return "MATCH", f"Verified starting price ${price:,.0f} is within the ${budget:,.0f} budget."
+        return "GAP", f"Verified starting price ${price:,.0f} exceeds the ${budget:,.0f} budget."
+
+    if need.get("desired_value") == "KNOWN":
+        if raw not in {None, "UNKNOWN", ""} and _is_verified_row(row):
+            return "MATCH", "A verified value is available."
+        return "UNKNOWN", "No verified value is available."
+
+    if need["parameter_id"] == "languages":
+        desired = _normalize(need.get("desired_value"))
+        if desired and desired in _normalize(raw):
+            return "MATCH", "Verified language support includes the preferred language."
+        if raw in {None, "UNKNOWN", ""}:
+            return "UNKNOWN", "Language support is not verified."
+        return "GAP", "Verified language support does not include the preferred language."
     if need.get("desired_value") == "NO":
         if raw == "NO":
             return "MATCH", "Verified as NO and aligned with requested absence."
@@ -604,13 +666,16 @@ def _evaluate_need(need: Dict[str, Any], row_by_param: Dict[str, Dict[str, Any]]
             return "GAP", "Verified as YES but user requested NO."
         return "UNKNOWN", "Not verified."
 
+    acceptable = {_normalize(value) for value in need.get("acceptable_values", [])}
+    if _normalize(raw) in acceptable:
+        return "MATCH", "Verified value is within the accepted range."
     if raw == "YES":
         return "MATCH", "Verified as YES."
     if raw == "NO":
         return "GAP", "Verified as NO."
     if raw in {"UNKNOWN", None}:
         return "UNKNOWN", "Not verified."
-    return "MATCH", "Typed value exists and is considered acceptable for current rules."
+    return "GAP", "Verified value is outside the accepted range."
 
 
 def _classify_match_evidence(row: Dict[str, Any]) -> Tuple[str, float]:
@@ -1631,6 +1696,7 @@ def run_patient_decision_engine(
         *STAFFING_PARAMETER_IDS,
         *OUTCOME_PARAMETER_IDS,
         *PRACTICAL_FIT_PARAMETER_IDS,
+        "current_price",
         "current_availability",
     }
     ordered_registry = [
