@@ -1,0 +1,65 @@
+{
+  "fixture_version": "golden-intake-v1",
+  "cases": [
+    {
+      "id": "P01_HUSBAND_SINGLE_RESIDENT",
+      "natural_language_query": "My husband needs help with medications. We need a community within 30 miles of Las Vegas.",
+      "questionnaire_state": {"relationship": "my husband", "gender": "", "ageGroup": "80-84", "assistanceLevel": "Help with medications", "memoryStatus": "No", "budget": 7500, "referenceLocationValue": "Las Vegas", "maximumDistanceMiles": "30", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Complex medication management"]}},
+      "expected": {"relationship": "Spouse", "gender": "Male", "household_type": "SINGLE_OR_UNKNOWN"}
+    },
+    {
+      "id": "P02_WIFE_SINGLE_RESIDENT",
+      "natural_language_query": "My wife uses a walker and needs help bathing, but she does not need dialysis.",
+      "questionnaire_state": {"relationship": "Wife", "gender": "", "ageGroup": "75-79", "assistanceLevel": "Help with bathing", "memoryStatus": "No", "budget": 6800, "referenceLocationValue": "Henderson", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": [], "mobilityMethod": "Walker"}},
+      "expected": {"relationship": "Spouse", "gender": "Female", "household_type": "SINGLE_OR_UNKNOWN"}
+    },
+    {
+      "id": "P03_DAD_NEGATED_CLINICAL_NEEDS",
+      "natural_language_query": "Dad needs help dressing. No dialysis, no wounds, and no oxygen.",
+      "questionnaire_state": {"relationship": "Dad", "gender": "", "ageGroup": "85-89", "assistanceLevel": "Help with dressing", "memoryStatus": "No", "budget": 7000, "referenceLocationValue": "Las Vegas", "medicalCareProfile": {"hasOngoingMedicalNeeds": "No", "needs": []}},
+      "expected": {"relationship": "Dad", "gender": "Male", "household_type": "SINGLE_OR_UNKNOWN"}
+    },
+    {
+      "id": "P04_MOM_MEMORY_CARE",
+      "natural_language_query": "My mother has significant memory issues and wandering concerns.",
+      "questionnaire_state": {"relationship": "Mother", "gender": "", "ageGroup": "90-94", "assistanceLevel": "Daytime supervision", "memoryStatus": "Significant memory issues", "budget": 9000, "referenceLocationValue": "Summerlin", "medicalCareProfile": {"hasOngoingMedicalNeeds": "No", "needs": []}, "humanIntelligenceV2": {"transitionRiskProfile": {"wanderingConcerns": "Yes"}, "futureCareProfile": {"secureMemoryNeighborhoodNeed": "Yes"}}},
+      "expected": {"relationship": "Mom", "gender": "Female", "household_type": "SINGLE_OR_UNKNOWN"}
+    },
+    {
+      "id": "P05_COUPLE_JOINT_MOVE",
+      "natural_language_query": "My spouse and I both want to move together and remain in the same community.",
+      "questionnaire_state": {"relationship": "Couple", "gender": "", "ageGroup": "80-84", "assistanceLevel": "Light assistance", "memoryStatus": "No", "budget": 11000, "referenceLocationValue": "Las Vegas", "medicalCareProfile": {"hasOngoingMedicalNeeds": "No", "needs": []}},
+      "expected": {"relationship": "Couple", "gender": "", "household_type": "COUPLE"}
+    },
+    {
+      "id": "P06_GRANDMA_DIALYSIS",
+      "natural_language_query": "Grandma receives dialysis three times weekly and needs transportation.",
+      "questionnaire_state": {"relationship": "Grandmother", "gender": "", "ageGroup": "85-89", "assistanceLevel": "Light assistance", "memoryStatus": "Occasionally forgetful", "budget": 8200, "referenceLocationValue": "North Las Vegas", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Dialysis"], "dialysisFrequency": "Three times weekly", "dialysisTransportation": "Yes"}},
+      "expected": {"relationship": "Grandma", "gender": "Female", "household_type": "SINGLE_OR_UNKNOWN"}
+    },
+    {
+      "id": "P07_GRANDPA_POST_HOSPITAL_REHAB",
+      "natural_language_query": "Grandfather needs short-term rehabilitation after a recent hospital stay.",
+      "questionnaire_state": {"relationship": "Grandfather", "gender": "", "ageGroup": "80-84", "assistanceLevel": "Skilled nursing care", "memoryStatus": "No", "budget": 8500, "referenceLocationValue": "Las Vegas", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Nursing supervision"]}, "humanIntelligenceV2": {"transitionRiskProfile": {"recentHospitalization": "Yes", "postHospitalRehabNeed": "Yes"}}},
+      "expected": {"relationship": "Grandpa", "gender": "Male", "household_type": "SINGLE_OR_UNKNOWN"}
+    },
+    {
+      "id": "P08_SELF_EXPLICIT_GENDER",
+      "natural_language_query": "I am looking for myself and prefer an active community near Henderson.",
+      "questionnaire_state": {"relationship": "Self", "gender": "Non-binary", "ageGroup": "70-74", "assistanceLevel": "Fully independent", "memoryStatus": "No", "budget": 6000, "referenceLocationValue": "Henderson", "medicalCareProfile": {"hasOngoingMedicalNeeds": "No", "needs": []}},
+      "expected": {"relationship": "Myself", "gender": "Nonbinary", "household_type": "SINGLE_OR_UNKNOWN"}
+    },
+    {
+      "id": "P09_RELATIVE_OXYGEN",
+      "natural_language_query": "A relative uses oxygen continuously and requires nursing supervision.",
+      "questionnaire_state": {"relationship": "Relative", "gender": "Prefer not to say", "ageGroup": "75-79", "assistanceLevel": "24/7 support required", "memoryStatus": "Mild memory issues", "budget": 9500, "referenceLocationValue": "Las Vegas", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Oxygen", "Nursing supervision"], "oxygenUse": "Continuously"}},
+      "expected": {"relationship": "Relative", "gender": "Prefer not to say", "household_type": "SINGLE_OR_UNKNOWN"}
+    },
+    {
+      "id": "P10_FRIEND_DISTANCE_ONLY",
+      "natural_language_query": "I am helping a friend find care within a maximum distance of 20 miles from family.",
+      "questionnaire_state": {"relationship": "Friend", "gender": "", "ageGroup": "80-84", "assistanceLevel": "Light assistance", "memoryStatus": "Not sure", "budget": 7200, "referenceLocationValue": "Las Vegas", "maximumDistanceMiles": "20", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Not sure", "needs": []}},
+      "expected": {"relationship": "Friend", "gender": "", "household_type": "SINGLE_OR_UNKNOWN"}
+    }
+  ]
+}
