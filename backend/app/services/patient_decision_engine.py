@@ -1624,6 +1624,12 @@ def _build_ranked_candidate_detail(
         "role_classification": table.get("role_classification"),
         "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
         "synthetic_pilot": bool(canonical_meta.get("synthetic_pilot")),
+        # Pilot identity attributes are verified fields in the governed synthetic
+        # catalog. Keep them on the recommendation row so the same person-fit
+        # adapter can evaluate an explicit size preference without looking for a
+        # fictional PILOT-NV id in the real Nevada regulatory index.
+        "community_size": canonical_meta.get("community_size") if canonical_meta.get("synthetic_pilot") else None,
+        "licensed_capacity": canonical_meta.get("licensed_capacity") if canonical_meta.get("synthetic_pilot") else None,
         "starting_monthly_price": _to_number(current_price.get("raw_value")),
         "availability_status": str(current_availability.get("raw_value") or "UNKNOWN"),
         "visual_media": build_visual_media_payload(get_facility_media_record(canonical_id)),
