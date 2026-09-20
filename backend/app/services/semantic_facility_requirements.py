@@ -75,7 +75,22 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             key, dimension = "SEMANTIC_DIETARY_SAFETY", "dietary_safety"
         elif any(token in haystack for token in ("all_daily_meals", "full_meal", "meal_plan", "all daily meals")):
             key, dimension = "SEMANTIC_ALL_DAILY_MEALS", "meal_service"
-        elif any(token in haystack for token in ("walking", "route", "distance", "layout", "walker", "elevator", "rest_seat", "service_proximity")):
+        elif any(token in haystack for token in (
+            "walking distance", "walking route", "internal route", "internal distance",
+            "distance to dining", "distance between", "wheelchair access",
+            "layout", "walker", "elevator", "rest_seat", "service_proximity",
+        )):
+            # Bare "distance"/"route" used to trigger this bucket, but Semantic AI
+            # also uses those exact words for a stated geographic search radius
+            # ("maximum distance 30 miles", "reference location and distance
+            # limit") -- an unrelated client preference that has nothing to do
+            # with a facility's internal walking routes. That collision silently
+            # created an unfulfillable SEMANTIC_MOBILITY_LAYOUT MUST for nearly
+            # every client who set a location distance preference, since no
+            # facility carries "mobility_layout_verified" evidence, leaving
+            # every result permanently pending. Require a phrase that actually
+            # implies in-building mobility, not a bare word shared with distance
+            # in the geographic sense.
             key, dimension = "SEMANTIC_MOBILITY_LAYOUT", "mobility_layout"
         elif any(token in haystack for token in ("organized_activities", "isolation", "social", "card_games", "classes")):
             key, dimension = "SEMANTIC_SOCIAL_DELIVERY", "social_engagement"
