@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { useQuestionnaire, type QuestionnaireState } from "@/context/questionnaire-context";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
+import { QUESTIONNAIRE_SESSION_KEY, saveSessionJson } from "@/lib/search-session";
 
 const assistanceOptions = [
   "Fully independent",
@@ -215,6 +216,10 @@ export function StructuredIntake() {
         futureCareProfile: { ...draft.humanIntelligenceV2.futureCareProfile, avoidFutureMovesPreference: continuum, continuumOfCarePreference: continuum, secureMemoryNeighborhoodNeed: hasMemoryConcern ? secureMemory : "" },
       },
     };
+    // The adaptive interview restores its initial gate from session storage. Persist
+    // this completed snapshot before navigation so the route cannot mount between the
+    // React state update and the provider's asynchronous persistence effect.
+    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, next);
     setState(next);
     const params = new URLSearchParams({ budget: String(next.budget), notes: next.notes || "" });
     router.push(`/adaptive-interview?next=${encodeURIComponent(`/results?${params.toString()}`)}`);

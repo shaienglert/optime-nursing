@@ -17,7 +17,7 @@ on:
       scenario_count:
         description: Number of real browser journeys
         required: true
-        default: '1'
+        default: '10'
       workers:
         description: Parallel Playwright workers
         required: true
@@ -25,7 +25,7 @@ on:
       expected_cohort:
         description: Expected synthetic facility cohort size
         required: true
-        default: '50'
+        default: '200'
 
 jobs:
   real-pilot-browser:
@@ -38,8 +38,8 @@ jobs:
       BACKEND_INTERNAL_API_URL: https://oomnik-nursing-pilot.onrender.com
       NEXT_PUBLIC_API_URL: https://oomnik-nursing-pilot.onrender.com
       OOMNIK_SCENARIO_START: ${{ github.event.inputs.scenario_start || '0' }}
-      OOMNIK_SCENARIO_COUNT: ${{ github.event.inputs.scenario_count || '1' }}
-      OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '50' }}
+      OOMNIK_SCENARIO_COUNT: ${{ github.event.inputs.scenario_count || '10' }}
+      OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '200' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

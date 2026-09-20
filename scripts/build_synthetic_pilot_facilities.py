@@ -241,6 +241,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
                 "evidence_date": now,
                 "confidence": "HIGH",
                 "evidence_strength": "FACILITY_REPORTED",
+                "verification_status": "VERIFIED",
                 "conflict_status": "NONE",
                 "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
             })
@@ -258,6 +259,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "evidence_date": now,
             "confidence": "HIGH",
             "evidence_strength": "FACILITY_REPORTED",
+            "verification_status": "VERIFIED",
             "conflict_status": "NONE",
             "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
         })
@@ -305,6 +307,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
                 "value": value,
                 "source": "SYNTHETIC_OWNER_COMPLETED_PORTAL",
                 "confidence": 1.0,
+                "verification_status": "VERIFIED",
                 "verified_at": now,
             })
     return facilities, evidence, rooms, media, portal_capabilities

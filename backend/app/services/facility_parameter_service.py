@@ -362,6 +362,7 @@ def _build_runtime_payload(market: str, active_signature: tuple[Any, ...]) -> Di
                 "last_verified": best.get("last_verified"),
                 "confidence": best.get("confidence"),
                 "evidence_strength": best.get("evidence_strength"),
+                "verification_status": best.get("verification_status") or "NOT_VERIFIED",
                 "provenance": best.get("provenance") or {},
             }
             capability_value_index.setdefault(parameter_id, {}).setdefault(normalized_value, set()).add(canonical_id)

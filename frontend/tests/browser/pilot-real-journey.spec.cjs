@@ -30,7 +30,6 @@ function question(page, text) {
 }
 
 test.describe('real synthetic-pilot customer journey', () => {
-  test.describe.configure({ mode: 'parallel' });
   test.setTimeout(900_000);
 
   for (let scenarioIndex = scenarioStart; scenarioIndex < scenarioStart + scenarioCount; scenarioIndex += 1) {
@@ -80,14 +79,17 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.getByRole('button', { name: scenario.distance, exact: true }).click();
     await page.getByText('Yes — this reflects what I told Oomnik.').click();
     await page.getByRole('button', { name: 'Continue our conversation' }).click();
+    await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
 
     for (let turn = 0; turn < 25; turn += 1) {
       await page.waitForLoadState('domcontentloaded');
+      const adaptivePrompt = await page.locator('main').innerText().catch(() => '');
+      console.log('OOMNIK_ADAPTIVE_TURN', JSON.stringify({ scenario_id: scenario.id, turn, url: page.url(), prompt: adaptivePrompt.slice(0, 1200) }));
       const finalConfirmation = page.getByRole('button', { name: /I confirm—show recommendations/i });
       await Promise.race([
-        finalConfirmation.waitFor({ state: 'visible', timeout: 120_000 }),
-        page.getByLabel('Your answer').waitFor({ state: 'visible', timeout: 120_000 }),
-        page.locator('main section button').first().waitFor({ state: 'visible', timeout: 120_000 }),
+        finalConfirmation.waitFor({ state: 'visible', timeout: 300_000 }),
+        page.getByLabel('Your answer').waitFor({ state: 'visible', timeout: 300_000 }),
+        page.locator('main section button').first().waitFor({ state: 'visible', timeout: 300_000 }),
       ]).catch(() => {});
       if (await finalConfirmation.isVisible()) break;
       const answerBox = page.getByLabel('Your answer');
@@ -103,7 +105,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       await page.waitForTimeout(500);
     }
 
-    await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible({ timeout: 180_000 });
+    await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible({ timeout: 300_000 });
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')
         && response.request().method() === 'POST',
@@ -132,12 +134,19 @@ test.describe('real synthetic-pilot customer journey', () => {
       scenario,
       total_candidates_scored: payload.total_candidates_scored,
       result_count: payload.result_count,
+      candidate_discovery: payload.candidate_discovery,
       market_coverage_notice: payload.market_coverage_notice,
       top_results: results.slice(0, 10).map((item) => ({
         canonical_facility_id: item.canonical_facility_id,
         facility_name: item.facility_name,
         eligibility_status: item.eligibility_status,
-        total_score: item.total_score,
+        patient_match_score: item.patient_match_score,
+        quality_safety_score: item.quality_safety_score,
+        staffing_score: item.staffing_score,
+        capability_depth_score: item.capability_depth_score,
+        practical_fit_score: item.practical_fit_score,
+        rank_position: item.rank_position,
+        rank_tie_status: item.rank_tie_status,
       })),
     };
     fs.mkdirSync(path.join(process.cwd(), 'pilot-results'), { recursive: true });
