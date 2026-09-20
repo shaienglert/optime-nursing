@@ -36,6 +36,24 @@ def _decision_for_budget(budget: int) -> dict:
         return run_patient_decision_engine(questionnaire, "Las Vegas", limit=10)
 
 
+def _rank_for_size(preference: str) -> list[dict]:
+    questionnaire = {
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "budget": 9900,
+        "moveTiming": "Planning ahead",
+        "humanIntelligenceV2": {
+            "personalityProfile": {"communitySizePreference": preference},
+        },
+    }
+    with patch.dict(
+        "os.environ",
+        {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200"},
+        clear=False,
+    ):
+        refresh_runtime_cache(f"size-ranking-{preference}")
+        return run_patient_decision_engine(questionnaire, "Las Vegas", limit=10)["results"]
+
+
 def test_budget_changes_ranking_and_top_results_fit_budget() -> None:
     lower = _rank_for_budget(5000)
     higher = _rank_for_budget(9900)
@@ -56,6 +74,19 @@ def test_no_in_budget_result_is_disclosed_instead_of_presented_as_a_fit() -> Non
     assert decision["results"]
     assert "No currently eligible pilot community" in decision["market_coverage_notice"]
     assert "not in-budget matches" in decision["market_coverage_notice"]
+
+
+def test_explicit_community_size_changes_full_engine_ranking() -> None:
+    small = _rank_for_size("Small and familiar")
+    large = _rank_for_size("Large and active")
+
+    assert [row["canonical_facility_id"] for row in small] != [
+        row["canonical_facility_id"] for row in large
+    ]
+    assert small[0]["human_person_fit"]["community_size"]["preference"] == "SMALL"
+    assert small[0]["human_person_fit"]["community_size"]["fit_score"] == 100.0
+    assert large[0]["human_person_fit"]["community_size"]["preference"] == "LARGE"
+    assert large[0]["human_person_fit"]["community_size"]["fit_score"] == 100.0
 
 
 def test_required_dialysis_need_reaches_full_engine_candidate_discovery() -> None:

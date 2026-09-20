@@ -7,6 +7,8 @@ on:
       - 'frontend/tests/browser/pilot-real-journey.spec.cjs'
       - 'frontend/src/**'
       - 'backend/app/services/facility_parameter_service.py'
+      - 'backend/app/services/human_intelligence_runtime_verified.py'
+      - 'backend/app/services/patient_decision_engine.py'
       - 'scripts/validate_synthetic_pilot.cjs'
   workflow_dispatch:
     inputs:
@@ -35,8 +37,11 @@ jobs:
       run:
         working-directory: frontend
     env:
-      BACKEND_INTERNAL_API_URL: https://oomnik-nursing-pilot.onrender.com
-      NEXT_PUBLIC_API_URL: https://oomnik-nursing-pilot.onrender.com
+      BACKEND_INTERNAL_API_URL: http://127.0.0.1:8000
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
+      OPTIME_CANONICAL_MARKET: synthetic-pilot
+      OOMNIK_PILOT_FACILITY_LIMIT: '200'
+      OPTIME_SEMANTIC_AI_ENABLED: '0'
       OOMNIK_SCENARIO_START: ${{ github.event.inputs.scenario_start || '0' }}
       OOMNIK_SCENARIO_COUNT: ${{ github.event.inputs.scenario_count || '10' }}
       OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '200' }}
@@ -47,6 +52,19 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install and start branch backend
+        run: |
+          pip install -r ../backend/requirements.txt
+          (cd ../backend && uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/oomnik-pilot-backend.log 2>&1) &
+          for i in {1..120}; do
+            if curl -fsS http://127.0.0.1:8000/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/oomnik-pilot-backend.log
+          exit 1
       - run: npm ci
       - run: npm install --no-save @playwright/test@1.55.0
       - run: npx playwright install --with-deps chromium
@@ -70,4 +88,5 @@ jobs:
             frontend/test-results
             frontend/pilot-results
             /tmp/oomnik-pilot-next.log
+            /tmp/oomnik-pilot-backend.log
           if-no-files-found: ignore
