@@ -57,6 +57,7 @@ def _required_output_schema() -> Dict[str, Any]:
         "research_requests": ["string"],
         "questionnaire_patch": {
             "relationship": "Mom|Dad|Grandma|Grandpa|Spouse|Myself|Couple|Relative|Friend",
+            "gender": "Male|Female|Nonbinary|Other|Prefer not to say",
             "ageGroup": "60-64|65-69|70-74|75-79|80-84|85-89|90-94|95+",
             "assistanceLevel": "Fully independent|Light assistance|Help with bathing|Help with dressing|Help with toileting|Help with medications|Daytime supervision|24/7 support required|Skilled nursing care",
             "memoryStatus": "No|Occasionally forgetful|Mild memory issues|Significant memory issues|Not sure",
