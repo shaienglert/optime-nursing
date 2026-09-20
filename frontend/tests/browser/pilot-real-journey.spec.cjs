@@ -30,7 +30,7 @@ function question(page, text) {
 }
 
 test.describe('real synthetic-pilot customer journey', () => {
-  test.describe.configure({ mode: 'parallel' });
+  test.describe.configure({ mode: 'serial' });
   test.setTimeout(900_000);
 
   for (let scenarioIndex = scenarioStart; scenarioIndex < scenarioStart + scenarioCount; scenarioIndex += 1) {
