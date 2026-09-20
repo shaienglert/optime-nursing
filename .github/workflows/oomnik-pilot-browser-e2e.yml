@@ -7,6 +7,8 @@ on:
       - 'frontend/tests/browser/pilot-real-journey.spec.cjs'
       - 'frontend/src/**'
       - 'backend/app/services/facility_parameter_service.py'
+      - 'backend/app/services/human_intelligence_runtime_verified.py'
+      - 'backend/app/services/patient_decision_engine.py'
       - 'scripts/validate_synthetic_pilot.cjs'
   workflow_dispatch:
     inputs:
