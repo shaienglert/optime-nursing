@@ -93,11 +93,11 @@ def _canonical_records_for_market(payload: Dict[str, Any], market: str) -> List[
         # never silently rank Reno/other Nevada facilities merely because they exist.
         rows = [row for row in rows if row.get("is_las_vegas_valley") is True]
     elif market == "synthetic-pilot":
-        requested_limit = int(os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50"))
-        if requested_limit not in {50, 100, 150, 200}:
-            raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 50, 100, 150, or 200")
+        catalog_size = int(os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "200"))
+        if catalog_size != 200:
+            raise ValueError("OOMNIK_PILOT_CATALOG_SIZE must be 200")
         rows.sort(key=lambda row: int(row.get("pilot_exposure_order") or 999999))
-        rows = rows[:requested_limit]
+        rows = rows[:catalog_size]
     return rows
 
 
@@ -108,6 +108,7 @@ def _signature(market: str) -> tuple[Any, ...]:
         evidence_mtime = PILOT_EVIDENCE_PATH.stat().st_mtime
     return (
         market,
+        os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "200") if market == "synthetic-pilot" else None,
         os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50") if market == "synthetic-pilot" else None,
         REGISTRY_PATH.stat().st_mtime,
         evidence_mtime,
@@ -494,6 +495,27 @@ def get_all_canonical_facility_ids() -> List[str]:
 
 def get_canonical_facility_index() -> Dict[str, Dict[str, Any]]:
     return _load_runtime()["canonical_by_id"]
+
+
+def get_exposed_canonical_facility_ids() -> List[str]:
+    """Return the current pilot cohort without shrinking the knowledge catalog."""
+    runtime = _load_runtime()
+    canonical = runtime["canonical_by_id"]
+    if runtime["market"] != "synthetic-pilot":
+        return list(canonical)
+    requested_limit = int(os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50"))
+    if requested_limit not in {50, 100, 150, 200}:
+        raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 50, 100, 150, or 200")
+    ordered = sorted(
+        canonical,
+        key=lambda canonical_id: int(canonical[canonical_id].get("pilot_exposure_order") or 999999),
+    )
+    return ordered[:requested_limit]
+
+
+def get_exposed_canonical_facility_index() -> Dict[str, Dict[str, Any]]:
+    canonical = get_canonical_facility_index()
+    return {canonical_id: canonical[canonical_id] for canonical_id in get_exposed_canonical_facility_ids()}
 
 
 def get_facility_knowledge_catalog() -> Dict[str, Dict[str, Any]]:

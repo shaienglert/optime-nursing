@@ -133,6 +133,7 @@ from app.services.cms_service import (
 from app.services.facility_parameter_service import (
     compare_facility_parameter_tables,
     get_canonical_facility_index,
+    get_exposed_canonical_facility_index,
     get_facility_parameter_table,
     get_parameter_registry_payload,
     get_personalized_parameter_order,
@@ -1946,7 +1947,7 @@ async def get_facilities(q: Optional[str] = Query(default=None), db: Session = D
     if configured_canonical_market() == "synthetic-pilot":
         term = (q or "").strip().lower()
         payload: List[FacilityListOut] = []
-        for canonical_id, facility in get_canonical_facility_index().items():
+        for canonical_id, facility in get_exposed_canonical_facility_index().items():
             searchable = " ".join(
                 str(facility.get(key) or "")
                 for key in ("facility_name", "city", "address", "zip", "canonical_type")
@@ -2070,7 +2071,7 @@ async def get_facility(id: int, db: Session = Depends(get_db)):
         facility = next(
             (
                 row
-                for row in get_canonical_facility_index().values()
+                for row in get_exposed_canonical_facility_index().values()
                 if int(row.get("pilot_exposure_order") or 0) == id
             ),
             None,

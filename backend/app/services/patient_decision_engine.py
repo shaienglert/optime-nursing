@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 from app.services.facility_parameter_service import (
     compare_facility_parameter_tables,
     get_canonical_facility_index,
+    get_exposed_canonical_facility_ids,
     query_facility_knowledge_catalog,
     get_facility_parameter_table,
     get_personalized_parameter_order,
@@ -1652,6 +1653,9 @@ def run_patient_decision_engine(
         ],
     )
     discovered_ids = list(catalog_query["candidate_ids"])
+    if configured_canonical_market() == "synthetic-pilot":
+        exposed_ids = set(get_exposed_canonical_facility_ids())
+        discovered_ids = [canonical_id for canonical_id in discovered_ids if canonical_id in exposed_ids]
 
     results = []
     requested_city = profile.get("location_city")
@@ -1799,6 +1803,7 @@ def run_patient_decision_engine(
             "classification_counts": catalog_query["classification_counts"],
             "required_parameter_ids": catalog_query["required_parameter_ids"],
             "relevant_candidate_count": catalog_query["candidate_count"],
+            "exposed_candidate_count": len(discovered_ids),
             "verified_capability_match_count": catalog_query["verified_capability_match_count"],
             "pending_verification_count": catalog_query["pending_verification_count"],
             "excluded_explicit_negative_count": catalog_query["excluded_explicit_negative_count"],

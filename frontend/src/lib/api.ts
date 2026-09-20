@@ -393,6 +393,7 @@ export type DecisionEngineResponse = {
     classification_counts: Record<string, number>;
     required_parameter_ids: string[];
     relevant_candidate_count: number;
+    exposed_candidate_count?: number;
     verified_capability_match_count: number;
     pending_verification_count: number;
     excluded_explicit_negative_count: number;
