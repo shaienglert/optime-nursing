@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { restoreQuestionnaireState, type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
 import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
+import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 type AdaptiveQuestion = {
@@ -52,9 +53,9 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
 }
 
 function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Record<string, unknown>): QuestionnaireState {
-  const next = cloneState(state);
+  let next = cloneState(state);
   const stringKeys: Array<keyof QuestionnaireState> = [
-    "relationship", "ageGroup", "assistanceLevel", "memoryStatus",
+    "ageGroup", "assistanceLevel", "memoryStatus",
     "medicaidStatus", "referenceLocationValue",
   ];
   for (const key of stringKeys) {
@@ -63,6 +64,12 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
     if (typeof value === "string" && value.trim() && value.trim() !== "Not sure" && !String(current || "").trim()) {
       (next as unknown as Record<string, unknown>)[key] = value.trim();
     }
+  }
+  if (typeof patch.relationship === "string" && patch.relationship.trim() && !next.relationship.trim()) {
+    next.relationship = patch.relationship.trim();
+  }
+  if (next.relationship) {
+    next = applyCanonicalIdentity(next, next.relationship, typeof patch.gender === "string" ? patch.gender : "");
   }
   if (next.budget <= 0 && typeof patch.budget === "number" && Number.isFinite(patch.budget) && patch.budget > 0) {
     next.budget = Math.round(patch.budget);
