@@ -30,7 +30,6 @@ function question(page, text) {
 }
 
 test.describe('real synthetic-pilot customer journey', () => {
-  test.describe.configure({ mode: 'serial' });
   test.setTimeout(900_000);
 
   for (let scenarioIndex = scenarioStart; scenarioIndex < scenarioStart + scenarioCount; scenarioIndex += 1) {
@@ -80,6 +79,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.getByRole('button', { name: scenario.distance, exact: true }).click();
     await page.getByText('Yes — this reflects what I told Oomnik.').click();
     await page.getByRole('button', { name: 'Continue our conversation' }).click();
+    await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
 
     for (let turn = 0; turn < 25; turn += 1) {
       await page.waitForLoadState('domcontentloaded');
