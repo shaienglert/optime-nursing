@@ -56,3 +56,25 @@ def test_no_in_budget_result_is_disclosed_instead_of_presented_as_a_fit() -> Non
     assert decision["results"]
     assert "No currently eligible pilot community" in decision["market_coverage_notice"]
     assert "not in-budget matches" in decision["market_coverage_notice"]
+
+
+def test_required_dialysis_need_reaches_full_engine_candidate_discovery() -> None:
+    questionnaire = {
+        "assistanceLevel": "Help with bathing and medications",
+        "budget": 7500,
+        "moveTiming": "Within 30 days",
+        "medicalCareProfile": {"needs": ["Dialysis", "Wound care"]},
+    }
+    with patch.dict(
+        "os.environ",
+        {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200"},
+        clear=False,
+    ):
+        refresh_runtime_cache("required-dialysis-full-engine")
+        decision = run_patient_decision_engine(
+            questionnaire,
+            "My father needs dialysis three times a week and wound care.",
+            limit=10,
+        )
+
+    assert "dialysis_arrangements" in decision["candidate_discovery"]["required_parameter_ids"]
