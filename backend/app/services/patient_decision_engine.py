@@ -1731,7 +1731,8 @@ def run_patient_decision_engine(
         required_parameter_ids=[
             str(need.get("parameter_id") or "")
             for need in needs
-            if isinstance(need, dict) and str(need.get("requirement_level") or "").upper() == "HIGH"
+            if isinstance(need, dict)
+            and str(need.get("requirement_level") or "").upper() in {"", "REQUIRED", "HIGH"}
         ],
     )
     discovered_ids = list(catalog_query["candidate_ids"])
