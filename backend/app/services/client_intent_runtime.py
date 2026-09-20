@@ -418,6 +418,17 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         -int(reviews) if reviews_known else 0,
         -int(fit.get("relevant_evidence_known_count") or 0),
         int(fit.get("relevant_evidence_unknown_count") or 0),
+        # Once MUSTs and explicit NICE preferences are respected, use the
+        # governed patient-specific and objective dimensions before the stable
+        # name fallback. Without these fields materially different budgets,
+        # availability and verified facility quality all collapsed to the same
+        # alphabetical ordering.
+        -float(row.get("patient_match_score") or 0.0),
+        -float(row.get("quality_safety_score") or 0.0),
+        -float(row.get("staffing_score") or 0.0),
+        -float(row.get("capability_depth_score") or 0.0),
+        -float(row.get("patient_relevant_outcomes_score") or 0.0),
+        -float(row.get("practical_fit_score") or 0.0),
         str(row.get("facility_name") or ""),
     )
 
