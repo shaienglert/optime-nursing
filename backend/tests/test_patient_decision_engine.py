@@ -11,6 +11,16 @@ from app.services.patient_decision_engine import (
 
 
 class PatientNeedsProfileTests(unittest.TestCase):
+    def test_budget_and_urgent_timing_become_real_matching_needs(self) -> None:
+        profile = build_patient_needs_profile(
+            questionnaire_state={"budget": 5000, "moveTiming": "Within 30 days"},
+        )
+        needs = {item["parameter_id"]: item for item in profile["needs"]}
+
+        self.assertEqual(needs["current_price"]["desired_value"], 5000.0)
+        self.assertEqual(needs["current_price"]["requirement_level"], "MEDIUM")
+        self.assertEqual(needs["current_availability"]["requirement_level"], "HIGH")
+
     def test_natural_language_stroke_profile_maps_expected_parameters(self) -> None:
         profile = build_patient_needs_profile(
             questionnaire_state={},
@@ -36,6 +46,32 @@ class PatientNeedsProfileTests(unittest.TestCase):
 
 
 class EligibilitySemanticsTests(unittest.TestCase):
+    def test_price_is_matched_against_budget_instead_of_presence_only(self) -> None:
+        need = {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 5000,
+            "acceptable_values": [],
+        }
+        within = _evaluate_need(need, {"current_price": {"raw_value": 4800, "source": "Facility reported"}})
+        over = _evaluate_need(need, {"current_price": {"raw_value": 6200, "source": "Facility reported"}})
+
+        self.assertEqual(within[0], "MATCH")
+        self.assertEqual(over[0], "GAP")
+
+    def test_limited_does_not_satisfy_yes_only_critical_need(self) -> None:
+        need = {
+            "parameter_id": "current_availability",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": ["YES"],
+        }
+        result = _evaluate_need(
+            need,
+            {"current_availability": {"raw_value": "LIMITED", "source": "Facility reported"}},
+        )
+        self.assertEqual(result[0], "GAP")
+
     def test_unknown_required_need_is_not_automatically_ineligible(self) -> None:
         needs = [
             {
