@@ -132,12 +132,19 @@ test.describe('real synthetic-pilot customer journey', () => {
       scenario,
       total_candidates_scored: payload.total_candidates_scored,
       result_count: payload.result_count,
+      candidate_discovery: payload.candidate_discovery,
       market_coverage_notice: payload.market_coverage_notice,
       top_results: results.slice(0, 10).map((item) => ({
         canonical_facility_id: item.canonical_facility_id,
         facility_name: item.facility_name,
         eligibility_status: item.eligibility_status,
-        total_score: item.total_score,
+        patient_match_score: item.patient_match_score,
+        quality_safety_score: item.quality_safety_score,
+        staffing_score: item.staffing_score,
+        capability_depth_score: item.capability_depth_score,
+        practical_fit_score: item.practical_fit_score,
+        rank_position: item.rank_position,
+        rank_tie_status: item.rank_tie_status,
       })),
     };
     fs.mkdirSync(path.join(process.cwd(), 'pilot-results'), { recursive: true });

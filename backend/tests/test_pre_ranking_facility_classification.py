@@ -59,6 +59,7 @@ def test_catalog_stores_provenance_and_retrieves_rehab_from_tables() -> None:
     assert rehab["capabilities"]["pt"]["value"] == "YES"
     assert rehab["capabilities"]["pt"]["source"]
     assert rehab["capabilities"]["pt"]["last_verified"]
+    assert rehab["capabilities"]["pt"]["verification_status"] == "VERIFIED"
     assert rehab["capabilities"]["pt"]["provenance"]["synthetic_pilot"] is True
 
 
