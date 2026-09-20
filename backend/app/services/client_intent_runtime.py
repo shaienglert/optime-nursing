@@ -131,6 +131,14 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if "kosher" in query or "kosher" in dietary_preferences:
         add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
 
+    budget = questionnaire_state.get("budget")
+    if isinstance(budget, (int, float)) and float(budget) > 0:
+        add_nice("BUDGET_FIT", "The verified starting monthly price should fit the client's stated budget.")
+
+    move_timing = str(questionnaire_state.get("moveTiming") or "").strip()
+    if move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
+        add_nice("AVAILABILITY_FIT", "Verified availability should fit the client's requested move timing.")
+
     return {
         "version": "client-intent-runtime-v1.6",
         "must_haves": must,
@@ -306,6 +314,18 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 0.0
             else:
                 nice_unknown.append(key)
+        elif key in {"BUDGET_FIT", "AVAILABILITY_FIT"}:
+            parameter_id = "current_price" if key == "BUDGET_FIT" else "current_availability"
+            matched = {str(item.get("parameter_id") or "") for item in row.get("matched_needs") or []}
+            gaps = {str(item.get("parameter_id") or "") for item in row.get("unmet_verified_needs") or []}
+            if parameter_id in matched:
+                nice_match.append(key)
+                nice_fit_scores[key] = 100.0
+            elif parameter_id in gaps:
+                nice_mismatch.append(key)
+                nice_fit_scores[key] = 0.0
+            else:
+                nice_unknown.append(key)
         else:
             nice_unknown.append(key)
 
@@ -418,17 +438,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         -int(reviews) if reviews_known else 0,
         -int(fit.get("relevant_evidence_known_count") or 0),
         int(fit.get("relevant_evidence_unknown_count") or 0),
-        # Once MUSTs and explicit NICE preferences are respected, use the
-        # governed patient-specific and objective dimensions before the stable
-        # name fallback. Without these fields materially different budgets,
-        # availability and verified facility quality all collapsed to the same
-        # alphabetical ordering.
-        -float(row.get("patient_match_score") or 0.0),
-        -float(row.get("quality_safety_score") or 0.0),
-        -float(row.get("staffing_score") or 0.0),
-        -float(row.get("capability_depth_score") or 0.0),
-        -float(row.get("patient_relevant_outcomes_score") or 0.0),
-        -float(row.get("practical_fit_score") or 0.0),
         str(row.get("facility_name") or ""),
     )
 
