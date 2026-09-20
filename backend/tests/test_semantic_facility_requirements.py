@@ -81,6 +81,46 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         rows = extract_semantic_facility_requirements(payload)
         self.assertEqual({"SEMANTIC_MOBILITY_LAYOUT", "SEMANTIC_DIETARY_SAFETY", "SEMANTIC_ALL_DAILY_MEALS"}, {row["key"] for row in rows})
 
+    def test_geographic_distance_statement_does_not_become_a_mobility_layout_must(self) -> None:
+        # Reproduces a live finding: a client's stated *search-radius* preference
+        # ("maximum distance 30 miles" from a reference address) was misread as an
+        # *in-building* mobility/walking-route requirement purely because both
+        # concepts share the word "distance". No pilot (or real) facility carries
+        # mobility_layout_verified evidence, so this silently made every result
+        # permanently pending for any client who set a location distance
+        # preference -- independent of budget, dialysis, or any other fix.
+        payload = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "Location matters; Henderson, NV; maximum distance 30 miles.",
+                    "meaning": "Target market and distance limit are specified.",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["referenceLocationValue"],
+                }]
+            }}}},
+        }
+        self.assertEqual([], extract_semantic_facility_requirements(payload))
+
+    def test_internal_walking_route_statement_still_becomes_a_mobility_layout_must(self) -> None:
+        # The fix for the geographic-distance false positive must not lose a
+        # genuine in-building mobility statement.
+        payload = {
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
+                "statements": [{
+                    "raw_text": "Needs a unit within walking distance of the dining room; uses a walker.",
+                    "meaning": "Short internal walking route required due to walker use.",
+                    "importance": "MUST",
+                    "knowledge_state": "KNOWN",
+                    "status": "USED",
+                    "mapped_parameters": ["unit_placement"],
+                }]
+            }}}},
+        }
+        rows = extract_semantic_facility_requirements(payload)
+        self.assertEqual(["SEMANTIC_MOBILITY_LAYOUT"], [row["key"] for row in rows])
+
     def test_ambiguous_client_owned_value_is_not_promoted_to_facility_must(self) -> None:
         payload = {
             "decision_intelligence": {
