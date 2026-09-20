@@ -80,6 +80,8 @@ def _merge_strategy_questions(human_context: Dict[str, Any], strategy: Dict[str,
 
 
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
+    from app.services.canonical_intake_state import canonicalize_intake_state
+    questionnaire_state = canonicalize_intake_state(questionnaire_state)
     profile = _governed.build_patient_needs_profile(questionnaire_state, natural_language_query)
     strategy = build_living_strategy_context(questionnaire_state, natural_language_query)
     _apply_strategy_needs(profile, strategy)
@@ -320,6 +322,8 @@ def _attach_facility_care_partner_access(rows: List[Dict[str, Any]], care_partne
 
 
 def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50) -> Dict[str, Any]:
+    from app.services.canonical_intake_state import canonicalize_intake_state
+    questionnaire_state = canonicalize_intake_state(questionnaire_state)
     _stage_started = time.perf_counter()
     _stage_timings: Dict[str, float] = {}
 
