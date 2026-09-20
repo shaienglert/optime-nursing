@@ -86,6 +86,9 @@ PARAMETERS = [
     "current_availability", "languages", "kosher", "gluten_free",
     "religious_cultural_services", "activities", "accessibility",
     "dialysis_arrangements", "wound_care", "respiratory_trach_vent",
+    "inspection_rating", "quality_measures", "deficiency_count",
+    "rn_hours_per_resident_day", "total_nurse_hours_per_resident_day",
+    "staffing_turnover", "therapy_staffing",
 ]
 
 ILLUSTRATIONS = [
@@ -148,6 +151,15 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
         # settings can; this gives oxygen-dependent personas a real parameter to
         # match without treating a category label as a capability proxy.
         "respiratory_trach_vent": "YES" if skilled or (care and index % 4 == 0) else "NO",
+        # Synthetic, facility-reported pilot values. They exist only to exercise
+        # evidence-aware quality/staffing ranking and are never presented as CMS data.
+        "inspection_rating": round(2.8 + ((index * 7) % 20) / 10, 1),
+        "quality_measures": round(8.0 + ((index * 11) % 50) / 10, 1),
+        "deficiency_count": (index * 3) % 12,
+        "rn_hours_per_resident_day": round(0.5 + ((index * 5) % 18) / 10, 1),
+        "total_nurse_hours_per_resident_day": round(2.1 + ((index * 7) % 30) / 10, 1),
+        "staffing_turnover": 18 + ((index * 13) % 43),
+        "therapy_staffing": "YES" if skilled or index % 4 == 0 else "NO",
     }
 
 
