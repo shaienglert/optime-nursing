@@ -229,7 +229,12 @@ class MustAiNicePipelineTests(unittest.TestCase):
             self.assertEqual(row["ai_ranking"]["status"], "DETERMINISTIC_FALLBACK")
             self.assertNotIn("global_score", row["ai_ranking"])
             self.assertEqual(row["rank_tie_status"], "JOINT_RANK")
+            self.assertEqual(row["rank_position"], 1)
+            self.assertEqual(row["rank_display"], "Joint #1")
+            self.assertEqual(row["tie_break_explanation_vs_next"]["deciding_dimension"], "true_tie")
         self.assertEqual(set(out["results"][0]["tied_with"] + out["results"][1]["tied_with"]), {"A", "B"})
+        self.assertEqual(out["tie_break_decisions"][0]["decision_dimension"], "true_tie")
+        self.assertIn("No governed ranking difference", out["tie_break_decisions"][0]["reason"])
 
 
 class DeterministicWaterfallThinEvidenceTests(unittest.TestCase):
