@@ -63,6 +63,27 @@ def test_catalog_stores_provenance_and_retrieves_rehab_from_tables() -> None:
     assert rehab["capabilities"]["pt"]["provenance"]["synthetic_pilot"] is True
 
 
+def test_required_clinical_need_is_included_in_pre_ranking_discovery() -> None:
+    profile = {
+        "needs": [
+            {
+                "parameter_id": "dialysis_arrangements",
+                "requirement_level": "REQUIRED",
+            }
+        ]
+    }
+    with patch.dict(
+        "os.environ",
+        {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200"},
+        clear=False,
+    ):
+        refresh_runtime_cache("test_required_need_in_discovery")
+        discovery = _classify_facilities_before_ranking(profile)
+
+    assert discovery["required_parameter_ids"] == ["dialysis_arrangements"]
+    assert discovery["relevant_candidate_count"] < discovery["total_facilities_classified"]
+
+
 def test_catalog_does_not_treat_missing_capability_as_negative() -> None:
     with patch.dict(
         "os.environ",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
+from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent, intent_rank_key
 from app.services.living_strategy_runtime import build_living_strategy_context
 
 
@@ -108,3 +108,53 @@ def test_spanish_launch_story_preserves_adl_must():
         "the Las Vegas Valley, with a budget of $6,000 per month."
     )
     assert {"LICENSE_CURRENTLY_VALID", "LAS_VEGAS", "ADL_SUPPORT_AVAILABLE", "MEDICATION_SUPPORT_AVAILABLE"} <= keys
+
+
+def test_future_care_preference_becomes_explicit_continuum_nice_to_have():
+    intent = build_client_intent(
+        {
+            "humanIntelligenceV2": {
+                "futureCareProfile": {"avoidFutureMovesPreference": "Important"},
+            }
+        },
+        "We want to avoid another move as care needs increase.",
+        {"signals": {}, "household": {}},
+        {},
+    )
+
+    keys = {item["key"] for item in intent["nice_to_haves"]}
+    assert "CONTINUUM_OF_CARE" in keys
+
+
+def test_continuing_care_matches_continuum_preference_and_active_adult_does_not():
+    intent = {"must_haves": [], "nice_to_haves": [{"key": "CONTINUUM_OF_CARE"}]}
+
+    continuing_care = evaluate_candidate_intent(
+        _row("ASSISTED_LIVING_RFG", synthetic_archetype="CONTINUING_CARE"),
+        intent,
+    )
+    active_adult = evaluate_candidate_intent(
+        _row("INDEPENDENT_LIVING", synthetic_archetype="ACTIVE_ADULT"),
+        intent,
+    )
+
+    assert "CONTINUUM_OF_CARE" in continuing_care["nice_match"]
+    assert "CONTINUUM_OF_CARE" in active_adult["nice_mismatch"]
+
+
+def test_explicit_continuum_match_ranks_above_generic_active_adult_fit():
+    intent = {"must_haves": [], "nice_to_haves": [{"key": "CONTINUUM_OF_CARE"}]}
+    continuing_care = _row(
+        "ASSISTED_LIVING_RFG",
+        synthetic_archetype="CONTINUING_CARE",
+        care_setting_fit={"status": "POSSIBLE_FIT"},
+    )
+    active_adult = _row(
+        "INDEPENDENT_LIVING",
+        synthetic_archetype="ACTIVE_ADULT_55_PLUS",
+        care_setting_fit={"status": "PRIMARY_FIT"},
+    )
+    continuing_care["client_intent_fit"] = evaluate_candidate_intent(continuing_care, intent)
+    active_adult["client_intent_fit"] = evaluate_candidate_intent(active_adult, intent)
+
+    assert intent_rank_key(continuing_care) < intent_rank_key(active_adult)

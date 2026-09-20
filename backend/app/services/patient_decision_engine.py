@@ -1415,6 +1415,22 @@ def _market_coverage_notice(requested_city: Optional[str]) -> Optional[str]:
     )
 
 
+def _budget_coverage_notice(questionnaire: Dict[str, Any], results: List[Dict[str, Any]]) -> Optional[str]:
+    budget = _to_number(questionnaire.get("budget"))
+    if budget is None or budget <= 0 or not results:
+        return None
+    known_prices = [_to_number(row.get("starting_monthly_price")) for row in results]
+    known_prices = [price for price in known_prices if price is not None]
+    if not known_prices or any(price <= budget for price in known_prices):
+        return None
+    lowest = min(known_prices)
+    return (
+        f"No currently eligible pilot community in this result set fits the stated "
+        f"${budget:,.0f} monthly budget. The lowest verified starting price shown is "
+        f"${lowest:,.0f}; these are alternatives for review, not in-budget matches."
+    )
+
+
 def _top_reasons(eligibility: Dict[str, Any], table_rows: List[Dict[str, Any]]) -> Tuple[List[str], List[str], List[str]]:
     row_by_param = {row["parameter_id"]: row for row in table_rows}
 
@@ -1876,7 +1892,14 @@ def run_patient_decision_engine(
             "unknown_is_not_negative": True,
             "identities_hidden_pending_client_input": False,
         },
-        "market_coverage_notice": _market_coverage_notice(requested_city),
+        "market_coverage_notice": " ".join(
+            notice
+            for notice in (
+                _market_coverage_notice(requested_city),
+                _budget_coverage_notice(questionnaire_state, detailed_top[:limit]),
+            )
+            if notice
+        ) or None,
         "availability_policy": "Current availability must be confirmed directly with the facility.",
         "tie_break_policy": {
             "thresholds": TIE_THRESHOLD_POLICY,

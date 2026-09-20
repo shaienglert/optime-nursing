@@ -213,7 +213,8 @@ def _classify_facilities_before_ranking(profile: dict[str, Any]) -> dict[str, An
     need_ids = sorted({
         str(need.get("parameter_id") or "").strip()
         for need in (profile.get("needs") or [])
-        if isinstance(need, dict) and str(need.get("requirement_level") or "").upper() == "HIGH"
+        if isinstance(need, dict)
+        and str(need.get("requirement_level") or "").upper() in {"", "REQUIRED", "HIGH"}
     })
     query = query_facility_knowledge_catalog(required_parameter_ids=need_ids)
     return {
