@@ -139,6 +139,21 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
         add_nice("AVAILABILITY_FIT", "Verified availability should fit the client's requested move timing.")
 
+    future_profile = human_profile.get("futureCareProfile") if isinstance(human_profile.get("futureCareProfile"), dict) else {}
+    continuum_preference = " ".join(
+        str(value or "").lower()
+        for value in (
+            future_profile.get("avoidFutureMovesPreference"),
+            future_profile.get("continuumOfCarePreference"),
+            questionnaire_state.get("futureCarePreference"),
+        )
+    )
+    if (
+        any(token in query for token in ("continuum of care", "continuing care", "life plan", "ccrc"))
+        or any(token in continuum_preference for token in ("required", "preferred", "important", "continuum"))
+    ):
+        add_nice("CONTINUUM_OF_CARE", "The client wants future care levels available without another move.")
+
     return {
         "version": "client-intent-runtime-v1.6",
         "must_haves": must,
@@ -326,6 +341,16 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 0.0
             else:
                 nice_unknown.append(key)
+        elif key == "CONTINUUM_OF_CARE":
+            synthetic_archetype = _upper(row.get("synthetic_archetype"))
+            if "LIFE_PLAN_CCRC" in modalities or synthetic_archetype == "CONTINUING_CARE" or any(
+                p.get("continuum_of_care_verified") is True for p in payloads
+            ):
+                nice_match.append(key)
+                nice_fit_scores[key] = 100.0
+            else:
+                nice_mismatch.append(key)
+                nice_fit_scores[key] = 0.0
         else:
             nice_unknown.append(key)
 
@@ -403,6 +428,8 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         setting_order = 0
     else:
         setting_order = {"PRIMARY_FIT": 0, "POSSIBLE_FIT": 1, "OVERLEVEL": 2, "INSUFFICIENT_SETTING": 3}.get(care_status, 1)
+    if "CONTINUUM_OF_CARE" in (fit.get("nice_match") or []) and care_status in {"PRIMARY_FIT", "POSSIBLE_FIT"}:
+        setting_order = 0
 
     independent_capable = care_status in {"PRIMARY_FIT", "POSSIBLE_FIT"} and (
         "INDEPENDENT_LIVING" in modalities or "LIFE_PLAN_CCRC" in modalities
