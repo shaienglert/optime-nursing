@@ -76,7 +76,7 @@ function Field({ label, value, onChange, placeholder = "" }: { label: string; va
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section className="rounded-3xl border border-[#e2d9cc] bg-[#fffefb] p-6 shadow-sm"><h2 className="text-2xl font-semibold tracking-[-0.025em] text-[#25362f]">{title}</h2><div className="mt-5 space-y-5">{children}</div></section>;
+  return <section className="py-5"><div className="flex items-start gap-3"><div className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-[#079ff2] text-sm font-bold text-white">O</div><div className="max-w-[85%] rounded-[1.6rem] rounded-tl-md bg-[#eaf6fd] px-5 py-4"><h2 className="text-xl font-medium leading-7 text-[#183f55]">{title}</h2></div></div><div className="ml-12 mt-4 space-y-4 [&>div]:rounded-[1.4rem] [&>div]:bg-white [&>div]:px-5 [&>div]:py-4 [&>div]:shadow-sm">{children}</div></section>;
 }
 
 export function StructuredIntake() {
@@ -227,14 +227,14 @@ export function StructuredIntake() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f3ed] px-4 py-8 text-[#26352f] sm:px-8">
-      <div className="mx-auto max-w-5xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">A conversation with Oomnik</p>
+    <main className="min-h-screen bg-[#f7fbfd] px-4 py-8 text-[#26352f] sm:px-8">
+      <div className="mx-auto max-w-3xl">
+        <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">Your conversation with Oomnik</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Let’s get to know the person behind the decision.</h1>
         <p className="mt-5 max-w-3xl text-lg leading-8 text-[#5c665f]">I’ll ask a few things that help me understand daily life, care needs and what really matters. You can change any answer before we continue.</p>
         {showErrors && missing.length > 0 ? <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5"><p className="font-semibold">Please complete the following before continuing:</p><p className="mt-2 text-sm leading-6">{missing.join(", ")}.</p></div> : null}
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-10 space-y-2">
           <Section title="Let’s start with who we’re helping">
             <div><p className="text-sm font-semibold">Who are we finding the right place for?</p><Choices options={["Mom", "Dad", "Grandma", "Grandpa", "Spouse", "Myself", "Couple", "Relative", "Friend"]} value={draft.relationship} onChange={(value) => {
               // A manual relationship change invalidates gender derived from the
