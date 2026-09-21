@@ -31,6 +31,7 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "NICE or CONTEXT ambiguity must remain UNKNOWN/AMBIGUOUS; the model may propose a question but may not grant it blocking authority.",
     "If material decision-critical information owned by the client is unknown or ambiguous, ASK the client instead of delegating it to facility research.",
     "Treat prior adaptiveSignals with explicit client answers as client evidence. Never re-ask a dimension that those answers already resolve, even with different wording.",
+    "An explicit later correction in adaptiveSignals supersedes the conflicting original statement for the same person, fact, and time. Preserve the correction in statement accounting as KNOWN/USED and populate questionnaire_patch with the corrected value; do not keep the superseded conflict ASKED. Every repair response must return the full structured packet including questionnaire_patch, not only the repaired question or readiness.",
     "Treat explicit free-text client statements as client evidence too. Never ask a dimension again when the user's original text already answers it clearly.",
     "The target market/location is a minimum client-owned decision dimension. Absence is UNKNOWN and READY is forbidden until the client has supplied enough location information to select the search market.",
     "The affordability envelope/budget is a minimum client-owned decision dimension. Absence is UNKNOWN and READY is forbidden until the client has supplied a usable monthly budget or explicitly declined to set one.",

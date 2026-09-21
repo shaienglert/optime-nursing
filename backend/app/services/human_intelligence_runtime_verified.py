@@ -13,6 +13,7 @@ import base64
 import gzip
 import hashlib
 import json
+import logging
 import os
 import re
 from functools import lru_cache
@@ -500,6 +501,11 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         elif readiness in {"READY", "NEEDS_RESEARCH"}:
             context["adaptive_questions"] = []
     except Exception as exc:
+        # Log only a bounded error category, never client text or provider bodies.
+        error_code = str(exc).split(":", 1)[0]
+        if not re.fullmatch(r"SEMANTIC_AI_[A-Z0-9_]{1,100}", error_code):
+            error_code = type(exc).__name__
+        logging.getLogger(__name__).warning("semantic_intake_failed code=%s", error_code)
         context["semantic_ai"] = {
             "enabled": True,
             "required": required,

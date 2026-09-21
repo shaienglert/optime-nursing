@@ -8,7 +8,7 @@ import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNe
 import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
 import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
-import { hasUnresolvedSemanticConflict, semanticConflictQuestion } from "@/lib/semantic-conflict";
+import { hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "@/lib/semantic-conflict";
 
 type AdaptiveQuestion = {
   question_key: string;
@@ -26,7 +26,7 @@ type NeedsProfileWithDecisionIntelligence = PatientNeedsProfile & {
     human_intelligence?: {
       decision_readiness?: string;
       adaptive_questions?: AdaptiveQuestion[];
-      semantic_ai?: { result?: { questionnaire_patch?: Record<string, unknown>; statements?: unknown } };
+      semantic_ai?: { enabled?: boolean; required?: boolean; status?: string; result?: { questionnaire_patch?: Record<string, unknown>; statements?: unknown } };
     };
     adaptive_questions?: AdaptiveQuestion[];
     canonical_decision_state?: {
@@ -49,6 +49,7 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
   const conflictQuestion = semanticConflictQuestion(nested?.semantic_ai?.result?.statements);
   return {
     canonical: top?.canonical_decision_state,
+    semanticFailed: semanticIntakeFailure(nested?.semantic_ai),
     adaptive_questions: conflictQuestion ? [conflictQuestion] : top?.adaptive_questions?.length
       ? top.adaptive_questions : nested?.adaptive_questions || [],
     questionnaire_patch: nested?.semantic_ai?.result?.questionnaire_patch || {},
@@ -216,6 +217,12 @@ export default function AdaptiveInterviewPage() {
         natural_language_query: currentState.notes || "",
       }))) as NeedsProfileWithDecisionIntelligence;
       const context = getDecisionContext(response);
+      if (context.semanticFailed) {
+        setQuestion(null);
+        setError("We could not verify our understanding of your answers. Your answers are saved. Please try again before confirming your profile.");
+        setBusy(false);
+        return;
+      }
       // A model-proposed value must not answer its own contradiction question.
       const hydratedState = context.hasConflict ? currentState : applySemanticQuestionnairePatch(currentState, context.questionnaire_patch);
       if (JSON.stringify(hydratedState) !== JSON.stringify(currentState)) setState(hydratedState);
