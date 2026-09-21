@@ -59,7 +59,7 @@ export function PersonalReportPageClient() {
       questionnaire_state: state as unknown as Record<string, unknown>,
       natural_language_query: naturalLanguageQuery,
       limit: 50,
-      decision_result: cachedDecisionResult ? (cachedDecisionResult as unknown as Record<string, unknown>) : undefined,
+      decision_id: cachedDecisionResult?.decision_id || undefined,
     })
       .then((value) => {
         if (active) setReport(value);

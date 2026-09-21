@@ -140,6 +140,7 @@ from app.services.facility_parameter_service import (
     refresh_runtime_cache,
 )
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
+from app.services.decision_result_store import decision_inputs_fingerprint, recall_decision_result, remember_decision_result
 from app.services.patient_decision_engine import (
     _regulatory_index,
     build_patient_comparison_context,
@@ -621,6 +622,10 @@ class PersonalDecisionReportRequestIn(BaseModel):
     questionnaire_state: Dict[str, Any] = Field(default_factory=dict)
     natural_language_query: Optional[str] = ""
     limit: int = 50
+    # Returned by /decision-engine/recommendations. Reused only for identical inputs.
+    decision_id: Optional[str] = None
+    # Deprecated and ignored: a report is never built from a client-supplied decision.
+    # Kept so older clients do not get a validation error.
     decision_result: Optional[Dict[str, Any]] = None
     case_token: Optional[str] = None
 
@@ -652,6 +657,9 @@ class PatientDecisionEngineOut(BaseModel):
     # be declared here regardless: a field the response model does not know about is
     # dropped in serialisation, and the notice would never reach the family it is for.
     degraded_result_notice: Optional[Dict[str, Any]] = None
+    # Opaque handle to the server-held copy of this exact response; a personal report
+    # for the same inputs can reuse it instead of re-running the engine.
+    decision_id: Optional[str] = None
 
 
 class PersonalDecisionReportOut(BaseModel):
@@ -2745,7 +2753,14 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
         duration_ms,
     )
 
-    return response
+    served = PatientDecisionEngineOut.model_validate(response).model_dump()
+    served["decision_id"] = remember_decision_result(
+        served,
+        inputs_fingerprint=decision_inputs_fingerprint(
+            payload.questionnaire_state, payload.natural_language_query or "", payload.limit
+        ),
+    )
+    return served
 
 
 @app.post("/decision-engine/personal-report", response_model=PersonalDecisionReportOut)
@@ -2755,22 +2770,20 @@ def post_personal_decision_report(payload: PersonalDecisionReportRequestIn, db: 
     Projects a decision-engine result through the fail-closed Personal Decision Report
     contract -- no new research, ranking, or decision authority is exercised here.
 
-    If the caller already has a decision_result (e.g. a client that just rendered
-    /decision-engine/recommendations for the identical questionnaire_state /
-    natural_language_query / limit), it can be passed straight through, skipping a
-    second, redundant, multi-minute AI-ranking pass for data the caller already has --
-    the same trust model /decision-engine/comparison-context already uses for
-    patient_needs_profile. Only the shape of the report built from it is validated;
-    the report cannot escape into a wider recommendation-visibility state than
-    decision_result's own canonical_decision_state already grants.
+    The decision is always server-computed. A client that just rendered
+    /decision-engine/recommendations may pass the decision_id it received; when that
+    id is still held by this server and was computed for the identical
+    questionnaire_state / natural_language_query / limit, the stored copy is reused to
+    skip a second multi-minute AI-ranking pass. Otherwise the engine runs again. A
+    client-supplied decision_result is ignored: accepting it let any caller place a
+    non-existent facility into a report.
 
     Every call is remembered as a case (or, with case_token, appended to an existing
     one) so a client can request an updated report later -- per the intended workflow,
     24-72h after the preliminary report while facilities are verified -- without
     re-submitting their whole questionnaire. Passing case_token loads that case's
     stored inputs and ignores questionnaire_state/natural_language_query/limit on the
-    request; decision_result is still honored if given, but an updated report should
-    normally omit it so the pipeline re-runs against current facility data.
+    request.
     """
 
     if payload.case_token:
@@ -2787,7 +2800,14 @@ def post_personal_decision_report(payload: PersonalDecisionReportRequestIn, db: 
         )
         inputs = case_inputs(case)
 
-    decision_result = payload.decision_result
+    if payload.decision_result is not None:
+        logger.info("personal_report_client_decision_result_ignored")
+    decision_result = recall_decision_result(
+        payload.decision_id,
+        inputs_fingerprint=decision_inputs_fingerprint(
+            inputs["questionnaire_state"], inputs["natural_language_query"], inputs["limit"]
+        ),
+    )
     if decision_result is None:
         decision_result = run_patient_decision_engine(
             questionnaire_state=inputs["questionnaire_state"],
