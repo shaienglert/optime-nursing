@@ -1,3 +1,11 @@
+export function semanticIntakeFailure(packet: { enabled?: boolean; required?: boolean; status?: string } | undefined): boolean {
+  if (!packet) return false;
+  if (packet.status === "FAILED" || packet.status === "REQUIRED_BUT_DISABLED") return true;
+  return Boolean(packet.enabled || packet.required)
+    && packet.status !== "CONSULTED_AND_VALIDATED"
+    && packet.status !== "GUARDIAN_BLOCKED_READY";
+}
+
 export function hasUnresolvedSemanticConflict(statements: unknown): boolean {
   return Array.isArray(statements) && statements.some((statement) =>
     statement && typeof statement === "object"
