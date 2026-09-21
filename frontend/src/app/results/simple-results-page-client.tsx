@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
 import { loadDecisionResponseCache, saveDecisionResponseCache } from "@/lib/search-session";
+import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 
 const TOP_COUNT = 5;
 
@@ -95,15 +96,11 @@ export function SimpleResultsPageClient() {
   }, [decisionRequestKey, naturalLanguageQuery, router, searchParams, state]);
 
   const eligible = useMemo(
-    () => (response?.results || []).filter((item) => item.must_eligibility
-      ? item.must_eligibility === "MUST_ELIGIBLE"
-      : item.eligibility_status === "ELIGIBLE"),
+    () => (response?.results || []).filter(isFinalRecommendation),
     [response],
   );
   const pending = useMemo(
-    () => (response?.results || []).filter((item) => item.must_eligibility
-      ? item.must_eligibility === "MUST_PENDING_VERIFICATION"
-      : item.eligibility_status !== "ELIGIBLE" && item.eligibility_status !== "INELIGIBLE"),
+    () => (response?.results || []).filter(isPendingRecommendation),
     [response],
   );
   const top = eligible.slice(0, TOP_COUNT);

@@ -30,7 +30,12 @@ if (!resultsPage.includes('SimpleResultsPageClient')) throw new Error('Senior-re
 for (const token of ['Meets verified must-haves', 'What we still want to confirm', 'See detailed comparison', 'Other promising places we are still checking']) {
   if (!simpleResults.includes(token)) throw new Error(`Senior-readable result contract missing: ${token}`);
 }
-if (!simpleResults.includes('eligibility_status === "ELIGIBLE"')) throw new Error('Only verified-eligible facilities may be presented as leading recommendations.');
+const eligibility = fs.readFileSync('frontend/src/lib/recommendation-eligibility.ts', 'utf8');
+const detailedResults = fs.readFileSync('frontend/src/app/results/results-page-client.tsx', 'utf8');
+if (!simpleResults.includes('.filter(isFinalRecommendation)') || !detailedResults.includes('.filter(isFinalRecommendation)')
+    || !eligibility.includes('must_eligibility === "MUST_ELIGIBLE"') || !eligibility.includes('eligibility_status === "ELIGIBLE"')) {
+  throw new Error('Both result views must use the canonical eligibility gate before presenting final recommendations.');
+}
 if (!simpleResults.includes('questionnaireCompletion.clientSummaryConfirmed')) throw new Error('Results must reject an unconfirmed client summary.');
 if (!simpleResults.includes('text-xl') || !simpleResults.includes('text-2xl')) throw new Error('Primary result copy must use senior-readable typography.');
 

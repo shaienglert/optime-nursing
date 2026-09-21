@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { VerificationOffer } from "@/app/results/verification-offer";
+import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import {
   compareFacilityParameters,
@@ -279,7 +280,8 @@ export function ResultsPageClient() {
     clearFavoriteFacilities();
   }, [favoriteCanonicalIds]);
 
-  const recommendations = useMemo(() => decisionResponse?.results || [], [decisionResponse?.results]);
+  const recommendations = useMemo(() => (decisionResponse?.results || []).filter(isFinalRecommendation), [decisionResponse?.results]);
+  const pendingRecommendations = useMemo(() => (decisionResponse?.results || []).filter(isPendingRecommendation), [decisionResponse?.results]);
   const topRecommendations = useMemo(() => recommendations.slice(0, TOP_RECOMMENDATION_COUNT), [recommendations]);
   const remainingRecommendations = useMemo(() => recommendations.slice(TOP_RECOMMENDATION_COUNT), [recommendations]);
 
@@ -842,7 +844,7 @@ export function ResultsPageClient() {
       <section className="mx-auto max-w-7xl">
         <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">Oomnik Results</p>
-          <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">Recommended communities for {relationship}</h1>
+          <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">{recommendations.length ? "Recommended communities" : "Community review"} for {relationship}</h1>
           <p className="mt-2 text-[#6b645a]">Results are personalized to your current needs profile and governed parameter evidence.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button type="button" onClick={backToSearch} className="rounded-full border border-[#d9cfbf] bg-[#f6f2ea] px-4 py-2 text-sm font-semibold text-[#534a3d] transition hover:bg-[#efe8db]">Back to search</button>
@@ -914,6 +916,16 @@ export function ResultsPageClient() {
           <section className="mt-6 rounded-3xl border border-[#e5b7b7] bg-[#fff4f4] p-6 text-sm text-[#7a2f2f]">
             <p className="font-semibold">Decision API unavailable</p>
             <p className="mt-2">{apiLoadError}</p>
+          </section>
+        ) : null}
+
+        {!isLoading && pendingRecommendations.length > 0 ? (
+          <section className="mt-6 rounded-3xl border border-[#e8ddcc] bg-white p-6">
+            <h2 className="text-xl font-semibold">Candidates awaiting verification</h2>
+            <p className="mt-2">These communities are not final recommendations. Required evidence is still unresolved.</p>
+            <ul className="mt-3 list-disc pl-5">
+              {pendingRecommendations.map((item) => <li key={item.canonical_facility_id}>{item.facility_name}</li>)}
+            </ul>
           </section>
         ) : null}
 
