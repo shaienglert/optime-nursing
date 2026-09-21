@@ -2234,7 +2234,8 @@ export async function fetchPatientDecisionRecommendations(
 export async function fetchPersonalDecisionReport(
   payload: PersonalDecisionReportRequest
 ): Promise<PersonalDecisionReportResponse> {
-  return postJson<PersonalDecisionReportRequest, PersonalDecisionReportResponse>("/decision-engine/personal-report", payload);
+  const { boundPersonalReportRequest } = await import("./personal-report-request");
+  return postJson<PersonalDecisionReportRequest, PersonalDecisionReportResponse>("/decision-engine/personal-report", boundPersonalReportRequest(payload));
 }
 
 export async function fetchPatientComparisonContext(

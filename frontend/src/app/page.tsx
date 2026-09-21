@@ -8,6 +8,7 @@ import { flushSync } from "react-dom";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
 import { buildResultsUrl } from "@/lib/results-url";
+import { extractExplicitMonthlyBudget } from "@/lib/story-budget";
 import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
@@ -58,20 +59,6 @@ const MEMORY_OPTIONS = [
 ] as const;
 
 type HeroStep = "relationship" | "age" | "assistance" | "memory";
-
-function extractExplicitMonthlyBudget(text: string): number | null {
-  const patterns = [
-    /(?:budget|afford|spend|pay)[^.$\n]{0,60}\$\s*([\d,]+)/i,
-    /\$\s*([\d,]+)[^.$\n]{0,60}(?:per month|monthly|budget)/i,
-  ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (!match) continue;
-    const amount = Number(match[1].replaceAll(",", ""));
-    if (Number.isFinite(amount) && amount > 0) return amount;
-  }
-  return null;
-}
 
 function personCopy(label: string): string {
   if (label === "me") return "you";
@@ -159,16 +146,13 @@ export default function HomePage() {
   function continueAfterAssistance(): void {
     if (selectedAssistance.length === 0) return;
 
-    const primaryLabel = [...selectedAssistance].sort(
-      (left, right) => ASSISTANCE_OPTIONS.indexOf(right as (typeof ASSISTANCE_OPTIONS)[number]) - ASSISTANCE_OPTIONS.indexOf(left as (typeof ASSISTANCE_OPTIONS)[number]),
-    )[0];
     const supportSummary = selectedAssistance.map((item) => ASSISTANCE_VALUE_MAP[item]).join(", ");
     setState((current) => {
       const existingNotes = current.notes?.trim() || "";
       const notes = [existingNotes, `Support needs selected: ${supportSummary}.`].filter(Boolean).join(" ");
       return {
         ...current,
-        assistanceLevel: ASSISTANCE_VALUE_MAP[primaryLabel],
+        assistanceLevel: supportSummary,
         notes,
       };
     });

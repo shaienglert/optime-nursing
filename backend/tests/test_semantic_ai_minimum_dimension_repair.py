@@ -81,7 +81,16 @@ class SemanticAiMinimumDimensionRepairTests(unittest.TestCase):
         self.assertNotIn("minimum_dimension_repair", result)
 
     def test_comma_formatted_spending_limit_is_a_known_budget(self):
-        first = packet(readiness="READY", statements=[])
+        first = packet(readiness="READY", statements=[{
+            "raw_text": "Las Vegas and we can spend up to $17,000 per month.",
+            "meaning": "Market and monthly spending limit are explicit.",
+            "importance": "MUST",
+            "knowledge_state": "KNOWN",
+            "status": "USED",
+            "mapped_parameters": ["market_location", "monthly_affordability"],
+            "clarification_question": None,
+            "research_task": None,
+        }])
         with patch("app.services.semantic_intent_ai._default_transport", return_value=first) as mocked:
             result = interpret_client_intent_with_ai(
                 user_text="My father needs care in Las Vegas and we can spend up to $17,000 per month.",

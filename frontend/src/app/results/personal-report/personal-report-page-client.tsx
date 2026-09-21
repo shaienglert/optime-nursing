@@ -96,7 +96,8 @@ export function PersonalReportPageClient() {
     return (
       <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]">
         <div className="mx-auto max-w-5xl rounded-3xl border border-rose-200 bg-white p-8 text-lg">
-          {error || "No report is available yet."}
+          <p>We could not prepare your personal report. Your recommendations are still available.</p>
+          <Link href={backHref} className="mt-4 inline-block underline">Back to your recommendations</Link>
         </div>
       </main>
     );
