@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { hasUnresolvedSemanticConflict, semanticConflictQuestion } from "../src/lib/semantic-conflict";
+import { hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "../src/lib/semantic-conflict";
+
+describe("semantic intake availability", () => {
+  it("blocks failed AI even when deterministic readiness reports complete", () => {
+    expect(semanticIntakeFailure({ enabled: true, status: "FAILED" })).toBe(true);
+    expect(semanticIntakeFailure({ required: true, status: "DISABLED" })).toBe(true);
+    expect(semanticIntakeFailure({ enabled: true })).toBe(true);
+  });
+  it("allows validated AI and explicitly disabled local mode", () => {
+    expect(semanticIntakeFailure({ enabled: true, status: "CONSULTED_AND_VALIDATED" })).toBe(false);
+    expect(semanticIntakeFailure({ enabled: false, required: false, status: "DISABLED" })).toBe(false);
+  });
+});
 
 describe("unresolved semantic conflicts", () => {
   it("preserves the model's clarification even without an adaptive question", () => {
