@@ -1,0 +1,48 @@
+name: Intake Regression
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  intake-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install backend test dependencies
+        run: python -m pip install -r backend/requirements.txt pytest httpx2
+      - name: Verify semantic intake and core mapping contracts
+        env:
+          PYTHONPATH: backend
+          OPTIME_SEMANTIC_AI_ENABLED: '0'
+        run: >-
+          python -m pytest -q
+          backend/tests/test_semantic_conflict_clarification.py
+          backend/tests/test_semantic_free_text_no_reask.py
+          backend/tests/test_semantic_clarification_contract_repair.py
+          backend/tests/test_patient_decision_engine.py
+          backend/tests/test_structured_medical_needs_mapping.py
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Verify all frontend unit contracts
+        working-directory: frontend
+        # Browser specs have their own Playwright workflows; run every *.test.ts here.
+        run: npx vitest run tests/*.test.ts
+      - name: Verify frontend types
+        working-directory: frontend
+        run: npm run typecheck
