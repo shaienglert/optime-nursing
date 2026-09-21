@@ -60,14 +60,14 @@ function IntakeConfirmationContent() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {state.notes?.trim() ? <div className="sm:col-span-2"><SummaryRow label="Story provided" value={state.notes} /></div> : null}
           <SummaryRow label="Person" value={[state.relationship, state.ageGroup].filter(Boolean).join(", ")} />
-          <SummaryRow label="Daily support" value={state.assistanceLevel} />
+          <SummaryRow label="Daily support" value={state.relationship === "Couple" ? state.coupleAssistance || state.assistanceLevel : state.assistanceLevel} />
           <SummaryRow label="Mobility" value={[medical.mobilityMethod, medical.transferAssistance ? `Transfers: ${medical.transferAssistance}` : "", medical.recentFalls ? `Falls: ${medical.recentFalls}` : ""].filter(Boolean).join("; ")} />
           <SummaryRow label="Memory and safety" value={[state.memoryStatus, hi.transitionRiskProfile.wanderingConcerns ? `Wandering: ${hi.transitionRiskProfile.wanderingConcerns}` : "", hi.futureCareProfile.secureMemoryNeighborhoodNeed ? `Secure setting: ${hi.futureCareProfile.secureMemoryNeighborhoodNeed}` : ""].filter(Boolean).join("; ")} />
           <SummaryRow label="Medical needs" value={medical.hasOngoingMedicalNeeds === "No" ? "No ongoing medical needs reported" : medical.needs.join(", ")} />
           <SummaryRow label="Medical coordination" value={[medical.physicianCoordination, medical.dialysisFrequency, medical.oxygenUse, medical.woundCareFrequency, medical.complexConditionDetails].filter(Boolean).join("; ")} />
-          <SummaryRow label="Coverage and budget" value={[`$${state.budget.toLocaleString()} per month`, `Medicare: ${state.medicareStatus || "Not provided"}`, `Medicaid: ${state.medicaidStatus || "Not provided"}`].join("; ")} />
+          <SummaryRow label="Coverage and budget" value={[state.budget > 0 ? `$${state.budget.toLocaleString()} per month` : "Budget: Not provided", `Medicare: ${state.medicareStatus || "Not provided"}`, `Medicaid: ${state.medicaidStatus || "Not provided"}`].join("; ")} />
           <SummaryRow label="Timing and transition" value={[state.moveTiming, hi.transitionRiskProfile.attitudeTowardMove].filter(Boolean).join("; ")} />
-          <SummaryRow label="Lifestyle priorities" value={[...state.happinessPreferences, ...state.moveLossConcerns].join(", ")} />
+          <SummaryRow label="Lifestyle priorities" value={[hi.familyProfile.socialInteractionNeed, hi.personalityProfile.communitySizePreference, ...state.happinessPreferences, ...state.moveLossConcerns].filter(Boolean).join(", ")} />
           <SummaryRow label="Language, diet, and religion" value={[hi.languageProfile.preferredSpokenLanguage, ...hi.foodProfile.dietaryPreferences, hi.culturalProfile.religionImportance === "Yes" ? hi.culturalProfile.faithTraditions.join(", ") : hi.culturalProfile.religionImportance === "No" ? "No religious-community requirement" : "Religious-community preference: Not provided"].filter(Boolean).join("; ")} />
           <SummaryRow label="Practical requirements" value={[state.parkingRequirement ? `Parking: ${state.parkingRequirement}` : "Parking: Not provided", state.parkingVehicleCount, hi.futureCareProfile.continuumOfCarePreference ? `Future care continuity: ${hi.futureCareProfile.continuumOfCarePreference}` : "Future care continuity: Not provided"].filter(Boolean).join("; ")} />
           <SummaryRow label="Location" value={
