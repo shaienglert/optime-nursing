@@ -1,0 +1,36 @@
+name: Decision engine behaviour parity
+# Runs 17 fixed family cases through the base branch and the PR and diffs everything
+# the decision engine exposes (library calls, HTTP endpoints, database writes).
+# A refactor must show zero differences. A PR that intends to change decisions adds
+# the label "decision-behavior-change"; the diff is still printed for review.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    paths: ['backend/app/**', 'database/**', 'scripts/decision_parity/**']
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: baseline
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r candidate/backend/requirements.txt httpx
+      - name: Compare decisions
+        id: parity
+        continue-on-error: true
+        env:
+          PARITY_OUT: ${{ runner.temp }}/parity
+        run: python candidate/scripts/decision_parity/run_parity.py check baseline/backend candidate/backend
+      - name: Enforce parity unless the change is declared
+        if: steps.parity.outcome == 'failure' && !contains(github.event.pull_request.labels.*.name, 'decision-behavior-change')
+        run: |
+          echo "Decision outputs changed. If intended, add the label 'decision-behavior-change'."
+          exit 1

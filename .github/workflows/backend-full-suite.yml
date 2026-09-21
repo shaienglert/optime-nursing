@@ -1,0 +1,26 @@
+name: Backend full test suite
+# Before this workflow, 69 of 117 backend test files were not run by any workflow,
+# so broken tests stayed invisible. This runs all of them. Known failures are listed,
+# with reasons, in backend/tests/known_failures.txt; anything else failing turns CI red.
+on:
+  pull_request:
+    paths: ['backend/**', 'database/**', 'scripts/run_backend_full_suite.py', '.github/workflows/backend-full-suite.yml']
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  full-suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PYTHONPATH: backend:.:scripts
+      OPTIME_CANONICAL_MARKET: las-vegas
+      PYTHONHASHSEED: '0'
+      OPTIME_SEMANTIC_AI_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt pytest pytest-xdist httpx
+      - run: python scripts/run_backend_full_suite.py -n 4 --dist loadfile
