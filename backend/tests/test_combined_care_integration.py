@@ -1,4 +1,4 @@
-from app import services
+from app.services import decision_pipeline as services
 
 
 def _row(facility_id, name, *, rating="UNKNOWN", review_count="UNKNOWN", grade=None, evidence_known=3):

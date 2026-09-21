@@ -400,10 +400,20 @@ def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[s
         _add_need(needs_by_id, "transportation", "PREFERENCE", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.distanceFromFamily", 0.8, "Transportation support preferred")
 
 
-def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
+def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -> None:
     budget = questionnaire.get("budget")
     if budget not in (None, "", 0):
-        _add_need(needs_by_id, "published_rates", "PREFERENCE", "KNOWN", ["KNOWN", "UNKNOWN"], "FACILITY", "questionnaire.budget", 1.0, "Prefer transparent pricing")
+        _add_need(
+            needs_by_id,
+            "published_rates",
+            "PREFERENCE",
+            "KNOWN",
+            ["KNOWN", "UNKNOWN"],
+            "FACILITY",
+            "questionnaire.budget",
+            1.0,
+            "Prefer transparent pricing",
+        )
         numeric_budget = _to_number(budget)
         if numeric_budget is not None and numeric_budget > 0:
             _add_need(
@@ -456,7 +466,6 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedIte
             1.0,
             "Medicaid/payment pathway must be confirmed",
         )
-    _add_need(needs_by_id, "medicare_attributes", "MEDIUM", "YES", ["YES", "UNKNOWN"], "FACILITY", "governed default", 0.7, "Medicare acceptance often relevant for skilled needs")
 
 
 def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[str, Any]:
@@ -1688,8 +1697,9 @@ def run_patient_decision_engine(
     questionnaire_state: Dict[str, Any],
     natural_language_query: str = "",
     limit: int = 50,
+    *, patient_needs_profile: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
-    cache_enabled = os.getenv("OPTIME_DECISION_RESULT_CACHE", "0") == "1"
+    cache_enabled = patient_needs_profile is None and os.getenv("OPTIME_DECISION_RESULT_CACHE", "0") == "1"
     cache_key = json.dumps(
         {
             "facility_catalog_version": get_runtime_metadata().get("runtime_version"),
@@ -1706,7 +1716,7 @@ def run_patient_decision_engine(
         if cached is not None:
             return cached
 
-    profile = build_patient_needs_profile(questionnaire_state, natural_language_query)
+    profile = patient_needs_profile if patient_needs_profile is not None else build_patient_needs_profile(questionnaire_state, natural_language_query)
     needs = profile["needs"]
 
     order_payload = get_personalized_parameter_order(

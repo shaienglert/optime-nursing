@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'backend/app/services/ai_process_owner_runtime.py'
-      - 'backend/app/services/__init__.py'
+      - 'backend/app/services/decision_pipeline.py'
       - 'backend/app/services/semantic_intent_ai.py'
       - 'backend/app/services/human_intelligence_runtime_verified.py'
       - 'backend/tests/test_ai_process_owner_runtime.py'
@@ -32,7 +32,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          services = Path('backend/app/services/__init__.py').read_text(encoding='utf-8')
+          services = Path('backend/app/services/decision_pipeline.py').read_text(encoding='utf-8')
           owner = Path('backend/app/services/ai_process_owner_runtime.py').read_text(encoding='utf-8')
           assert 'attach_ai_process_owner_guarded(result, questionnaire_state, natural_language_query)' in services
           assert 'from app.services.ai_process_owner_guard_patch import attach_ai_process_owner_guarded' in services

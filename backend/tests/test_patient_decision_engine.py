@@ -1,11 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from app.services.patient_decision_engine_runtime import _governed
+from app.services import decision_engine_core as _core
 
 # These are core scorer unit tests. Production integration is covered separately;
 # the public runtime facade no longer exports the core's private helpers.
-_core = _governed._legacy
 _eligibility_from_needs = _core._eligibility_from_needs
 _evaluate_need = _core._evaluate_need
 build_patient_comparison_context = _core.build_patient_comparison_context

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 import unittest
 
 from app.services.client_intent_runtime import build_client_intent, evaluate_candidate_intent
@@ -47,8 +46,8 @@ class LicenseValidityGateTests(unittest.TestCase):
 class LicenseExpiredHelperTests(unittest.TestCase):
     @classmethod
     def setUpContext(cls):
-        import app.main  # noqa: F401 -- registers app.services._patient_decision_engine_legacy
-        return sys.modules["app.services._patient_decision_engine_legacy"]
+        from app.services import decision_engine_core
+        return decision_engine_core
 
     def setUp(self) -> None:
         self.legacy = self.setUpContext()

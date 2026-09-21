@@ -175,6 +175,11 @@ def _human_payload(decision: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _material_client_blockers(human: Dict[str, Any]) -> list[Dict[str, Any]]:
+    policy = human.get("canonical_gap_policy")
+    if isinstance(policy, dict) and policy.get("authority") == "DETERMINISTIC_POLICY":
+        # Both Guardian and source-backed semantic gaps have already been governed
+        # here. Reading only Guardian rows silently discarded semantic conflicts.
+        return [row for row in policy.get("assessments") or [] if isinstance(row, dict) and row.get("classification") == "BLOCKING"]
     guardian = human.get("readiness_guardian")
     if not isinstance(guardian, dict):
         return []
@@ -278,9 +283,11 @@ def _ranking_state(decision: Dict[str, Any]) -> RankingState:
 
 
 def _system_failure(decision: Dict[str, Any], human: Dict[str, Any]) -> tuple[SystemHealth, str]:
-    # AI components may enrich extraction, wording and ordering, but their failure is
-    # not a system blocker. Canonical facts, MUST eligibility and deterministic gap
-    # policy continue to control readiness, visibility, escalation and zero-result behavior.
+    # Optional ranking failure does not erase established client facts. Failed
+    # narrative extraction is different: there is no established intake to match.
+    intake = human.get("intake_resolution") or {}
+    if intake.get("status") == "UNAVAILABLE" and intake.get("narrative_extraction_required") is True:
+        return SystemHealth.BLOCKED, "narrative intake interpretation unavailable; preserve answers and retry"
     return SystemHealth.HEALTHY, ""
 
 
@@ -311,7 +318,7 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     # cover either group. Only an explicit MUST_FAIL is excluded from ranking.
     rankable_count = eligible + pending
 
-    if blockers:
+    if blockers and system is not SystemHealth.BLOCKED:
         return CanonicalDecisionState(
             phase=DecisionPhase.CLIENT_INPUT_REQUIRED,
             client=ClientState.INCOMPLETE,
@@ -332,7 +339,7 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     if system is SystemHealth.BLOCKED:
         return CanonicalDecisionState(
             phase=DecisionPhase.SYSTEM_BLOCKED,
-            client=ClientState.COMPLETE,
+            client=ClientState.INCOMPLETE,
             evidence=EvidenceState.MATERIAL_GAPS if pending else EvidenceState.SUFFICIENT,
             must=MustState.PENDING if pending else (MustState.PASS if eligible else MustState.NOT_EVALUATED),
             ranking=ranking,

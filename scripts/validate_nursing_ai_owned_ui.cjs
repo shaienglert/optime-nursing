@@ -6,11 +6,11 @@ const confirmation = fs.readFileSync('frontend/src/app/intake-confirmation/page.
 const resultsPage = fs.readFileSync('frontend/src/app/results/page.tsx', 'utf8');
 const simpleResults = fs.readFileSync('frontend/src/app/results/simple-results-page-client.tsx', 'utf8');
 
-for (const token of ['adaptive_questions', 'answer_options', 'adaptiveSignals', 'existingAnswerFor', 'autoResolved', 'canonicalizeAdaptiveFact']) {
+for (const token of ['adaptive_questions', 'answer_options', 'adaptiveSignals', 'canonicalizeAdaptiveFact', 'context.canonical.system === "BLOCKED"', 'context.canonical.client === "COMPLETE"']) {
   if (!interview.includes(token)) throw new Error(`Nursing AI-owned interview invariant missing: ${token}`);
 }
 
-for (const forbidden of ['community_size_preference', 'social_interaction_need_after_loss', 'social_interaction_preference', 'move_participation', 'fallbackOptions(']) {
+for (const forbidden of ['community_size_preference', 'social_interaction_need_after_loss', 'social_interaction_preference', 'move_participation', 'fallbackOptions(', 'existingAnswerFor', 'autoResolved', 'hasConflict']) {
   if (interview.includes(forbidden)) throw new Error(`Legacy hard-coded adaptive interview behavior remains: ${forbidden}`);
 }
 

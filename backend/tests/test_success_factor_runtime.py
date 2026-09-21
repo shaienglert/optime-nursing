@@ -3,7 +3,17 @@ from __future__ import annotations
 import copy
 import unittest
 
-from app.services.patient_decision_engine_runtime import build_patient_needs_profile, run_patient_decision_engine
+from app.services.patient_decision_engine_runtime import build_patient_needs_profile, _run_prepared_decision
+
+
+def run_patient_decision_engine(questionnaire_state, natural_language_query, limit):
+    """Unit-test factor attachment/order; public readiness is tested separately.
+
+    These incomplete fixtures deliberately exercise the prepared matching stage,
+    not permission to present a final recommendation to a family.
+    """
+    profile = build_patient_needs_profile(questionnaire_state, natural_language_query)
+    return _run_prepared_decision(questionnaire_state, natural_language_query, limit, prepared_profile=profile)
 from app.services.success_factor_runtime import FACTOR_POLICY, build_success_factor_trace
 
 

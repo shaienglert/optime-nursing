@@ -4,7 +4,9 @@ on:
   pull_request:
     paths:
       - 'backend/tests/test_mother90_external_candidates_diagnostic.py'
-      - 'backend/app/services/patient_decision_engine.py'
+      - 'backend/app/services/decision_engine_core.py'
+      - 'backend/app/services/decision_engine_evidence.py'
+      - 'backend/app/services/decision_pipeline.py'
       - 'backend/app/services/patient_decision_engine_runtime/**'
       - 'backend/app/services/client_intent_runtime.py'
       - 'backend/app/services/facility_parameter_service.py'

@@ -22,7 +22,9 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
     def test_public_import_resolves_to_integrated_runtime(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
         module_file = Path(module.__file__).as_posix()
-        self.assertTrue(module_file.endswith("/app/services/patient_decision_engine_runtime/__init__.py"), module_file)
+        self.assertTrue(module_file.endswith("/app/services/patient_decision_engine/__init__.py"), module_file)
+        from app.services.patient_decision_engine_runtime import run_patient_decision_engine
+        self.assertIs(module.run_patient_decision_engine, run_patient_decision_engine)
 
     def test_memory_supervision_does_not_become_skilled_nursing(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")

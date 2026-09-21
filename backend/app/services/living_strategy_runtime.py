@@ -341,7 +341,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     strategy_candidates.sort(key=lambda row: (int(row.get("rank_hint") or 99), str(row.get("strategy_id") or "")))
     unresolved = [q["question_key"] for q in clarification_candidates]
 
-    return {
+    strategy = {
         "version": "living-strategy-runtime-v1.3-decision-quality",
         "household": household,
         "signals": {
@@ -366,6 +366,11 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         "interview_owner": "SEMANTIC_AI",
         "policy": "Choose the least-restrictive safe living-and-care strategy before ranking facilities; separate temporary recovery care from long-term residence; never convert a material unknown into a default. Strategy rules may flag unknowns but may not directly ask the user questions.",
     }
+
+    from app.services.living_strategy_guard_patch import deceased_spouse_without_current_couple, _strip_couple_only_strategy
+    if deceased_spouse_without_current_couple(questionnaire_state, natural_language_query):
+        return _strip_couple_only_strategy(strategy)
+    return strategy
 
 
 __all__ = ["build_living_strategy_context"]
