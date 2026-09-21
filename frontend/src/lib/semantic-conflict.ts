@@ -6,3 +6,22 @@ export function hasUnresolvedSemanticConflict(statements: unknown): boolean {
     && (statement.importance === "MUST" || statement.importance === "UNKNOWN"),
   );
 }
+
+export function semanticConflictQuestion(statements: unknown) {
+  if (!Array.isArray(statements)) return null;
+  const index = statements.findIndex((statement) =>
+    hasUnresolvedSemanticConflict([statement])
+    && typeof statement.clarification_question === "string"
+    && statement.clarification_question.trim(),
+  );
+  if (index < 0) return null;
+  const statement = statements[index];
+  const gapKey = typeof statement.gap_key === "string" ? statement.gap_key : "";
+  return {
+    question_key: `semantic-conflict-${gapKey || index}`,
+    question: statement.clarification_question.trim() as string,
+    decision_dimensions: Array.isArray(statement.mapped_parameters)
+      ? statement.mapped_parameters.filter((value: unknown): value is string => typeof value === "string") : [],
+    information_gain: "HIGH",
+  };
+}

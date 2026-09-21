@@ -8,7 +8,7 @@ import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNe
 import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
 import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
-import { hasUnresolvedSemanticConflict } from "@/lib/semantic-conflict";
+import { hasUnresolvedSemanticConflict, semanticConflictQuestion } from "@/lib/semantic-conflict";
 
 type AdaptiveQuestion = {
   question_key: string;
@@ -46,9 +46,11 @@ function cloneState(state: QuestionnaireState): QuestionnaireState {
 function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
   const top = profile.decision_intelligence;
   const nested = top?.human_intelligence;
+  const conflictQuestion = semanticConflictQuestion(nested?.semantic_ai?.result?.statements);
   return {
     canonical: top?.canonical_decision_state,
-    adaptive_questions: top?.adaptive_questions || nested?.adaptive_questions || [],
+    adaptive_questions: conflictQuestion ? [conflictQuestion] : top?.adaptive_questions?.length
+      ? top.adaptive_questions : nested?.adaptive_questions || [],
     questionnaire_patch: nested?.semantic_ai?.result?.questionnaire_patch || {},
     hasConflict: hasUnresolvedSemanticConflict(nested?.semantic_ai?.result?.statements),
   };
