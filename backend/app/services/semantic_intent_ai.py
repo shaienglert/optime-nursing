@@ -365,19 +365,18 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
         return False
     # A mentioned dimension is not necessarily resolved. Preserve model-authored
     # questions about contradictory client evidence rather than forcing READY.
-    if any(
+    has_conflict = any(
         isinstance(statement, dict)
         and statement.get("status") == "ASKED"
         and statement.get("knowledge_state") == "AMBIGUOUS"
         and statement.get("importance") in {"MUST", "UNKNOWN"}
         for statement in result.get("statements") or []
-    ):
-        return False
+    )
     current = _question_terms(next_question)
     if not current:
         return False
     salient = {"mobility", "cognitive", "location", "budget"}
-    if current & _explicit_user_text_answered_dimensions(user_text) & salient:
+    if not has_conflict and current & _explicit_user_text_answered_dimensions(user_text) & salient:
         return True
     for entry in _adaptive_answer_summary(questionnaire_state):
         prior = _question_terms(f"{entry.get('question', '')} {entry.get('answer', '')}")
