@@ -305,9 +305,21 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
         raise RuntimeError("Verified Las Vegas housing overlay contains non-Valley records")
 
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = target.with_suffix(target.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    os.replace(temporary, target)
+    # A unique temporary name per writer: concurrent cold-start callers (request
+    # threads, background workers, several processes after a deploy empties /tmp)
+    # used to share one fixed ".tmp" path, so one writer's os.replace moved the file
+    # out from under another and raised FileNotFoundError. Each writer now replaces
+    # the target atomically with its own complete file; identical content means the
+    # last replace wins harmlessly.
+    descriptor, temporary_name = tempfile.mkstemp(prefix=target.name + ".", suffix=".tmp", dir=str(target.parent))
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
+        os.replace(temporary, target)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
     return target
 
 
