@@ -7,19 +7,14 @@ non-existent facility into an Oomnik-branded report.
 """
 from __future__ import annotations
 
-import os
-import tempfile
 import unittest
 from unittest.mock import patch
 
-_TMP = tempfile.mkdtemp(prefix="report_authority_")
-os.environ.setdefault("DATABASE_URL", f"sqlite:///{_TMP}/report_authority.db")
+from fastapi.testclient import TestClient
 
-from fastapi.testclient import TestClient  # noqa: E402
-
-import app.main as main  # noqa: E402
-from app.database import Base, engine  # noqa: E402
-from app.services import decision_result_store  # noqa: E402
+import app.main as main
+from app.database import Base, engine
+from app.services import decision_result_store
 
 QUESTIONNAIRE = {"relationship": "Dad", "ageGroup": "80-84", "budget": 6500}
 QUERY = "My father lives in Las Vegas and needs help with bathing and dressing."
