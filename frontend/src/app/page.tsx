@@ -228,7 +228,7 @@ export default function HomePage() {
             </div>
           </nav>
 
-          <div className="pt-20 sm:pt-28">
+          <div className="pt-10 sm:pt-14"><div className="flex justify-center pb-12 sm:pb-16"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div>
             <p className="text-2xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Welcome to Oomnik</p>
             <h1 className="mt-5 max-w-5xl text-5xl font-semibold leading-[1.03] tracking-[-0.05em] text-[#1e2e28] sm:text-7xl lg:text-[5.5rem]">
               A difficult decision deserves time, care, and the right guidance.
