@@ -12,7 +12,7 @@ export function OptimeStaticLogo({ href = "/", className = "", variant = "compac
   const wordSize = Math.max(22, Math.round(30 * scale));
   const ring = Math.max(24, Math.round(31 * scale));
   const stroke = Math.max(4, Math.round(5 * scale));
-  const gap = Math.max(3, Math.round(5 * scale));
+  const gap = Math.max(4, Math.round(6.25 * scale));
 
   return (
     <Link
@@ -25,14 +25,14 @@ export function OptimeStaticLogo({ href = "/", className = "", variant = "compac
           <span className="inline-block rounded-full border-current" style={{ width: ring, height: ring, borderWidth: stroke }} />
           <span className="inline-block rounded-full border-current" style={{ width: ring, height: ring, borderWidth: stroke, marginLeft: -stroke }} />
         </span>
-        <span className="inline-flex items-baseline" style={{ gap, fontSize: wordSize, letterSpacing: "0.03em" }}>
+        <span className="inline-flex items-baseline" style={{ gap, fontSize: wordSize, letterSpacing: "0.0375em" }}>
           <span>m</span><span>n</span>
-          <span className="relative">i<span className="absolute left-1/2 -translate-x-1/2 rounded-[2px] bg-gradient-to-br from-orange-400 to-pink-500" style={{ width: Math.max(5, Math.round(6*scale)), height: Math.max(5, Math.round(6*scale)), top: Math.round(-5*scale) }} /></span>
+          <span className="relative">i<span className="absolute left-1/2 -translate-x-1/2 rounded-[2px] bg-gradient-to-br from-orange-400 to-pink-500" style={{ width: Math.max(6, Math.round(6.6*scale)), height: Math.max(6, Math.round(6.6*scale)), top: Math.round(-5*scale) }} /></span>
           <span>k</span>
         </span>
       </span>
       {variant === "primary" ? (
-        <span className="mt-1 whitespace-nowrap font-light text-[#168fe0]" style={{ fontSize: Math.max(9, Math.round(10*scale)), letterSpacing: "0.10em" }}>
+        <span className="mt-1 whitespace-nowrap font-light text-[#168fe0]" style={{ fontSize: Math.max(9, Math.round(10*scale)), letterSpacing: "0.125em" }}>
           Finding You the Right Way
         </span>
       ) : null}
