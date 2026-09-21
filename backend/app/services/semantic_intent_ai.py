@@ -24,6 +24,7 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Understand the client before recommending anything.",
     "Account for every meaningful client statement.",
     "Separate explicit facts from inferences.",
+    "When client statements conflict about the same person and current situation, preserve both statements as AMBIGUOUS and ask which is correct. Do not choose the higher budget or more severe care need. Distinguish genuine contradictions from different people, time periods, or an explicit correction.",
     "Never convert an inference into a fact without confirmation or evidence.",
     "Classify decision relevance as MUST, NICE, CONTEXT, or UNKNOWN.",
     "Identify unresolved client-owned information with a stable gap_key; deterministic policy, not the model, decides whether it blocks READY.",
@@ -361,6 +362,16 @@ def _explicit_user_text_answered_dimensions(user_text: str) -> set[str]:
 def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_state: Dict[str, Any], user_text: str = "") -> bool:
     next_question = str(result.get("next_question") or "").strip()
     if not next_question:
+        return False
+    # A mentioned dimension is not necessarily resolved. Preserve model-authored
+    # questions about contradictory client evidence rather than forcing READY.
+    if any(
+        isinstance(statement, dict)
+        and statement.get("status") == "ASKED"
+        and statement.get("knowledge_state") == "AMBIGUOUS"
+        and statement.get("importance") in {"MUST", "UNKNOWN"}
+        for statement in result.get("statements") or []
+    ):
         return False
     current = _question_terms(next_question)
     if not current:

@@ -74,6 +74,8 @@ function useFacilityRecommendation(
   state: ReturnType<typeof useQuestionnaire>["state"],
 ) {
   return useMemo(() => {
+    const completion = state.questionnaireCompletion;
+    if (!completion?.mandatoryComplete || !completion.conditionalFollowUpsComplete || !completion.clientSummaryConfirmed) return null;
     if (!governanceContext || facilities.length === 0) return null;
     const engineOutput = runOptimeV2Engine(facilities, state, { governanceContext });
     return (
@@ -176,8 +178,8 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
     || facility?.id
     || null;
 
-  const whySelected = recommendation?.report.audit.clinicalReasoning.whyThisCommunity || recommendation?.whyThisFits || facility?.shortExplanation || "OPTIME selected this facility based on the strongest verified fit signals currently available.";
-  const rankReason = recommendation?.rankReason || recommendation?.confidenceExplanation || "One of the strongest available options for this search.";
+  const whySelected = recommendation?.report.audit.clinicalReasoning.whyThisCommunity || recommendation?.whyThisFits;
+  const rankReason = recommendation?.rankReason || recommendation?.confidenceExplanation;
   const priceLine = priceTruth ? `${priceTruth.label}: ${priceTruth.value}` : "Current pricing not verified - contact facility";
   const priceDisclosure = priceTruth?.truthState === "UNKNOWN"
     ? "Pricing is not published by the backend for this facility."
@@ -243,10 +245,19 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
 
           <div className="space-y-6">
             <section className="rounded-3xl border border-[#e8ddcc] bg-white p-5 shadow-[0_16px_50px_-34px_rgba(69,58,43,0.45)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5f7f6b]">Why OPTIME selected this facility for {person}</p>
-              <p className="mt-2 text-xl font-semibold text-[#2f2a24]">Why this facility may fit {person}</p>
-              <p className="mt-3 text-sm leading-6 text-[#5f5548]">{whySelected}</p>
-              <p className="mt-2 text-sm leading-6 text-[#5f5548]">{rankReason}</p>
+              {recommendation ? (
+                <>
+                  <p className="mt-2 text-xl font-semibold text-[#2f2a24]">Fit assessment for {person}</p>
+                  {whySelected ? <p className="mt-3 text-sm leading-6 text-[#5f5548]">{whySelected}</p> : null}
+                  {rankReason ? <p className="mt-2 text-sm leading-6 text-[#5f5548]">{rankReason}</p> : null}
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 text-xl font-semibold text-[#2f2a24]">Facility profile</p>
+                  <p className="mt-3 text-sm leading-6 text-[#5f5548]">No personalized assessment is available for this facility.</p>
+                  <Link href="/intake" className="mt-2 inline-block text-[#5f7f6b] underline">Complete and confirm your questionnaire to explore your options</Link>
+                </>
+              )}
             </section>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -274,7 +285,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
               <section className="rounded-2xl border border-[#f0d9b0] bg-[#fff8ea] p-4">
                 <p className="font-semibold text-[#8a6a2f]">Still unknown</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {sectionItems(unknownItems.slice(0, 6).map((item) => item.label), "No unknowns currently surfaced").map((item) => (
+                  {sectionItems(unknownItems.slice(0, 6).map((item) => item.label), recommendation ? "No unknowns currently surfaced" : "Personal requirements have not been assessed").map((item) => (
                     <span key={`unknown-${item}`} className="rounded-full border border-[#e3d2a6] bg-[#fffdf4] px-3 py-1 text-xs font-medium text-[#7a6847]">Verify {item}</span>
                   ))}
                 </div>

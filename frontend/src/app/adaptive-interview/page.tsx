@@ -8,6 +8,7 @@ import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNe
 import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
 import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
+import { hasUnresolvedSemanticConflict } from "@/lib/semantic-conflict";
 
 type AdaptiveQuestion = {
   question_key: string;
@@ -25,7 +26,7 @@ type NeedsProfileWithDecisionIntelligence = PatientNeedsProfile & {
     human_intelligence?: {
       decision_readiness?: string;
       adaptive_questions?: AdaptiveQuestion[];
-      semantic_ai?: { result?: { questionnaire_patch?: Record<string, unknown> } };
+      semantic_ai?: { result?: { questionnaire_patch?: Record<string, unknown>; statements?: unknown } };
     };
     adaptive_questions?: AdaptiveQuestion[];
     canonical_decision_state?: {
@@ -49,6 +50,7 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
     canonical: top?.canonical_decision_state,
     adaptive_questions: top?.adaptive_questions || nested?.adaptive_questions || [],
     questionnaire_patch: nested?.semantic_ai?.result?.questionnaire_patch || {},
+    hasConflict: hasUnresolvedSemanticConflict(nested?.semantic_ai?.result?.statements),
   };
 }
 
@@ -212,7 +214,8 @@ export default function AdaptiveInterviewPage() {
         natural_language_query: currentState.notes || "",
       }))) as NeedsProfileWithDecisionIntelligence;
       const context = getDecisionContext(response);
-      const hydratedState = applySemanticQuestionnairePatch(currentState, context.questionnaire_patch);
+      // A model-proposed value must not answer its own contradiction question.
+      const hydratedState = context.hasConflict ? currentState : applySemanticQuestionnairePatch(currentState, context.questionnaire_patch);
       if (JSON.stringify(hydratedState) !== JSON.stringify(currentState)) setState(hydratedState);
 
       if (context.canonical?.authoritative !== true) {
@@ -221,7 +224,7 @@ export default function AdaptiveInterviewPage() {
         return;
       }
 
-      if (context.canonical.client === "COMPLETE") {
+      if (context.canonical.client === "COMPLETE" && !context.hasConflict) {
         setQuestion(null);
         setState(hydratedState);
         router.replace(`/intake-confirmation?next=${encodeURIComponent(destination)}`);
@@ -235,7 +238,7 @@ export default function AdaptiveInterviewPage() {
         return;
       }
 
-      const existing = existingAnswerFor(nextQuestion, hydratedState);
+      const existing = context.hasConflict ? null : existingAnswerFor(nextQuestion, hydratedState);
       if (existing && !autoResolved.current.has(nextQuestion.question_key)) {
         autoResolved.current.add(nextQuestion.question_key);
         const resolvedState = applyAnswer(hydratedState, nextQuestion, existing);
