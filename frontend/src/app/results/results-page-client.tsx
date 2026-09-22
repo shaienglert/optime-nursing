@@ -843,7 +843,7 @@ export function ResultsPageClient() {
     <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8f5ec_22%,#ffffff_45%)] px-4 py-6 sm:px-8 lg:px-12">
       <section className="mx-auto max-w-7xl">
         <header className="rounded-3xl border border-[#e9dfce] bg-white/90 p-6 shadow-[0_22px_80px_-42px_rgba(82,65,42,0.4)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">Oomnik Results</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5f7f6b]">OOmnik Results</p>
           <h1 className="mt-3 text-3xl font-semibold text-[#2f2a24] sm:text-4xl">{recommendations.length ? "Recommended communities" : "Community review"} for {relationship}</h1>
           <p className="mt-2 text-[#6b645a]">Results are personalized to your current needs profile and governed parameter evidence.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
