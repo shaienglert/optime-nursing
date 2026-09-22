@@ -26,7 +26,7 @@ if (!interview.includes('I’ll use everything you’ve already told me, so I wo
 for (const token of ['medicalCareProfile', 'moveLossConcerns', 'parkingRequirement', 'clientSummaryConfirmed: false', 'Continue our conversation']) {
   if (!intake.includes(token)) throw new Error(`Mandatory structured intake contract missing: ${token}`);
 }
-for (const token of ['Please confirm what Oomnik understood.', 'clientSummaryConfirmed: true', 'I confirm—show recommendations']) {
+for (const token of ['Please confirm what OOmnik understood.', 'clientSummaryConfirmed: true', 'I confirm—show recommendations']) {
   if (!confirmation.includes(token)) throw new Error(`Client confirmation contract missing: ${token}`);
 }
 

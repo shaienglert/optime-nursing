@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { OOmnikMark } from "@/components/brand/oomnik-mark";
+import { OomnikMark as OOmnikMark } from "@/components/brand/oomnik-mark";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { buildResultsUrl } from "@/lib/results-url";
 

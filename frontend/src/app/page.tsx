@@ -11,7 +11,7 @@ import { buildResultsUrl } from "@/lib/results-url";
 import { extractExplicitMonthlyBudget } from "@/lib/story-budget";
 import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
-import { OOmnikMark } from "@/components/brand/oomnik-mark";
+import { OomnikMark as OOmnikMark } from "@/components/brand/oomnik-mark";
 
 const EXAMPLE_QUERY =
   "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
