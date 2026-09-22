@@ -543,6 +543,8 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
         "no mobility limitation", "no mobility limitations", "walks independently", "no transfer assistance", "does not need transfer assistance",
         "does not need help getting", "doesn't need help getting", "no help getting",
         "does not need one person", "doesn't need one person",
+        "does not need help getting", "doesn't need help getting",
+        "does not need help to get", "doesn't need help to get",
     ))
     bed_or_shower_help = re.search(
         r"\b(?:needs?\s+(?:one person\s+to\s+)?help|needs?\s+one person\s+to\s+help\s+(?:her|him|them)|help\s+(?:her|him|them))\s+(?:to\s+)?(?:get|getting)\s+(?:in\s+and\s+out\s+of|into|out\s+of)\s+(?:the\s+)?(?:bed|shower)\b",
