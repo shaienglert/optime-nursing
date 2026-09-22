@@ -10,6 +10,7 @@ downstream research, never invented facts.
 """
 
 import json
+import copy
 import os
 import re
 import time
@@ -486,16 +487,53 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     payload = _build_prompt(user_text, questionnaire_state, learning_advice)
     active_transport = transport or _default_transport
     result = active_transport(payload)
-    if transport is None:
-        result = _repair_live_readiness_mismatch(result)
-        result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=False)
-        result = _repair_missing_minimum_dimensions_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
-        result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=True)
+    def validate_live_packet(packet: Dict[str, Any]) -> Dict[str, Any]:
+        packet = _repair_live_readiness_mismatch(packet)
+        # Validation normalizes advisory readiness, so check minimum dimensions
+        # on the validated packet as well as question usability and repetition.
+        packet = _validate_result(packet)
         missing = [key for key, known in _minimum_dimension_status(user_text, questionnaire_state).items() if not known]
-        readiness = str(result.get("decision_readiness") or "").upper()
-        if missing and (readiness == "READY" or (readiness == "NEEDS_CLARIFICATION" and not _has_blocking_question(result))):
+        readiness = str(packet.get("decision_readiness") or "").upper()
+        if missing and (readiness == "READY" or (readiness == "NEEDS_CLARIFICATION" and not _has_blocking_question(packet))):
             raise RuntimeError(f"SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS:{','.join(missing)}")
-    result = _validate_result(result)
+        if readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(packet, questionnaire_state, user_text):
+            raise RuntimeError("SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION")
+        return packet
+
+    if transport is None:
+        prior_packet = copy.deepcopy(result)
+        try:
+            result = _repair_live_readiness_mismatch(result)
+            result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=False)
+            result = _repair_missing_minimum_dimensions_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
+            result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=True)
+            prior_packet = copy.deepcopy(result)
+            result = validate_live_packet(result)
+        except RuntimeError as error:
+            # One final schema repair covers failures that the question-only
+            # repair misses (including omitted readiness and invalid enums).
+            # Transport failures are not schema failures and are never retried here.
+            code = str(error).split(":", 1)[0]
+            repairable = code in {
+                "SEMANTIC_AI_CLARIFICATION_WITHOUT_BLOCKING_QUESTION",
+                "SEMANTIC_AI_REPAIR_CLARIFICATION_WITHOUT_QUESTION",
+                "SEMANTIC_AI_INVALID_IMPORTANCE",
+                "SEMANTIC_AI_INVALID_STATUS",
+                "SEMANTIC_AI_INVALID_KNOWLEDGE",
+                "SEMANTIC_AI_ASKED_WITHOUT_QUESTION",
+            }
+            if not repairable:
+                raise
+            repair_payload = dict(payload)
+            repair_payload["packet_validation_repair"] = {
+                "validation_error": str(error),
+                "prior_packet": prior_packet,
+                "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness and questionnaire_patch. Preserve explicit client facts and unknowns. Use only allowed enum values. If a material client question remains, include one ASKED statement and its identical next_question. Otherwise return READY with statement accounting. Never invent answers or discard a requirement to pass validation.",
+            }
+            result = validate_live_packet(active_transport(repair_payload))
+            result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}
+    else:
+        result = _validate_result(result)
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
 
