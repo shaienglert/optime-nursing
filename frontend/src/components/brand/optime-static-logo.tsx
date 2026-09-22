@@ -27,7 +27,7 @@ export function OptimeStaticLogo({ href = "/", className = "", variant = "compac
         </span>
         <span className="inline-flex items-baseline" style={{ gap, fontSize: wordSize, letterSpacing: "0.0375em" }}>
           <span>m</span><span>n</span>
-          <span className="relative">i<span className="absolute left-1/2 -translate-x-1/2 rounded-[2px] bg-gradient-to-br from-orange-400 to-pink-500" style={{ width: Math.max(5, Math.round(4.75*scale)), height: Math.max(5, Math.round(4.75*scale)), top: Math.round(-3.2*scale) }} /></span>
+          <span className="relative inline-block">ı<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-orange-500" style={{ width: Math.max(5, Math.round(4.75*scale)), height: Math.max(5, Math.round(4.75*scale)), top: Math.round(5.4*scale) }} /></span>
           <span>k</span>
         </span>
       </span>
