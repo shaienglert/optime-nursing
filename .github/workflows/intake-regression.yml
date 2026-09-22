@@ -36,6 +36,7 @@ jobs:
           backend/tests/test_semantic_clarification_contract_repair.py
           backend/tests/test_patient_decision_engine.py
           backend/tests/test_structured_medical_needs_mapping.py
+          backend/tests/test_personal_decision_report_builder.py
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci

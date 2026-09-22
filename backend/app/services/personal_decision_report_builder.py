@@ -240,7 +240,9 @@ def _candidate_claims(row: Mapping[str, Any]) -> list[tuple[ApprovedReportClaim,
             ),
             ReportSection.BEFORE_YOU_DECIDE,
         ))
-    for index, parameter_id in enumerate(row.get("unknown_critical_needs") or []):
+    for index, need in enumerate(row.get("unknown_critical_needs") or []):
+        # The scorer emits evidence records; older saved reports used bare IDs.
+        parameter_id = str(need.get("parameter_id") or "") if isinstance(need, Mapping) else str(need)
         pairs.append((
             _claim(
                 f"facility:{facility_id}.unknown.{parameter_id}",
