@@ -9,15 +9,15 @@ type OptimeStaticLogoProps = {
 
 export function OptimeStaticLogo({ href = "/", className = "", variant = "compact", height = 32 }: OptimeStaticLogoProps) {
   const scale = height / 32;
-  const wordSize = Math.max(22, Math.round(30 * scale));
-  const ring = Math.max(24, Math.round(31 * scale));
-  const stroke = Math.max(4, Math.round(5 * scale));
-  const gap = Math.max(4, Math.round(6.25 * scale));
+  const wordSize = Math.max(22, Math.round(33 * scale));
+  const ring = Math.max(24, Math.round(34.1 * scale));
+  const stroke = Math.max(4, Math.round(5.5 * scale));
+  const gap = Math.max(4, Math.round(6.875 * scale));
 
   return (
     <Link
       href={href}
-      className={`inline-flex flex-col items-start leading-none ${className}`.trim()}
+      className={`inline-flex flex-col items-center leading-none ${className}`.trim()}
       aria-label="OOmnik Home"
     >
       <span className="inline-flex items-center font-semibold text-[#079ff2]" style={{ gap }}>
@@ -27,7 +27,7 @@ export function OptimeStaticLogo({ href = "/", className = "", variant = "compac
         </span>
         <span className="inline-flex items-baseline" style={{ gap, fontSize: wordSize, letterSpacing: "0.0375em" }}>
           <span>m</span><span>n</span>
-          <span className="relative">i<span className="absolute left-1/2 -translate-x-1/2 rounded-[2px] bg-gradient-to-br from-orange-400 to-pink-500" style={{ width: Math.max(6, Math.round(6.6*scale)), height: Math.max(6, Math.round(6.6*scale)), top: Math.round(-5*scale) }} /></span>
+          <span className="relative">i<span className="absolute left-1/2 -translate-x-1/2 rounded-[2px] bg-gradient-to-br from-orange-400 to-pink-500" style={{ width: Math.max(6, Math.round(5.6*scale)), height: Math.max(6, Math.round(5.6*scale)), top: Math.round(-3.8*scale) }} /></span>
           <span>k</span>
         </span>
       </span>
