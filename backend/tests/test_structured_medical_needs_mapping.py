@@ -89,10 +89,26 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
     def test_assistance_checkboxes_previously_unrecognized_now_register(self) -> None:
         # "Help with dressing"/"toileting"/"medications" and "Daytime supervision" matched
         # no keyword at all before -- selecting only these produced zero needs.
-        for label in ("Help with dressing", "Help with toileting", "Help with medications", "Daytime supervision"):
+        for label in ("Help with dressing", "Help with toileting", "Daytime supervision"):
             profile = build_patient_needs_profile({"assistanceLevel": label, "memoryStatus": "No"}, "")
             ids = {item["parameter_id"] for item in profile["needs"]}
             self.assertIn("adl_support", ids, f"{label!r} should register an ADL-support need")
+
+    def test_medication_selection_does_not_invent_personal_care(self):
+        profile = build_patient_needs_profile({"assistanceLevel": "Help with medications"}, "")
+        ids = {item["parameter_id"] for item in profile["needs"]}
+        self.assertIn("medication_support", ids)
+        self.assertTrue(ids.isdisjoint({"adl_support", "transfer_assistance"}))
+
+    def test_bathing_and_dressing_do_not_imply_transfers(self):
+        for label in ("Help with bathing", "Help with dressing", "Needs assistance with bathing and dressing", "Help with medications, Help with bathing"):
+            profile = build_patient_needs_profile({"assistanceLevel": label}, "")
+            ids = {item["parameter_id"] for item in profile["needs"]}
+            self.assertIn("adl_support", ids)
+            self.assertNotIn("transfer_assistance", ids)
+        profile = build_patient_needs_profile({"assistanceLevel": "Help with bathing", "medicalCareProfile": {"transferAssistance": "Two people"}}, "")
+        needs = {item["parameter_id"]: item for item in profile["needs"]}
+        self.assertEqual(needs["transfer_assistance"]["requirement_level"], "HIGH")
 
     def test_frontend_checkbox_options_are_exhaustively_classified(self) -> None:
         repo_root = Path(__file__).resolve().parents[2]
