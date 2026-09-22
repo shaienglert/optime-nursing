@@ -163,11 +163,11 @@ export function SimpleResultsPageClient() {
           </p>
           {top.length > 0 ? (
             <div className="mt-7 rounded-2xl bg-[#eef7f2] p-5 text-xl leading-8 text-[#214d40]">
-              We currently have <strong>{top.length}</strong> leading option{top.length === 1 ? "" : "s"} with verified eligibility. We still recommend confirming the few facility-specific details shown below before making a final decision.
+              I found <strong>{top.length}</strong> option{top.length === 1 ? "" : "s"} I think deserve your attention. I’ll show you what I like about each one, what gives me pause, and anything I still want to verify before you rely on it.
             </div>
           ) : (
             <div className="mt-7 rounded-2xl bg-[#fff5df] p-5 text-xl leading-8 text-[#6d5426]">
-              We have promising candidates, but we do not yet have enough verified information to call any of them a final recommendation. We should verify the missing facility details first.
+              I found some promising possibilities, but I’m not comfortable calling any of them a recommendation yet. There are still important details I want verified first.
             </div>
           )}
         </section>
@@ -205,20 +205,20 @@ export function SimpleResultsPageClient() {
 
                   <div className="mt-7 grid gap-5 lg:grid-cols-2">
                     <div className="rounded-2xl bg-[#f4f8f6] p-6">
-                      <h3 className="text-2xl font-semibold">Why Oomnik is showing you this</h3>
+                      <h3 className="text-2xl font-semibold">Why I think this is worth looking at</h3>
                       {why.length ? (
                         <ul className="mt-3 space-y-3 text-xl leading-8">{why.map((text) => <li key={text}>✓ {text}</li>)}</ul>
                       ) : (
-                        <p className="mt-3 text-xl leading-8 text-[#596761]">It passed the required-care and location checks. We are still building the plain-language explanation.</p>
+                        <p className="mt-3 text-xl leading-8 text-[#596761]">It meets the important requirements we agreed on. I’m still building the clearest explanation of why it stands out from the other options.</p>
                       )}
                     </div>
 
                     <div className="rounded-2xl bg-[#fff7e7] p-6">
-                      <h3 className="text-2xl font-semibold">What we still want to confirm</h3>
+                      <h3 className="text-2xl font-semibold">What gives me pause</h3>
                       {verify.length ? (
                         <ul className="mt-3 space-y-3 text-xl leading-8">{verify.map((text) => <li key={text}>• {text}</li>)}</ul>
                       ) : (
-                        <p className="mt-3 text-xl leading-8">No critical verification item is currently flagged.</p>
+                        <p className="mt-3 text-xl leading-8">I don’t see a critical unresolved issue here right now.</p>
                       )}
                     </div>
                   </div>
@@ -232,7 +232,7 @@ export function SimpleResultsPageClient() {
           <section className="mt-8 rounded-[2rem] border border-[#ead9b4] bg-[#fffaf0] p-7 sm:p-9">
             <h2 className="text-3xl font-semibold">Other promising places we are still checking</h2>
             <p className="mt-3 text-xl leading-8 text-[#655a45]">
-              These places are not being presented as recommendations yet because one or more important facts still need verification.
+              I’m keeping these places in view, but I’m not asking you to rely on them yet. One or more details that matter to this decision still need verification.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               {pending.slice(0, 8).map((item) => (
@@ -244,10 +244,10 @@ export function SimpleResultsPageClient() {
 
         <section className="mt-8 rounded-[2rem] border border-[#bcd9e7] bg-[#f5fbfe] p-7 sm:p-9">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#168fe0]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">Refine the search without starting over</h2><p className="mt-3 max-w-3xl text-lg leading-8 text-[#53635d]">These are the criteria currently shaping your results. Change, remove or add a preference and Oomnik will reassess the options.</p></div>
+            <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#168fe0]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">Refine the search without starting over</h2><p className="mt-3 max-w-3xl text-lg leading-8 text-[#53635d]">These are the things currently shaping my search for you. Tell OOMNIKER what you want to change, remove or add, and I’ll reassess the options without making you start over.</p></div>
             <button type="button" onClick={() => setOomnikerOpen((v) => !v)} className="rounded-full bg-[#079ff2] px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close" : "Open OOMNIKER"}</button>
           </div>
-          <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>\n          {oomnikerNotice ? <div className="mt-4 rounded-2xl bg-white p-4 text-base text-[#315f53]">{oomnikerNotice} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOomnikerNotice("Last OOMNIKER change undone. Reassessing the previous search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
+          <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>\n          {oomnikerNotice ? <div className="mt-4 rounded-2xl bg-white p-4 text-base text-[#315f53]">{oomnikerNotice} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOomnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
           {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOomnikerText(e.target.value)} rows={3} placeholder="Try: Increase the radius to 75 miles, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOomnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
         </section>
 
