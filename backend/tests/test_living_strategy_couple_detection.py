@@ -39,3 +39,7 @@ def test_parents_present_tense_across_sentences_form_a_couple():
 
 def test_parents_relationship_alone_does_not_invent_a_couple():
     assert _household_type("My mother is widowed after her husband died and is looking for an apartment.", "Parents") == "SINGLE_OR_UNKNOWN"
+
+
+def test_deceased_parents_are_not_a_current_couple():
+    assert _household_type("My parents are both deceased. I need housing for myself.") == "SINGLE_OR_UNKNOWN"
