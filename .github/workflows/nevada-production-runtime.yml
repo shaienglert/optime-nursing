@@ -124,7 +124,10 @@ jobs:
           _real_agent_and_provider_payloads = evidence_runtime.agent_and_provider_payloads
 
           def _payloads_with_verified_budget(row):
-              return [*_real_agent_and_provider_payloads(row), {'published_rates_verified': True}]
+              # Explicit synthetic price for this contract fixture only. Keep the
+              # real affordability comparison; disclosure alone is not enough.
+              row['starting_monthly_price'] = 2800
+              return _real_agent_and_provider_payloads(row)
 
           evidence_runtime.agent_and_provider_payloads = _payloads_with_verified_budget
 
