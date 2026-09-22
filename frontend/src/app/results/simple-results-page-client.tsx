@@ -38,10 +38,44 @@ function cleanText(value: string): string {
 export function SimpleResultsPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { state } = useQuestionnaire();
+  const { state, setState } = useQuestionnaire();
   const [response, setResponse] = useState<DecisionEngineResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);\n  const [oomnikerOpen, setOomnikerOpen] = useState(false);\n  const [oomnikerText, setOomnikerText] = useState("");
+
+  function applyOomnikerChange() {
+    const text = oomnikerText.trim();
+    if (!text) return;
+    const lower = text.toLowerCase();
+    setState((current) => {
+      const next = JSON.parse(JSON.stringify(current));
+      const budget = lower.match(/(?:budget|up to|maximum|max)[^$0-9]{0,20}\$?([0-9][0-9,]*)/);
+      if (budget) next.budget = Number(budget[1].replaceAll(",", ""));
+      const miles = lower.match(/([0-9]+)\s*miles?/);
+      if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.locationImportant = "Yes"; }
+      if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
+      if (/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "No preference";
+      if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";
+      next.questionnaireCompletion.clientSummaryConfirmed = true;
+      next.questionnaireCompletion.confirmedAt = new Date().toISOString();
+      return next;
+    });
+    setOomnikerText("");
+    setOomnikerOpen(false);
+  }
+
+  const activeCriteria = [
+    state.assistanceLevel && ["Care", state.assistanceLevel],
+    state.medicalCareProfile.mobilityMethod && ["Mobility", state.medicalCareProfile.mobilityMethod],
+    state.memoryStatus && ["Memory", state.memoryStatus],
+    state.futureCarePreference && ["Future care", state.futureCarePreference],
+    state.humanIntelligenceV2.personalityProfile.communitySizePreference && ["Community", state.humanIntelligenceV2.personalityProfile.communitySizePreference],
+    state.humanIntelligenceV2.independenceProfile.petOwnershipImportance && ["Pet", state.humanIntelligenceV2.independenceProfile.petOwnershipImportance],
+    state.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently && ["Independent outings", state.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently],
+    state.budget > 0 && ["Budget", `Up to ${state.budget.toLocaleString("en-US")}/month`],
+    state.maximumDistanceMiles && ["Radius", `${state.maximumDistanceMiles} miles`],
+    state.moveTiming && ["Timing", state.moveTiming],
+  ].filter(Boolean) as string[][];
 
   const naturalLanguageQuery = (
     searchParams.get("q") || searchParams.get("search") || searchParams.get("notes") || state.notes || ""
@@ -122,7 +156,7 @@ export function SimpleResultsPageClient() {
       <div className="mx-auto max-w-6xl">
         <section className="rounded-[2rem] border border-[#e1d8c9] bg-white p-7 shadow-sm sm:p-10">
           {syntheticPilot ? <div className="mb-6 rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-lg font-semibold text-amber-950">Pilot mode: every community, price, availability value and image on this page is synthetic test data—not a real facility.</div> : null}
-          <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#437667]">OPTIME results</p>
+          <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#437667]">Oomnik results</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">The strongest options for {relationship}</h1>
           <p className="mt-5 max-w-4xl text-xl leading-8 text-[#53635d]">
             We first removed places that do not meet the required conditions. Then we ranked the remaining options using the information we currently have.
@@ -207,6 +241,15 @@ export function SimpleResultsPageClient() {
             </div>
           </section>
         ) : null}
+
+        <section className="mt-8 rounded-[2rem] border border-[#bcd9e7] bg-[#f5fbfe] p-7 sm:p-9">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#168fe0]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">Refine the search without starting over</h2><p className="mt-3 max-w-3xl text-lg leading-8 text-[#53635d]">These are the criteria currently shaping your results. Change, remove or add a preference and Oomnik will reassess the options.</p></div>
+            <button type="button" onClick={() => setOomnikerOpen((v) => !v)} className="rounded-full bg-[#079ff2] px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close" : "Open OOMNIKER"}</button>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>
+          {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOomnikerText(e.target.value)} rows={3} placeholder="Try: Increase the radius to 75 miles, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOomnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
+        </section>
 
         <section className="mt-8 flex flex-wrap gap-4 pb-10">
           <Link href={detailsHref} className="rounded-2xl border-2 border-[#315f53] px-6 py-4 text-xl font-semibold text-[#315f53]">See detailed comparison</Link>
