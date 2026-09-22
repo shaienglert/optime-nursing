@@ -46,13 +46,17 @@ export function SimpleResultsPageClient() {
   const [oomnikerOpen, setOomnikerOpen] = useState(false);
   const [oomnikerText, setOomnikerText] = useState("");
   const [oomnikerNotice, setOomnikerNotice] = useState("");
-  const oomnikerHistory = useRef<typeof state[]>([]);\n  const beforeOomnikerIds = useRef<string[]>([]);\n  const [oomnikerDiff, setOomnikerDiff] = useState<string>("");
+  const oomnikerHistory = useRef<typeof state[]>([]);
+  const beforeOomnikerIds = useRef<string[]>([]);
+  const [oomnikerDiff, setOomnikerDiff] = useState<string>("");
 
   function applyOomnikerChange() {
     const text = oomnikerText.trim();
     if (!text) return;
     const lower = text.toLowerCase();
-    beforeOomnikerIds.current = (response?.results || []).filter(isFinalRecommendation).map((item) => item.canonical_facility_id);\n    setOomnikerDiff("");\n    setState((current) => {
+    beforeOomnikerIds.current = (response?.results || []).filter(isFinalRecommendation).map((item) => item.canonical_facility_id);
+    setOomnikerDiff("");
+    setState((current) => {
       oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
       const next = JSON.parse(JSON.stringify(current));
       const budget = lower.match(/(?:budget|up to|maximum|max)[^$0-9]{0,20}\$?([0-9][0-9,]*)/);

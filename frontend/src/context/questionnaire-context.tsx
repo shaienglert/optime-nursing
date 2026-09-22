@@ -28,7 +28,8 @@ export type QuestionnaireState = {
   moveLossConcerns: string[];
   medicareStatus: string;
   medicaidStatus: string;
-  moveTiming: string;\n  careSearchApproach: string;
+  moveTiming: string;
+  careSearchApproach: string;
   questionnaireCompletion: {
     mandatoryComplete: boolean;
     conditionalFollowUpsComplete: boolean;
@@ -236,7 +237,8 @@ const DEFAULT_STATE: QuestionnaireState = {
   moveLossConcerns: [],
   medicareStatus: "",
   medicaidStatus: "",
-  moveTiming: "",\n  careSearchApproach: "",
+  moveTiming: "",
+  careSearchApproach: "",
   questionnaireCompletion: {
     mandatoryComplete: false,
     conditionalFollowUpsComplete: false,
