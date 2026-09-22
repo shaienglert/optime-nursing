@@ -26,7 +26,7 @@ type NeedsProfileWithDecisionIntelligence = PatientNeedsProfile & {
     human_intelligence?: {
       decision_readiness?: string;
       adaptive_questions?: AdaptiveQuestion[];
-      semantic_ai?: { result?: { questionnaire_patch?: Record<string, unknown>; statements?: unknown } };
+      semantic_ai?: { enabled?: boolean; required?: boolean; status?: string; result?: { questionnaire_patch?: Record<string, unknown>; statements?: unknown } };
     };
     adaptive_questions?: AdaptiveQuestion[];
     canonical_decision_state?: {
