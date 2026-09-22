@@ -241,6 +241,9 @@ def _add_need(
 
 def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     level = _normalize(questionnaire.get("assistanceLevel"))
+    if "medication" in level:
+        _add_need(needs_by_id, "medication_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 1.0, "Needs medication support")
+        level = re.sub(r"(?:help|assistance|support)\s+with\s+medications?", "", level)
     # Round-the-clock *supervision* (for example for dementia) is not evidence
     # that the resident requires a skilled-nursing license. Only an explicit
     # nursing/clinical statement may create this requirement.
@@ -259,17 +262,18 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
         # each one is a real signal that daily-living support is needed, not just the
         # two or three keywords this used to recognize.
         _add_need(needs_by_id, "adl_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 1.0, "Needs ADL support")
-        _add_need(needs_by_id, "transfer_assistance", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.8, "May need transfer help")
+        if not any(word in level for word in ("bathing", "dressing")) or any(word in level for word in ("transfer", "lift")):
+            _add_need(needs_by_id, "transfer_assistance", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.8, "May need transfer help")
 
 
 STRUCTURED_INTAKE_MAPPING_CONTRACT = {
     "assistanceLevel": {
         "Fully independent": {"classification": "NO_REQUIREMENT", "parameter_ids": []},
         "Light assistance": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "Help with bathing": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "Help with dressing": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
+        "Help with bathing": {"classification": "NEED", "parameter_ids": ["adl_support"]},
+        "Help with dressing": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with toileting": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "Help with medications": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
+        "Help with medications": {"classification": "NEED", "parameter_ids": ["medication_support"]},
         "Daytime supervision": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
         "24/7 support required": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
         "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities", "nursing_24_7", "transfer_assistance", "medication_support"]},
