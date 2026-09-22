@@ -5,21 +5,12 @@ import { useRouter } from "next/navigation";
 
 import { restoreQuestionnaireState, type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
-import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
+import { applyAdaptiveAnswer, type AdaptiveQuestion } from "@/lib/adaptive-answer";
 import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 import { hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "@/lib/semantic-conflict";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
 
-type AdaptiveQuestion = {
-  question_key: string;
-  question: string;
-  reason?: string;
-  decision_dimensions?: string[];
-  information_gain?: string;
-  answer_options?: string[];
-  policy_reference?: string;
-  target_fact_key?: string;
-};
+
 
 type NeedsProfileWithDecisionIntelligence = PatientNeedsProfile & {
   decision_intelligence?: {
@@ -144,29 +135,6 @@ function conversationWisdom(question: AdaptiveQuestion): string {
   return "";
 }
 
-function applyAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
-  let next = cloneState(state);
-  next.questionnaireCompletion = {
-    ...next.questionnaireCompletion,
-    clientSummaryConfirmed: false,
-    confirmedAt: "",
-  };
-  const targetFactKey = String(question.target_fact_key || "").trim();
-  const signals = next.humanIntelligenceV2.scoringEngine.adaptiveSignals || [];
-  next.humanIntelligenceV2.scoringEngine.adaptiveSignals = [
-    ...signals.filter((signal) => signal.questionKey !== question.question_key),
-    {
-      questionKey: question.question_key,
-      answer,
-      signalType: "decision-interview",
-      weights: { informationGain: question.information_gain === "HIGH" ? 1 : 0 },
-      impactExplanation: `Question: ${question.question}${targetFactKey ? ` | Target fact: ${targetFactKey}` : ""} | explicit client answer`,
-      infoGain: question.information_gain === "HIGH" ? 1 : 0,
-    },
-  ];
-  if (targetFactKey) next = canonicalizeAdaptiveFact(next, targetFactKey, answer);
-  return next;
-}
 
 async function withTimeout<T>(promise: Promise<T>): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -280,7 +248,7 @@ export default function AdaptiveInterviewPage() {
     const value = raw.trim();
     if (!value) return;
     setBusy(true);
-    const nextState = applyAnswer(state, question, value);
+    const nextState = applyAdaptiveAnswer(state, question, value);
     setState(nextState);
     void persistAdaptiveQuestionSignal({
       resident_key: "decision-interview-session",

@@ -7,8 +7,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
-import { loadDecisionResponseCache, saveDecisionResponseCache } from "@/lib/search-session";
+import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, QUESTIONNAIRE_SESSION_KEY } from "@/lib/search-session";
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
+import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
+import { resultsClientState } from "@/lib/results-client-state";
 
 const TOP_COUNT = 5;
 
@@ -42,6 +44,8 @@ export function SimpleResultsPageClient() {
   const [response, setResponse] = useState<DecisionEngineResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [followUpAnswer, setFollowUpAnswer] = useState("");
+  const [continuingInterview, setContinuingInterview] = useState(false);
   const [searchStage, setSearchStage] = useState(0);
   const [oomnikerOpen, setOOmnikerOpen] = useState(false);
   const [oomnikerText, setOOmnikerText] = useState("");
@@ -104,6 +108,7 @@ export function SimpleResultsPageClient() {
   );
 
   useEffect(() => {
+    if (continuingInterview) return;
     if (!state.questionnaireCompletion?.mandatoryComplete || !state.questionnaireCompletion?.conditionalFollowUpsComplete) {
       router.replace("/intake");
       return;
@@ -148,7 +153,7 @@ export function SimpleResultsPageClient() {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [decisionRequestKey, naturalLanguageQuery, router, searchParams, state]);
+  }, [continuingInterview, decisionRequestKey, naturalLanguageQuery, router, searchParams, state]);
 
   useEffect(() => {
     if (loading || beforeOOmnikerIds.current.length === 0 || !response) return;
@@ -193,6 +198,41 @@ export function SimpleResultsPageClient() {
     return <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]"><div className="mx-auto max-w-5xl rounded-3xl border border-rose-200 bg-white p-8 text-lg">{error || "No results are available yet."}</div></main>;
   }
 
+  const clientState = resultsClientState(response);
+  if (clientState.blocked || clientState.needsAnswer) {
+    const question = clientState.question;
+    const submitFollowUp = (raw: string) => {
+      const answer = raw.trim();
+      if (!question || !answer || continuingInterview) return;
+      setContinuingInterview(true);
+      const next = applyAdaptiveAnswer({ ...state, notes: naturalLanguageQuery }, question, answer);
+      // Persist before navigation so the interview restores this explicit answer.
+      saveSessionJson(QUESTIONNAIRE_SESSION_KEY, next);
+      setState(next);
+      router.push("/adaptive-interview?next=%2Fresults");
+    };
+    return <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]">
+      <section className="mx-auto max-w-3xl rounded-3xl bg-white p-8">
+        <p className="text-base font-semibold text-[#437667]">OOmnik</p>
+        <h1 className="mt-3 text-3xl font-semibold">{clientState.blocked ? "Your search needs another check" : "One more detail before we recommend places"}</h1>
+        {question ? <>
+          <p className="mt-6 text-2xl leading-9">{question.question}</p>
+          <div className="mt-5 flex flex-wrap gap-3">{(question.answer_options || []).map(option =>
+            <button key={option} type="button" disabled={continuingInterview} onClick={() => submitFollowUp(option)} className="rounded-full border px-5 py-3 text-lg disabled:opacity-50">{option}</button>
+          )}</div>
+          <form className="mt-5" onSubmit={event => { event.preventDefault(); submitFollowUp(followUpAnswer); }}>
+            <label htmlFor="results-follow-up" className="block text-lg">Your answer</label>
+            <textarea id="results-follow-up" value={followUpAnswer} onChange={event => setFollowUpAnswer(event.target.value)} disabled={continuingInterview} rows={3} className="mt-2 w-full rounded-2xl border p-4 text-lg" />
+            <button type="submit" disabled={continuingInterview || !followUpAnswer.trim()} className="mt-4 rounded-2xl bg-[#315f53] px-7 py-4 text-xl text-white disabled:opacity-50">{continuingInterview ? "Using your answer…" : "Continue"}</button>
+          </form>
+        </> : <>
+          <p className="mt-5 text-xl">Your answers are saved. We need to check our understanding before showing recommendations.</p>
+          <Link href="/adaptive-interview?next=%2Fresults" className="mt-6 inline-block rounded-2xl bg-[#315f53] px-6 py-4 text-lg text-white">Continue our conversation</Link>
+        </>}
+      </section>
+    </main>;
+  }
+
   return (
     <main className="min-h-screen bg-[#fffaf2] px-5 py-8 text-[#22332d] sm:px-8 lg:px-12">
       <div className="mx-auto max-w-6xl">
@@ -201,7 +241,9 @@ export function SimpleResultsPageClient() {
           <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#437667]">OOmnik results</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Here’s where I’d start for {relationship}</h1>
           <p className="mt-5 max-w-4xl text-xl leading-8 text-[#53635d]">
-            I removed places that do not meet the requirements that matter in this case. The options below are the strongest combinations of fit, evidence and what we still need to verify.
+            {top.length > 0
+              ? "The options below meet the verified must-haves for this case. I’ll explain their fit and any details that still need confirmation."
+              : "I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch."}
           </p>
           {top.length > 0 ? (
             <div className="mt-7 rounded-2xl bg-[#eef7f2] p-5 text-xl leading-8 text-[#214d40]">
@@ -209,7 +251,9 @@ export function SimpleResultsPageClient() {
             </div>
           ) : (
             <div className="mt-7 rounded-2xl bg-[#fff5df] p-5 text-xl leading-8 text-[#6d5426]">
-              I found some promising possibilities, but I’m not comfortable calling any of them a recommendation yet. There are still important details I want verified first.
+              {pending.length > 0
+                ? "Some communities still need important details verified before I can recommend them."
+                : "No community is ready to recommend from this search. You can review your answers or return to the conversation."}
             </div>
           )}
         </section>
