@@ -6,7 +6,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from backend.tests.priced_candidate_fixture import priced_payloads
+if __package__:
+    from .priced_candidate_fixture import priced_payloads
+else:
+    from priced_candidate_fixture import priced_payloads
 
 from app.services.facility_parameter_service import refresh_runtime_cache
 
