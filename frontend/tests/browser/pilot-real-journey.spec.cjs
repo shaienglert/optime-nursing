@@ -95,6 +95,10 @@ test.describe('real synthetic-pilot customer journey', () => {
         page.locator('main section button').first().waitFor({ state: 'visible', timeout: 300_000 }),
       ]).catch(() => {});
       if (await finalConfirmation.isVisible()) break;
+      // A runtime failure is not an interview option. Fail with the rendered
+      // explanation instead of silently clicking Try again up to 25 times.
+      const retry = page.getByRole('button', { name: 'Try again', exact: true });
+      expect(await retry.count(), await page.locator('main').innerText()).toBe(0);
       const answerBox = page.getByLabel('Your answer');
       const continueButton = page.getByRole('button', { name: /^Continue$/ });
       if (await answerBox.count()) {
