@@ -9,6 +9,7 @@ from app.services.personal_decision_report_builder import (
 
 def _ready_decision_result():
     canonical_state = {
+        "authoritative": True,
         "phase": "PROVISIONAL_RECOMMENDATION",
         "finality": "PROVISIONAL_PENDING_PREFERENCE_VERIFICATION",
         "can_show_recommendations": True,
@@ -52,6 +53,7 @@ def _ready_decision_result():
 
 def _blocked_decision_result():
     canonical_state = {
+        "authoritative": True,
         "phase": "CLIENT_INPUT_REQUIRED",
         "finality": "NONE",
         "can_show_recommendations": False,
@@ -90,6 +92,30 @@ def test_ready_case_produces_candidate_and_passes_contract():
     sections_used = {use.section for use in payload.claim_uses}
     assert ReportSection.WHY_THIS_PLACE in sections_used
     assert ReportSection.BEFORE_YOU_DECIDE in sections_used
+
+
+def test_scorer_unknown_records_survive_report_serialization():
+    from app.services.patient_decision_engine_runtime import _governed
+
+    result = _ready_decision_result()
+    eligibility = _governed._legacy._eligibility_from_needs(
+        [{"parameter_id": "dialysis_arrangements", "requirement_level": "REQUIRED",
+          "desired_value": "YES", "acceptable_values": ["YES"]}],
+        {},
+    )
+    unknowns = eligibility["unknown_critical_needs"]
+    assert unknowns and isinstance(unknowns[0], dict)
+    result["results"][0]["unknown_critical_needs"] = unknowns
+    payload = build_personal_decision_report(
+        questionnaire_state={"relationship": "Couple"},
+        natural_language_query="",
+        decision_result=result,
+    )
+    serialized = serialize_personal_report_payload(payload)
+    claims = serialized["candidates"][0]["sections"]["BEFORE_YOU_DECIDE"]
+    claim = next(item for item in claims if item["claim_id"].endswith(".unknown.dialysis_arrangements"))
+    assert claim["claim_type"] == "UNKNOWN"
+    assert "has not been verified" in claim["text"]
 
 
 def test_only_required_or_high_needs_enter_what_matters():

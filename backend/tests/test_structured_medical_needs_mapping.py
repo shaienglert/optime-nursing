@@ -89,10 +89,29 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
     def test_assistance_checkboxes_previously_unrecognized_now_register(self) -> None:
         # "Help with dressing"/"toileting"/"medications" and "Daytime supervision" matched
         # no keyword at all before -- selecting only these produced zero needs.
-        for label in ("Help with dressing", "Help with toileting", "Help with medications", "Daytime supervision"):
+        for label in ("Help with dressing", "Help with toileting", "Daytime supervision"):
             profile = build_patient_needs_profile({"assistanceLevel": label, "memoryStatus": "No"}, "")
             ids = {item["parameter_id"] for item in profile["needs"]}
             self.assertIn("adl_support", ids, f"{label!r} should register an ADL-support need")
+
+    def test_medication_help_does_not_invent_physical_assistance(self) -> None:
+        profile = build_patient_needs_profile({"assistanceLevel": "Help with medications", "memoryStatus": "No"}, "")
+        ids = {item["parameter_id"] for item in profile["needs"]}
+        self.assertIn("medication_support", ids)
+        self.assertNotIn("adl_support", ids)
+        self.assertNotIn("transfer_assistance", ids)
+
+    def test_mixed_medication_and_bathing_answers_preserve_both_needs(self) -> None:
+        profile = build_patient_needs_profile({"assistanceLevel": "Help with medications, Help with bathing", "memoryStatus": "No"}, "")
+        ids = {item["parameter_id"] for item in profile["needs"]}
+        self.assertTrue({"medication_support", "adl_support"}.issubset(ids))
+        self.assertNotIn("transfer_assistance", ids)
+
+    def test_other_assistance_answers_do_not_imply_transfers(self) -> None:
+        for label in STRUCTURED_INTAKE_MAPPING_CONTRACT["assistanceLevel"]:
+            profile = build_patient_needs_profile({"assistanceLevel": label, "memoryStatus": "No"}, "")
+            ids = {item["parameter_id"] for item in profile["needs"]}
+            self.assertNotIn("transfer_assistance", ids, label)
 
     def test_frontend_checkbox_options_are_exhaustively_classified(self) -> None:
         repo_root = Path(__file__).resolve().parents[2]
