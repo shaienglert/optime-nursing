@@ -215,7 +215,7 @@ export default function ProviderProfilePage({
                 <button type="button" onClick={() => void enterDemoWorkspace()} className="mt-5 min-h-12 rounded-full bg-[#16715e] px-6 py-3 text-base font-semibold text-white shadow-[0_5px_14px_rgba(22,113,94,.2)] transition hover:bg-[#105c4d]">Open OPTICARE practice workspace</button>
               </div>
             ) : (
-              <div className="mt-8 rounded-2xl border border-[#e5e5ea] bg-white p-5 text-base text-[#52645d]">Email verification will be available here once the Oomnik mail service is connected.</div>
+              <div className="mt-8 rounded-2xl border border-[#e5e5ea] bg-white p-5 text-base text-[#52645d]">Email verification will be available here once the OOmnik mail service is connected.</div>
             )}
             {error ? <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-base text-red-800">{error}</p> : null}
           </div>
