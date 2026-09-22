@@ -472,7 +472,7 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
         )
 
 
-# Explicit denials that the phrase list above misses, e.g. "Neither has dementia",
+# Explicit denials that the phrase list below misses, e.g. "Neither has dementia",
 # "neither of them has dementia or memory problems", "she does not have dementia".
 # Only explicit denial constructions are matched: a denial suppresses the positive
 # memory-care need (it becomes UNKNOWN unless stated as NO), it never invents one.
@@ -568,7 +568,16 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     no_memory_support = any(phrase in normalized for phrase in (
         "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern",
         "does not need cognitive support", "doesn't need cognitive support", "no cognitive support",
-    )) or bool(_NEGATED_DEMENTIA.search(normalized))
+    ))
+    # A denial belongs to its own mention, not to every person or requirement
+    # in the story. Keep a positive mention elsewhere (including memory care
+    # explicitly requested despite no dementia diagnosis).
+    memory_text_without_denials = _NEGATED_DEMENTIA.sub("", normalized)
+    if memory_text_without_denials != normalized:
+        no_memory_support = no_memory_support or not any(
+            token in memory_text_without_denials
+            for token in ("dementia", "alzheimer", "memory care")
+        )
     no_clinical_support = any(phrase in normalized for phrase in (
         "no special medical or nursing needs", "no medical or nursing needs", "does not need nursing support", "doesn't need nursing support",
     ))

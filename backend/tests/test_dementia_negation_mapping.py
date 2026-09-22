@@ -35,6 +35,9 @@ def test_denied_dementia_is_not_a_positive_memory_care_need(text):
     "My mother has Alzheimer's and wanders at night.",
     "He has dementia and needs a secure memory care setting.",
     "No one noticed her dementia until last year.",
+    "My father does not have dementia. My mother has dementia.",
+    "My mother has dementia. My father does not have dementia.",
+    "Neither has dementia, but they need memory care for another condition.",
 ])
 def test_stated_dementia_still_creates_memory_care_need(text):
     need = _memory(text)
