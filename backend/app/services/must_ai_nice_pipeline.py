@@ -283,11 +283,8 @@ def apply_must_ai_nice_pipeline(
     human_context["dynamic_preference_model"] = dynamic_preferences
     decision["dynamic_preference_model"] = dynamic_preferences
 
-    # Pending candidates are ranked together with eligible ones: a MUST item with no
-    # evidence yet is not a veto, so it must not silently disappear from the shortlist.
-    # The full universe remains gated and enters evidence research. Live candidate AI
-    # works only on the small shortlist that can be shown usefully right now.
-    rankable = eligible + pending
+    # Pending MUST evidence is a research queue, never a recommendation pool.
+    rankable = list(eligible)
     rankable.sort(key=_fallback_key)
     interactive_shortlist_limit = _resolve_interactive_shortlist_limit(limit)
     live_shortlist = rankable[:interactive_shortlist_limit]
