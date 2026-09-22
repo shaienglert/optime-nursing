@@ -516,9 +516,14 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
     return context
 
 
-def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
+def build_human_intelligence_context(
+    questionnaire_state: Dict[str, Any], natural_language_query: str = "", *,
+    prepared_strategy: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
     base_context = _base.build_human_intelligence_context(questionnaire_state, natural_language_query)
-    strategy_context = build_living_strategy_context(questionnaire_state, natural_language_query)
+    # The intake composer owns this interpretation. Standalone callers still
+    # construct it here; an explicitly supplied empty strategy is also authoritative.
+    strategy_context = prepared_strategy if prepared_strategy is not None else build_living_strategy_context(questionnaire_state, natural_language_query)
     context = _governed_context(base_context, strategy_context, natural_language_query, questionnaire_state)
     context["adaptive_questions"] = []
     context["decision_readiness"] = "NEEDS_CLARIFICATION"
