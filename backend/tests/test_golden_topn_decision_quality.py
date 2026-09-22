@@ -3,8 +3,19 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
+import pytest
+
 from app.services.facility_parameter_service import refresh_runtime_cache
 from app.services.patient_decision_engine import run_patient_decision_engine
+
+
+@pytest.fixture(autouse=True)
+def verified_budget_and_medication_evidence_for_strategy_goldens():
+    # These tests exercise strategy among verified candidates. Price-unknown cases
+    # belong in the pending-MUST tests and must not supply a ranked shortlist.
+    with patch("app.services.governed_evidence_runtime.agent_and_provider_payloads",
+               return_value=[{"published_rates_verified": True, "medication_support_verified": True}]):
+        yield
 
 
 def _deterministic_rank_for_quality_gate(rows, client_intent, human_context, strategy, deterministic_fallback_key):
