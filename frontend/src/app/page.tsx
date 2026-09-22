@@ -236,7 +236,7 @@ export default function HomePage() {
               Choosing senior living has many important dimensions. Answer a few questions, and Oomnik will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
             </p>
 
-            <div className="mt-14 max-w-4xl border-l-2 border-[#a9c7bd] pl-6 sm:pl-9">
+            <div className="mt-14 max-w-3xl">
               {heroStep === "relationship" && (
                 <div>
                   <p className="text-xl font-medium text-[#52645d]">Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.</p>
@@ -253,7 +253,7 @@ export default function HomePage() {
               {heroStep === "age" && (
                 <div>
                   <button type="button" onClick={() => setHeroStep("relationship")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change who this is for</button>
-                  <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">How old is {relationshipLabel}?</h2>
+                  <div className="mt-4 flex items-start gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#079ff2] font-semibold text-white">O</div><div className="max-w-[85%] rounded-[1.6rem] rounded-tl-md bg-[#eaf6fd] px-5 py-4"><h2 className="text-2xl font-medium text-[#183f55]">Thanks. About how old is {relationshipLabel}?</h2></div></div>
                   <div className="mt-3">
                     {AGE_OPTIONS.map((option) => <ChoiceLink key={option} label={option} onClick={() => chooseAge(option)} />)}
                   </div>
@@ -284,7 +284,7 @@ export default function HomePage() {
               {heroStep === "memory" && (
                 <div>
                   <button type="button" onClick={() => setHeroStep("assistance")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change the support needed</button>
-                  <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">Are there any memory concerns?</h2>
+                  <div className="mt-4 flex items-start gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#079ff2] font-semibold text-white">O</div><div className="max-w-[85%] rounded-[1.6rem] rounded-tl-md bg-[#eaf6fd] px-5 py-4"><h2 className="text-2xl font-medium text-[#183f55]">One more thing before we continue — have you noticed any changes in memory lately?</h2></div></div>
                   <div className="mt-3">
                     {MEMORY_OPTIONS.map((option) => (
                       <ChoiceLink key={option.label} label={option.label} onClick={() => chooseMemory(option.value)} />
