@@ -71,7 +71,9 @@ def test_budget_changes_ranking_and_top_results_fit_budget() -> None:
 def test_no_in_budget_result_is_disclosed_instead_of_presented_as_a_fit() -> None:
     decision = _decision_for_budget(1000)
 
-    assert decision["results"]
+    assert not decision["results"]
+    assert decision["must_pending_verification_count"] > 0
+    assert decision["decision_intelligence"]["canonical_decision_state"]["can_show_recommendations"] is False
     assert "No currently eligible pilot community" in decision["market_coverage_notice"]
     assert "not in-budget matches" in decision["market_coverage_notice"]
 
