@@ -130,7 +130,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
-    const canonical = payload.canonical_decision_state;
+    const canonical = payload.decision_intelligence?.canonical_decision_state || payload.canonical_decision_state;
     expect(canonical?.authoritative).toBe(true);
     if (canonical.can_show_recommendations) {
       expect(results.length).toBeGreaterThan(0);
