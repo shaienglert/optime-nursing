@@ -168,6 +168,10 @@ export function StructuredIntake() {
     if (!draft.locationImportant) rows.push("location importance");
     if (draft.locationImportant === "Yes" && (!draft.referenceAddress.trim() || !draft.maximumDistanceMiles)) rows.push("location details");
     if (!draft.moveTiming || !moveAttitude) rows.push("move timing and attitude");
+    if (!draft.humanIntelligenceV2.familyProfile.involvedFamilyMembers) rows.push("family support");
+    if (!draft.humanIntelligenceV2.independenceProfile.petOwnershipImportance) rows.push("pet needs");
+    if (!draft.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently) rows.push("independent outings");
+    if (!draft.humanIntelligenceV2.transitionRiskProfile.biggestFear) rows.push("biggest move concern");
     if (!confirmed) rows.push("confirmation of the summary");
     return rows;
   }, [activities.length, assistance, communityStyle, confirmed, continuum, draft, hasMemoryConcern, hospitalTiming, isCouple, language, medical, medicalLanguage, memoryWandering, moveAttitude, needsComplexDetails, needsDialysis, needsMedicalDetails, needsMobilityFollowUp, needsOxygen, needsWoundCare, recentHospitalization, rehabNeed, religion, religiousCommunity, religiousNeeds.length, secureMemory, socialFrequency]);
