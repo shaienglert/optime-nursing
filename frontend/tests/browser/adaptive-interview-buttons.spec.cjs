@@ -152,7 +152,7 @@ test('results default view is readable and does not expose internal evidence jar
   }, confirmed);
   await page.goto('http://127.0.0.1:3000/results');
 
-  await expect(page.getByRole('heading', { name: /The strongest options for Mom/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Here’s where I’d start for Mom/i })).toBeVisible();
   await expect(page.getByText('Verified Community')).toBeVisible();
   await expect(page.getByText('Community Still Under Review')).toBeVisible();
   await expect(page.getByText('Meets verified must-haves')).toBeVisible();
