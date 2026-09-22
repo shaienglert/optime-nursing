@@ -92,6 +92,10 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
                     "$.run_limit5.patient_needs_profile.care_delivery_signals",
                     "$.run_limit50.patient_needs_profile.care_delivery_signals",
                     "$.http_recommendations.body.patient_needs_profile.care_delivery_signals",
+                    "$.profile.care_partner_requirements",
+                    "$.run_limit5.patient_needs_profile.care_partner_requirements",
+                    "$.run_limit50.patient_needs_profile.care_partner_requirements",
+                    "$.http_recommendations.body.patient_needs_profile.care_partner_requirements",
                 }
                 or path.endswith(".intake_resolution")
                 or path.endswith(".source_backed_conflict_keys")

@@ -91,3 +91,12 @@ def test_profile_endpoint_exposes_only_server_generated_handle():
     assert response["intake_profile_id"]
     artifact = store.recall_intake_profile(response["intake_profile_id"], questionnaire_state={}, natural_language_query="")
     assert artifact["profile"]["needs"] == []
+
+
+def test_care_partner_consumes_prepared_requirements_without_reading_story():
+    from app.services import patient_decision_engine_runtime as runtime
+    requirements = {"test_requirement": True}
+    with patch.object(runtime, "_prepare_care_partner_requirements", side_effect=AssertionError("Reinterpreted case")), \
+         patch.object(runtime, "build_verified_care_partner_context", return_value={}) as lookup:
+        runtime._care_partner_layer({}, {}, "different story", prepared_profile={"care_partner_requirements": requirements})
+    lookup.assert_called_once_with(requirements, limit=10)
