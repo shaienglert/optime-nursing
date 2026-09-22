@@ -291,6 +291,7 @@ export type PatientNeed = {
 };
 
 export type PatientNeedsProfile = {
+  intake_profile_id?: string | null;
   generated_from: { questionnaire: boolean; natural_language: boolean };
   needs: PatientNeed[];
   need_tags: string[];
@@ -421,6 +422,7 @@ export type DecisionEngineResponse = {
 };
 
 export type DecisionEngineRequest = {
+  intake_profile_id?: string;
   patient_case_id?: number;
   questionnaire_state: Record<string, unknown>;
   natural_language_query?: string;
@@ -2224,6 +2226,8 @@ const decisionRecommendationRequests = new Map<string, Promise<DecisionEngineRes
 export async function fetchPatientDecisionRecommendations(
   payload: DecisionEngineRequest
 ): Promise<DecisionEngineResponse> {
+  const { confirmedIntakeId } = await import("./confirmed-intake");
+  payload = { ...payload, intake_profile_id: payload.intake_profile_id || confirmedIntakeId(payload.questionnaire_state, payload.natural_language_query || "") };
   const key = JSON.stringify(payload);
   const existing = decisionRecommendationRequests.get(key);
   if (existing) return existing;

@@ -195,7 +195,7 @@ export function SimpleResultsPageClient() {
   }
 
   if (error || !response) {
-    return <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]"><div className="mx-auto max-w-5xl rounded-3xl border border-rose-200 bg-white p-8 text-lg">{error || "No results are available yet."}</div></main>;
+    return <main className="min-h-screen bg-[#fffaf2] px-5 py-12 text-[#22332d]"><div className="mx-auto max-w-5xl rounded-3xl border border-rose-200 bg-white p-8 text-lg">{error || "No results are available yet."}<Link href="/intake-confirmation?next=%2Fresults" className="mt-5 block underline">Review and confirm your profile</Link></div></main>;
   }
 
   const clientState = resultsClientState(response);

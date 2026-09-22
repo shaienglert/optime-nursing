@@ -78,6 +78,9 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context)
     factor_policy = build_success_factor_trace(questionnaire_state, profile)
     profile["living_strategy"] = strategy
+    from app.services.combined_care_solution_runtime import _query_signals
+    profile["care_delivery_signals"] = _query_signals(questionnaire_state, natural_language_query)
+    profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, questionnaire_state, natural_language_query)
     profile["client_intent"] = client_intent
     profile["decision_intelligence"] = {
         "version": "decision-intelligence-runtime-v3.1",
@@ -247,16 +250,10 @@ def _strategy_research_pool(rows: List[Dict[str, Any]], limit: int) -> List[Dict
     return selected[: max(base_count, 60)]
 
 
-def _care_partner_layer(strategy: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
+def _prepare_care_partner_requirements(strategy: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any] | None:
     strategy_ids = {str(item.get("strategy_id") or "") for item in strategy.get("strategy_candidates") or []}
     if "INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE" not in strategy_ids:
-        return {
-            "status": "NOT_APPLICABLE",
-            "licensed_valley_universe_count": 363,
-            "operationally_verified_count": 3,
-            "candidate_options": [],
-            "rule": "The PCA layer activates only when Independent Living plus temporary personal care is a governed strategy candidate.",
-        }
+        return None
 
     query = str(natural_language_query or "").lower()
     assistance = str(questionnaire_state.get("assistanceLevel") or "").lower()
@@ -276,13 +273,25 @@ def _care_partner_layer(strategy: Dict[str, Any], questionnaire_state: Dict[str,
     if preferred_language:
         preferred_languages.append(preferred_language)
 
-    requirements = build_care_agency_requirements(
+    return build_care_agency_requirements(
         temporary_adl_support=True,
         bathing=bathing,
         dressing=dressing,
         transfer=transfer,
         preferred_languages=preferred_languages,
     )
+
+
+def _care_partner_layer(strategy: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str, *, prepared_profile: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    requirements = prepared_profile["care_partner_requirements"] if prepared_profile is not None else _prepare_care_partner_requirements(strategy, questionnaire_state, natural_language_query)
+    if requirements is None:
+        return {
+            "status": "NOT_APPLICABLE",
+            "licensed_valley_universe_count": 363,
+            "operationally_verified_count": 3,
+            "candidate_options": [],
+            "rule": "The PCA layer activates only when Independent Living plus temporary personal care is a governed strategy candidate.",
+        }
     return build_verified_care_partner_context(requirements, limit=10)
 
 
@@ -363,7 +372,7 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     _stage_started = _mark("final_sort_and_rank_ms", _stage_started)
 
     universe_status = _strategy_universe_status(ranked_survivors, strategy)
-    care_partner_layer = _care_partner_layer(strategy, questionnaire_state, natural_language_query)
+    care_partner_layer = _care_partner_layer(strategy, questionnaire_state, natural_language_query, prepared_profile=prepared_profile)
     _attach_facility_care_partner_access(ranked_survivors, care_partner_layer)
     _stage_started = _mark("care_partner_layer_ms", _stage_started)
     logger.info("runtime_run_patient_decision_engine_breakdown_ms %s total_ms=%s", _stage_timings, round(sum(_stage_timings.values()), 1))
@@ -467,6 +476,6 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
 __all__ = ["_regulatory_index", "build_patient_needs_profile", "build_patient_comparison_context", "run_patient_decision_engine"]
 
 
-def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50) -> Dict[str, Any]:
+def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50, *, prepared_profile: Dict[str, Any] | None = None) -> Dict[str, Any]:
     from app.services.decision_pipeline import run_decision_pipeline
-    return run_decision_pipeline(questionnaire_state, natural_language_query, limit, profile_builder=build_patient_needs_profile, runner=_run_prepared_decision)
+    return run_decision_pipeline(questionnaire_state, natural_language_query, limit, profile_builder=build_patient_needs_profile, runner=_run_prepared_decision, prepared_profile=prepared_profile)

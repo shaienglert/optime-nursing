@@ -121,7 +121,8 @@ def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict
     rows = list(result.get("results") or [])
     for row in rows:
         row["external_care_agency_matches"] = _agency_matches_for_row(row, result)
-    summary = attach_combined_care_solutions(rows, questionnaire_state, natural_language_query)
+    profile = result.get("patient_needs_profile") or {}
+    summary = attach_combined_care_solutions(rows, questionnaire_state, natural_language_query, prepared_signals=profile.get("care_delivery_signals"))
     for row in rows:
         _reconcile_adl_must(row)
         _reconcile_medication_must(row)
@@ -282,7 +283,7 @@ def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
     return attach_decision_pipeline_trace(result)
 
 
-def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_query: str, limit: int, *, profile_builder: Callable, runner: Callable):
+def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_query: str, limit: int, *, profile_builder: Callable, runner: Callable, prepared_profile: dict[str, Any] | None = None):
     from app.services.canonical_decision_state import apply_canonical_decision_state_authority
 
     stage_started = time.perf_counter()
@@ -293,7 +294,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
         stage_timings[stage_name] = round((now - previous) * 1000, 1)
         return now
 
-    profile = profile_builder(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+    profile = prepared_profile if prepared_profile is not None else profile_builder(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
     stage_started = _mark("build_patient_needs_profile_ms", stage_started)
     profile_readiness = "UNKNOWN"
     if isinstance(profile, dict):
@@ -350,4 +351,3 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     result = _attach_pipeline_trace(result)
     logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
     return result
-
