@@ -81,6 +81,18 @@ function existingAnswerFor(question: AdaptiveQuestion, state: QuestionnaireState
   return null;
 }
 
+function personalContextLead(state: QuestionnaireState, question: AdaptiveQuestion): string {
+  const who = state.relationship === "Mom" ? "your mom" : state.relationship === "Dad" ? "your dad" : state.relationship === "Spouse" ? "your spouse" : state.relationship === "Myself" ? "you" : state.relationship === "Couple" ? "both of you" : "the person you’re helping";
+  const target = String(question.target_fact_key || "").toLowerCase();
+  const text = question.question.toLowerCase();
+  if ((target.includes("memory") || text.includes("memory")) && state.assistanceLevel) return `Based on what you’ve told me about ${who} and the support needed day to day,`;
+  if ((target.includes("budget") || text.includes("budget")) && state.budget > 0) return `You mentioned a monthly budget of ${state.budget.toLocaleString("en-US")}.`;
+  if ((target.includes("location") || text.includes("location")) && (state.referenceAddress || state.referenceLocationValue)) return `You said staying near ${state.referenceAddress || state.referenceLocationValue} matters.`;
+  if ((target.includes("care") || target.includes("adl") || text.includes("care")) && state.memoryStatus) return `Taking into account what you shared about ${who}’s memory,`;
+  if (state.ageGroup) return `Based on what you’ve shared about ${who},`;
+  return "";
+}
+
 function applyAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
   let next = cloneState(state);
   next.questionnaireCompletion = {
