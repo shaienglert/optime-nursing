@@ -89,8 +89,8 @@ def _meal_component(service: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
-    signals = _query_signals(questionnaire_state, natural_language_query)
+def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str, *, prepared_signals: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    signals = prepared_signals if prepared_signals is not None else _query_signals(questionnaire_state, natural_language_query)
     payloads = governed_evidence_runtime.agent_and_provider_payloads(row)
     canonical_type = _upper(row.get("canonical_type"))
     modalities = {_upper(item) for item in row.get("housing_modalities") or []}
@@ -212,12 +212,12 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
     }
 
 
-def attach_combined_care_solutions(rows: Iterable[Dict[str, Any]], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
-    signals = _query_signals(questionnaire_state, natural_language_query)
+def attach_combined_care_solutions(rows: Iterable[Dict[str, Any]], questionnaire_state: Dict[str, Any], natural_language_query: str, *, prepared_signals: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    signals = prepared_signals if prepared_signals is not None else _query_signals(questionnaire_state, natural_language_query)
     counts = {"FACILITY_IN_HOUSE": 0, "FACILITY_PLUS_EXTERNAL_AGENCY": 0, "PENDING": 0, "FAIL": 0}
     meal_counts = {"THREE_MEALS_VERIFIED": 0, "MEAL_PLAN_OTHER": 0, "MEALS_UNKNOWN": 0}
     for row in rows:
-        solution = build_combined_care_solution(row, questionnaire_state, natural_language_query)
+        solution = build_combined_care_solution(row, questionnaire_state, natural_language_query, prepared_signals=signals)
         row["combined_care_solution"] = solution
         model = solution["delivery_model"]
         if model == "FACILITY_IN_HOUSE":

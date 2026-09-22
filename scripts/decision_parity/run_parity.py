@@ -84,6 +84,15 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
         allowed += sum(
             kind == "added" and (
                 path == "$.http_recommendations.body.decision_id"
+                # Additive intake-reuse contract. Existing signals, decisions,
+                # ordering and database writes must still match exactly.
+                or path in {
+                    "$.http_profile.body.intake_profile_id",
+                    "$.profile.care_delivery_signals",
+                    "$.run_limit5.patient_needs_profile.care_delivery_signals",
+                    "$.run_limit50.patient_needs_profile.care_delivery_signals",
+                    "$.http_recommendations.body.patient_needs_profile.care_delivery_signals",
+                }
                 or path.endswith(".intake_resolution")
                 or path.endswith(".source_backed_conflict_keys")
             )

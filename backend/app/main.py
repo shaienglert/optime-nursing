@@ -141,6 +141,7 @@ from app.services.facility_parameter_service import (
 )
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 from app.services.decision_result_store import decision_inputs_fingerprint, recall_decision_result, remember_decision_result
+from app.services.decision_result_store import remember_intake_profile, recall_intake_profile
 from app.services.patient_decision_engine import (
     _regulatory_index,
     build_patient_comparison_context,
@@ -613,6 +614,7 @@ class PatientDecisionEngineRequestIn(BaseModel):
     questionnaire_state: Dict[str, Any]
     natural_language_query: Optional[str] = ""
     limit: int = 50
+    intake_profile_id: Optional[str] = None
 
 
 class PersonalDecisionReportRequestIn(BaseModel):
@@ -680,6 +682,7 @@ class PatientNeedsProfileOut(BaseModel):
     location_city: Optional[str] = None
     natural_language_mapping: Dict[str, Any]
     decision_intelligence: Dict[str, Any] = Field(default_factory=dict)
+    intake_profile_id: Optional[str] = None
 
 
 class PatientComparisonContextOut(BaseModel):
@@ -2686,7 +2689,14 @@ async def post_personalized_parameter_order(payload: PersonalizedParameterOrderI
 
 @app.post("/decision-engine/patient-needs-profile", response_model=PatientNeedsProfileOut)
 def post_patient_needs_profile(payload: PatientNeedsProfileRequestIn):
-    return build_patient_needs_profile(payload.questionnaire_state, payload.natural_language_query or "")
+    profile = build_patient_needs_profile(payload.questionnaire_state, payload.natural_language_query or "")
+    canonical = (profile.get("decision_intelligence") or {}).get("canonical_decision_state") or {}
+    if canonical.get("authoritative") is True and canonical.get("client") == "COMPLETE" and canonical.get("system") != "BLOCKED":
+        profile["intake_profile_id"] = remember_intake_profile(
+            profile, questionnaire_state=payload.questionnaire_state,
+            natural_language_query=payload.natural_language_query or "",
+        )
+    return profile
 
 
 @app.post("/decision-engine/deferred-report", response_model=DeferredReportOut)
@@ -2723,11 +2733,21 @@ async def decision_engine_deferred_report_status(db: Session = Depends(get_db)):
 def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestIn, db: Session = Depends(get_db)):
     started = time.perf_counter()
     logger.info("decision_request_received limit=%s", payload.limit)
-    response = run_patient_decision_engine(
-        questionnaire_state=payload.questionnaire_state,
-        natural_language_query=payload.natural_language_query or "",
-        limit=payload.limit,
-    )
+    run_inputs = {
+        "questionnaire_state": payload.questionnaire_state,
+        "natural_language_query": payload.natural_language_query or "",
+        "limit": payload.limit,
+    }
+    if payload.intake_profile_id:
+        artifact = recall_intake_profile(payload.intake_profile_id,
+            questionnaire_state=payload.questionnaire_state,
+            natural_language_query=payload.natural_language_query or "")
+        if artifact is None:
+            raise HTTPException(status_code=409, detail="Your reviewed profile expired or your answers changed. Please review and confirm your profile again.")
+        run_inputs.update(questionnaire_state=artifact["questionnaire_state"],
+                          natural_language_query=artifact["natural_language_query"],
+                          prepared_profile=artifact["profile"])
+    response = run_patient_decision_engine(**run_inputs)
 
     ccn_to_facility_id = {
         str(facility.cms_id): int(facility.id)

@@ -80,6 +80,33 @@ def _reset_for_tests() -> None:
         _entries.clear()
 
 
+def intake_inputs_fingerprint(questionnaire_state: Dict[str, Any], natural_language_query: str) -> str:
+    state = copy.deepcopy(questionnaire_state)
+    # Workflow acknowledgements are not client facts. All care, financial,
+    # identity, preference and adaptive-answer fields remain in the fingerprint.
+    state.pop("questionnaireCompletion", None)
+    return "intake:" + decision_inputs_fingerprint(state, natural_language_query, 0)
+
+
+def remember_intake_profile(profile: Dict[str, Any], *, questionnaire_state: Dict[str, Any], natural_language_query: str) -> str:
+    from app.services.canonical_decision_state import canonical_client_is_complete, canonical_state_payload
+    if not canonical_client_is_complete(profile) or canonical_state_payload(profile).get("system") == "BLOCKED":
+        raise ValueError("Only a complete, unblocked server profile can be confirmed")
+    return remember_decision_result({
+        "artifact_kind": "CONFIRMED_INTAKE_CANDIDATE",
+        "profile": profile,
+        "questionnaire_state": questionnaire_state,
+        "natural_language_query": natural_language_query,
+    }, inputs_fingerprint=intake_inputs_fingerprint(questionnaire_state, natural_language_query))
+
+
+def recall_intake_profile(profile_id: str, *, questionnaire_state: Dict[str, Any], natural_language_query: str) -> Optional[Dict[str, Any]]:
+    artifact = recall_decision_result(profile_id, inputs_fingerprint=intake_inputs_fingerprint(questionnaire_state, natural_language_query))
+    if not artifact or artifact.get("artifact_kind") != "CONFIRMED_INTAKE_CANDIDATE":
+        return None
+    return artifact
+
+
 __all__ = [
     "decision_inputs_fingerprint",
     "recall_decision_result",

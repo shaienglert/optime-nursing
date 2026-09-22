@@ -78,6 +78,8 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context)
     factor_policy = build_success_factor_trace(questionnaire_state, profile)
     profile["living_strategy"] = strategy
+    from app.services.combined_care_solution_runtime import _query_signals
+    profile["care_delivery_signals"] = _query_signals(questionnaire_state, natural_language_query)
     profile["client_intent"] = client_intent
     profile["decision_intelligence"] = {
         "version": "decision-intelligence-runtime-v3.1",
@@ -467,6 +469,6 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
 __all__ = ["_regulatory_index", "build_patient_needs_profile", "build_patient_comparison_context", "run_patient_decision_engine"]
 
 
-def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50) -> Dict[str, Any]:
+def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50, *, prepared_profile: Dict[str, Any] | None = None) -> Dict[str, Any]:
     from app.services.decision_pipeline import run_decision_pipeline
-    return run_decision_pipeline(questionnaire_state, natural_language_query, limit, profile_builder=build_patient_needs_profile, runner=_run_prepared_decision)
+    return run_decision_pipeline(questionnaire_state, natural_language_query, limit, profile_builder=build_patient_needs_profile, runner=_run_prepared_decision, prepared_profile=prepared_profile)

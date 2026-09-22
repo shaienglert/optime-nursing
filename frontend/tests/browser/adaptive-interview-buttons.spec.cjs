@@ -52,6 +52,8 @@ function profileFor(body) {
     };
   }
   return {
+    intake_profile_id: 'test-server-profile',
+    needs: [{ parameter_id: 'adl', need_text: 'Bathing assistance', requirement_level: 'REQUIRED' }],
     decision_intelligence: {
       decision_readiness: 'READY',
       canonical_decision_state: interviewState(true),
@@ -138,8 +140,11 @@ test('server-owned intake asks only the missing question and preserves explicit 
   await page.getByRole('button', { name: 'More active' }).click();
   await expect(page).toHaveURL(/\/intake-confirmation\?next=/);
   await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible();
+  await expect(page.getByText('Bathing assistance', { exact: true })).toBeVisible();
+  const recommendations = page.waitForRequest(request => request.url().includes('/decision-engine/recommendations'));
   await page.getByRole('button', { name: /I confirm—show recommendations/i }).click();
   await expect(page).toHaveURL(/\/results/);
+  expect((await recommendations).postDataJSON().intake_profile_id).toBe('test-server-profile');
 });
 
 test('results default view is readable and does not expose internal evidence jargon', async ({ page }) => {
