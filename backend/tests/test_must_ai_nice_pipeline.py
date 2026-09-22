@@ -56,13 +56,12 @@ class MustAiNicePipelineTests(unittest.TestCase):
             },
         }
 
-    def test_must_pass_and_must_pending_both_enter_ai_ranking_and_legacy_nice_is_not_authoritative(self):
+    def test_only_must_pass_enters_ai_ranking_and_legacy_nice_is_not_authoritative(self):
         # A, B are MUST_ELIGIBLE; C is MUST_PENDING_VERIFICATION (still ranked, not
         # excluded); D is MUST_REJECTED (a real MUST failure -- correctly excluded).
         packet = {
             "ranked_candidates": [
                 {"canonical_facility_id": "B", "reason": "overall evidence", "information_deficits": []},
-                {"canonical_facility_id": "C", "reason": "overall evidence", "information_deficits": []},
                 {"canonical_facility_id": "A", "reason": "overall evidence", "information_deficits": []},
             ]
         }
@@ -71,31 +70,23 @@ class MustAiNicePipelineTests(unittest.TestCase):
         ):
             result = apply_must_ai_nice_pipeline(self._result(), {}, "", 5)
 
-        self.assertEqual([r["canonical_facility_id"] for r in result["results"]], ["B", "C", "A"])
+        self.assertEqual([r["canonical_facility_id"] for r in result["results"]], ["B", "A"])
         self.assertEqual(result["must_eligible_count"], 2)
         self.assertEqual(result["must_pending_verification_count"], 1)
         self.assertEqual(result["must_rejected_count"], 1)
         self.assertEqual(result["results"][0]["must_eligibility"], "MUST_ELIGIBLE")
         self.assertEqual(result["results"][0]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
-        self.assertEqual(result["results"][2]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
+        self.assertEqual(result["results"][1]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
         self.assertEqual(result["results"][0]["legacy_structured_nice_fit"]["nice_unknown"], ["SOCIAL"])
-        self.assertEqual(result["results"][2]["legacy_structured_nice_fit"]["nice_match"], ["SOCIAL"])
+        self.assertEqual(result["results"][1]["legacy_structured_nice_fit"]["nice_match"], ["SOCIAL"])
         pipeline = result["decision_intelligence"]["facility_selection_pipeline"]
         self.assertEqual(pipeline["ai_ranking"]["status"], "AI_RANKED")
         self.assertFalse(pipeline["legacy_structured_nice_authoritative"])
         self.assertEqual(result["decision_intelligence"]["ranking_order"][0], "DETERMINISTIC_MUST_GATE")
 
-        # C is MUST_PENDING_VERIFICATION: shown, not excluded, with an explicit note
-        # of what remains unverified and a promise it can only hold or improve rank.
-        pending_row = result["results"][1]
-        self.assertEqual(pending_row["canonical_facility_id"], "C")
-        self.assertEqual(pending_row["must_eligibility"], "MUST_PENDING_VERIFICATION")
-        note = pending_row["provisional_ranking_note"]
-        self.assertEqual(note["status"], "MUST_VERIFICATION_PENDING")
-        self.assertEqual(note["still_unverified"], ["ADL_SUPPORT_AVAILABLE"])
-        self.assertIn("never get worse", note["statement"])
-        self.assertNotIn("provisional_ranking_note", result["results"][0])
-        self.assertNotIn("provisional_ranking_note", result["results"][2])
+        self.assertEqual(result["must_pending_verification_candidates"][0]["canonical_facility_id"], "C")
+        self.assertEqual(result["must_pending_verification_candidates"][0]["must_unknown"], ["ADL_SUPPORT_AVAILABLE"])
+        self.assertTrue(all(row["must_eligibility"] == "MUST_ELIGIBLE" for row in result["results"]))
 
     def test_ai_cannot_introduce_or_drop_must_eligible_candidate(self):
         rows = [_row("A", "PASS"), _row("B", "PASS")]
@@ -127,38 +118,27 @@ class MustAiNicePipelineTests(unittest.TestCase):
         failed_status = {"status": "AI_RANKING_ERROR", "error": "temporary model failure"}
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "1"}, clear=False), patch(
             "app.services.must_ai_nice_pipeline.rank_must_eligible_candidates",
-            return_value=(rows, failed_status),
+            return_value=(rows[:2], failed_status),
         ):
             out = apply_must_ai_nice_pipeline(result, {}, "", 5)
-        self.assertEqual(3, out["result_count"])
-        self.assertEqual(["A", "B", "C"], [row["canonical_facility_id"] for row in out["results"]])
+        self.assertEqual(2, out["result_count"])
+        self.assertEqual(["A", "B"], [row["canonical_facility_id"] for row in out["results"]])
         pipeline = out["decision_intelligence"]["facility_selection_pipeline"]
         self.assertTrue(pipeline["ai_ranking_degraded"])
         self.assertFalse(pipeline["ai_ranking_fail_closed"])
         self.assertTrue(out["decision_intelligence"]["ai_ranking_failure"]["deterministic_order_exposed"])
 
-    def test_zero_eligible_but_pending_candidates_are_still_ranked_and_shown(self):
-        # No candidate has fully passed MUST yet, but two have unresolved (not
-        # failed) evidence -- these must not be dropped to an empty shortlist.
+    def test_zero_eligible_pending_candidates_remain_research_only(self):
         rows = [_row("E", "PENDING_VERIFICATION"), _row("F", "PENDING_VERIFICATION")]
-        result = {"results": rows, "decision_intelligence": {"client_intent": {"nice_to_haves": []}, "human_intelligence": {}, "living_strategy": {}}}
-        packet = {"ranked_candidates": [
-            {"canonical_facility_id": "F", "reason": "first", "information_deficits": []},
-            {"canonical_facility_id": "E", "reason": "second", "information_deficits": []},
-        ]}
-        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_AI_CANDIDATE_RANKING_REQUIRED": "1"}, clear=False), patch(
-            "app.services.ai_candidate_ranking_runtime._default_transport", return_value=packet
-        ):
-            out = apply_must_ai_nice_pipeline(result, {}, "", 5)
-
-        self.assertEqual(out["must_eligible_count"], 0)
+        for row in rows:
+            row["client_intent_fit"]["must_unknown"] = ["SEMANTIC_BUDGET_VERIFICATION"]
+        result = {"results": rows, "decision_intelligence": {"client_intent": {}, "human_intelligence": {}, "living_strategy": {}}}
+        out = apply_must_ai_nice_pipeline(result, {}, "", 5)
+        self.assertEqual(out["results"], [])
         self.assertEqual(out["must_pending_verification_count"], 2)
-        self.assertEqual([r["canonical_facility_id"] for r in out["results"]], ["F", "E"])
-        self.assertEqual(out["result_count"], 2)
-        for row in out["results"]:
-            self.assertEqual(row["must_eligibility"], "MUST_PENDING_VERIFICATION")
-            self.assertIn("provisional_ranking_note", row)
-        self.assertIn("still have at least one MUST requirement pending", out["decision_intelligence"]["facility_selection_pipeline"]["client_statement"])
+        self.assertEqual(out["must_rejected_count"], 0)
+        self.assertEqual(len(out["must_pending_verification_candidates"]), 2)
+        self.assertTrue(all(row["must_unknown"] == ["SEMANTIC_BUDGET_VERIFICATION"] for row in out["must_pending_verification_candidates"]))
 
     def test_live_search_ai_is_bounded_to_the_display_shortlist(self):
         rows = [_row(f"F-{index:02d}", "PASS") for index in range(15)]
