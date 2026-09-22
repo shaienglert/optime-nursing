@@ -1,0 +1,156 @@
+{
+  "baseline": "74428ba063aaf193e7015fe365bd60910b2c0493",
+  "part_a": {
+    "full_suite": {
+      "passed": 817,
+      "failed": 0,
+      "excluded": 20
+    },
+    "baseline_same_exclusions": {
+      "passed": 798,
+      "failed": 2
+    },
+    "parity": {
+      "cases": 17,
+      "total_differences": 391,
+      "allowed_additions": 391,
+      "unexpected": 0
+    },
+    "frontend": {
+      "tsc_exit": 0,
+      "vitest_files": 12,
+      "vitest_tests": 40
+    }
+  },
+  "combined": {
+    "full_suite": {
+      "passed": 828,
+      "failed": 0,
+      "excluded": 20
+    },
+    "synthetic_reconstructed_cases": 10,
+    "runs_per_case": 2,
+    "http_requests": 60,
+    "http_200": 60
+  },
+  "parts": {
+    "B1": {
+      "differences": 7879,
+      "changed_cases": 14,
+      "per_case": {
+        "budget_medicaid_pending": 948,
+        "clinical_dialysis": 83,
+        "couple_rehab": 125,
+        "empty_input": 0,
+        "henderson_city": 852,
+        "independent_couple": 0,
+        "interview_not_ready": 852,
+        "medicaid_negated_kosher": 634,
+        "memory_care": 634,
+        "mother90_social": 85,
+        "pilot_memory": 310,
+        "pilot_son84": 624,
+        "pilot_stroke_rehab": 40,
+        "skilled_nursing": 0,
+        "son84_answered_hi": 852,
+        "son84_ready": 852,
+        "son84_ready_verified_rates": 988
+      }
+    },
+    "B2": {
+      "differences": 0,
+      "changed_cases": 0,
+      "per_case": {
+        "budget_medicaid_pending": 0,
+        "clinical_dialysis": 0,
+        "couple_rehab": 0,
+        "empty_input": 0,
+        "henderson_city": 0,
+        "independent_couple": 0,
+        "interview_not_ready": 0,
+        "medicaid_negated_kosher": 0,
+        "memory_care": 0,
+        "mother90_social": 0,
+        "pilot_memory": 0,
+        "pilot_son84": 0,
+        "pilot_stroke_rehab": 0,
+        "skilled_nursing": 0,
+        "son84_answered_hi": 0,
+        "son84_ready": 0,
+        "son84_ready_verified_rates": 0
+      },
+      "supplemental_reproducer_differences": 16642
+    },
+    "B3": {
+      "differences": 0,
+      "changed_cases": 0,
+      "per_case": {
+        "budget_medicaid_pending": 0,
+        "clinical_dialysis": 0,
+        "couple_rehab": 0,
+        "empty_input": 0,
+        "henderson_city": 0,
+        "independent_couple": 0,
+        "interview_not_ready": 0,
+        "medicaid_negated_kosher": 0,
+        "memory_care": 0,
+        "mother90_social": 0,
+        "pilot_memory": 0,
+        "pilot_son84": 0,
+        "pilot_stroke_rehab": 0,
+        "skilled_nursing": 0,
+        "son84_answered_hi": 0,
+        "son84_ready": 0,
+        "son84_ready_verified_rates": 0
+      },
+      "supplemental_reproducer_differences": 11792
+    },
+    "B4": {
+      "differences": 0,
+      "changed_cases": 0,
+      "per_case": {
+        "budget_medicaid_pending": 0,
+        "clinical_dialysis": 0,
+        "couple_rehab": 0,
+        "empty_input": 0,
+        "henderson_city": 0,
+        "independent_couple": 0,
+        "interview_not_ready": 0,
+        "medicaid_negated_kosher": 0,
+        "memory_care": 0,
+        "mother90_social": 0,
+        "pilot_memory": 0,
+        "pilot_son84": 0,
+        "pilot_stroke_rehab": 0,
+        "skilled_nursing": 0,
+        "son84_answered_hi": 0,
+        "son84_ready": 0,
+        "son84_ready_verified_rates": 0
+      },
+      "supplemental_reproducer_differences": 661
+    },
+    "B5": {
+      "differences": 1358,
+      "changed_cases": 10,
+      "per_case": {
+        "budget_medicaid_pending": 0,
+        "clinical_dialysis": 0,
+        "couple_rehab": 0,
+        "empty_input": 0,
+        "henderson_city": 134,
+        "independent_couple": 0,
+        "interview_not_ready": 134,
+        "medicaid_negated_kosher": 134,
+        "memory_care": 134,
+        "mother90_social": 0,
+        "pilot_memory": 123,
+        "pilot_son84": 9,
+        "pilot_stroke_rehab": 152,
+        "skilled_nursing": 271,
+        "son84_answered_hi": 133,
+        "son84_ready": 134,
+        "son84_ready_verified_rates": 0
+      }
+    }
+  }
+}

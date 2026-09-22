@@ -1,0 +1,2780 @@
+[
+  {
+    "case": "independent_social",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "current_price": "MEDIUM",
+          "memory_care": "PREFERENCE",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "memory_care",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "NO",
+            "acceptable_values": [
+              "NO",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.85,
+            "need_text": "No dementia-focused unit specifically required"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "current_price": "MEDIUM",
+          "memory_care": "PREFERENCE",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "memory_care",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "NO",
+            "acceptable_values": [
+              "NO",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.85,
+            "need_text": "No dementia-focused unit specifically required"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "bathing_dressing",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "adl_support": "HIGH",
+          "current_price": "MEDIUM",
+          "memory_care": "PREFERENCE",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "memory_care",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "NO",
+            "acceptable_values": [
+              "NO",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.85,
+            "need_text": "No dementia-focused unit specifically required"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "no_invented_transfers": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "adl_support": "HIGH",
+          "current_price": "MEDIUM",
+          "memory_care": "PREFERENCE",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "memory_care",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "NO",
+            "acceptable_values": [
+              "NO",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.85,
+            "need_text": "No dementia-focused unit specifically required"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "no_invented_transfers": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "falls_transfers",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "adl_support": "HIGH",
+          "transfer_assistance": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "transfer_assistance",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.9,
+            "need_text": "Transfer assistance support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "transfer_high": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "adl_support": "HIGH",
+          "transfer_assistance": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "transfer_assistance",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.9,
+            "need_text": "Transfer assistance support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "transfer_high": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "mild_forgetfulness",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "medication_support": "HIGH",
+          "current_price": "MEDIUM",
+          "memory_care": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "medication_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs medication support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "memory_care",
+            "requirement_level": "MEDIUM",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "questionnaire.memoryStatus",
+            "confidence": 0.8,
+            "need_text": "Mild memory support preferred"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "MEDICATION_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs medication-management support; a facility cannot be called eligible until this capability is verified.",
+            "verification": "verified medication-support evidence"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "no_invented_transfers": true,
+          "medication_without_adl": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "medication_support": "HIGH",
+          "current_price": "MEDIUM",
+          "memory_care": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "medication_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs medication support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "memory_care",
+            "requirement_level": "MEDIUM",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "questionnaire.memoryStatus",
+            "confidence": 0.8,
+            "need_text": "Mild memory support preferred"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "MEDICATION_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs medication-management support; a facility cannot be called eligible until this capability is verified.",
+            "verification": "verified medication-support evidence"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "no_invented_transfers": true,
+          "medication_without_adl": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "dementia_wandering",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "memory_care": "REQUIRED",
+          "adl_support": "HIGH",
+          "dementia_alz_programs": "HIGH",
+          "current_price": "MEDIUM",
+          "transfer_assistance": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "memory_care",
+            "requirement_level": "REQUIRED",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "questionnaire.memoryStatus; natural_language",
+            "confidence": 1,
+            "need_text": "Requires memory care"
+          },
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "dementia_alz_programs",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "questionnaire.memoryStatus",
+            "confidence": 1,
+            "need_text": "Requires dementia program"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "transfer_assistance",
+            "requirement_level": "MEDIUM",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 0.8,
+            "need_text": "May need transfer help"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "SECURE_MEMORY_CARE_CONFIRMED",
+            "reason": "The resident has a stated dementia/wandering safety need and requires an officially confirmed memory-care setting; ordinary assisted or independent living is not sufficient.",
+            "verification": "Nevada official-detail memory-care classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "memory_need": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "memory_care": "REQUIRED",
+          "adl_support": "HIGH",
+          "dementia_alz_programs": "HIGH",
+          "current_price": "MEDIUM",
+          "transfer_assistance": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "memory_care",
+            "requirement_level": "REQUIRED",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "questionnaire.memoryStatus; natural_language",
+            "confidence": 1,
+            "need_text": "Requires memory care"
+          },
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "dementia_alz_programs",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "PROGRAM",
+            "user_evidence_source": "questionnaire.memoryStatus",
+            "confidence": 1,
+            "need_text": "Requires dementia program"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "transfer_assistance",
+            "requirement_level": "MEDIUM",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 0.8,
+            "need_text": "May need transfer help"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "SECURE_MEMORY_CARE_CONFIRMED",
+            "reason": "The resident has a stated dementia/wandering safety need and requires an officially confirmed memory-care setting; ordinary assisted or independent living is not sufficient.",
+            "verification": "Nevada official-detail memory-care classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "memory_need": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "post_surgery_rehab",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "adl_support": "HIGH",
+          "ot": "HIGH",
+          "pt": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "ot",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.95,
+            "need_text": "Occupational therapy support"
+          },
+          {
+            "parameter_id": "pt",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.95,
+            "need_text": "Physical therapy support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "REHAB_PATH_AVAILABLE",
+            "reason": "The recovery plan requires access to appropriate rehabilitation/PT/OT, either onsite or through a verified external pathway.",
+            "verification": "rehab/PT/OT evidence"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [],
+        "must_gate": {},
+        "phase": "CLIENT_INPUT_REQUIRED",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "pt_and_ot": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "adl_support": "HIGH",
+          "ot": "HIGH",
+          "pt": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "ot",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.95,
+            "need_text": "Occupational therapy support"
+          },
+          {
+            "parameter_id": "pt",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.95,
+            "need_text": "Physical therapy support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "REHAB_PATH_AVAILABLE",
+            "reason": "The recovery plan requires access to appropriate rehabilitation/PT/OT, either onsite or through a verified external pathway.",
+            "verification": "rehab/PT/OT evidence"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [],
+        "must_gate": {},
+        "phase": "CLIENT_INPUT_REQUIRED",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "pt_and_ot": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "dialysis",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "dialysis_arrangements": "REQUIRED",
+          "medication_support": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "dialysis_arrangements",
+            "requirement_level": "REQUIRED",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.98,
+            "need_text": "Dialysis arrangements required"
+          },
+          {
+            "parameter_id": "medication_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs medication support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "MEDICATION_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs medication-management support; a facility cannot be called eligible until this capability is verified.",
+            "verification": "verified medication-support evidence"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "no_invented_transfers": true,
+          "medication_without_adl": true,
+          "dialysis_required": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "dialysis_arrangements": "REQUIRED",
+          "medication_support": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "dialysis_arrangements",
+            "requirement_level": "REQUIRED",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.98,
+            "need_text": "Dialysis arrangements required"
+          },
+          {
+            "parameter_id": "medication_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs medication support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "MEDICATION_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs medication-management support; a facility cannot be called eligible until this capability is verified.",
+            "verification": "verified medication-support evidence"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "no_invented_transfers": true,
+          "medication_without_adl": true,
+          "dialysis_required": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "oxygen_wound",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "adl_support": "HIGH",
+          "medication_support": "HIGH",
+          "respiratory_trach_vent": "HIGH",
+          "wound_care": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.9,
+            "need_text": "ADL support"
+          },
+          {
+            "parameter_id": "medication_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 1,
+            "need_text": "Needs medication support"
+          },
+          {
+            "parameter_id": "respiratory_trach_vent",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.95,
+            "need_text": "Respiratory / oxygen support required"
+          },
+          {
+            "parameter_id": "wound_care",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.98,
+            "need_text": "Wound-care capability required"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "wound_high": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "adl_support": "HIGH",
+          "medication_support": "HIGH",
+          "respiratory_trach_vent": "HIGH",
+          "wound_care": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.9,
+            "need_text": "ADL support"
+          },
+          {
+            "parameter_id": "medication_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel",
+            "confidence": 1,
+            "need_text": "Needs medication support"
+          },
+          {
+            "parameter_id": "respiratory_trach_vent",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.95,
+            "need_text": "Respiratory / oxygen support required"
+          },
+          {
+            "parameter_id": "wound_care",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "natural_language",
+            "confidence": 0.98,
+            "need_text": "Wound-care capability required"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 6500,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $6,500 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "wound_high": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "low_budget_medicaid",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "adl_support": "HIGH",
+          "current_price": "MEDIUM",
+          "medicaid_attributes": "PREFERENCE",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 3000,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $3,000 budget"
+          },
+          {
+            "parameter_id": "medicaid_attributes",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.medicaidStatus; natural_language.medicaid",
+            "confidence": 1,
+            "need_text": "Medicaid/payment pathway must be confirmed"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget; natural_language.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "adl_support": "HIGH",
+          "current_price": "MEDIUM",
+          "medicaid_attributes": "PREFERENCE",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 3000,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $3,000 budget"
+          },
+          {
+            "parameter_id": "medicaid_attributes",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.medicaidStatus; natural_language.medicaid",
+            "confidence": 1,
+            "need_text": "Medicaid/payment pathway must be confirmed"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget; natural_language.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "SINGLE_OR_UNKNOWN",
+          "requires_two_resident_model": false,
+          "resident_profiles": []
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  },
+  {
+    "case": "couple_different_needs",
+    "reconstructed": true,
+    "runs": [
+      {
+        "repeat": 1,
+        "needs": {
+          "adl_support": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 12000,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $12,000 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "COUPLE_CORESIDENCE",
+            "reason": "The couple wants to live together; a solution that cannot house both partners is not acceptable.",
+            "verification": "unit/occupancy policy"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "COUPLE",
+          "requires_two_resident_model": true,
+          "resident_profiles": [
+            {
+              "role": "HIGHER_NEED_PARTNER",
+              "current_needs": [
+                "ADL_SUPPORT"
+              ],
+              "trajectory": "STABLE_OR_UNKNOWN",
+              "expected_support_duration_months": "UNKNOWN"
+            },
+            {
+              "role": "OTHER_PARTNER",
+              "current_needs": [],
+              "trajectory": "STABLE_OR_UNKNOWN"
+            }
+          ]
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "couple": true
+        }
+      },
+      {
+        "repeat": 2,
+        "needs": {
+          "adl_support": "HIGH",
+          "current_price": "MEDIUM",
+          "published_rates": "PREFERENCE",
+          "transportation": "PREFERENCE"
+        },
+        "need_records": [
+          {
+            "parameter_id": "adl_support",
+            "requirement_level": "HIGH",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.assistanceLevel; natural_language",
+            "confidence": 1,
+            "need_text": "Needs ADL support"
+          },
+          {
+            "parameter_id": "current_price",
+            "requirement_level": "MEDIUM",
+            "desired_value": 12000,
+            "acceptable_values": [],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Starting monthly price should fit the $12,000 budget"
+          },
+          {
+            "parameter_id": "published_rates",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "KNOWN",
+            "acceptable_values": [
+              "KNOWN",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "FACILITY",
+            "user_evidence_source": "questionnaire.budget",
+            "confidence": 1,
+            "need_text": "Prefer transparent pricing"
+          },
+          {
+            "parameter_id": "transportation",
+            "requirement_level": "PREFERENCE",
+            "desired_value": "YES",
+            "acceptable_values": [
+              "YES",
+              "UNKNOWN"
+            ],
+            "applicable_scope": "SERVICE",
+            "user_evidence_source": "questionnaire.distanceFromFamily",
+            "confidence": 0.8,
+            "need_text": "Transportation support preferred"
+          }
+        ],
+        "musts": [
+          {
+            "key": "LICENSE_CURRENTLY_VALID",
+            "reason": "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.",
+            "verification": "canonical license expiration_date vs current date"
+          },
+          {
+            "key": "LAS_VEGAS",
+            "reason": "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.",
+            "verification": "canonical Las Vegas Valley market geography"
+          },
+          {
+            "key": "COUPLE_CORESIDENCE",
+            "reason": "The couple wants to live together; a solution that cannot house both partners is not acceptable.",
+            "verification": "unit/occupancy policy"
+          },
+          {
+            "key": "ADL_SUPPORT_AVAILABLE",
+            "reason": "The resident explicitly needs bathing/dressing or other ADL assistance.",
+            "verification": "service evidence or permitted outside-care model"
+          },
+          {
+            "key": "NO_FORCED_MEMORY_PLACEMENT",
+            "reason": "A cognitively intact resident should not be placed in a locked memory-care-only setting.",
+            "verification": "care setting classification"
+          }
+        ],
+        "semantic_musts": [
+          {
+            "key": "SEMANTIC_BUDGET_VERIFICATION",
+            "dimension": "budget_verification",
+            "reason": "A stated monthly budget requires facility-specific price verification.",
+            "research_task": "Verify this requirement against current facility-specific evidence.",
+            "mapped_parameters": [
+              "budget"
+            ],
+            "source": "QUESTIONNAIRE_CLIENT_INTENT"
+          }
+        ],
+        "must_gate": {
+          "survivors": 374,
+          "rejected": 0,
+          "selected_must_unknown_count": 0,
+          "combined_care_delivery_enforced": true,
+          "combined_care_rule": "Outside-care permission alone does not satisfy ADL_SUPPORT_AVAILABLE or MEDICATION_SUPPORT_AVAILABLE; a verified agency match covering required services is required for each.",
+          "eligible": 0,
+          "pending_verification": 60
+        },
+        "phase": "EVIDENCE_COLLECTION",
+        "household": {
+          "type": "COUPLE",
+          "requires_two_resident_model": true,
+          "resident_profiles": [
+            {
+              "role": "HIGHER_NEED_PARTNER",
+              "current_needs": [
+                "ADL_SUPPORT"
+              ],
+              "trajectory": "STABLE_OR_UNKNOWN",
+              "expected_support_duration_months": "UNKNOWN"
+            },
+            {
+              "role": "OTHER_PARTNER",
+              "current_needs": [],
+              "trajectory": "STABLE_OR_UNKNOWN"
+            }
+          ]
+        },
+        "shown_facilities": [],
+        "http": [
+          200,
+          200,
+          200
+        ],
+        "checks": {
+          "all_http_200": true,
+          "no_pending_recommendations": true,
+          "couple": true
+        }
+      }
+    ],
+    "repeated_facilities_identical": true
+  }
+]

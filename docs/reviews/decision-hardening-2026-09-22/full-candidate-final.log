@@ -1,0 +1,43 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+........................................................................ [ 35%]
+........................................................................ [ 44%]
+........................................................................ [ 52%]
+........................................................................ [ 61%]
+........................................................................ [ 70%]
+........................................................................ [ 79%]
+........................................................................ [ 88%]
+........................................................................ [ 96%]
+.........................                                                [100%]
+=============================== warnings summary ===============================
+backend/app/main.py:1541
+backend/app/main.py:1541
+backend/app/main.py:1541
+backend/app/main.py:1541
+  /workspace/scratch/e46135c68bc1/optime-decision-authority/backend/app/main.py:1541: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+../../../../tmp/oomnik-pyuser/lib/python3.12/site-packages/fastapi/applications.py:4675
+../../../../tmp/oomnik-pyuser/lib/python3.12/site-packages/fastapi/applications.py:4675
+../../../../tmp/oomnik-pyuser/lib/python3.12/site-packages/fastapi/applications.py:4675
+../../../../tmp/oomnik-pyuser/lib/python3.12/site-packages/fastapi/applications.py:4675
+  /tmp/oomnik-pyuser/lib/python3.12/site-packages/fastapi/applications.py:4675: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)  # ty: ignore[deprecated]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+817 passed, 8 warnings in 146.30s (0:02:26)
+Deselecting 20 known failures listed in backend/tests/known_failures.txt
