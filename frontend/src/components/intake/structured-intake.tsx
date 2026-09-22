@@ -168,7 +168,6 @@ export function StructuredIntake() {
     if (!draft.locationImportant) rows.push("location importance");
     if (draft.locationImportant === "Yes" && (!draft.referenceAddress.trim() || !draft.maximumDistanceMiles)) rows.push("location details");
     if (!draft.moveTiming || !moveAttitude) rows.push("move timing and attitude");
-    if (!draft.humanIntelligenceV2.familyProfile.involvedFamilyMembers) rows.push("family support");
     if (!draft.humanIntelligenceV2.independenceProfile.petOwnershipImportance) rows.push("pet needs");
     if (!draft.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently) rows.push("independent outings");
     if (!draft.humanIntelligenceV2.transitionRiskProfile.biggestFear) rows.push("biggest move concern");
