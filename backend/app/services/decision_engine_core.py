@@ -554,6 +554,8 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     ))
     no_wound_care = any(phrase in normalized for phrase in (
         "no wound", "no wounds", "no wound care", "does not need wound care", "doesn't need wound care",
+        "no pressure wound", "no pressure ulcer", "no pressure sore", "without pressure wounds",
+        "does not need dressing changes", "doesn't need dressing changes",
     ))
     no_respiratory_support = any(phrase in normalized for phrase in (
         "no oxygen", "not on oxygen", "no continuous oxygen", "no respiratory support",
@@ -563,7 +565,7 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     keyword_rules = [
         (["stroke", "neurolog"], ("post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")),
         (["dialysis"], ("dialysis_arrangements", "REQUIRED", "YES", ["YES"], "SERVICE", "natural_language", 0.98, "Dialysis arrangements required")),
-        (["wound care", "wound management"], ("wound_care", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.98, "Wound-care capability required")),
+        (["wound care", "wound management", "pressure wound", "pressure ulcer", "pressure sore", "daily dressing changes"], ("wound_care", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.98, "Wound-care capability required")),
         (["continuous oxygen", "oxygen"], ("respiratory_trach_vent", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Respiratory / oxygen support required")),
         (["24/7 nursing", "24x7 nursing", "round the clock nursing", "skilled nursing"], ("nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "natural_language", 0.98, "24/7 nursing required")),
         (["physical therapy", "pt"], ("pt", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Physical therapy support")),
