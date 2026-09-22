@@ -46,13 +46,13 @@ export function SimpleResultsPageClient() {
   const [oomnikerOpen, setOomnikerOpen] = useState(false);
   const [oomnikerText, setOomnikerText] = useState("");
   const [oomnikerNotice, setOomnikerNotice] = useState("");
-  const oomnikerHistory = useRef<typeof state[]>([]);
+  const oomnikerHistory = useRef<typeof state[]>([]);\n  const beforeOomnikerIds = useRef<string[]>([]);\n  const [oomnikerDiff, setOomnikerDiff] = useState<string>("");
 
   function applyOomnikerChange() {
     const text = oomnikerText.trim();
     if (!text) return;
     const lower = text.toLowerCase();
-    setState((current) => {
+    beforeOomnikerIds.current = (response?.results || []).filter(isFinalRecommendation).map((item) => item.canonical_facility_id);\n    setOomnikerDiff("");\n    setState((current) => {
       oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
       const next = JSON.parse(JSON.stringify(current));
       const budget = lower.match(/(?:budget|up to|maximum|max)[^$0-9]{0,20}\$?([0-9][0-9,]*)/);
@@ -145,6 +145,27 @@ export function SimpleResultsPageClient() {
       window.clearTimeout(timer);
     };
   }, [decisionRequestKey, naturalLanguageQuery, router, searchParams, state]);
+
+  useEffect(() => {
+    if (loading || beforeOomnikerIds.current.length === 0 || !response) return;
+    const before = beforeOomnikerIds.current;
+    const afterItems = (response.results || []).filter(isFinalRecommendation);
+    const after = afterItems.map((item) => item.canonical_facility_id);
+    const added = after.filter((id) => !before.includes(id));
+    const removed = before.filter((id) => !after.includes(id));
+    const oldLeader = before[0];
+    const newLeader = after[0];
+    const parts: string[] = [];
+    if (added.length) parts.push(`${added.length} new communit${added.length === 1 ? "y now qualifies" : "ies now qualify"}`);
+    if (removed.length) parts.push(`${removed.length} previous option${removed.length === 1 ? " no longer qualifies" : "s no longer qualify"}`);
+    if (oldLeader && newLeader && oldLeader !== newLeader) {
+      const leader = afterItems.find((item) => item.canonical_facility_id === newLeader);
+      parts.push(`${leader?.facility_name || "A different community"} now comes first based on the updated priorities`);
+    }
+    if (!parts.length) parts.push("the leading recommendations did not materially change");
+    setOomnikerDiff(`Here’s what changed: ${parts.join("; ")}.`);
+    beforeOomnikerIds.current = [];
+  }, [loading, response]);
 
   const eligible = useMemo(
     () => (response?.results || []).filter(isFinalRecommendation),
@@ -265,7 +286,7 @@ export function SimpleResultsPageClient() {
             <button type="button" onClick={() => setOomnikerOpen((v) => !v)} className="rounded-full bg-[#079ff2] px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close" : "Open OOMNIKER"}</button>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>
-          {oomnikerNotice ? <div className="mt-4 rounded-2xl bg-white p-4 text-base text-[#315f53]">{oomnikerNotice} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOomnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
+          {oomnikerNotice ? <div className="mt-4 rounded-2xl bg-white p-4 text-base text-[#315f53]">{oomnikerNotice}{oomnikerDiff ? <p className="mt-2 font-medium">{oomnikerDiff}</p> : null} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOomnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
           {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOomnikerText(e.target.value)} rows={3} placeholder="Try: Increase the radius to 75 miles, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOomnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
         </section>
 
