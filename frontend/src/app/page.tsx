@@ -11,7 +11,7 @@ import { buildResultsUrl } from "@/lib/results-url";
 import { extractExplicitMonthlyBudget } from "@/lib/story-budget";
 import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
-import { OomnikMark } from "@/components/brand/oomnik-mark";
+import { OomnikMark as OOmnikMark } from "@/components/brand/oomnik-mark";
 
 const EXAMPLE_QUERY =
   "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
@@ -228,12 +228,12 @@ export default function HomePage() {
           </nav>
 
           <div className="pt-10 sm:pt-14"><div className="flex justify-center pb-12 sm:pb-16"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div>
-            <p className="text-2xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Welcome to Oomnik</p>
-            <h1 className="mt-5 max-w-5xl text-5xl font-semibold leading-[1.03] tracking-[-0.05em] text-[#1e2e28] sm:text-7xl lg:text-[5.5rem]">
+            <p className="text-2xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Welcome to OOmnik</p>
+            <h1 className="mt-5 max-w-5xl text-4xl font-semibold leading-[1.08] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
               A difficult decision deserves time, care, and the right guidance.
             </h1>
             <p className="mt-7 max-w-4xl text-xl leading-9 text-[#52645d] sm:text-2xl sm:leading-10">
-              Choosing senior living has many important dimensions. Answer a few questions, and Oomnik will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
+              Choosing senior living has many important dimensions. Answer a few questions, and OOmnik will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
             </p>
 
             <div className="mt-14 max-w-3xl">
@@ -276,7 +276,7 @@ export default function HomePage() {
                     onClick={continueAfterAssistance}
                     className="mt-8 inline-flex items-center gap-2 border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <OomnikMark size={18} /> Next <span className="ml-1">→</span>
+                    <OOmnikMark size={18} /> Next <span className="ml-1">→</span>
                   </button>
                 </div>
               )}
@@ -309,13 +309,13 @@ export default function HomePage() {
         <div className="max-w-4xl">
           <p className="text-xl font-semibold tracking-[-0.02em] text-[#3a7969]">Your story matters</p>
           <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">Tell us anything the questions may not capture.</h2>
-          <p className="mt-5 max-w-2xl text-xl leading-9 text-[#5a6d65]">Use your own words. Oomnik will combine the story with the answers already saved.</p>
+          <p className="mt-5 max-w-2xl text-xl leading-9 text-[#5a6d65]">Use your own words. OOmnik will combine the story with the answers already saved.</p>
           <form onSubmit={submit} className="mt-10 max-w-4xl">
             <label htmlFor="family-case" className="sr-only">Describe your family situation</label>
             <textarea id="family-case" value={query} onChange={(event) => setQuery(event.target.value)} rows={6} placeholder={EXAMPLE_QUERY} className="w-full resize-none border-0 border-b-2 border-[#a8beb6] bg-transparent px-0 py-5 text-xl leading-9 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#315f53] focus:ring-0" />
             {error && <p className="mt-4 text-sm text-[#8a4434]">{error}</p>}
             <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex items-center gap-2 border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:opacity-60">
-              {!isSubmitting && <OomnikMark size={18} />}
+              {!isSubmitting && <OOmnikMark size={18} />}
               {isSubmitting ? "Opening the AI interview..." : "See options that may fit"} <span className="ml-1">→</span>
             </button>
           </form>
@@ -346,7 +346,7 @@ export default function HomePage() {
 
       <footer className="bg-[#f4f1eb]">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-8 text-sm text-[#66766f] sm:px-8 md:flex-row md:items-center md:justify-between lg:px-12">
-          <p>© {new Date().getFullYear()} Oomnik. Finding You the Right Way.</p>
+          <p>© {new Date().getFullYear()} OOmnik. Finding You the Right Way.</p>
           <div className="flex flex-wrap gap-5">
             <Link href="/workspace" className="hover:text-[#254d42]">Workspace</Link>
             <Link href="/profiles" className="hover:text-[#254d42]">Saved profiles</Link>
