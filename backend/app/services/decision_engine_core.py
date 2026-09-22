@@ -537,7 +537,16 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     )))
     no_transfer_support = explicit_independence or any(phrase in normalized for phrase in (
         "no mobility limitation", "no mobility limitations", "walks independently", "no transfer assistance", "does not need transfer assistance",
+        "does not need help getting", "doesn't need help getting", "no help getting",
+        "does not need one person", "doesn't need one person",
     ))
+    bed_or_shower_help = re.search(
+        r"\b(?:needs?\s+(?:one person\s+to\s+)?help|needs?\s+one person\s+to\s+help\s+(?:her|him|them)|help\s+(?:her|him|them))\s+(?:to\s+)?(?:get|getting)\s+(?:in\s+and\s+out\s+of|into|out\s+of)\s+(?:the\s+)?(?:bed|shower)\b",
+        normalized,
+    )
+    if bed_or_shower_help and not no_transfer_support:
+        _add_need(needs_by_id, "transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.9, "Transfer assistance support")
+        extraction_meta["recognized_tokens"].append("bed or shower transfer help")
     no_memory_support = any(phrase in normalized for phrase in (
         "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern",
         "does not need cognitive support", "doesn't need cognitive support", "no cognitive support",
