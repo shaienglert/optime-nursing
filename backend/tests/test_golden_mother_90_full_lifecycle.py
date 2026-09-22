@@ -5,6 +5,8 @@ import os
 import unittest
 from unittest.mock import patch
 
+from priced_candidate_fixture import priced_payloads
+
 from app.services.ai_process_owner_runtime import _phase, attach_ai_process_owner
 from app.services.facility_parameter_service import get_canonical_facility_index
 from app.services.human_intelligence_runtime_verified import build_human_intelligence_context
@@ -156,7 +158,7 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         }, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ready_ai
         ), patch(
-            "app.services.governed_evidence_runtime.agent_and_provider_payloads", return_value=verified_medication_payload
+            "app.services.governed_evidence_runtime.agent_and_provider_payloads", side_effect=priced_payloads(verified_medication_payload)
         ):
             result = run_patient_decision_engine(answered, self._query(), limit=5)
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
+from priced_candidate_fixture import priced_payloads
+
 import pytest
 
 from app.services.facility_parameter_service import refresh_runtime_cache
@@ -14,7 +16,7 @@ def verified_budget_and_medication_evidence_for_strategy_goldens():
     # These tests exercise strategy among verified candidates. Price-unknown cases
     # belong in the pending-MUST tests and must not supply a ranked shortlist.
     with patch("app.services.governed_evidence_runtime.agent_and_provider_payloads",
-               return_value=[{"published_rates_verified": True, "medication_support_verified": True}]):
+               side_effect=priced_payloads([{"published_rates_verified": True, "medication_support_verified": True}])):
         yield
 
 

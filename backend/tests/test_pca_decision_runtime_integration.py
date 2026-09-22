@@ -4,6 +4,8 @@ import os
 import unittest
 from unittest.mock import patch
 
+from priced_candidate_fixture import priced_payloads
+
 from app.services.facility_parameter_service import refresh_runtime_cache
 from app.services.patient_decision_engine import run_patient_decision_engine
 from app.services.personal_care_agency_runtime import load_personal_care_agency_evidence
@@ -49,7 +51,7 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
             return_value=ai_result,
         ), patch(
             "app.services.governed_evidence_runtime.agent_and_provider_payloads",
-            return_value=[{
+            side_effect=priced_payloads([{
                 "published_rates_verified": True,
                 "couple_coresidence_verified": True,
                 "same_apartment_transition_verified": True,
@@ -57,7 +59,7 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
                 "pt_ot_verified": True,
                 "outside_care_allowed_verified": True,
                 "continuum_of_care_verified": True,
-            }],
+            }]),
         ):
             result = run_patient_decision_engine(state, query, limit=limit)
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
