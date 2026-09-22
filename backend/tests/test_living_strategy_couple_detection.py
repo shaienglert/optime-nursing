@@ -31,3 +31,15 @@ def test_genuine_couple_mention_is_still_detected():
 def test_relationship_field_identifies_beneficiary_not_two_residents():
     assert _household_type("Looking for senior housing", relationship="spouse") == "SINGLE_OR_UNKNOWN"
     assert _household_type("My husband needs help with medication", relationship="spouse") == "SINGLE_OR_UNKNOWN"
+
+
+def test_parents_present_tense_across_sentences_form_a_couple():
+    assert _household_type("My parents are both 82. My father needs daily help and my mother is independent. They want to live together in the same apartment.", "Parents") == "COUPLE"
+
+
+def test_parents_relationship_alone_does_not_invent_a_couple():
+    assert _household_type("My mother is widowed after her husband died and is looking for an apartment.", "Parents") == "SINGLE_OR_UNKNOWN"
+
+
+def test_deceased_parents_are_not_a_current_couple():
+    assert _household_type("My parents are both deceased. I need housing for myself.") == "SINGLE_OR_UNKNOWN"
