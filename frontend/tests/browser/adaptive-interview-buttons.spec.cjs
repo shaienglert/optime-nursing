@@ -61,6 +61,9 @@ function profileFor(body) {
 }
 
 const decisionResponse = {
+  decision_intelligence: {
+    canonical_decision_state: { authoritative: true, client: 'COMPLETE', system: 'READY' },
+  },
   patient_needs_profile: { needs: [], need_tags: [], priority_parameter_ids: [] },
   result_count: 2,
   total_candidates_scored: 20,
@@ -165,6 +168,33 @@ test('results default view is readable and does not expose internal evidence jar
   await expect(page.getByText(/^Not verified$/i)).toHaveCount(0);
 });
 
+
+test('results follow-up preserves the answer and returns to confirmation', async ({ page }) => {
+  await mockBackend(page);
+  const confirmed = questionnaireState();
+  confirmed.questionnaireCompletion.clientSummaryConfirmed = true;
+  await page.addInitScript((state) => {
+    window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify(state));
+  }, confirmed);
+  await page.route('**/api/backend/decision-engine/recommendations', async (route) => {
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      ...decisionResponse,
+      decision_intelligence: profileFor({}).decision_intelligence,
+    }) });
+  });
+  await page.goto('http://127.0.0.1:3000/results');
+  await expect(page.getByRole('heading', { name: 'One more detail before we recommend places' })).toBeVisible();
+  await expect(page.getByText('Would Mom prefer a quieter setting or a more active social environment?')).toBeVisible();
+  await expect(page.getByText('Verified Community', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'More active', exact: true }).click();
+  await expect(page).toHaveURL(/\/intake-confirmation\?next=/);
+  const persisted = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem('optime.questionnaire.session')));
+  expect(persisted.notes).toBe(confirmed.notes);
+  expect(persisted.questionnaireCompletion.clientSummaryConfirmed).toBe(false);
+  expect(persisted.humanIntelligenceV2.scoringEngine.adaptiveSignals).toEqual(expect.arrayContaining([
+    expect.objectContaining({ questionKey: 'new-fact', answer: 'More active' }),
+  ]));
+});
 
 test('direct adaptive-interview access is blocked until the structured questionnaire is complete', async ({ page }) => {
   await mockBackend(page);

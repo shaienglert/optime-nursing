@@ -5,10 +5,15 @@ const intake = fs.readFileSync('frontend/src/components/intake/structured-intake
 const confirmation = fs.readFileSync('frontend/src/app/intake-confirmation/page.tsx', 'utf8');
 const resultsPage = fs.readFileSync('frontend/src/app/results/page.tsx', 'utf8');
 const simpleResults = fs.readFileSync('frontend/src/app/results/simple-results-page-client.tsx', 'utf8');
+const adaptiveAnswer = fs.readFileSync('frontend/src/lib/adaptive-answer.ts', 'utf8');
 
-for (const token of ['adaptive_questions', 'answer_options', 'adaptiveSignals', 'canonicalizeAdaptiveFact', 'context.canonical.system === "BLOCKED"', 'context.canonical.client === "COMPLETE"']) {
+for (const token of ['adaptive_questions', 'answer_options', 'applyAdaptiveAnswer', 'context.canonical.system === "BLOCKED"', 'context.canonical.client === "COMPLETE"']) {
   if (!interview.includes(token)) throw new Error(`Nursing AI-owned interview invariant missing: ${token}`);
 }
+for (const token of ['adaptiveSignals', 'canonicalizeAdaptiveFact', 'clientSummaryConfirmed: false']) {
+  if (!adaptiveAnswer.includes(token)) throw new Error(`Shared adaptive answer invariant missing: ${token}`);
+}
+if (!simpleResults.includes('applyAdaptiveAnswer')) throw new Error('Results follow-up must use shared answer persistence.');
 
 for (const forbidden of ['community_size_preference', 'social_interaction_need_after_loss', 'social_interaction_preference', 'move_participation', 'fallbackOptions(', 'existingAnswerFor', 'autoResolved']) {
   if (interview.includes(forbidden)) throw new Error(`Legacy hard-coded adaptive interview behavior remains: ${forbidden}`);
