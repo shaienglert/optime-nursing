@@ -4,7 +4,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from priced_candidate_fixture import priced_payloads
+from backend.tests.priced_candidate_fixture import priced_payloads
 
 from app.services.facility_parameter_service import refresh_runtime_cache
 from app.services.patient_decision_engine import run_patient_decision_engine

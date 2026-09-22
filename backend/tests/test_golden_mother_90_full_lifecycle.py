@@ -5,7 +5,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from priced_candidate_fixture import priced_payloads
+from backend.tests.priced_candidate_fixture import priced_payloads
 
 from app.services.ai_process_owner_runtime import _phase, attach_ai_process_owner
 from app.services.facility_parameter_service import get_canonical_facility_index

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
-from priced_candidate_fixture import priced_payloads
+from backend.tests.priced_candidate_fixture import priced_payloads
 
 import pytest
 

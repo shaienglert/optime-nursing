@@ -4,7 +4,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from priced_candidate_fixture import priced_payloads
+from backend.tests.priced_candidate_fixture import priced_payloads
 
 from app.services.canonical_universe import configured_canonical_market
 from app.services.facility_parameter_service import (
