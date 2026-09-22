@@ -254,10 +254,10 @@ export default function AdaptiveInterviewPage() {
 
   return (
     <main className="min-h-screen bg-[#f8f5ef] px-5 py-10 text-[#22332d] sm:px-8">
-      <section className="mx-auto max-w-4xl rounded-[2rem] border border-[#ded6c9] bg-white p-7 shadow-sm sm:p-10">
-        <p className="text-base font-semibold uppercase tracking-[0.14em] text-[#437667]">OPTIME</p>
-        <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">One thing that could improve the decision</h1>
-        <p className="mt-4 text-xl leading-8 text-[#5b6863]">We use everything you already told us. We only ask when an important answer is genuinely missing.</p>
+      <section className="mx-auto max-w-3xl p-3 sm:p-6">
+        <p className="text-base font-semibold text-[#168fe0]">Oomnik</p>
+        <h1 className="mt-3 text-3xl font-medium leading-tight sm:text-4xl">Let’s keep going.</h1>
+        <p className="mt-3 text-lg leading-8 text-[#5b6863]">I’ll use everything you’ve already told me, so I won’t make you repeat yourself.</p>
 
         {error ? (
           <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-xl leading-8 text-rose-800">
@@ -273,15 +273,15 @@ export default function AdaptiveInterviewPage() {
             </div>
 
             {options.length > 0 ? (
-              <div className="mt-6 grid gap-3">
+              <div className="ml-12 mt-5 flex flex-wrap gap-3">
                 {options.map((option) => (
-                  <button key={option} type="button" disabled={busy} onClick={() => void submitAnswer(option)} className="rounded-2xl border-2 border-[#d7ddd8] bg-white px-6 py-5 text-left text-xl font-semibold hover:border-[#5c8b7d] hover:bg-[#f2f8f5] disabled:opacity-50">{option}</button>
+                  <button key={option} type="button" disabled={busy} onClick={() => void submitAnswer(option)} className="rounded-full border border-[#bcd9e7] bg-white px-5 py-3 text-left text-lg font-medium text-[#234f63] shadow-sm hover:border-[#079ff2] hover:bg-[#f2fbff] disabled:opacity-50">{option}</button>
                 ))}
               </div>
             ) : (
-              <form className="mt-6" onSubmit={(event) => { event.preventDefault(); void submitAnswer(answer); }}>
-                <label htmlFor="decision-answer" className="text-xl font-semibold">Your answer</label>
-                <textarea id="decision-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={busy} rows={3} className="mt-3 w-full rounded-2xl border-2 border-[#d7ddd8] px-5 py-4 text-xl leading-8 outline-none focus:border-[#5c8b7d]" />
+              <form className="ml-12 mt-5" onSubmit={(event) => { event.preventDefault(); void submitAnswer(answer); }}>
+                <label htmlFor="decision-answer" className="sr-only">Your answer</label>
+                <textarea id="decision-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={busy} rows={3} placeholder="Tell me in your own words…" className="w-full rounded-[1.5rem] border border-[#bcd9e7] bg-white px-5 py-4 text-lg leading-8 outline-none focus:border-[#079ff2]" />
                 <button type="submit" disabled={busy || !answer.trim()} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#315f53] px-7 py-4 text-xl font-semibold text-white disabled:opacity-50">{!busy && <OomnikMark size={18} />}{busy ? "Using your answer…" : "Continue"}</button>
               </form>
             )}
@@ -289,7 +289,7 @@ export default function AdaptiveInterviewPage() {
         ) : null}
 
         {busy ? (
-          <div className="mt-8 rounded-2xl bg-[#f4f1ea] p-6 text-xl leading-8 text-[#5d5548]">Using the information you already provided…</div>
+          <div className="mt-8 text-lg leading-8 text-[#5d5548]">Thinking about what you’ve already told me…</div>
         ) : null}
       </section>
     </main>
