@@ -46,3 +46,11 @@ def test_positive_needs_are_preserved_including_other_partner(story):
     assert p['care_delivery_signals']['adl_support_needed'] is True
     assert p['care_delivery_signals']['medication_support_needed'] is True
     assert {'ADL_SUPPORT_AVAILABLE', 'MEDICATION_SUPPORT_AVAILABLE', 'SECURE_MEMORY_CARE_CONFIRMED'} <= musts(p)
+
+
+def test_client_intent_consumes_the_same_prepared_care_delivery_fact():
+    from app.services.client_intent_runtime import build_client_intent
+    supplied = {'in_house_only_requested': False}
+    with patch('app.services.combined_care_solution_runtime._query_signals', side_effect=AssertionError('Reinterpreted prepared facts')):
+        intent = build_client_intent({}, 'Only in-house care', {}, {}, care_delivery_signals=supplied)
+    assert intent['in_house_only_requested'] is False

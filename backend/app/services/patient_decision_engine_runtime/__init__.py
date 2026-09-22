@@ -77,11 +77,12 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     _apply_strategy_needs(profile, strategy)
     human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=strategy)
     _merge_strategy_questions(human_context, strategy)
-    client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context)
+    from app.services.combined_care_solution_runtime import _query_signals
+    delivery_signals = _query_signals(questionnaire_state, natural_language_query, care_denials=care_denials)
+    client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context, care_delivery_signals=delivery_signals)
     factor_policy = build_success_factor_trace(questionnaire_state, profile)
     profile["living_strategy"] = strategy
-    from app.services.combined_care_solution_runtime import _query_signals
-    profile["care_delivery_signals"] = _query_signals(questionnaire_state, natural_language_query, care_denials=care_denials)
+    profile["care_delivery_signals"] = delivery_signals
     profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, questionnaire_state, natural_language_query)
     profile["client_intent"] = client_intent
     profile["decision_intelligence"] = {

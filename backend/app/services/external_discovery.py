@@ -1293,6 +1293,9 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
         wanted = set(facility_ids)
         facilities = [facility for facility in facilities if facility.id in wanted]
 
+    # Source retrieval may take minutes. Release caller-owned status writes
+    # before network access and commit each independent source result below.
+    db.commit()
     target_ccns = {str(facility.cms_id or "").strip() for facility in facilities if str(facility.cms_id or "").strip()}
     provider_rows = _cms_provider_rows(target_ccns)
     inspection_rows = _cms_inspection_rows(target_ccns)
@@ -1342,7 +1345,7 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
         registry_row = _facility_record(facility, registry)
 
         result["facilities_successfully_discovered"] += 1
-        db.flush()
+        db.commit()
         before_states = _decision_field_states_for_facility(db, facility)
         before = _count_unknown_fields(before_states)
         result["unknown_before"] += before
@@ -1474,13 +1477,13 @@ def run_external_discovery(db: Session, *, agent_key: str = "provider_intelligen
                         }
                     )
 
-            db.flush()
+            db.commit()
             after_states = _decision_field_states_for_facility(db, facility)
             if claims and any(claim.get("evidence_key") for claim in claims):
                 result["unknown_resolved"] += _count_unknown_transitions(before_states, after_states)
             before_states = after_states
 
-        db.flush()
+        db.commit()
         after = _count_unknown_fields(_decision_field_states_for_facility(db, facility))
         result["unknown_remaining"] += after
         result["unknowns_by_facility"].append({"facility": facility.name, "unknown_before": before, "unknown_after": after, "sources": source_counts})
