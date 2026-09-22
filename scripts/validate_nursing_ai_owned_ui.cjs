@@ -10,14 +10,18 @@ for (const token of ['adaptive_questions', 'answer_options', 'adaptiveSignals', 
   if (!interview.includes(token)) throw new Error(`Nursing AI-owned interview invariant missing: ${token}`);
 }
 
-for (const forbidden of ['community_size_preference', 'social_interaction_need_after_loss', 'social_interaction_preference', 'move_participation', 'fallbackOptions(', 'existingAnswerFor', 'autoResolved', 'hasConflict']) {
+for (const forbidden of ['community_size_preference', 'social_interaction_need_after_loss', 'social_interaction_preference', 'move_participation', 'fallbackOptions(', 'existingAnswerFor', 'autoResolved']) {
   if (interview.includes(forbidden)) throw new Error(`Legacy hard-coded adaptive interview behavior remains: ${forbidden}`);
+}
+
+for (const token of ['hasUnresolvedSemanticConflict(nested?.semantic_ai?.result?.statements)', 'context.canonical.client === "COMPLETE" && !context.hasConflict']) {
+  if (!interview.includes(token)) throw new Error(`Server-reported semantic conflict guard missing: ${token}`);
 }
 
 if (!interview.includes('question?.answer_options || []')) throw new Error('Answer options must come from governed runtime only.');
 if (!interview.includes('router.replace(`/intake-confirmation?next=')) throw new Error('READY must move to client confirmation before results.');
 if (!interview.includes('questionnaireCompletion?.mandatoryComplete') || !interview.includes('conditionalFollowUpsComplete')) throw new Error('Adaptive interview must reject an incomplete structured questionnaire.');
-if (!interview.includes('We use everything you already told us.')) throw new Error('Interview must disclose the no-reask contract to the user.');
+if (!interview.includes('I’ll use everything you’ve already told me, so I won’t make you repeat yourself.')) throw new Error('Interview must disclose the no-reask contract to the user.');
 
 for (const token of ['medicalCareProfile', 'moveLossConcerns', 'parkingRequirement', 'clientSummaryConfirmed: false', 'Continue our conversation']) {
   if (!intake.includes(token)) throw new Error(`Mandatory structured intake contract missing: ${token}`);
