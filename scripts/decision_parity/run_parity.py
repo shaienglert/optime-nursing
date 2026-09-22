@@ -69,6 +69,7 @@ def snapshot(backend: str, out: str, workers: int = 4) -> int:
 def compare(baseline: str, candidate: str, show: int = 12) -> int:
     base_dir, cand_dir = Path(baseline), Path(candidate)
     total = 0
+    allowed = 0
     for case in CASES:
         a, b = base_dir / f"{case}.json", cand_dir / f"{case}.json"
         if not a.exists() or not b.exists():
@@ -78,11 +79,23 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
         diffs: list = []
         walk(json.loads(a.read_text()), json.loads(b.read_text()), "$", diffs)
         total += len(diffs)
+        # Owner-approved additive contract fields from the authority integration.
+        # Changed values and removals still fail; only absent -> present is exempt.
+        allowed += sum(
+            kind == "added" and (
+                path == "$.http_recommendations.body.decision_id"
+                or path.endswith(".intake_resolution")
+                or path.endswith(".source_backed_conflict_keys")
+            )
+            for path, kind, _old, _new in diffs
+        )
         print(f"{case}: {'identical' if not diffs else f'{len(diffs)} differences'}")
         for path, kind, x, y in diffs[:show]:
             print(f"    {path} [{kind}] {json.dumps(x, default=str)[:100]} -> {json.dumps(y, default=str)[:100]}")
     print(f"TOTAL_DIFFERENCES={total}")
-    return 1 if total else 0
+    print(f"ALLOWED_ADDITIONS={allowed}")
+    print(f"UNEXPECTED_DIFFERENCES={total - allowed}")
+    return 1 if total > allowed else 0
 
 
 def main(argv: list[str]) -> int:
