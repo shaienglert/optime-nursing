@@ -313,10 +313,8 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     eligible, pending, rejected = _must_counts(result, decision)
     ranking = _ranking_state(decision)
     preferences = _preference_state(decision)
-    # MUST_PENDING_VERIFICATION candidates are ranked together with MUST_ELIGIBLE ones
-    # (see must_ai_nice_pipeline.py) rather than excluded, so a completed ranking can
-    # cover either group. Only an explicit MUST_FAIL is excluded from ranking.
-    rankable_count = eligible + pending
+    # Unverified MUSTs remain research candidates; only verified passes can rank.
+    rankable_count = eligible
 
     if blockers and system is not SystemHealth.BLOCKED:
         return CanonicalDecisionState(
@@ -354,14 +352,8 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             legacy_decision_finality=legacy_finality,
         )
 
-    # Pending evidence is a research queue, not a veto on candidates that already
-    # passed every MUST.  The former behaviour let one unresolved non-shortlisted
-    # facility hide a successfully AI-ranked shortlist. Pending candidates are now
-    # ranked alongside eligible ones (must_ai_nice_pipeline.py), so this route only
-    # applies while that combined ranking has not completed yet -- once it has,
-    # control falls through to the PROVISIONAL/FINAL_RECOMMENDATION branch below,
-    # which shows them with an explicit per-candidate pending-verification note.
-    if pending > 0 and eligible == 0 and ranking is not RankingState.COMPLETE:
+    # Ranking cannot turn missing MUST evidence into a verified pass.
+    if pending > 0 and eligible == 0:
         return CanonicalDecisionState(
             phase=DecisionPhase.EVIDENCE_COLLECTION,
             client=ClientState.COMPLETE,
@@ -454,8 +446,7 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     # fully-ranked shortlist from being shown. PREFERENCE_VERIFICATION is therefore
     # unreachable once rankable_count>0 and ranking is complete; preferences only
     # decide FINAL vs PROVISIONAL below, never whether anything is shown at all.
-    # The same now holds for MUST evidence: a candidate with an unresolved (not
-    # failed) MUST item is ranked and shown on today's evidence, never hidden for it.
+    # Pending MUST candidates stay in the research queue.
     if rankable_count > 0 and ranking is RankingState.COMPLETE:
         finality = DecisionFinality.FINAL if preferences is PreferenceState.COMPLETE and pending == 0 else DecisionFinality.PROVISIONAL
         phase = DecisionPhase.FINAL_RECOMMENDATION if finality is DecisionFinality.FINAL else DecisionPhase.PROVISIONAL_RECOMMENDATION
@@ -548,11 +539,8 @@ def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str
     else:
         visibility, finality = f"BLOCKED_{state.phase.value}", f"PENDING_{state.phase.value}"
 
-    if state.is_degraded_result:
-        # This module already owns whether recommendations may be shown, so it is also where
-        # "shown by the hard criteria alone" is enforced. Without the model nothing assessed
-        # the unverified candidates, and a degraded list that quietly carried them would be
-        # asserting exactly what the notice says it is not.
+    if state.can_show_recommendations:
+        # Enforce the MUST gate even if an upstream ranking returns pending rows.
         rows = result.get("results")
         if isinstance(rows, list):
             verified = [

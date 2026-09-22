@@ -70,7 +70,7 @@ def test_pending_candidates_are_shown_provisionally_once_ranked():
     assert state.finality is DecisionFinality.PROVISIONAL
 
 
-def test_zero_eligible_but_ranked_pending_candidates_still_show_a_provisional_recommendation():
+def test_zero_eligible_ranked_pending_candidates_remain_research_only():
     # No candidate has fully passed MUST yet, but 5 pending ones have already been
     # ranked on today's evidence -- this must not collapse to an empty shortlist.
     result = base_result()
@@ -80,8 +80,8 @@ def test_zero_eligible_but_ranked_pending_candidates_still_show_a_provisional_re
         "dynamic_preferences": {"preference_count": 0, "verification_required_count": 0},
     }
     state = derive_canonical_decision_state(result)
-    assert state.phase is DecisionPhase.PROVISIONAL_RECOMMENDATION
-    assert state.can_show_recommendations is True
+    assert state.phase is DecisionPhase.EVIDENCE_COLLECTION
+    assert state.can_show_recommendations is False
 
 
 def test_must_pass_routes_to_ai_ranking_until_ranking_complete():
