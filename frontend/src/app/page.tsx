@@ -298,9 +298,6 @@ export default function HomePage() {
               Or tell the story in your own words
             </button>
             <p className="mt-12 max-w-5xl text-3xl font-medium leading-tight tracking-[-0.04em] text-[#20342c] sm:text-4xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
-            <div className="mt-6">
-              <OptimeStaticLogo variant="primary" height={72} />
-            </div>
           </div>
         </div>
       </section>
