@@ -44,7 +44,7 @@ import logging  # noqa: E402
 
 logging.disable(logging.CRITICAL)
 
-VOLATILE_KEY = re.compile(r"(_ms$|^ms$|duration|elapsed|latency|timestamp|generated_at|created_at|updated_at|loaded_at|requested_at|queued_at|observed_at_utc|run_id|request_id|trace_id|^id$|uuid|swap_count|last_swap_reason|perf_counter|^catalog_version$|^runtime_version$|artifact_signature|^decision_id$|^intake_profile_id$)", re.I)
+VOLATILE_KEY = re.compile(r"(_ms$|^ms$|duration|elapsed|latency|timestamp|generated_at|created_at|updated_at|loaded_at|requested_at|queued_at|observed_at_utc|run_id|request_id|trace_id|^id$|uuid|swap_count|last_swap_reason|perf_counter|^catalog_version$|^runtime_version$|artifact_signature|^decision_id$|^intake_profile_id$|^token_hash$|^created_at_epoch$|^expires_at_epoch$)", re.I)
 ISO_TS = re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?(\+00:00|Z)?")
 UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.I)
 MEM_ID = re.compile(r"ROW-\d+|id=\d{6,}|(?<=decision:)[0-9a-f]{24}(?=:)")

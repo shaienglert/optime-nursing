@@ -8,6 +8,18 @@ from app.services import combined_care_solution_runtime as combined
 from app.services import decision_pipeline as pipeline
 
 
+@pytest.fixture(autouse=True)
+def artifact_database(tmp_path, monkeypatch):
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from app.models.decision_artifact import DecisionArtifact
+    engine = create_engine(f"sqlite:///{tmp_path / 'artifacts.db'}")
+    DecisionArtifact.__table__.create(engine)
+    monkeypatch.setattr(store, "SessionLocal", sessionmaker(bind=engine))
+    yield
+    engine.dispose()
+
+
 def profile():
     return {"needs": [], "decision_intelligence": {"canonical_decision_state": {
         "authoritative": True, "client": "COMPLETE", "system": "READY",
@@ -27,7 +39,7 @@ def test_snapshot_bound_to_case_but_not_confirmation_acknowledgement():
     assert store.recall_intake_profile(token, questionnaire_state={**state, "budget": 9000}, natural_language_query="mother") is None
     assert store.recall_intake_profile(token, questionnaire_state=state, natural_language_query="father") is None
     assert store.recall_intake_profile("forged", questionnaire_state=state, natural_language_query="mother") is None
-    with patch.object(store, "_TTL_SECONDS", -1):
+    with patch.object(store.time, "time", return_value=store.time.time() + store._TTL_SECONDS + 1):
         assert store.recall_intake_profile(token, questionnaire_state=state, natural_language_query="mother") is None
 
 

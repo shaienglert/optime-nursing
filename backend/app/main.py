@@ -18,10 +18,11 @@ from sqlalchemy import func, or_
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, database_runtime_status
 from app.models.facility import AdaptiveQuestionResponse, Facility, FacilityIntelligenceProfile, HumanIntelligenceScore, Inspection, QualityMeasure, ResidentOutcome, Staffing
 from app.models.facility_outreach import FacilitySalesCopilotInteraction
 import app.models.clinical_evidence
@@ -141,7 +142,7 @@ from app.services.facility_parameter_service import (
 )
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 from app.services.decision_result_store import decision_inputs_fingerprint, recall_decision_result, remember_decision_result
-from app.services.decision_result_store import remember_intake_profile, recall_intake_profile
+from app.services.decision_result_store import remember_intake_profile, recall_intake_profile, ArtifactStoreUnavailable
 from app.services.patient_decision_engine import (
     _regulatory_index,
     build_patient_comparison_context,
@@ -186,6 +187,11 @@ app = FastAPI(
 )
 
 logger = logging.getLogger("optime.api")
+
+
+@app.exception_handler(ArtifactStoreUnavailable)
+async def artifact_store_unavailable(_request, exc):
+    return JSONResponse(status_code=503, content={"detail": str(exc)}, headers={"Retry-After": "5"})
 
 REQUIRED_FRONTEND_ORIGINS = ["https://optime-nursing.vercel.app"]
 DEVELOPMENT_FRONTEND_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
@@ -1667,7 +1673,7 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {"status": "healthy", "artifact_storage": database_runtime_status()}
 
 
 @app.get("/runtime/status")

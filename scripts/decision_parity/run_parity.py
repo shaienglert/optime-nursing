@@ -84,6 +84,7 @@ def compare(baseline: str, candidate: str, show: int = 12) -> int:
         allowed += sum(
             kind == "added" and (
                 path == "$.http_recommendations.body.decision_id"
+                or path == "$.db_side_effects.decision_artifacts"
                 # Additive intake-reuse contract. Existing signals, decisions,
                 # ordering and database writes must still match exactly.
                 or path in {
