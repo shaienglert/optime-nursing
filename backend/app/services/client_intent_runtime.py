@@ -25,7 +25,7 @@ def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
 
 
-def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any]) -> Dict[str, Any]:
+def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any], *, care_delivery_signals=None) -> Dict[str, Any]:
     query = str(natural_language_query or "").lower()
     signals = living_strategy.get("signals") if isinstance(living_strategy.get("signals"), dict) else {}
     household = living_strategy.get("household") if isinstance(living_strategy.get("household"), dict) else {}
@@ -47,13 +47,10 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     # on missing data -- so a row with no expiration_date recorded still passes.
     add_must("LICENSE_CURRENTLY_VALID", "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.", "canonical license expiration_date vs current date")
 
-    in_house_only_requested = any(token in query for token in (
-        "everything in house", "everything in-house", "all in house", "all in-house",
-        "only in house", "only in-house", "in house only", "in-house only",
-        "no outside care", "no outside caregiver", "no external care", "no external agency",
-        "no outside agency", "not okay with outside caregivers", "not comfortable with outside caregivers",
-        "don't want outside caregivers", "do not want outside caregivers",
-    ))
+    if care_delivery_signals is None:
+        from app.services.combined_care_solution_runtime import _query_signals
+        care_delivery_signals = _query_signals({}, natural_language_query)
+    in_house_only_requested = bool(care_delivery_signals.get("in_house_only_requested"))
 
     city = str(questionnaire_state.get("locationCity") or questionnaire_state.get("city") or "").strip().upper()
     # The product market is the Las Vegas Valley, not only the incorporated city.

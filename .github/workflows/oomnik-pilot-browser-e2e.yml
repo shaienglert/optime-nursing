@@ -11,6 +11,10 @@ on:
       - 'backend/app/services/decision_engine_core.py'
       - 'backend/app/services/decision_engine_evidence.py'
       - 'backend/app/services/decision_pipeline.py'
+      - 'backend/app/services/decision_result_store.py'
+      - 'backend/app/models/decision_artifact.py'
+      - 'backend/app/services/agent_knowledge_reports.py'
+      - 'backend/app/services/external_discovery.py'
       - 'scripts/validate_synthetic_pilot.cjs'
   workflow_dispatch:
     inputs:

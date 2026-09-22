@@ -815,7 +815,9 @@ def _run_agent_workflow(db: Session, agent_key: str) -> Dict[str, Any]:
     started = datetime.now(timezone.utc)
     run = AgentJobRun(agent_key=agent_key, started_at=started, status="RUNNING")
     db.add(run)
-    db.flush()
+    # Persist RUNNING before network work; never hold a SQLite writer lock
+    # while a source request is pending.
+    db.commit()
     result: Dict[str, Any] = {}
     try:
         workflow = workflows.get(agent_key)
@@ -1178,7 +1180,7 @@ def refresh_all_agent_reports(
             row.refresh_status = "RUNNING"
             row.freshness_status = "REFRESHING"
             row.last_refresh_attempt = started
-            db.flush()
+            db.commit()
 
             stage = "workflow"
             workflow_result = _run_agent_workflow(db, agent_key)
