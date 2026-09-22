@@ -472,6 +472,18 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
         )
 
 
+# Explicit denials that the phrase list above misses, e.g. "Neither has dementia",
+# "neither of them has dementia or memory problems", "she does not have dementia".
+# Only explicit denial constructions are matched: a denial suppresses the positive
+# memory-care need (it becomes UNKNOWN unless stated as NO), it never invents one.
+_NEGATED_DEMENTIA = re.compile(
+    r"\b(?:neither(?:\s+of\s+them)?\s+(?:has|have|had)|nor\s+(?:has|have|does)"
+    r"|(?:does|do|did)\s*n[o']t\s+have|(?:has|have)\s+no|never\s+(?:had|been\s+diagnosed\s+with)"
+    r"|not\s+diagnosed\s+with|no\s+(?:signs?|history|diagnosis)\s+of|free\s+of)"
+    r"\s+(?:any\s+)?(?:dementia|alzheimer'?s?|memory\s+(?:problems?|issues?|loss))\b"
+)
+
+
 def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[str, Any]:
     normalized = _normalize(text)
     extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
@@ -556,7 +568,7 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     no_memory_support = any(phrase in normalized for phrase in (
         "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern",
         "does not need cognitive support", "doesn't need cognitive support", "no cognitive support",
-    ))
+    )) or bool(_NEGATED_DEMENTIA.search(normalized))
     no_clinical_support = any(phrase in normalized for phrase in (
         "no special medical or nursing needs", "no medical or nursing needs", "does not need nursing support", "doesn't need nursing support",
     ))
