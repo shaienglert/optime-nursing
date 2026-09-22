@@ -21,7 +21,7 @@ Restart, eviction, or routing to another worker requires review again. It is not
 durable cross-worker storage. No claim of durable persistence is made.
 
 Combined-care signals are computed when constructing the intake profile and passed
-through the existing pipeline, rather than inferred again for each facility. Their
+through the existing pipeline, rather than inferred again for each facility.
 Care-partner service requirements are likewise prepared at intake and consumed
 without reading the story again. Current interpretation rules are preserved; semantic reconciliation of those rules
 with the core need mapper remains separate work.
