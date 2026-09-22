@@ -31,7 +31,7 @@ for (const token of ['Please confirm what Oomnik understood.', 'clientSummaryCon
 }
 
 if (!resultsPage.includes('SimpleResultsPageClient')) throw new Error('Senior-readable results summary must be the default results surface.');
-for (const token of ['Meets verified must-haves', 'What we still want to confirm', 'See detailed comparison', 'Other promising places we are still checking']) {
+for (const token of ['Meets verified must-haves', 'What gives me pause', 'See detailed comparison', 'Other promising places we are still checking']) {
   if (!simpleResults.includes(token)) throw new Error(`Senior-readable result contract missing: ${token}`);
 }
 const eligibility = fs.readFileSync('frontend/src/lib/recommendation-eligibility.ts', 'utf8');
