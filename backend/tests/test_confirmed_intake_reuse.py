@@ -19,7 +19,7 @@ def test_snapshot_bound_to_case_but_not_confirmation_acknowledgement():
     p = profile()
     token = store.remember_intake_profile(p, questionnaire_state=state, natural_language_query="mother")
     p["needs"].append({"forged": True})
-    confirmed = {**state, "questionnaireCompletion": {"clientSummaryConfirmed": True}}
+    confirmed = {**state, "questionnaireCompletion": {"clientSummaryConfirmed": True}, "aiProcessContinuity": {"phase": "RECOMMEND", "lastEvent": "RESULTS_VIEWED", "updatedAt": "now"}}
     result = store.recall_intake_profile(token, questionnaire_state=confirmed, natural_language_query="mother")
     assert result["profile"]["needs"] == []
     result["profile"]["needs"].append({"changed": True})

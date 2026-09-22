@@ -10,7 +10,9 @@ Use the existing bounded server result store to hold a complete intake artifact.
 The browser receives an opaque identifier, never authority to upload a profile.
 The confirmation page fetches and displays the profile that will be reused.
 Recommendation requests carrying that identifier must match all case inputs;
-confirmation UI metadata is excluded. Missing/expired/mismatched identifiers fail
+confirmation UI metadata and navigation continuity (`aiProcessContinuity`) are excluded.
+The stored case remains the input authority; navigation events do not rewrite it.
+Missing/expired/mismatched identifiers fail
 closed instead of silently interpreting a different profile. Legacy requests without
 an identifier retain their existing behavior for compatibility.
 

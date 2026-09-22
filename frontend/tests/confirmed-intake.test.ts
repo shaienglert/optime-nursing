@@ -15,6 +15,7 @@ test("confirmation metadata preserves the artifact; changed case facts require r
   memory.set("decision-cache", { old: true });
   saveConfirmedIntake("server-id", intakeInputKey(facts, "mother"));
   expect(memory.has("decision-cache")).toBe(false);
+  expect(confirmedIntakeId({ ...facts, aiProcessContinuity: { phase: "RECOMMEND", lastEvent: "RESULTS_VIEWED", updatedAt: "now" } }, "mother")).toBe("server-id");
   expect(confirmedIntakeId({ medical: facts.medical, notes: "mother", budget: 5000, questionnaireCompletion: { clientSummaryConfirmed: true } }, " mother ")).toBe("server-id");
   expect(() => confirmedIntakeId({ ...facts, budget: 6000 }, "mother")).toThrow(/review/);
   expect(() => confirmedIntakeId(facts, "father")).toThrow(/review/);

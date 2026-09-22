@@ -11,6 +11,7 @@ function stable(value: unknown): unknown {
 export function intakeInputKey(state: Record<string, unknown>, query: string) {
   const facts = { ...state };
   delete facts.questionnaireCompletion;
+  delete facts.aiProcessContinuity;
   return JSON.stringify(stable({ facts, query: query.trim() }));
 }
 export function saveConfirmedIntake(id: string, inputKey: string) {

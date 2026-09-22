@@ -85,6 +85,7 @@ def intake_inputs_fingerprint(questionnaire_state: Dict[str, Any], natural_langu
     # Workflow acknowledgements are not client facts. All care, financial,
     # identity, preference and adaptive-answer fields remain in the fingerprint.
     state.pop("questionnaireCompletion", None)
+    state.pop("aiProcessContinuity", None)
     return "intake:" + decision_inputs_fingerprint(state, natural_language_query, 0)
 
 
