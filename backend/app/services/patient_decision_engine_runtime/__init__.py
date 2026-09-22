@@ -73,7 +73,7 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     profile = _governed.build_patient_needs_profile(questionnaire_state, natural_language_query)
     strategy = build_living_strategy_context(questionnaire_state, natural_language_query)
     _apply_strategy_needs(profile, strategy)
-    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=strategy)
     _merge_strategy_questions(human_context, strategy)
     client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context)
     factor_policy = build_success_factor_trace(questionnaire_state, profile)
