@@ -564,7 +564,8 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     no_wound_care = any(phrase in normalized for phrase in (
         "no wound", "no wounds", "no wound care", "does not need wound care", "doesn't need wound care",
         "no pressure wound", "no pressure ulcer", "no pressure sore", "without pressure wounds",
-        "does not need dressing changes", "doesn't need dressing changes",
+        "does not need dressing changes", "doesn't need dressing changes", "no daily dressing changes",
+        "does not have a pressure wound", "doesn't have a pressure wound",
     ))
     no_respiratory_support = any(phrase in normalized for phrase in (
         "no oxygen", "not on oxygen", "no continuous oxygen", "no respiratory support",
