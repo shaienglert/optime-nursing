@@ -20,26 +20,26 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optime-nursing.verc
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Oomnik | Finding You the Right Way",
-    template: "%s | Oomnik",
+    default: "OOmnik | Finding You the Right Way",
+    template: "%s | OOmnik",
   },
   description:
-    "Oomnik helps families make a clear, evidence-based senior living decision using care needs, verified evidence, and the details that matter to each family.",
-  applicationName: "Oomnik",
+    "OOmnik helps families make a clear, evidence-based senior living decision using care needs, verified evidence, and the details that matter to each family.",
+  applicationName: "OOmnik",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     url: "/",
-    siteName: "Oomnik",
-    title: "Oomnik | Finding You the Right Way",
+    siteName: "OOmnik",
+    title: "OOmnik | Finding You the Right Way",
     description:
       "Compare senior care options using care needs, verified evidence, quality signals, and family-specific priorities.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Oomnik | Finding You the Right Way",
+    title: "OOmnik | Finding You the Right Way",
     description:
       "Compare senior care options using care needs, verified evidence, quality signals, and family-specific priorities.",
   },

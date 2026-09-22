@@ -18,7 +18,7 @@ export function OptimeStaticLogo({ href = "/", className = "", variant = "compac
     <Link
       href={href}
       className={`inline-flex flex-col items-start leading-none ${className}`.trim()}
-      aria-label="Oomnik Home"
+      aria-label="OOmnik Home"
     >
       <span className="inline-flex items-center font-semibold text-[#079ff2]" style={{ gap }}>
         <span className="inline-flex items-center" aria-hidden="true">
