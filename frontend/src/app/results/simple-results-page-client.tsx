@@ -60,7 +60,7 @@ export function SimpleResultsPageClient() {
       next.questionnaireCompletion.confirmedAt = new Date().toISOString();
       return next;
     });
-    setOomnikerText("");
+    setOomnikerNotice(`Got it. I’ll make this change — “${text}” — and leave everything else as we agreed. I’m checking whether it changes the decision in a meaningful way.`);\n    setOomnikerText("");
     setOomnikerOpen(false);
   }
 
