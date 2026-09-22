@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { OomnikMark } from "@/components/brand/oomnik-mark";
@@ -15,6 +15,7 @@ function IntakeConfirmationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { state, setState } = useQuestionnaire();
+  const [confirmationRequested, setConfirmationRequested] = useState(false);
   const requestedDestination = searchParams.get("next")?.startsWith("/results") ? String(searchParams.get("next")) : "/results";
 
   useEffect(() => {
@@ -26,10 +27,14 @@ function IntakeConfirmationContent() {
     }
   }, [router, state.notes, state.questionnaireCompletion]);
 
+  useEffect(() => {
+    if (!confirmationRequested || !state.questionnaireCompletion.clientSummaryConfirmed) return;
+    const requestedPathname = requestedDestination.split("?", 1)[0] || "/results";
+    router.replace(buildResultsUrl(state, requestedPathname));
+  }, [confirmationRequested, requestedDestination, router, state]);
+
   function confirm() {
-    let confirmedState = state;
-    setState((current) => {
-      confirmedState = {
+    setState((current) => ({
         ...current,
         questionnaireCompletion: {
           ...current.questionnaireCompletion,
@@ -40,11 +45,10 @@ function IntakeConfirmationContent() {
           clientSummaryConfirmed: true,
           confirmedAt: new Date().toISOString(),
         },
-      };
-      return confirmedState;
-    });
-    const requestedPathname = requestedDestination.split("?", 1)[0] || "/results";
-    router.replace(buildResultsUrl(confirmedState, requestedPathname));
+      }));
+    // Navigate only after the provider has committed the confirmed profile.
+    // Reading a variable assigned inside a state updater races React scheduling.
+    setConfirmationRequested(true);
   }
 
   const medical = state.medicalCareProfile;
