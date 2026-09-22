@@ -476,15 +476,10 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
 # "neither of them has dementia or memory problems", "she does not have dementia".
 # Only explicit denial constructions are matched: a denial suppresses the positive
 # memory-care need (it becomes UNKNOWN unless stated as NO), it never invents one.
-_NEGATED_DEMENTIA = re.compile(
-    r"\b(?:neither(?:\s+of\s+them)?\s+(?:has|have|had)|nor\s+(?:has|have|does)"
-    r"|(?:does|do|did)\s*n[o']t\s+have|(?:has|have)\s+no|never\s+(?:had|been\s+diagnosed\s+with)"
-    r"|not\s+diagnosed\s+with|no\s+(?:signs?|history|diagnosis)\s+of|free\s+of)"
-    r"\s+(?:any\s+)?(?:dementia|alzheimer'?s?|memory\s+(?:problems?|issues?|loss))\b"
-)
+from app.services.care_input_assertions import extract_care_denials
 
 
-def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[str, Any]:
+def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_denials=None) -> Dict[str, Any]:
     normalized = _normalize(text)
     extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
 
@@ -540,17 +535,10 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
             return re.search(rf"\b{re.escape(token)}\b", normalized) is not None
         return token in normalized
 
-    explicit_independence = any(phrase in normalized for phrase in (
-        "fully independent", "completely independent", "independent with bathing",
-        "independent with dressing", "independent with toileting", "independent with transfers",
-    ))
-    no_adl_support = explicit_independence or any(phrase in normalized for phrase in (
-        "no adl support", "no help with daily activities", "does not need help with daily activities",
-        "doesn't need help with daily activities", "no personal care support",
-    ))
-    no_medication_support = ((explicit_independence and present("medication")) or any(phrase in normalized for phrase in (
-        "no medication support", "no medication assistance", "does not need medication support", "doesn't need medication support",
-    )))
+    denials = care_denials if care_denials is not None else extract_care_denials(text)
+    explicit_independence = denials["independent"]
+    no_adl_support = denials["adl"]
+    no_medication_support = denials["medication"]
     no_transfer_support = explicit_independence or any(phrase in normalized for phrase in (
         "no mobility limitation", "no mobility limitations", "walks independently", "no transfer assistance", "does not need transfer assistance",
         "does not need help getting", "doesn't need help getting", "no help getting",
@@ -565,19 +553,7 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
     if bed_or_shower_help and not no_transfer_support:
         _add_need(needs_by_id, "transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.9, "Transfer assistance support")
         extraction_meta["recognized_tokens"].append("bed or shower transfer help")
-    no_memory_support = any(phrase in normalized for phrase in (
-        "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern",
-        "does not need cognitive support", "doesn't need cognitive support", "no cognitive support",
-    ))
-    # A denial belongs to its own mention, not to every person or requirement
-    # in the story. Keep a positive mention elsewhere (including memory care
-    # explicitly requested despite no dementia diagnosis).
-    memory_text_without_denials = _NEGATED_DEMENTIA.sub("", normalized)
-    if memory_text_without_denials != normalized:
-        no_memory_support = no_memory_support or not any(
-            token in memory_text_without_denials
-            for token in ("dementia", "alzheimer", "memory care")
-        )
+    no_memory_support = denials["memory"]
     no_clinical_support = any(phrase in normalized for phrase in (
         "no special medical or nursing needs", "no medical or nursing needs", "does not need nursing support", "doesn't need nursing support",
     ))
@@ -639,7 +615,7 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem]) -> Dict[s
             break
     return {"extraction": extraction_meta, "location_city": location_city}
 
-def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
+def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, care_denials=None) -> Dict[str, Any]:
     needs_by_id: Dict[str, NeedItem] = {}
 
     _map_assistance_level(questionnaire_state, needs_by_id)
@@ -650,7 +626,7 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     _map_personal_preferences(questionnaire_state, needs_by_id)
     _map_financial(questionnaire_state, needs_by_id)
 
-    nl_meta = _map_natural_language(natural_language_query or "", needs_by_id)
+    nl_meta = _map_natural_language(natural_language_query or "", needs_by_id, care_denials=care_denials)
 
     needs = [
         {

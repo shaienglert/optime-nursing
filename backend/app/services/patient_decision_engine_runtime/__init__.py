@@ -70,8 +70,10 @@ def _merge_strategy_questions(human_context: Dict[str, Any], strategy: Dict[str,
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
     from app.services.canonical_intake_state import canonicalize_intake_state
     questionnaire_state = canonicalize_intake_state(questionnaire_state)
-    profile = _governed.build_patient_needs_profile(questionnaire_state, natural_language_query)
-    strategy = build_living_strategy_context(questionnaire_state, natural_language_query)
+    from app.services.care_input_assertions import extract_care_denials
+    care_denials = extract_care_denials(natural_language_query)
+    profile = _governed.build_patient_needs_profile(questionnaire_state, natural_language_query, care_denials=care_denials)
+    strategy = build_living_strategy_context(questionnaire_state, natural_language_query, care_denials=care_denials)
     _apply_strategy_needs(profile, strategy)
     human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=strategy)
     _merge_strategy_questions(human_context, strategy)
@@ -79,7 +81,7 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     factor_policy = build_success_factor_trace(questionnaire_state, profile)
     profile["living_strategy"] = strategy
     from app.services.combined_care_solution_runtime import _query_signals
-    profile["care_delivery_signals"] = _query_signals(questionnaire_state, natural_language_query)
+    profile["care_delivery_signals"] = _query_signals(questionnaire_state, natural_language_query, care_denials=care_denials)
     profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, questionnaire_state, natural_language_query)
     profile["client_intent"] = client_intent
     profile["decision_intelligence"] = {

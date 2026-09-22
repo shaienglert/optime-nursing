@@ -82,7 +82,9 @@ def _duration_months(text: str) -> int | None:
     return None
 
 
-def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
+def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, care_denials=None) -> Dict[str, Any]:
+    from app.services.care_input_assertions import extract_care_denials
+    denials = care_denials if care_denials is not None else extract_care_denials(natural_language_query)
     query = _norm(natural_language_query)
     hi = _hi(questionnaire_state)
     transition = hi.get("transitionRiskProfile") if isinstance(hi.get("transitionRiskProfile"), dict) else {}
@@ -93,7 +95,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     # co-residence statement before creating the COUPLE_CORESIDENCE hard gate.
     couple = _mentions_couple(query)
 
-    no_dementia = _contains(query, "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern", "does not need cognitive support", "doesn't need cognitive support", "no cognitive support") or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
+    no_dementia = denials["memory"] or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
     memory_care_needed = (
         not no_dementia
         and _contains(query, "dementia", "alzheimer", "memory care", "wandering", "cognitive decline", "cognitive impairment")
@@ -128,9 +130,9 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     if duration is not None and duration <= 6:
         expected_recovery = True
 
-    explicit_independence = _contains(query, "fully independent", "completely independent", "independent with bathing", "independent with dressing", "independent with toileting", "independent with transfers") or _contains(_norm(questionnaire_state.get("assistanceLevel")), "fully independent", "independent")
-    no_adl_support = explicit_independence or _contains(query, "no adl support", "no help with daily activities", "does not need help with daily activities", "doesn't need help with daily activities", "no personal care support")
-    no_medication_support = (explicit_independence and _contains(query, "medication", "medications", "medicine")) or _contains(query, "no medication support", "no medication assistance", "does not need medication support", "doesn't need medication support")
+    explicit_independence = denials["independent"] or _contains(_norm(questionnaire_state.get("assistanceLevel")), "fully independent", "independent")
+    no_adl_support = explicit_independence or denials["adl"]
+    no_medication_support = (explicit_independence and _contains(query, "medication", "medications", "medicine")) or denials["medication"]
     # Keep explicit, ordinary-language ADL statements canonical even when the
     # client does not name a specific task.  The launch journeys exposed three
     # equivalent phrases ("assistance with daily activities", "substantial

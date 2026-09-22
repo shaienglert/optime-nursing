@@ -63,8 +63,9 @@ def _explicit_location_city(questionnaire: Dict[str, Any], natural_language_quer
 def build_patient_needs_profile(
     questionnaire_state: Dict[str, Any],
     natural_language_query: str = "",
+    *, care_denials=None,
 ) -> Dict[str, Any]:
-    profile = _legacy_build_patient_needs_profile(questionnaire_state, natural_language_query)
+    profile = _legacy_build_patient_needs_profile(questionnaire_state, natural_language_query, care_denials=care_denials)
     if profile.get("location_city"):
         return profile
 

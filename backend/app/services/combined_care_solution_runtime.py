@@ -14,15 +14,17 @@ def _upper(value: Any) -> str:
     return str(value or UNKNOWN).strip().upper()
 
 
-def _query_signals(questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
+def _query_signals(questionnaire_state: Dict[str, Any], natural_language_query: str, *, care_denials=None) -> Dict[str, Any]:
+    from app.services.care_input_assertions import extract_care_denials
+    denials = care_denials if care_denials is not None else extract_care_denials(natural_language_query)
     text = str(natural_language_query or "").lower()
     assistance = str(questionnaire_state.get("assistanceLevel") or "").lower()
     combined = f"{text} {assistance}"
     temporary = any(token in combined for token in ("temporary", "temporarily", "3 months", "three months", "short term", "short-term", "post surgery", "after surgery", "recovery", "recovering"))
     home_like = any(token in combined for token in ("intimate", "home-like", "homelike", "home like", "small community", "less institutional", "not institutional", "independent living", "independent senior living"))
     part_time = any(token in combined for token in ("few hours", "a few hours", "couple hours", "part time", "part-time", "morning and evening", "morning/evening", "one hour", "1 hour"))
-    adl = any(token in combined for token in ("bathing", "dressing", "adl", "personal care", "caregiver", "care giver", "shower"))
-    medication = any(token in combined for token in ("medication", "meds", "med management", "pills", "prescription"))
+    adl = not denials["adl"] and any(token in combined for token in ("bathing", "dressing", "adl", "personal care", "caregiver", "care giver", "shower"))
+    medication = not denials["medication"] and any(token in combined for token in ("medication", "meds", "med management", "pills", "prescription"))
     meals_material = any(token in combined for token in ("meal", "meals", "food", "dining", "breakfast", "lunch", "dinner", "ארוחות", "אוכל"))
     in_house_only_requested = any(token in combined for token in (
         "everything in house", "everything in-house", "all in house", "all in-house",
