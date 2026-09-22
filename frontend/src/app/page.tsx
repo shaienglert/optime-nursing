@@ -233,7 +233,7 @@ export default function HomePage() {
               A difficult decision deserves time, care, and the right guidance.
             </h1>
             <p className="mt-7 max-w-4xl text-xl leading-9 text-[#52645d] sm:text-2xl sm:leading-10">
-              Choosing senior living has many important dimensions. Answer a few questions, and <span className="inline-flex items-baseline whitespace-nowrap font-semibold text-black"><span>OOmn</span><span className="relative inline-block">i<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-[1px] bg-orange-500" style={{ width: "0.34em", height: "0.34em", top: "-0.18em" }} /></span><span>k</span></span> will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
+              Choosing senior living has many important dimensions. Answer a few questions, and <span className="inline-flex items-baseline whitespace-nowrap font-normal text-inherit"><span>OOmn</span><span className="relative inline-block">i<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-[1px] bg-orange-500" style={{ width: "0.22em", height: "0.22em", top: "-0.08em" }} /></span><span>k</span></span> will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
             </p>
 
             <div className="mt-14 max-w-3xl">
@@ -306,7 +306,7 @@ export default function HomePage() {
         <div className="max-w-4xl">
           <p className="text-xl font-semibold tracking-[-0.02em] text-[#3a7969]">Your story matters</p>
           <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">Tell us anything the questions may not capture.</h2>
-          <p className="mt-5 max-w-2xl text-xl leading-9 text-[#5a6d65]">Use your own words. <span className="inline-flex items-baseline whitespace-nowrap font-semibold text-black"><span>OOmn</span><span className="relative inline-block">i<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-[1px] bg-orange-500" style={{ width: "0.34em", height: "0.34em", top: "-0.18em" }} /></span><span>k</span></span> will combine the story with the answers already saved.</p>
+          <p className="mt-5 max-w-2xl text-xl leading-9 text-[#5a6d65]">Use your own words. <span className="inline-flex items-baseline whitespace-nowrap font-normal text-inherit"><span>OOmn</span><span className="relative inline-block">i<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-[1px] bg-orange-500" style={{ width: "0.22em", height: "0.22em", top: "-0.08em" }} /></span><span>k</span></span> will combine the story with the answers already saved.</p>
           <form onSubmit={submit} className="mt-10 max-w-4xl">
             <label htmlFor="family-case" className="sr-only">Describe your family situation</label>
             <textarea id="family-case" value={query} onChange={(event) => setQuery(event.target.value)} rows={6} placeholder={EXAMPLE_QUERY} className="w-full resize-none border-0 border-b-2 border-[#a8beb6] bg-transparent px-0 py-5 text-xl leading-9 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#315f53] focus:ring-0" />
