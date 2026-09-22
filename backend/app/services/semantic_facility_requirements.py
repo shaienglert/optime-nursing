@@ -292,7 +292,9 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 if key == "SEMANTIC_FUTURE_CARE_PATH":
                     verified = _row_verifies_future_care(row)
                 elif key == "SEMANTIC_BUDGET_VERIFICATION":
-                    verified = (True in verdicts) or _row_verifies_budget(row, questionnaire_state)
+                    # Disclosure proves that rates are published, not that the
+                    # family's budget covers them. Always compare the price.
+                    verified = _row_verifies_budget(row, questionnaire_state)
                 else:
                     verified = True in verdicts
                 if verified:

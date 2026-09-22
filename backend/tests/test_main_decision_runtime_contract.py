@@ -5,6 +5,11 @@ import os
 import unittest
 from unittest.mock import patch
 
+if __package__:
+    from .priced_candidate_fixture import priced_payloads
+else:
+    from priced_candidate_fixture import priced_payloads
+
 
 class MainDecisionRuntimeContractTests(unittest.TestCase):
     def _questionnaire(self) -> dict:
@@ -123,7 +128,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
         ), patch(
-            "app.services.governed_evidence_runtime.agent_and_provider_payloads", return_value=[{"published_rates_verified": True}]
+            "app.services.governed_evidence_runtime.agent_and_provider_payloads", side_effect=priced_payloads([{"published_rates_verified": True}])
         ):
             result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
         serialized = main.PatientDecisionEngineOut.model_validate(result).model_dump()

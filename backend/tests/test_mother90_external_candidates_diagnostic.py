@@ -17,7 +17,8 @@ def _payloads_with_verified_budget(row):
     # payload rather than replacing real evidence, so a stated budget (now also a
     # facility-owned MUST; see semantic_facility_requirements.py's
     # SEMANTIC_BUDGET_VERIFICATION) doesn't mask what this test actually verifies.
-    return [*_real_agent_and_provider_payloads(row), {"published_rates_verified": True}]
+    row["starting_monthly_price"] = 2800  # Synthetic price; keep the numeric budget gate real.
+    return _real_agent_and_provider_payloads(row)
 
 
 class Mother90ExternalCandidateDiagnosticTests(unittest.TestCase):
