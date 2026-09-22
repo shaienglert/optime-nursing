@@ -58,10 +58,11 @@ test.describe('real synthetic-pilot customer journey', () => {
     await page.getByRole('button', { name: 'Not eligible', exact: true }).click();
 
     await page.locator('input[type="range"]').evaluate((element, budget) => {
-      element.value = String(budget);
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(element, String(budget));
       element.dispatchEvent(new Event('input', { bubbles: true }));
       element.dispatchEvent(new Event('change', { bubbles: true }));
     }, scenario.budget);
+    await expect(page.locator('input[type="range"]')).toHaveValue(String(scenario.budget));
     await page.getByRole('button', { name: scenario.moveTiming, exact: true }).click();
     await page.getByRole('button', { name: scenario.attitude, exact: true }).click();
     await page.getByRole('button', { name: scenario.social, exact: true }).click();
@@ -129,10 +130,19 @@ test.describe('real synthetic-pilot customer journey', () => {
     if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
-    expect(results.length).toBeGreaterThan(0);
+    const canonical = payload.canonical_decision_state;
+    expect(canonical?.authoritative).toBe(true);
+    if (canonical.can_show_recommendations) {
+      expect(results.length).toBeGreaterThan(0);
+    } else {
+      expect(results).toEqual([]);
+      expect(canonical.phase).toBe('EVIDENCE_COLLECTION');
+      await expect(page.getByText(/do not yet have enough verified information/)).toBeVisible();
+      await expect(page.getByText(/Meets verified must-haves/)).toHaveCount(0);
+    }
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);
     expect(results.every((item) => String(item.canonical_facility_id || '').startsWith('PILOT-NV-'))).toBe(true);
-    await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
+    if (results.length) await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
     expect(errors.filter((message) => !/favicon/i.test(message))).toEqual([]);
 
     console.log('OOMNIK_REAL_PILOT_RESULT_BEGIN');
