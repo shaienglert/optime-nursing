@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { OomnikMark } from "@/components/brand/oomnik-mark";
+import { OOmnikMark } from "@/components/brand/oomnik-mark";
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { buildResultsUrl } from "@/lib/results-url";
 
@@ -58,7 +58,7 @@ function IntakeConfirmationContent() {
     <main className="min-h-screen bg-[#f6f3ed] px-4 py-10 text-[#26352f] sm:px-8">
       <section className="mx-auto max-w-5xl">
         <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">Final understanding check</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Please confirm what Oomnik understood.</h1>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Please confirm what OOmnik understood.</h1>
         <p className="mt-5 max-w-3xl text-lg leading-8 text-[#5c665f]">This confirmed profile—not free-text guesses—will be the basis for research, matching, and the questions shown for each community.</p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -86,7 +86,7 @@ function IntakeConfirmationContent() {
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={() => router.push("/intake")} className="rounded-full border border-[#76958a] bg-white px-7 py-4 text-base font-semibold text-[#315f53]">Change answers</button>
-          <button type="button" onClick={confirm} className="inline-flex items-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759]"><OomnikMark size={16} /> I confirm—show recommendations</button>
+          <button type="button" onClick={confirm} className="inline-flex items-center gap-2 rounded-full bg-[#397a69] px-7 py-4 text-base font-semibold text-white hover:bg-[#2f6759]"><OOmnikMark size={16} /> I confirm—show recommendations</button>
         </div>
       </section>
     </main>
