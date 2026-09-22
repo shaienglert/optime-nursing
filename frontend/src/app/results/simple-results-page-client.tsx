@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
@@ -41,7 +41,7 @@ export function SimpleResultsPageClient() {
   const { state, setState } = useQuestionnaire();
   const [response, setResponse] = useState<DecisionEngineResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);\n  const [oomnikerOpen, setOomnikerOpen] = useState(false);\n  const [oomnikerText, setOomnikerText] = useState("");
+  const [error, setError] = useState<string | null>(null);\n  const [oomnikerOpen, setOomnikerOpen] = useState(false);\n  const [oomnikerText, setOomnikerText] = useState("");\n  const [oomnikerNotice, setOomnikerNotice] = useState("");\n  const oomnikerHistory = useRef<typeof state[]>([]);
 
   function applyOomnikerChange() {
     const text = oomnikerText.trim();
@@ -55,7 +55,7 @@ export function SimpleResultsPageClient() {
       if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.locationImportant = "Yes"; }
       if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
       if (/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "No preference";
-      if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";
+      if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";\n      if (/community.*small|small community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Small";\n      if (/community.*medium|medium community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Medium";\n      if (/community.*large|large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "Large";\n      if (/parking.*(?:not|no longer).*(?:need|required)|(?:remove|drop).*parking/.test(lower)) next.parkingRequirement = "No";\n      if (/parking.*(?:need|required|important)/.test(lower) && !/(?:not|no longer)/.test(lower)) next.parkingRequirement = "Yes";\n      if (/future care.*(?:important|required)|avoid another move/.test(lower)) next.futureCarePreference = "Yes";\n      if (/future care.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*future care/.test(lower)) next.futureCarePreference = "No preference";
       next.questionnaireCompletion.clientSummaryConfirmed = true;
       next.questionnaireCompletion.confirmedAt = new Date().toISOString();
       return next;
@@ -247,7 +247,7 @@ export function SimpleResultsPageClient() {
             <div><p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#168fe0]">OOMNIKER</p><h2 className="mt-2 text-3xl font-semibold">Refine the search without starting over</h2><p className="mt-3 max-w-3xl text-lg leading-8 text-[#53635d]">These are the criteria currently shaping your results. Change, remove or add a preference and Oomnik will reassess the options.</p></div>
             <button type="button" onClick={() => setOomnikerOpen((v) => !v)} className="rounded-full bg-[#079ff2] px-5 py-3 font-semibold text-white">{oomnikerOpen ? "Close" : "Open OOMNIKER"}</button>
           </div>
-          <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>
+          <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>\n          {oomnikerNotice ? <div className="mt-4 rounded-2xl bg-white p-4 text-base text-[#315f53]">{oomnikerNotice} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOomnikerNotice("Last OOMNIKER change undone. Reassessing the previous search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
           {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOomnikerText(e.target.value)} rows={3} placeholder="Try: Increase the radius to 75 miles, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOomnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
         </section>
 
