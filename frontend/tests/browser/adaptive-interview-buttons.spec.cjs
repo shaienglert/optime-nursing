@@ -42,34 +42,6 @@ function profileFor(body) {
         decision_readiness: 'NEEDS_CLARIFICATION',
         canonical_decision_state: interviewState(),
         adaptive_questions: [{
-          question_key: 'known-location',
-          question: 'What city or area should we search in for Mom?',
-          target_fact_key: 'market_location',
-          information_gain: 'HIGH',
-        }],
-      },
-    };
-  }
-  if (signals.length === 1) {
-    return {
-      decision_intelligence: {
-        decision_readiness: 'NEEDS_CLARIFICATION',
-        canonical_decision_state: interviewState(),
-        adaptive_questions: [{
-          question_key: 'known-budget',
-          question: 'What monthly housing-and-care budget are you comfortable with?',
-          target_fact_key: 'monthly_budget',
-          information_gain: 'HIGH',
-        }],
-      },
-    };
-  }
-  if (signals.length === 2) {
-    return {
-      decision_intelligence: {
-        decision_readiness: 'NEEDS_CLARIFICATION',
-        canonical_decision_state: interviewState(),
-        adaptive_questions: [{
           question_key: 'new-fact',
           question: 'Would Mom prefer a quieter setting or a more active social environment?',
           target_fact_key: 'environment_preference_not_already_known',
@@ -154,7 +126,7 @@ test('home free-text entry starts the governed AI intake without forcing the man
   expect(persisted.budget).toBe(8000);
 });
 
-test('AI silently consumes questionnaire facts and only asks genuinely missing information', async ({ page }) => {
+test('server-owned intake asks only the missing question and preserves explicit answers', async ({ page }) => {
   await mockBackend(page);
   await seedQuestionnaire(page);
   await page.goto('http://127.0.0.1:3000/adaptive-interview');
