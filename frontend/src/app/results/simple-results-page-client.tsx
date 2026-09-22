@@ -228,7 +228,12 @@ export function SimpleResultsPageClient() {
                       <p className="text-lg font-semibold text-[#3e7868]">{index === 0 ? "Where I would start" : `Option ${index + 1}`}</p>
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{item.facility_name}</h2>
                       <p className="mt-2 text-lg text-[#627069]">{[item.city, item.state].filter(Boolean).join(", ")}</p>
-                      <p className="mt-2 text-lg font-semibold text-[#334b42]">{item.starting_monthly_price ? `Starting at $${item.starting_monthly_price.toLocaleString()} / month` : "Price not provided"} · Availability: {item.availability_status === "YES" ? "available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
+                      <p className="mt-2 text-lg font-semibold text-[#334b42]">{item.starting_monthly_price ? `Starting at ${item.starting_monthly_price.toLocaleString()} / month` : "Price not provided"} · Availability: {item.availability_status === "YES" ? "available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
+                      {state.careSearchApproach !== "Care provided by the community" && item.starting_monthly_price ? (
+                        <div className="mt-3 rounded-xl border border-[#cfe3da] bg-[#f7fbf9] px-4 py-3 text-sm leading-6 text-[#40564e]">
+                          <strong>Independent living + outside support:</strong> housing starts at ${item.starting_monthly_price.toLocaleString()} / month. Outside-care cost is shown separately only when a verified provider price and required service package are available. Until then, the combined monthly cost remains <strong>to be verified</strong>.
+                        </div>
+                      ) : null}
                     </div>
                     <div className="flex flex-col items-start gap-2 sm:items-end">
                       <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">Meets verified must-haves</span>
