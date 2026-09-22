@@ -1,13 +1,30 @@
 import unittest
 from unittest.mock import patch
 
-from app.services.patient_decision_engine import (
-    _eligibility_from_needs,
-    _evaluate_need,
-    build_patient_comparison_context,
-    build_patient_needs_profile,
-    run_patient_decision_engine,
-)
+from app.services.patient_decision_engine_runtime import _governed
+
+# These are core scorer unit tests. Production integration is covered separately;
+# the public runtime facade no longer exports the core's private helpers.
+_core = _governed._legacy
+_eligibility_from_needs = _core._eligibility_from_needs
+_evaluate_need = _core._evaluate_need
+build_patient_comparison_context = _core.build_patient_comparison_context
+build_patient_needs_profile = _core.build_patient_needs_profile
+run_patient_decision_engine = _core.run_patient_decision_engine
+
+
+def _catalog(ids):
+    return {
+        "candidate_ids": ids,
+        "candidate_count": len(ids),
+        "catalog_version": "unit-test",
+        "total_facilities_known": len(ids),
+        "classification_counts": {},
+        "required_parameter_ids": [],
+        "verified_capability_match_count": 0,
+        "pending_verification_count": len(ids),
+        "excluded_explicit_negative_count": 0,
+    }
 
 
 class PatientNeedsProfileTests(unittest.TestCase):
@@ -163,11 +180,11 @@ class EngineRuntimeTests(unittest.TestCase):
             "rows": rows_by_id[canonical_id],
         }
 
-    @patch("app.services.patient_decision_engine.get_facility_parameter_table")
-    @patch("app.services.patient_decision_engine.get_all_canonical_facility_ids")
-    @patch("app.services.patient_decision_engine.get_canonical_facility_index")
-    @patch("app.services.patient_decision_engine.get_personalized_parameter_order")
-    @patch("app.services.patient_decision_engine.build_patient_needs_profile")
+    @patch.object(_core, "get_facility_parameter_table")
+    @patch.object(_core, "query_facility_knowledge_catalog")
+    @patch.object(_core, "get_canonical_facility_index")
+    @patch.object(_core, "get_personalized_parameter_order")
+    @patch.object(_core, "build_patient_needs_profile")
     def test_deterministic_matching_and_no_type_exclusion(
         self,
         mock_build_profile,
@@ -183,7 +200,7 @@ class EngineRuntimeTests(unittest.TestCase):
                 {"parameter_id": "nursing_24_7"},
             ]
         }
-        mock_ids.return_value = ["A", "B"]
+        mock_ids.return_value = _catalog(["A", "B"])
         mock_index.return_value = {
             "A": {"source_identity_ids": {"cms_ccn": "100001"}, "canonical_type": "SNF"},
             "B": {"source_identity_ids": {"cms_ccn": "100002"}, "canonical_type": "ALF"},
@@ -198,11 +215,11 @@ class EngineRuntimeTests(unittest.TestCase):
         self.assertEqual({item["canonical_facility_id"] for item in first["results"]}, {"A", "B"})
         self.assertEqual(first["results"][0]["canonical_facility_id"], "A")
 
-    @patch("app.services.patient_decision_engine.get_facility_parameter_table")
-    @patch("app.services.patient_decision_engine.get_all_canonical_facility_ids")
-    @patch("app.services.patient_decision_engine.get_canonical_facility_index")
-    @patch("app.services.patient_decision_engine.get_personalized_parameter_order")
-    @patch("app.services.patient_decision_engine.build_patient_needs_profile")
+    @patch.object(_core, "get_facility_parameter_table")
+    @patch.object(_core, "query_facility_knowledge_catalog")
+    @patch.object(_core, "get_canonical_facility_index")
+    @patch.object(_core, "get_personalized_parameter_order")
+    @patch.object(_core, "build_patient_needs_profile")
     def test_no_completeness_bias_for_extra_unknown_non_need_rows(
         self,
         mock_build_profile,
@@ -213,7 +230,7 @@ class EngineRuntimeTests(unittest.TestCase):
     ) -> None:
         mock_build_profile.return_value = self._mock_profile()
         mock_order.return_value = {"ordered_parameters": [{"parameter_id": "pt"}, {"parameter_id": "nursing_24_7"}]}
-        mock_ids.return_value = ["A", "B"]
+        mock_ids.return_value = _catalog(["A", "B"])
         mock_index.return_value = {"A": {"source_identity_ids": {}}, "B": {"source_identity_ids": {}}}
         mock_table.side_effect = lambda canonical_id, **_: self._mock_table(canonical_id)
 
@@ -226,7 +243,7 @@ class EngineRuntimeTests(unittest.TestCase):
 
 
 class ComparisonContextTests(unittest.TestCase):
-    @patch("app.services.patient_decision_engine.compare_facility_parameter_tables")
+    @patch.object(_core, "compare_facility_parameter_tables")
     def test_comparison_context_uses_identical_parameter_ids_and_preserves_scope(self, mock_compare) -> None:
         mock_compare.return_value = {
             "parameter_ids": ["pt", "nursing_24_7"],
@@ -372,11 +389,13 @@ class GovernedTieBreakerTests(unittest.TestCase):
         }
 
     def _run_with_tables(self, ids: list[str], tables: dict[str, dict]) -> dict:
-        with patch("app.services.patient_decision_engine.build_patient_needs_profile") as mock_profile, patch(
-            "app.services.patient_decision_engine.get_personalized_parameter_order"
-        ) as mock_order, patch("app.services.patient_decision_engine.get_all_canonical_facility_ids") as mock_ids, patch(
-            "app.services.patient_decision_engine.get_canonical_facility_index"
-        ) as mock_index, patch("app.services.patient_decision_engine.get_facility_parameter_table") as mock_table:
+        with (
+            patch.object(_core, "build_patient_needs_profile") as mock_profile,
+            patch.object(_core, "get_personalized_parameter_order") as mock_order,
+            patch.object(_core, "query_facility_knowledge_catalog") as mock_ids,
+            patch.object(_core, "get_canonical_facility_index") as mock_index,
+            patch.object(_core, "get_facility_parameter_table") as mock_table,
+        ):
             mock_profile.return_value = self._profile()
             mock_order.return_value = {
                 "ordered_parameters": [
@@ -385,7 +404,7 @@ class GovernedTieBreakerTests(unittest.TestCase):
                     {"parameter_id": "post_stroke_neuro_evidence"},
                 ]
             }
-            mock_ids.return_value = ids
+            mock_ids.return_value = _catalog(ids)
             mock_index.return_value = {item: {"source_identity_ids": {"cms_ccn": f"1000{index}"}} for index, item in enumerate(ids)}
             mock_table.side_effect = lambda canonical_id, **_: tables[canonical_id]
             return run_patient_decision_engine(questionnaire_state={}, natural_language_query="", limit=20)

@@ -5,11 +5,10 @@ import re
 import unittest
 from pathlib import Path
 
-from app.services.patient_decision_engine import (
-    STRUCTURED_INTAKE_MAPPING_CONTRACT,
-    build_patient_needs_profile,
-)
+from app.services.patient_decision_engine import build_patient_needs_profile
 from app.services.patient_decision_engine_runtime import _governed
+
+STRUCTURED_INTAKE_MAPPING_CONTRACT = _governed._legacy.STRUCTURED_INTAKE_MAPPING_CONTRACT
 
 
 class StructuredMedicalNeedsMappingTests(unittest.TestCase):
@@ -100,7 +99,7 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
         source = (repo_root / "frontend/src/components/intake/structured-intake.tsx").read_text(encoding="utf-8")
 
         def options_for(const_name: str) -> set[str]:
-            match = re.search(rf"const {const_name} = \\[(.*?)\\];", source, re.DOTALL)
+            match = re.search(rf"const {const_name} = \[(.*?)\];", source, re.DOTALL)
             self.assertIsNotNone(match, f"missing frontend option group {const_name}")
             return set(re.findall(r'"([^"]+)"', match.group(1)))
 
