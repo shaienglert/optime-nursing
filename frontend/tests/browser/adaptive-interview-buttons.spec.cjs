@@ -176,7 +176,7 @@ test('results follow-up preserves the answer and returns to confirmation', async
   await page.addInitScript((state) => {
     window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify(state));
   }, confirmed);
-  await page.route('**/api/backend/decision-engine/recommend', async (route) => {
+  await page.route('**/api/backend/decision-engine/recommendations', async (route) => {
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
       ...decisionResponse,
       decision_intelligence: profileFor({}).decision_intelligence,
