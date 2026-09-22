@@ -77,6 +77,9 @@ test.describe('real synthetic-pilot customer journey', () => {
     await question(page, 'Does staying near a particular area or person matter?').getByRole('button', { name: 'Yes', exact: true }).click();
     await page.getByLabel('Reference address').fill('Las Vegas, NV');
     await page.getByRole('button', { name: scenario.distance, exact: true }).click();
+    await question(page, 'Would a pet need to move with them?').getByRole('button', { name: 'No', exact: true }).click();
+    await question(page, 'Can they go out independently?').getByRole('button', { name: 'Yes', exact: true }).click();
+    await page.getByLabel('What worries them most about moving?').fill('Losing familiar routines');
     await page.getByText('Yes — this reflects what I told Oomnik.').click();
     await page.getByRole('button', { name: 'Continue our conversation' }).click();
     await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
@@ -92,6 +95,10 @@ test.describe('real synthetic-pilot customer journey', () => {
         page.locator('main section button').first().waitFor({ state: 'visible', timeout: 300_000 }),
       ]).catch(() => {});
       if (await finalConfirmation.isVisible()) break;
+      // A runtime failure is not an interview option. Fail with the rendered
+      // explanation instead of silently clicking Try again up to 25 times.
+      const retry = page.getByRole('button', { name: 'Try again', exact: true });
+      expect(await retry.count(), await page.locator('main').innerText()).toBe(0);
       const answerBox = page.getByLabel('Your answer');
       const continueButton = page.getByRole('button', { name: /^Continue$/ });
       if (await answerBox.count()) {

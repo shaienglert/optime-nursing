@@ -10,7 +10,6 @@ same governed household semantics without duplicating special cases in UI or ran
 import re
 from typing import Any, Dict
 
-from app.services import living_strategy_runtime as _runtime
 
 
 _DECEASED_SPOUSE_PATTERNS = (
@@ -99,33 +98,11 @@ def _strip_couple_only_strategy(strategy: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def build_living_strategy_context_guarded(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
-    original = getattr(_runtime, "_optime_original_build_living_strategy_context", None)
-    if not callable(original):
-        original = _runtime.build_living_strategy_context
-    strategy = original(questionnaire_state, natural_language_query)
-    if deceased_spouse_without_current_couple(questionnaire_state, natural_language_query):
-        return _strip_couple_only_strategy(strategy)
-    return strategy
+    """Compatibility name; household governance now runs in the strategy builder."""
+    from app.services.living_strategy_runtime import build_living_strategy_context
+    return build_living_strategy_context(questionnaire_state, natural_language_query)
 
 
 def install_patch() -> None:
-    if getattr(_runtime.build_living_strategy_context, "_optime_bereavement_guard", False):
-        return
-    original = _runtime.build_living_strategy_context
-    _runtime._optime_original_build_living_strategy_context = original
-
-    def guarded(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
-        strategy = original(questionnaire_state, natural_language_query)
-        if deceased_spouse_without_current_couple(questionnaire_state, natural_language_query):
-            return _strip_couple_only_strategy(strategy)
-        return strategy
-
-    setattr(guarded, "_optime_bereavement_guard", True)
-    _runtime.build_living_strategy_context = guarded
-
-
-__all__ = [
-    "build_living_strategy_context_guarded",
-    "deceased_spouse_without_current_couple",
-    "install_patch",
-]
+    """Deprecated compatibility no-op: no runtime monkey patch is required."""
+    return None

@@ -40,7 +40,18 @@ _PREFERENCE_GAPS = {
     "ccrc_entrance_fee_tolerance",
 }
 
+# Clinical/subject contradictions are not optional preference questions. This
+# registry governs their relevance; a model's MUST label alone is insufficient.
+_CRITICAL_FACT_CONFLICTS = {
+    "assistance_level", "memory_status", "mobility_method", "transfer_assistance",
+    "dialysis_requirement", "oxygen_requirement", "wound_care_requirement", "household_composition",
+}
+
 _PARAMETER_ALIASES = {
+    "memory_care": "memory_status",
+    "dementia_status": "memory_status",
+    "adl_support": "assistance_level",
+    "dialysis_arrangements": "dialysis_requirement",
     "budget": "monthly_budget",
     "monthly_affordability": "monthly_budget",
     "co_residence": "cohabitation_requirement",
@@ -164,6 +175,8 @@ def normalize_gap_key(value: Any) -> str:
 
 def classify_gap(gap_key: str, canonical_facts: Dict[str, Any], decision_context: Dict[str, Any]) -> GapClassification:
     key = normalize_gap_key(gap_key)
+    if key in _CRITICAL_FACT_CONFLICTS and decision_context.get("source_backed_conflict") is True:
+        return GapClassification.BLOCKING
     if key == "cohabitation_requirement":
         if canonical_facts.get("household_is_couple") and canonical_facts.get("different_care_needs") and canonical_facts.get("same_home_is_must"):
             return GapClassification.BLOCKING
@@ -205,6 +218,27 @@ def assess_gaps(
     user_text: str,
 ) -> Dict[str, Any]:
     facts = canonical_client_facts(questionnaire_state, user_text)
+    # Mentioning a value is not resolving a contradiction. Only a source-backed
+    # ambiguous statement may override presence heuristics; a model's unsupported
+    # assertion that an already explicit fact is unclear must not cause re-asking.
+    source_texts = [" ".join(str(user_text or "").lower().split())]
+    signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
+    source_texts.extend(" ".join(str(signal.get("answer") or "").lower().split()) for signal in signals if isinstance(signal, dict))
+    conflicting_keys = {
+        _statement_gap_key(statement)
+        for statement in ai_result.get("statements") or []
+        if isinstance(statement, dict)
+        and str(statement.get("status") or "").upper() == "ASKED"
+        and str(statement.get("knowledge_state") or "").upper() == "AMBIGUOUS"
+        and (raw := " ".join(str(statement.get("raw_text") or "").lower().split()))
+        and any(raw in source for source in source_texts)
+    }
+    for key, fact_key in {
+        "monthly_budget": "monthly_budget_known", "market_location": "market_location_known",
+        "rehab_level_needed": "rehab_level_resolved", "medicare_status": "medicare_status_known",
+    }.items():
+        if key in conflicting_keys:
+            facts[fact_key] = False
     rows: List[Dict[str, Any]] = []
 
     for gap in guardian_gaps:
@@ -231,7 +265,7 @@ def assess_gaps(
             key = normalize_gap_key(ai_result.get("selected_fact_key")) or "semantic_ai_unregistered_gap"
         if gap_is_resolved(key, facts):
             continue
-        classification = classify_gap(key, facts, {"source": "SEMANTIC_AI"})
+        classification = classify_gap(key, facts, {"source": "SEMANTIC_AI", "source_backed_conflict": key in conflicting_keys})
         rows.append({
             "gap_key": key,
             "classification": classification.value,
@@ -264,6 +298,7 @@ def assess_gaps(
         "version": "canonical-gap-policy-v2",
         "authority": "DETERMINISTIC_POLICY",
         "canonical_facts": facts,
+        "source_backed_conflict_keys": sorted(conflicting_keys),
         "assessments": assessments,
         "blocking_gap_keys": blocking_keys,
         "resolved_gap_keys": resolved_keys,

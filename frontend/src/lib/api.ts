@@ -379,6 +379,8 @@ export type DecisionEngineRecommendation = {
 };
 
 export type DecisionEngineResponse = {
+  // Server-held handle for this exact response; lets the personal report reuse it.
+  decision_id?: string | null;
   patient_case_id?: number | null;
   runtime_version?: string | null;
   runtime_timestamp?: string | null;
@@ -455,10 +457,11 @@ export type PersonalDecisionReportResponse = {
 };
 
 export type PersonalDecisionReportRequest = DecisionEngineRequest & {
-  // Pass an already-fetched DecisionEngineResponse for the identical
-  // questionnaire_state/natural_language_query/limit to skip a second, redundant
-  // multi-minute AI-ranking pass on the backend.
-  decision_result?: Record<string, unknown>;
+  // decision_id from a DecisionEngineResponse for the identical
+  // questionnaire_state/natural_language_query/limit. The server reuses its own copy
+  // of that decision (skipping a second multi-minute AI-ranking pass) and otherwise
+  // recomputes. The decision itself is never uploaded from the browser.
+  decision_id?: string;
 };
 
 export type PatientComparisonContextRequest = {
@@ -2234,8 +2237,7 @@ export async function fetchPatientDecisionRecommendations(
 export async function fetchPersonalDecisionReport(
   payload: PersonalDecisionReportRequest
 ): Promise<PersonalDecisionReportResponse> {
-  const { boundPersonalReportRequest } = await import("./personal-report-request");
-  return postJson<PersonalDecisionReportRequest, PersonalDecisionReportResponse>("/decision-engine/personal-report", boundPersonalReportRequest(payload));
+  return postJson<PersonalDecisionReportRequest, PersonalDecisionReportResponse>("/decision-engine/personal-report", payload);
 }
 
 export async function fetchPatientComparisonContext(

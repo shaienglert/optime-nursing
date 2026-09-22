@@ -522,7 +522,18 @@ def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natura
     context = _governed_context(base_context, strategy_context, natural_language_query, questionnaire_state)
     context["adaptive_questions"] = []
     context["decision_readiness"] = "NEEDS_CLARIFICATION"
-    return _consult_semantic_ai(context, questionnaire_state, natural_language_query)
+    context = _consult_semantic_ai(context, questionnaire_state, natural_language_query)
+    completion = questionnaire_state.get("questionnaireCompletion") or {}
+    structured_complete = completion.get("mandatoryComplete") is True and completion.get("conditionalFollowUpsComplete") is True
+    semantic = context.get("semantic_ai") or {}
+    narrative_extraction_required = bool(str(natural_language_query or "").strip()) and not structured_complete
+    semantic_unavailable = semantic.get("status") in {"FAILED", "REQUIRED_BUT_DISABLED"}
+    context["intake_resolution"] = {
+        "source": "STRUCTURED" if structured_complete else "NARRATIVE",
+        "narrative_extraction_required": narrative_extraction_required,
+        "status": "UNAVAILABLE" if narrative_extraction_required and semantic_unavailable else "ASSESSED",
+    }
+    return context
 
 
 @lru_cache(maxsize=1)

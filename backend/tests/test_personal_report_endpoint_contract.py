@@ -69,23 +69,29 @@ class PersonalReportEndpointContractTests(unittest.TestCase):
             self.assertIn("WHY_THIS_PLACE", serialized["candidates"][0]["sections"])
         self.assertEqual(["SUCCESSFUL_TRANSITION"], serialized["omitted_sections"])
 
-    def test_passed_in_decision_result_skips_recomputation(self) -> None:
-        """A caller that already has a decision_result must not trigger a second,
-        redundant run through the full (multi-minute, AI-ranking) pipeline."""
+    def test_server_held_decision_id_skips_recomputation(self) -> None:
+        """A report for the decision the family just saw must not trigger a second,
+        redundant run through the full (multi-minute, AI-ranking) pipeline. The reuse
+        goes through the server's own copy (decision_id), never a client upload."""
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
+        store = importlib.import_module("app.services.decision_result_store")
 
         ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
         ):
             decision_result = decision.run_patient_decision_engine(self._questionnaire(), self._query(), limit=5)
+        decision_id = store.remember_decision_result(
+            decision_result,
+            inputs_fingerprint=store.decision_inputs_fingerprint(self._questionnaire(), self._query(), 5),
+        )
 
         payload = main.PersonalDecisionReportRequestIn(
             questionnaire_state=self._questionnaire(),
             natural_language_query=self._query(),
             limit=5,
-            decision_result=decision_result,
+            decision_id=decision_id,
         )
         db = main.SessionLocal()
         try:

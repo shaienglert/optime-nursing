@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from app.services import _classify_facilities_before_ranking
+from app.services.decision_pipeline import _classify_facilities_before_ranking
 from app.services.facility_parameter_service import (
     get_facility_knowledge_catalog,
     get_exposed_canonical_facility_ids,

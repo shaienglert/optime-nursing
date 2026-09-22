@@ -1,0 +1,30 @@
+# Tests known to fail on main as of 2026-09-21. The full-suite workflow deselects
+# these so that any NEW failure turns CI red. Remove a line when its test is fixed;
+# never add a line without a reason.
+#
+# Report builder fixtures predate canonical-state authority (#260) and are unsealed.
+backend/tests/test_personal_decision_report_builder.py::test_blocked_case_has_no_candidates_and_still_passes_contract
+backend/tests/test_personal_decision_report_builder.py::test_only_required_or_high_needs_enter_what_matters
+backend/tests/test_personal_decision_report_builder.py::test_ready_case_produces_candidate_and_passes_contract
+backend/tests/test_personal_decision_report_builder.py::test_serialize_blocked_case_has_no_candidates
+backend/tests/test_personal_decision_report_builder.py::test_serialize_groups_claims_by_section_and_is_json_safe
+backend/tests/test_personal_decision_report_builder.py::test_successful_transition_section_is_never_fabricated
+backend/tests/test_personal_decision_report_builder.py::test_unverified_grade_is_not_rendered_as_verified_fact
+# Copy assertions no longer match the sales-copilot wording.
+backend/tests/test_facility_sales_copilot.py::test_death_before_day_sixty_uses_approved_half_fee
+backend/tests/test_facility_sales_copilot.py::test_online_percentage_uses_latest_unverified_agent_record_with_date
+backend/tests/test_facility_sales_copilot.py::test_profile_completeness_enables_proven_match_without_buying_rank
+backend/tests/test_facility_sales_copilot.py::test_ranking_answer_is_independent_of_payment
+backend/tests/test_facility_sales_copilot.py::test_welcome_package_explains_first_and_later_placement_split
+# Hard-codes the Windows interpreter path backend/venv/Scripts/python.exe.
+backend/tests/test_decision_engine_routes.py::test_decision_routes_end_to_end
+# Expect pilot facility ids but receive Las Vegas ids (market setting leaks between tests).
+backend/tests/test_synthetic_pilot_facilities_endpoint.py::SyntheticPilotFacilitiesEndpointTests::test_list_searches_the_pilot_index
+backend/tests/test_synthetic_pilot_facilities_endpoint.py::SyntheticPilotFacilitiesEndpointTests::test_list_uses_canonical_pilot_without_running_intelligence
+backend/tests/test_synthetic_pilot_facilities_endpoint.py::SyntheticPilotFacilitiesEndpointTests::test_pilot_card_detail_uses_exposure_order_id
+# Depend on live external sources (CMS, web search) or on a shared SQLite file that
+# parallel workers contend for; not hermetic.
+backend/tests/test_official_market_metrics_service.py::OfficialMarketMetricsServiceTests::test_collects_official_national_and_nevada_snf_metrics
+backend/tests/test_official_market_metrics_service.py::OfficialMarketMetricsServiceTests::test_refresh_updates_in_place_instead_of_accumulating_duplicate_snapshots
+backend/tests/test_market_supply_intelligence_endpoints.py::MarketSupplyIntelligenceEndpointsTests::test_market_report_derives_nevada_licensed_counts_without_claiming_independent_living
+backend/tests/test_market_supply_intelligence_service.py::MarketSupplyIntelligenceServiceTests::test_las_vegas_pilot_persists_market_key

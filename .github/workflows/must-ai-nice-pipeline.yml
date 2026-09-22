@@ -7,7 +7,7 @@ on:
       - 'backend/app/services/ai_candidate_ranking_runtime.py'
       - 'backend/app/services/semantic_preference_runtime.py'
       - 'backend/app/services/must_ai_nice_pipeline.py'
-      - 'backend/app/services/__init__.py'
+      - 'backend/app/services/decision_pipeline.py'
       - 'backend/tests/test_must_ai_nice_pipeline.py'
       - 'backend/tests/test_dynamic_semantic_preferences.py'
       - 'backend/tests/test_specific_nice_preferences.py'

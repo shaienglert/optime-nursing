@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { restoreQuestionnaireState, type QuestionnaireState, useQuestionnaire } from "@/context/questionnaire-context";
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
 import { canonicalizeAdaptiveFact } from "@/lib/decision-fact-canonicalization";
-import { applySemanticQuestionnairePatch } from "@/lib/semantic-questionnaire-patch";
-import { OomnikMark } from "@/components/brand/oomnik-mark";
+import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 import { hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "@/lib/semantic-conflict";
+import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 type AdaptiveQuestion = {
   question_key: string;
@@ -33,6 +33,8 @@ type NeedsProfileWithDecisionIntelligence = PatientNeedsProfile & {
       authoritative?: boolean;
       client?: string;
       phase?: string;
+      system?: string;
+      next_action?: string;
     };
   };
 };
@@ -50,38 +52,99 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
   return {
     canonical: top?.canonical_decision_state,
     semanticFailed: semanticIntakeFailure(nested?.semantic_ai),
+    hasConflict: hasUnresolvedSemanticConflict(nested?.semantic_ai?.result?.statements),
     adaptive_questions: conflictQuestion ? [conflictQuestion] : top?.adaptive_questions?.length
       ? top.adaptive_questions : nested?.adaptive_questions || [],
     questionnaire_patch: nested?.semantic_ai?.result?.questionnaire_patch || {},
-    hasConflict: hasUnresolvedSemanticConflict(nested?.semantic_ai?.result?.statements),
   };
 }
 
-
-function existingAnswerFor(question: AdaptiveQuestion, state: QuestionnaireState): string | null {
-  const key = String(question.target_fact_key || "").toLowerCase();
-  const text = `${question.question} ${(question.decision_dimensions || []).join(" ")}`.toLowerCase();
-  const hi = state.humanIntelligenceV2;
-
-  if (/market|location|city|area|geograph/.test(key + " " + text)) {
-    return state.referenceLocationValue?.trim() || state.referenceAddress?.trim() || null;
+function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Record<string, unknown>): QuestionnaireState {
+  let next = cloneState(state);
+  const stringKeys: Array<keyof QuestionnaireState> = [
+    "ageGroup", "assistanceLevel", "memoryStatus",
+    "medicaidStatus", "referenceLocationValue",
+  ];
+  for (const key of stringKeys) {
+    const value = patch[key];
+    const current = next[key];
+    if (typeof value === "string" && value.trim() && value.trim() !== "Not sure" && !String(current || "").trim()) {
+      (next as unknown as Record<string, unknown>)[key] = value.trim();
+    }
   }
-  if (/budget|afford|monthly/.test(key + " " + text)) {
-    return state.budget > 0 ? `$${state.budget.toLocaleString("en-US")} per month` : null;
+  if (typeof patch.relationship === "string" && patch.relationship.trim() && !next.relationship.trim()) {
+    next.relationship = patch.relationship.trim();
   }
-  if (key.includes("community_size")) return hi.personalityProfile.communitySizePreference || null;
-  if (key.includes("social_interaction")) return hi.familyProfile.socialInteractionNeed || hi.socialProfile.preferredSocialIntensity || null;
-  if (key.includes("move") || key.includes("transition")) return hi.transitionRiskProfile.attitudeTowardMove || null;
-  if (key.includes("language")) return hi.languageProfile.preferredSpokenLanguage || hi.languageProfile.nativeLanguage || null;
-  if (key.includes("relig")) return hi.culturalProfile.religionImportance || null;
-  if (key.includes("grief")) return hi.familyProfile.griefSupportInterest || null;
-  if (key.includes("widow") || key.includes("bereavement")) return hi.familyProfile.widowStatus || hi.transitionRiskProfile.bereavementStatus || null;
-  if (key.includes("memory")) return state.memoryStatus || null;
-  if (key.includes("care") || key.includes("adl") || key.includes("assistance")) return state.assistanceLevel || null;
-  return null;
+  if (next.relationship) {
+    next = applyCanonicalIdentity(next, next.relationship, typeof patch.gender === "string" ? patch.gender : "");
+  }
+  if (next.budget <= 0 && typeof patch.budget === "number" && Number.isFinite(patch.budget) && patch.budget > 0) {
+    next.budget = Math.round(patch.budget);
+  }
+
+  const medical = patch.medicalCareProfile;
+  if (medical && typeof medical === "object" && !Array.isArray(medical)) {
+    const source = medical as Record<string, unknown>;
+    const medicalStringKeys: Array<keyof QuestionnaireState["medicalCareProfile"]> = [
+      "hasOngoingMedicalNeeds", "mobilityMethod", "transferAssistance", "recentFalls",
+      "dialysisFrequency", "dialysisCenter", "dialysisTransportation", "oxygenUse",
+      "woundCareFrequency", "complexConditionDetails", "physicianCoordination",
+    ];
+    for (const key of medicalStringKeys) {
+      const value = source[key];
+      const current = next.medicalCareProfile[key];
+      if (typeof value === "string" && value.trim() && value.trim() !== "Not sure" && !String(current || "").trim()) {
+        (next.medicalCareProfile as unknown as Record<string, unknown>)[key] = value.trim();
+      }
+    }
+    if (Array.isArray(source.needs)) {
+      next.medicalCareProfile.needs = Array.from(new Set([
+        ...next.medicalCareProfile.needs,
+        ...source.needs.map(String).map((value) => value.trim()).filter(Boolean),
+      ]));
+    }
+  }
+
+  const human = patch.humanIntelligenceV2;
+  if (human && typeof human === "object" && !Array.isArray(human)) {
+    const source = human as Record<string, unknown>;
+    const mergeStrings = (target: Record<string, unknown>, candidate: unknown) => {
+      if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return;
+      for (const [key, value] of Object.entries(candidate as Record<string, unknown>)) {
+        if (typeof value === "string" && value.trim() && value.trim() !== "Not sure" && key in target && !String(target[key] || "").trim()) {
+          target[key] = value.trim();
+        }
+        if (Array.isArray(value) && key in target && Array.isArray(target[key]) && (target[key] as unknown[]).length === 0) {
+          target[key] = value.map(String).map((item) => item.trim()).filter(Boolean);
+        }
+      }
+    };
+    mergeStrings(next.humanIntelligenceV2.transitionRiskProfile as unknown as Record<string, unknown>, source.transitionRiskProfile);
+    mergeStrings(next.humanIntelligenceV2.languageProfile as unknown as Record<string, unknown>, source.languageProfile);
+    mergeStrings(next.humanIntelligenceV2.foodProfile as unknown as Record<string, unknown>, source.foodProfile);
+    mergeStrings(next.humanIntelligenceV2.futureCareProfile as unknown as Record<string, unknown>, source.futureCareProfile);
+  }
+
+  next.questionnaireCompletion = {
+    ...next.questionnaireCompletion,
+    clientSummaryConfirmed: false,
+    confirmedAt: "",
+  };
+  return next;
 }
 
-function conversationWisdom(question: AdaptiveQuestion): string {\n  const text = `${question.target_fact_key || ""} ${question.question} ${(question.decision_dimensions || []).join(" ")}`.toLowerCase();\n  if (/memory|cognitive/.test(text)) return "Familiar routines and the right support can help a person keep more of what feels like home.";\n  if (/mobility|assist|adl|care/.test(text)) return "The right support should make independence easier, not smaller.";\n  if (/social|activity|lifestyle|community/.test(text)) return "A good next chapter should preserve what makes everyday life worth looking forward to.";\n  if (/budget|cost|afford/.test(text)) return "A good decision has to work in everyday life — including financially.";\n  if (/location|distance|geograph/.test(text)) return "Being close to the people and places that matter can be part of feeling at home.";\n  if (/language|culture|relig/.test(text)) return "Feeling understood is about more than care — language, culture and traditions can matter too.";\n  return "";\n}\n\nfunction applyAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
+function conversationWisdom(question: AdaptiveQuestion): string {
+  const text = `${question.target_fact_key || ""} ${question.question} ${(question.decision_dimensions || []).join(" ")}`.toLowerCase();
+  if (/memory|cognitive/.test(text)) return "Familiar routines and the right support can help a person keep more of what feels like home.";
+  if (/mobility|assist|adl|care/.test(text)) return "The right support should make independence easier, not smaller.";
+  if (/social|activity|lifestyle|community/.test(text)) return "A good next chapter should preserve what makes everyday life worth looking forward to.";
+  if (/budget|cost|afford/.test(text)) return "A good decision has to work in everyday life — including financially.";
+  if (/location|distance|geograph/.test(text)) return "Being close to the people and places that matter can be part of feeling at home.";
+  if (/language|culture|relig/.test(text)) return "Feeling understood is about more than care — language, culture and traditions can matter too.";
+  return "";
+}
+
+function applyAnswer(state: QuestionnaireState, question: AdaptiveQuestion, answer: string): QuestionnaireState {
   let next = cloneState(state);
   next.questionnaireCompletion = {
     ...next.questionnaireCompletion,
@@ -122,19 +185,13 @@ async function withTimeout<T>(promise: Promise<T>): Promise<T> {
 export default function AdaptiveInterviewPage() {
   const router = useRouter();
   const { state, setState } = useQuestionnaire();
-  const autoResolved = useRef<Set<string>>(new Set());
   const [question, setQuestion] = useState<AdaptiveQuestion | null>(null);
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const nextUrl = useRef("/results");
 
-  async function continueDecision(currentState: QuestionnaireState, destination: string, depth = 0): Promise<void> {
-    if (depth > 8) {
-      setError("We could not resolve the interview state cleanly. Please try again.");
-      setBusy(false);
-      return;
-    }
+  async function continueDecision(currentState: QuestionnaireState, destination: string): Promise<void> {
 
     setBusy(true);
     setError(null);
@@ -144,15 +201,6 @@ export default function AdaptiveInterviewPage() {
         natural_language_query: currentState.notes || "",
       }))) as NeedsProfileWithDecisionIntelligence;
       const context = getDecisionContext(response);
-      if (context.semanticFailed) {
-        setQuestion(null);
-        setError("We could not verify our understanding of your answers. Your answers are saved. Please try again before confirming your profile.");
-        setBusy(false);
-        return;
-      }
-      // A model-proposed value must not answer its own contradiction question.
-      const hydratedState = context.hasConflict ? currentState : applySemanticQuestionnairePatch(currentState, context.questionnaire_patch);
-      if (JSON.stringify(hydratedState) !== JSON.stringify(currentState)) setState(hydratedState);
 
       if (context.canonical?.authoritative !== true) {
         setError("The decision state could not be verified. Please try again.");
@@ -160,7 +208,15 @@ export default function AdaptiveInterviewPage() {
         return;
       }
 
+      if (context.semanticFailed || context.canonical.system === "BLOCKED") {
+        setQuestion(null);
+        setError("We could not verify our understanding of your answers. Your answers are saved. Please try again.");
+        setBusy(false);
+        return;
+      }
+
       if (context.canonical.client === "COMPLETE" && !context.hasConflict) {
+        const hydratedState = applySemanticQuestionnairePatch(currentState, context.questionnaire_patch);
         setQuestion(null);
         setState(hydratedState);
         router.replace(`/intake-confirmation?next=${encodeURIComponent(destination)}`);
@@ -174,15 +230,8 @@ export default function AdaptiveInterviewPage() {
         return;
       }
 
-      const existing = context.hasConflict ? null : existingAnswerFor(nextQuestion, hydratedState);
-      if (existing && !autoResolved.current.has(nextQuestion.question_key)) {
-        autoResolved.current.add(nextQuestion.question_key);
-        const resolvedState = applyAnswer(hydratedState, nextQuestion, existing);
-        setState(resolvedState);
-        await continueDecision(resolvedState, destination, depth + 1);
-        return;
-      }
-
+      // The server owns fact resolution. A proposed patch must never answer its
+      // own question or trigger another hidden round of interpretation here.
       setQuestion(nextQuestion);
       setAnswer("");
       setBusy(false);

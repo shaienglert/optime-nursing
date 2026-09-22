@@ -2,17 +2,14 @@ from __future__ import annotations
 
 """Integrated production decision runtime."""
 
-import importlib.util
 import logging
-import sys
 import time
-from pathlib import Path
 from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
 from app.services.client_intent_runtime import attach_client_intent_fit, build_client_intent, intent_rank_key
-from app.services.decision_agent_bridge import attach_agent_evidence_and_queue_gaps
+from app.services.decision_agent_bridge_fast import attach_agent_evidence_and_queue_gaps_fast as attach_agent_evidence_and_queue_gaps
 from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
 from app.services.human_intelligence_runtime_verified import attach_human_person_fit, build_human_intelligence_context, has_explicit_person_fit_preference, person_fit_sort_key
 from app.services.living_strategy_runtime import build_living_strategy_context
@@ -20,16 +17,7 @@ from app.services.personal_care_agency_runtime import build_care_agency_requirem
 from app.services.provider_housing_runtime import attach_provider_housing_evidence
 from app.services.success_factor_runtime import build_success_factor_trace, summarize_trace
 
-_SERVICES_DIR = Path(__file__).resolve().parent.parent
-_GOVERNED_DIR = _SERVICES_DIR / "patient_decision_engine"
-_GOVERNED_INIT = _GOVERNED_DIR / "__init__.py"
-_GOVERNED_PRIVATE_NAME = "app.services._patient_decision_engine_governed"
-_spec = importlib.util.spec_from_file_location(_GOVERNED_PRIVATE_NAME, _GOVERNED_INIT, submodule_search_locations=[str(_GOVERNED_DIR)])
-if _spec is None or _spec.loader is None:
-    raise RuntimeError(f"Unable to load governed patient decision engine: {_GOVERNED_INIT}")
-_governed = importlib.util.module_from_spec(_spec)
-sys.modules[_GOVERNED_PRIVATE_NAME] = _governed
-_spec.loader.exec_module(_governed)
+from app.services import decision_engine_evidence as _governed
 _regulatory_index = _governed._regulatory_index
 build_patient_comparison_context = _governed.build_patient_comparison_context
 
@@ -321,7 +309,7 @@ def _attach_facility_care_partner_access(rows: List[Dict[str, Any]], care_partne
         }
 
 
-def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50) -> Dict[str, Any]:
+def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50, *, prepared_profile: Dict[str, Any]) -> Dict[str, Any]:
     from app.services.canonical_intake_state import canonicalize_intake_state
     questionnaire_state = canonicalize_intake_state(questionnaire_state)
     _stage_started = time.perf_counter()
@@ -332,18 +320,16 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
         _stage_timings[stage_name] = round((now - previous) * 1000, 1)
         return now
 
-    strategy = build_living_strategy_context(questionnaire_state, natural_language_query)
+    strategy = prepared_profile["living_strategy"]
     _stage_started = _mark("build_living_strategy_context_ms", _stage_started)
-    core = _governed.run_patient_decision_engine(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=max(10000, int(limit or 50)))
+    core = _governed.run_patient_decision_engine(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=max(10000, int(limit or 50)), patient_needs_profile=prepared_profile)
     _stage_started = _mark("governed_run_patient_decision_engine_ms", _stage_started)
     patient_profile = core.get("patient_needs_profile") if isinstance(core.get("patient_needs_profile"), dict) else {}
-    _apply_strategy_needs(patient_profile, strategy)
     patient_profile["living_strategy"] = strategy
 
-    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+    human_context = prepared_profile["decision_intelligence"]["human_intelligence"]
     _stage_started = _mark("build_human_intelligence_context_ms", _stage_started)
-    _merge_strategy_questions(human_context, strategy)
-    client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context)
+    client_intent = prepared_profile["client_intent"]
     _stage_started = _mark("build_client_intent_ms", _stage_started)
     patient_profile["client_intent"] = client_intent
 
@@ -479,3 +465,8 @@ def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_lan
 
 
 __all__ = ["_regulatory_index", "build_patient_needs_profile", "build_patient_comparison_context", "run_patient_decision_engine"]
+
+
+def run_patient_decision_engine(questionnaire_state: Dict[str, Any], natural_language_query: str = "", limit: int = 50) -> Dict[str, Any]:
+    from app.services.decision_pipeline import run_decision_pipeline
+    return run_decision_pipeline(questionnaire_state, natural_language_query, limit, profile_builder=build_patient_needs_profile, runner=_run_prepared_decision)

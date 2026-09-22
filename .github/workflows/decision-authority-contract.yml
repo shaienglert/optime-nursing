@@ -1,0 +1,24 @@
+name: Decision Authority Contract
+on:
+  pull_request:
+    paths:
+      - 'backend/app/services/**'
+      - 'backend/tests/test_*decision*.py'
+      - 'backend/tests/test_intake_authority_contract.py'
+      - '.github/workflows/decision-authority-contract.yml'
+  workflow_dispatch:
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    env:
+      OPTIME_SEMANTIC_AI_ENABLED: '0'
+      OPTIME_CANONICAL_MARKET: las-vegas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt pytest
+      - name: Explicit composition and intake authority (mock AI, not live acceptance)
+        working-directory: backend
+        run: python -m pytest tests/test_explicit_decision_pipeline.py tests/test_intake_authority_contract.py tests/test_patient_decision_engine_import_resolution.py tests/test_patient_decision_engine.py tests/test_license_validity_gate.py tests/test_success_factor_runtime.py -q
