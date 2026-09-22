@@ -184,7 +184,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             },
         ]
 
-    strategy_candidates: List[Dict[str, Any]] = []
+    care_search_approach = _norm(questionnaire_state.get("careSearchApproach"))\n    strategy_candidates: List[Dict[str, Any]] = []
 
     def add_strategy(strategy_id: str, status: str, rationale: str, required_capabilities: List[str], rank_hint: int) -> None:
         if any(row.get("strategy_id") == strategy_id for row in strategy_candidates):
@@ -361,7 +361,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             "memory_care_needed": memory_care_needed,
             "high_social_culture_priority": high_social,
             "no_dementia": no_dementia,
-            "explicit_independence": explicit_independence,
+            "explicit_independence": explicit_independence,\n            "care_search_approach": care_search_approach or "UNSPECIFIED",
         },
         "strategy_candidates": strategy_candidates,
         "material_questions": [],
