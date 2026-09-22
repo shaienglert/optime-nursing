@@ -1,18 +1,7 @@
-"""Server-held decision results, addressed by an opaque decision_id.
+"""Server-owned decision and intake artifacts in the shared application database.
 
-The personal report used to accept a full ``decision_result`` from the browser and
-trust it (its only "authority" check was an ``authoritative: true`` flag inside the
-same client-supplied JSON). A caller could therefore insert a facility that does not
-exist and receive an Oomnik-branded report recommending it.
-
-Instead, /decision-engine/recommendations keeps a copy of the exact response it
-served and returns a ``decision_id``. A report may reuse that copy only when the id
-is known *and* the request's inputs are the ones the decision was computed for.
-Anything else (unknown id, expired id, different inputs, another worker process,
-a restart) falls back to recomputing on the server -- slower, never wrong.
-
-This is deliberately process-local and bounded: it is a cache of server output, not
-a system of record. A persisted, versioned decision artifact is the follow-up.
+Opaque handles are bound to exact inputs and expire after two hours. Database
+errors never issue a handle or silently fall back to a different interpretation.
 """
 from __future__ import annotations
 
@@ -20,64 +9,77 @@ import copy
 import hashlib
 import json
 import secrets
-import threading
 import time
-from collections import OrderedDict
 from typing import Any, Dict, Optional
 
-_MAX_ENTRIES = 256
-_TTL_SECONDS = 2 * 60 * 60
+from sqlalchemy.exc import SQLAlchemyError
 
-_lock = threading.Lock()
-_entries: "OrderedDict[str, tuple[float, str, Dict[str, Any]]]" = OrderedDict()
+from app.database import SessionLocal
+from app.models.decision_artifact import DecisionArtifact
+
+_TTL_SECONDS = 2 * 60 * 60
+_SCHEMA_VERSION = 1
+
+
+class ArtifactStoreUnavailable(RuntimeError):
+    """The reviewed profile cannot currently be saved or retrieved."""
 
 
 def decision_inputs_fingerprint(questionnaire_state: Dict[str, Any], natural_language_query: str, limit: int) -> str:
     canonical = json.dumps(
-        {
-            "questionnaire_state": questionnaire_state or {},
-            "natural_language_query": (natural_language_query or "").strip(),
-            "limit": int(limit or 0),
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-        default=str,
+        {"questionnaire_state": questionnaire_state or {},
+         "natural_language_query": (natural_language_query or "").strip(),
+         "limit": int(limit or 0)},
+        sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str,
     )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def _token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
 def remember_decision_result(result: Dict[str, Any], *, inputs_fingerprint: str) -> str:
-    decision_id = secrets.token_urlsafe(18)
-    now = time.monotonic()
-    with _lock:
-        _entries[decision_id] = (now, inputs_fingerprint, copy.deepcopy(result))
-        _entries.move_to_end(decision_id)
-        while len(_entries) > _MAX_ENTRIES:
-            _entries.popitem(last=False)
-    return decision_id
+    token = secrets.token_urlsafe(24)
+    now = time.time()
+    payload = json.dumps(result, ensure_ascii=False, allow_nan=False)
+    try:
+        with SessionLocal() as db:
+            db.query(DecisionArtifact).filter(DecisionArtifact.expires_at_epoch <= now).delete(synchronize_session=False)
+            db.add(DecisionArtifact(
+                token_hash=_token_hash(token), inputs_fingerprint=inputs_fingerprint,
+                schema_version=_SCHEMA_VERSION, payload_json=payload,
+                created_at_epoch=now, expires_at_epoch=now + _TTL_SECONDS,
+            ))
+            db.commit()
+    except SQLAlchemyError as exc:
+        raise ArtifactStoreUnavailable("Unable to save your reviewed profile. Please try again.") from exc
+    return token
 
 
 def recall_decision_result(decision_id: Optional[str], *, inputs_fingerprint: str) -> Optional[Dict[str, Any]]:
     if not decision_id:
         return None
-    now = time.monotonic()
-    with _lock:
-        entry = _entries.get(decision_id)
-        if entry is None:
-            return None
-        stored_at, fingerprint, result = entry
-        if now - stored_at > _TTL_SECONDS:
-            _entries.pop(decision_id, None)
-            return None
-        if not secrets.compare_digest(fingerprint, inputs_fingerprint):
-            return None
-        return copy.deepcopy(result)
+    try:
+        with SessionLocal() as db:
+            entry = db.get(DecisionArtifact, _token_hash(decision_id))
+            if entry is None:
+                return None
+            if entry.expires_at_epoch <= time.time():
+                db.delete(entry)
+                db.commit()
+                return None
+            if entry.schema_version != _SCHEMA_VERSION or not secrets.compare_digest(entry.inputs_fingerprint, inputs_fingerprint):
+                return None
+            return json.loads(entry.payload_json)
+    except SQLAlchemyError as exc:
+        raise ArtifactStoreUnavailable("Unable to retrieve your reviewed profile. Please try again.") from exc
 
 
 def _reset_for_tests() -> None:
-    with _lock:
-        _entries.clear()
+    with SessionLocal() as db:
+        db.query(DecisionArtifact).delete()
+        db.commit()
 
 
 def intake_inputs_fingerprint(questionnaire_state: Dict[str, Any], natural_language_query: str) -> str:
