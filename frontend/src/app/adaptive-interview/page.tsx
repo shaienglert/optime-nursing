@@ -7,7 +7,7 @@ import { restoreQuestionnaireState, type QuestionnaireState, useQuestionnaire } 
 import { fetchPatientNeedsProfile, persistAdaptiveQuestionSignal, type PatientNeedsProfile } from "@/lib/api";
 import { applyAdaptiveAnswer, type AdaptiveQuestion } from "@/lib/adaptive-answer";
 import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
-import { hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "@/lib/semantic-conflict";
+import { canonicalRecoveryQuestion, hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "@/lib/semantic-conflict";
 import { OomnikMark } from "@/components/brand/oomnik-mark";
 
 
@@ -177,6 +177,13 @@ export default function AdaptiveInterviewPage() {
       }
 
       if (context.semanticFailed || context.canonical.system === "BLOCKED") {
+        const recoveryQuestion = canonicalRecoveryQuestion(response);
+        if (recoveryQuestion) {
+          setQuestion(recoveryQuestion);
+          setAnswer("");
+          setBusy(false);
+          return;
+        }
         setQuestion(null);
         setError("We could not verify our understanding of your answers. Your answers are saved. Please try again.");
         setBusy(false);

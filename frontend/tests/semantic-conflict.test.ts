@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "../src/lib/semantic-conflict";
+import { canonicalRecoveryQuestion, hasUnresolvedSemanticConflict, semanticConflictQuestion, semanticIntakeFailure } from "../src/lib/semantic-conflict";
+
+it("allows only the canonical unresolved-fact question during semantic failure", () => {
+  const question = { question_key: "budget-recovery", question: "What is your monthly budget?", target_fact_key: "monthly_budget", answer_options: ["Not sure"], question_owner: "DETERMINISTIC_CANONICAL_FALLBACK" };
+  const profile = { decision_intelligence: {
+    canonical_decision_state: { authoritative: true, client: "INCOMPLETE", system: "BLOCKED" },
+    human_intelligence: { semantic_ai: { status: "FAILED" }, readiness_guardian: { fallback_reason: "SEMANTIC_AI_UNAVAILABLE", selected_fact_key: "monthly_budget" }, adaptive_questions: [question] },
+  } };
+  expect(canonicalRecoveryQuestion(profile)).toEqual(question);
+  expect(semanticIntakeFailure(profile.decision_intelligence.human_intelligence.semantic_ai)).toBe(true);
+  question.target_fact_key = "medicare_status";
+  expect(canonicalRecoveryQuestion(profile)).toBeUndefined();
+  question.target_fact_key = "monthly_budget";
+  profile.decision_intelligence.canonical_decision_state.client = "COMPLETE";
+  expect(canonicalRecoveryQuestion(profile)).toBeUndefined();
+});
 
 describe("semantic intake availability", () => {
   it("blocks failed AI even when deterministic readiness reports complete", () => {

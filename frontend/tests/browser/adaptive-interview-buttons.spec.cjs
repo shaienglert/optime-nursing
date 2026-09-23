@@ -92,11 +92,11 @@ const decisionResponse = {
   ],
 };
 
-async function mockBackend(page, recommendations = decisionResponse) {
+async function mockBackend(page, recommendations = decisionResponse, profileFactory = profileFor) {
   await page.route('**/api/backend/**', async (route) => {
     const url = route.request().url();
     if (url.includes('/decision-engine/patient-needs-profile')) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(profileFor(route.request().postDataJSON())) });
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(profileFactory(route.request().postDataJSON())) });
     }
     if (url.includes('/human-intelligence/adaptive-response')) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
@@ -113,6 +113,31 @@ async function seedQuestionnaire(page) {
     window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify(state));
   }, questionnaireState());
 }
+
+test('invalid AI packet does not hide a canonical budget recovery question', async ({ page }) => {
+  await mockBackend(page, decisionResponse, body => {
+    const profile = profileFor(body);
+    if (body?.questionnaire_state?.humanIntelligenceV2?.scoringEngine?.adaptiveSignals?.length) return profile;
+    profile.decision_intelligence.canonical_decision_state.system = 'BLOCKED';
+    profile.decision_intelligence.adaptive_questions = [];
+    profile.decision_intelligence.human_intelligence = {
+      semantic_ai: { enabled: true, status: 'FAILED', error: 'SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS' },
+      readiness_guardian: { selected_fact_key: 'monthly_budget', fallback_reason: 'SEMANTIC_AI_UNAVAILABLE' },
+      adaptive_questions: [{ question_key: 'budget-recovery', question: 'What is your monthly budget?',
+        target_fact_key: 'monthly_budget', question_owner: 'DETERMINISTIC_CANONICAL_FALLBACK', answer_options: ['Not sure'] }],
+    };
+    return profile;
+  });
+  await seedQuestionnaire(page);
+  await page.goto('http://127.0.0.1:3000/adaptive-interview');
+  await expect(page.getByText('What is your monthly budget?', { exact: true })).toBeVisible();
+  await expect(page.getByText(/We could not verify our understanding/)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Not sure', exact: true }).click();
+  await expect(page).toHaveURL(/\/intake-confirmation/);
+  const saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('optime.questionnaire.session')));
+  expect(saved.budget).toBe(0);
+  expect(saved.humanIntelligenceV2.scoringEngine.adaptiveSignals[0].answer).toBe('Not sure');
+});
 
 test('home free-text entry starts the governed AI intake without forcing the manual questionnaire', async ({ page }) => {
   await mockBackend(page);
