@@ -57,11 +57,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     await question(page, 'Has there been a hospital stay recently?').getByRole('button', { name: 'No', exact: true }).click();
     await page.getByRole('button', { name: 'Not eligible', exact: true }).click();
 
-    await page.locator('input[type="range"]').evaluate((element, budget) => {
-      element.value = String(budget);
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      element.dispatchEvent(new Event('change', { bubbles: true }));
-    }, scenario.budget);
+    await page.getByRole('spinbutton', { name: 'What monthly budget would feel comfortable?' }).fill(String(scenario.budget));
     await page.getByRole('button', { name: scenario.moveTiming, exact: true }).click();
     await page.getByRole('button', { name: scenario.attitude, exact: true }).click();
     await page.getByRole('button', { name: scenario.social, exact: true }).click();
