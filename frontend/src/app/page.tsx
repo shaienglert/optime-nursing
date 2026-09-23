@@ -81,7 +81,7 @@ function ChoiceLink({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`group relative mr-5 mt-4 inline-flex min-h-12 items-center text-left text-2xl font-medium transition ${
+      className={`group relative mr-7 mt-5 inline-flex min-h-14 items-center text-left text-4xl font-medium transition ${
         selected ? "text-[#183f35]" : "text-[#315f53] hover:text-[#183f35]"
       }`}
     >
@@ -221,27 +221,27 @@ export default function HomePage() {
       <section className="relative overflow-hidden border-b border-[#dbe4df] bg-[radial-gradient(circle_at_12%_8%,rgba(219,239,229,0.88),transparent_33%),radial-gradient(circle_at_90%_0%,rgba(255,232,202,0.72),transparent_36%),linear-gradient(180deg,#fbfaf7_0%,#f7f4ee_100%)]">
         <div className="mx-auto max-w-6xl px-5 pb-24 pt-6 sm:px-8 lg:px-12 lg:pb-32">
           <nav className="flex items-center justify-end" aria-label="Main navigation">
-            <div className="flex items-center gap-3 text-sm font-medium">
+            <div className="flex items-center gap-5 text-2xl font-medium">
               <Link href="/workspace" className="hidden px-3 py-2 text-[#486057] hover:text-[#234f43] sm:inline-flex">My workspace</Link>
               <Link href="/intake" className="border-b border-[#6c9c8e] px-1 py-2 text-[#315f53] transition hover:border-[#244f43] hover:text-[#244f43]">Continue where I left off</Link>
             </div>
           </nav>
 
           <div className="pt-10 sm:pt-14"><div className="flex justify-center pb-12 sm:pb-16"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div>
-            <p className="text-2xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Welcome</p>
+            <p className="text-5xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Welcome</p>
             <h1 className="mt-5 max-w-5xl text-4xl font-semibold leading-[1.08] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
               A difficult decision deserves time, care, and the right guidance.
             </h1>
-            <p className="mt-7 max-w-4xl text-xl leading-9 text-[#52645d] sm:text-2xl sm:leading-10">
+            <p className="mt-7 max-w-5xl text-3xl font-medium leading-tight tracking-[-0.04em] text-[#52645d] sm:text-4xl">
               Choosing senior living has many important dimensions. Answer a few questions, and <span className="whitespace-nowrap"><span>OOmn</span><span className="relative inline-block">ı<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-orange-500" style={{ width: "0.18em", height: "0.18em", top: "0.30em" }} /></span><span>k</span></span> will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
             </p>
 
             <div className="mt-14 max-w-3xl">
               {heroStep === "relationship" && (
                 <div>
-                  <p className="text-xl font-medium text-[#52645d]">Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.</p>
+                  <p className="text-3xl font-medium text-[#52645d]">Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.</p>
                   <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">First, tell us who this decision is for.</h2>
-                  <p className="mt-5 text-2xl font-medium text-[#315f53]">Who are you looking for?</p>
+                  <p className="mt-5 text-4xl font-medium text-[#315f53]">Who are you looking for?</p>
                   <div className="mt-3">
                     {RELATIONSHIP_OPTIONS.map((option) => (
                       <ChoiceLink key={option.label} label={option.label} onClick={() => chooseRelationship(option.label, option.value)} />
