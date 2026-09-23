@@ -23,6 +23,7 @@ from app.services.facility_parameter_service import (
     get_runtime_metadata,
 )
 from app.services.canonical_universe import configured_canonical_market
+from app.services.care_input_assertions import without_negated_nursing
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 
 
@@ -531,6 +532,8 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
 
     def present(token: str) -> bool:
         token = token.lower()
+        if "nursing" in token:
+            return token in without_negated_nursing(normalized)
         if token in {"pt", "ot"}:
             return re.search(rf"\b{re.escape(token)}\b", normalized) is not None
         return token in normalized
@@ -578,7 +581,7 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
     keyword_rules = [
         (["stroke", "neurolog"], ("post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")),
         (["dialysis"], ("dialysis_arrangements", "REQUIRED", "YES", ["YES"], "SERVICE", "natural_language", 0.98, "Dialysis arrangements required")),
-        (["wound care", "wound management", "pressure wound", "pressure ulcer", "pressure sore", "daily dressing changes"], ("wound_care", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.98, "Wound-care capability required")),
+        (["wound care", "wound management", "pressure wound", "pressure ulcer", "pressure sore", "daily dressing changes", "daily skilled dressing changes"], ("wound_care", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.98, "Wound-care capability required")),
         (["continuous oxygen", "oxygen"], ("respiratory_trach_vent", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Respiratory / oxygen support required")),
         (["24/7 nursing", "24x7 nursing", "round the clock nursing", "skilled nursing"], ("nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "natural_language", 0.98, "24/7 nursing required")),
         (["physical therapy", "pt"], ("pt", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Physical therapy support")),

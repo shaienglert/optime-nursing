@@ -539,6 +539,35 @@ def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str
     else:
         visibility, finality = f"BLOCKED_{state.phase.value}", f"PENDING_{state.phase.value}"
 
+    # Owner-approved research visibility is separate from recommendation authority.
+    # Rebuild on every seal: a later client/system blocker must remove stale names.
+    research = []
+    if state.client is ClientState.COMPLETE and state.system is not SystemHealth.BLOCKED:
+        seen = set()
+        for row in result.get("must_pending_verification_candidates") or []:
+            if not isinstance(row, dict):
+                continue
+            identifier = str(row.get("canonical_facility_id") or "").strip()
+            name = str(row.get("facility_name") or "").strip()
+            if not identifier or not name or identifier in seen:
+                continue
+            if set(row.get("must_unknown") or []) != {"SEMANTIC_BUDGET_VERIFICATION"} or row.get("must_fail"):
+                continue
+            # A known amount (including one above budget) is not a missing price.
+            if row.get("starting_monthly_price") not in (None, ""):
+                continue
+            seen.add(identifier)
+            research.append({
+                "canonical_facility_id": identifier,
+                "facility_name": name,
+                "status": "PRICE_NOT_VERIFIED_NOT_A_RECOMMENDATION",
+                "passed_requirement_count": len(set(row.get("must_pass") or [])),
+                "synthetic_pilot": row.get("synthetic_pilot") is True,
+            })
+    research.sort(key=lambda row: (row["facility_name"].casefold(), row["canonical_facility_id"]))
+    result["price_research_candidates"] = research
+    decision["price_research_visibility"] = "UNRANKED_RESEARCH_ONLY" if research else "HIDDEN"
+
     if state.can_show_recommendations:
         # Enforce the MUST gate even if an upstream ranking returns pending rows.
         rows = result.get("results")

@@ -25,6 +25,30 @@ def base_result():
     }
 
 
+def test_price_only_research_is_unranked_and_separate_from_recommendations():
+    result = base_result()
+    result.update(must_eligible_count=0, must_pending_verification_count=2)
+    def candidate(identifier, name, **extra):
+        return {"canonical_facility_id": identifier, "facility_name": name,
+                "must_unknown": ["SEMANTIC_BUDGET_VERIFICATION"],
+                "must_fail": [], "must_pass": ["LAS_VEGAS"], **extra}
+    result["must_pending_verification_candidates"] = [
+        candidate("z", "Zed"), candidate("a", "Alpha"), candidate("a", "Alpha"),
+        candidate("clinical", "Clinical unknown", must_unknown=["SEMANTIC_BUDGET_VERIFICATION", "DIALYSIS"]),
+        candidate("failed", "Failed", must_fail=["LAS_VEGAS"]),
+        candidate("known", "Known price over budget", starting_monthly_price=50000),
+    ]
+    apply_canonical_decision_state_authority(result)
+    assert [row["canonical_facility_id"] for row in result["price_research_candidates"]] == ["a", "z"]
+    assert all("patient_match_score" not in row and "rank_position" not in row for row in result["price_research_candidates"])
+    assert result["results"] == []
+    assert not canonical_can_show_recommendations(result)
+    result["decision_intelligence"]["human_intelligence"]["readiness_guardian"]["client_owned_blockers"] = [{"fact_key": "move_timing"}]
+    apply_canonical_decision_state_authority(result)
+    assert result["price_research_candidates"] == []
+    assert result["decision_intelligence"]["price_research_visibility"] == "HIDDEN"
+
+
 def test_client_blocker_beats_legacy_ready():
     result = base_result()
     result["decision_intelligence"]["human_intelligence"]["readiness_guardian"]["client_owned_blockers"] = [{"fact_key": "move_timing"}]

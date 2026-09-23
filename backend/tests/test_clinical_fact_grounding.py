@@ -36,3 +36,17 @@ def test_rehabilitation_does_not_invent_speech_therapy():
     assert "speech_therapy" in {need["parameter_id"] for need in explicit["needs"]}
     denied = build_patient_needs_profile(state, "Hip rehabilitation. No speech or swallowing problems.")
     assert "speech_therapy" not in {need["parameter_id"] for need in denied["needs"]}
+
+
+def test_live_dementia_case_denies_nursing_without_losing_memory_care():
+    profile = build_patient_needs_profile({}, "Diagnosed dementia, wandering, needs 24/7 supervision. She has no skilled nursing procedures.")
+    parameters = {need["parameter_id"] for need in profile["needs"]}
+    assert "memory_care" in parameters
+    assert not parameters.intersection({"nursing_24_7", "skilled_nursing_capabilities"})
+    positive = build_patient_needs_profile({}, "Mother has no skilled nursing needs; father needs skilled nursing.")
+    assert "nursing_24_7" in {need["parameter_id"] for need in positive["needs"]}
+
+
+def test_live_wound_case_preserves_explicit_skilled_dressing_changes():
+    profile = build_patient_needs_profile({}, "A wound requiring daily skilled dressing changes.")
+    assert "wound_care" in {need["parameter_id"] for need in profile["needs"]}
