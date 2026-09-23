@@ -294,33 +294,10 @@ export default function HomePage() {
                 </div>
               )}
             </div>
-
-            <button type="button" onClick={() => document.getElementById("describe")?.scrollIntoView({ behavior: "smooth" })} className="mt-12 text-2xl font-medium text-[#315f53] underline decoration-[#a8beb6] underline-offset-4 hover:text-[#183f35]">
-              Or tell the story in your own words
-            </button>
             <p className="mt-12 max-w-none text-3xl font-medium leading-tight tracking-[-0.04em] text-[#20342c] sm:text-4xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
           </div>
         </div>
-      </section>
-
-      <section id="describe" className="mx-auto max-w-6xl px-5 py-24 sm:px-8 lg:px-12">
-        <div className="max-w-4xl">
-          <p className="text-xl font-semibold tracking-[-0.02em] text-[#3a7969]">Your story matters</p>
-          <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">Tell us anything the questions may not capture.</h2>
-          <p className="mt-5 max-w-2xl text-xl leading-9 text-[#5a6d65]">Use your own words. <span className="whitespace-nowrap"><span>OOmn</span><span className="relative inline-block">ı<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-orange-500" style={{ width: "0.18em", height: "0.18em", top: "0.30em" }} /></span><span>k</span></span> will combine the story with the answers already saved.</p>
-          <form onSubmit={submit} className="mt-10 max-w-4xl">
-            <label htmlFor="family-case" className="sr-only">Describe your family situation</label>
-            <textarea id="family-case" value={query} onChange={(event) => setQuery(event.target.value)} rows={6} placeholder={EXAMPLE_QUERY} className="w-full resize-none border-0 border-b-2 border-[#a8beb6] bg-transparent px-0 py-5 text-xl leading-9 text-[#273630] outline-none transition placeholder:text-[#8b9a94] focus:border-[#315f53] focus:ring-0" />
-            {error && <p className="mt-4 text-sm text-[#8a4434]">{error}</p>}
-            <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex items-center gap-2 border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:opacity-60">
-              {!isSubmitting && <OOmnikMark size={18} />}
-              {isSubmitting ? "Opening the AI interview..." : "See options that may fit"} <span className="ml-1">→</span>
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <section className="border-y border-[#dbe4df] bg-[#edf6f1]">
+      </section>\n\n      <section className="border-y border-[#dbe4df] bg-[#edf6f1]">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:px-12">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3a7969]">Las Vegas market transparency</p>
