@@ -275,9 +275,9 @@ export default function HomePage() {
                     type="button"
                     disabled={selectedAssistance.length === 0}
                     onClick={continueAfterAssistance}
-                    className="mt-8 inline-flex items-center gap-2 border-b-2 border-[#4c8b7b] pb-1 text-lg font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="mt-8 inline-flex items-center gap-4 border-b-2 border-[#4c8b7b] pb-2 text-4xl font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <OOmnikMark size={18} /> Next <span className="ml-1">→</span>
+                    <OOmnikMark size={36} /> Next <span className="ml-1">→</span>
                   </button>
                 </div>
               )}
