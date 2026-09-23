@@ -124,6 +124,7 @@ test('home free-text entry starts the governed AI intake without forcing the man
   await page.getByRole('button', { name: /See options that may fit/ }).click();
 
   await expect(page).toHaveURL(/\/adaptive-interview/);
+  expect(new URL(page.url()).searchParams.get('next')).toBe('/results');
   await page.waitForTimeout(1_000);
   await expect(page).not.toHaveURL(/\/intake$/);
   const persisted = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem('optime.questionnaire.session') || '{}'));
@@ -147,6 +148,7 @@ test('server-owned intake asks only the missing question and preserves explicit 
   const recommendations = page.waitForRequest(request => request.url().includes('/decision-engine/recommendations'));
   await page.getByRole('button', { name: /I confirm—show recommendations/i }).click();
   await expect(page).toHaveURL(/\/results/);
+  expect(new URL(page.url()).search).toBe('');
   expect((await recommendations).postDataJSON().intake_profile_id).toBe('test-server-profile');
 });
 

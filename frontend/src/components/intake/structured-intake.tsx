@@ -225,8 +225,7 @@ export function StructuredIntake() {
     // React state update and the provider's asynchronous persistence effect.
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, next);
     setState(next);
-    const params = new URLSearchParams({ budget: String(next.budget), notes: next.notes || "" });
-    router.push(`/adaptive-interview?next=${encodeURIComponent(`/results?${params.toString()}`)}`);
+    router.push("/adaptive-interview?next=%2Fresults");
   }
 
   return (
