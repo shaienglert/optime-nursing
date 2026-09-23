@@ -21,7 +21,7 @@ function IntakeConfirmationContent() {
   const [confirmationRequested, setConfirmationRequested] = useState(false);
   const [reviewed, setReviewed] = useState<{ key: string; profile: PatientNeedsProfile } | null>(null);
   const [reviewError, setReviewError] = useState<string | null>(null);
-  const [retry, setRetry] = useState(0);
+  const [retry, setRetry] = useState(0);\n  const [additionalContext, setAdditionalContext] = useState("");
   const inputKey = intakeInputKey(state as unknown as Record<string, unknown>, state.notes || "");
   const requestedDestination = searchParams.get("next")?.startsWith("/results") ? String(searchParams.get("next")) : "/results";
 
@@ -58,7 +58,7 @@ function IntakeConfirmationContent() {
     router.replace(buildResultsUrl(state, requestedPathname));
   }, [confirmationRequested, requestedDestination, router, state]);
 
-  function confirm() {
+  function addContext() {\n    const extra = additionalContext.trim();\n    if (!extra) return;\n    setState((current) => ({ ...current, notes: [current.notes?.trim(), extra].filter(Boolean).join("\\n\\n"), questionnaireCompletion: { ...current.questionnaireCompletion, clientSummaryConfirmed: false, confirmedAt: "" } }));\n    setAdditionalContext("");\n    setReviewed(null);\n    setRetry((value) => value + 1);\n  }\n\n  function confirm() {
     if (reviewError || reviewed?.key !== inputKey || !reviewed.profile.intake_profile_id) return;
     try { saveConfirmedIntake(reviewed.profile.intake_profile_id, inputKey); }
     catch (error) { setReviewError(error instanceof Error ? error.message : "Unable to save your confirmation."); return; }
@@ -114,6 +114,13 @@ function IntakeConfirmationContent() {
                 ].filter(Boolean).join("; ")
           } />
         </div>
+
+        <section className="mt-10 rounded-3xl border border-[#d9e3df] bg-white p-6">
+          <h2 className="text-2xl font-semibold">Anything you’d like to add or correct?</h2>
+          <p className="mt-2 text-lg leading-8 text-[#5c665f]">Add anything in your own words. OOmnik will read it together with your answers and prepare an updated understanding for you to approve.</p>
+          <textarea value={additionalContext} onChange={(event) => setAdditionalContext(event.target.value)} rows={4} className="mt-5 w-full resize-y rounded-2xl border border-[#b9cbc4] bg-[#fbfaf7] p-4 text-xl leading-8 outline-none focus:border-[#397a69]" placeholder="Add a preference, concern, correction, or anything we missed…" />
+          <button type="button" onClick={addContext} disabled={!additionalContext.trim()} className="mt-4 rounded-full border border-[#397a69] px-6 py-3 text-lg font-semibold text-[#315f53] disabled:opacity-40">Update my summary</button>
+        </section>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={() => router.push("/intake")} className="rounded-full border border-[#76958a] bg-white px-7 py-4 text-base font-semibold text-[#315f53]">Change answers</button>
