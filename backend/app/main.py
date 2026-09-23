@@ -650,6 +650,7 @@ class PatientComparisonContextRequestIn(BaseModel):
 
 class PatientDecisionEngineOut(BaseModel):
     patient_needs_profile: Dict[str, Any]
+    price_research_candidates: List[Dict[str, Any]] = Field(default_factory=list)
     results: List[Dict[str, Any]]
     result_count: int
     total_candidates_scored: int

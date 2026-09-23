@@ -11,6 +11,15 @@ _NEGATED_DEMENTIA = re.compile(
 )
 
 
+def without_negated_nursing(text: str) -> str:
+    """Remove only the denied nursing mention; preserve other positive mentions."""
+    return re.sub(
+        r"\b(?:no(?:\s+need\s+for)?|without|does\s+not\s+(?:need|require)|doesn't\s+(?:need|require))"
+        r"\s+(?:any\s+)?(?:(?:skilled|24/7|24x7|round\s+the\s+clock)\s+)?nursing\b",
+        "", str(text or "").lower(),
+    )
+
+
 def extract_care_denials(text: str) -> dict[str, bool]:
     normalized = str(text or "").strip().lower()
     def present(token: str) -> bool:

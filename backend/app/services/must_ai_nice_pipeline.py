@@ -444,6 +444,11 @@ def apply_must_ai_nice_pipeline(
             "canonical_facility_id": row.get("canonical_facility_id"),
             "facility_name": row.get("facility_name"),
             "must_unknown": (row.get("client_intent_fit") or {}).get("must_unknown") or [],
+            "must_pass": (row.get("client_intent_fit") or {}).get("must_pass") or [],
+            "must_fail": (row.get("client_intent_fit") or {}).get("must_fail") or [],
+            "starting_monthly_price": row.get("starting_monthly_price"),
+            "eligibility_status": row.get("eligibility_status"),
+            "synthetic_pilot": row.get("synthetic_pilot") is True,
         }
         for row in pending
     ]

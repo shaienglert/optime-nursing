@@ -380,6 +380,13 @@ export type DecisionEngineRecommendation = {
 };
 
 export type DecisionEngineResponse = {
+  price_research_candidates?: Array<{
+    canonical_facility_id: string;
+    facility_name: string;
+    status: "PRICE_NOT_VERIFIED_NOT_A_RECOMMENDATION";
+    passed_requirement_count: number;
+    synthetic_pilot?: boolean;
+  }>;
   // Server-held handle for this exact response; lets the personal report reuse it.
   decision_id?: string | null;
   patient_case_id?: number | null;

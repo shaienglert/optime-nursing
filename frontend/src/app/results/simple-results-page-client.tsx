@@ -256,7 +256,26 @@ export function SimpleResultsPageClient() {
                 : "No community is ready to recommend from this search. You can review your answers or return to the conversation."}
             </div>
           )}
+          <p className="mt-5 text-lg leading-8 text-[#53635d]">Confirm current pricing and availability before any move.</p>
+          {/medicaid/i.test(naturalLanguageQuery) ? <p className="mt-2 text-lg leading-8 text-[#53635d]">Medicaid eligibility and each community’s participation must be confirmed separately.</p> : null}
         </section>
+
+        {(response.price_research_candidates || []).length > 0 ? (
+          <section className="mt-8 rounded-[2rem] border border-amber-300 bg-amber-50 p-7" aria-label="Price research">
+            <h2 className="text-2xl font-semibold">Price not verified — not a recommendation</h2>
+            <p className="mt-3 text-lg leading-8">These communities passed the other mandatory checks for this search, but their price is missing. We cannot confirm affordability. This alphabetical list is for further research and has no ranking.</p>
+            <ul className="mt-5 space-y-4">
+              {response.price_research_candidates?.map((item) => (
+                <li key={item.canonical_facility_id} className="rounded-2xl bg-white p-5">
+                  <h3 className="text-xl font-semibold">{item.facility_name}</h3>
+                  {item.synthetic_pilot ? <p>Synthetic test community</p> : null}
+                  <p className="mt-2">{item.passed_requirement_count} other mandatory checks passed. Monthly price: not verified.</p>
+                  <p className="mt-2">Next step: obtain a current written quote including the care services needed, then compare the total with your budget.</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {top.length > 0 ? (
           <section className="mt-8 grid gap-6">

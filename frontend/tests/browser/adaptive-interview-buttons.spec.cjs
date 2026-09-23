@@ -92,7 +92,7 @@ const decisionResponse = {
   ],
 };
 
-async function mockBackend(page) {
+async function mockBackend(page, recommendations = decisionResponse) {
   await page.route('**/api/backend/**', async (route) => {
     const url = route.request().url();
     if (url.includes('/decision-engine/patient-needs-profile')) {
@@ -102,7 +102,7 @@ async function mockBackend(page) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
     }
     if (url.includes('/decision-engine/recommend')) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(decisionResponse) });
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(recommendations) });
     }
     return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
   });
@@ -173,6 +173,23 @@ test('results default view is readable and does not expose internal evidence jar
   await expect(page.getByText(/CMS Placeholder/i)).toHaveCount(0);
   await expect(page.getByText(/POTENTIALLY_ELIGIBLE/i)).toHaveCount(0);
   await expect(page.getByText(/^Not verified$/i)).toHaveCount(0);
+});
+
+test('price research is visible without pretending it is a recommendation', async ({ page }) => {
+  await mockBackend(page, {
+    ...decisionResponse, results: [], result_count: 0,
+    price_research_candidates: [{ canonical_facility_id: 'price-only', facility_name: 'Research Community',
+      status: 'PRICE_NOT_VERIFIED_NOT_A_RECOMMENDATION', passed_requirement_count: 3 }],
+  });
+  const confirmed = questionnaireState();
+  confirmed.questionnaireCompletion.clientSummaryConfirmed = true;
+  await page.addInitScript(state => window.sessionStorage.setItem('optime.questionnaire.session', JSON.stringify(state)), confirmed);
+  await page.goto('http://127.0.0.1:3000/results');
+  await expect(page.getByRole('heading', { name: 'Price not verified — not a recommendation' })).toBeVisible();
+  await expect(page.getByText('Research Community', { exact: true })).toBeVisible();
+  await expect(page.getByText(/We cannot confirm affordability/)).toBeVisible();
+  await expect(page.getByText('Meets verified must-haves')).toHaveCount(0);
+  await expect(page.getByText(/obtain a current written quote/)).toBeVisible();
 });
 
 
