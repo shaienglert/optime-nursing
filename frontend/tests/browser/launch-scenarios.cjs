@@ -56,7 +56,9 @@ const scenarios = {
 function answerFor(question, scenario) {
   const text = question.toLowerCase();
   if (/city|area|location|market/.test(text)) return 'Las Vegas Valley';
-  if (/budget|cost|monthly|afford|medicaid/.test(text)) return scenario.story.match(/\$[\d,]+[^.]*|Medicaid[^.]*/i)?.[0] || 'Use the budget and payment information in the story.';
+  if (/medicare|insurance coverage/.test(text)) return scenario.story.match(/Original Medicare|Medicare Advantage|No Medicare/i)?.[0] || 'Not sure';
+  if (/medicaid/.test(text)) return scenario.story.match(/Medicaid[^.]*/i)?.[0] || 'Not sure';
+  if (/budget|cost|monthly|afford/.test(text)) return scenario.story.match(/\$[\d,]+[^.]*/i)?.[0] || 'Not sure';
   if (/memory|cognitive|dementia|alzheimer|wander/.test(text)) return /alzheimer|dementia|wander/i.test(scenario.story) ? 'Use the diagnosed memory and safety needs in the story.' : 'No diagnosed dementia unless the story says otherwise.';
   if (/care|support|adl|bathing|dressing|toilet|medication|supervision|rehab|therapy/.test(text)) return 'Use all care, medication, mobility and rehabilitation requirements stated in the story.';
   if (/safety|secure|night/.test(text)) return 'Use the safety requirements stated in the story; do not infer any additional requirement.';
