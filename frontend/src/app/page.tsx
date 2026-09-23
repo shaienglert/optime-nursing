@@ -219,7 +219,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f8f5ef] text-[#21312b]">
       <section className="relative overflow-hidden border-b border-[#dbe4df] bg-[radial-gradient(circle_at_12%_8%,rgba(219,239,229,0.88),transparent_33%),radial-gradient(circle_at_90%_0%,rgba(255,232,202,0.72),transparent_36%),linear-gradient(180deg,#fbfaf7_0%,#f7f4ee_100%)]">
-        <div className="mx-auto max-w-6xl px-5 pb-24 pt-6 sm:px-8 lg:px-12 lg:pb-32">
+        <div className="mx-auto w-full max-w-[1600px] px-5 pb-24 pt-6 sm:px-10 lg:px-16 lg:pb-32">
           <nav className="flex items-center justify-end" aria-label="Main navigation">
             <div className="flex items-center gap-5 text-2xl font-medium">
               <Link href="/workspace" className="hidden px-3 py-2 text-[#486057] hover:text-[#234f43] sm:inline-flex">My workspace</Link>
@@ -227,16 +227,17 @@ export default function HomePage() {
             </div>
           </nav>
 
-          <div className="pt-10 sm:pt-14"><div className="flex justify-center pb-12 sm:pb-16"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div>
+          <div className="pt-10 sm:pt-14">
             <p className="text-5xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Welcome</p>
-            <h1 className="mt-5 max-w-5xl text-4xl font-semibold leading-[1.08] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
+            <h1 className="mt-5 max-w-none text-4xl font-semibold leading-[1.08] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
               A difficult decision deserves time, care, and the right guidance.
             </h1>
-            <p className="mt-7 max-w-5xl text-3xl font-medium leading-tight tracking-[-0.04em] text-[#52645d] sm:text-4xl">
+            <div className="flex justify-center py-12 sm:py-16"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div>
+            <p className="max-w-none text-3xl font-medium leading-tight tracking-[-0.04em] text-[#52645d] sm:text-4xl">
               Choosing senior living has many important dimensions. Answer a few questions, and <span className="whitespace-nowrap"><span>OOmn</span><span className="relative inline-block">ı<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-orange-500" style={{ width: "0.18em", height: "0.18em", top: "0.30em" }} /></span><span>k</span></span> will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
             </p>
 
-            <div className="mt-14 max-w-3xl">
+            <div className="mt-14 max-w-none">
               {heroStep === "relationship" && (
                 <div>
                   <p className="text-3xl font-medium text-[#52645d]">Let&apos;s begin naturally. A few simple answers will help us understand the person before we compare any community.</p>
@@ -297,7 +298,7 @@ export default function HomePage() {
             <button type="button" onClick={() => document.getElementById("describe")?.scrollIntoView({ behavior: "smooth" })} className="mt-12 text-2xl font-medium text-[#315f53] underline decoration-[#a8beb6] underline-offset-4 hover:text-[#183f35]">
               Or tell the story in your own words
             </button>
-            <p className="mt-12 max-w-5xl text-3xl font-medium leading-tight tracking-[-0.04em] text-[#20342c] sm:text-4xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
+            <p className="mt-12 max-w-none text-3xl font-medium leading-tight tracking-[-0.04em] text-[#20342c] sm:text-4xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
           </div>
         </div>
       </section>
