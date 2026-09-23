@@ -405,21 +405,60 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
     return False
 
 
+_DIMENSION_BY_FACT_KEY = {
+    "monthly_budget": "monthly_affordability",
+    "monthly_affordability": "monthly_affordability",
+    "budget": "monthly_affordability",
+    "market_location": "market_location",
+    "location": "market_location",
+    "city_or_metro_area": "market_location",
+}
+
+
+def _answered_minimum_dimensions(questionnaire_state: Dict[str, Any]) -> set[str]:
+    """Minimum dimensions the client has already been asked about and has answered.
+
+    The readiness guardian's own rule is that "explicit adaptive answers, including
+    acknowledged unknowns, resolve the interview blocker without fabricating a value".
+    Without this, an answer that carries no parsable amount ("Not sure") left the
+    dimension permanently unknown while the AI — correctly — reported READY, so the
+    readiness guard below raised on every attempt and the interview could never be
+    completed or retried out of.
+    """
+    answered: set[str] = set()
+    signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
+    for item in signals:
+        if not isinstance(item, dict) or not str(item.get("answer") or "").strip():
+            continue
+        fact_key = str(item.get("targetFactKey") or item.get("target_fact_key") or "").strip()
+        if not fact_key:
+            match = re.search(r"Target fact:\s*([A-Za-z0-9_]+)", str(item.get("impactExplanation") or ""))
+            fact_key = match.group(1) if match else ""
+        dimension = _DIMENSION_BY_FACT_KEY.get(fact_key.strip().lower())
+        if dimension:
+            answered.add(dimension)
+    return answered
+
+
 def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, bool]:
     text = str(user_text or "").lower()
     signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
     signal_text = " ".join(f"{str(item.get('impactExplanation') or '')} {str(item.get('answer') or '')}" for item in signals if isinstance(item, dict)).lower()
     combined = f"{text} {signal_text}"
+    answered = _answered_minimum_dimensions(questionnaire_state)
     explicit_location = any(str(questionnaire_state.get(key) or "").strip() for key in ("locationCity", "city", "referenceLocationValue"))
     text_location = bool(re.search(r"\b(las vegas|north las vegas|henderson|nevada)\b", combined))
     raw_budget = questionnaire_state.get("budget")
-    numeric_budget = isinstance(raw_budget, (int, float)) and float(raw_budget) > 0 and float(raw_budget) != 7000
+    numeric_budget = isinstance(raw_budget, (int, float)) and float(raw_budget) > 0
     text_budget = bool(re.search(
         r"(?:budget|monthly|per month|afford|cost|spend|pay)[^\n]{0,50}\$?\s*\d[\d,]{2,}(?:\.\d+)?|\$\s*\d[\d,]{2,}(?:\.\d+)?",
         combined,
     ))
     explicit_no_limit = bool(re.search(r"\b(no budget limit|no monthly limit|do not want to set a budget|don't want to set a budget)\b", combined))
-    return {"market_location": explicit_location or text_location, "monthly_affordability": numeric_budget or text_budget or explicit_no_limit}
+    return {
+        "market_location": explicit_location or text_location or "market_location" in answered,
+        "monthly_affordability": numeric_budget or text_budget or explicit_no_limit or "monthly_affordability" in answered,
+    }
 
 
 def _has_blocking_question(result: Dict[str, Any]) -> bool:
