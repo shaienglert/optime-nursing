@@ -104,12 +104,56 @@ def agent_only_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     return [item.get("payload") for item in agent_evidence if isinstance(item, dict) and isinstance(item.get("payload"), dict)]
 
 
+def _pilot_parameter_payload(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Project existing verified pilot facts into the common evidence vocabulary.
+
+    Never available to the real market or an arbitrary caller-supplied row: both
+    the configured market and the server-owned fixture identity/provenance must
+    match. This is fixture evidence, not verification of a real facility.
+    """
+    from app.services.canonical_universe import configured_canonical_market
+    if configured_canonical_market() != "synthetic-pilot":
+        return {}
+    from app.services.facility_parameter_service import get_canonical_facility_index, get_facility_knowledge_catalog
+    cid = str(row.get("canonical_facility_id") or "")
+    if not cid.startswith("PILOT-NV-"):
+        return {}
+    facility = get_canonical_facility_index().get(cid) or {}
+    if facility.get("synthetic_pilot") is not True:
+        return {}
+    capabilities = (get_facility_knowledge_catalog().get(cid) or {}).get("capabilities") or {}
+    def yes(parameter):
+        fact = capabilities.get(parameter) or {}
+        return (fact.get("verification_status") == "VERIFIED"
+                and (fact.get("provenance") or {}).get("synthetic_pilot") is True
+                and str(fact.get("value") or "").upper() == "YES")
+    payload = {"synthetic_pilot": True, "source": "VERIFIED_SYNTHETIC_PILOT_PARAMETERS"}
+    for parameter, key in {
+        "adl_support": "adl_support_verified",
+        "medication_support": "medication_support_verified",
+        "activities": "social_engagement_verified",
+        "transportation": "transportation_verified",
+        "kosher": "kosher_meals_verified",
+    }.items():
+        if yes(parameter):
+            payload[key] = True
+    if yes("pt") and yes("ot"):
+        payload["rehab_verified"] = True
+        payload["pt_ot_verified"] = True
+    if facility.get("accepts_couples") is True:
+        payload["couple_coresidence_verified"] = True
+    return payload
+
+
 def agent_and_provider_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Flatten agent-sourced, provider-verified, and life-plan evidence for one
     candidate row into a single list of payload dicts, in a stable order
     (agent evidence first, then provider evidence, then life-plan-derived flags).
     """
     out: List[Dict[str, Any]] = list(agent_only_payloads(row))
+    pilot = _pilot_parameter_payload(row)
+    if pilot:
+        out.append(pilot)
 
     provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
     provider_evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else None

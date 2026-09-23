@@ -581,6 +581,7 @@ def _apply_strategy_needs(profile: Dict[str, Any], strategy: Dict[str, Any]) -> 
 
 
 def extract_intake_facts(questionnaire_state, natural_language_query="", *, care_denials=None):
+    from app.services.care_input_assertions import extract_care_denials
     from app.services.decision_engine_evidence import _explicit_location_city
     from app.services.living_strategy_guard_patch import deceased_spouse_without_current_couple
     state = deepcopy(questionnaire_state or {})
@@ -601,7 +602,14 @@ def extract_intake_facts(questionnaire_state, natural_language_query="", *, care
     }})
     # One positive requirement owns each shared care fact. These are projections
     # of explicit clinical requirements, never a second reading of the story.
-    positive = {n["parameter_id"] for n in clinical["needs"] if n["desired_value"] == "YES"}
+    positive = {
+        n["parameter_id"] for n in clinical["needs"]
+        if n["desired_value"] == "YES"
+        # The legacy structured nursing mapping carries possible transfer/
+        # medication support at <1 confidence. That is derived care context,
+        # not an explicit client statement and must not create a new MUST.
+        and not (n["user_evidence_source"] == "questionnaire.assistanceLevel" and n["confidence"] < 1.0)
+    }
     strategy["adl"] = "adl_support" in positive
     strategy["medication"] = "medication_support" in positive
     delivery = _extract_delivery_facts(state, story, care_denials=denials)

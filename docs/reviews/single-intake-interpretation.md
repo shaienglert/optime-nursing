@@ -15,3 +15,11 @@ An interpretation digest binds the fact record and validated AI packet to the re
 ## Validation scope
 
 Pilot means the isolated synthetic-pilot market with exactly 200 facilities and synthetic provenance. The ordinary production site's real facilities cannot substitute for this acceptance test. Existing offline pilot CI has AI disabled; it is regression coverage only. Live acceptance must assert AI CONSULTED_AND_VALIDATED, pilot identity and the reviewed interpretation identifier through matching.
+
+## Regression findings resolved
+
+- Derived medication support from the legacy skilled-nursing mapping is not an explicit family requirement and cannot be promoted into a medication MUST.
+- The pilot medication evidence existed in the parameter catalog but the intent gate read only agent/provider payloads. The governed adapter now projects verified synthetic parameters for the synthetic-pilot market only, with server-owned identity and provenance checks. It cannot authorize evidence in the real market.
+- Unit tests now queue research without starting live daemon workers. This prevents unintended web requests and background threads racing subsequent tests' temporary catalogs.
+
+The shared-denial, pilot personalized-ranking, source-isolation and interpretation regressions pass together (23 tests). The separate PCA regression passes (13 tests with interpretation coverage).

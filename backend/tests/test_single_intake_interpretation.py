@@ -76,3 +76,11 @@ def test_intent_uses_budget_from_same_record_not_second_state():
     strategy = build_living_strategy_context({}, intake_facts=record)
     intent = build_client_intent({'budget': 0}, '', strategy, {}, intake_facts=record)
     assert 'BUDGET_FIT' in {n['key'] for n in intent['nice_to_haves']}
+
+
+def test_derived_nursing_context_does_not_become_an_unstated_medication_must():
+    record = facts.extract_intake_facts({'assistanceLevel': 'Needs 24/7 skilled nursing', 'budget': 12000}, 'Father needs 24/7 skilled nursing in Las Vegas.')
+    strategy = build_living_strategy_context({}, intake_facts=record)
+    intent = build_client_intent({}, '', strategy, {}, intake_facts=record)
+    assert 'MEDICATION_SUPPORT_AVAILABLE' not in {m['key'] for m in intent['must_haves']}
+    assert record['delivery']['medication_support_needed'] is False
