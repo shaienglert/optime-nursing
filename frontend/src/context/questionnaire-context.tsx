@@ -222,7 +222,7 @@ const DEFAULT_STATE: QuestionnaireState = {
   futureCarePreference: "",
   memoryStatus: "",
   happinessPreferences: [],
-  budget: 7000,
+  budget: 0,
   distanceFromFamily: "",
   referenceLocationType: "",
   referenceLocationValue: "",

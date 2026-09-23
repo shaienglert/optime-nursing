@@ -383,7 +383,7 @@ def _map_rehab(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) 
     if rehab_need in {"yes", "required", "high"}:
         _add_need(needs_by_id, "pt", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.transitionRiskProfile.postHospitalRehabNeed", 1.0, "Needs physical therapy")
         _add_need(needs_by_id, "ot", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.transitionRiskProfile.postHospitalRehabNeed", 1.0, "Needs occupational therapy")
-        _add_need(needs_by_id, "speech_therapy", "MEDIUM", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.transitionRiskProfile.postHospitalRehabNeed", 0.9, "Speech therapy may be needed")
+        # Speech therapy requires its own explicit evidence; rehab alone is not it.
 
 
 def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
@@ -570,6 +570,10 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
         "no oxygen", "not on oxygen", "no continuous oxygen", "no respiratory support",
         "does not need oxygen", "doesn't need oxygen",
     ))
+    no_speech_support = any(phrase in normalized for phrase in (
+        "no speech", "no swallowing or speech", "does not need speech therapy",
+        "doesn't need speech therapy", "without speech problems",
+    ))
 
     keyword_rules = [
         (["stroke", "neurolog"], ("post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")),
@@ -595,6 +599,7 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
         "dialysis_arrangements": no_dialysis,
         "wound_care": no_wound_care,
         "respiratory_trach_vent": no_respiratory_support,
+        "speech_therapy": no_speech_support,
     }
     for keywords, need_tuple in keyword_rules:
         parameter_id = need_tuple[0]

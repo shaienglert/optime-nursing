@@ -71,4 +71,10 @@ describe("canonicalizeAdaptiveFact monthly_budget", () => {
       expect((canonicalizeAdaptiveFact(state(), "monthly_budget", option) as { budget: number }).budget).toBe(0);
     }
   });
+
+  it("clears a previously stated ceiling when the family replaces it with an unknown or floor", () => {
+    for (const option of ["Above $12,000", "Not sure", "Prefer not to say"]) {
+      expect(canonicalizeAdaptiveFact({ budget: 7000 } as never, "monthly_budget", option).budget).toBe(0);
+    }
+  });
 });

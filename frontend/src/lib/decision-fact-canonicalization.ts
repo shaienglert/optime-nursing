@@ -56,7 +56,8 @@ export function canonicalizeAdaptiveFact(state: QuestionnaireState, targetFactKe
       break;
     case "monthly_budget": {
       const parsed = parseMonthlyBudgetAnswer(answer);
-      if (parsed.budget !== undefined) next.budget = parsed.budget;
+      // An explicit replacement without a ceiling supersedes any old amount.
+      next.budget = parsed.budget ?? 0;
       break;
     }
     case "community_size_preference":

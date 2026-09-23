@@ -22,7 +22,13 @@ export function applySemanticQuestionnairePatch(state: QuestionnaireState, patch
   if (next.relationship) {
     next = applyCanonicalIdentity(next, next.relationship, typeof patch.gender === "string" ? patch.gender : "");
   }
-  if (next.budget <= 0 && typeof patch.budget === "number" && Number.isFinite(patch.budget) && patch.budget > 0) {
+  const budgetAnswered = next.humanIntelligenceV2?.scoringEngine?.adaptiveSignals?.some((signal) => {
+    const fact = (signal as unknown as Record<string, unknown>).targetFactKey
+      || (signal as unknown as Record<string, unknown>).target_fact_key
+      || /Target fact:\s*([A-Za-z0-9_]+)/i.exec(signal.impactExplanation || "")?.[1];
+    return ["monthly_budget", "monthly_affordability", "budget"].includes(String(fact)) && Boolean(signal.answer?.trim());
+  });
+  if (!budgetAnswered && next.budget <= 0 && typeof patch.budget === "number" && Number.isFinite(patch.budget) && patch.budget > 0) {
     next.budget = Math.round(patch.budget);
   }
 
