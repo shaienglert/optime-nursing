@@ -553,6 +553,9 @@ def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str
                 continue
             if set(row.get("must_unknown") or []) != {"SEMANTIC_BUDGET_VERIFICATION"} or row.get("must_fail"):
                 continue
+            # Intent checks cannot erase an unmet/unknown clinical capability.
+            if row.get("eligibility_status") != "ELIGIBLE":
+                continue
             # A known amount (including one above budget) is not a missing price.
             if row.get("starting_monthly_price") not in (None, ""):
                 continue

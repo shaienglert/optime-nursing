@@ -31,12 +31,13 @@ def test_price_only_research_is_unranked_and_separate_from_recommendations():
     def candidate(identifier, name, **extra):
         return {"canonical_facility_id": identifier, "facility_name": name,
                 "must_unknown": ["SEMANTIC_BUDGET_VERIFICATION"],
-                "must_fail": [], "must_pass": ["LAS_VEGAS"], **extra}
+                "must_fail": [], "must_pass": ["LAS_VEGAS"], "eligibility_status": "ELIGIBLE", **extra}
     result["must_pending_verification_candidates"] = [
         candidate("z", "Zed"), candidate("a", "Alpha"), candidate("a", "Alpha"),
         candidate("clinical", "Clinical unknown", must_unknown=["SEMANTIC_BUDGET_VERIFICATION", "DIALYSIS"]),
         candidate("failed", "Failed", must_fail=["LAS_VEGAS"]),
         candidate("known", "Known price over budget", starting_monthly_price=50000),
+        candidate("core-gap", "Unknown clinical capability", eligibility_status="INSUFFICIENT_EVIDENCE"),
     ]
     apply_canonical_decision_state_authority(result)
     assert [row["canonical_facility_id"] for row in result["price_research_candidates"]] == ["a", "z"]
