@@ -189,6 +189,26 @@ def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natura
     transition_participation = _transition_participation(questionnaire)
 
     adaptive_questions: List[Dict[str, Any]] = []
+    hi = questionnaire.get("humanIntelligenceV2") if isinstance(questionnaire.get("humanIntelligenceV2"), dict) else {}
+    social = hi.get("socialProfile") if isinstance(hi.get("socialProfile"), dict) else {}
+    personality = hi.get("personalityProfile") if isinstance(hi.get("personalityProfile"), dict) else {}
+    culture = hi.get("culturalProfile") if isinstance(hi.get("culturalProfile"), dict) else {}
+    transition = hi.get("transitionRiskProfile") if isinstance(hi.get("transitionRiskProfile"), dict) else {}
+    future = hi.get("futureCareProfile") if isinstance(hi.get("futureCareProfile"), dict) else {}
+    if not _text(social.get("newFriendsImportance")):
+        adaptive_questions.append(_question("social_priority", "How important is having regular opportunities to meet people and socialize?", "Social preference changes person-fit, not provider quality.", ["social_connection_engagement"], ["Very important", "Somewhat important", "Not important", "Not sure"], impact="MEDIUM"))
+    if not _text(personality.get("communitySizePreference")):
+        adaptive_questions.append(_question("community_size_preference", "What kind of community atmosphere would feel most comfortable?", "Explicit environment preference improves fit.", ["preference_congruence"], ["Small and home-like", "Medium-sized", "Larger and more active", "No preference"], impact="MEDIUM"))
+    if not _text(questionnaire.get("locationImportant")):
+        adaptive_questions.append(_question("location_priority", "How important is staying close to family, friends, doctors, or a familiar neighborhood?", "Location can materially change the practical shortlist.", ["location_fit"], ["Very important", "Somewhat important", "Not important", "Not sure"], impact="MEDIUM"))
+    if not _text(questionnaire.get("moveTiming")):
+        adaptive_questions.append(_question("move_timing", "When would you ideally like the move to happen?", "Timing affects availability and transition planning.", ["move_timing"], ["As soon as possible", "Within 1–3 months", "Within 3–6 months", "Just planning ahead", "Not sure"], impact="MEDIUM"))
+    if not _text(culture.get("languageImportance")):
+        adaptive_questions.append(_question("language_culture", "Are language, cultural, or religious preferences important in the community?", "Only explicit cultural preferences should affect fit.", ["cultural_fit"], ["Yes, important", "Nice to have", "No preference", "Not sure"], impact="MEDIUM"))
+    if not _text(transition.get("attitudeTowardMove")):
+        adaptive_questions.append(_question("move_attitude", "How does the person feel about the idea of moving?", "Move participation changes transition support.", ["transition_preparation"], ["Positive and involved", "Cautious but open", "Reluctant", "Not sure"], impact="MEDIUM"))
+    if not _text(future.get("futureCarePreference")) and not _text(questionnaire.get("futureCarePreference")):
+        adaptive_questions.append(_question("future_care_preference", "How important is choosing a place that can provide more care later if needs change?", "Future-care preference affects the living strategy and risk of another move.", ["future_care"], ["Required", "Preferred", "Not important", "Not sure"], impact="MEDIUM"))
     if social_transition["value"] in {"HIGH", "REVIEW_REQUIRED"} and community_size["value"] == "UNKNOWN":
         adaptive_questions.append(_question(
             "community_size_preference",
