@@ -22,36 +22,6 @@ _regulatory_index = _governed._regulatory_index
 build_patient_comparison_context = _governed.build_patient_comparison_context
 
 
-def _has_need(profile: Dict[str, Any], parameter_id: str) -> bool:
-    return any(str(item.get("parameter_id") or "") == parameter_id for item in profile.get("needs") or [])
-
-
-def _append_need(profile: Dict[str, Any], parameter_id: str, level: str, text: str, source: str) -> None:
-    if _has_need(profile, parameter_id):
-        return
-    profile.setdefault("needs", []).append({
-        "parameter_id": parameter_id,
-        "requirement_level": level,
-        "desired_value": "YES",
-        "acceptable_values": ["YES", "UNKNOWN"],
-        "applicable_scope": "SERVICE",
-        "user_evidence_source": source,
-        "confidence": 0.9,
-        "need_text": text,
-    })
-
-
-def _apply_strategy_needs(profile: Dict[str, Any], strategy: Dict[str, Any]) -> None:
-    signals = strategy.get("signals") if isinstance(strategy.get("signals"), dict) else {}
-    if signals.get("rehabilitation_need_detected"):
-        _append_need(profile, "pt", "HIGH", "Physical therapy / post-operative rehabilitation support", "living_strategy_runtime")
-        _append_need(profile, "ot", "MEDIUM", "Occupational therapy may be needed during recovery", "living_strategy_runtime")
-    if signals.get("adl_support_needed"):
-        _append_need(profile, "adl_support", "HIGH", "Temporary or ongoing help with activities of daily living", "living_strategy_runtime")
-    if signals.get("medication_support_needed"):
-        _append_need(profile, "medication_support", "HIGH", "Medication-management support", "living_strategy_runtime")
-
-
 def _merge_strategy_questions(human_context: Dict[str, Any], strategy: Dict[str, Any]) -> None:
     questions = list(human_context.get("adaptive_questions") or [])
     existing = {str(item.get("question_key") or "") for item in questions}
@@ -70,20 +40,19 @@ def _merge_strategy_questions(human_context: Dict[str, Any], strategy: Dict[str,
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
     from app.services.canonical_intake_state import canonicalize_intake_state
     questionnaire_state = canonicalize_intake_state(questionnaire_state)
-    from app.services.care_input_assertions import extract_care_denials
-    care_denials = extract_care_denials(natural_language_query)
-    profile = _governed.build_patient_needs_profile(questionnaire_state, natural_language_query, care_denials=care_denials)
-    strategy = build_living_strategy_context(questionnaire_state, natural_language_query, care_denials=care_denials)
-    _apply_strategy_needs(profile, strategy)
-    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=strategy)
+    from copy import deepcopy
+    from app.services.intake_interpretation import extract_intake_facts, seal_interpretation
+    facts = extract_intake_facts(questionnaire_state, natural_language_query)
+    profile = deepcopy(facts["clinical_profile"])
+    strategy = build_living_strategy_context(questionnaire_state, natural_language_query, intake_facts=facts)
+    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=strategy, intake_facts=facts)
     _merge_strategy_questions(human_context, strategy)
-    from app.services.combined_care_solution_runtime import _query_signals
-    delivery_signals = _query_signals(questionnaire_state, natural_language_query, care_denials=care_denials)
-    client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context, care_delivery_signals=delivery_signals)
+    delivery_signals = deepcopy(facts["delivery"])
+    client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context, care_delivery_signals=delivery_signals, intake_facts=facts)
     factor_policy = build_success_factor_trace(questionnaire_state, profile)
     profile["living_strategy"] = strategy
     profile["care_delivery_signals"] = delivery_signals
-    profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, questionnaire_state, natural_language_query)
+    profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, questionnaire_state, natural_language_query, intake_facts=facts)
     profile["client_intent"] = client_intent
     profile["decision_intelligence"] = {
         "version": "decision-intelligence-runtime-v3.1",
@@ -104,6 +73,7 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
         "results": [],
     })
     profile["decision_intelligence"] = envelope["decision_intelligence"]
+    seal_interpretation(profile, facts)
     return profile
 
 
@@ -253,17 +223,16 @@ def _strategy_research_pool(rows: List[Dict[str, Any]], limit: int) -> List[Dict
     return selected[: max(base_count, 60)]
 
 
-def _prepare_care_partner_requirements(strategy: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any] | None:
+def _prepare_care_partner_requirements(strategy: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str, *, intake_facts=None) -> Dict[str, Any] | None:
     strategy_ids = {str(item.get("strategy_id") or "") for item in strategy.get("strategy_candidates") or []}
     if "INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE" not in strategy_ids:
         return None
 
-    query = str(natural_language_query or "").lower()
-    assistance = str(questionnaire_state.get("assistanceLevel") or "").lower()
-    combined = f"{query} {assistance}"
-    bathing = any(token in combined for token in ("bath", "shower"))
-    dressing = any(token in combined for token in ("dress", "socks", "shoes"))
-    transfer = any(token in combined for token in ("transfer", "mobility", "walker", "wheelchair"))
+    from app.services.intake_interpretation import extract_intake_facts
+    facts = intake_facts if intake_facts is not None else extract_intake_facts(questionnaire_state, natural_language_query)
+    bathing = facts["care_tasks"]["bathing"]
+    dressing = facts["care_tasks"]["dressing"]
+    transfer = facts["care_tasks"]["transfer"]
     signals = strategy.get("signals") if isinstance(strategy.get("signals"), dict) else {}
     if signals.get("adl_support_needed") and not any((bathing, dressing, transfer)):
         bathing = True

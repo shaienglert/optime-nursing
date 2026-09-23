@@ -681,6 +681,7 @@ class PersonalDecisionReportOut(BaseModel):
 
 
 class PatientNeedsProfileOut(BaseModel):
+    interpretation_id: Optional[str] = None
     generated_from: Dict[str, Any]
     needs: List[Dict[str, Any]]
     need_tags: List[str]
@@ -1674,7 +1675,8 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "artifact_storage": database_runtime_status()}
+    return {"status": "healthy", "artifact_storage": database_runtime_status(),
+            "intake_interpretation_version": "intake-facts-v1", "market": configured_canonical_market()}
 
 
 @app.get("/runtime/status")

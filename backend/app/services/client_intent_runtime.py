@@ -25,8 +25,11 @@ def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
 
 
-def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any], *, care_delivery_signals=None) -> Dict[str, Any]:
-    query = str(natural_language_query or "").lower()
+def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any], *, care_delivery_signals=None, intake_facts=None) -> Dict[str, Any]:
+    from app.services.intake_interpretation import extract_intake_facts
+    facts = intake_facts if intake_facts is not None else extract_intake_facts(questionnaire_state, natural_language_query)
+    questionnaire_state = facts["questionnaire_state"]
+    preferences = facts["preferences"]
     signals = living_strategy.get("signals") if isinstance(living_strategy.get("signals"), dict) else {}
     household = living_strategy.get("household") if isinstance(living_strategy.get("household"), dict) else {}
     human_signals = human_context.get("signals") if isinstance(human_context.get("signals"), dict) else {}
@@ -48,35 +51,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     add_must("LICENSE_CURRENTLY_VALID", "A facility must hold a currently valid license; one whose license has expired should never be presented as a safe option.", "canonical license expiration_date vs current date")
 
     if care_delivery_signals is None:
-        from app.services.combined_care_solution_runtime import _query_signals
-        care_delivery_signals = _query_signals({}, natural_language_query)
+        care_delivery_signals = facts["delivery"]
     in_house_only_requested = bool(care_delivery_signals.get("in_house_only_requested"))
 
-    city = str(questionnaire_state.get("locationCity") or questionnaire_state.get("city") or "").strip().upper()
-    # The product market is the Las Vegas Valley, not only the incorporated city.
-    # Preserve a stated valley location such as Henderson as the canonical market
-    # MUST instead of dropping location merely because the words "Las Vegas" were
-    # not repeated in free text.
-    las_vegas_valley_terms = (
-        "las vegas",
-        "henderson",
-        "north las vegas",
-        "summerlin",
-        "clark county",
-    )
-    las_vegas_valley_cities = {
-        "LAS VEGAS",
-        "HENDERSON",
-        "NORTH LAS VEGAS",
-        "SUMMERLIN",
-        "PARADISE",
-        "SPRING VALLEY",
-        "ENTERPRISE",
-        "WINCHESTER",
-        "SUNRISE MANOR",
-    }
-    las_vegas_requested = any(term in query for term in las_vegas_valley_terms) or city in las_vegas_valley_cities
-    city_limits_only = any(token in query for token in ("las vegas city limits", "city limits only", "within las vegas city", "only in las vegas city"))
+    las_vegas_requested = preferences["las_vegas_requested"]
+    city_limits_only = preferences["city_limits_only"]
     if las_vegas_requested:
         if city_limits_only:
             add_must("LAS_VEGAS_CITY_LIMITS", "The client explicitly restricted the search to Las Vegas city limits.", "canonical city/state")
@@ -110,7 +89,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
 
     if signals.get("high_social_culture_priority"):
         add_nice("RICH_CULTURE_AND_ACTIVITIES", "The clients explicitly want substantial culture, classes, events and social opportunities.")
-    if any(token in query for token in ("classical music", "classical concert", "classical concerts")):
+    if preferences["classical_music"]:
         add_nice("CLASSICAL_MUSIC_ACCESS", "The client explicitly values classical music; generic social programming is not sufficient evidence for this preference.")
 
     community = human_signals.get("community_size_preference") if isinstance(human_signals.get("community_size_preference"), dict) else {}
@@ -118,14 +97,11 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if community_value not in {"UNKNOWN", "NO_PREFERENCE", "NONE"}:
         add_nice("COMMUNITY_ENVIRONMENT_MATCH", "The client expressed a community-size/environment preference.")
 
-    if "transport" in query or "outings" in query:
+    if preferences["transportation"]:
         add_nice("TRANSPORTATION_AND_OUTINGS", "Transportation/outings are part of the desired lifestyle.")
-    if any(token in query for token in ("dining", "restaurant", "food")):
+    if preferences["dining"]:
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
-    human_profile = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
-    food_profile = human_profile.get("foodProfile") if isinstance(human_profile.get("foodProfile"), dict) else {}
-    dietary_preferences = " ".join(str(value or "").lower() for value in food_profile.get("dietaryPreferences") or [])
-    if "kosher" in query or "kosher" in dietary_preferences:
+    if preferences["kosher"]:
         add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
 
     budget = questionnaire_state.get("budget")
@@ -136,19 +112,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
         add_nice("AVAILABILITY_FIT", "Verified availability should fit the client's requested move timing.")
 
-    future_profile = human_profile.get("futureCareProfile") if isinstance(human_profile.get("futureCareProfile"), dict) else {}
-    continuum_preference = " ".join(
-        str(value or "").lower()
-        for value in (
-            future_profile.get("avoidFutureMovesPreference"),
-            future_profile.get("continuumOfCarePreference"),
-            questionnaire_state.get("futureCarePreference"),
-        )
-    )
-    if (
-        any(token in query for token in ("continuum of care", "continuing care", "life plan", "ccrc"))
-        or any(token in continuum_preference for token in ("required", "preferred", "important", "continuum"))
-    ):
+    if preferences["continuum"]:
         add_nice("CONTINUUM_OF_CARE", "The client wants future care levels available without another move.")
 
     return {

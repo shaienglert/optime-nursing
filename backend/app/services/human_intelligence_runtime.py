@@ -58,115 +58,10 @@ def _explicit_neutral(value: Any) -> bool:
     return _contains_any(value, ("neither", "neutral", "about the same", "no strong preference"))
 
 
-def _community_size_preference(questionnaire: Dict[str, Any]) -> Dict[str, Any]:
-    raw = _nested(questionnaire, "humanIntelligenceV2", "personalityProfile", "communitySizePreference")
-    normalized = _norm(raw)
-    if not normalized:
-        return {"value": "UNKNOWN", "source": "UNKNOWN", "confidence": 0.0}
-    if any(token in normalized for token in ("small", "intimate", "few", "home-like", "home like")):
-        return {"value": "SMALL", "source": "questionnaire.humanIntelligenceV2.personalityProfile.communitySizePreference", "confidence": 1.0}
-    if any(token in normalized for token in ("large", "bigger", "many people", "active community", "large community")):
-        return {"value": "LARGE", "source": "questionnaire.humanIntelligenceV2.personalityProfile.communitySizePreference", "confidence": 1.0}
-    if "medium" in normalized or "mid" in normalized:
-        return {"value": "MEDIUM", "source": "questionnaire.humanIntelligenceV2.personalityProfile.communitySizePreference", "confidence": 1.0}
-    if "no preference" in normalized or "either" in normalized:
-        return {"value": "NO_PREFERENCE", "source": "questionnaire.humanIntelligenceV2.personalityProfile.communitySizePreference", "confidence": 1.0}
-    return {"value": "UNKNOWN", "source": "questionnaire.humanIntelligenceV2.personalityProfile.communitySizePreference", "confidence": 0.5, "raw": _text(raw)}
-
-
-def _recent_bereavement(questionnaire: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
-    family = _nested(questionnaire, "humanIntelligenceV2", "familyProfile") or {}
-    transition = _nested(questionnaire, "humanIntelligenceV2", "transitionRiskProfile") or {}
-    candidates = [
-        (family.get("widowStatus"), "questionnaire.humanIntelligenceV2.familyProfile.widowStatus"),
-        (family.get("lossTiming"), "questionnaire.humanIntelligenceV2.familyProfile.lossTiming"),
-        (transition.get("bereavementStatus"), "questionnaire.humanIntelligenceV2.transitionRiskProfile.bereavementStatus"),
-    ]
-    for value, source in candidates:
-        if _contains_any(value, ("widow", "widower", "bereav", "recent loss", "recently", "spouse died", "spouse passed", "within 6 months", "6-12 months", "within 1 year")):
-            return {"value": "YES", "source": source, "confidence": 1.0}
-    nl = _norm(natural_language_query)
-    if re.search(r"\b(recently\s+widow(?:ed|er)?|recent\s+bereavement|spouse\s+(?:died|passed)|wife\s+(?:died|passed)|husband\s+(?:died|passed))\b", nl):
-        return {"value": "YES", "source": "natural_language", "confidence": 0.95}
-    return {"value": "UNKNOWN", "source": "UNKNOWN", "confidence": 0.0}
-
-
-def _social_transition_priority(questionnaire: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
-    hi = questionnaire.get("humanIntelligenceV2") if isinstance(questionnaire.get("humanIntelligenceV2"), dict) else {}
-    family = hi.get("familyProfile") if isinstance(hi.get("familyProfile"), dict) else {}
-    social = hi.get("socialProfile") if isinstance(hi.get("socialProfile"), dict) else {}
-    transition = hi.get("transitionRiskProfile") if isinstance(hi.get("transitionRiskProfile"), dict) else {}
-    explicit = [
-        (family.get("socialInteractionNeed"), "questionnaire.humanIntelligenceV2.familyProfile.socialInteractionNeed"),
-        (social.get("newFriendsImportance"), "questionnaire.humanIntelligenceV2.socialProfile.newFriendsImportance"),
-        (social.get("preferredSocialIntensity"), "questionnaire.humanIntelligenceV2.socialProfile.preferredSocialIntensity"),
-        (transition.get("lonelinessRisk"), "questionnaire.humanIntelligenceV2.transitionRiskProfile.lonelinessRisk"),
-        (transition.get("socialIsolationConcern"), "questionnaire.humanIntelligenceV2.transitionRiskProfile.socialIsolationConcern"),
-    ]
-    for value, source in explicit:
-        if _explicit_high(value):
-            return {"value": "HIGH", "source": source, "confidence": 1.0}
-    for value, source in explicit:
-        if _explicit_low(value):
-            return {"value": "LOW", "source": source, "confidence": 1.0}
-    for value, source in explicit:
-        if _explicit_neutral(value):
-            return {"value": "NEUTRAL", "source": source, "confidence": 1.0}
-    bereavement = _recent_bereavement(questionnaire, natural_language_query)
-    if bereavement["value"] == "YES":
-        return {
-            "value": "REVIEW_REQUIRED",
-            "source": bereavement["source"],
-            "confidence": bereavement["confidence"],
-            "reason": "Recent bereavement makes social and transition fit material but does not determine preferred social intensity.",
-        }
-    return {"value": "UNKNOWN", "source": "UNKNOWN", "confidence": 0.0}
-
-
-def _independence_priority(questionnaire: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
-    profile = _nested(questionnaire, "humanIntelligenceV2", "independenceProfile") or {}
-    values = [profile.get("drivingImportance"), profile.get("cookingImportance"), profile.get("abilityToLeaveIndependently"), profile.get("hostingFamilyImportance")]
-    if any(_explicit_high(value) for value in values):
-        return {"value": "HIGH", "source": "questionnaire.humanIntelligenceV2.independenceProfile", "confidence": 1.0}
-    nl = _norm(natural_language_query)
-    if any(token in nl for token in ("still independent", "independent", "still mobile", "drives himself", "drives herself", "mobile")):
-        return {"value": "HIGH", "source": "natural_language", "confidence": 0.8}
-    return {"value": "UNKNOWN", "source": "UNKNOWN", "confidence": 0.0}
-
-
-def _transition_participation(questionnaire: Dict[str, Any]) -> Dict[str, Any]:
-    transition = _nested(questionnaire, "humanIntelligenceV2", "transitionRiskProfile") or {}
-    family_culture = _nested(questionnaire, "humanIntelligenceV2", "familyCultureProfile") or {}
-    raw = transition.get("attitudeTowardMove")
-    normalized = _norm(raw)
-    if normalized:
-        if any(
-            token in normalized
-            for token in (
-                "positive",
-                "involved",
-                "his choice",
-                "her choice",
-                "ready",
-                "wants to move",
-                "want to move",
-                "does not want to remain alone",
-                "doesn't want to remain alone",
-                "does not want to stay alone",
-            )
-        ):
-            return {"value": "PARTICIPATING", "source": "questionnaire.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove", "confidence": 1.0}
-        if any(token in normalized for token in ("cautious", "open", "uncertain")):
-            return {"value": "CAUTIOUS", "source": "questionnaire.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove", "confidence": 1.0}
-        if any(token in normalized for token in ("reluctant", "pushed", "forced", "against")):
-            return {"value": "LOW_PARTICIPATION_RISK", "source": "questionnaire.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove", "confidence": 1.0}
-        if any(token in normalized for token in ("not sure", "unsure")):
-            return {"value": "ACKNOWLEDGED_UNKNOWN", "source": "questionnaire.humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove", "confidence": 1.0}
-    decision_role = _norm(family_culture.get("decisionRole"))
-    if decision_role == "resident decides":
-        return {"value": "PARTICIPATING", "source": "questionnaire.humanIntelligenceV2.familyCultureProfile.decisionRole", "confidence": 0.9}
-    return {"value": "UNKNOWN", "source": "UNKNOWN", "confidence": 0.0}
-
+from app.services.intake_interpretation import (
+    _community_size_preference, _recent_bereavement, _social_transition_priority,
+    _independence_priority, _transition_participation,
+)
 
 def _question(key: str, text: str, reason: str, dimensions: List[str], options: List[str], *, impact: str = "HIGH") -> Dict[str, Any]:
     return {
@@ -180,13 +75,15 @@ def _question(key: str, text: str, reason: str, dimensions: List[str], options: 
     }
 
 
-def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
-    questionnaire = questionnaire_state if isinstance(questionnaire_state, dict) else {}
-    community_size = _community_size_preference(questionnaire)
-    bereavement = _recent_bereavement(questionnaire, natural_language_query)
-    social_transition = _social_transition_priority(questionnaire, natural_language_query)
-    independence = _independence_priority(questionnaire, natural_language_query)
-    transition_participation = _transition_participation(questionnaire)
+def build_human_intelligence_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, intake_facts=None) -> Dict[str, Any]:
+    from app.services.intake_interpretation import extract_intake_facts
+    facts = intake_facts if intake_facts is not None else extract_intake_facts(questionnaire_state, natural_language_query)
+    human = facts["human"]
+    community_size = human["community_size_preference"]
+    bereavement = human["recent_bereavement"]
+    social_transition = human["social_transition_priority"]
+    independence = human["independence_priority"]
+    transition_participation = human["decision_participation"]
 
     adaptive_questions: List[Dict[str, Any]] = []
     if social_transition["value"] in {"HIGH", "REVIEW_REQUIRED"} and community_size["value"] == "UNKNOWN":

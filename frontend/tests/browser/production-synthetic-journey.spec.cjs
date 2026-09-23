@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { scenarios, answerFor } = require('./launch-scenarios.cjs');
+const { scenarios, answerFor } = require(process.env.OOMNIK_EXPECTED_MARKET === 'synthetic-pilot' ? './pilot-live-scenarios.cjs' : './launch-scenarios.cjs');
 const { validateLaunchContract } = require('./launch-contract.cjs');
 
 const chosen = process.env.OOMNIK_SCENARIO || 'memory_mom';
@@ -13,6 +13,21 @@ test.describe('production synthetic journey', () => {
     const scenario = scenarios[chosen];
     if (!scenario) throw new Error(`Unknown scenario: ${chosen}`);
 
+    const pilot = process.env.OOMNIK_EXPECTED_MARKET === 'synthetic-pilot';
+    if (pilot) {
+      const response = await page.request.get(baseUrl + '/api/backend/facilities');
+      expect(response.ok()).toBe(true);
+      const facilities = await response.json();
+      expect(facilities).toHaveLength(200);
+      expect(facilities.every(f => /^PILOT-NV-/.test(f.cms_id) && f.state === 'NV')).toBe(true);
+    }
+    let reviewedInterpretation;
+    page.on('response', async response => {
+      if (response.url().includes('/decision-engine/patient-needs-profile') && response.ok()) {
+        const profile = await response.json().catch(() => ({}));
+        if (profile.intake_profile_id) reviewedInterpretation = profile.interpretation_id;
+      }
+    });
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')
         && response.request().method() === 'POST',
@@ -36,7 +51,7 @@ test.describe('production synthetic journey', () => {
 
     let transientRetries = 0;
     let clarificationRetries = 0;
-    for (let step = 0; step < 9; step += 1) {
+    for (let step = 0; step < 20; step += 1) {
       await page.waitForFunction(
         () => /\/results/.test(window.location.pathname)
           || Boolean(document.querySelector('#decision-answer'))
@@ -110,6 +125,15 @@ test.describe('production synthetic journey', () => {
     const semantic = recommendationPayload.patient_needs_profile?.decision_intelligence?.human_intelligence?.semantic_ai
       || recommendationPayload.decision_intelligence?.human_intelligence?.semantic_ai;
     expect(semantic?.status).toBe('CONSULTED_AND_VALIDATED');
+    if (pilot) {
+      expect(reviewedInterpretation).toMatch(/^[a-f0-9]{64}$/);
+      expect(recommendationPayload.patient_needs_profile?.interpretation_id).toBe(reviewedInterpretation);
+      expect(recommendationPayload.total_candidates_scored).toBe(200);
+      for (const row of recommendationPayload.results || []) {
+        expect(row.canonical_facility_id).toMatch(/^PILOT-NV-/);
+        expect(row.synthetic_pilot).toBe(true);
+      }
+    }
     const fs = require('node:fs');
     fs.mkdirSync('test-results', { recursive: true });
     fs.writeFileSync(`test-results/${chosen}-decision.json`, JSON.stringify(recommendationPayload, null, 2));
