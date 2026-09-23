@@ -254,7 +254,7 @@ export default function HomePage() {
               {heroStep === "age" && (
                 <div>
                   <button type="button" onClick={() => setHeroStep("relationship")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change who this is for</button>
-                  <div className="mt-4 flex items-start gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#079ff2] font-semibold text-white">O</div><div className="max-w-[85%] rounded-[1.6rem] rounded-tl-md bg-[#eaf6fd] px-5 py-4"><h2 className="text-2xl font-medium text-[#183f55]">Thanks. About how old is {relationshipLabel}?</h2></div></div>
+                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">Thanks. About how old is {relationshipLabel}?</h2>
                   <div className="mt-3">
                     {AGE_OPTIONS.map((option) => <ChoiceLink key={option} label={option} onClick={() => chooseAge(option)} />)}
                   </div>
@@ -264,7 +264,7 @@ export default function HomePage() {
               {heroStep === "assistance" && (
                 <div>
                   <button type="button" onClick={() => setHeroStep("age")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change the age</button>
-                  <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#22332d] sm:text-4xl">What kind of help is needed today?</h2>
+                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">What kind of help is needed today?</h2>
                   <p className="mt-3 max-w-2xl text-base leading-7 text-[#60716a]">Choose every answer that applies, then continue.</p>
                   <div className="mt-3">
                     {ASSISTANCE_OPTIONS.map((option) => (
@@ -285,7 +285,7 @@ export default function HomePage() {
               {heroStep === "memory" && (
                 <div>
                   <button type="button" onClick={() => setHeroStep("assistance")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change the support needed</button>
-                  <div className="mt-4 flex items-start gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#079ff2] font-semibold text-white">O</div><div className="max-w-[85%] rounded-[1.6rem] rounded-tl-md bg-[#eaf6fd] px-5 py-4"><h2 className="text-2xl font-medium text-[#183f55]">One more thing before we continue — have you noticed any changes in memory lately?</h2></div></div>
+                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">One more thing before we continue — have you noticed any changes in memory lately?</h2>
                   <div className="mt-3">
                     {MEMORY_OPTIONS.map((option) => (
                       <ChoiceLink key={option.label} label={option.label} onClick={() => chooseMemory(option.value)} />
