@@ -46,6 +46,14 @@ test.describe('production synthetic journey', () => {
       );
       if (/\/results/.test(page.url())) break;
 
+      if (/\/intake-confirmation/.test(page.url())) {
+        const confirm = page.getByRole('button', { name: /I confirm.*show recommendations/i });
+        await expect(confirm).toBeEnabled({ timeout: 90_000 });
+        await confirm.click();
+        await expect(page).toHaveURL(/\/results/, { timeout: 90_000 });
+        break;
+      }
+
       const prompt = await page.locator('main').innerText({ timeout: 45_000 });
       const choices = page.locator('main button');
       const continueButton = page.getByRole('button', { name: /^Continue$/ });
@@ -93,12 +101,18 @@ test.describe('production synthetic journey', () => {
     }
 
     await expect(page).toHaveURL(/\/results/, { timeout: 90_000 });
-    await expect(page.getByText('OPTIME results')).toBeVisible({ timeout: 120_000 });
+    await expect(page.getByText('OOmnik results', { exact: true })).toBeVisible({ timeout: 120_000 });
     const resultsText = await page.locator('main').innerText();
     console.log('OOMNIK_RESULTS_BEGIN');
     console.log(resultsText);
     console.log('OOMNIK_RESULTS_END');
     const recommendationPayload = await (await recommendationResponse).json();
+    const semantic = recommendationPayload.patient_needs_profile?.decision_intelligence?.human_intelligence?.semantic_ai
+      || recommendationPayload.decision_intelligence?.human_intelligence?.semantic_ai;
+    expect(semantic?.status).toBe('CONSULTED_AND_VALIDATED');
+    const fs = require('node:fs');
+    fs.mkdirSync('test-results', { recursive: true });
+    fs.writeFileSync(`test-results/${chosen}-decision.json`, JSON.stringify(recommendationPayload, null, 2));
     console.log('OOMNIK_DECISION_JSON_BEGIN');
     console.log(JSON.stringify({
       result_count: recommendationPayload.result_count,
