@@ -1,6 +1,17 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('node:fs');
 const path = require('node:path');
+const zlib = require('node:zlib');
+
+// Independent fixture oracle: every case below explicitly needs ADL and medication
+// support. A ceiling below every such facility's price MUST produce no matches.
+const fixtureEvidence = JSON.parse(zlib.gunzipSync(Buffer.from(fs.readFileSync(path.join(__dirname, '../../../database/synthetic_pilot/facility_parameter_evidence.json.gz.b64'), 'utf8'), 'base64'))).records;
+const fixtureFacts = new Map();
+for (const row of fixtureEvidence) {
+  if (!fixtureFacts.has(row.canonical_facility_id)) fixtureFacts.set(row.canonical_facility_id, {});
+  fixtureFacts.get(row.canonical_facility_id)[row.parameter_id] = row.value;
+}
+const minimumCarePrice = Math.min(...[...fixtureFacts.values()].filter(row => row.adl_support === 'YES' && row.medication_support === 'YES').map(row => row.current_price));
 
 const scenarioStart = Number(process.env.OOMNIK_SCENARIO_START || 0);
 const scenarioCount = Number(process.env.OOMNIK_SCENARIO_COUNT || 1);
@@ -125,10 +136,18 @@ test.describe('real synthetic-pilot customer journey', () => {
     if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
-    expect(results.length).toBeGreaterThan(0);
+    const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
+    expect(budgetNeed.desired_value).toBe(scenario.budget);
+    expect(Number.isFinite(minimumCarePrice)).toBe(true);
+    if (scenario.budget < minimumCarePrice) {
+      expect(results).toHaveLength(0);
+      await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
+    } else {
+      expect(results.length).toBeGreaterThan(0);
+      await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
+    }
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);
     expect(results.every((item) => String(item.canonical_facility_id || '').startsWith('PILOT-NV-'))).toBe(true);
-    await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
     expect(errors.filter((message) => !/favicon/i.test(message))).toEqual([]);
 
     console.log('OOMNIK_REAL_PILOT_RESULT_BEGIN');
