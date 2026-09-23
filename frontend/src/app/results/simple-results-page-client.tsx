@@ -256,6 +256,8 @@ export function SimpleResultsPageClient() {
                 : "No community is ready to recommend from this search. You can review your answers or return to the conversation."}
             </div>
           )}
+          <p className="mt-5 text-lg leading-8 text-[#53635d]">Confirm current pricing and availability before any move.</p>
+          {/medicaid/i.test(naturalLanguageQuery) ? <p className="mt-2 text-lg leading-8 text-[#53635d]">Medicaid eligibility and each community’s participation must be confirmed separately.</p> : null}
         </section>
 
         {(response.price_research_candidates || []).length > 0 ? (
