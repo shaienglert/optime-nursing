@@ -268,7 +268,7 @@ export function StructuredIntake() {
           </Section>
 
           <Section title="Let’s talk about timing and budget">
-            <label className="block text-sm font-semibold">What monthly budget would feel comfortable? ${draft.budget.toLocaleString()}<input type="range" min="3000" max="20000" step="100" value={draft.budget} onChange={(event) => update({ budget: Number(event.target.value) })} className="mt-3 block w-full accent-[#397a69]" /></label>
+            <label className="block text-sm font-semibold">What monthly budget would feel comfortable?<input type="number" min="1" step="1" placeholder="Monthly amount in dollars" value={draft.budget > 0 ? draft.budget : ""} onChange={(event) => update({ budget: Math.max(0, Number(event.target.value)) })} className="mt-3 block w-full rounded-lg border p-3" /></label>
             <div><p className="text-sm font-semibold">When would you ideally like the move to happen?</p><Choices options={["Immediately", "Within 30 days", "1-3 months", "3-6 months", "Planning ahead", "Not sure"]} value={draft.moveTiming} onChange={(value) => update({ moveTiming: value })} /></div>
             <div><p className="text-sm font-semibold">How do they feel about the idea of moving?</p><Choices options={["Wants to move", "Positive", "Cautious but open", "Anxious", "Resistant", "Not sure"]} value={moveAttitude} onChange={setMoveAttitude} /></div>
           </Section>
@@ -308,7 +308,7 @@ export function StructuredIntake() {
               <p><strong>Daily support:</strong> {assistance.join(", ") || "Missing"}</p>
               <p><strong>Memory:</strong> {draft.memoryStatus || "Missing"}</p>
               <p><strong>Medical needs:</strong> {medical.hasOngoingMedicalNeeds === "No" ? "None reported" : medical.needs.join(", ") || "Missing"}</p>
-              <p><strong>Budget:</strong> ${draft.budget.toLocaleString()} monthly</p>
+              <p><strong>Budget:</strong> {draft.budget > 0 ? `$${draft.budget.toLocaleString()} monthly` : "Not provided"}</p>
               <p><strong>Move timing:</strong> {draft.moveTiming || "Missing"}</p>
               <p><strong>Priorities:</strong> {draft.moveLossConcerns.join(", ") || "Missing"}</p>
               <p><strong>Parking:</strong> {draft.parkingRequirement || "Missing"}</p>

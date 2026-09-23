@@ -22,6 +22,7 @@ from app.services.learning_center_advisor import build_learning_center_advice
 from app.services.canonical_gap_policy import normalize_gap_key
 
 SEMANTIC_AI_SYSTEM_RULES = [
+    "Supervision around the clock is not Nursing supervision or Skilled nursing care. Medication reminders are not Complex medication management. Rehabilitation alone does not establish speech therapy. Preserve only explicitly established clinical facts.",
     "Understand the client before recommending anything.",
     "Account for every meaningful client statement.",
     "Separate explicit facts from inferences.",
@@ -239,6 +240,41 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
 
 
+def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    """Enforce the existing explicit-fact rule at the narrative/structured boundary.
+
+    Ordinary supervision/reminders must not become higher-acuity enum values.
+    Keep the original statements for accounting; omitted inferred fields are traced.
+    """
+    patch = result.get("questionnaire_patch")
+    if not isinstance(patch, dict):
+        return result
+    signals = (((state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
+    source = " ".join([str(user_text or "")] + [str(s.get("answer") or "") for s in signals if isinstance(s, dict)]).lower()
+    # Exclude explicit negative clauses from positive grounding. Structured client
+    # selections remain authoritative and are never removed by this patch guard.
+    positive = re.sub(r"\b(?:no|without|not|does not need|doesn't need|do not need|don't need)\s+(?:any\s+)?(?:skilled\s+)?(?:nursing|nurses?|rn|lpn|complex\s+(?:medication|medicine|meds)\s+(?:management|regimens?))\b", "", source)
+    selected = (state.get("medicalCareProfile") or {}).get("needs") or []
+    nursing = "Nursing supervision" in selected or "skilled nursing" in str(state.get("assistanceLevel") or "").lower() or bool(re.search(r"\b(nursing|nurse|nurses|rn|lpn)\b", positive))
+    complex_meds = "Complex medication management" in selected or bool(re.search(r"\bcomplex\s+(?:medication|medicine|meds)\s+(?:management|regimen|regimens)\b", positive))
+    omitted = []
+    medical = patch.get("medicalCareProfile")
+    if isinstance(medical, dict) and isinstance(medical.get("needs"), list):
+        allowed = []
+        for need in medical["needs"]:
+            if (need == "Nursing supervision" and not nursing) or (need == "Complex medication management" and not complex_meds):
+                omitted.append(f"medicalCareProfile.needs:{need}")
+            else:
+                allowed.append(need)
+        medical["needs"] = allowed
+    if patch.get("assistanceLevel") == "Skilled nursing care" and not nursing:
+        del patch["assistanceLevel"]
+        omitted.append("assistanceLevel:Skilled nursing care")
+    if omitted:
+        result["clinical_fact_validation"] = {"omitted_unsupported_fields": omitted, "reason": "EXPLICIT_CLIENT_EVIDENCE_REQUIRED"}
+    return result
+
+
 def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
     patch = result.get("questionnaire_patch")
     if patch is None:
@@ -405,21 +441,60 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
     return False
 
 
+_DIMENSION_BY_FACT_KEY = {
+    "monthly_budget": "monthly_affordability",
+    "monthly_affordability": "monthly_affordability",
+    "budget": "monthly_affordability",
+    "market_location": "market_location",
+    "location": "market_location",
+    "city_or_metro_area": "market_location",
+}
+
+
+def _answered_minimum_dimensions(questionnaire_state: Dict[str, Any]) -> set[str]:
+    """Minimum dimensions the client has already been asked about and has answered.
+
+    The readiness guardian's own rule is that "explicit adaptive answers, including
+    acknowledged unknowns, resolve the interview blocker without fabricating a value".
+    Without this, an answer that carries no parsable amount ("Not sure") left the
+    dimension permanently unknown while the AI — correctly — reported READY, so the
+    readiness guard below raised on every attempt and the interview could never be
+    completed or retried out of.
+    """
+    answered: set[str] = set()
+    signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
+    for item in signals:
+        if not isinstance(item, dict) or not str(item.get("answer") or "").strip():
+            continue
+        fact_key = str(item.get("targetFactKey") or item.get("target_fact_key") or "").strip()
+        if not fact_key:
+            match = re.search(r"Target fact:\s*([A-Za-z0-9_]+)", str(item.get("impactExplanation") or ""))
+            fact_key = match.group(1) if match else ""
+        dimension = _DIMENSION_BY_FACT_KEY.get(fact_key.strip().lower())
+        if dimension:
+            answered.add(dimension)
+    return answered
+
+
 def _minimum_dimension_status(user_text: str, questionnaire_state: Dict[str, Any]) -> Dict[str, bool]:
     text = str(user_text or "").lower()
     signals = (((questionnaire_state.get("humanIntelligenceV2") or {}).get("scoringEngine") or {}).get("adaptiveSignals") or [])
     signal_text = " ".join(f"{str(item.get('impactExplanation') or '')} {str(item.get('answer') or '')}" for item in signals if isinstance(item, dict)).lower()
     combined = f"{text} {signal_text}"
+    answered = _answered_minimum_dimensions(questionnaire_state)
     explicit_location = any(str(questionnaire_state.get(key) or "").strip() for key in ("locationCity", "city", "referenceLocationValue"))
     text_location = bool(re.search(r"\b(las vegas|north las vegas|henderson|nevada)\b", combined))
     raw_budget = questionnaire_state.get("budget")
-    numeric_budget = isinstance(raw_budget, (int, float)) and float(raw_budget) > 0 and float(raw_budget) != 7000
+    numeric_budget = isinstance(raw_budget, (int, float)) and float(raw_budget) > 0
     text_budget = bool(re.search(
         r"(?:budget|monthly|per month|afford|cost|spend|pay)[^\n]{0,50}\$?\s*\d[\d,]{2,}(?:\.\d+)?|\$\s*\d[\d,]{2,}(?:\.\d+)?",
         combined,
     ))
     explicit_no_limit = bool(re.search(r"\b(no budget limit|no monthly limit|do not want to set a budget|don't want to set a budget)\b", combined))
-    return {"market_location": explicit_location or text_location, "monthly_affordability": numeric_budget or text_budget or explicit_no_limit}
+    return {
+        "market_location": explicit_location or text_location or "market_location" in answered,
+        "monthly_affordability": numeric_budget or text_budget or explicit_no_limit or "monthly_affordability" in answered,
+    }
 
 
 def _has_blocking_question(result: Dict[str, Any]) -> bool:
@@ -488,6 +563,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     active_transport = transport or _default_transport
     result = active_transport(payload)
     def validate_live_packet(packet: Dict[str, Any]) -> Dict[str, Any]:
+        packet = _ground_clinical_patch(packet, user_text, questionnaire_state)
         packet = _repair_live_readiness_mismatch(packet)
         # Validation normalizes advisory readiness, so check minimum dimensions
         # on the validated packet as well as question usability and repetition.
@@ -533,7 +609,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             result = validate_live_packet(active_transport(repair_payload))
             result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}
     else:
-        result = _validate_result(result)
+        result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state))
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
 

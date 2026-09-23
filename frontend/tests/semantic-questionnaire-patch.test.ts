@@ -16,6 +16,11 @@ function blankState(): QuestionnaireState {
 }
 
 describe("explicit narrative facts reach confirmation", () => {
+  it("does not restore an earlier amount after an acknowledged unknown budget answer", () => {
+    const initial = blankState();
+    initial.humanIntelligenceV2.scoringEngine = { adaptiveSignals: [{ answer: "Not sure", impactExplanation: "Target fact: monthly_budget" }] } as never;
+    expect(applySemanticQuestionnairePatch(initial, { budget: 7000 }).budget).toBe(0);
+  });
   it("retains coverage, timing, exact address and a non-preset radius", () => {
     const initial = blankState();
     const result = applySemanticQuestionnairePatch(initial, {

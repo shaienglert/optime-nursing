@@ -6,6 +6,43 @@ type ExtendedQuestionnaireState = QuestionnaireState & {
   entranceFeeTolerance?: string;
 };
 
+export type MonthlyBudgetAnswer = {
+  /** Upper bound in dollars per month, or undefined when the client stated no usable ceiling. */
+  budget?: number;
+  /** The client stated a floor ("Above $12,000"), so no upper bound may be inferred. */
+  noUpperLimit: boolean;
+  /** The client answered but supplied no amount ("Not sure"). Unknown, never a default. */
+  acknowledgedUnknown: boolean;
+};
+
+/**
+ * Interpret an answer to the `monthly_budget` question.
+ *
+ * `current_price.desired_value` is consumed downstream strictly as an inclusive upper
+ * bound (`price <= budget`), so a range must yield its TOP value, and a floor-style
+ * answer must yield no bound at all. Concatenating the digits of a range — the previous
+ * behaviour — turned "$5,000-$8,000" into a $50,008,000 ceiling, which silently disabled
+ * every budget comparison in the pipeline.
+ *
+ * An answer carrying no amount is an acknowledged unknown: it is never converted into a
+ * default value, per the material-unknown policy.
+ */
+export function parseMonthlyBudgetAnswer(answer: string): MonthlyBudgetAnswer {
+  const normalized = String(answer ?? "").trim().toLowerCase();
+  const amounts = (normalized.match(/\d[\d,]*(?:\.\d+)?/g) ?? [])
+    .map((token) => Number(token.replace(/,/g, "")))
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  if (amounts.length === 0) return { noUpperLimit: false, acknowledgedUnknown: true };
+
+  // "Above $12,000" / "over $12,000" / "$12,000+" state a floor, not a ceiling.
+  if (/\b(above|over|more than|at least|greater than)\b/.test(normalized) || /\d\s*\+/.test(normalized)) {
+    return { noUpperLimit: true, acknowledgedUnknown: false };
+  }
+
+  return { budget: Math.max(...amounts), noUpperLimit: false, acknowledgedUnknown: false };
+}
+
 export function canonicalizeAdaptiveFact(state: QuestionnaireState, targetFactKey: string, answer: string): QuestionnaireState {
   const next = state as ExtendedQuestionnaireState;
   const normalized = answer.trim().toLowerCase();
@@ -18,8 +55,9 @@ export function canonicalizeAdaptiveFact(state: QuestionnaireState, targetFactKe
       next.referenceLocationType = "City or metro area";
       break;
     case "monthly_budget": {
-      const numericBudget = Number(answer.replace(/[^0-9.]/g, ""));
-      if (Number.isFinite(numericBudget) && numericBudget > 0) next.budget = numericBudget;
+      const parsed = parseMonthlyBudgetAnswer(answer);
+      // An explicit replacement without a ceiling supersedes any old amount.
+      next.budget = parsed.budget ?? 0;
       break;
     }
     case "community_size_preference":
