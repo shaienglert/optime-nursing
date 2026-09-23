@@ -127,7 +127,15 @@ def _pilot_parameter_payload(row: Dict[str, Any]) -> Dict[str, Any]:
         return (fact.get("verification_status") == "VERIFIED"
                 and (fact.get("provenance") or {}).get("synthetic_pilot") is True
                 and str(fact.get("value") or "").upper() == "YES")
-    payload = {"synthetic_pilot": True, "source": "VERIFIED_SYNTHETIC_PILOT_PARAMETERS"}
+    payload = {
+        "synthetic_pilot": True, "source": "VERIFIED_SYNTHETIC_PILOT_PARAMETERS",
+        "verified_parameters": {
+            parameter: fact["value"] for parameter, fact in capabilities.items()
+            if fact.get("verification_status") == "VERIFIED"
+            and (fact.get("provenance") or {}).get("synthetic_pilot") is True
+            and fact.get("value") not in (None, "", "UNKNOWN")
+        },
+    }
     for parameter, key in {
         "adl_support": "adl_support_verified",
         "medication_support": "medication_support_verified",

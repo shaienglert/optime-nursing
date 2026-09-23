@@ -84,3 +84,11 @@ def test_derived_nursing_context_does_not_become_an_unstated_medication_must():
     intent = build_client_intent({}, '', strategy, {}, intake_facts=record)
     assert 'MEDICATION_SUPPORT_AVAILABLE' not in {m['key'] for m in intent['must_haves']}
     assert record['delivery']['medication_support_needed'] is False
+
+
+def test_matching_cannot_silently_replace_confirmed_ai_meaning(monkeypatch):
+    monkeypatch.setenv('OPTIME_SEMANTIC_AI_ENABLED', '0')
+    profile = runtime.build_patient_needs_profile({}, 'Mother needs help bathing.')
+    profile['decision_intelligence']['human_intelligence']['semantic_ai']['result'] = {'preferences': ['Invented preference']}
+    with pytest.raises(ValueError, match='SEMANTIC_RESULT_CHANGED'):
+        facts.validate_interpretation(profile)

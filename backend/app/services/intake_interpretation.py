@@ -673,3 +673,7 @@ def validate_interpretation(profile):
     for key in ("living_strategy", "client_intent", "care_delivery_signals", "care_partner_requirements"):
         if profile.get(key) != record.get(key):
             raise ValueError("INTAKE_INTERPRETATION_PROJECTION_CHANGED:" + key)
+
+    semantic = ((profile.get("decision_intelligence") or {}).get("human_intelligence") or {}).get("semantic_ai") or {}
+    if semantic.get("result") != (record.get("semantic_validation") or {}).get("result"):
+        raise ValueError("INTAKE_INTERPRETATION_SEMANTIC_RESULT_CHANGED")
