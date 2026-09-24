@@ -58,9 +58,7 @@ function IntakeConfirmationContent() {
     router.replace(buildResultsUrl(state, requestedPathname));
   }, [confirmationRequested, requestedDestination, router, state]);
 
-  function addContext() {\n    const extra = additionalContext.trim();\n    if (!extra) return;\n    setState((current) => ({ ...current, notes: [current.notes?.trim(), extra].filter(Boolean).join("
-
-"), questionnaireCompletion: { ...current.questionnaireCompletion, clientSummaryConfirmed: false, confirmedAt: "" } }));\n    setAdditionalContext("");\n    setReviewed(null);\n    setRetry((value) => value + 1);\n  }\n\n  function confirm() {
+  function addContext() {\n    const extra = additionalContext.trim();\n    if (!extra) return;\n    setState((current) => ({ ...current, notes: [current.notes?.trim(), extra].filter(Boolean).join("\\n\\n"), questionnaireCompletion: { ...current.questionnaireCompletion, clientSummaryConfirmed: false, confirmedAt: "" } }));\n    setAdditionalContext("");\n    setReviewed(null);\n    setRetry((value) => value + 1);\n  }\n\n  function confirm() {
     if (reviewError || reviewed?.key !== inputKey || !reviewed.profile.intake_profile_id) return;
     try { saveConfirmedIntake(reviewed.profile.intake_profile_id, inputKey); }
     catch (error) { setReviewError(error instanceof Error ? error.message : "Unable to save your confirmation."); return; }
