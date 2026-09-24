@@ -21,7 +21,8 @@ function IntakeConfirmationContent() {
   const [confirmationRequested, setConfirmationRequested] = useState(false);
   const [reviewed, setReviewed] = useState<{ key: string; profile: PatientNeedsProfile } | null>(null);
   const [reviewError, setReviewError] = useState<string | null>(null);
-  const [retry, setRetry] = useState(0);\n  const [additionalContext, setAdditionalContext] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [additionalContext, setAdditionalContext] = useState("");
   const inputKey = intakeInputKey(state as unknown as Record<string, unknown>, state.notes || "");
   const requestedDestination = searchParams.get("next")?.startsWith("/results") ? String(searchParams.get("next")) : "/results";
 
@@ -58,7 +59,16 @@ function IntakeConfirmationContent() {
     router.replace(buildResultsUrl(state, requestedPathname));
   }, [confirmationRequested, requestedDestination, router, state]);
 
-  function addContext() {\n    const extra = additionalContext.trim();\n    if (!extra) return;\n    setState((current) => ({ ...current, notes: [current.notes?.trim(), extra].filter(Boolean).join("\n\n"), questionnaireCompletion: { ...current.questionnaireCompletion, clientSummaryConfirmed: false, confirmedAt: "" } }));\n    setAdditionalContext("");\n    setReviewed(null);\n    setRetry((value) => value + 1);\n  }\n\n  function confirm() {
+  function addContext() {
+    const extra = additionalContext.trim();
+    if (!extra) return;
+    setState((current) => ({ ...current, notes: [current.notes?.trim(), extra].filter(Boolean).join("\n\n"), questionnaireCompletion: { ...current.questionnaireCompletion, clientSummaryConfirmed: false, confirmedAt: "" } }));
+    setAdditionalContext("");
+    setReviewed(null);
+    setRetry((value) => value + 1);
+  }
+
+  function confirm() {
     if (reviewError || reviewed?.key !== inputKey || !reviewed.profile.intake_profile_id) return;
     try { saveConfirmedIntake(reviewed.profile.intake_profile_id, inputKey); }
     catch (error) { setReviewError(error instanceof Error ? error.message : "Unable to save your confirmation."); return; }
