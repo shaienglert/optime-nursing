@@ -36,3 +36,10 @@ and budget.
 - data
 - docs
 - scripts
+- reports
+
+## Documentation
+
+Start with the [Documentation Library](docs/README.md). It maps the product
+structure, governing rules, active work, implementation guides, data evidence,
+and historical reports, and explains which documents are authoritative.
