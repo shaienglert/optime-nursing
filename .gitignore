@@ -12,3 +12,10 @@ backend/app/data/
 *.csv
 *.parquet
 reports/email/startup_test_state.json
+
+# Regenerated on app startup, including by a local test run. The dated archive files and
+# the recovery-state file are pure output; they are not deliverables.
+database/system_recovery_state.json
+reports/daily/archive/executive_intelligence_report_*.html
+reports/daily/archive/executive_intelligence_report_*.json
+reports/daily/archive/executive_intelligence_report_*.md
