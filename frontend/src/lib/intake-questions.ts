@@ -215,7 +215,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "search state",
     visible: () => true,
     get: ({ draft }) => draft.searchState,
-    set: (context, value) => setDraft(context, { searchState: text(value) }),
+    set: (context, value) => {
+      const nextState = text(value);
+      if (nextState === context.draft.searchState) return setDraft(context, { searchState: nextState });
+      return setDraft(context, {
+        searchState: nextState,
+        locationImportant: "",
+        referenceAddress: "",
+        referenceLocationValue: "",
+        maximumDistanceMiles: "",
+        customDistanceMiles: "",
+      });
+    },
   },
   {
     id: "assistance",
@@ -773,7 +784,16 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "location importance",
     visible: () => true,
     get: ({ draft }) => draft.locationImportant,
-    set: (context, value) => setDraft(context, { locationImportant: text(value) }),
+    set: (context, value) => {
+      const important = text(value);
+      return setDraft(context, important === "No" ? {
+        locationImportant: important,
+        referenceAddress: "",
+        referenceLocationValue: "",
+        maximumDistanceMiles: "",
+        customDistanceMiles: "",
+      } : { locationImportant: important });
+    },
   },
   {
     id: "referenceAddress",
@@ -827,6 +847,13 @@ export function missingQuestions(context: IntakeContext): IntakeQuestion[] {
  */
 export function buildSubmission(context: IntakeContext): QuestionnaireState {
   const { draft, extras } = context;
+  const locationScopedDraft = draft.locationImportant === "Yes" ? draft : {
+    ...draft,
+    referenceAddress: "",
+    referenceLocationValue: "",
+    maximumDistanceMiles: "",
+    customDistanceMiles: "",
+  };
   const mobility = needsMobilityFollowUp(context);
   const memory = hasMemoryConcern(context);
   const medicalDetails = needsMedicalDetails(context);
