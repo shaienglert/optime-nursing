@@ -94,6 +94,9 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
         ...source.needs.map(String).map((value) => value.trim()).filter(Boolean),
       ]));
     }
+    if (Array.isArray(source.rehabServicesNeeded) && next.medicalCareProfile.rehabServicesNeeded.length === 0) {
+      next.medicalCareProfile.rehabServicesNeeded = source.rehabServicesNeeded.map(String).map((value) => value.trim()).filter(Boolean);
+    }
   }
 
   const human = patch.humanIntelligenceV2;
