@@ -97,6 +97,7 @@ export type HumanIntelligenceV2 = {
   };
   languageProfile: {
     preferredSpokenLanguage: string;
+    processLanguage: string;
     nativeLanguage: string;
     medicalDiscussionLanguage: string;
     socialInteractionLanguage: string;
@@ -305,6 +306,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
     },
     languageProfile: {
       preferredSpokenLanguage: "",
+      processLanguage: "",
       nativeLanguage: "",
       medicalDiscussionLanguage: "",
       socialInteractionLanguage: "",
