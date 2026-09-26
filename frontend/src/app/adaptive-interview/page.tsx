@@ -79,7 +79,7 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
     const medicalStringKeys: Array<keyof QuestionnaireState["medicalCareProfile"]> = [
       "hasOngoingMedicalNeeds", "mobilityMethod", "transferAssistance", "recentFalls",
       "dialysisFrequency", "dialysisCenter", "dialysisTransportation", "oxygenUse",
-      "woundCareFrequency", "complexConditionDetails", "physicianCoordination",
+      "woundCareFrequency", "complexConditionDetails", "complexConditionSupportLevel", "physicianCoordination",
     ];
     for (const key of medicalStringKeys) {
       const value = source[key];
