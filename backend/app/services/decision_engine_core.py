@@ -1793,6 +1793,13 @@ def _canonical_state(value: Any) -> str:
     raw = str(value or "").strip().upper()
     return _STATE_ALIASES.get(raw, raw)
 
+_CITY_STATES = {
+    "LAS VEGAS": "NEVADA", "HENDERSON": "NEVADA", "NORTH LAS VEGAS": "NEVADA",
+    "MIAMI": "FLORIDA", "NORTH MIAMI": "FLORIDA", "HIALEAH": "FLORIDA",
+    "DORAL": "FLORIDA", "AVENTURA": "FLORIDA", "HOMESTEAD": "FLORIDA",
+    "CORAL GABLES": "FLORIDA",
+}
+
 _CITY_COORDINATES = {
     "LAS VEGAS": (36.1716, -115.1391),
     "HENDERSON": (36.0395, -114.9817),
@@ -1911,6 +1918,7 @@ def run_patient_decision_engine(
     requested_city = profile.get("location_city")
     requested_state = _canonical_state(questionnaire_state.get("searchState"))
     radius_constraint = _requested_radius(questionnaire_state, profile)
+    city_state_conflict = bool(requested_state and requested_city and _CITY_STATES.get(str(requested_city).upper()) and _CITY_STATES.get(str(requested_city).upper()) != requested_state)
     state_excluded_count = 0
     radius_excluded_count = 0
 
@@ -2172,4 +2180,19 @@ def build_patient_comparison_context(canonical_facility_ids: List[str], patient_
         "preferences": [item for item in patient_needs_profile.get("needs", []) if item["requirement_level"] in {"MEDIUM", "PREFERENCE"}],
         "comparison_parameter_ids": comparison.get("parameter_ids", []),
         "facilities": facilities,
-    }
+    }    if city_state_conflict:
+        return {
+            "status": "NEEDS_CLARIFICATION",
+            "recommendations": [],
+            "profile": profile,
+            "diagnostics": {
+                "location_conflict": {
+                    "search_state": requested_state,
+                    "location_city": requested_city,
+                    "city_state": _CITY_STATES.get(str(requested_city).upper()),
+                    "reason": "CITY_OUTSIDE_SELECTED_SEARCH_STATE",
+                }
+            },
+        }
+
+
