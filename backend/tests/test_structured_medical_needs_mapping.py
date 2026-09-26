@@ -200,3 +200,33 @@ def test_complex_condition_clinical_help_uses_explicit_clarification():
     needs = {}
     _map_structured_medical_needs(questionnaire, needs)
     assert needs["nursing_24_7"].level == "HIGH"
+
+
+def test_daytime_supervision_does_not_infer_transfer_support():
+    needs = {}
+    _map_assistance_level({"assistanceLevel": "Daytime supervision"}, needs)
+    assert "adl_support" in needs
+    assert "transfer_assistance" not in needs
+
+
+def test_skilled_nursing_does_not_infer_transfer_or_medication_support():
+    needs = {}
+    _map_assistance_level({"assistanceLevel": "Skilled nursing care"}, needs)
+    assert "nursing_24_7" in needs
+    assert "skilled_nursing_capabilities" in needs
+    assert "transfer_assistance" not in needs
+    assert "medication_support" not in needs
+
+
+def test_generic_rehab_need_does_not_infer_pt_or_ot():
+    needs = {}
+    _map_rehab({"humanIntelligenceV2": {"transitionRiskProfile": {"postHospitalRehabNeed": "Yes"}}, "medicalCareProfile": {"rehabServicesNeeded": []}}, needs)
+    assert "pt" not in needs
+    assert "ot" not in needs
+
+
+def test_explicit_rehab_disciplines_are_mapped_individually():
+    needs = {}
+    _map_rehab({"humanIntelligenceV2": {"transitionRiskProfile": {"postHospitalRehabNeed": "Yes"}}, "medicalCareProfile": {"rehabServicesNeeded": ["Physical therapy"]}}, needs)
+    assert "pt" in needs
+    assert "ot" not in needs
