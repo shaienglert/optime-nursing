@@ -494,9 +494,35 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
 from app.services.care_input_assertions import extract_care_denials
 
 
+def _decision_current_clauses(text: str) -> str:
+    """Keep only clauses safe for deterministic current-need extraction.
+
+    Past/recovered and explicitly future clauses are context, not current needs.
+    Clauses explicitly about another relative are not assigned to the search subject.
+    Ambiguous material remains available to the no-drop/clarification layer.
+    """
+    clauses = re.split(r"(?<=[.!?;])\\s+|\\n+", str(text or ""))
+    target_match = re.search(r"\\bmy\\s+(mother|mom|father|dad|grandmother|grandma|grandfather|grandpa|spouse|husband|wife)\\b", str(text or ""), re.I)
+    target = target_match.group(1).lower() if target_match else None
+    relatives = {"mother","mom","father","dad","grandmother","grandma","grandfather","grandpa","aunt","uncle","sister","brother","spouse","husband","wife"}
+    kept = []
+    for clause in clauses:
+        low = clause.lower()
+        if re.search(r"\\b(?:used to|formerly|previously|no longer|recovered|in the past|last year)\\b", low):
+            continue
+        if re.search(r"\\b(?:will need|may need|might need|expect(?:ed)? .* to need|in the future|within (?:a|one|two|three|\\d+) years?)\\b", low):
+            continue
+        mentioned = {rel for rel in relatives if re.search(rf"\\bmy\\s+{re.escape(rel)}\\b", low)}
+        if target and mentioned and target not in mentioned:
+            continue
+        kept.append(clause)
+    return " ".join(kept)
+
+
 def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_denials=None) -> Dict[str, Any]:
-    normalized = _normalize(text)
-    extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
+    decision_text = _decision_current_clauses(text)
+    normalized = _normalize(decision_text)
+    extraction_meta = {"text": text, "decision_text": decision_text, "recognized_tokens": [], "unrecognized_segments": []}
 
     # A monthly budget stated in the opening story is just as explicit as one
     # entered in a structured field.  The adaptive interview may carry the
@@ -552,7 +578,7 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
             return re.search(rf"\b{re.escape(token)}\b", normalized) is not None
         return token in normalized
 
-    denials = care_denials if care_denials is not None else extract_care_denials(text)
+    denials = extract_care_denials(decision_text)
     explicit_independence = denials["independent"]
     no_adl_support = denials["adl"]
     no_medication_support = denials["medication"]
