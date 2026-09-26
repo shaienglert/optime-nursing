@@ -1,0 +1,36 @@
+from app.services import decision_engine_core as core
+
+
+def test_haversine_zero_distance():
+    assert core._haversine_miles(36.1716, -115.1391, 36.1716, -115.1391) == 0
+
+
+def test_henderson_to_las_vegas_is_outside_tight_radius():
+    miles = core._haversine_miles(36.0395, -114.9817, 36.1716, -115.1391)
+    assert miles > 10
+
+
+def test_radius_uses_explicit_miles_and_location_city():
+    radius = core._requested_radius(
+        {"locationImportant": "Yes", "maximumDistanceMiles": "15"},
+        {"location_city": "HENDERSON"},
+    )
+    assert radius["miles"] == 15
+    assert radius["city"] == "HENDERSON"
+    assert radius["status"] == "RESOLVED_CITY_CENTROID"
+
+
+def test_no_location_constraint_means_no_radius_gate():
+    assert core._requested_radius(
+        {"locationImportant": "No", "maximumDistanceMiles": "15"},
+        {"location_city": "HENDERSON"},
+    ) is None
+
+
+def test_unknown_origin_is_not_silently_replaced_by_another_market():
+    radius = core._requested_radius(
+        {"locationImportant": "Yes", "maximumDistanceMiles": "15"},
+        {"location_city": "RENO"},
+    )
+    assert radius["status"] == "ORIGIN_UNRESOLVED"
+    assert radius["origin"] is None
