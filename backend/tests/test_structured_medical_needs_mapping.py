@@ -163,3 +163,92 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_permanent_medical_equipment_alone_does_not_infer_adl_support():
+    questionnaire = {
+        "medicalCareProfile": {
+            "needs": ["Permanent medical equipment"],
+            "complexConditionSupportLevel": "Independently",
+        }
+    }
+    needs = {}
+    _governed._legacy._map_structured_medical_needs(questionnaire, needs)
+    assert "adl_support" not in needs
+    assert "nursing_24_7" not in needs
+
+
+def test_permanent_medical_equipment_daily_help_uses_explicit_clarification():
+    questionnaire = {
+        "medicalCareProfile": {
+            "needs": ["Permanent medical equipment"],
+            "complexConditionSupportLevel": "Some daily help",
+        }
+    }
+    needs = {}
+    _governed._legacy._map_structured_medical_needs(questionnaire, needs)
+    assert needs["adl_support"].requirement_level == "MEDIUM"
+
+
+def test_complex_condition_clinical_help_uses_explicit_clarification():
+    questionnaire = {
+        "medicalCareProfile": {
+            "needs": ["Complex chronic condition"],
+            "complexConditionSupportLevel": "Clinical or nursing help",
+        }
+    }
+    needs = {}
+    _governed._legacy._map_structured_medical_needs(questionnaire, needs)
+    assert needs["nursing_24_7"].requirement_level == "HIGH"
+
+
+def test_daytime_supervision_does_not_infer_transfer_support():
+    needs = {}
+    _governed._legacy._map_assistance_level({"assistanceLevel": "Daytime supervision"}, needs)
+    assert "adl_support" in needs
+    assert "transfer_assistance" not in needs
+
+
+def test_skilled_nursing_does_not_infer_transfer_or_medication_support():
+    needs = {}
+    _governed._legacy._map_assistance_level({"assistanceLevel": "Skilled nursing care"}, needs)
+    assert "nursing_24_7" in needs
+    assert "skilled_nursing_capabilities" in needs
+    assert "transfer_assistance" not in needs
+    assert "medication_support" not in needs
+
+
+def test_generic_rehab_need_does_not_infer_pt_or_ot():
+    needs = {}
+    _governed._legacy._map_rehab({"humanIntelligenceV2": {"transitionRiskProfile": {"postHospitalRehabNeed": "Yes"}}, "medicalCareProfile": {"rehabServicesNeeded": []}}, needs)
+    assert "pt" not in needs
+    assert "ot" not in needs
+
+
+def test_explicit_rehab_disciplines_are_mapped_individually():
+    needs = {}
+    _governed._legacy._map_rehab({"humanIntelligenceV2": {"transitionRiskProfile": {"postHospitalRehabNeed": "Yes"}}, "medicalCareProfile": {"rehabServicesNeeded": ["Physical therapy"]}}, needs)
+    assert "pt" in needs
+    assert "ot" not in needs
+
+
+def test_daily_and_medical_languages_are_separate_needs():
+    needs = {}
+    questionnaire = {
+        "humanIntelligenceV2": {
+            "languageProfile": {
+                "preferredSpokenLanguage": "Spanish",
+                "medicalDiscussionLanguage": "Russian",
+                "bilingualStaffRequired": "Yes",
+            },
+            "foodProfile": {"dietaryPreferences": []},
+            "culturalProfile": {},
+        },
+        "happinessPreferences": [],
+        "moveLossConcerns": [],
+    }
+    _governed._legacy._map_personal_preferences(questionnaire, needs)
+    assert needs["languages"].desired_value == "spanish"
+    assert needs["languages"].requirement_level == "HIGH"
+    assert needs["medical_languages"].desired_value == "russian"
+    assert needs["medical_languages"].requirement_level == "HIGH"

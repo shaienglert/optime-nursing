@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import logging
 import time
 from collections import defaultdict
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 from app.services.facility_parameter_service import (
     compare_facility_parameter_tables,
     get_canonical_facility_index,
+    get_exposed_canonical_facility_index,
     get_exposed_canonical_facility_ids,
     query_facility_knowledge_catalog,
     get_facility_parameter_table,
@@ -251,8 +253,6 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
     if "24/7 nursing" in level or "24x7 nursing" in level or "round the clock nursing" in level or "skilled nursing" in level or "complex" in level:
         _add_need(needs_by_id, "skilled_nursing_capabilities", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs skilled nursing capability")
         _add_need(needs_by_id, "nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs 24/7 nursing")
-        _add_need(needs_by_id, "transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs transfer assistance")
-        _add_need(needs_by_id, "medication_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs medication support")
     elif (
         "bathing" in level or "light" in level or "assistance" in level
         or "dressing" in level or "toileting" in level or "medications" in level
@@ -263,21 +263,21 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
         # each one is a real signal that daily-living support is needed, not just the
         # two or three keywords this used to recognize.
         _add_need(needs_by_id, "adl_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 1.0, "Needs ADL support")
-        if not any(word in level for word in ("bathing", "dressing")) or any(word in level for word in ("transfer", "lift")):
-            _add_need(needs_by_id, "transfer_assistance", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.8, "May need transfer help")
+        # Transfer support is a separate fact and is mapped only from the explicit
+        # transferAssistance follow-up below.
 
 
 STRUCTURED_INTAKE_MAPPING_CONTRACT = {
     "assistanceLevel": {
         "Fully independent": {"classification": "NO_REQUIREMENT", "parameter_ids": []},
-        "Light assistance": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
+        "Light assistance": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with bathing": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with dressing": {"classification": "NEED", "parameter_ids": ["adl_support"]},
-        "Help with toileting": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
+        "Help with toileting": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with medications": {"classification": "NEED", "parameter_ids": ["medication_support"]},
-        "Daytime supervision": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "24/7 support required": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities", "nursing_24_7", "transfer_assistance", "medication_support"]},
+        "Daytime supervision": {"classification": "NEED", "parameter_ids": ["adl_support"]},
+        "24/7 support required": {"classification": "NEED", "parameter_ids": ["adl_support"]},
+        "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities", "nursing_24_7"]},
     },
     "medicalCareProfile.needs": {
         "Dialysis": {"classification": "NEED", "parameter_ids": ["dialysis_arrangements"]},
@@ -323,11 +323,6 @@ _STRUCTURED_MEDICAL_NEED_MAP = {
     "nursing supervision": ("nursing_24_7", "HIGH"),
     "injections or infusions": ("medication_support", "HIGH"),
     "complex medication management": ("medication_support", "HIGH"),
-    # Deliberately mapped to the residential-assistance tier, not a skilled-nursing
-    # signal: neither a chronic condition label nor equipment alone tells us the
-    # facility needs a licensed nurse, only that daily support is required.
-    "complex chronic condition": ("adl_support", "HIGH"),
-    "permanent medical equipment": ("adl_support", "HIGH"),
 }
 
 
@@ -341,6 +336,16 @@ def _map_structured_medical_needs(questionnaire: Dict[str, Any], needs_by_id: Di
     for label, (parameter_id, level) in _STRUCTURED_MEDICAL_NEED_MAP.items():
         if label in selected:
             _add_need(needs_by_id, parameter_id, level, "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.needs", 0.95, f"Requires {parameter_id.replace('_', ' ')}")
+
+    # A condition/equipment label describes what the person has, not how much
+    # help they need. Only the client's explicit follow-up answer may create a
+    # support requirement.
+    if selected.intersection({"complex chronic condition", "permanent medical equipment"}):
+        support_level = _normalize(medical.get("complexConditionSupportLevel"))
+        if support_level == "some daily help":
+            _add_need(needs_by_id, "adl_support", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.complexConditionSupportLevel", 1.0, "Needs daily help managing medical equipment or chronic condition")
+        elif support_level == "clinical or nursing help":
+            _add_need(needs_by_id, "nursing_24_7", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.complexConditionSupportLevel", 1.0, "Needs clinical or nursing help managing medical equipment or chronic condition")
 
     if "oxygen" in selected:
         # Any regular supplemental-oxygen need rules out plain independent/active-adult
@@ -371,27 +376,43 @@ def _map_structured_follow_ups(questionnaire: Dict[str, Any], needs_by_id: Dict[
 
 def _map_memory(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     memory_status = _normalize(questionnaire.get("memoryStatus"))
-    if "significant" in memory_status:
-        _add_need(needs_by_id, "memory_care", "REQUIRED", "YES", ["YES"], "PROGRAM", "questionnaire.memoryStatus", 1.0, "Requires memory care")
-        _add_need(needs_by_id, "dementia_alz_programs", "HIGH", "YES", ["YES"], "PROGRAM", "questionnaire.memoryStatus", 1.0, "Requires dementia program")
-    elif "mild" in memory_status:
-        _add_need(needs_by_id, "memory_care", "MEDIUM", "YES", ["YES", "UNKNOWN"], "PROGRAM", "questionnaire.memoryStatus", 0.8, "Mild memory support preferred")
+    future = questionnaire.get("humanIntelligenceV2", {}).get("futureCareProfile", {})
+    secure_memory = _normalize(future.get("secureMemoryNeighborhoodNeed"))
+    if secure_memory == "yes":
+        _add_need(needs_by_id, "memory_care", "REQUIRED", "YES", ["YES"], "PROGRAM", "questionnaire.futureCareProfile.secureMemoryNeighborhoodNeed", 1.0, "Secure memory-care setting explicitly required")
+        _add_need(needs_by_id, "dementia_alz_programs", "HIGH", "YES", ["YES"], "PROGRAM", "questionnaire.futureCareProfile.secureMemoryNeighborhoodNeed", 1.0, "Memory/dementia program explicitly required")
+    elif "mild" in memory_status or "significant" in memory_status:
+        # Memory severity is clinically relevant context, but it does not by itself
+        # prove that a secure memory-care placement is required.
+        _add_need(needs_by_id, "memory_care", "MEDIUM", "YES", ["YES", "UNKNOWN"], "PROGRAM", "questionnaire.memoryStatus", 0.8, "Memory support preferred; secure setting not inferred")
 
 
 def _map_rehab(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     transition = questionnaire.get("humanIntelligenceV2", {}).get("transitionRiskProfile", {})
     rehab_need = _normalize(transition.get("postHospitalRehabNeed"))
-    if rehab_need in {"yes", "required", "high"}:
-        _add_need(needs_by_id, "pt", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.transitionRiskProfile.postHospitalRehabNeed", 1.0, "Needs physical therapy")
-        _add_need(needs_by_id, "ot", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.transitionRiskProfile.postHospitalRehabNeed", 1.0, "Needs occupational therapy")
-        # Speech therapy requires its own explicit evidence; rehab alone is not it.
+    if rehab_need not in {"yes", "required", "high"}:
+        return
+    services = {_normalize(item) for item in ((questionnaire.get("medicalCareProfile") or {}).get("rehabServicesNeeded") or [])}
+    mapping = {
+        "physical therapy": ("pt", "Physical therapy explicitly required"),
+        "occupational therapy": ("ot", "Occupational therapy explicitly required"),
+        "speech therapy": ("speech_therapy", "Speech therapy explicitly required"),
+    }
+    for label, (parameter_id, need_text) in mapping.items():
+        if label in services:
+            _add_need(needs_by_id, parameter_id, "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.rehabServicesNeeded", 1.0, need_text)
 
 
 def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     language = questionnaire.get("humanIntelligenceV2", {}).get("languageProfile", {})
     preferred_language = _normalize(language.get("preferredSpokenLanguage"))
+    medical_language = _normalize(language.get("medicalDiscussionLanguage"))
+    bilingual_required = _normalize(language.get("bilingualStaffRequired"))
     if preferred_language:
-        _add_need(needs_by_id, "languages", "MEDIUM", preferred_language, [preferred_language, "UNKNOWN"], "FACILITY", "questionnaire.languageProfile.preferredSpokenLanguage", 1.0, "Preferred spoken language support")
+        level = "HIGH" if bilingual_required == "yes" else "MEDIUM"
+        _add_need(needs_by_id, "languages", level, preferred_language, [preferred_language, "UNKNOWN"], "FACILITY", "questionnaire.languageProfile.preferredSpokenLanguage", 1.0, "Resident daily spoken-language support")
+    if medical_language and medical_language != preferred_language:
+        _add_need(needs_by_id, "medical_languages", "HIGH", medical_language, [medical_language, "UNKNOWN"], "FACILITY", "questionnaire.languageProfile.medicalDiscussionLanguage", 1.0, "Medical communication language support")
 
     food = questionnaire.get("humanIntelligenceV2", {}).get("foodProfile", {})
     dietary = [item for item in (food.get("dietaryPreferences") or []) if str(item).strip()]
@@ -480,9 +501,35 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
 from app.services.care_input_assertions import extract_care_denials
 
 
+def _decision_current_clauses(text: str) -> str:
+    """Keep only clauses safe for deterministic current-need extraction.
+
+    Past/recovered and explicitly future clauses are context, not current needs.
+    Clauses explicitly about another relative are not assigned to the search subject.
+    Ambiguous material remains available to the no-drop/clarification layer.
+    """
+    clauses = re.split(r"(?<=[.!?;])\\s+|\\n+", str(text or ""))
+    target_match = re.search(r"\\bmy\\s+(mother|mom|father|dad|grandmother|grandma|grandfather|grandpa|spouse|husband|wife)\\b", str(text or ""), re.I)
+    target = target_match.group(1).lower() if target_match else None
+    relatives = {"mother","mom","father","dad","grandmother","grandma","grandfather","grandpa","aunt","uncle","sister","brother","spouse","husband","wife"}
+    kept = []
+    for clause in clauses:
+        low = clause.lower()
+        if re.search(r"\\b(?:used to|formerly|previously|no longer|recovered|in the past|last year)\\b", low):
+            continue
+        if re.search(r"\\b(?:will need|may need|might need|expect(?:ed)? .* to need|in the future|within (?:a|one|two|three|\\d+) years?)\\b", low):
+            continue
+        mentioned = {rel for rel in relatives if re.search(rf"\\bmy\\s+{re.escape(rel)}\\b", low)}
+        if target and mentioned and target not in mentioned:
+            continue
+        kept.append(clause)
+    return " ".join(kept)
+
+
 def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_denials=None) -> Dict[str, Any]:
-    normalized = _normalize(text)
-    extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
+    decision_text = _decision_current_clauses(text)
+    normalized = _normalize(decision_text)
+    extraction_meta = {"text": text, "decision_text": decision_text, "recognized_tokens": [], "unrecognized_segments": []}
 
     # A monthly budget stated in the opening story is just as explicit as one
     # entered in a structured field.  The adaptive interview may carry the
@@ -538,7 +585,7 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
             return re.search(rf"\b{re.escape(token)}\b", normalized) is not None
         return token in normalized
 
-    denials = care_denials if care_denials is not None else extract_care_denials(text)
+    denials = extract_care_denials(decision_text)
     explicit_independence = denials["independent"]
     no_adl_support = denials["adl"]
     no_medication_support = denials["medication"]
@@ -616,11 +663,18 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
             extraction_meta["recognized_tokens"].append(keywords[0])
 
     location_city = None
-    for city in ["north las vegas", "las vegas", "henderson", "miami", "hialeah", "doral", "aventura", "homestead", "coral gables", "north miami"]:
-        if city in normalized:
-            location_city = city.upper()
-            extraction_meta["recognized_tokens"].append(city)
-            break
+    location_mentions = []
+    for city in sorted((name.lower() for name in CITY_MARKETS), key=len, reverse=True):
+        for match in re.finditer(rf"\\b{re.escape(city)}\\b", normalized):
+            prefix = normalized[max(0, match.start() - 18):match.start()]
+            if re.search(r"\\b(?:dr|doctor|mr|mrs|ms|nurse)\\.?\\s*$", prefix):
+                continue
+            locative = bool(re.search(r"\\b(?:in|near|around|from|lives? in|stay in)\\s*$", prefix))
+            location_mentions.append((locative, len(city), -match.start(), city))
+    if location_mentions:
+        city = max(location_mentions)[3]
+        location_city = city.upper()
+        extraction_meta["recognized_tokens"].append(city)
     return {"extraction": extraction_meta, "location_city": location_city}
 
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, care_denials=None) -> Dict[str, Any]:
@@ -1716,6 +1770,82 @@ def _build_ranked_candidate_detail(
     }
 
 
+_STATE_NAMES = {
+    "AL":"ALABAMA","AK":"ALASKA","AZ":"ARIZONA","AR":"ARKANSAS","CA":"CALIFORNIA","CO":"COLORADO","CT":"CONNECTICUT","DE":"DELAWARE","FL":"FLORIDA","GA":"GEORGIA","HI":"HAWAII","ID":"IDAHO","IL":"ILLINOIS","IN":"INDIANA","IA":"IOWA","KS":"KANSAS","KY":"KENTUCKY","LA":"LOUISIANA","ME":"MAINE","MD":"MARYLAND","MA":"MASSACHUSETTS","MI":"MICHIGAN","MN":"MINNESOTA","MS":"MISSISSIPPI","MO":"MISSOURI","MT":"MONTANA","NE":"NEBRASKA","NV":"NEVADA","NH":"NEW HAMPSHIRE","NJ":"NEW JERSEY","NM":"NEW MEXICO","NY":"NEW YORK","NC":"NORTH CAROLINA","ND":"NORTH DAKOTA","OH":"OHIO","OK":"OKLAHOMA","OR":"OREGON","PA":"PENNSYLVANIA","RI":"RHODE ISLAND","SC":"SOUTH CAROLINA","SD":"SOUTH DAKOTA","TN":"TENNESSEE","TX":"TEXAS","UT":"UTAH","VT":"VERMONT","VA":"VIRGINIA","WA":"WASHINGTON","WV":"WEST VIRGINIA","WI":"WISCONSIN","WY":"WYOMING","DC":"DISTRICT OF COLUMBIA",
+}
+
+def available_search_states() -> list[str]:
+    states = set()
+    for row in get_exposed_canonical_facility_index().values():
+        raw = str(row.get("state") or "").strip().upper()
+        if not raw:
+            continue
+        states.add(_STATE_NAMES.get(raw, raw))
+    return sorted(states)
+
+_STATE_ALIASES = {
+    "NV": "NEVADA", "FL": "FLORIDA", "CA": "CALIFORNIA", "AZ": "ARIZONA",
+    "TX": "TEXAS", "NY": "NEW YORK", "NJ": "NEW JERSEY", "IL": "ILLINOIS",
+    "PA": "PENNSYLVANIA", "MA": "MASSACHUSETTS",
+}
+
+def _canonical_state(value: Any) -> str:
+    raw = str(value or "").strip().upper()
+    return _STATE_ALIASES.get(raw, raw)
+
+_CITY_STATES = {
+    "LAS VEGAS": "NEVADA", "HENDERSON": "NEVADA", "NORTH LAS VEGAS": "NEVADA",
+    "MIAMI": "FLORIDA", "NORTH MIAMI": "FLORIDA", "HIALEAH": "FLORIDA",
+    "DORAL": "FLORIDA", "AVENTURA": "FLORIDA", "HOMESTEAD": "FLORIDA",
+    "CORAL GABLES": "FLORIDA",
+}
+
+_CITY_COORDINATES = {
+    "LAS VEGAS": (36.1716, -115.1391),
+    "HENDERSON": (36.0395, -114.9817),
+    "NORTH LAS VEGAS": (36.1989, -115.1175),
+    "MIAMI": (25.7617, -80.1918),
+    "NORTH MIAMI": (25.8901, -80.1867),
+    "HIALEAH": (25.8576, -80.2781),
+    "DORAL": (25.8195, -80.3553),
+    "AVENTURA": (25.9565, -80.1392),
+    "HOMESTEAD": (25.4687, -80.4776),
+    "CORAL GABLES": (25.7215, -80.2684),
+}
+
+def _haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    radius = 3958.7613
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlon / 2) ** 2
+    return radius * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+def _requested_radius(questionnaire: Dict[str, Any], profile: Dict[str, Any]) -> Dict[str, Any] | None:
+    if _normalize(questionnaire.get("locationImportant")) == "no":
+        return None
+    raw = str(questionnaire.get("maximumDistanceMiles") or questionnaire.get("customDistanceMiles") or "").strip()
+    if not raw:
+        return None
+    try:
+        miles = float(raw)
+    except ValueError:
+        return None
+    if miles <= 0:
+        return None
+    city = str(profile.get("location_city") or "").strip().upper()
+    reference = str(questionnaire.get("referenceAddress") or questionnaire.get("referenceLocationValue") or "").strip()
+    # A street address or ZIP is a more precise client instruction than a city. Until a
+    # governed geocoder resolves it, using the city centroid would silently move the
+    # requested circle. Keep the radius unresolved instead.
+    looks_precise = bool(re.search(r"\\b\\d{5}(?:-\\d{4})?\\b", reference) or re.search(r"^\\s*\\d+\\s+\\S+", reference))
+    if looks_precise:
+        return {"miles": miles, "city": city, "reference": reference, "origin": None, "status": "PRECISE_REFERENCE_REQUIRES_GEOCODING"}
+    coords = _CITY_COORDINATES.get(city)
+    if not coords:
+        return {"miles": miles, "city": city, "reference": reference, "origin": None, "status": "ORIGIN_UNRESOLVED"}
+    return {"miles": miles, "city": city, "reference": reference, "origin": coords, "status": "RESOLVED_CITY_CENTROID"}
+
 def run_patient_decision_engine(
     questionnaire_state: Dict[str, Any],
     natural_language_query: str = "",
@@ -1786,6 +1916,41 @@ def run_patient_decision_engine(
 
     results = []
     requested_city = profile.get("location_city")
+    requested_state = _canonical_state(questionnaire_state.get("searchState"))
+    radius_constraint = _requested_radius(questionnaire_state, profile)
+    if radius_constraint and radius_constraint.get("status") != "RESOLVED_CITY_CENTROID":
+        return {
+            "status": "NEEDS_CLARIFICATION",
+            "recommendations": [],
+            "profile": profile,
+            "diagnostics": {
+                "location_radius": {
+                    "requested_miles": radius_constraint.get("miles"),
+                    "origin_city": radius_constraint.get("city"),
+                    "origin_status": radius_constraint.get("status"),
+                    "reason": "LOCATION_ORIGIN_MUST_BE_RESOLVED_BEFORE_RADIUS_CAN_GATE",
+                }
+            },
+        }
+    city_state_conflict = bool(requested_state and requested_city and _CITY_STATES.get(str(requested_city).upper()) and _CITY_STATES.get(str(requested_city).upper()) != requested_state)
+    if city_state_conflict:
+        return {
+            "status": "NEEDS_CLARIFICATION",
+            "recommendations": [],
+            "profile": profile,
+            "diagnostics": {
+                "location_conflict": {
+                    "search_state": requested_state,
+                    "location_city": requested_city,
+                    "city_state": _CITY_STATES.get(str(requested_city).upper()),
+                    "reason": "CITY_OUTSIDE_SELECTED_SEARCH_STATE",
+                }
+            },
+        }
+    state_excluded_count = 0
+    state_unknown_count = 0
+    radius_excluded_count = 0
+    coordinate_unknown_count = 0
 
     _table_lookup_ms = 0.0
     _scoring_ms = 0.0
@@ -1803,6 +1968,30 @@ def run_patient_decision_engine(
         _t1 = time.perf_counter()
         _table_lookup_ms += (_t1 - _t0) * 1000
         canonical_meta = canonical_index.get(canonical_id, {})
+        if requested_state:
+            facility_state = _canonical_state(canonical_meta.get("state"))
+            if not facility_state:
+                state_unknown_count += 1
+                continue
+            if facility_state != requested_state:
+                state_excluded_count += 1
+                continue
+        facility_distance_miles = None
+        if radius_constraint and radius_constraint.get("origin"):
+            try:
+                facility_lat = float(canonical_meta.get("latitude"))
+                facility_lon = float(canonical_meta.get("longitude"))
+                if not (-90 <= facility_lat <= 90 and -180 <= facility_lon <= 180):
+                    raise ValueError("invalid coordinate range")
+                origin_lat, origin_lon = radius_constraint["origin"]
+                facility_distance_miles = _haversine_miles(origin_lat, origin_lon, facility_lat, facility_lon)
+                if facility_distance_miles > float(radius_constraint["miles"]):
+                    radius_excluded_count += 1
+                    continue
+            except (TypeError, ValueError):
+                # A requested hard radius cannot be verified without valid coordinates.
+                coordinate_unknown_count += 1
+                continue
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
 
         eligibility = _eligibility_from_needs(needs, row_by_param)
@@ -1840,6 +2029,7 @@ def run_patient_decision_engine(
                 "state": table.get("state"),
                 "county": table.get("county"),
                 "zip": table.get("zip"),
+                "distance_miles": round(facility_distance_miles, 2) if facility_distance_miles is not None else None,
                 "canonical_type": table.get("canonical_type"),
                 "role_classification": table.get("role_classification"),
                 "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
@@ -1936,6 +2126,20 @@ def run_patient_decision_engine(
             "excluded_explicit_negative_count": catalog_query["excluded_explicit_negative_count"],
             "unknown_is_not_negative": True,
             "identities_hidden_pending_client_input": False,
+            "search_state": {
+                "requested": requested_state or None,
+                "excluded_other_states_count": state_excluded_count,
+                "excluded_unknown_state_count": state_unknown_count,
+                "missing_facility_state_policy": "NOT_ELIGIBLE_UNTIL_VERIFIED",
+            },
+            "location_radius": {
+                "requested_miles": radius_constraint.get("miles") if radius_constraint else None,
+                "origin_city": radius_constraint.get("city") if radius_constraint else None,
+                "origin_status": radius_constraint.get("status") if radius_constraint else "NOT_REQUESTED",
+                "excluded_outside_radius_count": radius_excluded_count,
+                "excluded_unknown_coordinates_count": coordinate_unknown_count,
+                "missing_coordinates_policy": "NOT_ELIGIBLE_FOR_HARD_RADIUS_UNTIL_VERIFIED",
+            },
         },
         "market_coverage_notice": " ".join(
             notice
@@ -2015,3 +2219,4 @@ def build_patient_comparison_context(canonical_facility_ids: List[str], patient_
         "comparison_parameter_ids": comparison.get("parameter_ids", []),
         "facilities": facilities,
     }
+

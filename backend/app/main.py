@@ -75,6 +75,7 @@ from app.services.demographic_market_metrics_service import (
 from app.services.nevada_facility_scope import NEVADA_STATE_CODE, purge_non_nevada_facilities
 from app.services.nevada_runtime_facility_import import import_las_vegas_runtime_facilities
 from app.services.canonical_universe import configured_canonical_market
+from app.services.decision_engine_core import available_search_states
 
 
 from app.services.schema_migrations import ensure_deferred_report_schema
@@ -188,6 +189,12 @@ app = FastAPI(
 
 logger = logging.getLogger("optime.api")
 
+
+
+@app.get("/public/search-states")
+def public_search_states():
+    """States are selectable only when the active facility inventory contains them."""
+    return {"available_states": available_search_states()}
 
 @app.exception_handler(ArtifactStoreUnavailable)
 async def artifact_store_unavailable(_request, exc):

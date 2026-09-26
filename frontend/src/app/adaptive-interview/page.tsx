@@ -53,7 +53,7 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
 function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Record<string, unknown>): QuestionnaireState {
   let next = cloneState(state);
   const stringKeys: Array<keyof QuestionnaireState> = [
-    "ageGroup", "assistanceLevel", "memoryStatus",
+    "ageGroup", "searchState", "assistanceLevel", "memoryStatus",
     "medicaidStatus", "referenceLocationValue",
   ];
   for (const key of stringKeys) {
@@ -79,7 +79,7 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
     const medicalStringKeys: Array<keyof QuestionnaireState["medicalCareProfile"]> = [
       "hasOngoingMedicalNeeds", "mobilityMethod", "transferAssistance", "recentFalls",
       "dialysisFrequency", "dialysisCenter", "dialysisTransportation", "oxygenUse",
-      "woundCareFrequency", "complexConditionDetails", "physicianCoordination",
+      "woundCareFrequency", "complexConditionDetails", "complexConditionSupportLevel", "physicianCoordination",
     ];
     for (const key of medicalStringKeys) {
       const value = source[key];
@@ -93,6 +93,9 @@ function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Recor
         ...next.medicalCareProfile.needs,
         ...source.needs.map(String).map((value) => value.trim()).filter(Boolean),
       ]));
+    }
+    if (Array.isArray(source.rehabServicesNeeded) && next.medicalCareProfile.rehabServicesNeeded.length === 0) {
+      next.medicalCareProfile.rehabServicesNeeded = source.rehabServicesNeeded.map(String).map((value) => value.trim()).filter(Boolean);
     }
   }
 

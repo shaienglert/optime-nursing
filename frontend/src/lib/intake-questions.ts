@@ -32,6 +32,7 @@ export type IntakeExtras = {
   memoryWandering: string;
   secureMemory: string;
   language: string;
+  processLanguage: string;
   medicalLanguage: string;
   continuum: string;
 };
@@ -128,6 +129,7 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
     memoryWandering: human.transitionRiskProfile.wanderingConcerns || "",
     secureMemory: human.futureCareProfile.secureMemoryNeighborhoodNeed || "",
     language: human.languageProfile.preferredSpokenLanguage || "",
+    processLanguage: human.languageProfile.processLanguage || "",
     medicalLanguage: human.languageProfile.medicalDiscussionLanguage || "",
     continuum: human.futureCareProfile.avoidFutureMovesPreference || "",
   };
@@ -202,6 +204,29 @@ export const QUESTIONS: IntakeQuestion[] = [
     visible: () => true,
     get: ({ draft }) => draft.ageGroup,
     set: (context, value) => setDraft(context, { ageGroup: text(value) }),
+  },
+  {
+    id: "searchState",
+    section: SECTION_PERSON,
+    prompt: "Which state are you looking in?",
+    kind: "single",
+    options: ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming", "District of Columbia"],
+    required: true,
+    label: "search state",
+    visible: () => true,
+    get: ({ draft }) => draft.searchState,
+    set: (context, value) => {
+      const nextState = text(value);
+      if (nextState === context.draft.searchState) return setDraft(context, { searchState: nextState });
+      return setDraft(context, {
+        searchState: nextState,
+        locationImportant: "",
+        referenceAddress: "",
+        referenceLocationValue: "",
+        maximumDistanceMiles: "",
+        customDistanceMiles: "",
+      });
+    },
   },
   {
     id: "assistance",
@@ -284,7 +309,7 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "secureMemory",
     section: SECTION_PERSON,
-    prompt: "Would a secure memory-care setting feel necessary?",
+    prompt: "Based on their memory and safety needs, is a secure memory-care setting actually needed?",
     kind: "single",
     options: ["Yes", "No", "Not sure"],
     required: true,
@@ -390,6 +415,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setMedical(context, { complexConditionDetails: text(value) }),
   },
   {
+    id: "complexConditionSupportLevel",
+    section: SECTION_MEDICAL,
+    prompt: "Do they manage this equipment or condition independently, or do they need help with it?",
+    kind: "single",
+    options: ["Independently", "Some daily help", "Clinical or nursing help", "Not sure"],
+    required: true,
+    label: "support needed for medical equipment or chronic condition",
+    visible: (context) => needsMedicalDetails(context) && context.draft.medicalCareProfile.needs.some((item) => COMPLEX_MEDICAL_NEEDS.includes(item)),
+    get: ({ draft }) => draft.medicalCareProfile.complexConditionSupportLevel,
+    set: (context, value) => setMedical(context, { complexConditionSupportLevel: text(value) }),
+  },
+  {
     id: "physicianCoordination",
     section: SECTION_MEDICAL,
     prompt: "Would it help if the community coordinated doctors, appointments, tests, or medication changes?",
@@ -436,6 +473,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     visible: ({ extras }) => extras.recentHospitalization === "Yes",
     get: ({ extras }) => extras.rehabNeed,
     set: (context, value) => setExtra(context, { rehabNeed: text(value) }),
+  },
+  {
+    id: "rehabServicesNeeded",
+    section: SECTION_MEDICAL,
+    prompt: "Which rehabilitation services are actually needed now?",
+    kind: "multi",
+    options: ["Physical therapy", "Occupational therapy", "Speech therapy", "Not sure"],
+    required: true,
+    label: "rehabilitation services needed",
+    visible: ({ extras }) => extras.rehabNeed === "Yes",
+    get: ({ draft }) => draft.medicalCareProfile.rehabServicesNeeded,
+    set: (context, value) => setMedical(context, { rehabServicesNeeded: list(value) }),
   },
   {
     id: "medicareStatus",
@@ -556,6 +605,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     visible: () => true,
     get: ({ draft }) => draft.otherInterests,
     set: (context, value) => setDraft(context, { otherInterests: text(value) }),
+  },
+  {
+    id: "processLanguage",
+    section: SECTION_FIT,
+    prompt: "Which language would you like to use with Oomnik?",
+    kind: "single",
+    options: ["English", "Spanish", "Chinese", "Vietnamese", "Korean", "Russian", "Tagalog / Filipino", "Arabic", "Haitian Creole", "Portuguese", "Polish", "Persian / Farsi", "Hindi", "Gujarati", "Ukrainian", "French", "Hebrew", "Other"],
+    required: true,
+    label: "language for the Oomnik process",
+    visible: () => true,
+    get: ({ extras }) => extras.processLanguage,
+    set: (context, value) => setExtra(context, { processLanguage: text(value) }),
   },
   {
     id: "language",
@@ -723,7 +784,16 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "location importance",
     visible: () => true,
     get: ({ draft }) => draft.locationImportant,
-    set: (context, value) => setDraft(context, { locationImportant: text(value) }),
+    set: (context, value) => {
+      const important = text(value);
+      return setDraft(context, important === "No" ? {
+        locationImportant: important,
+        referenceAddress: "",
+        referenceLocationValue: "",
+        maximumDistanceMiles: "",
+        customDistanceMiles: "",
+      } : { locationImportant: important });
+    },
   },
   {
     id: "referenceAddress",
@@ -777,6 +847,13 @@ export function missingQuestions(context: IntakeContext): IntakeQuestion[] {
  */
 export function buildSubmission(context: IntakeContext): QuestionnaireState {
   const { draft, extras } = context;
+  const locationScopedDraft = draft.locationImportant === "Yes" ? draft : {
+    ...draft,
+    referenceAddress: "",
+    referenceLocationValue: "",
+    maximumDistanceMiles: "",
+    customDistanceMiles: "",
+  };
   const mobility = needsMobilityFollowUp(context);
   const memory = hasMemoryConcern(context);
   const medicalDetails = needsMedicalDetails(context);
@@ -786,7 +863,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
   const complex = medicalDetails && draft.medicalCareProfile.needs.some((item) => COMPLEX_MEDICAL_NEEDS.includes(item));
 
   return {
-    ...draft,
+    ...locationScopedDraft,
     assistanceLevel: extras.assistance.join(", "),
     happinessPreferences: extras.activities,
     medicareStatus: extras.rehabNeed === "Yes" ? draft.medicareStatus : "",
@@ -807,7 +884,9 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
       oxygenUse: oxygen ? draft.medicalCareProfile.oxygenUse : "",
       woundCareFrequency: wound ? draft.medicalCareProfile.woundCareFrequency : "",
       complexConditionDetails: complex ? draft.medicalCareProfile.complexConditionDetails : "",
+      complexConditionSupportLevel: complex ? draft.medicalCareProfile.complexConditionSupportLevel : "",
       physicianCoordination: medicalDetails ? draft.medicalCareProfile.physicianCoordination : "",
+      rehabServicesNeeded: extras.rehabNeed === "Yes" ? draft.medicalCareProfile.rehabServicesNeeded : [],
     },
     humanIntelligenceV2: {
       ...draft.humanIntelligenceV2,
@@ -818,7 +897,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
         faithTraditions: extras.religiousCommunity === "Yes" ? [extras.religion] : [],
         religiousSupportNeeds: extras.religiousCommunity === "Yes" ? extras.religiousNeeds : [],
       },
-      languageProfile: { ...draft.humanIntelligenceV2.languageProfile, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage },
+      languageProfile: { ...draft.humanIntelligenceV2.languageProfile, processLanguage: extras.processLanguage, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage },
       foodProfile: { dietaryPreferences: extras.dietary },
       personalityProfile: { ...draft.humanIntelligenceV2.personalityProfile, communitySizePreference: extras.communityStyle },
       transitionRiskProfile: {
