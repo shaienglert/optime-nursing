@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 from app.services.facility_parameter_service import (
     compare_facility_parameter_tables,
     get_canonical_facility_index,
+    get_exposed_canonical_facility_index,
     get_exposed_canonical_facility_ids,
     query_facility_knowledge_catalog,
     get_facility_parameter_table,
@@ -1775,7 +1776,7 @@ _STATE_NAMES = {
 
 def available_search_states() -> list[str]:
     states = set()
-    for row in get_canonical_facility_index().values():
+    for row in get_exposed_canonical_facility_index().values():
         raw = str(row.get("state") or "").strip().upper()
         if not raw:
             continue
