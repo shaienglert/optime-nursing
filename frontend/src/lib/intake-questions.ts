@@ -32,6 +32,7 @@ export type IntakeExtras = {
   memoryWandering: string;
   secureMemory: string;
   language: string;
+  processLanguage: string;
   medicalLanguage: string;
   continuum: string;
 };
@@ -128,6 +129,7 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
     memoryWandering: human.transitionRiskProfile.wanderingConcerns || "",
     secureMemory: human.futureCareProfile.secureMemoryNeighborhoodNeed || "",
     language: human.languageProfile.preferredSpokenLanguage || "",
+    processLanguage: human.languageProfile.processLanguage || "",
     medicalLanguage: human.languageProfile.medicalDiscussionLanguage || "",
     continuum: human.futureCareProfile.avoidFutureMovesPreference || "",
   };
@@ -582,6 +584,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setDraft(context, { otherInterests: text(value) }),
   },
   {
+    id: "processLanguage",
+    section: SECTION_FIT,
+    prompt: "Which language would you like to use with Oomnik?",
+    kind: "single",
+    options: ["English", "Spanish", "Chinese", "Vietnamese", "Korean", "Russian", "Tagalog / Filipino", "Arabic", "Haitian Creole", "Portuguese", "Polish", "Persian / Farsi", "Hindi", "Gujarati", "Ukrainian", "French", "Hebrew", "Other"],
+    required: true,
+    label: "language for the Oomnik process",
+    visible: () => true,
+    get: ({ extras }) => extras.processLanguage,
+    set: (context, value) => setExtra(context, { processLanguage: text(value) }),
+  },
+  {
     id: "language",
     section: SECTION_FIT,
     prompt: "What language feels most natural day to day?",
@@ -844,7 +858,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
         faithTraditions: extras.religiousCommunity === "Yes" ? [extras.religion] : [],
         religiousSupportNeeds: extras.religiousCommunity === "Yes" ? extras.religiousNeeds : [],
       },
-      languageProfile: { ...draft.humanIntelligenceV2.languageProfile, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage },
+      languageProfile: { ...draft.humanIntelligenceV2.languageProfile, processLanguage: extras.processLanguage, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage },
       foodProfile: { dietaryPreferences: extras.dietary },
       personalityProfile: { ...draft.humanIntelligenceV2.personalityProfile, communitySizePreference: extras.communityStyle },
       transitionRiskProfile: {
