@@ -1769,6 +1769,16 @@ def _build_ranked_candidate_detail(
     }
 
 
+_STATE_ALIASES = {
+    "NV": "NEVADA", "FL": "FLORIDA", "CA": "CALIFORNIA", "AZ": "ARIZONA",
+    "TX": "TEXAS", "NY": "NEW YORK", "NJ": "NEW JERSEY", "IL": "ILLINOIS",
+    "PA": "PENNSYLVANIA", "MA": "MASSACHUSETTS",
+}
+
+def _canonical_state(value: Any) -> str:
+    raw = str(value or "").strip().upper()
+    return _STATE_ALIASES.get(raw, raw)
+
 _CITY_COORDINATES = {
     "LAS VEGAS": (36.1716, -115.1391),
     "HENDERSON": (36.0395, -114.9817),
@@ -1885,7 +1895,7 @@ def run_patient_decision_engine(
 
     results = []
     requested_city = profile.get("location_city")
-    requested_state = str(questionnaire_state.get("searchState") or "").strip().upper()
+    requested_state = _canonical_state(questionnaire_state.get("searchState"))
     radius_constraint = _requested_radius(questionnaire_state, profile)
     state_excluded_count = 0
     radius_excluded_count = 0
@@ -1907,7 +1917,7 @@ def run_patient_decision_engine(
         _table_lookup_ms += (_t1 - _t0) * 1000
         canonical_meta = canonical_index.get(canonical_id, {})
         if requested_state:
-            facility_state = str(canonical_meta.get("state") or "").strip().upper()
+            facility_state = _canonical_state(canonical_meta.get("state"))
             if facility_state and facility_state != requested_state:
                 state_excluded_count += 1
                 continue
