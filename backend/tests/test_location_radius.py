@@ -55,3 +55,19 @@ def test_zip_reference_is_not_replaced_by_city_centroid():
         {"location_city": "LAS VEGAS"},
     )
     assert radius["status"] == "PRECISE_REFERENCE_REQUIRES_GEOCODING"
+
+
+def test_state_names_and_abbreviations_normalize_to_same_scope():
+    assert core._canonical_state("Nevada") == "NEVADA"
+    assert core._canonical_state("NV") == "NEVADA"
+    assert core._canonical_state("Florida") == "FLORIDA"
+    assert core._canonical_state("FL") == "FLORIDA"
+
+
+def test_state_is_independent_from_city_radius():
+    radius = core._requested_radius(
+        {"searchState": "Nevada", "locationImportant": "Yes", "maximumDistanceMiles": "15"},
+        {"location_city": "HENDERSON"},
+    )
+    assert core._canonical_state("NV") == core._canonical_state("Nevada")
+    assert radius["city"] == "HENDERSON"
