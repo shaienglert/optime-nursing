@@ -390,6 +390,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setMedical(context, { complexConditionDetails: text(value) }),
   },
   {
+    id: "complexConditionSupportLevel",
+    section: SECTION_MEDICAL,
+    prompt: "Do they manage this equipment or condition independently, or do they need help with it?",
+    kind: "single",
+    options: ["Independently", "Some daily help", "Clinical or nursing help", "Not sure"],
+    required: true,
+    label: "support needed for medical equipment or chronic condition",
+    visible: (context) => needsMedicalDetails(context) && context.draft.medicalCareProfile.needs.some((item) => COMPLEX_MEDICAL_NEEDS.includes(item)),
+    get: ({ draft }) => draft.medicalCareProfile.complexConditionSupportLevel,
+    set: (context, value) => setMedical(context, { complexConditionSupportLevel: text(value) }),
+  },
+  {
     id: "physicianCoordination",
     section: SECTION_MEDICAL,
     prompt: "Would it help if the community coordinated doctors, appointments, tests, or medication changes?",
@@ -807,6 +819,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
       oxygenUse: oxygen ? draft.medicalCareProfile.oxygenUse : "",
       woundCareFrequency: wound ? draft.medicalCareProfile.woundCareFrequency : "",
       complexConditionDetails: complex ? draft.medicalCareProfile.complexConditionDetails : "",
+      complexConditionSupportLevel: complex ? draft.medicalCareProfile.complexConditionSupportLevel : "",
       physicianCoordination: medicalDetails ? draft.medicalCareProfile.physicianCoordination : "",
     },
     humanIntelligenceV2: {
