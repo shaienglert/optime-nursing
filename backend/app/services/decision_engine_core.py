@@ -656,11 +656,18 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
             extraction_meta["recognized_tokens"].append(keywords[0])
 
     location_city = None
-    for city in ["north las vegas", "las vegas", "henderson", "miami", "hialeah", "doral", "aventura", "homestead", "coral gables", "north miami"]:
-        if city in normalized:
-            location_city = city.upper()
-            extraction_meta["recognized_tokens"].append(city)
-            break
+    location_mentions = []
+    for city in sorted((name.lower() for name in CITY_MARKETS), key=len, reverse=True):
+        for match in re.finditer(rf"\\b{re.escape(city)}\\b", normalized):
+            prefix = normalized[max(0, match.start() - 18):match.start()]
+            if re.search(r"\\b(?:dr|doctor|mr|mrs|ms|nurse)\\.?\\s*$", prefix):
+                continue
+            locative = bool(re.search(r"\\b(?:in|near|around|from|lives? in|stay in)\\s*$", prefix))
+            location_mentions.append((locative, len(city), -match.start(), city))
+    if location_mentions:
+        city = max(location_mentions)[3]
+        location_city = city.upper()
+        extraction_meta["recognized_tokens"].append(city)
     return {"extraction": extraction_meta, "location_city": location_city}
 
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, care_denials=None) -> Dict[str, Any]:
