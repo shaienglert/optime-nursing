@@ -50,6 +50,7 @@ export type QuestionnaireState = {
     complexConditionDetails: string;
     complexConditionSupportLevel: string;
     physicianCoordination: string;
+    rehabServicesNeeded: string[];
   };
   humanIntelligenceV2: HumanIntelligenceV2;
 };
@@ -260,6 +261,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
     complexConditionDetails: "",
     complexConditionSupportLevel: "",
     physicianCoordination: "",
+    rehabServicesNeeded: [],
   },
   humanIntelligenceV2: {
     socialProfile: {
