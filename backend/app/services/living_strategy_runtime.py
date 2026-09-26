@@ -23,31 +23,7 @@ def _contains(text: str, *tokens: str) -> bool:
     return any(token in text for token in tokens)
 
 
-def _mentions_couple(text: str) -> bool:
-    """True only for a genuine couple/relationship signal.
-
-    A naive substring check on "couple" fires on the idiomatic "a couple of X" (weeks,
-    specific things, ...), which has nothing to do with a relationship, and fires on
-    "spouse"/"husband"/"wife" even when the sentence explicitly negates them ("no
-    spouse", "without a husband") -- both produced a false COUPLE_CORESIDENCE MUST and
-    a spurious CCRC entrance-fee guardian question for single-person searches.
-    """
-    if re.search(r"\bcouple\b(?!\s+of\b)", text):
-        return True
-    if _contains(text, "both of us", "both parents", "husband and wife"):
-        return True
-    if re.search(r"\b(?:parents|partners|spouses)\s+are\s+both\b(?!\s+(?:deceased|dead)\b)", text):
-        return True
-    if re.search(r"\b(?:parents|partners|spouses)\b", text) and re.search(
-        r"\b(?:they\s+)?(?:want|wish|plan)\s+to\s+(?:live|stay|move)\s+together\b", text
-    ):
-        return True
-    if re.search(r"\bmy (?:husband|wife|spouse|partner) and i\b", text):
-        return True
-    if re.search(r"\b(?:parents|partners|spouses)\b[^.]{0,80}\b(?:together|same (?:community|home|room|unit)|remain together|remain near each other|stay near each other|live near each other)\b", text):
-        return True
-    return bool(re.search(r"\b(?:together|same (?:community|home|room|unit))\b[^.]{0,80}\b(?:parents|partners|spouses)\b", text))
-
+from app.services.intake_interpretation import _mentions_couple
 
 def _first_known(questionnaire: Dict[str, Any], *keys: str) -> Any:
     for key in keys:
@@ -73,98 +49,32 @@ def _question(key: str, text: str, why: str, options: List[str]) -> Dict[str, An
     }
 
 
-def _duration_months(text: str) -> int | None:
-    match = re.search(r"\b(\d{1,2})\s*(?:month|months|mo)\b", text)
-    if match:
-        return int(match.group(1))
-    if _contains(text, "three months", "3 months"):
-        return 3
-    return None
+from app.services.intake_interpretation import _duration_months
 
-
-def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, care_denials=None) -> Dict[str, Any]:
-    from app.services.care_input_assertions import extract_care_denials
-    denials = care_denials if care_denials is not None else extract_care_denials(natural_language_query)
-    query = _norm(natural_language_query)
-    hi = _hi(questionnaire_state)
-    transition = hi.get("transitionRiskProfile") if isinstance(hi.get("transitionRiskProfile"), dict) else {}
-    finance = hi.get("financialProfile") if isinstance(hi.get("financialProfile"), dict) else {}
-
-    # `relationship` identifies who the search is for (for example, "my spouse");
-    # it does not mean two residents are moving. Require an explicit joint-move or
-    # co-residence statement before creating the COUPLE_CORESIDENCE hard gate.
-    couple = _mentions_couple(query)
-
-    no_dementia = denials["memory"] or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
-    memory_care_needed = (
-        not no_dementia
-        and _contains(query, "dementia", "alzheimer", "memory care", "wandering", "cognitive decline", "cognitive impairment")
-    ) or _norm(questionnaire_state.get("memoryStatus")) in {"yes", "dementia", "memory care", "alzheimer", "alzheimers"}
-
-    surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")
-    spine_or_back = _contains(query, "spine", "spinal", "back surgery", "back operation")
-    rehab = _contains(query, "rehab", "rehabilitation", "physical therapy", "physiotherapy", "pt ", " pt", "occupational therapy")
-    # A phrase such as "not temporary" must not be mistaken for temporary recovery merely
-    # because it contains the word "temporary". Persistent ADL support belongs on the
-    # Assisted Living path, while a genuine recovery episode can lead with lower intensity.
-    explicitly_persistent = _contains(
-        query,
-        "not temporary",
-        "not a temporary",
-        "permanent",
-        "ongoing daily help",
-        "ongoing help",
-        "not expected to recover",
-    )
-    expected_recovery = not explicitly_persistent and _contains(
-        query,
-        "expected to walk",
-        "should walk again",
-        "return to walking",
-        "expected to recover",
-        "temporary",
-        "short-term",
-        "short term",
-    )
-    duration = _duration_months(query)
-    if duration is not None and duration <= 6:
-        expected_recovery = True
-
-    explicit_independence = denials["independent"] or _contains(_norm(questionnaire_state.get("assistanceLevel")), "fully independent", "independent")
-    no_adl_support = explicit_independence or denials["adl"]
-    no_medication_support = (explicit_independence and _contains(query, "medication", "medications", "medicine")) or denials["medication"]
-    # Keep explicit, ordinary-language ADL statements canonical even when the
-    # client does not name a specific task.  The launch journeys exposed three
-    # equivalent phrases ("assistance with daily activities", "substantial
-    # daily assistance", and "light daily assistance") that were accounted for
-    # as client statements but were not promoted into the strategy signal.  The
-    # downstream MUST gate therefore silently lost ADL_SUPPORT_AVAILABLE.
-    adl = (not no_adl_support) and (
-        _contains(
-            query,
-            "bathing",
-            "dressing",
-            "shower",
-            "toileting",
-            "adl",
-            "personal care",
-            "daily assistance",
-            "daily activities",
-            "activities of daily living",
-            "daily living assistance",
-        )
-        or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance")
-    )
-    medication = (not no_medication_support) and _contains(query, "medication", "medications", "medicine")
-    high_social = _contains(query, "culture", "cultural", "classes", "activities", "social", "clubs", "lectures", "music", "art", "events")
-
-    raw_rehab_need = _norm(transition.get("postHospitalRehabNeed"))
-    skilled_rehab_known = raw_rehab_need in {"yes", "required", "high"} or _contains(query, "physical therapy", "occupational therapy", "skilled rehab", "rehabilitation")
-
-    move_timing = _norm(transition.get("moveTiming") or questionnaire_state.get("moveTiming"))
-    budget = _first_known(questionnaire_state, "budget", "monthlyBudget")
-    medicare = _norm(finance.get("medicareStatus") or questionnaire_state.get("medicareStatus"))
-    entrance_fee = _norm(finance.get("entranceFeeTolerance") or questionnaire_state.get("entranceFeeTolerance"))
+def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, care_denials=None, intake_facts=None) -> Dict[str, Any]:
+    from app.services.intake_interpretation import extract_intake_facts
+    facts = intake_facts if intake_facts is not None else extract_intake_facts(questionnaire_state, natural_language_query, care_denials=care_denials)
+    questionnaire_state = facts["questionnaire_state"]
+    sf = facts["strategy"]
+    couple = sf["couple"]
+    no_dementia = sf["no_dementia"]
+    memory_care_needed = sf["memory_care_needed"]
+    surgery = sf["surgery"]
+    spine_or_back = sf["spine_or_back"]
+    rehab = sf["rehab"]
+    expected_recovery = sf["expected_recovery"]
+    duration = sf["duration"]
+    explicit_independence = sf["explicit_independence"]
+    no_adl_support = sf["no_adl_support"]
+    no_medication_support = sf["no_medication_support"]
+    adl = sf["adl"]
+    medication = sf["medication"]
+    high_social = sf["high_social"]
+    skilled_rehab_known = sf["skilled_rehab_known"]
+    move_timing = sf["move_timing"]
+    budget = sf["budget"]
+    medicare = sf["medicare"]
+    entrance_fee = sf["entrance_fee"]
 
     household = {
         "type": "COUPLE" if couple else "SINGLE_OR_UNKNOWN",
@@ -186,7 +96,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             },
         ]
 
-    care_search_approach = _norm(questionnaire_state.get("careSearchApproach"))
+    care_search_approach = facts["preferences"]["care_search_approach"]
     strategy_candidates: List[Dict[str, Any]] = []
 
     def add_strategy(strategy_id: str, status: str, rationale: str, required_capabilities: List[str], rank_hint: int) -> None:
@@ -378,7 +288,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     }
 
     from app.services.living_strategy_guard_patch import deceased_spouse_without_current_couple, _strip_couple_only_strategy
-    if deceased_spouse_without_current_couple(questionnaire_state, natural_language_query):
+    if facts["deceased_spouse_without_current_couple"]:
         return _strip_couple_only_strategy(strategy)
     return strategy
 

@@ -295,6 +295,8 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
         return now
 
     profile = prepared_profile if prepared_profile is not None else profile_builder(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+    from app.services.intake_interpretation import validate_interpretation
+    validate_interpretation(profile)
     stage_started = _mark("build_patient_needs_profile_ms", stage_started)
     profile_readiness = "UNKNOWN"
     if isinstance(profile, dict):
@@ -349,5 +351,6 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     result = apply_canonical_decision_state_authority(result)
     result = _suppress_unverified_recommendations(result)
     result = _attach_pipeline_trace(result)
+    validate_interpretation(result.get("patient_needs_profile") or profile)
     logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
     return result

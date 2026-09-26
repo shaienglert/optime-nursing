@@ -95,6 +95,8 @@ def remember_intake_profile(profile: Dict[str, Any], *, questionnaire_state: Dic
     from app.services.canonical_decision_state import canonical_client_is_complete, canonical_state_payload
     if not canonical_client_is_complete(profile) or canonical_state_payload(profile).get("system") == "BLOCKED":
         raise ValueError("Only a complete, unblocked server profile can be confirmed")
+    from app.services.intake_interpretation import validate_interpretation
+    validate_interpretation(profile)
     return remember_decision_result({
         "artifact_kind": "CONFIRMED_INTAKE_CANDIDATE",
         "profile": profile,
@@ -107,6 +109,8 @@ def recall_intake_profile(profile_id: str, *, questionnaire_state: Dict[str, Any
     artifact = recall_decision_result(profile_id, inputs_fingerprint=intake_inputs_fingerprint(questionnaire_state, natural_language_query))
     if not artifact or artifact.get("artifact_kind") != "CONFIRMED_INTAKE_CANDIDATE":
         return None
+    from app.services.intake_interpretation import validate_interpretation
+    validate_interpretation(artifact["profile"])
     return artifact
 
 
