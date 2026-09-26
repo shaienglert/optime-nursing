@@ -65,8 +65,16 @@ export function SimpleResultsPageClient() {
       const next = JSON.parse(JSON.stringify(current));
       const budget = lower.match(/(?:budget|up to|maximum|max)[^$0-9]{0,20}\$?([0-9][0-9,]*)/);
       if (budget) next.budget = Number(budget[1].replaceAll(",", ""));
-      const miles = lower.match(/([0-9]+)\s*miles?/);
-      if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.locationImportant = "Yes"; }
+      const distance = lower.match(/([0-9]+(?:\\.[0-9]+)?)\\s*(miles?|mi\\b|kilometers?|kilometres?|km\\b)/);
+      if (distance) {
+        const amount = Number(distance[1]);
+        const unit = distance[2];
+        const miles = /^(?:kilo|km)/.test(unit) ? amount * 0.621371 : amount;
+        const normalizedMiles = String(Math.round(miles * 10) / 10);
+        next.maximumDistanceMiles = normalizedMiles;
+        next.customDistanceMiles = normalizedMiles;
+        next.locationImportant = "Yes";
+      }
       if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
       if (/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "No preference";
       if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";
