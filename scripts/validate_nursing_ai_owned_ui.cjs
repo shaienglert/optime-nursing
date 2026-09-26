@@ -2,6 +2,8 @@ const fs = require('fs');
 
 const interview = fs.readFileSync('frontend/src/app/adaptive-interview/page.tsx', 'utf8');
 const intake = fs.readFileSync('frontend/src/components/intake/structured-intake.tsx', 'utf8');
+const intakeQuestions = fs.readFileSync('frontend/src/lib/intake-questions.ts', 'utf8');
+const intakeContract = `${intake}\n${intakeQuestions}`;
 const confirmation = fs.readFileSync('frontend/src/app/intake-confirmation/page.tsx', 'utf8');
 const resultsPage = fs.readFileSync('frontend/src/app/results/page.tsx', 'utf8');
 const simpleResults = fs.readFileSync('frontend/src/app/results/simple-results-page-client.tsx', 'utf8');
@@ -29,7 +31,7 @@ if (!interview.includes('questionnaireCompletion?.mandatoryComplete') || !interv
 if (!interview.includes('I’ll use everything you’ve already told me, so I won’t make you repeat yourself.')) throw new Error('Interview must disclose the no-reask contract to the user.');
 
 for (const token of ['medicalCareProfile', 'moveLossConcerns', 'parkingRequirement', 'clientSummaryConfirmed: false', 'Continue our conversation']) {
-  if (!intake.includes(token)) throw new Error(`Mandatory structured intake contract missing: ${token}`);
+  if (!intakeContract.includes(token)) throw new Error(`Mandatory structured intake contract missing: ${token}`);
 }
 for (const token of ['Please confirm what OOmnik understood.', 'clientSummaryConfirmed: true', 'I confirm—show recommendations']) {
   if (!confirmation.includes(token)) throw new Error(`Client confirmation contract missing: ${token}`);

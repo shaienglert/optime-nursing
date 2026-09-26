@@ -112,7 +112,7 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
 
     def test_frontend_checkbox_options_are_exhaustively_classified(self) -> None:
         repo_root = Path(__file__).resolve().parents[2]
-        source = (repo_root / "frontend/src/components/intake/structured-intake.tsx").read_text(encoding="utf-8")
+        source = (repo_root / "frontend/src/lib/intake-questions.ts").read_text(encoding="utf-8")
 
         def options_for(const_name: str) -> set[str]:
             match = re.search(rf"const {const_name} = \[(.*?)\];", source, re.DOTALL)

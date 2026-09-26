@@ -213,7 +213,7 @@ export type HumanIntelligenceV2 = {
   };
 };
 
-const DEFAULT_STATE: QuestionnaireState = {
+export const DEFAULT_STATE: QuestionnaireState = {
   relationship: "",
   gender: "",
   coupleAssistance: "",
