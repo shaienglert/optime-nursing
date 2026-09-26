@@ -87,3 +87,27 @@ def test_city_state_dictionary_catches_cross_state_conflict():
     assert core._CITY_STATES["HENDERSON"] == "NEVADA"
     assert core._CITY_STATES["MIAMI"] == "FLORIDA"
     assert core._CITY_STATES["MIAMI"] != core._canonical_state("Nevada")
+
+
+def test_state_with_no_local_preference_is_a_complete_market_location():
+    from app.services.canonical_gap_policy import canonical_client_facts
+    facts = canonical_client_facts(
+        {"searchState": "Nevada", "locationImportant": "No"},
+        "",
+    )
+    assert facts["market_location_known"] is True
+
+
+def test_state_without_local_preference_answer_is_not_complete_location():
+    from app.services.canonical_gap_policy import canonical_client_facts
+    facts = canonical_client_facts({"searchState": "Nevada"}, "")
+    assert facts["market_location_known"] is False
+
+
+def test_local_preference_yes_requires_reference():
+    from app.services.canonical_gap_policy import canonical_client_facts
+    facts = canonical_client_facts(
+        {"searchState": "Nevada", "locationImportant": "Yes", "referenceAddress": ""},
+        "",
+    )
+    assert facts["market_location_known"] is False
