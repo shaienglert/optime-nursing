@@ -34,3 +34,24 @@ def test_unknown_origin_is_not_silently_replaced_by_another_market():
     )
     assert radius["status"] == "ORIGIN_UNRESOLVED"
     assert radius["origin"] is None
+
+
+def test_precise_address_is_not_replaced_by_city_centroid():
+    radius = core._requested_radius(
+        {
+            "locationImportant": "Yes",
+            "maximumDistanceMiles": "15",
+            "referenceAddress": "333 S Valley View Blvd, Las Vegas NV 89107",
+        },
+        {"location_city": "LAS VEGAS"},
+    )
+    assert radius["status"] == "PRECISE_REFERENCE_REQUIRES_GEOCODING"
+    assert radius["origin"] is None
+
+
+def test_zip_reference_is_not_replaced_by_city_centroid():
+    radius = core._requested_radius(
+        {"locationImportant": "Yes", "maximumDistanceMiles": "10", "referenceAddress": "89107"},
+        {"location_city": "LAS VEGAS"},
+    )
+    assert radius["status"] == "PRECISE_REFERENCE_REQUIRES_GEOCODING"
