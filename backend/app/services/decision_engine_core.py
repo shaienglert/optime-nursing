@@ -1656,6 +1656,8 @@ def _build_ranked_candidate_detail(
         "role_classification": table.get("role_classification"),
         "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
         "synthetic_pilot": bool(canonical_meta.get("synthetic_pilot")),
+        "synthetic_archetype": canonical_meta.get("synthetic_archetype") if canonical_meta.get("synthetic_pilot") else None,
+        "accepts_couples": canonical_meta.get("accepts_couples") if canonical_meta.get("synthetic_pilot") else None,
         # Pilot identity attributes are verified fields in the governed synthetic
         # catalog. Keep them on the recommendation row so the same person-fit
         # adapter can evaluate an explicit size preference without looking for a
@@ -1843,6 +1845,8 @@ def run_patient_decision_engine(
                 "canonical_type": table.get("canonical_type"),
                 "role_classification": table.get("role_classification"),
                 "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
+                "synthetic_archetype": canonical_meta.get("synthetic_archetype") if canonical_meta.get("synthetic_pilot") else None,
+                "accepts_couples": canonical_meta.get("accepts_couples") if canonical_meta.get("synthetic_pilot") else None,
                 "eligibility_status": eligibility["eligibility_status"],
                 "match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "patient_match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
