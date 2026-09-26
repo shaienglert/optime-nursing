@@ -4,7 +4,7 @@ import { applyCanonicalIdentity } from "./canonical-intake-state";
 export function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Record<string, unknown>): QuestionnaireState {
   let next = JSON.parse(JSON.stringify(state)) as QuestionnaireState;
   const stringKeys: Array<keyof QuestionnaireState> = [
-    "ageGroup", "assistanceLevel", "memoryStatus",
+    "ageGroup", "searchState", "assistanceLevel", "memoryStatus",
     "medicaidStatus", "medicareStatus", "moveTiming", "referenceLocationValue",
     "referenceAddress", "locationImportant", "maximumDistanceMiles", "coupleAssistance",
     "parkingRequirement", "parkingVehicleCount",
