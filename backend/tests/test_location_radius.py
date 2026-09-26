@@ -81,3 +81,9 @@ def test_available_states_are_derived_from_canonical_inventory(monkeypatch):
         "d": {"state": ""},
     })
     assert core.available_search_states() == ["FLORIDA", "NEVADA"]
+
+
+def test_city_state_dictionary_catches_cross_state_conflict():
+    assert core._CITY_STATES["HENDERSON"] == "NEVADA"
+    assert core._CITY_STATES["MIAMI"] == "FLORIDA"
+    assert core._CITY_STATES["MIAMI"] != core._canonical_state("Nevada")
