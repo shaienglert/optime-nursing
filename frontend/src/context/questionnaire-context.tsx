@@ -48,6 +48,7 @@ export type QuestionnaireState = {
     oxygenUse: string;
     woundCareFrequency: string;
     complexConditionDetails: string;
+    complexConditionSupportLevel: string;
     physicianCoordination: string;
   };
   humanIntelligenceV2: HumanIntelligenceV2;
@@ -257,6 +258,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
     oxygenUse: "",
     woundCareFrequency: "",
     complexConditionDetails: "",
+    complexConditionSupportLevel: "",
     physicianCoordination: "",
   },
   humanIntelligenceV2: {
