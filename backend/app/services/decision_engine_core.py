@@ -670,11 +670,50 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
     ):
         _add_need(needs_by_id, "post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")
         extraction_meta["recognized_tokens"].append("neurological rehabilitation")
+    denial_phrases = {
+        "transfer_assistance": ("no mobility limitation", "no mobility limitations", "walks independently", "no transfer assistance", "does not need transfer assistance", "does not need help getting", "doesn't need help getting", "no help getting", "does not need one person", "doesn't need one person", "does not need help to get", "doesn't need help to get"),
+        "nursing_24_7": ("no special medical or nursing needs", "no medical or nursing needs", "does not need nursing support", "doesn't need nursing support"),
+        "dialysis_arrangements": ("no dialysis", "not on dialysis", "does not need dialysis", "doesn't need dialysis"),
+        "wound_care": ("no wound", "no wounds", "no wound care", "does not need wound care", "doesn't need wound care", "no pressure wound", "no pressure ulcer", "no pressure sore", "without pressure wounds", "does not need dressing changes", "doesn't need dressing changes", "no daily dressing changes", "does not have a pressure wound", "doesn't have a pressure wound"),
+        "respiratory_trach_vent": ("no oxygen", "not on oxygen", "no continuous oxygen", "no respiratory support", "does not need oxygen", "doesn't need oxygen"),
+        "speech_therapy": ("no speech", "no swallowing or speech", "does not need speech therapy", "doesn't need speech therapy", "without speech problems"),
+    }
+    sentences = [part for part in re.split(r"(?<=[.!?;])\s+|\n+", normalized) if part.strip()]
+
+    def asserted_apart_from_the_denial(parameter_id: str, keywords) -> bool:
+        """Did the family state this need somewhere the denial does not reach?
+
+        A denial was matched against the whole story, so "she uses oxygen continuously for
+        COPD; there is no oxygen concentrator at home, so the community must supply it"
+        lost the oxygen requirement entirely: "no oxygen" is about equipment the family
+        does not own, not about a person who does not need it. Dropping a clinical need
+        recommends a community that cannot meet it, so a denial only silences a need when
+        the family did not also state it in a sentence the denial is not part of.
+        """
+        phrases = denial_phrases.get(parameter_id)
+        if not phrases:
+            return False
+        for sentence in sentences:
+            if any(phrase in sentence for phrase in phrases):
+                continue
+            # "She is fully independent with bathing, dressing, toileting, transfers,
+            # medications" names every care word in the vocabulary while saying the person
+            # needs none of them. A sentence like that is a denial in its own right, so it
+            # cannot be read as the family asserting the need.
+            if extract_care_denials(sentence)["independent"]:
+                continue
+            if any(re.search(rf"\b{re.escape(str(keyword).lower())}", sentence) for keyword in keywords):
+                return True
+        return False
 
     for keywords, need_tuple in keyword_rules:
         parameter_id = need_tuple[0]
         desired_value = need_tuple[2]
-        if desired_value == "YES" and suppressed_positive.get(parameter_id, False):
+        if (
+            desired_value == "YES"
+            and suppressed_positive.get(parameter_id, False)
+            and not asserted_apart_from_the_denial(parameter_id, keywords)
+        ):
             continue
         if any(present(keyword) for keyword in keywords):
             _add_need(needs_by_id, *need_tuple)
