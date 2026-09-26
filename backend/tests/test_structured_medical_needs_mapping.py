@@ -187,7 +187,7 @@ def test_permanent_medical_equipment_daily_help_uses_explicit_clarification():
     }
     needs = {}
     _governed._legacy._map_structured_medical_needs(questionnaire, needs)
-    assert needs["adl_support"].level == "MEDIUM"
+    assert needs["adl_support"].requirement_level == "MEDIUM"
 
 
 def test_complex_condition_clinical_help_uses_explicit_clarification():
@@ -199,7 +199,7 @@ def test_complex_condition_clinical_help_uses_explicit_clarification():
     }
     needs = {}
     _governed._legacy._map_structured_medical_needs(questionnaire, needs)
-    assert needs["nursing_24_7"].level == "HIGH"
+    assert needs["nursing_24_7"].requirement_level == "HIGH"
 
 
 def test_daytime_supervision_does_not_infer_transfer_support():
