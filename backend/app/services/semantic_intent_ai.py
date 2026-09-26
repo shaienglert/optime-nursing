@@ -46,6 +46,7 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Prefer one high-information clarification at a time.",
     "Populate questionnaire_patch from explicit client facts using only the exact field names and allowed enum values in required_output. Omit unknown or merely inferred fields; never copy defaults as client facts.",
     "Medical terms must be normalized into the structured taxonomy: for example CPAP/BiPAP/ventilator/cough-assist belongs in respiratory equipment details and Permanent medical equipment, dialysis in Dialysis, chronic wounds in Wound care, wheelchairs in mobilityMethod, and lift/two-person transfers in transferAssistance.",
+    "Never infer assistance intensity from a diagnosis, device, supervision label, hospitalization, or generic rehabilitation need. If the specific support/service is decision-relevant and not explicit, leave it UNKNOWN and ask one clarification question.",
     "Return a compact decision packet: preserve 100% statement accounting but avoid repetition and long prose.",
 ]
 
@@ -87,6 +88,8 @@ def _required_output_schema() -> Dict[str, Any]:
                 "oxygenUse": "At night|With activity|Continuously|Not sure",
                 "woundCareFrequency": "explicit frequency string",
                 "complexConditionDetails": "concise explicit conditions/equipment",
+                "complexConditionSupportLevel": "Independently|Some daily help|Clinical or nursing help|Not sure",
+                "rehabServicesNeeded": ["Physical therapy|Occupational therapy|Speech therapy|Not sure"],
                 "physicianCoordination": "No|Yes|Not sure",
             },
             "humanIntelligenceV2": {
