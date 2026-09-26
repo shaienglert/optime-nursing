@@ -1918,6 +1918,20 @@ def run_patient_decision_engine(
     requested_city = profile.get("location_city")
     requested_state = _canonical_state(questionnaire_state.get("searchState"))
     radius_constraint = _requested_radius(questionnaire_state, profile)
+    if radius_constraint and radius_constraint.get("status") != "RESOLVED_CITY_CENTROID":
+        return {
+            "status": "NEEDS_CLARIFICATION",
+            "recommendations": [],
+            "profile": profile,
+            "diagnostics": {
+                "location_radius": {
+                    "requested_miles": radius_constraint.get("miles"),
+                    "origin_city": radius_constraint.get("city"),
+                    "origin_status": radius_constraint.get("status"),
+                    "reason": "LOCATION_ORIGIN_MUST_BE_RESOLVED_BEFORE_RADIUS_CAN_GATE",
+                }
+            },
+        }
     city_state_conflict = bool(requested_state and requested_city and _CITY_STATES.get(str(requested_city).upper()) and _CITY_STATES.get(str(requested_city).upper()) != requested_state)
     if city_state_conflict:
         return {
@@ -1934,7 +1948,9 @@ def run_patient_decision_engine(
             },
         }
     state_excluded_count = 0
+    state_unknown_count = 0
     radius_excluded_count = 0
+    coordinate_unknown_count = 0
 
     _table_lookup_ms = 0.0
     _scoring_ms = 0.0
@@ -1954,7 +1970,10 @@ def run_patient_decision_engine(
         canonical_meta = canonical_index.get(canonical_id, {})
         if requested_state:
             facility_state = _canonical_state(canonical_meta.get("state"))
-            if facility_state and facility_state != requested_state:
+            if not facility_state:
+                state_unknown_count += 1
+                continue
+            if facility_state != requested_state:
                 state_excluded_count += 1
                 continue
         facility_distance_miles = None
@@ -1962,14 +1981,17 @@ def run_patient_decision_engine(
             try:
                 facility_lat = float(canonical_meta.get("latitude"))
                 facility_lon = float(canonical_meta.get("longitude"))
+                if not (-90 <= facility_lat <= 90 and -180 <= facility_lon <= 180):
+                    raise ValueError("invalid coordinate range")
                 origin_lat, origin_lon = radius_constraint["origin"]
                 facility_distance_miles = _haversine_miles(origin_lat, origin_lon, facility_lat, facility_lon)
                 if facility_distance_miles > float(radius_constraint["miles"]):
                     radius_excluded_count += 1
                     continue
             except (TypeError, ValueError):
-                # Missing coordinates are UNKNOWN, never a negative location fact.
-                facility_distance_miles = None
+                # A requested hard radius cannot be verified without valid coordinates.
+                coordinate_unknown_count += 1
+                continue
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
 
         eligibility = _eligibility_from_needs(needs, row_by_param)
@@ -2107,14 +2129,16 @@ def run_patient_decision_engine(
             "search_state": {
                 "requested": requested_state or None,
                 "excluded_other_states_count": state_excluded_count,
-                "missing_facility_state_remains_unknown": True,
+                "excluded_unknown_state_count": state_unknown_count,
+                "missing_facility_state_policy": "NOT_ELIGIBLE_UNTIL_VERIFIED",
             },
             "location_radius": {
                 "requested_miles": radius_constraint.get("miles") if radius_constraint else None,
                 "origin_city": radius_constraint.get("city") if radius_constraint else None,
                 "origin_status": radius_constraint.get("status") if radius_constraint else "NOT_REQUESTED",
                 "excluded_outside_radius_count": radius_excluded_count,
-                "missing_coordinates_remain_unknown": True,
+                "excluded_unknown_coordinates_count": coordinate_unknown_count,
+                "missing_coordinates_policy": "NOT_ELIGIBLE_FOR_HARD_RADIUS_UNTIL_VERIFIED",
             },
         },
         "market_coverage_notice": " ".join(
