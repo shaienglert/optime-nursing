@@ -74,7 +74,7 @@ def test_state_is_independent_from_city_radius():
 
 
 def test_available_states_are_derived_from_canonical_inventory(monkeypatch):
-    monkeypatch.setattr(core, "get_canonical_facility_index", lambda: {
+    monkeypatch.setattr(core, "get_exposed_canonical_facility_index", lambda: {
         "a": {"state": "NV"},
         "b": {"state": "NV"},
         "c": {"state": "FL"},
