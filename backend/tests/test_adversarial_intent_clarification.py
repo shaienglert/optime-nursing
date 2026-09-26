@@ -64,3 +64,18 @@ def test_third_party_statement_is_asked_for_person_scope():
 def test_hebrew_material_is_not_falsely_marked_used():
     rows = account_user_input("אמא צריכה עזרה ברחצה ואין לה דמנציה.")["statements"]
     assert any(row["status"] == "ASKED" and "SEMANTIC_INTERPRETATION_REQUIRED" in row["concepts"] for row in rows)
+
+
+def test_doctor_henderson_does_not_override_explicit_miami_location():
+    profile = core.build_patient_needs_profile({}, "Dr. Henderson is her physician. She lives in Miami and wants to stay there.")
+    assert profile["location_city"] == "MIAMI"
+
+
+def test_north_miami_beats_miami_substring():
+    profile = core.build_patient_needs_profile({}, "My mother lives in North Miami.")
+    assert profile["location_city"] == "NORTH MIAMI"
+
+
+def test_real_henderson_location_still_resolves():
+    profile = core.build_patient_needs_profile({}, "My mother lives in Henderson.")
+    assert profile["location_city"] == "HENDERSON"
