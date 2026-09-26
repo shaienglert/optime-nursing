@@ -139,7 +139,7 @@ test('invalid AI packet does not hide a canonical budget recovery question', asy
   expect(saved.humanIntelligenceV2.scoringEngine.adaptiveSignals[0].answer).toBe('Not sure');
 });
 
-test('home free-text entry starts the governed AI intake without forcing the manual questionnaire', async ({ page }) => {
+test('home free-text entry enters the one-question structured intake without losing the narrative', async ({ page }) => {
   await mockBackend(page);
   await page.goto('http://127.0.0.1:3000/');
 
@@ -148,10 +148,8 @@ test('home free-text entry starts the governed AI intake without forcing the man
   );
   await page.getByRole('button', { name: /See options that may fit/ }).click();
 
-  await expect(page).toHaveURL(/\/adaptive-interview/);
-  expect(new URL(page.url()).searchParams.get('next')).toBe('/results');
-  await page.waitForTimeout(1_000);
-  await expect(page).not.toHaveURL(/\/intake$/);
+  await expect(page).toHaveURL(/\/intake$/);
+  await expect(page.getByRole('heading')).toHaveCount(1);
   const persisted = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem('optime.questionnaire.session') || '{}'));
   expect(persisted.notes).toContain('My mother is 82');
   expect(persisted.budget).toBe(8000);
@@ -265,11 +263,11 @@ test('direct adaptive-interview access is blocked until the structured questionn
 
   await page.goto('http://127.0.0.1:3000/adaptive-interview');
   await expect(page).toHaveURL(/\/intake$/);
-  await expect(page.getByText('Is there any ongoing medical care the community would need to provide or coordinate?')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Who are we finding the right place for?' })).toBeVisible();
+  await expect(page.getByRole('heading')).toHaveCount(1);
+  await expect(page.getByText('Is there any ongoing medical care the community would need to provide or coordinate?')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Yes', exact: true }).nth(0).click();
-  await page.getByRole('button', { name: 'Dialysis', exact: true }).click();
-  await expect(page.getByLabel('Dialysis frequency')).toBeVisible();
-  await expect(page.getByLabel('Current dialysis center')).toBeVisible();
-  await expect(page.getByText('Will they need parking at the community?')).toBeVisible();
+  await page.getByRole('button', { name: 'Mom', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'About how old are they?' })).toBeVisible();
+  await expect(page.getByRole('heading')).toHaveCount(1);
 });
