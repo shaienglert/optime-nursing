@@ -231,3 +231,34 @@ describe("submission", () => {
     expect(submitted.humanIntelligenceV2.futureCareProfile.secureMemoryNeighborhoodNeed).toBe("");
   });
 });
+
+test("changing search state clears stale local geography", () => {
+  let context = baseContext();
+  context.draft.searchState = "Nevada";
+  context.draft.locationImportant = "Yes";
+  context.draft.referenceAddress = "Henderson, NV";
+  context.draft.referenceLocationValue = "Henderson, NV";
+  context.draft.maximumDistanceMiles = "15";
+  const question = QUESTIONS.find((item) => item.id === "searchState")!;
+  context = question.set(context, "Florida");
+  expect(context.draft.searchState).toBe("Florida");
+  expect(context.draft.referenceAddress).toBe("");
+  expect(context.draft.maximumDistanceMiles).toBe("");
+  expect(context.draft.locationImportant).toBe("");
+});
+
+test("turning local preference off clears address and radius from submission", () => {
+  let context = baseContext();
+  context.draft.searchState = "Nevada";
+  context.draft.locationImportant = "Yes";
+  context.draft.referenceAddress = "Summerlin, Las Vegas, NV";
+  context.draft.referenceLocationValue = "Summerlin, Las Vegas, NV";
+  context.draft.maximumDistanceMiles = "20";
+  const question = QUESTIONS.find((item) => item.id === "locationImportant")!;
+  context = question.set(context, "No");
+  const submission = buildSubmission(context);
+  expect(submission.locationImportant).toBe("No");
+  expect(submission.referenceAddress).toBe("");
+  expect(submission.referenceLocationValue).toBe("");
+  expect(submission.maximumDistanceMiles).toBe("");
+});
