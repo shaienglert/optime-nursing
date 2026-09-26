@@ -404,8 +404,13 @@ def _map_rehab(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) 
 def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     language = questionnaire.get("humanIntelligenceV2", {}).get("languageProfile", {})
     preferred_language = _normalize(language.get("preferredSpokenLanguage"))
+    medical_language = _normalize(language.get("medicalDiscussionLanguage"))
+    bilingual_required = _normalize(language.get("bilingualStaffRequired"))
     if preferred_language:
-        _add_need(needs_by_id, "languages", "MEDIUM", preferred_language, [preferred_language, "UNKNOWN"], "FACILITY", "questionnaire.languageProfile.preferredSpokenLanguage", 1.0, "Preferred spoken language support")
+        level = "HIGH" if bilingual_required == "yes" else "MEDIUM"
+        _add_need(needs_by_id, "languages", level, preferred_language, [preferred_language, "UNKNOWN"], "FACILITY", "questionnaire.languageProfile.preferredSpokenLanguage", 1.0, "Resident daily spoken-language support")
+    if medical_language and medical_language != preferred_language:
+        _add_need(needs_by_id, "medical_languages", "HIGH", medical_language, [medical_language, "UNKNOWN"], "FACILITY", "questionnaire.languageProfile.medicalDiscussionLanguage", 1.0, "Medical communication language support")
 
     food = questionnaire.get("humanIntelligenceV2", {}).get("foodProfile", {})
     dietary = [item for item in (food.get("dietaryPreferences") or []) if str(item).strip()]
