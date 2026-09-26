@@ -36,8 +36,42 @@ function scenarioFor(index) {
   };
 }
 
-function question(page, text) {
-  return page.getByText(text, { exact: true }).locator('..');
+/**
+ * Drive the intake one question at a time.
+ *
+ * The intake asks a single question per step and decides the next one from the answers so
+ * far, so the spec cannot click a fixed list of buttons: it has to read the question on
+ * screen and answer that. `answers` maps a prompt pattern to what to do. A single-choice
+ * answer advances by itself; anything else needs "Next".
+ */
+async function answerInterview(page, answers, maxSteps = 120) {
+  const asked = [];
+  for (let step = 0; step < maxSteps; step += 1) {
+    const summary = page.getByRole('heading', { name: /Here’s what I understood/i });
+    if (await summary.isVisible().catch(() => false)) return asked;
+
+    const heading = page.locator('main h1').first();
+    await heading.waitFor({ state: 'visible' });
+    const prompt = (await heading.innerText()).trim();
+    asked.push(prompt);
+
+    const entry = answers.find(([pattern]) => pattern.test(prompt));
+    if (!entry) throw new Error(`No answer configured for intake question: "${prompt}"`);
+    const [, action] = entry;
+
+    if (action.choose) {
+      await page.getByRole('button', { name: action.choose, exact: true }).click();
+      continue; // a single choice advances on its own
+    }
+    if (action.select) {
+      for (const option of action.select) await page.getByRole('button', { name: option, exact: true }).click();
+    }
+    if (action.fill !== undefined) {
+      await page.locator('main input[type="text"], main input[type="number"]').first().fill(String(action.fill));
+    }
+    await page.getByRole('button', { name: /^(Next →|See the summary →)$/ }).click();
+  }
+  throw new Error('Intake did not reach the summary within the step budget');
 }
 
 test.describe('real synthetic-pilot customer journey', () => {
@@ -53,40 +87,44 @@ test.describe('real synthetic-pilot customer journey', () => {
     });
 
     await page.goto('http://127.0.0.1:3000/intake', { waitUntil: 'networkidle' });
-    await expect(page.getByRole('heading', { name: /Let’s get to know the person behind the decision\./i })).toBeVisible();
 
-    await page.getByRole('button', { name: scenario.relationship, exact: true }).click();
-    await page.getByRole('button', { name: scenario.age, exact: true }).click();
-    await page.getByRole('button', { name: 'Help with bathing', exact: true }).click();
-    await page.getByRole('button', { name: 'Help with dressing', exact: true }).click();
-    await page.getByRole('button', { name: 'Help with medications', exact: true }).click();
-    await question(page, 'How do they usually get around?').getByRole('button', { name: 'Independent', exact: true }).click();
-    await question(page, 'Do they need help getting up, sitting down, or transferring?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Have there been any falls in the last six months?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Have you noticed any changes in memory or confusion lately?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Is there any ongoing medical care the community would need to provide or coordinate?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Has there been a hospital stay recently?').getByRole('button', { name: 'No', exact: true }).click();
-    await page.getByRole('button', { name: 'Not eligible', exact: true }).click();
+    const asked = await answerInterview(page, [
+      [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
+      [/About how old are they\?/i, { choose: scenario.age }],
+      [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
+      [/How do they usually get around\?/i, { choose: 'Independent' }],
+      [/getting up, sitting down, or transferring\?/i, { choose: 'No' }],
+      [/falls in the last six months\?/i, { choose: 'No' }],
+      [/changes in memory or confusion lately\?/i, { choose: 'No' }],
+      [/ongoing medical care the community/i, { choose: 'No' }],
+      [/hospital stay recently\?/i, { choose: 'No' }],
+      [/Medicaid situation\?/i, { choose: 'Not eligible' }],
+      [/What monthly budget would feel comfortable\?/i, { fill: scenario.budget }],
+      [/When would you ideally like the move to happen\?/i, { choose: scenario.moveTiming }],
+      [/How do they feel about the idea of moving\?/i, { choose: scenario.attitude }],
+      [/How social would they like everyday life to be\?/i, { choose: scenario.social }],
+      [/What kind of community would feel most comfortable\?/i, { choose: scenario.community }],
+      [/What do they genuinely enjoy doing\?/i, { select: scenario.activities }],
+      [/hate for them to lose after the move\?/i, { select: scenario.concerns }],
+      [/Anything specific we should preserve\?/i, { fill: `${scenario.id}: preserve familiar routines and preferred activities.` }],
+      [/What language feels most natural day to day\?/i, { choose: 'English' }],
+      [/food preferences or requirements/i, { select: [scenario.diet] }],
+      [/religious or faith community be important\?/i, { choose: 'No' }],
+      [/Would a pet need to move with them\?/i, { choose: 'No' }],
+      [/Can they go out independently\?/i, { choose: 'Yes' }],
+      [/What worries them most about moving\?/i, { fill: 'Losing familiar routines' }],
+      [/Will they need parking at the community\?/i, { choose: 'No' }],
+      [/provide more care later/i, { choose: scenario.futureCare }],
+      [/How broadly would you like me to search\?/i, { choose: 'Show me both approaches' }],
+      [/staying near a particular area or person matter\?/i, { choose: 'Yes' }],
+      [/address or area should I measure from\?/i, { fill: 'Las Vegas, NV' }],
+      [/How far would still feel close enough\?/i, { choose: scenario.distance }],
+    ]);
 
-    await page.getByRole('spinbutton', { name: 'What monthly budget would feel comfortable?' }).fill(String(scenario.budget));
-    await page.getByRole('button', { name: scenario.moveTiming, exact: true }).click();
-    await page.getByRole('button', { name: scenario.attitude, exact: true }).click();
-    await page.getByRole('button', { name: scenario.social, exact: true }).click();
-    await page.getByRole('button', { name: scenario.community, exact: true }).click();
-    for (const activity of scenario.activities) await page.getByRole('button', { name: activity, exact: true }).click();
-    for (const concern of scenario.concerns) await page.getByRole('button', { name: concern, exact: true }).click();
-    await page.getByLabel('Anything specific we should preserve?').fill(`${scenario.id}: preserve familiar routines and preferred activities.`);
-    await page.getByRole('button', { name: 'English', exact: true }).click();
-    await page.getByRole('button', { name: scenario.diet, exact: true }).click();
-    await question(page, 'Would a religious or faith community be important?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Will they need parking at the community?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Would you prefer a place that can provide more care later, so another move may be avoided?').getByRole('button', { name: scenario.futureCare, exact: true }).click();
-    await question(page, 'Does staying near a particular area or person matter?').getByRole('button', { name: 'Yes', exact: true }).click();
-    await page.getByLabel('Reference address').fill('Las Vegas, NV');
-    await page.getByRole('button', { name: scenario.distance, exact: true }).click();
-    await question(page, 'Would a pet need to move with them?').getByRole('button', { name: 'No', exact: true }).click();
-    await question(page, 'Can they go out independently?').getByRole('button', { name: 'Yes', exact: true }).click();
-    await page.getByLabel('What worries them most about moving?').fill('Losing familiar routines');
+    // The interview must ask one question at a time and never repeat itself.
+    expect(new Set(asked).size).toBe(asked.length);
+    expect(asked.length).toBeGreaterThan(20);
+
     await page.getByText('Yes — this reflects what I told Oomnik.').click();
     await page.getByRole('button', { name: 'Continue our conversation' }).click();
     await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
