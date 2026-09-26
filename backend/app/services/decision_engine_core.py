@@ -323,11 +323,6 @@ _STRUCTURED_MEDICAL_NEED_MAP = {
     "nursing supervision": ("nursing_24_7", "HIGH"),
     "injections or infusions": ("medication_support", "HIGH"),
     "complex medication management": ("medication_support", "HIGH"),
-    # Deliberately mapped to the residential-assistance tier, not a skilled-nursing
-    # signal: neither a chronic condition label nor equipment alone tells us the
-    # facility needs a licensed nurse, only that daily support is required.
-    "complex chronic condition": ("adl_support", "HIGH"),
-    "permanent medical equipment": ("adl_support", "HIGH"),
 }
 
 
@@ -341,6 +336,16 @@ def _map_structured_medical_needs(questionnaire: Dict[str, Any], needs_by_id: Di
     for label, (parameter_id, level) in _STRUCTURED_MEDICAL_NEED_MAP.items():
         if label in selected:
             _add_need(needs_by_id, parameter_id, level, "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.needs", 0.95, f"Requires {parameter_id.replace('_', ' ')}")
+
+    # A condition/equipment label describes what the person has, not how much
+    # help they need. Only the client's explicit follow-up answer may create a
+    # support requirement.
+    if selected.intersection({"complex chronic condition", "permanent medical equipment"}):
+        support_level = _normalize(medical.get("complexConditionSupportLevel"))
+        if support_level == "some daily help":
+            _add_need(needs_by_id, "adl_support", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.complexConditionSupportLevel", 1.0, "Needs daily help managing medical equipment or chronic condition")
+        elif support_level == "clinical or nursing help":
+            _add_need(needs_by_id, "nursing_24_7", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.complexConditionSupportLevel", 1.0, "Needs clinical or nursing help managing medical equipment or chronic condition")
 
     if "oxygen" in selected:
         # Any regular supplemental-oxygen need rules out plain independent/active-adult
