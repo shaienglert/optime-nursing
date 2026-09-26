@@ -1885,7 +1885,9 @@ def run_patient_decision_engine(
 
     results = []
     requested_city = profile.get("location_city")
+    requested_state = str(questionnaire_state.get("searchState") or "").strip().upper()
     radius_constraint = _requested_radius(questionnaire_state, profile)
+    state_excluded_count = 0
     radius_excluded_count = 0
 
     _table_lookup_ms = 0.0
@@ -1904,6 +1906,11 @@ def run_patient_decision_engine(
         _t1 = time.perf_counter()
         _table_lookup_ms += (_t1 - _t0) * 1000
         canonical_meta = canonical_index.get(canonical_id, {})
+        if requested_state:
+            facility_state = str(canonical_meta.get("state") or "").strip().upper()
+            if facility_state and facility_state != requested_state:
+                state_excluded_count += 1
+                continue
         facility_distance_miles = None
         if radius_constraint and radius_constraint.get("origin"):
             try:
@@ -2051,6 +2058,11 @@ def run_patient_decision_engine(
             "excluded_explicit_negative_count": catalog_query["excluded_explicit_negative_count"],
             "unknown_is_not_negative": True,
             "identities_hidden_pending_client_input": False,
+            "search_state": {
+                "requested": requested_state or None,
+                "excluded_other_states_count": state_excluded_count,
+                "missing_facility_state_remains_unknown": True,
+            },
             "location_radius": {
                 "requested_miles": radius_constraint.get("miles") if radius_constraint else None,
                 "origin_city": radius_constraint.get("city") if radius_constraint else None,
