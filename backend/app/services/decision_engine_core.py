@@ -1803,10 +1803,17 @@ def _requested_radius(questionnaire: Dict[str, Any], profile: Dict[str, Any]) ->
     if miles <= 0:
         return None
     city = str(profile.get("location_city") or "").strip().upper()
+    reference = str(questionnaire.get("referenceAddress") or questionnaire.get("referenceLocationValue") or "").strip()
+    # A street address or ZIP is a more precise client instruction than a city. Until a
+    # governed geocoder resolves it, using the city centroid would silently move the
+    # requested circle. Keep the radius unresolved instead.
+    looks_precise = bool(re.search(r"\\b\\d{5}(?:-\\d{4})?\\b", reference) or re.search(r"^\\s*\\d+\\s+\\S+", reference))
+    if looks_precise:
+        return {"miles": miles, "city": city, "reference": reference, "origin": None, "status": "PRECISE_REFERENCE_REQUIRES_GEOCODING"}
     coords = _CITY_COORDINATES.get(city)
     if not coords:
-        return {"miles": miles, "city": city, "origin": None, "status": "ORIGIN_UNRESOLVED"}
-    return {"miles": miles, "city": city, "origin": coords, "status": "RESOLVED_CITY_CENTROID"}
+        return {"miles": miles, "city": city, "reference": reference, "origin": None, "status": "ORIGIN_UNRESOLVED"}
+    return {"miles": miles, "city": city, "reference": reference, "origin": coords, "status": "RESOLVED_CITY_CENTROID"}
 
 def run_patient_decision_engine(
     questionnaire_state: Dict[str, Any],
