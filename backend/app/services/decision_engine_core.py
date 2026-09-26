@@ -481,6 +481,47 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
 from app.services.care_input_assertions import extract_care_denials
 
 
+SERVED_CITIES = (
+    "north las vegas", "north miami", "coral gables", "las vegas",
+    "henderson", "hialeah", "homestead", "aventura", "miami", "doral",
+)
+# "Dr. Henderson", "Nurse Henderson" -- a person, not a market. Henderson is one of the
+# commonest surnames in the United States and also a city fifteen miles from Las Vegas.
+_PERSONAL_TITLE = re.compile(r"\b(?:dr|doctor|mr|mrs|ms|miss|nurse|sister|brother|pastor|rabbi|father|prof|professor)\.?\s+$")
+_LOCATION_LEAD = re.compile(r"\b(?:in|near|around|from|at|to|within|outside|by)\s+$")
+
+
+def _detect_location_city(normalized: str) -> Optional[str]:
+    """Pick the market the family is describing, out of the cities OPTIME serves.
+
+    A plain substring scan in a fixed order got two things wrong. It read the city out of
+    a person's name, so "Dr. Henderson is her physician, she lives in Miami" searched
+    Henderson, Nevada -- the surname beat the city the family actually stated. And because
+    "miami" was tested before "north miami" and the scan stopped at the first hit, a family
+    in North Miami was searched in Miami.
+
+    So: every mention is collected, a name that follows a personal title is not a place,
+    and of what remains the one introduced by a preposition wins, then the longest name
+    (North Miami over the Miami inside it), then the earliest.
+    """
+    candidates = []
+    for city in SERVED_CITIES:
+        for match in re.finditer(rf"\b{re.escape(city)}\b", normalized):
+            preceding = normalized[: match.start()]
+            if _PERSONAL_TITLE.search(preceding):
+                continue
+            candidates.append((
+                bool(_LOCATION_LEAD.search(preceding)),
+                len(city),
+                -match.start(),
+                city,
+            ))
+    if not candidates:
+        return None
+    candidates.sort(reverse=True)
+    return candidates[0][3].upper()
+
+
 def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_denials=None) -> Dict[str, Any]:
     normalized = _normalize(text)
     extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
@@ -641,12 +682,9 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
                 _add_need(needs_by_id, "skilled_nursing_capabilities", "REQUIRED", "YES", ["YES"], "FACILITY", "natural_language", 0.95, "Skilled nursing capability required")
             extraction_meta["recognized_tokens"].append(keywords[0])
 
-    location_city = None
-    for city in ["north las vegas", "las vegas", "henderson", "miami", "hialeah", "doral", "aventura", "homestead", "coral gables", "north miami"]:
-        if city in normalized:
-            location_city = city.upper()
-            extraction_meta["recognized_tokens"].append(city)
-            break
+    location_city = _detect_location_city(normalized)
+    if location_city:
+        extraction_meta["recognized_tokens"].append(location_city.lower())
     return {"extraction": extraction_meta, "location_city": location_city}
 
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, care_denials=None) -> Dict[str, Any]:
