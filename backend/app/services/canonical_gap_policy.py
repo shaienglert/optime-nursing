@@ -122,9 +122,15 @@ def canonical_client_facts(questionnaire_state: Dict[str, Any], user_text: str) 
         structured_budget_known
         or re.search(r"(?:\$\s*[0-9][0-9,]*(?:\.\d+)?|[0-9][0-9,]*\s*(?:dollars?|usd))", text)
     )
+    search_state_known = bool(str(questionnaire_state.get("searchState") or "").strip())
+    local_location_answered = str(questionnaire_state.get("locationImportant") or "").strip().lower()
+    local_reference_known = bool(str(questionnaire_state.get("referenceLocationValue") or questionnaire_state.get("referenceAddress") or "").strip())
     market_location_known = bool(
-        str(questionnaire_state.get("referenceLocationValue") or questionnaire_state.get("referenceAddress") or "").strip()
-        or re.search(r"\b(?:las vegas|henderson|north las vegas|boulder city|clark county)\b", text)
+        search_state_known
+        and (
+            local_location_answered == "no"
+            or (local_location_answered == "yes" and local_reference_known)
+        )
     )
     medicare_status_known = bool(
         str(questionnaire_state.get("medicareStatus") or "").strip()
