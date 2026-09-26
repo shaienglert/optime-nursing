@@ -863,7 +863,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
   const complex = medicalDetails && draft.medicalCareProfile.needs.some((item) => COMPLEX_MEDICAL_NEEDS.includes(item));
 
   return {
-    ...draft,
+    ...locationScopedDraft,
     assistanceLevel: extras.assistance.join(", "),
     happinessPreferences: extras.activities,
     medicareStatus: extras.rehabNeed === "Yes" ? draft.medicareStatus : "",
