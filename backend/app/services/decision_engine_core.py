@@ -1919,6 +1919,20 @@ def run_patient_decision_engine(
     requested_state = _canonical_state(questionnaire_state.get("searchState"))
     radius_constraint = _requested_radius(questionnaire_state, profile)
     city_state_conflict = bool(requested_state and requested_city and _CITY_STATES.get(str(requested_city).upper()) and _CITY_STATES.get(str(requested_city).upper()) != requested_state)
+    if city_state_conflict:
+        return {
+            "status": "NEEDS_CLARIFICATION",
+            "recommendations": [],
+            "profile": profile,
+            "diagnostics": {
+                "location_conflict": {
+                    "search_state": requested_state,
+                    "location_city": requested_city,
+                    "city_state": _CITY_STATES.get(str(requested_city).upper()),
+                    "reason": "CITY_OUTSIDE_SELECTED_SEARCH_STATE",
+                }
+            },
+        }
     state_excluded_count = 0
     radius_excluded_count = 0
 
@@ -2180,19 +2194,5 @@ def build_patient_comparison_context(canonical_facility_ids: List[str], patient_
         "preferences": [item for item in patient_needs_profile.get("needs", []) if item["requirement_level"] in {"MEDIUM", "PREFERENCE"}],
         "comparison_parameter_ids": comparison.get("parameter_ids", []),
         "facilities": facilities,
-    }    if city_state_conflict:
-        return {
-            "status": "NEEDS_CLARIFICATION",
-            "recommendations": [],
-            "profile": profile,
-            "diagnostics": {
-                "location_conflict": {
-                    "search_state": requested_state,
-                    "location_city": requested_city,
-                    "city_state": _CITY_STATES.get(str(requested_city).upper()),
-                    "reason": "CITY_OUTSIDE_SELECTED_SEARCH_STATE",
-                }
-            },
-        }
-
+    }
 
