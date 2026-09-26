@@ -388,10 +388,17 @@ def _map_memory(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem])
 def _map_rehab(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     transition = questionnaire.get("humanIntelligenceV2", {}).get("transitionRiskProfile", {})
     rehab_need = _normalize(transition.get("postHospitalRehabNeed"))
-    if rehab_need in {"yes", "required", "high"}:
-        _add_need(needs_by_id, "pt", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.transitionRiskProfile.postHospitalRehabNeed", 1.0, "Needs physical therapy")
-        _add_need(needs_by_id, "ot", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.transitionRiskProfile.postHospitalRehabNeed", 1.0, "Needs occupational therapy")
-        # Speech therapy requires its own explicit evidence; rehab alone is not it.
+    if rehab_need not in {"yes", "required", "high"}:
+        return
+    services = {_normalize(item) for item in ((questionnaire.get("medicalCareProfile") or {}).get("rehabServicesNeeded") or [])}
+    mapping = {
+        "physical therapy": ("pt", "Physical therapy explicitly required"),
+        "occupational therapy": ("ot", "Occupational therapy explicitly required"),
+        "speech therapy": ("speech_therapy", "Speech therapy explicitly required"),
+    }
+    for label, (parameter_id, need_text) in mapping.items():
+        if label in services:
+            _add_need(needs_by_id, parameter_id, "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.rehabServicesNeeded", 1.0, need_text)
 
 
 def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
