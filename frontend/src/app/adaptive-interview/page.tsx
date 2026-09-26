@@ -53,7 +53,7 @@ function getDecisionContext(profile: NeedsProfileWithDecisionIntelligence) {
 function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Record<string, unknown>): QuestionnaireState {
   let next = cloneState(state);
   const stringKeys: Array<keyof QuestionnaireState> = [
-    "ageGroup", "assistanceLevel", "memoryStatus",
+    "ageGroup", "searchState", "assistanceLevel", "memoryStatus",
     "medicaidStatus", "referenceLocationValue",
   ];
   for (const key of stringKeys) {
