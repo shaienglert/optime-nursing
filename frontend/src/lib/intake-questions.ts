@@ -284,7 +284,7 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "secureMemory",
     section: SECTION_PERSON,
-    prompt: "Would a secure memory-care setting feel necessary?",
+    prompt: "Based on their memory and safety needs, is a secure memory-care setting actually needed?",
     kind: "single",
     options: ["Yes", "No", "Not sure"],
     required: true,
