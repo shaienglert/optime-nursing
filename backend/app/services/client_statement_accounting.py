@@ -61,11 +61,27 @@ def account_user_input(text: str) -> Dict[str, Any]:
     for index, statement in enumerate(split_user_statements(text)):
         concepts = concepts_for_statement(statement)
         meaningful = len(statement.split()) >= 2 or any(ch.isdigit() for ch in statement)
-        if concepts:
+        value = _norm(statement)
+        contradiction = "INDEPENDENCE" in concepts and "ADL_SUPPORT" in concepts and bool(
+            re.search(r"\\b(?:but|except|though|however)\\b|(?:needs?|requires?)\\s+(?:help|assistance)", value)
+        )
+        temporal_ambiguity = bool(re.search(r"\\b(?:used to|formerly|previously|will need|may need|might need|in the future|recovered|no longer)\\b", value))
+        third_party_scope = bool(re.search(r"\\bmy\\s+(?:aunt|uncle|sister|brother|friend|caregiver)\\b", value))
+        non_english_material = bool(re.search(r"[\\u0590-\\u05ff]", value)) and bool(concepts)
+        if concepts and not (contradiction or temporal_ambiguity or third_party_scope or non_english_material):
             status = "USED"
         elif meaningful:
             status = "ASKED"
-            concepts = ["UNRESOLVED_PARAMETER"]
+            if not concepts:
+                concepts = ["UNRESOLVED_PARAMETER"]
+            if contradiction:
+                concepts.append("CONFLICT_REQUIRES_CLARIFICATION")
+            if temporal_ambiguity:
+                concepts.append("TIME_SCOPE_REQUIRES_CLARIFICATION")
+            if third_party_scope:
+                concepts.append("PERSON_SCOPE_REQUIRES_CLARIFICATION")
+            if non_english_material:
+                concepts.append("SEMANTIC_INTERPRETATION_REQUIRED")
         else:
             status = "NOT_DECISION_RELEVANT"
         rows.append({"index": index, "statement": statement, "status": status, "concepts": concepts})
