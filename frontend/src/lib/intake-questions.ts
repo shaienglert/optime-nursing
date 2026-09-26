@@ -450,6 +450,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setExtra(context, { rehabNeed: text(value) }),
   },
   {
+    id: "rehabServicesNeeded",
+    section: SECTION_MEDICAL,
+    prompt: "Which rehabilitation services are actually needed now?",
+    kind: "multi",
+    options: ["Physical therapy", "Occupational therapy", "Speech therapy", "Not sure"],
+    required: true,
+    label: "rehabilitation services needed",
+    visible: ({ extras }) => extras.rehabNeed === "Yes",
+    get: ({ draft }) => draft.medicalCareProfile.rehabServicesNeeded,
+    set: (context, value) => setMedical(context, { rehabServicesNeeded: list(value) }),
+  },
+  {
     id: "medicareStatus",
     section: SECTION_MEDICAL,
     prompt: "What’s the current Medicare situation?",
@@ -821,6 +833,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
       complexConditionDetails: complex ? draft.medicalCareProfile.complexConditionDetails : "",
       complexConditionSupportLevel: complex ? draft.medicalCareProfile.complexConditionSupportLevel : "",
       physicianCoordination: medicalDetails ? draft.medicalCareProfile.physicianCoordination : "",
+      rehabServicesNeeded: extras.rehabNeed === "Yes" ? draft.medicalCareProfile.rehabServicesNeeded : [],
     },
     humanIntelligenceV2: {
       ...draft.humanIntelligenceV2,
