@@ -206,6 +206,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setDraft(context, { ageGroup: text(value) }),
   },
   {
+    id: "searchState",
+    section: SECTION_PERSON,
+    prompt: "Which state are you looking in?",
+    kind: "single",
+    options: ["Nevada", "Florida", "California", "Arizona", "Texas", "New York", "New Jersey", "Illinois", "Pennsylvania", "Massachusetts", "Other"],
+    required: true,
+    label: "search state",
+    visible: () => true,
+    get: ({ draft }) => draft.searchState,
+    set: (context, value) => setDraft(context, { searchState: text(value) }),
+  },
+  {
     id: "assistance",
     section: SECTION_PERSON,
     prompt: "What kind of help makes everyday life easier? Choose anything that fits.",
