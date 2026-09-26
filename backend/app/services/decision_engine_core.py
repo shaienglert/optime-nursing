@@ -374,11 +374,15 @@ def _map_structured_follow_ups(questionnaire: Dict[str, Any], needs_by_id: Dict[
 
 def _map_memory(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     memory_status = _normalize(questionnaire.get("memoryStatus"))
-    if "significant" in memory_status:
-        _add_need(needs_by_id, "memory_care", "REQUIRED", "YES", ["YES"], "PROGRAM", "questionnaire.memoryStatus", 1.0, "Requires memory care")
-        _add_need(needs_by_id, "dementia_alz_programs", "HIGH", "YES", ["YES"], "PROGRAM", "questionnaire.memoryStatus", 1.0, "Requires dementia program")
-    elif "mild" in memory_status:
-        _add_need(needs_by_id, "memory_care", "MEDIUM", "YES", ["YES", "UNKNOWN"], "PROGRAM", "questionnaire.memoryStatus", 0.8, "Mild memory support preferred")
+    future = questionnaire.get("humanIntelligenceV2", {}).get("futureCareProfile", {})
+    secure_memory = _normalize(future.get("secureMemoryNeighborhoodNeed"))
+    if secure_memory == "yes":
+        _add_need(needs_by_id, "memory_care", "REQUIRED", "YES", ["YES"], "PROGRAM", "questionnaire.futureCareProfile.secureMemoryNeighborhoodNeed", 1.0, "Secure memory-care setting explicitly required")
+        _add_need(needs_by_id, "dementia_alz_programs", "HIGH", "YES", ["YES"], "PROGRAM", "questionnaire.futureCareProfile.secureMemoryNeighborhoodNeed", 1.0, "Memory/dementia program explicitly required")
+    elif "mild" in memory_status or "significant" in memory_status:
+        # Memory severity is clinically relevant context, but it does not by itself
+        # prove that a secure memory-care placement is required.
+        _add_need(needs_by_id, "memory_care", "MEDIUM", "YES", ["YES", "UNKNOWN"], "PROGRAM", "questionnaire.memoryStatus", 0.8, "Memory support preferred; secure setting not inferred")
 
 
 def _map_rehab(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
