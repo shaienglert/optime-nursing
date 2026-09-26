@@ -163,3 +163,40 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_permanent_medical_equipment_alone_does_not_infer_adl_support():
+    questionnaire = {
+        "medicalCareProfile": {
+            "needs": ["Permanent medical equipment"],
+            "complexConditionSupportLevel": "Independently",
+        }
+    }
+    needs = {}
+    _map_structured_medical_needs(questionnaire, needs)
+    assert "adl_support" not in needs
+    assert "nursing_24_7" not in needs
+
+
+def test_permanent_medical_equipment_daily_help_uses_explicit_clarification():
+    questionnaire = {
+        "medicalCareProfile": {
+            "needs": ["Permanent medical equipment"],
+            "complexConditionSupportLevel": "Some daily help",
+        }
+    }
+    needs = {}
+    _map_structured_medical_needs(questionnaire, needs)
+    assert needs["adl_support"].level == "MEDIUM"
+
+
+def test_complex_condition_clinical_help_uses_explicit_clarification():
+    questionnaire = {
+        "medicalCareProfile": {
+            "needs": ["Complex chronic condition"],
+            "complexConditionSupportLevel": "Clinical or nursing help",
+        }
+    }
+    needs = {}
+    _map_structured_medical_needs(questionnaire, needs)
+    assert needs["nursing_24_7"].level == "HIGH"
