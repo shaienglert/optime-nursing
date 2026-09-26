@@ -20,6 +20,31 @@ def without_negated_nursing(text: str) -> str:
     )
 
 
+
+_NEED_TERMS = {
+    "adl": r"(?:help|assistance|support)\\s+with\\s+(?:bathing|dressing|toilet(?:ing)?|daily activities)|(?:bathing|dressing|toilet(?:ing)?)\\s+(?:help|assistance|support)",
+    "medication": r"(?:help|assistance|support)\\s+with\\s+(?:medications?|medicines?)|medication\\s+(?:help|assistance|support|management)",
+    "memory": r"(?:memory care|cognitive support|dementia support)",
+}
+
+def _has_positive_need_outside_denial(normalized: str, domain: str) -> bool:
+    pattern = _NEED_TERMS[domain]
+    for clause in re.split(r"[.!?;\\n]+|\\bbut\\b|\\bhowever\\b|\\bthough\\b|\\balthough\\b", normalized):
+        if not re.search(pattern, clause):
+            continue
+        if re.search(r"\\b(?:does|do|did)\\s+not\\s+(?:need|require|use)|\\bdoesn't\\s+(?:need|require|use)|\\bno\\s+need\\s+for|\\bnever\\s+needed|\\bwithout\\b", clause):
+            continue
+        if re.search(r"\\b(?:fully|completely)\\s+independent\\s+with\\b", clause):
+            continue
+        return True
+    return False
+
+def _ordinary_denial(normalized: str, concept_pattern: str) -> bool:
+    return re.search(
+        rf"\\b(?:(?:does|do|did)\\s+not\\s+(?:need|require|use)|doesn't\\s+(?:need|require|use)|no\\s+need\\s+for|never\\s+needed)\\b[^.!?;\\n]{{0,55}}(?:{concept_pattern})\\b",
+        normalized,
+    ) is not None
+
 def extract_care_denials(text: str) -> dict[str, bool]:
     normalized = str(text or "").strip().lower()
     def present(token: str) -> bool:
@@ -28,16 +53,15 @@ def extract_care_denials(text: str) -> dict[str, bool]:
         "fully independent", "completely independent", "independent with bathing",
         "independent with dressing", "independent with toileting", "independent with transfers",
     ))
-    no_adl_support = explicit_independence or any(phrase in normalized for phrase in (
-        "no adl support", "no help with daily activities", "does not need help with daily activities",
-        "doesn't need help with daily activities", "no personal care support",
+    no_adl_support = (explicit_independence and not _has_positive_need_outside_denial(normalized, "adl")) or _ordinary_denial(normalized, r"(?:adl support|help with (?:bathing|dressing|toilet(?:ing)?|daily activities)|personal care support)") or any(phrase in normalized for phrase in (
+        "no adl support", "no help with daily activities", "no personal care support",
     ))
-    no_medication_support = ((explicit_independence and present("medication")) or any(phrase in normalized for phrase in (
-        "no medication support", "no medication assistance", "does not need medication support", "doesn't need medication support",
+    no_medication_support = ((explicit_independence and present("medication") and not _has_positive_need_outside_denial(normalized, "medication")) or _ordinary_denial(normalized, r"(?:medication support|medication assistance|help with (?:medications?|medicines?))") or any(phrase in normalized for phrase in (
+        "no medication support", "no medication assistance",
     )))
-    no_memory_support = any(phrase in normalized for phrase in (
+    no_memory_support = _ordinary_denial(normalized, r"(?:memory care|cognitive support|dementia support)") or any(phrase in normalized for phrase in (
         "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern",
-        "does not need cognitive support", "doesn't need cognitive support", "no cognitive support",
+        "no cognitive support",
     ))
     # A denial belongs to its own mention, not to every person or requirement
     # in the story. Keep a positive mention elsewhere (including memory care
