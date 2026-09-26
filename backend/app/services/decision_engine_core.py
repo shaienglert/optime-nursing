@@ -251,8 +251,6 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
     if "24/7 nursing" in level or "24x7 nursing" in level or "round the clock nursing" in level or "skilled nursing" in level or "complex" in level:
         _add_need(needs_by_id, "skilled_nursing_capabilities", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs skilled nursing capability")
         _add_need(needs_by_id, "nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs 24/7 nursing")
-        _add_need(needs_by_id, "transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs transfer assistance")
-        _add_need(needs_by_id, "medication_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs medication support")
     elif (
         "bathing" in level or "light" in level or "assistance" in level
         or "dressing" in level or "toileting" in level or "medications" in level
@@ -263,21 +261,21 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
         # each one is a real signal that daily-living support is needed, not just the
         # two or three keywords this used to recognize.
         _add_need(needs_by_id, "adl_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 1.0, "Needs ADL support")
-        if not any(word in level for word in ("bathing", "dressing")) or any(word in level for word in ("transfer", "lift")):
-            _add_need(needs_by_id, "transfer_assistance", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.8, "May need transfer help")
+        # Transfer support is a separate fact and is mapped only from the explicit
+        # transferAssistance follow-up below.
 
 
 STRUCTURED_INTAKE_MAPPING_CONTRACT = {
     "assistanceLevel": {
         "Fully independent": {"classification": "NO_REQUIREMENT", "parameter_ids": []},
-        "Light assistance": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
+        "Light assistance": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with bathing": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with dressing": {"classification": "NEED", "parameter_ids": ["adl_support"]},
-        "Help with toileting": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
+        "Help with toileting": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Help with medications": {"classification": "NEED", "parameter_ids": ["medication_support"]},
-        "Daytime supervision": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "24/7 support required": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities", "nursing_24_7", "transfer_assistance", "medication_support"]},
+        "Daytime supervision": {"classification": "NEED", "parameter_ids": ["adl_support"]},
+        "24/7 support required": {"classification": "NEED", "parameter_ids": ["adl_support"]},
+        "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities", "nursing_24_7"]},
     },
     "medicalCareProfile.needs": {
         "Dialysis": {"classification": "NEED", "parameter_ids": ["dialysis_arrangements"]},
