@@ -111,3 +111,16 @@ def test_local_preference_yes_requires_reference():
         "",
     )
     assert facts["market_location_known"] is False
+
+
+def test_invalid_coordinate_range_is_not_a_real_distance():
+    assert not (-90 <= 999 <= 90)
+
+
+def test_precise_reference_requires_resolution_before_hard_radius():
+    radius = core._requested_radius(
+        {"locationImportant": "Yes", "maximumDistanceMiles": "15", "referenceAddress": "89107"},
+        {"location_city": "LAS VEGAS"},
+    )
+    assert radius["status"] != "RESOLVED_CITY_CENTROID"
+    assert radius["origin"] is None
