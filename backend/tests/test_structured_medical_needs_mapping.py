@@ -230,3 +230,25 @@ def test_explicit_rehab_disciplines_are_mapped_individually():
     _governed._legacy._map_rehab({"humanIntelligenceV2": {"transitionRiskProfile": {"postHospitalRehabNeed": "Yes"}}, "medicalCareProfile": {"rehabServicesNeeded": ["Physical therapy"]}}, needs)
     assert "pt" in needs
     assert "ot" not in needs
+
+
+def test_daily_and_medical_languages_are_separate_needs():
+    needs = {}
+    questionnaire = {
+        "humanIntelligenceV2": {
+            "languageProfile": {
+                "preferredSpokenLanguage": "Spanish",
+                "medicalDiscussionLanguage": "Russian",
+                "bilingualStaffRequired": "Yes",
+            },
+            "foodProfile": {"dietaryPreferences": []},
+            "culturalProfile": {},
+        },
+        "happinessPreferences": [],
+        "moveLossConcerns": [],
+    }
+    _governed._legacy._map_personal_preferences(questionnaire, needs)
+    assert needs["languages"].desired_value == "spanish"
+    assert needs["languages"].requirement_level == "HIGH"
+    assert needs["medical_languages"].desired_value == "russian"
+    assert needs["medical_languages"].requirement_level == "HIGH"
