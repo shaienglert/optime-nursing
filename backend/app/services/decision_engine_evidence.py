@@ -248,8 +248,6 @@ def _result_sort_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         -(float(row.get("capability_depth_score") or 0.0)),
         -(float(row.get("patient_relevant_outcomes_score") or 0.0)),
         -(float(row.get("practical_fit_score") or 0.0)),
-        str(row.get("facility_name") or ""),
-        str(row.get("canonical_facility_id") or ""),
     )
 
 
