@@ -117,7 +117,7 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
     # app/services/__init__.py, which overwrites whatever an earlier gate decided based
     # on this coverage) -- the equivalent fix in client_intent_runtime.py alone had no
     # effect in production because this reconciliation runs after it and ignores it.
-    in_house_adl = canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or explicit_in_house or any(p.get("adl_support_verified") is True for p in payloads)
+    in_house_adl = canonical_type == "SKILLED_NURSING" or explicit_in_house or any(p.get("adl_support_verified") is True for p in payloads)
     outside_allowed_true = care_delivery.get("outside_care_allowed") is True or any(p.get("outside_care_allowed_verified") is True for p in payloads)
     outside_allowed_false = care_delivery.get("outside_care_allowed") is False
     agency = _agency_match_from_row(row)
