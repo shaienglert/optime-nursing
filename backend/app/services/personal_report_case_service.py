@@ -35,8 +35,22 @@ def create_case(
     return case
 
 
+CASE_TOKEN_TTL = timedelta(hours=72)
+
+
 def get_case_by_token(db: Session, case_token: str) -> Optional[PersonalReportCase]:
-    return db.query(PersonalReportCase).filter(PersonalReportCase.case_token == case_token).first()
+    case = db.query(PersonalReportCase).filter(PersonalReportCase.case_token == case_token).first()
+    if case is None:
+        return None
+    created = case.created_at
+    if created is None:
+        return None
+    now = datetime.now(timezone.utc)
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    if created < now - CASE_TOKEN_TTL:
+        return None
+    return case
 
 
 def case_inputs(case: PersonalReportCase) -> dict[str, Any]:
