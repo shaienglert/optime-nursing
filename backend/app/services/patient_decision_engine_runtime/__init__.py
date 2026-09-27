@@ -16,6 +16,7 @@ from app.services.living_strategy_runtime import build_living_strategy_context
 from app.services.personal_care_agency_runtime import build_care_agency_requirements, build_verified_care_partner_context
 from app.services.provider_housing_runtime import attach_provider_housing_evidence
 from app.services.success_factor_runtime import build_success_factor_trace, summarize_trace
+from app.services.nearby_place_service import attach_nearby_place_fit, nearby_rank_key
 
 from app.services import decision_engine_evidence as _governed
 _regulatory_index = _governed._regulatory_index
@@ -367,9 +368,11 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     attach_client_intent_fit(rows, client_intent)
     _stage_started = _mark("attach_client_intent_fit_2_ms", _stage_started)
     survivors = [row for row in rows if _is_rankable_candidate(row)]
+    nearby_importance = str(questionnaire_state.get("nearbyPlacesImportance") or "No preference")
+    attach_nearby_place_fit(survivors, questionnaire_state)
     rejected = [row for row in rows if not _is_rankable_candidate(row)]
     indexed_final = list(enumerate(survivors))
-    indexed_final.sort(key=lambda pair: _stable_final_intent_key(pair[1], pair[0]))
+    indexed_final.sort(key=lambda pair: (*_stable_final_intent_key(pair[1], pair[0])[:-1], *nearby_rank_key(pair[1], nearby_importance), _stable_final_intent_key(pair[1], pair[0])[-1:]))
     ranked_survivors = [row for _, row in indexed_final]
     _reassign_rank_metadata(ranked_survivors)
     _stage_started = _mark("final_sort_and_rank_ms", _stage_started)
@@ -450,6 +453,7 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
         explanation["strategy_universe"] = universe_status
         explanation["care_partner_access"] = row.get("care_partner_access") or {"status": "NOT_APPLICABLE"}
         explanation["human_person_fit"] = row.get("human_person_fit")
+        explanation["nearby_place_fit"] = row.get("nearby_place_fit")
         explanation["agent_person_fit_evidence"] = row.get("agent_person_fit_evidence") or []
         explanation["success_factor_summary"] = trace_summary
         audit_rows.append({"canonical_facility_id": row.get("canonical_facility_id"), "rank_position": row.get("rank_position"), "eligibility_status": row.get("eligibility_status"), "care_setting_fit": (row.get("care_setting_fit") or {}).get("status"), "client_intent_fit": row.get("client_intent_fit") or {}, "care_partner_access": row.get("care_partner_access") or {}, "matched_needs": [item.get("parameter_id") for item in row.get("matched_needs") or []], "unknown_critical_needs": [item.get("parameter_id") for item in row.get("unknown_critical_needs") or []], "success_factors_known_both_sides": trace_summary.get("known_on_both_sides") or [], "success_factors_facility_unknown": trace_summary.get("facility_evidence_unknown") or [], "agent_market_evidence_count": len(row.get("agent_person_fit_evidence") or [])})
