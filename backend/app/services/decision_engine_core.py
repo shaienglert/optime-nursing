@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import time
 from collections import defaultdict
 from dataclasses import dataclass
@@ -1718,54 +1717,6 @@ def _build_ranked_candidate_detail(
     }
 
 
-_STATE_ALIASES = {"NV": "NEVADA", "NEVADA": "NEVADA"}
-_CITY_COORDINATES = {
-    "LAS VEGAS": (36.1716, -115.1391),
-    "HENDERSON": (36.0395, -114.9817),
-    "NORTH LAS VEGAS": (36.1989, -115.1175),
-    "SUMMERLIN": (36.1671, -115.2869),
-    # Census 2026 internal points for the remaining intake choices.
-    "SPRING VALLEY": (36.0951781, -115.2636094),
-    "PARADISE": (36.0871482, -115.1355187),
-    "ENTERPRISE": (36.0091430, -115.2278241),
-    "BOULDER CITY": (35.8538747, -114.9133412),
-}
-
-def _canonical_search_state(value: Any) -> str:
-    raw = str(value or "").strip().upper()
-    return _STATE_ALIASES.get(raw, raw)
-
-def _haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    radius = 3958.7613
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlon / 2) ** 2
-    return radius * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-def _requested_radius(questionnaire: Dict[str, Any], profile: Dict[str, Any]) -> Dict[str, Any] | None:
-    if _normalize(questionnaire.get("locationImportant")) == "no":
-        return None
-    raw = str(questionnaire.get("maximumDistanceMiles") or questionnaire.get("customDistanceMiles") or "").strip()
-    if not raw:
-        return None
-    try:
-        miles = float(raw)
-    except ValueError:
-        return None
-    if miles <= 0:
-        return None
-    reference = str(questionnaire.get("referenceAddress") or questionnaire.get("referenceLocationValue") or "").strip()
-    selected_city = reference.upper() if reference and not reference.lower().startswith("anywhere in") else ""
-    city = str(questionnaire.get("locationCity") or selected_city or profile.get("location_city") or "").strip().upper()
-    looks_precise = bool(re.search(r"\b\d{5}(?:-\d{4})?\b", reference) or re.search(r"^\s*\d+\s+\S+", reference))
-    if looks_precise:
-        return {"miles": miles, "city": city, "origin": None, "status": "PRECISE_REFERENCE_REQUIRES_GEOCODING"}
-    coords = _CITY_COORDINATES.get(city)
-    if not coords:
-        return {"miles": miles, "city": city, "origin": None, "status": "ORIGIN_UNRESOLVED"}
-    return {"miles": miles, "city": city, "origin": coords, "status": "RESOLVED_CITY_CENTROID"}
-
 def run_patient_decision_engine(
     questionnaire_state: Dict[str, Any],
     natural_language_query: str = "",
@@ -1835,17 +1786,7 @@ def run_patient_decision_engine(
         discovered_ids = [canonical_id for canonical_id in discovered_ids if canonical_id in exposed_ids]
 
     results = []
-    selected_reference = str(questionnaire_state.get("referenceAddress") or questionnaire_state.get("referenceLocationValue") or "").strip().upper()
-    selected_city = selected_reference if selected_reference and not selected_reference.startswith("ANYWHERE IN") else ""
-    requested_city = str(questionnaire_state.get("locationCity") or selected_city or profile.get("location_city") or "").strip().upper() or None
-    requested_state = _canonical_search_state(questionnaire_state.get("searchState"))
-    radius_constraint = _requested_radius(questionnaire_state, profile)
-    if radius_constraint and radius_constraint.get("status") != "RESOLVED_CITY_CENTROID":
-        return {"status": "NEEDS_CLARIFICATION", "recommendations": [], "profile": profile, "diagnostics": {"location_radius": {"requested_miles": radius_constraint.get("miles"), "origin_city": radius_constraint.get("city"), "origin_status": radius_constraint.get("status"), "reason": "LOCATION_ORIGIN_MUST_BE_RESOLVED_BEFORE_RADIUS_CAN_GATE"}}}
-    state_excluded_count = 0
-    state_unknown_count = 0
-    radius_excluded_count = 0
-    coordinate_unknown_count = 0
+    requested_city = profile.get("location_city")
 
     _table_lookup_ms = 0.0
     _scoring_ms = 0.0
@@ -1863,27 +1804,6 @@ def run_patient_decision_engine(
         _t1 = time.perf_counter()
         _table_lookup_ms += (_t1 - _t0) * 1000
         canonical_meta = canonical_index.get(canonical_id, {})
-        if requested_state:
-            facility_state = _canonical_search_state(canonical_meta.get("state"))
-            if not facility_state:
-                state_unknown_count += 1
-                continue
-            if facility_state != requested_state:
-                state_excluded_count += 1
-                continue
-        facility_distance_miles = None
-        if radius_constraint and radius_constraint.get("origin"):
-            try:
-                facility_lat = float(canonical_meta.get("latitude"))
-                facility_lon = float(canonical_meta.get("longitude"))
-                origin_lat, origin_lon = radius_constraint["origin"]
-                facility_distance_miles = _haversine_miles(origin_lat, origin_lon, facility_lat, facility_lon)
-                if facility_distance_miles > float(radius_constraint["miles"]):
-                    radius_excluded_count += 1
-                    continue
-            except (TypeError, ValueError):
-                coordinate_unknown_count += 1
-                continue
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
 
         eligibility = _eligibility_from_needs(needs, row_by_param)
@@ -1921,7 +1841,6 @@ def run_patient_decision_engine(
                 "state": table.get("state"),
                 "county": table.get("county"),
                 "zip": table.get("zip"),
-                "distance_miles": round(facility_distance_miles, 2) if facility_distance_miles is not None else None,
                 "canonical_type": table.get("canonical_type"),
                 "role_classification": table.get("role_classification"),
                 "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
@@ -2018,8 +1937,6 @@ def run_patient_decision_engine(
             "excluded_explicit_negative_count": catalog_query["excluded_explicit_negative_count"],
             "unknown_is_not_negative": True,
             "identities_hidden_pending_client_input": False,
-            "search_state": {"requested": requested_state or None, "excluded_other_states_count": state_excluded_count, "excluded_unknown_state_count": state_unknown_count},
-            "location_radius": {"requested_miles": radius_constraint.get("miles") if radius_constraint else None, "origin_city": radius_constraint.get("city") if radius_constraint else None, "origin_status": radius_constraint.get("status") if radius_constraint else "NOT_REQUESTED", "excluded_outside_radius_count": radius_excluded_count, "excluded_unknown_coordinates_count": coordinate_unknown_count},
         },
         "market_coverage_notice": " ".join(
             notice
