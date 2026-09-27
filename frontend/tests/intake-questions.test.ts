@@ -262,3 +262,13 @@ test("turning local preference off clears address and radius from submission", (
   expect(submission.referenceLocationValue).toBe("");
   expect(submission.maximumDistanceMiles).toBe("");
 });
+
+
+test("couple intake requires person-specific assistance instead of sharing one need profile", () => {
+  const context = baseContext();
+  context.draft.relationship = "Couple";
+  const visible = visibleQuestions(context);
+  const q = visible.find((item) => item.id === "coupleAssistance");
+  expect(q).toBeDefined();
+  expect(q?.required).toBe(true);
+});
