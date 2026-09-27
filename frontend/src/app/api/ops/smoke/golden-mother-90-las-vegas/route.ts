@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { requireOpsAuth } from "@/lib/server-ops-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,7 +30,9 @@ const QUESTIONNAIRE_STATE = {
   },
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const unauthorized = requireOpsAuth(request);
+  if (unauthorized) return unauthorized;
   try {
     const started = Date.now();
     const response = await fetch(`${BACKEND_BASE}/decision-engine/recommendations`, {

@@ -1,3 +1,4 @@
+import { requireOpsAuth } from "@/lib/server-ops-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -199,6 +200,8 @@ function fingerprint(payload: RecommendationPayload) {
 }
 
 export async function GET(request: NextRequest) {
+  const unauthorized = requireOpsAuth(request);
+  if (unauthorized) return unauthorized;
   const persona = (request.nextUrl.searchParams.get("persona") || "son84") as PersonaKey;
   const compact = request.nextUrl.searchParams.get("compact") === "1";
   const dialogue = request.nextUrl.searchParams.get("dialogue") === "1";

@@ -1,3 +1,4 @@
+import { requireOpsAuth } from "@/lib/server-ops-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -118,6 +119,8 @@ function scriptedAnswer(id: ScenarioId, question: string): string {
 }
 
 export async function GET(request: NextRequest) {
+  const unauthorized = requireOpsAuth(request);
+  if (unauthorized) return unauthorized;
   try {
     const id = request.nextUrl.searchParams.get("id") as ScenarioId | null;
     if (!id || !(id in scenarios)) return NextResponse.json({ status: "FAIL", error: "UNKNOWN_SCENARIO", supported: Object.keys(scenarios) }, { status: 400 });
