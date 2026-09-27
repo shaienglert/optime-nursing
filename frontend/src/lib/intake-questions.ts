@@ -247,6 +247,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     },
   },
   {
+    id: "coupleAssistance",
+    section: SECTION_PERSON,
+    prompt: "For each person, what help does each of you need day to day?",
+    kind: "text",
+    placeholder: "For example: Husband needs help bathing and medications; wife is fully independent.",
+    required: true,
+    label: "individual support needs for both partners",
+    visible: ({ draft }) => draft.relationship === "Couple",
+    get: ({ draft }) => draft.coupleAssistance,
+    set: (context, value) => setDraft(context, { coupleAssistance: text(value) }),
+  },
+  {
     id: "mobilityMethod",
     section: SECTION_PERSON,
     prompt: "How do they usually get around?",
