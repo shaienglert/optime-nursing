@@ -2880,7 +2880,7 @@ async def run_intelligence(facility_id: Optional[int] = Query(default=None), db:
 
 
 @app.get("/intelligence/facilities/{id}", response_model=FacilityIntelligenceProfileOut)
-async def get_facility_intelligence_profile(id: int, db: Session = Depends(get_db)):
+async def get_facility_intelligence_profile(id: int, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     profile = db.query(FacilityIntelligenceProfile).filter(FacilityIntelligenceProfile.facility_id == id).first()
     if not profile:
         facility = db.query(Facility).filter(Facility.id == id).first()
@@ -2972,12 +2972,12 @@ async def supervisor_run_cycle(db: Session = Depends(get_db), _: None = Depends(
 
 
 @app.get("/supervisor/incidents")
-async def supervisor_incidents(limit: int = Query(default=200, ge=1, le=1000), db: Session = Depends(get_db)):
+async def supervisor_incidents(limit: int = Query(default=200, ge=1, le=1000), db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return {"incidents": recent_incidents(db, limit=limit)}
 
 
 @app.get("/supervisor/stale-usage")
-async def supervisor_stale_usage(hours: int = Query(default=24, ge=1, le=24 * 30), db: Session = Depends(get_db)):
+async def supervisor_stale_usage(hours: int = Query(default=24, ge=1, le=24 * 30), db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return stale_usage_summary(db, hours=hours)
 
 
@@ -3513,7 +3513,7 @@ async def provider_identity_reverification_run(db: Session = Depends(get_db), _:
 
 
 @app.get("/executive-report/latest")
-async def executive_report_latest():
+async def executive_report_latest(_: None = Depends(require_admin_token)):
     latest = get_latest_executive_report()
     if not latest:
         raise HTTPException(status_code=404, detail="No executive report generated yet")
@@ -3521,7 +3521,7 @@ async def executive_report_latest():
 
 
 @app.get("/executive-report/latest/full")
-async def executive_report_latest_full():
+async def executive_report_latest_full(_: None = Depends(require_admin_token)):
     payload = get_executive_report_payload()
     if not payload:
         raise HTTPException(status_code=404, detail="No executive report generated yet")
