@@ -104,7 +104,7 @@ def _resident_factor_state(questionnaire: Dict[str, Any], profile: Dict[str, Any
         values = _known_values((independence.get("drivingImportance"), independence.get("cookingImportance"), independence.get("abilityToLeaveIndependently"), independence.get("hostingFamilyImportance"), personality.get("structureFlexibilityPreference")))
         return {"status": "KNOWN" if values else "UNKNOWN", "evidence": values}
     if factor_key == "preference_congruence":
-        values = _known_values((language.get("preferredSpokenLanguage"), personality.get("privacyImportance"), personality.get("communitySizePreference"), *(food.get("dietaryPreferences") or []), *(questionnaire.get("happinessPreferences") or [])))
+        values = _known_values((language.get("preferredSpokenLanguage"), personality.get("privacyImportance"), personality.get("communitySizePreference"), *(food.get("dietaryPreferences") or []), *(questionnaire.get("happinessPreferences") or []), *(questionnaire.get("nearbyPlaces") or []), questionnaire.get("nearbyPlacesImportance")))
         return {"status": "KNOWN" if values else "UNKNOWN", "evidence": values}
     if factor_key == "resident_staff_relationship":
         values = _known_values((social.get("preferredSocialIntensity"), transition.get("biggestFear")))
