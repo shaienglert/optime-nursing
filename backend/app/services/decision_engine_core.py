@@ -1750,8 +1750,9 @@ def _requested_radius(questionnaire: Dict[str, Any], profile: Dict[str, Any]) ->
         return None
     if miles <= 0:
         return None
-    city = str(questionnaire.get("locationCity") or profile.get("location_city") or "").strip().upper()
     reference = str(questionnaire.get("referenceAddress") or questionnaire.get("referenceLocationValue") or "").strip()
+    selected_city = reference.upper() if reference and not reference.lower().startswith("anywhere in") else ""
+    city = str(questionnaire.get("locationCity") or selected_city or profile.get("location_city") or "").strip().upper()
     looks_precise = bool(re.search(r"\b\d{5}(?:-\d{4})?\b", reference) or re.search(r"^\s*\d+\s+\S+", reference))
     if looks_precise:
         return {"miles": miles, "city": city, "origin": None, "status": "PRECISE_REFERENCE_REQUIRES_GEOCODING"}
@@ -1829,7 +1830,9 @@ def run_patient_decision_engine(
         discovered_ids = [canonical_id for canonical_id in discovered_ids if canonical_id in exposed_ids]
 
     results = []
-    requested_city = str(questionnaire_state.get("locationCity") or profile.get("location_city") or "").strip().upper() or None
+    selected_reference = str(questionnaire_state.get("referenceAddress") or questionnaire_state.get("referenceLocationValue") or "").strip().upper()
+    selected_city = selected_reference if selected_reference and not selected_reference.startswith("ANYWHERE IN") else ""
+    requested_city = str(questionnaire_state.get("locationCity") or selected_city or profile.get("location_city") or "").strip().upper() or None
     requested_state = _canonical_search_state(questionnaire_state.get("searchState"))
     radius_constraint = _requested_radius(questionnaire_state, profile)
     if radius_constraint and radius_constraint.get("status") != "RESOLVED_CITY_CENTROID":

@@ -19,6 +19,7 @@ export type QuestionnaireState = {
   distanceFromFamily: string;
   referenceLocationType: string;
   referenceLocationValue: string;
+  searchState: string;
   locationImportant: string;
   referenceAddress: string;
   maximumDistanceMiles: string;
@@ -230,6 +231,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
   distanceFromFamily: "",
   referenceLocationType: "",
   referenceLocationValue: "",
+  searchState: "Nevada",
   locationImportant: "",
   referenceAddress: "",
   maximumDistanceMiles: "",

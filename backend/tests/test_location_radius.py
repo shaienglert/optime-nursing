@@ -45,3 +45,21 @@ def test_precise_reference_requires_geocoding_before_radius_filter():
     )
     assert radius["status"] == "PRECISE_REFERENCE_REQUIRES_GEOCODING"
     assert radius["origin"] is None
+
+
+def test_selected_intake_city_takes_precedence_over_city_in_free_text():
+    radius = _requested_radius(
+        {"locationImportant": "Yes", "referenceAddress": "Henderson", "maximumDistanceMiles": "10"},
+        {"location_city": "LAS VEGAS"},
+    )
+    assert radius["city"] == "HENDERSON"
+    assert radius["status"] == "RESOLVED_CITY_CENTROID"
+
+
+def test_unresolved_selected_area_never_uses_unrelated_text_city():
+    radius = _requested_radius(
+        {"locationImportant": "Yes", "referenceAddress": "Spring Valley", "maximumDistanceMiles": "10"},
+        {"location_city": "LAS VEGAS"},
+    )
+    assert radius["city"] == "SPRING VALLEY"
+    assert radius["status"] == "ORIGIN_UNRESOLVED"
