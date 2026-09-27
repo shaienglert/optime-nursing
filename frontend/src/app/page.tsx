@@ -28,36 +28,6 @@ const RELATIONSHIP_OPTIONS = [
 
 const AGE_OPTIONS = ["60–64", "65–69", "70–74", "75–79", "80–84", "85–89", "90–94", "95+"];
 
-const ASSISTANCE_OPTIONS = [
-  "fully independent",
-  "a little support",
-  "help with bathing",
-  "help with dressing",
-  "help with medications",
-  "daytime supervision",
-  "support around the clock",
-  "skilled nursing care",
-] as const;
-
-const ASSISTANCE_VALUE_MAP: Record<string, string> = {
-  "fully independent": "Fully independent",
-  "a little support": "Light assistance",
-  "help with bathing": "Help with bathing",
-  "help with dressing": "Help with dressing",
-  "help with medications": "Help with medications",
-  "daytime supervision": "Daytime supervision",
-  "support around the clock": "24/7 support required",
-  "skilled nursing care": "Skilled nursing care",
-};
-
-const MEMORY_OPTIONS = [
-  { label: "no memory concerns", value: "No" },
-  { label: "occasional forgetfulness", value: "Occasionally forgetful" },
-  { label: "mild memory changes", value: "Mild memory issues" },
-  { label: "significant memory concerns", value: "Significant memory issues" },
-  { label: "I am not sure yet", value: "Not sure" },
-] as const;
-
 type HeroStep = "relationship" | "age";
 
 function personCopy(label: string): string {
@@ -98,7 +68,6 @@ export default function HomePage() {
   const [query, setQuery] = useState("");
   const [heroStep, setHeroStep] = useState<HeroStep>("relationship");
   const [relationshipLabel, setRelationshipLabel] = useState("your loved one");
-  const [selectedAssistance, setSelectedAssistance] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -133,8 +102,10 @@ export default function HomePage() {
   }
 
   function chooseAge(label: string): void {
-    setState((current) => ({ ...current, ageGroup: label.replaceAll("–", "-") }));
-    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, { ...state, ageGroup: label.replaceAll("–", "-") });
+    const ageGroup = label.replaceAll("–", "-");
+    const nextState = { ...state, ageGroup };
+    flushSync(() => setState((current) => ({ ...current, ageGroup })));
+    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, nextState);
     router.push("/intake");
   }
 
