@@ -99,8 +99,27 @@ export function StructuredIntake() {
 
   const index = Math.max(0, questions.findIndex((question) => question.id === stepId));
   const question = questions[index];
-  const subject = state.relationship === "Mom" ? "your mother" : state.relationship === "Dad" ? "your father" : state.relationship === "Grandma" ? "your grandmother" : state.relationship === "Grandpa" ? "your grandfather" : state.relationship === "Spouse" ? "your spouse" : state.relationship === "Myself" ? "you" : state.relationship === "Couple" ? "they" : state.relationship === "Relative" ? "your relative" : state.relationship === "Friend" ? "your friend" : "they";
-  const displayPrompt = question?.id === "abilityToLeaveIndependently" ? (subject === "you" ? "Can you leave the community and go out on your own, without another person assisting you?" : `Can ${subject} leave the community and go out on ${subject === "they" ? "their" : "their"} own, without another person assisting ${subject === "they" ? "them" : subject}?`) : question?.prompt;
+  const relation = context.draft.relationship;
+  const subject = relation === "Mom" ? "your mother" : relation === "Dad" ? "your father" : relation === "Grandma" ? "your grandmother" : relation === "Grandpa" ? "your grandfather" : relation === "Spouse" ? "your spouse" : relation === "Myself" ? "you" : relation === "Couple" ? "they" : relation === "Relative" ? "your relative" : relation === "Friend" ? "your friend" : "they";
+  const objectPronoun = relation === "Mom" || relation === "Grandma" ? "her" : relation === "Dad" || relation === "Grandpa" ? "him" : relation === "Myself" ? "you" : "them";
+  const possessive = relation === "Mom" || relation === "Grandma" ? "her" : relation === "Dad" || relation === "Grandpa" ? "his" : relation === "Myself" ? "your" : "their";
+  function personalizePrompt(prompt = "") {
+    if (subject === "they") return prompt;
+    if (subject === "you") return prompt.replace(/\bthey\b/gi, "you").replace(/\bthem\b/gi, "you").replace(/\btheir\b/gi, "your");
+    return prompt
+      .replace(/^Are they\b/i, `Is ${subject}`)
+      .replace(/^Do they\b/i, `Does ${subject}`)
+      .replace(/^How do they\b/i, `How does ${subject}`)
+      .replace(/^What do they\b/i, `What does ${subject}`)
+      .replace(/^Can they\b/i, `Can ${subject}`)
+      .replace(/^Would they\b/i, `Would ${subject}`)
+      .replace(/\bthey\b/gi, subject)
+      .replace(/\bthem\b/gi, objectPronoun)
+      .replace(/\btheir\b/gi, possessive);
+  }
+  const displayPrompt = question?.id === "abilityToLeaveIndependently"
+    ? (subject === "you" ? "Can you leave the community and go out on your own, without another person assisting you?" : `Can ${subject} leave the community and go out on ${possessive} own, without another person assisting ${objectPronoun}?`)
+    : personalizePrompt(question?.prompt);
   const missing = useMemo(() => missingQuestions(context), [context]);
 
   function finishQuestionnaire(finalContext: IntakeContext) {
