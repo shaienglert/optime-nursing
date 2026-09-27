@@ -1,7 +1,7 @@
 export type RankedItem = { rank_position?: number | null; canonical_facility_id: string };
 
 export function getResultsAfterTopFive<T extends RankedItem>(items: T[], topCount = 5): T[] {
-  return items.filter((item) => (item.rank_position || 0) > topCount);
+  return items.filter((item) => item.rank_position == null || item.rank_position > topCount);
 }
 
 export function isStrictRankOrder(items: RankedItem[]): boolean {
@@ -22,7 +22,7 @@ export function canCompareFavorites(ids: string[]): boolean {
 
 export function selectOptimeReference(results: RankedItem[], disqualifiedIds: string[] = []): RankedItem | null {
   const disqualified = new Set(disqualifiedIds);
-  return results.find((item) => !disqualified.has(item.canonical_facility_id)) || null;
+  return results.find((item) => item.rank_position != null && !disqualified.has(item.canonical_facility_id)) || null;
 }
 
 export function uniqueCanonicalParameters(parameterIds: string[]): string[] {
