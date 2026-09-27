@@ -90,7 +90,7 @@ test.describe('real synthetic-pilot customer journey', () => {
 
     const asked = await answerInterview(page, [
       [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
-      [/About how old are they\?/i, { choose: scenario.age }],
+      [/About how old/i, { choose: scenario.age }],
       [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
       [/How do they usually get around\?/i, { choose: 'Independent' }],
       [/getting up, sitting down, or transferring\?/i, { choose: 'No' }],
@@ -105,6 +105,8 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/How social would they like everyday life to be\?/i, { choose: scenario.social }],
       [/What kind of community would feel most comfortable\?/i, { choose: scenario.community }],
       [/What do they genuinely enjoy doing\?/i, { select: scenario.activities }],
+      [/What would you like to have nearby\?/i, { select: ["Parks & walking paths"] }],
+      [/How important is it to be close to these places\?/i, { choose: "Nice to have" }],
       [/hate for them to lose after the move\?/i, { select: scenario.concerns }],
       [/Anything specific we should preserve\?/i, { fill: `${scenario.id}: preserve familiar routines and preferred activities.` }],
       [/What language feels most natural day to day\?/i, { choose: 'English' }],
