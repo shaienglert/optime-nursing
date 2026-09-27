@@ -30,3 +30,15 @@ def test_independence_and_denied_care_do_not_invent_need():
     )
     assert "adl_support" not in ids
     assert "medication_support" not in ids
+
+
+def test_independent_partner_does_not_erase_bed_transfer_need():
+    assert "transfer_assistance" in _need_ids(
+        "Mother is fully independent. Father needs help getting out of bed."
+    )
+
+
+def test_denied_bed_transfer_does_not_create_transfer_need():
+    assert "transfer_assistance" not in _need_ids(
+        "Mother is fully independent and does not need help getting out of bed."
+    )
