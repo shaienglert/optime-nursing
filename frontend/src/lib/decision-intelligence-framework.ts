@@ -118,7 +118,7 @@ function buildResidentProfile(state: QuestionnaireState, recommendations: Ranked
     budget: resolveBudgetValue(state.budget) ?? 0,
     locationPreference: state.referenceLocationValue || state.distanceFromFamily || "Not specified",
     futureCarePreference: state.futureCarePreference || "No stated preference",
-    lifestylePreferences: state.happinessPreferences || [],
+    lifestylePreferences: [...(state.happinessPreferences || []), ...(state.nearbyPlaces || []).map((place) => `Nearby: ${place}`), ...(state.nearbyPlacesImportance ? [`Nearby importance: ${state.nearbyPlacesImportance}`] : [])],
     familyPriorities,
     dietaryPreferences: state.humanIntelligenceV2.foodProfile.dietaryPreferences || [],
     languagePreferences: unique([
