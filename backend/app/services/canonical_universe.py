@@ -227,6 +227,16 @@ def _overlay_source_mtime() -> int:
     return max(mtimes) if mtimes else 0
 
 
+def _projection_source_fingerprint() -> str:
+    """Identify the pinned base and exact overlay inputs across processes and checkouts."""
+    digest = hashlib.sha256(LAS_VEGAS_RUNTIME_SHA256.encode("ascii"))
+    digest.update(LAS_VEGAS_OVERLAY_VERSION.encode("ascii"))
+    for path in (INDEPENDENT_LIVING_EVIDENCE_PATH, PROVIDER_HOUSING_EVIDENCE_PATH, LIFE_PLAN_EVIDENCE_PATH):
+        digest.update(path.name.encode("utf-8"))
+        digest.update(path.read_bytes() if path.is_file() else b"<missing>")
+    return digest.hexdigest()
+
+
 def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: bool) -> Path:
     parts = _las_vegas_part_paths(database_dir)
     missing = [path for path in parts if not path.is_file()]
@@ -249,10 +259,11 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
         else database_dir / "nevada_las_vegas_runtime_projection_v3.json"
     )
     source_mtime = max(max(path.stat().st_mtime_ns for path in parts), _overlay_source_mtime())
+    source_fingerprint = _projection_source_fingerprint()
     if target.is_file() and target.stat().st_mtime_ns >= source_mtime:
         try:
             cached = json.loads(target.read_text(encoding="utf-8"))
-            if cached.get("runtime_overlay_version") == LAS_VEGAS_OVERLAY_VERSION:
+            if cached.get("runtime_source_fingerprint") == source_fingerprint:
                 return target
         except Exception:
             pass
@@ -298,6 +309,7 @@ def _materialize_las_vegas_projection(*, database_dir: Path, require_exists: boo
         raise RuntimeError("Pinned Las Vegas runtime projection contains non-Valley records")
 
     payload = _apply_verified_housing_overlays(payload)
+    payload["runtime_source_fingerprint"] = source_fingerprint
     records = payload.get("records") or []
     if any(str(row.get("state") or "").upper() != "NV" for row in records):
         raise RuntimeError("Verified Las Vegas housing overlay contains non-Nevada records")
