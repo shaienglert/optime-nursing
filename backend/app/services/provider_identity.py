@@ -192,6 +192,17 @@ def start_email_verification(
         ip_address=ip_address,
     )
     db.add(challenge)
+    db.flush()
+
+    from app.services.email_service import send_email_detailed
+    outcome = send_email_detailed(
+        subject="Your OOmnik verification code",
+        body_text=f"Your OOmnik verification code is {code}. It expires in 15 minutes.",
+        recipients=[email],
+    )
+    if not getattr(outcome, "success", False):
+        db.rollback()
+        raise RuntimeError(f"Verification email could not be sent: {getattr(outcome, 'error', 'unknown error')}")
     db.commit()
 
     result = {
