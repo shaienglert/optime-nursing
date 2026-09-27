@@ -156,12 +156,15 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         key = str(must.get("key") or "")
         if key == "LICENSE_CURRENTLY_VALID":
             # Only a confirmed-past expiration_date (a curated registry field, not agent
-            # evidence) fails this; missing/unparseable data passes rather than blocking
+            # evidence) fails this; missing/unparseable data remains pending rather than passing
             # on absence of information, matching the "never fail on unverified data"
             # policy but treating a *reliable* negative here as safe to hard-fail on.
-            if row.get("license_expired") is True:
+            license_status = _upper(row.get("license_status"))
+            explicit_bad_status = license_status in {"INACTIVE", "SUSPENDED", "REVOKED", "EXPIRED", "CLOSED"}
+            explicit_active_status = license_status in {"ACTIVE", "ACTIVE_BUSINESS_LICENSE_IDENTITY", "UNREGULATED_SENIOR_HOUSING_PROVIDER_VERIFIED"}
+            if row.get("license_expired") is True or explicit_bad_status:
                 hard_fail.append(key)
-            elif row.get("license_expired") is False:
+            elif row.get("license_expired") is False and (explicit_active_status or not license_status):
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
