@@ -401,7 +401,7 @@ def _explicit_user_text_answered_dimensions(user_text: str) -> set[str]:
     answered: set[str] = set()
     if re.search(r"\b(no mobility limitation(?:s)?|walks? independently|independent with [^.]{0,100}transfers?|uses? (?:a )?(?:walker|wheelchair|cane)|needs? (?:a )?(?:walker|wheelchair|cane))\b", text):
         answered.add("mobility")
-    if re.search(r"\b(no memory concern(?:s)?|no cognitive support|no dementia|cognitively intact|memory concern(?:s)?|dementia|alzheimer)\b", text):
+    if re.search(r"\b(no memory concern(?:s)?|no cognitive support|no dementia|cognitively intact|memory concern(?:s)?|dementia|alzheimer(?:'s)?)\b", text):
         answered.add("cognitive")
     if re.search(r"\b(las vegas|north las vegas|henderson|nevada|miami|dallas|houston|austin)\b", text):
         answered.add("location")
