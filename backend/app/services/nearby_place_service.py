@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import math
 import os
+import time
 from typing import Any
 
 import requests
 
 OVERPASS_URL = os.getenv("OOMNIK_OVERPASS_URL", "https://overpass-api.de/api/interpreter")
 DEFAULT_RADIUS_METERS = int(os.getenv("OOMNIK_POI_RADIUS_METERS", "8047"))
+_CACHE: dict[tuple[float, float, tuple[str, ...], int], tuple[float, dict[str, Any]]] = {}
+_CACHE_TTL_SECONDS = int(os.getenv("OOMNIK_POI_CACHE_TTL_SECONDS", "86400"))
 
 CATEGORY_TAGS = {
     "Shopping": [("shop", None)],
@@ -36,6 +39,10 @@ def _distance_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float
 
 def nearby_places(latitude: float, longitude: float, categories: list[str], radius_meters: int = DEFAULT_RADIUS_METERS) -> dict[str, Any]:
     requested = [c for c in categories if c in CATEGORY_TAGS]
+    cache_key = (round(float(latitude), 5), round(float(longitude), 5), tuple(sorted(requested)), int(radius_meters))
+    cached = _CACHE.get(cache_key)
+    if cached and time.time() - cached[0] < _CACHE_TTL_SECONDS:
+        return {**cached[1], "cache": "HIT"}
     if not requested:
         return {"status": "NO_SUPPORTED_CATEGORIES", "places": {}, "radius_meters": radius_meters}
     clauses = []
@@ -58,7 +65,9 @@ def nearby_places(latitude: float, longitude: float, categories: list[str], radi
                 found[category].append({"name": tags.get("name") or category, "distance_miles": round(_distance_miles(latitude, longitude, float(lat), float(lon)), 2), "source": "OpenStreetMap/Overpass"})
     for category in found:
         found[category] = sorted(found[category], key=lambda x: x["distance_miles"])[:5]
-    return {"status": "OK", "places": found, "radius_meters": radius_meters, "source": "OpenStreetMap/Overpass"}
+    result = {"status": "OK", "places": found, "radius_meters": radius_meters, "source": "OpenStreetMap/Overpass", "cache": "MISS"}
+    _CACHE[cache_key] = (time.time(), result)
+    return result
 
 
 def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dict[str, Any]) -> None:
