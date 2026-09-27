@@ -20,6 +20,7 @@ export type IntakeExtras = {
   assistance: string[];
   activities: string[];
   dietary: string[];
+  dietaryOther: string;
   religiousCommunity: string;
   religion: string;
   religiousNeeds: string[];
@@ -101,7 +102,7 @@ export const moveConcernOptions = [
 ];
 
 export const activityOptions = ["Music", "Movies", "Games", "Exercise", "Outdoor activities", "Religious life", "Cultural activities", "Classes", "Volunteering"];
-export const dietaryOptions = ["Kosher", "Halal", "Vegetarian", "Vegan", "Low sodium", "Diabetic", "Gluten free", "Other"];
+export const dietaryOptions = ["No restrictions / eats everything", "Kosher", "Halal", "Vegetarian", "Vegan", "Low sodium", "Diabetic", "Gluten free", "Other"];
 
 export const COMPLEX_MEDICAL_NEEDS = ["Complex chronic condition", "Complex medication management", "Injections or infusions", "Permanent medical equipment", "Nursing supervision"];
 
@@ -117,7 +118,8 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
   return {
     assistance: state.assistanceLevel ? state.assistanceLevel.split(", ") : [],
     activities: state.happinessPreferences || [],
-    dietary: human.foodProfile.dietaryPreferences || [],
+    dietary: (human.foodProfile.dietaryPreferences || []).filter((item) => !item.startsWith("Other: ")),
+    dietaryOther: (human.foodProfile.dietaryPreferences || []).find((item) => item.startsWith("Other: "))?.slice(7) || "",
     religiousCommunity: religionImportance === "Yes" ? "Yes" : religionImportance === "No" ? "No" : "",
     religion: human.culturalProfile.faithTraditions[0] || "",
     religiousNeeds: human.culturalProfile.religiousSupportNeeds || [],
@@ -397,9 +399,9 @@ export const QUESTIONS: IntakeQuestion[] = [
     section: SECTION_MEDICAL,
     prompt: "Describe what the community must provide or coordinate.",
     kind: "text",
-    placeholder: "Condition, treatment, equipment, nursing task...",
-    required: true,
-    label: "complex medical details",
+    placeholder: "Optional: condition, treatment, equipment, or nursing task"
+    required: false,
+    label: "complex medical details (optional)",
     visible: (context) => needsMedicalDetails(context) && context.draft.medicalCareProfile.needs.some((item) => COMPLEX_MEDICAL_NEEDS.includes(item)),
     get: ({ draft }) => draft.medicalCareProfile.complexConditionDetails,
     set: (context, value) => setMedical(context, { complexConditionDetails: text(value) }),
@@ -606,7 +608,24 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "dietary preferences",
     visible: () => true,
     get: ({ extras }) => extras.dietary,
-    set: (context, value) => setExtra(context, { dietary: list(value) }),
+    set: (context, value) => {
+      const next = list(value);
+      const added = next.find((item) => !context.extras.dietary.includes(item));
+      if (added === "No restrictions / eats everything") return setExtra(context, { dietary: ["No restrictions / eats everything"], dietaryOther: "" });
+      return setExtra(context, { dietary: next.filter((item) => item !== "No restrictions / eats everything") });
+    },
+  },
+  {
+    id: "dietaryOther",
+    section: SECTION_FIT,
+    prompt: "What other food preference or requirement should we know about?",
+    kind: "text",
+    placeholder: "Describe it in your own words",
+    required: true,
+    label: "other food preference",
+    visible: ({ extras }) => extras.dietary.includes("Other"),
+    get: ({ extras }) => extras.dietaryOther,
+    set: (context, value) => setExtra(context, { dietaryOther: text(value) }),
   },
   {
     id: "religiousCommunity",
@@ -658,7 +677,7 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "abilityToLeaveIndependently",
     section: SECTION_PRACTICAL,
-    prompt: "Can they go out independently?",
+    prompt: "Can the person we’re finding a home for leave the community and go out on their own?"
     kind: "single",
     options: ["Yes", "With support", "No", "Not sure"],
     required: true,
@@ -675,7 +694,7 @@ export const QUESTIONS: IntakeQuestion[] = [
     placeholder: "Tell me in your own words, or say none or not sure",
     required: true,
     label: "biggest move concern",
-    visible: () => true,
+    visible: () => false,
     get: ({ draft }) => draft.humanIntelligenceV2.transitionRiskProfile.biggestFear,
     set: (context, value) => setTransitionRisk(context, { biggestFear: text(value) }),
   },
@@ -743,9 +762,9 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "referenceAddress",
     section: SECTION_PRACTICAL,
-    prompt: "Which address or area should I measure from?",
-    kind: "text",
-    placeholder: "Address, ZIP, city, or neighborhood",
+    prompt: "Which Las Vegas Valley area should we use as the center of the search?",
+    kind: "single",
+    options: ["Las Vegas", "Henderson", "North Las Vegas", "Summerlin", "Spring Valley", "Paradise", "Enterprise", "Boulder City"],
     required: true,
     label: "reference address",
     visible: ({ draft }) => draft.locationImportant === "Yes",
@@ -835,7 +854,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
         religiousSupportNeeds: extras.religiousCommunity === "Yes" ? extras.religiousNeeds : [],
       },
       languageProfile: { ...draft.humanIntelligenceV2.languageProfile, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage },
-      foodProfile: { dietaryPreferences: extras.dietary },
+      foodProfile: { dietaryPreferences: [...extras.dietary.filter((item) => item !== "Other"), ...(extras.dietaryOther.trim() ? [`Other: ${extras.dietaryOther.trim()}`] : [])] },
       personalityProfile: { ...draft.humanIntelligenceV2.personalityProfile, communitySizePreference: extras.communityStyle },
       transitionRiskProfile: {
         ...draft.humanIntelligenceV2.transitionRiskProfile,
