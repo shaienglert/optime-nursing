@@ -1,0 +1,37 @@
+name: Pilot acceptance cases
+# Runs the ten family situations against the synthetic-pilot market, where every one of
+# the 200 communities has a curated record and verified evidence for 31 parameters, and
+# grades each recommendation against those records rather than against the engine's own
+# verdict. A recommendation over the family's budget, one missing a capability the family
+# needs, or one in a kind of community the case must never be shown, fails the run.
+on:
+  pull_request:
+    paths:
+      - 'backend/app/**'
+      - 'database/synthetic_pilot/**'
+      - 'scripts/pilot_acceptance/**'
+      - '.github/workflows/pilot-acceptance.yml'
+  workflow_dispatch:
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt
+      - name: Run the acceptance cases
+        env:
+          # The whole catalog, not the default first fifty: a benchmark that looks at a
+          # quarter of the market is not a benchmark.
+          OOMNIK_PILOT_FACILITY_LIMIT: '200'
+          PYTHONHASHSEED: '0'
+        run: python scripts/pilot_acceptance/run_all.py --out "${{ runner.temp }}/pilot-acceptance"
+      - name: Keep the per-case snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-acceptance-snapshots
+          path: ${{ runner.temp }}/pilot-acceptance
