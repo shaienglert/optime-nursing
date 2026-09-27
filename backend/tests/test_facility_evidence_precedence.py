@@ -28,3 +28,17 @@ def test_unverified_evidence_cannot_become_hard_fact():
         {"value": "YES", "scope": "FACILITY", "confidence": "HIGH", "last_verified": "2026-09-01", "verification_status": "NOT_VERIFIED", "conflict_status": "NO_CONFLICT"},
     ])
     assert best["value"] == "UNKNOWN"
+
+
+def test_taxonomy_inference_cannot_prove_hard_capability():
+    best = _best_evidence_row([
+        {"value": "YES", "scope": "FACILITY", "confidence": "HIGH", "last_verified": "2026-09-01", "evidence_strength": "TAXONOMY_INFERRED", "conflict_status": "NONE"},
+    ])
+    assert best["value"] == "UNKNOWN"
+
+
+def test_nevada_regulatory_evidence_without_verification_status_remains_eligible():
+    best = _best_evidence_row([
+        {"value": "YES", "scope": "FACILITY", "confidence": "HIGH", "last_verified": "2026-09-01", "evidence_strength": "REGULATORY_VERIFIED", "conflict_status": "NONE"},
+    ])
+    assert best["value"] == "YES"
