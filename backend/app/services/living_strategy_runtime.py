@@ -93,7 +93,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     # `relationship` identifies who the search is for (for example, "my spouse");
     # it does not mean two residents are moving. Require an explicit joint-move or
     # co-residence statement before creating the COUPLE_CORESIDENCE hard gate.
-    couple = _mentions_couple(query)
+    couple = _mentions_couple(query) or _norm(questionnaire_state.get("relationship")) == "couple"
 
     no_dementia = denials["memory"] or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
     memory_care_needed = (
@@ -187,6 +187,8 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         ]
 
     care_search_approach = _norm(questionnaire_state.get("careSearchApproach"))
+    allow_outside_strategy = care_search_approach in {"", "show me both approaches", "independent living + outside support"}
+    require_in_house_strategy = care_search_approach == "care provided by the community"
     strategy_candidates: List[Dict[str, Any]] = []
 
     def add_strategy(strategy_id: str, status: str, rationale: str, required_capabilities: List[str], rank_hint: int) -> None:
@@ -245,7 +247,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             )
 
     transient_support_pattern = adl and no_dementia and not memory_care_needed and expected_recovery
-    if transient_support_pattern:
+    if transient_support_pattern and allow_outside_strategy and not require_in_house_strategy:
         add_strategy(
             "INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE",
             "LEADING_CONDITIONAL",
@@ -285,13 +287,14 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
             ["MEDICATION_SUPPORT", "ADL_SUPPORT_IF_NEEDED"],
             1,
         )
-        add_strategy(
-            "INDEPENDENT_LIVING_PLUS_OUTSIDE_CARE",
-            "ALTERNATIVE_CONDITIONAL",
-            "Independent Living may remain viable only where medication support can be safely supplied through a verified outside-care pathway.",
-            ["INDEPENDENT_LIVING", "OUTSIDE_CARE_ALLOWED", "MEDICATION_SUPPORT_EXTERNAL"],
-            2,
-        )
+        if allow_outside_strategy and not require_in_house_strategy:
+            add_strategy(
+                "INDEPENDENT_LIVING_PLUS_OUTSIDE_CARE",
+                "ALTERNATIVE_CONDITIONAL",
+                "Independent Living may remain viable only where medication support can be safely supplied through a verified outside-care pathway.",
+                ["INDEPENDENT_LIVING", "OUTSIDE_CARE_ALLOWED", "MEDICATION_SUPPORT_EXTERNAL"],
+                2,
+            )
     if skilled_rehab_known:
         add_strategy(
             "SHORT_STAY_SKILLED_NURSING_REHAB",
