@@ -1708,6 +1708,7 @@ def _build_ranked_candidate_detail(
         "county": table.get("county"),
         "license_expiration_date": canonical_meta.get("expiration_date"),
         "license_expired": _license_expired(canonical_meta.get("expiration_date")),
+        "license_status": canonical_meta.get("license_status"),
         "zip": table.get("zip"),
         "canonical_type": table.get("canonical_type"),
         "role_classification": table.get("role_classification"),
