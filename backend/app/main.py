@@ -94,6 +94,7 @@ from app.services.provider_identity import (
     start_email_verification,
     validate_license_ownership,
     verify_provider_access_token,
+    provider_session_user_id,
 )
 from app.services.facility_profile_portal import (
     add_photo,
@@ -3136,7 +3137,12 @@ async def import_facility_activities(
     facility_id: int,
     payload: ActivityImportIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
+    try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.updated_by_user_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
@@ -3191,7 +3197,12 @@ async def persist_provider_verification_answers(
     facility_id: int,
     payload: ProviderPersistIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
+    try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.verified_by_user_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
@@ -3283,7 +3294,12 @@ async def provider_identity_license_validate(
     facility_id: int,
     payload: LicenseValidationIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
+    try:
+        provider_session_user_id(x_provider_token or "", facility_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     try:
         result = validate_license_ownership(
             db=db,
@@ -3419,7 +3435,7 @@ async def provider_facility_search(
 
 
 @app.post("/provider/demo/opticare")
-async def provider_portal_opticare_demo(db: Session = Depends(get_db)):
+async def provider_portal_opticare_demo(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     """Create or return the one isolated, non-production portal test record."""
     return ensure_opticare_demo(db)
 
