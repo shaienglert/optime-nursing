@@ -533,11 +533,12 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
 
     def present(token: str) -> bool:
         token = token.lower()
-        if "nursing" in token:
-            return token in without_negated_nursing(normalized)
+        haystack = without_negated_nursing(normalized) if "nursing" in token else normalized
         if token in {"pt", "ot"}:
-            return re.search(rf"\b{re.escape(token)}\b", normalized) is not None
-        return token in normalized
+            return re.search(rf"\b{re.escape(token)}\b", haystack) is not None
+        # Require a word start: "adl" in "sadly" must not invent a care
+        # need. Preserve ordinary suffixes such as "medications".
+        return re.search(rf"(?<!\w){re.escape(token)}", haystack) is not None
 
     denials = care_denials if care_denials is not None else extract_care_denials(text)
     explicit_independence = denials["independent"]
@@ -550,6 +551,19 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
         "does not need help getting", "doesn't need help getting",
         "does not need help to get", "doesn't need help to get",
     ))
+    # A different family member's independence cannot cancel an explicitly
+    # stated transfer need. Keep denial-only stories suppressed.
+    transfer_text = re.sub(
+        r"\b(?:does|do)\s+not\s+need\s+(?:help|assistance)[^.;!?]{0,65}\b(?:transfers?|transferring|get(?:ting)?\s+(?:in|out|up)|mobility|lift)"
+        r"|\b(?:doesn't|don't)\s+need\s+(?:help|assistance)[^.;!?]{0,65}\b(?:transfers?|transferring|get(?:ting)?\s+(?:in|out|up)|mobility|lift)",
+        "", normalized,
+    )
+    positive_transfer = re.search(
+        r"\b(?:needs?|requires?)\s+(?:help|assistance|support)\s+(?:with\s+|to\s+)?(?:transfers?|transferring|get(?:ting)?\s+(?:in|out|up)|mobility|lift)",
+        transfer_text,
+    )
+    if positive_transfer:
+        no_transfer_support = False
     bed_or_shower_help = re.search(
         r"\b(?:needs?\s+(?:one person\s+to\s+)?help|needs?\s+one person\s+to\s+help\s+(?:her|him|them)|help\s+(?:her|him|them))\s+(?:to\s+)?(?:get|getting)\s+(?:in\s+and\s+out\s+of|into|out\s+of)\s+(?:the\s+)?(?:bed|shower)\b",
         normalized,
