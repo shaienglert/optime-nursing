@@ -580,7 +580,6 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
     ))
 
     keyword_rules = [
-        (["stroke", "neurolog"], ("post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")),
         (["dialysis"], ("dialysis_arrangements", "REQUIRED", "YES", ["YES"], "SERVICE", "natural_language", 0.98, "Dialysis arrangements required")),
         (["wound care", "wound management", "pressure wound", "pressure ulcer", "pressure sore", "daily dressing changes", "daily skilled dressing changes"], ("wound_care", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.98, "Wound-care capability required")),
         (["continuous oxygen", "oxygen"], ("respiratory_trach_vent", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Respiratory / oxygen support required")),
@@ -605,6 +604,16 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
         "respiratory_trach_vent": no_respiratory_support,
         "speech_therapy": no_speech_support,
     }
+    # A past stroke describes history, not a current rehabilitation requirement.
+    # Only explicit current neurological rehabilitation requests establish this need.
+    if re.search(
+        r"\b(?:stroke|neurolog\w*)\b[^.\n;]{0,65}\b(?:rehab(?:ilitation)?|therapy|therapies)\b"
+        r"|\b(?:rehab(?:ilitation)?|therapy|therapies)\b[^.\n;]{0,65}\b(?:stroke|neurolog\w*)\b",
+        normalized,
+    ):
+        _add_need(needs_by_id, "post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")
+        extraction_meta["recognized_tokens"].append("neurological rehabilitation")
+
     for keywords, need_tuple in keyword_rules:
         parameter_id = need_tuple[0]
         desired_value = need_tuple[2]
@@ -1657,6 +1666,8 @@ def _build_ranked_candidate_detail(
         "role_classification": table.get("role_classification"),
         "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
         "synthetic_pilot": bool(canonical_meta.get("synthetic_pilot")),
+        "synthetic_archetype": canonical_meta.get("synthetic_archetype") if canonical_meta.get("synthetic_pilot") else None,
+        "accepts_couples": canonical_meta.get("accepts_couples") if canonical_meta.get("synthetic_pilot") else None,
         # Pilot identity attributes are verified fields in the governed synthetic
         # catalog. Keep them on the recommendation row so the same person-fit
         # adapter can evaluate an explicit size preference without looking for a
@@ -1844,6 +1855,8 @@ def run_patient_decision_engine(
                 "canonical_type": table.get("canonical_type"),
                 "role_classification": table.get("role_classification"),
                 "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
+                "synthetic_archetype": canonical_meta.get("synthetic_archetype") if canonical_meta.get("synthetic_pilot") else None,
+                "accepts_couples": canonical_meta.get("accepts_couples") if canonical_meta.get("synthetic_pilot") else None,
                 "eligibility_status": eligibility["eligibility_status"],
                 "match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "patient_match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
