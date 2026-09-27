@@ -300,7 +300,7 @@ export function SimpleResultsPageClient() {
                   {item.visual_media?.hero?.url ? <div className="mb-6 overflow-hidden rounded-2xl border border-[#ded6c9] bg-[#f4f0e8]"><Image src={item.visual_media.hero.url} alt={`Synthetic illustration for ${item.facility_name}`} width={1200} height={700} className="h-64 w-full object-cover" /><p className="px-4 py-2 text-sm text-[#6b6257]">{item.visual_media.hero.source_note || "Synthetic pilot illustration—not a real facility"}</p></div> : null}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-lg font-semibold text-[#3e7868]">{index === 0 ? "Where I would start" : `Option ${index + 1}`}</p>
+                      <p className="text-lg font-semibold text-[#3e7868]">{item.rank_display ? item.rank_display : "Eligible option"}</p>
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{item.facility_name}</h2>
                       <p className="mt-2 text-lg text-[#627069]">{[item.city, item.state].filter(Boolean).join(", ")}</p>
                       <p className="mt-2 text-lg font-semibold text-[#334b42]">{item.starting_monthly_price ? `Starting at ${item.starting_monthly_price.toLocaleString()} / month` : "Price not provided"} · Availability: {item.availability_status === "YES" ? "available" : item.availability_status === "LIMITED" ? "limited / waitlist" : item.availability_status === "NO" ? "not currently available" : "needs confirmation"}</p>
