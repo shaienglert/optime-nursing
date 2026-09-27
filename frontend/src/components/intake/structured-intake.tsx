@@ -99,6 +99,8 @@ export function StructuredIntake() {
 
   const index = Math.max(0, questions.findIndex((question) => question.id === stepId));
   const question = questions[index];
+  const subject = state.relationship === "Mom" ? "your mother" : state.relationship === "Dad" ? "your father" : state.relationship === "Grandma" ? "your grandmother" : state.relationship === "Grandpa" ? "your grandfather" : state.relationship === "Spouse" ? "your spouse" : state.relationship === "Myself" ? "you" : state.relationship === "Couple" ? "they" : state.relationship === "Relative" ? "your relative" : state.relationship === "Friend" ? "your friend" : "they";
+  const displayPrompt = question?.id === "abilityToLeaveIndependently" ? (subject === "you" ? "Can you leave the community and go out on your own, without another person assisting you?" : `Can ${subject} leave the community and go out on ${subject === "they" ? "their" : "their"} own, without another person assisting ${subject === "they" ? "them" : subject}?`) : question?.prompt;
   const missing = useMemo(() => missingQuestions(context), [context]);
 
   function finishQuestionnaire(finalContext: IntakeContext) {
@@ -183,7 +185,7 @@ export function StructuredIntake() {
             <div className="mt-4 flex items-start gap-3">
               <div className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-[#079ff2] text-sm font-bold text-white">O</div>
               <div className="rounded-[1.6rem] rounded-tl-md bg-[#eaf6fd] px-5 py-4">
-                <h1 className="text-2xl font-medium leading-8 text-[#183f55]">{question.prompt}</h1>
+                <h1 className="text-2xl font-medium leading-8 text-[#183f55]">{displayPrompt}</h1>
               </div>
             </div>
 
