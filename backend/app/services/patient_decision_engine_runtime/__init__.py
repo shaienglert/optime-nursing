@@ -372,7 +372,7 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     attach_nearby_place_fit(survivors, questionnaire_state)
     rejected = [row for row in rows if not _is_rankable_candidate(row)]
     indexed_final = list(enumerate(survivors))
-    indexed_final.sort(key=lambda pair: (*_stable_final_intent_key(pair[1], pair[0])[:-1], *nearby_rank_key(pair[1], nearby_importance), _stable_final_intent_key(pair[1], pair[0])[-1:]))
+    indexed_final.sort(key=lambda pair: (*_stable_final_intent_key(pair[1], pair[0])[:-1], *nearby_rank_key(pair[1], nearby_importance), _stable_final_intent_key(pair[1], pair[0])[-1]))
     ranked_survivors = [row for _, row in indexed_final]
     _reassign_rank_metadata(ranked_survivors)
     _stage_started = _mark("final_sort_and_rank_ms", _stage_started)
