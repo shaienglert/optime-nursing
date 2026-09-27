@@ -42,3 +42,19 @@ def test_denied_bed_transfer_does_not_create_transfer_need():
     assert "transfer_assistance" not in _need_ids(
         "Mother is fully independent and does not need help getting out of bed."
     )
+
+
+def test_a_lift_can_be_an_elevator():
+    # "lift" alone is the British word for an elevator, so it must not ask for hoist transfers.
+    assert "transfer_assistance" not in _need_ids(
+        "The building must have a lift, she cannot use stairs."
+    )
+
+
+def test_a_hoist_always_names_itself():
+    for story in (
+        "She needs a mechanical lift to get out of bed.",
+        "Staff use a hoyer lift for her.",
+        "She needs lift assist for every transfer.",
+    ):
+        assert "transfer_assistance" in _need_ids(story), story
