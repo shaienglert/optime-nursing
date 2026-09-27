@@ -667,6 +667,27 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setExtra(context, { dietary: list(value) }),
   },
   {
+    id: "dietaryImportance",
+    section: SECTION_FIT,
+    prompt: "Are these food requirements essential for safety or religious observance, or are they preferences?",
+    kind: "single",
+    options: ["Essential requirement", "Preference", "Not sure"],
+    required: true,
+    label: "dietary requirement importance",
+    visible: ({ extras }) => extras.dietary.length > 0,
+    get: ({ draft }) => draft.humanIntelligenceV2.foodProfile.dietaryRequirementImportance || "",
+    set: (context, value) => ({
+      ...context,
+      draft: {
+        ...context.draft,
+        humanIntelligenceV2: {
+          ...context.draft.humanIntelligenceV2,
+          foodProfile: { ...context.draft.humanIntelligenceV2.foodProfile, dietaryRequirementImportance: text(value) },
+        },
+      },
+    }),
+  },
+  {
     id: "religiousCommunity",
     section: SECTION_FIT,
     prompt: "Would a religious or faith community be important?",
