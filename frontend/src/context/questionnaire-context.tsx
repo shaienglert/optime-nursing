@@ -13,6 +13,8 @@ export type QuestionnaireState = {
   futureCarePreference: string;
   memoryStatus: string;
   happinessPreferences: string[];
+  nearbyPlaces: string[];
+  nearbyPlacesImportance: string;
   budget: number;
   distanceFromFamily: string;
   referenceLocationType: string;
@@ -222,6 +224,8 @@ export const DEFAULT_STATE: QuestionnaireState = {
   futureCarePreference: "",
   memoryStatus: "",
   happinessPreferences: [],
+  nearbyPlaces: [],
+  nearbyPlacesImportance: "",
   budget: 0,
   distanceFromFamily: "",
   referenceLocationType: "",
