@@ -1724,6 +1724,11 @@ _CITY_COORDINATES = {
     "HENDERSON": (36.0395, -114.9817),
     "NORTH LAS VEGAS": (36.1989, -115.1175),
     "SUMMERLIN": (36.1671, -115.2869),
+    # Census 2026 internal points for the remaining intake choices.
+    "SPRING VALLEY": (36.0951781, -115.2636094),
+    "PARADISE": (36.0871482, -115.1355187),
+    "ENTERPRISE": (36.0091430, -115.2278241),
+    "BOULDER CITY": (35.8538747, -114.9133412),
 }
 
 def _canonical_search_state(value: Any) -> str:

@@ -58,8 +58,17 @@ def test_selected_intake_city_takes_precedence_over_city_in_free_text():
 
 def test_unresolved_selected_area_never_uses_unrelated_text_city():
     radius = _requested_radius(
-        {"locationImportant": "Yes", "referenceAddress": "Spring Valley", "maximumDistanceMiles": "10"},
+        {"locationImportant": "Yes", "referenceAddress": "Reno", "maximumDistanceMiles": "10"},
         {"location_city": "LAS VEGAS"},
     )
-    assert radius["city"] == "SPRING VALLEY"
+    assert radius["city"] == "RENO"
     assert radius["status"] == "ORIGIN_UNRESOLVED"
+
+
+@pytest.mark.parametrize("area", ["Spring Valley", "Paradise", "Enterprise", "Boulder City"])
+def test_every_intake_area_has_a_radius_origin(area):
+    radius = _requested_radius(
+        {"locationImportant": "Yes", "referenceAddress": area, "maximumDistanceMiles": "10"},
+        {},
+    )
+    assert radius["status"] == "RESOLVED_CITY_CENTROID"
