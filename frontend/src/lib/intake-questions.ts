@@ -21,6 +21,9 @@ export type IntakeExtras = {
   activities: string[];
   dietary: string[];
   dietaryOther: string;
+  nearbyPlaces: string[];
+  nearbyOther: string;
+  nearbyImportance: string;
   religiousCommunity: string;
   religion: string;
   religiousNeeds: string[];
@@ -120,6 +123,9 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
     activities: state.happinessPreferences || [],
     dietary: (human.foodProfile.dietaryPreferences || []).filter((item) => !item.startsWith("Other: ")),
     dietaryOther: (human.foodProfile.dietaryPreferences || []).find((item) => item.startsWith("Other: "))?.slice(7) || "",
+    nearbyPlaces: [],
+    nearbyOther: "",
+    nearbyImportance: "",
     religiousCommunity: religionImportance === "Yes" ? "Yes" : religionImportance === "No" ? "No" : "",
     religion: human.culturalProfile.faithTraditions[0] || "",
     religiousNeeds: human.culturalProfile.religiousSupportNeeds || [],
@@ -549,6 +555,47 @@ export const QUESTIONS: IntakeQuestion[] = [
     visible: () => true,
     get: ({ extras }) => extras.activities,
     set: (context, value) => setExtra(context, { activities: list(value) }),
+  },
+  {
+    id: "nearbyPlaces",
+    section: SECTION_FIT,
+    prompt: "What would you like to have nearby?",
+    kind: "multi",
+    options: ["Shopping", "Restaurants & cafés", "Movie theater", "Bowling", "Senior center / social club", "Parks & walking paths", "Gym / pool", "Library", "Place of worship", "Medical center / doctors", "Pharmacy", "Public transportation", "Family or friends", "Entertainment / cultural venues", "Nothing in particular", "Other"],
+    required: true,
+    label: "nearby places",
+    visible: () => true,
+    get: ({ extras }) => extras.nearbyPlaces,
+    set: (context, value) => {
+      const next = list(value);
+      const added = next.find((item) => !context.extras.nearbyPlaces.includes(item));
+      if (added === "Nothing in particular") return setExtra(context, { nearbyPlaces: ["Nothing in particular"], nearbyOther: "", nearbyImportance: "No preference" });
+      return setExtra(context, { nearbyPlaces: next.filter((item) => item !== "Nothing in particular") });
+    },
+  },
+  {
+    id: "nearbyOther",
+    section: SECTION_FIT,
+    prompt: "What else would you like to have nearby?",
+    kind: "text",
+    placeholder: "Tell us in your own words",
+    required: true,
+    label: "other nearby place",
+    visible: ({ extras }) => extras.nearbyPlaces.includes("Other"),
+    get: ({ extras }) => extras.nearbyOther,
+    set: (context, value) => setExtra(context, { nearbyOther: text(value) }),
+  },
+  {
+    id: "nearbyImportance",
+    section: SECTION_FIT,
+    prompt: "How important is it to be close to these places?",
+    kind: "single",
+    options: ["Important", "Nice to have", "No preference"],
+    required: true,
+    label: "nearby-place importance",
+    visible: ({ extras }) => extras.nearbyPlaces.length > 0 && !extras.nearbyPlaces.includes("Nothing in particular"),
+    get: ({ extras }) => extras.nearbyImportance,
+    set: (context, value) => setExtra(context, { nearbyImportance: text(value) }),
   },
   {
     id: "moveLossConcerns",
