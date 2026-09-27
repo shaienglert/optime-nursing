@@ -259,9 +259,9 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
         "dimension": dimension, "requested_parameters": requested, "research_completed": True,
         "source_url": source_url, "observed_at": datetime.now(timezone.utc).isoformat(),
         "official_identity_verified": False, "regulatory_source_verified": False, "regulatory_parameters_verified": [],
-        "social_engagement_verified": False, "medication_support_verified": False, "adl_support_verified": False,
-        "transportation_verified": False, "dining_verified": False, "rehab_verified": False, "pt_ot_verified": False,
-        "couple_coresidence_verified": False, "outside_care_allowed_verified": False, "continuum_of_care_verified": False,
+        "social_engagement_verified": None, "medication_support_verified": None, "adl_support_verified": None,
+        "transportation_verified": None, "dining_verified": None, "rehab_verified": None, "pt_ot_verified": None,
+        "couple_coresidence_verified": None, "outside_care_allowed_verified": None, "continuum_of_care_verified": None,
         "public_rating": "UNKNOWN", "public_review_count": "UNKNOWN", "public_reputation_source": "UNKNOWN",
         "evidence_interpretation_mode": "UNRESOLVED",
     }
