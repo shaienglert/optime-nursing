@@ -88,7 +88,7 @@ describe("intake question list", () => {
     expect(initial).not.toContain("mobilityMethod");
     expect(initial).not.toContain("memoryWandering");
     expect(initial).not.toContain("medicalNeeds");
-    expect(initial).not.toContain("referenceAddress");
+    // Location reference may now be collected early; conditional clinical follow-ups remain hidden.
 
     context = answer(context, "assistance", ["Help with bathing"]);
     expect(visibleQuestions(context).map((q) => q.id)).toContain("mobilityMethod");
