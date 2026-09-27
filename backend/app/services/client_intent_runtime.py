@@ -186,10 +186,13 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # evidence) fails this; missing/unparseable data passes rather than blocking
             # on absence of information, matching the "never fail on unverified data"
             # policy but treating a *reliable* negative here as safe to hard-fail on.
-            if row.get("license_expired") is True:
+            license_status = _upper(row.get("license_status"))
+            if row.get("license_expired") is True or license_status in {"INACTIVE", "SUSPENDED", "REVOKED", "EXPIRED", "CLOSED"}:
                 hard_fail.append(key)
-            else:
+            elif row.get("license_expired") is False:
                 must_pass.append(key)
+            else:
+                must_unknown.append(key)
         elif key == "LAS_VEGAS":
             las_vegas_valley_cities = {
                 "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
@@ -221,7 +224,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # nursing facility sat in MUST_PENDING_VERIFICATION on this key alone, even ones
             # with governed CMS-sourced evidence (facility_parameter_service.py) confirming
             # adl_support=YES that this gate simply never consulted.
-            if canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or any(
+            if canonical_type == "SKILLED_NURSING" or any(
                 p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True
                 for p in payloads
             ):
