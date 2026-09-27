@@ -2462,7 +2462,7 @@ async def get_placement_referral(referral_code: str, db: Session = Depends(get_d
 
 
 @app.post("/placement-referrals/{referral_code}/confirm-entry", response_model=PlacementReferralOut)
-async def post_confirm_placement_entry(referral_code: str, payload: PlacementReferralConfirmEntryIn, db: Session = Depends(get_db)):
+async def post_confirm_placement_entry(referral_code: str, payload: PlacementReferralConfirmEntryIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     entry_date = _parse_iso_datetime(payload.entry_date, field_name="entry_date")
     try:
         referral = placement_referral_service.confirm_entry(
@@ -2474,7 +2474,7 @@ async def post_confirm_placement_entry(referral_code: str, payload: PlacementRef
 
 
 @app.post("/placement-referrals/{referral_code}/report-departure", response_model=PlacementReferralOut)
-async def post_report_placement_departure(referral_code: str, payload: PlacementReferralDepartureIn, db: Session = Depends(get_db)):
+async def post_report_placement_departure(referral_code: str, payload: PlacementReferralDepartureIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     departure_date = _parse_iso_datetime(payload.departure_date, field_name="departure_date")
     try:
         referral = placement_referral_service.report_departure(

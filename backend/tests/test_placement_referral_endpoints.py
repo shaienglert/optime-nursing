@@ -58,6 +58,20 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         response = self.client.get("/placement-referrals/not-a-real-code")
         self.assertEqual(response.status_code, 404)
 
+    def test_placement_mutations_require_admin_token(self) -> None:
+        created = self.client.post("/placement-referrals", json={"canonical_facility_id": self.real_canonical_id}).json()
+        code = created["referral_code"]
+        date = datetime.now(timezone.utc).isoformat()
+        self.assertEqual(
+            self.client.post(f"/placement-referrals/{code}/confirm-entry", json={"entry_date": date}).status_code,
+            401,
+        )
+        self.assertEqual(
+            self.client.post(f"/placement-referrals/{code}/report-departure", json={"departure_date": date, "reason": "VOLUNTARY"}).status_code,
+            401,
+        )
+        self.assertIsNone(self.client.get(f"/placement-referrals/{code}").json()["entry_confirmed_at"])
+
     def test_full_lifecycle_confirm_entry_then_due_at_day_60(self) -> None:
         created = self.client.post("/placement-referrals", json={"canonical_facility_id": self.real_canonical_id}).json()
         referral_code = created["referral_code"]
@@ -65,6 +79,7 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         entry_date = (datetime.now(timezone.utc) - timedelta(days=61)).isoformat()
         confirm_response = self.client.post(
             f"/placement-referrals/{referral_code}/confirm-entry",
+            headers=_ADMIN_HEADERS,
             json={"entry_date": entry_date, "confirmed_by": "admissions@example.com"},
         )
         self.assertEqual(confirm_response.status_code, 200)
@@ -87,10 +102,12 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         entry_date = datetime.now(timezone.utc) - timedelta(days=40)
         self.client.post(
             f"/placement-referrals/{referral_code}/confirm-entry",
+            headers=_ADMIN_HEADERS,
             json={"entry_date": entry_date.isoformat()},
         )
         departure_response = self.client.post(
             f"/placement-referrals/{referral_code}/report-departure",
+            headers=_ADMIN_HEADERS,
             json={"departure_date": (entry_date + timedelta(days=20)).isoformat(), "reason": "VOLUNTARY"},
         )
         self.assertEqual(departure_response.status_code, 200)
@@ -103,10 +120,12 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         entry_date = datetime.now(timezone.utc) - timedelta(days=40)
         self.client.post(
             f"/placement-referrals/{referral_code}/confirm-entry",
+            headers=_ADMIN_HEADERS,
             json={"entry_date": entry_date.isoformat()},
         )
         departure_response = self.client.post(
             f"/placement-referrals/{referral_code}/report-departure",
+            headers=_ADMIN_HEADERS,
             json={"departure_date": (entry_date + timedelta(days=20)).isoformat(), "reason": "DECEASED"},
         )
         self.assertEqual(departure_response.status_code, 200)
@@ -118,10 +137,12 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         referral_code = created["referral_code"]
         self.client.post(
             f"/placement-referrals/{referral_code}/confirm-entry",
+            headers=_ADMIN_HEADERS,
             json={"entry_date": datetime.now(timezone.utc).isoformat()},
         )
         response = self.client.post(
             f"/placement-referrals/{referral_code}/report-departure",
+            headers=_ADMIN_HEADERS,
             json={"departure_date": datetime.now(timezone.utc).isoformat(), "reason": "MOVED_AWAY"},
         )
         self.assertEqual(response.status_code, 422)
@@ -129,6 +150,7 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
     def test_confirm_entry_unknown_code_is_404(self) -> None:
         response = self.client.post(
             "/placement-referrals/not-a-real-code/confirm-entry",
+            headers=_ADMIN_HEADERS,
             json={"entry_date": datetime.now(timezone.utc).isoformat()},
         )
         self.assertEqual(response.status_code, 404)
@@ -137,6 +159,7 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         created = self.client.post("/placement-referrals", json={"canonical_facility_id": self.real_canonical_id}).json()
         response = self.client.post(
             f"/placement-referrals/{created['referral_code']}/confirm-entry",
+            headers=_ADMIN_HEADERS,
             json={"entry_date": "not-a-date"},
         )
         self.assertEqual(response.status_code, 422)
@@ -156,6 +179,7 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
             entry_date = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
             confirm_response = self.client.post(
                 f"/placement-referrals/{created['referral_code']}/confirm-entry",
+                headers=_ADMIN_HEADERS,
                 json={"entry_date": entry_date},
             )
             self.assertEqual(confirm_response.json()["billable_status"], "WAIVED_FOUNDING_FIRST_PLACEMENT")
