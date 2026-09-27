@@ -189,14 +189,10 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE
             # above for why: the research pipeline cannot currently distinguish "confirmed not
             # offered" from "never researched" (both are stored as False).
-            # SKILLED_NURSING is included for the same reason ASSISTED_LIVING_RFG already is
-            # (see REHAB_PATH_AVAILABLE below, which already treats it as auto-pass): ADL
-            # assistance is a baseline requirement of that license category, not something a
-            # facility could hold the license without providing. Before this, every skilled
-            # nursing facility sat in MUST_PENDING_VERIFICATION on this key alone, even ones
-            # with governed CMS-sourced evidence (facility_parameter_service.py) confirming
-            # adl_support=YES that this gate simply never consulted.
-            if canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or any(
+            # RFG taxonomy alone does not prove the exact ADL service required by this person.
+            # Skilled Nursing remains intrinsic to the licensed care category; RFG requires
+            # direct/provider evidence before this MUST can pass.
+            if canonical_type == "SKILLED_NURSING" or any(
                 p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True
                 for p in payloads
             ):
