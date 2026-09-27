@@ -47,22 +47,32 @@ function scenarioFor(index) {
 async function answerInterview(page, answers, maxSteps = 120) {
   const asked = [];
   for (let step = 0; step < maxSteps; step += 1) {
+    if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
     const summary = page.getByRole('heading', { name: /Here’s what I understood/i });
     if (await summary.isVisible().catch(() => false)) return asked;
 
     const heading = page.locator('main h1').first();
     await heading.waitFor({ state: 'visible' });
     const prompt = (await heading.innerText()).trim();
-    asked.push(prompt);
+    if (asked[asked.length - 1] === prompt) {
+      await page.waitForURL(/\/intake-confirmation(?:\?|$)/, { timeout: 5_000 }).catch(() => {});
+      if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
+      throw new Error(`Intake repeated a question without advancing: ${prompt}`);
+    }
 
     const entry = answers.find(([pattern]) => pattern.test(prompt));
     if (!entry) throw new Error(`No answer configured for intake question: "${prompt}"`);
     const [, action] = entry;
 
     if (action.choose) {
-      await page.getByRole('button', { name: action.choose, exact: true }).click();
+      const choice = page.getByRole('button', { name: action.choose, exact: true });
+      await choice.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => {});
+      if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
+      asked.push(prompt);
+      await choice.click();
       continue; // a single choice advances on its own
     }
+    asked.push(prompt);
     if (action.select) {
       for (const option of action.select) await page.getByRole('button', { name: option, exact: true }).click();
     }
@@ -90,9 +100,9 @@ test.describe('real synthetic-pilot customer journey', () => {
 
     const asked = await answerInterview(page, [
       [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
-      [/About how old are they\?/i, { choose: scenario.age }],
+      [/About how old/i, { choose: scenario.age }],
       [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
-      [/How do they usually get around\?/i, { choose: 'Independent' }],
+      [/usually get around\?/i, { choose: 'Independent' }],
       [/getting up, sitting down, or transferring\?/i, { choose: 'No' }],
       [/falls in the last six months\?/i, { choose: 'No' }],
       [/changes in memory or confusion lately\?/i, { choose: 'No' }],
@@ -101,23 +111,24 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/Medicaid situation\?/i, { choose: 'Not eligible' }],
       [/What monthly budget would feel comfortable\?/i, { fill: scenario.budget }],
       [/When would you ideally like the move to happen\?/i, { choose: scenario.moveTiming }],
-      [/How do they feel about the idea of moving\?/i, { choose: scenario.attitude }],
-      [/How social would they like everyday life to be\?/i, { choose: scenario.social }],
+      [/feel about the idea of moving\?/i, { choose: scenario.attitude }],
+      [/How social would/i, { choose: scenario.social }],
       [/What kind of community would feel most comfortable\?/i, { choose: scenario.community }],
-      [/What do they genuinely enjoy doing\?/i, { select: scenario.activities }],
-      [/hate for them to lose after the move\?/i, { select: scenario.concerns }],
+      [/genuinely enjoy doing\?/i, { select: scenario.activities }],
+      [/What would you like to have nearby\?/i, { select: ["Parks & walking paths"] }],
+      [/How important is it to be close to these places\?/i, { choose: "Nice to have" }],
+      [/hate for .* to lose after the move\?/i, { select: scenario.concerns }],
       [/Anything specific we should preserve\?/i, { fill: `${scenario.id}: preserve familiar routines and preferred activities.` }],
       [/What language feels most natural day to day\?/i, { choose: 'English' }],
       [/food preferences or requirements/i, { select: [scenario.diet] }],
       [/religious or faith community be important\?/i, { choose: 'No' }],
-      [/Would a pet need to move with them\?/i, { choose: 'No' }],
-      [/Can they go out independently\?/i, { choose: 'Yes' }],
-      [/What worries them most about moving\?/i, { fill: 'Losing familiar routines' }],
-      [/Will they need parking at the community\?/i, { choose: 'No' }],
+      [/pet need to move with/i, { choose: 'No' }],
+      [/leave the community and go out on/i, { choose: 'Yes' }],
+      [/worries.*most about moving\?/i, { fill: 'Losing familiar routines' }],
+      [/need parking at the community\?/i, { choose: 'No' }],
       [/provide more care later/i, { choose: scenario.futureCare }],
       [/How broadly would you like me to search\?/i, { choose: 'Show me both approaches' }],
-      [/staying near a particular area or person matter\?/i, { choose: 'Yes' }],
-      [/address or area should I measure from\?/i, { fill: 'Las Vegas, NV' }],
+      [/Where in the Las Vegas Valley should we search\?/i, { choose: "Las Vegas" }],
       [/How far would still feel close enough\?/i, { choose: scenario.distance }],
     ]);
 
@@ -125,11 +136,13 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(new Set(asked).size).toBe(asked.length);
     expect(asked.length).toBeGreaterThan(20);
 
-    await page.getByText('Yes — this reflects what I told Oomnik.').click();
-    await page.getByRole('button', { name: 'Continue our conversation' }).click();
-    await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
+    if (!/\/intake-confirmation(?:\?|$)/.test(page.url())) {
+      await page.getByText('Yes — this reflects what I told Oomnik.').click();
+      await page.getByRole('button', { name: 'Continue our conversation' }).click();
+      await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
+    }
 
-    for (let turn = 0; turn < 25; turn += 1) {
+    for (let turn = 0; turn < 25 && /\/adaptive-interview(?:\?|$)/.test(page.url()); turn += 1) {
       await page.waitForLoadState('domcontentloaded');
       const adaptivePrompt = await page.locator('main').innerText().catch(() => '');
       console.log('OOMNIK_ADAPTIVE_TURN', JSON.stringify({ scenario_id: scenario.id, turn, url: page.url(), prompt: adaptivePrompt.slice(0, 1200) }));
