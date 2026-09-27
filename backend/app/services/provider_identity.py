@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import base64
+import hmac
+import json
 import hashlib
 import os
 import secrets
@@ -254,8 +257,49 @@ def complete_email_verification(db: Session, facility_id: int, email: str, code:
         "user_id": user.id,
         "verification_completed_at": now.isoformat(),
         "verification_method": user.verification_method,
+        "access_token": issue_provider_access_token(facility_id, user.id),
+        "access_token_expires_in_seconds": _PROVIDER_SESSION_TTL_SECONDS,
     }
 
+
+
+_PROVIDER_SESSION_TTL_SECONDS = 12 * 60 * 60
+
+
+def _provider_session_secret() -> str:
+    secret = os.getenv("OOMNIK_PROVIDER_SESSION_SECRET", "").strip()
+    if not secret:
+        raise RuntimeError("Provider session authentication is not configured")
+    return secret
+
+
+def issue_provider_access_token(facility_id: int, user_id: int) -> str:
+    payload = {
+        "facility_id": int(facility_id),
+        "user_id": int(user_id),
+        "exp": int(_now().timestamp()) + _PROVIDER_SESSION_TTL_SECONDS,
+    }
+    body = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()).decode().rstrip("=")
+    signature = hmac.new(_provider_session_secret().encode(), body.encode(), hashlib.sha256).hexdigest()
+    return f"{body}.{signature}"
+
+
+def verify_provider_access_token(token: str, facility_id: int, user_id: int) -> None:
+    try:
+        body, supplied = str(token or "").split(".", 1)
+        expected = hmac.new(_provider_session_secret().encode(), body.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(supplied, expected):
+            raise PermissionError("Invalid provider session")
+        padded = body + "=" * (-len(body) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
+        if int(payload.get("facility_id")) != int(facility_id) or int(payload.get("user_id")) != int(user_id):
+            raise PermissionError("Provider session identity mismatch")
+        if int(payload.get("exp") or 0) < int(_now().timestamp()):
+            raise PermissionError("Provider session expired")
+    except PermissionError:
+        raise
+    except Exception as error:
+        raise PermissionError("Invalid provider session") from error
 
 def validate_license_ownership(
     db: Session,
