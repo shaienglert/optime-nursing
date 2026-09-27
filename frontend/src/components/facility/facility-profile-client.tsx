@@ -63,7 +63,7 @@ function formatLastVerified(value?: string | null): string {
 function describeEvidenceConfidence(text?: string | null): string {
   if (!text) return "Evidence confidence is based on the currently available verified signals.";
   return text
-    .replace(/\b0 case-relevant requirements are independently verified and 0 still require verification\b/i, "the current evidence set is limited but internally consistent")
+    .replace(/\b0 case-relevant requirements are independently verified and 0 still require verification\b/i, "no case-relevant requirements are independently verified; evidence is insufficient for a confident recommendation")
     .replace(/Confidence:\s*/i, "Evidence confidence: ");
 }
 
