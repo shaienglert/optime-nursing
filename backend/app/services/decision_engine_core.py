@@ -327,7 +327,6 @@ _STRUCTURED_MEDICAL_NEED_MAP = {
     # signal: neither a chronic condition label nor equipment alone tells us the
     # facility needs a licensed nurse, only that daily support is required.
     "complex chronic condition": ("adl_support", "HIGH"),
-    "permanent medical equipment": ("adl_support", "HIGH"),
 }
 
 
@@ -341,6 +340,9 @@ def _map_structured_medical_needs(questionnaire: Dict[str, Any], needs_by_id: Di
     for label, (parameter_id, level) in _STRUCTURED_MEDICAL_NEED_MAP.items():
         if label in selected:
             _add_need(needs_by_id, parameter_id, level, "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.needs", 0.95, f"Requires {parameter_id.replace('_', ' ')}")
+
+    if "permanent medical equipment" in selected and _normalize(medical.get("medicalEquipmentSupport")) == "yes":
+        _add_need(needs_by_id, "adl_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.medicalCareProfile.medicalEquipmentSupport", 1.0, "Daily help is required because of permanent medical equipment")
 
     if "oxygen" in selected:
         # Any regular supplemental-oxygen need rules out plain independent/active-adult
