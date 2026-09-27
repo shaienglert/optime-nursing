@@ -288,6 +288,7 @@ STRUCTURED_INTAKE_MAPPING_CONTRACT = {
         "Complex chronic condition": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Permanent medical equipment": {"classification": "NEED", "parameter_ids": ["adl_support"]},
         "Nursing supervision": {"classification": "NEED", "parameter_ids": ["nursing_24_7"]},
+        "Other": {"classification": "CONTEXT_ONLY", "parameter_ids": []},
     },
     "medicalCareProfile.mobilityMethod": {
         "Independent": {"classification": "NO_REQUIREMENT", "parameter_ids": []},
