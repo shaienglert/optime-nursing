@@ -162,8 +162,8 @@ export function StructuredIntake() {
   const progress = Math.round((answeredCount / Math.max(1, questions.length)) * 100);
 
   return (
-    <main className="min-h-screen bg-[#f7fbfd] px-4 py-8 text-[#26352f] sm:px-8">
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-screen bg-[#f6f3ed] px-4 py-8 text-[#26352f] sm:px-8">
+      <div className="mx-auto max-w-5xl">
         <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">Your conversation with Oomnik</p>
 
         <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-[#e3ece8]">
@@ -180,14 +180,14 @@ export function StructuredIntake() {
               </div>
             </div>
 
-            <div className="ml-12 mt-5 rounded-[1.4rem] bg-white px-5 py-5 shadow-sm">
+            <div className="mt-7">
               {question.note ? <p className="mb-3 text-base leading-7 text-[#527083]">{question.note}</p> : null}
               <AnswerControl question={question} value={question.get(context)} onAnswer={answer} />
               {question.kind === "multi" ? <p className="mt-3 text-sm text-[#7d8b84]">Choose anything that applies, then continue.</p> : null}
               {showError ? <p className="mt-3 text-sm font-semibold text-[#a4501f]">Please answer this before we continue.</p> : null}
             </div>
 
-            <div className="ml-12 mt-6 flex items-center justify-between gap-3">
+            <div className="mt-8 flex items-center justify-between gap-3">
               <button type="button" onClick={() => goToIndex(index - 1)} disabled={index === 0} className="rounded-full border border-[#ddd4c7] px-5 py-2.5 text-sm font-semibold text-[#5e554b] disabled:opacity-40">
                 ← Back
               </button>
