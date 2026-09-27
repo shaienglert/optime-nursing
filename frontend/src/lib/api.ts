@@ -315,6 +315,11 @@ export type DecisionEngineRecommendation = {
   facility_profile_id?: number | null;
   synthetic_pilot?: boolean;
   starting_monthly_price?: number | null;
+  combined_care_solution?: {
+    delivery_model?: string;
+    care_component?: { delivery_model?: string };
+    medication_component?: { delivery_model?: string };
+  };
   availability_status?: "YES" | "NO" | "LIMITED" | "UNKNOWN";
   visual_media?: {
     hero?: { url: string; category: string; source_note?: string };
