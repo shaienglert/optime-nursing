@@ -196,8 +196,6 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     care_search_approach = _norm(questionnaire_state.get("careSearchApproach"))
     allow_outside_strategy = care_search_approach in {"", "show me both approaches", "independent living + outside support"}
     require_in_house_strategy = care_search_approach == "care provided by the community"
-    allow_outside_strategy = care_search_approach in {"show me both approaches", "independent living + outside support", ""}
-    require_in_house_strategy = care_search_approach == "care provided by the community"
     strategy_candidates: List[Dict[str, Any]] = []
 
     def add_strategy(strategy_id: str, status: str, rationale: str, required_capabilities: List[str], rank_hint: int) -> None:
