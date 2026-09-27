@@ -2726,7 +2726,7 @@ async def decision_engine_deferred_report(payload: DeferredReportIn, db: Session
 
 
 @app.post("/decision-engine/deferred-report/process")
-async def decision_engine_process_deferred_reports(limit: int = 25, db: Session = Depends(get_db)):
+async def decision_engine_process_deferred_reports(limit: int = 25, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     """Retry pending requests and send the ones that now rank. Safe to call repeatedly."""
     return process_pending_reports(db, limit=limit)
 
@@ -2862,7 +2862,7 @@ def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
 
 
 @app.post("/intelligence/run", response_model=IntelligenceRunSummaryOut)
-async def run_intelligence(facility_id: Optional[int] = Query(default=None), db: Session = Depends(get_db)):
+async def run_intelligence(facility_id: Optional[int] = Query(default=None), db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     if facility_id is not None:
         facility = db.query(Facility).filter(Facility.id == facility_id).first()
         if not facility:
@@ -2935,7 +2935,7 @@ async def search_agent_knowledge_reports(query: str = Query(..., min_length=2), 
 
 
 @app.post("/expert-agents/knowledge-reports/refresh", response_model=AgentKnowledgeRefreshOut)
-async def refresh_agent_knowledge_reports(db: Session = Depends(get_db)):
+async def refresh_agent_knowledge_reports(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     result = refresh_all_agent_reports(db, refresh_mode="manual", force=True)
     return AgentKnowledgeRefreshOut(
         attempted=int(result.get("attempted", 0)),
@@ -2963,7 +2963,7 @@ async def supervisor_overview(db: Session = Depends(get_db)):
 
 
 @app.post("/supervisor/run-cycle")
-async def supervisor_run_cycle(db: Session = Depends(get_db)):
+async def supervisor_run_cycle(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     ensure_reports_available(db)
     return run_supervisor_cycle(db)
 
@@ -2997,7 +2997,7 @@ async def recommendation_knowledge_guard(payload: RecommendationGuardCheckIn, db
 
 
 @app.post("/human-intelligence", response_model=HumanIntelligenceOut)
-async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db)):
+async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     def clip_optional(value: Optional[float]) -> Optional[float]:
         if value is None:
             return None
@@ -3033,7 +3033,7 @@ async def create_human_intelligence(payload: HumanIntelligenceIn, db: Session = 
 
 
 @app.post("/human-intelligence/adaptive-response", response_model=AdaptiveQuestionResponseOut)
-def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db)):
+def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     record = AdaptiveQuestionResponse(
         resident_key=payload.resident_key,
         question_key=payload.question_key,
@@ -3051,7 +3051,7 @@ def create_adaptive_response(payload: AdaptiveQuestionResponseIn, db: Session = 
 
 
 @app.post("/resident-outcomes", response_model=ResidentOutcomeOut)
-async def create_resident_outcome(payload: ResidentOutcomeIn, db: Session = Depends(get_db)):
+async def create_resident_outcome(payload: ResidentOutcomeIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     if payload.human_intelligence_score_id is not None:
         score_record = db.query(HumanIntelligenceScore).filter(HumanIntelligenceScore.id == payload.human_intelligence_score_id).first()
         if not score_record:
@@ -3491,7 +3491,7 @@ async def provider_facility_completeness(facility_id: int, db: Session = Depends
 
 
 @app.post("/provider/identity/reverification/run")
-async def provider_identity_reverification_run(db: Session = Depends(get_db)):
+async def provider_identity_reverification_run(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return run_annual_reverification(db)
 
 
