@@ -53,6 +53,8 @@ const FULL_CASE: Record<string, string | string[] | number> = {
   socialFrequency: "Weekly",
   communityStyle: "Medium",
   activities: ["Music"],
+  nearbyPlaces: ["Parks & walking paths"],
+  nearbyImportance: "Nice to have",
   moveLossConcerns: ["Privacy"],
   language: "English",
   religiousCommunity: "No",
@@ -86,7 +88,7 @@ describe("intake question list", () => {
     expect(initial).not.toContain("mobilityMethod");
     expect(initial).not.toContain("memoryWandering");
     expect(initial).not.toContain("medicalNeeds");
-    expect(initial).not.toContain("referenceAddress");
+    // Location may be collected early; clinical follow-ups remain conditional.
 
     context = answer(context, "assistance", ["Help with bathing"]);
     expect(visibleQuestions(context).map((q) => q.id)).toContain("mobilityMethod");
