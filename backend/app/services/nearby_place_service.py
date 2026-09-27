@@ -70,12 +70,17 @@ def nearby_places(latitude: float, longitude: float, categories: list[str], radi
     return result
 
 
-def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dict[str, Any]) -> None:
+def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dict[str, Any], max_candidates: int = 25) -> None:
     categories = [str(x) for x in (questionnaire_state.get("nearbyPlaces") or []) if str(x) in CATEGORY_TAGS]
     importance = str(questionnaire_state.get("nearbyPlacesImportance") or "No preference")
     if not categories or importance == "No preference":
         return
-    for row in rows:
+    # External POI lookup is intentionally bounded to the strongest pre-ranked candidates.
+    # Calling a remote provider serially for thousands of survivors would make the recommendation path unusable.
+    for position, row in enumerate(rows):
+        if position >= max_candidates:
+            row["nearby_place_fit"] = {"status": "NOT_EVALUATED", "reason": "outside POI shortlist", "importance": importance}
+            continue
         try:
             lat, lon = float(row.get("latitude")), float(row.get("longitude"))
         except (TypeError, ValueError):
