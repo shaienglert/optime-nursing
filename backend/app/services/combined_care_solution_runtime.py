@@ -145,7 +145,7 @@ def build_combined_care_solution(row: Dict[str, Any], questionnaire_state: Dict[
 
     if in_house_adl:
         coverage, delivery_model = "PASS", "FACILITY_IN_HOUSE"
-        reason = "Required personal care is verified in-house or supplied by the licensed assisted-living component."
+        reason = "Required personal care is supported by verified in-house evidence."
     elif outside_allowed_true and agency_verified:
         coverage, delivery_model = "PASS", "FACILITY_PLUS_EXTERNAL_AGENCY"
         reason = "Housing allows outside care and a verified agency match covers the required services."
