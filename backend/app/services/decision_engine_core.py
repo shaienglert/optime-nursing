@@ -537,7 +537,10 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
             return token in without_negated_nursing(normalized)
         if token in {"pt", "ot"}:
             return re.search(rf"\b{re.escape(token)}\b", normalized) is not None
-        return token in normalized
+        # Require a word start: "adl" in "sadly" and "pt" in unrelated
+        # words must not invent a care need. Keep suffixes for ordinary plurals
+        # and forms such as "medications" or "transferring".
+        return re.search(rf"(?<!\\w){re.escape(token)}", normalized) is not None
 
     denials = care_denials if care_denials is not None else extract_care_denials(text)
     explicit_independence = denials["independent"]
