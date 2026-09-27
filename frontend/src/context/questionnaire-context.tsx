@@ -109,6 +109,7 @@ export type HumanIntelligenceV2 = {
   };
   foodProfile: {
     dietaryPreferences: string[];
+    dietaryRequirementImportance: string;
   };
   familyCultureProfile: {
     involvementExpectation: string;
