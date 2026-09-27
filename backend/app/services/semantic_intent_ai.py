@@ -255,7 +255,20 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
     # selections remain authoritative and are never removed by this patch guard.
     positive = re.sub(r"\b(?:no|without|not|does not need|doesn't need|do not need|don't need)\s+(?:any\s+)?(?:skilled\s+)?(?:nursing|nurses?|rn|lpn|complex\s+(?:medication|medicine|meds)\s+(?:management|regimens?))\b", "", source)
     selected = (state.get("medicalCareProfile") or {}).get("needs") or []
-    nursing = "Nursing supervision" in selected or "skilled nursing" in str(state.get("assistanceLevel") or "").lower() or bool(re.search(r"\b(nursing|nurse|nurses|rn|lpn)\b", positive))
+    # The bare word "nursing" is not a clinical fact. It appears in "we toured a nursing
+    # home", "her nurse suggested", "nursing care in general" -- none of which says this
+    # person needs nursing supervision. Matching it let ordinary supervision become a
+    # nursing requirement, which is exactly what this guard exists to prevent, so the
+    # phrasing must actually attach a nurse to this person's care, the same way the
+    # complex-medication test below demands the whole phrase.
+    nursing_phrase = re.compile(
+        r"\b(?:skilled\s+nursing|nursing\s+(?:supervision|care|support|staff|services?)"
+        r"|(?:supervis\w+|monitor\w+|care|assessments?)\s+by\s+(?:a\s+)?(?:nurse|rn|lpn)"
+        r"|(?:needs?|requires?|has)\s+(?:a\s+)?(?:nurse|rn|lpn)\b"
+        r"|(?:nurse|rn|lpn)\s+on\s+(?:site|staff|duty)"
+        r"|round[- ]the[- ]clock\s+nursing|24/?7\s+nursing)\b"
+    )
+    nursing = "Nursing supervision" in selected or "skilled nursing" in str(state.get("assistanceLevel") or "").lower() or bool(nursing_phrase.search(positive))
     complex_meds = "Complex medication management" in selected or bool(re.search(r"\bcomplex\s+(?:medication|medicine|meds)\s+(?:management|regimen|regimens)\b", positive))
     omitted = []
     medical = patch.get("medicalCareProfile")

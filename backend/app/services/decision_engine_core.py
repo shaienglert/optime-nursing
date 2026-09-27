@@ -1962,6 +1962,10 @@ def run_patient_decision_engine(
             "verified_capability_match_count": catalog_query["verified_capability_match_count"],
             "pending_verification_count": catalog_query["pending_verification_count"],
             "excluded_explicit_negative_count": catalog_query["excluded_explicit_negative_count"],
+            # Which requirement removed how many communities. The total alone says the
+            # search narrowed but not what narrowed it, which is the first thing anyone
+            # asks when a market of two hundred returns nothing.
+            "excluded_by_parameter": catalog_query.get("excluded_by_parameter") or {},
             "unknown_is_not_negative": True,
             "identities_hidden_pending_client_input": False,
         },
