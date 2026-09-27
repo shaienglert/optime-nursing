@@ -106,6 +106,8 @@ export function StructuredIntake() {
   function personalizePrompt(prompt = "") {
     if (subject === "they") return prompt;
     if (subject === "you") return prompt.replace(/\bthey\b/gi, "you").replace(/\bthem\b/gi, "you").replace(/\btheir\b/gi, "your");
+    // The age question starts with "About how old are they?" and needs agreement.
+    if (/^About how old are they\?/i.test(prompt)) return `About how old is ${subject}?`;
     return prompt
       .replace(/^Are they\b/i, `Is ${subject}`)
       .replace(/^Do they\b/i, `Does ${subject}`)
