@@ -107,7 +107,8 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         candidate_id = next(canonical_id for canonical_id, row in index.items() if row.get("canonical_type") == "ASSISTED_LIVING_RFG")
         table = get_facility_parameter_table(candidate_id)
         rows = {row["parameter_id"]: row for row in table["rows"]}
-        self.assertEqual(rows["adl_support"]["raw_value"], "YES")
+        # A facility's care category does not prove this specific ADL capability.
+        self.assertEqual(rows["adl_support"]["raw_value"], "UNKNOWN")
         self.assertIn("taxonomy", rows["adl_support"]["source"].lower())
         self.assertEqual(rows["adl_support"]["evidence_strength"], "TAXONOMY_INFERRED")
         self.assertEqual(rows["medication_support"]["raw_value"], "UNKNOWN")
