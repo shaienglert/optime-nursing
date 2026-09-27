@@ -33,13 +33,13 @@ class LicenseValidityGateTests(unittest.TestCase):
         result = evaluate_candidate_intent(self._row(license_expired=False), intent)
         self.assertIn("LICENSE_CURRENTLY_VALID", result["must_pass"])
 
-    def test_missing_expiration_data_passes_rather_than_blocking(self) -> None:
-        # No license_expired field at all (the shape of every pre-existing row/test
-        # fixture in the whole suite) must never turn into UNKNOWN/PENDING noise.
+    def test_missing_expiration_data_requires_verification(self) -> None:
+        # License validity is an unconditional safety MUST. Missing evidence cannot
+        # silently become PASS; it remains pending until registry evidence resolves it.
         intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
         result = evaluate_candidate_intent(self._row(), intent)
-        self.assertIn("LICENSE_CURRENTLY_VALID", result["must_pass"])
-        self.assertNotIn("LICENSE_CURRENTLY_VALID", result["must_unknown"])
+        self.assertIn("LICENSE_CURRENTLY_VALID", result["must_unknown"])
+        self.assertNotIn("LICENSE_CURRENTLY_VALID", result["must_pass"])
         self.assertNotIn("LICENSE_CURRENTLY_VALID", result["must_fail"])
 
 
