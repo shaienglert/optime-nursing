@@ -31,8 +31,8 @@ def extract_care_denials(text: str) -> dict[str, bool]:
     # Keep a need explicitly stated for another person when this story also
     # describes someone independent. A denial alone never creates a need.
     positive_text = re.sub(
-        r"\b(?:does|do)\s+not\s+need\s+(?:help|assistance)[^.;!?]{0,50}\b(?:bathing|dressing|adl|shower|medications?)\b"
-        r"|\b(?:doesn't|don't)\s+need\s+(?:help|assistance)[^.;!?]{0,50}\b(?:bathing|dressing|adl|shower|medications?)\b",
+        r"\b(?:does|do)\s+not\s+need\b[^.;!?]{0,60}\b(?:bathing|dressing|adl|shower|medications?)\b"
+        r"|\b(?:doesn't|don't)\s+need\b[^.;!?]{0,60}\b(?:bathing|dressing|adl|shower|medications?)\b",
         "", normalized,
     )
     positive_adl = bool(re.search(
