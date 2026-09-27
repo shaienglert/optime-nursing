@@ -39,11 +39,11 @@ def test_verified_agency_plus_outside_permission_passes():
     assert result["delivery_model"] == "FACILITY_PLUS_EXTERNAL_AGENCY"
 
 
-def test_in_house_adl_remains_valid_path():
+def test_rfg_taxonomy_alone_does_not_prove_in_house_adl():
     row = _row(canonical_type="ASSISTED_LIVING_RFG")
     result = build_combined_care_solution(row, {}, "Needs help bathing")
-    assert result["combined_must_coverage"] == "PASS"
-    assert result["delivery_model"] == "FACILITY_IN_HOUSE"
+    assert result["combined_must_coverage"] == "PENDING_VERIFICATION"
+    assert result["delivery_model"] == "CARE_DELIVERY_UNKNOWN"
 
 
 def test_skilled_nursing_in_house_adl_also_passes():
