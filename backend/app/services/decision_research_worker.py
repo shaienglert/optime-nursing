@@ -174,7 +174,8 @@ def _apply_verified_registry_evidence(research: Dict[str, Any], canonical_id: st
         research["dining_verified"] = evidence.get("dining_verified") is True
         research["rehab_verified"] = evidence.get("rehab_verified") is True
         research["pt_ot_verified"] = evidence.get("pt_ot_verified") is True or evidence.get("pt_ot_external_path_verified") is True
-        research["couple_coresidence_verified"] = evidence.get("couple_coresidence_verified") is True or evidence.get("couple_unit_possible") is True
+        research["couple_coresidence_verified"] = evidence.get("couple_coresidence_verified") is True
+        research["couple_unit_possible"] = evidence.get("couple_unit_possible") is True
         research["outside_care_allowed_verified"] = evidence.get("outside_care_allowed_verified") is True
         research["continuum_of_care_verified"] = evidence.get("continuum_of_care_verified") is True
         research["verified_registry_used"] = True
