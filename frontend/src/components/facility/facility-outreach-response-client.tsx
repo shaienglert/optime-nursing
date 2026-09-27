@@ -18,7 +18,7 @@ type DraftRoom = {
 };
 
 function emptyRoom(): DraftRoom {
-  return { room_type_name: "", description: "", monthly_price: "", availability_status: "AVAILABLE", photo_urls: "" };
+  return { room_type_name: "", description: "", monthly_price: "", availability_status: "UNKNOWN", photo_urls: "" };
 }
 
 export function FacilityOutreachResponseClient({ responseToken }: { responseToken: string }) {
@@ -173,7 +173,7 @@ export function FacilityOutreachResponseClient({ responseToken }: { responseToke
                     onChange={(e) => updateRoom(index, { availability_status: e.target.value as DraftRoom["availability_status"] })}
                     className="mt-1 w-full rounded-xl border border-[#d9cfbf] px-3 py-2 text-base text-[#22332d]"
                   >
-                    <option value="AVAILABLE">Available now</option>
+                    <option value="UNKNOWN">Not confirmed yet</option>\n                    <option value="AVAILABLE">Available now</option>
                     <option value="WAITLIST">Waitlist</option>
                     <option value="UNAVAILABLE">Not available</option>
                   </select>
