@@ -300,7 +300,7 @@ def issue_provider_access_token(facility_id: int, user_id: int) -> str:
     return f"{body}.{signature}"
 
 
-def verify_provider_access_token(token: str, facility_id: int, user_id: int) -> None:
+def provider_session_user_id(token: str, facility_id: int) -> int:
     try:
         body, supplied = str(token or "").split(".", 1)
         expected = hmac.new(_provider_session_secret().encode(), body.encode(), hashlib.sha256).hexdigest()
@@ -308,14 +308,21 @@ def verify_provider_access_token(token: str, facility_id: int, user_id: int) -> 
             raise PermissionError("Invalid provider session")
         padded = body + "=" * (-len(body) % 4)
         payload = json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
-        if int(payload.get("facility_id")) != int(facility_id) or int(payload.get("user_id")) != int(user_id):
-            raise PermissionError("Provider session identity mismatch")
+        if int(payload.get("facility_id")) != int(facility_id):
+            raise PermissionError("Provider session facility mismatch")
         if int(payload.get("exp") or 0) < int(_now().timestamp()):
             raise PermissionError("Provider session expired")
+        return int(payload.get("user_id"))
     except PermissionError:
         raise
     except Exception as error:
         raise PermissionError("Invalid provider session") from error
+
+
+def verify_provider_access_token(token: str, facility_id: int, user_id: int) -> None:
+    if provider_session_user_id(token, facility_id) != int(user_id):
+        raise PermissionError("Provider session identity mismatch")
+
 
 def validate_license_ownership(
     db: Session,
