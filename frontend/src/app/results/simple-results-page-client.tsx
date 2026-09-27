@@ -95,7 +95,7 @@ export function SimpleResultsPageClient() {
     state.humanIntelligenceV2.independenceProfile.petOwnershipImportance && ["Pet", state.humanIntelligenceV2.independenceProfile.petOwnershipImportance],
     state.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently && ["Independent outings", state.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently],
     state.budget > 0 && ["Budget", `Up to ${state.budget.toLocaleString("en-US")}/month`],
-    state.maximumDistanceMiles && ["Radius", `${state.maximumDistanceMiles} miles`],
+    state.maximumDistanceMiles && ["Preferred distance (unverified)", `${state.maximumDistanceMiles} miles`],
     state.moveTiming && ["Timing", state.moveTiming],
   ].filter(Boolean) as string[][];
 
@@ -257,6 +257,7 @@ export function SimpleResultsPageClient() {
             </div>
           )}
           <p className="mt-5 text-lg leading-8 text-[#53635d]">Confirm current pricing and availability before any move.</p>
+          {state.locationImportant === "Yes" ? <p className="mt-2 text-lg leading-8 text-[#53635d]">Your selected area and travel distance are preferences. Community locations have not been verified for distance, so these results are not limited by that mileage. Confirm actual travel distance before contacting a community.</p> : null}
           {/medicaid/i.test(naturalLanguageQuery) ? <p className="mt-2 text-lg leading-8 text-[#53635d]">Medicaid eligibility and each community’s participation must be confirmed separately.</p> : null}
         </section>
 
@@ -364,7 +365,7 @@ export function SimpleResultsPageClient() {
           </div>
           <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>
           {oomnikerNotice ? <div className="mt-4 rounded-2xl bg-white p-4 text-base text-[#315f53]">{oomnikerNotice}{oomnikerDiff ? <p className="mt-2 font-medium">{oomnikerDiff}</p> : null} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
-          {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="Try: Increase the radius to 75 miles, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
+          {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="Try: Prefer a different area, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
         </section>
 
         <section className="mt-8 flex flex-wrap gap-4 pb-10">

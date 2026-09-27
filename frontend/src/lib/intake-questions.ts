@@ -229,7 +229,7 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "referenceAddress",
     section: SECTION_PRACTICAL,
-    prompt: "Where in the Las Vegas Valley should we search?",
+    prompt: "Which part of the Las Vegas Valley would you prefer?",
     kind: "single",
     options: ["Anywhere in the Las Vegas Valley", "Las Vegas", "Henderson", "North Las Vegas", "Summerlin", "Spring Valley", "Paradise", "Enterprise", "Boulder City"],
     required: true,
@@ -241,7 +241,8 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "maximumDistanceMiles",
     section: SECTION_PRACTICAL,
-    prompt: "How far would still feel close enough?",
+    prompt: "What travel distance would you prefer?",
+    note: "We record this as a preference. Community distances are not yet verified, so these results are not limited to this mileage.",
     kind: "single",
     options: ["10", "20", "30", "50", "100"],
     required: true,
