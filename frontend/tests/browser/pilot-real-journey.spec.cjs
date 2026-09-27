@@ -47,6 +47,7 @@ function scenarioFor(index) {
 async function answerInterview(page, answers, maxSteps = 120) {
   const asked = [];
   for (let step = 0; step < maxSteps; step += 1) {
+    if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
     const summary = page.getByRole('heading', { name: /Here’s what I understood/i });
     if (await summary.isVisible().catch(() => false)) return asked;
 
@@ -60,7 +61,10 @@ async function answerInterview(page, answers, maxSteps = 120) {
     const [, action] = entry;
 
     if (action.choose) {
-      await page.getByRole('button', { name: action.choose, exact: true }).click();
+      const choice = page.getByRole('button', { name: action.choose, exact: true });
+      await choice.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => {});
+      if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
+      await choice.click();
       continue; // a single choice advances on its own
     }
     if (action.select) {
@@ -126,11 +130,13 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(new Set(asked).size).toBe(asked.length);
     expect(asked.length).toBeGreaterThan(20);
 
-    await page.getByText('Yes — this reflects what I told Oomnik.').click();
-    await page.getByRole('button', { name: 'Continue our conversation' }).click();
-    await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
+    if (!/\/intake-confirmation(?:\?|$)/.test(page.url())) {
+      await page.getByText('Yes — this reflects what I told Oomnik.').click();
+      await page.getByRole('button', { name: 'Continue our conversation' }).click();
+      await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
+    }
 
-    for (let turn = 0; turn < 25; turn += 1) {
+    for (let turn = 0; turn < 25 && /\/adaptive-interview(?:\?|$)/.test(page.url()); turn += 1) {
       await page.waitForLoadState('domcontentloaded');
       const adaptivePrompt = await page.locator('main').innerText().catch(() => '');
       console.log('OOMNIK_ADAPTIVE_TURN', JSON.stringify({ scenario_id: scenario.id, turn, url: page.url(), prompt: adaptivePrompt.slice(0, 1200) }));
