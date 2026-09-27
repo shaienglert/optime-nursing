@@ -10,6 +10,7 @@ facility); this module is the storage/read side that a facility page can already
 on, whether a given row got there by outreach or by manual entry.
 """
 
+from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy.orm import Session, joinedload
@@ -39,6 +40,7 @@ def upsert_room_type(
     monthly_price_cents: Optional[int] = None,
     availability_status: str = "UNKNOWN",
     source: str = "MANUAL",
+    last_verified_at: Optional[datetime] = None,
     photo_urls: Optional[List[str]] = None,
 ) -> FacilityRoomType:
     if availability_status not in VALID_AVAILABILITY_STATUSES:
@@ -62,6 +64,7 @@ def upsert_room_type(
     room.monthly_price_cents = monthly_price_cents
     room.availability_status = availability_status
     room.source = source
+    room.last_verified_at = last_verified_at
     db.flush()
 
     if photo_urls is not None:
