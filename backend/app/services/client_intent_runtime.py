@@ -255,13 +255,17 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 must_unknown.append(key)
         elif key == "COUPLE_CORESIDENCE":
-            # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE.
-            if any(
+            # Synthetic pilot policy is governed catalog evidence; absent real-world
+            # evidence remains UNKNOWN, and explicit refusal is a verified failure.
+            accepts_couples = row.get("accepts_couples") if row.get("synthetic_pilot") is True else None
+            if accepts_couples is True or any(
                 p.get("couple_coresidence_verified") is True
                 or p.get("same_apartment_transition_verified") is True
                 for p in payloads
             ):
                 must_pass.append(key)
+            elif accepts_couples is False:
+                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "RECOVERY_TRANSITION_COMPATIBLE":

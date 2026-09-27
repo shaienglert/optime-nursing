@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { requireOpsAuth } from "@/lib/server-ops-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -40,7 +41,9 @@ function isSmallCareHome(row: any): boolean {
   return values.has("ASSISTED_LIVING_RFG") && !values.has("INDEPENDENT_LIVING") && !values.has("LIFE_PLAN_CCRC");
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const unauthorized = requireOpsAuth(request);
+  if (unauthorized) return unauthorized;
   try {
     const response = await fetch(`${BACKEND_BASE}/decision-engine/recommendations`, {
       method: "POST",
