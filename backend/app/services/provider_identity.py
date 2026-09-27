@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
@@ -190,14 +191,18 @@ def start_email_verification(
     db.add(challenge)
     db.commit()
 
-    return {
+    result = {
         "facility_id": facility_id,
         "user_id": user.id,
         "email": email,
         "verification_sent_at": challenge.verification_sent_at.isoformat(),
         "verification_method": "EMAIL_OTP",
-        "debug_verification_code": code,
     }
+    # Never disclose an authentication secret in a production API response. Tests may
+    # opt in explicitly; the default is fail-closed.
+    if os.getenv("OOMNIK_EXPOSE_DEBUG_VERIFICATION_CODE", "").strip().lower() in {"1", "true", "yes"}:
+        result["debug_verification_code"] = code
+    return result
 
 
 def complete_email_verification(db: Session, facility_id: int, email: str, code: str) -> Dict[str, object]:
