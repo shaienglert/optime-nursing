@@ -123,18 +123,12 @@ function relationshipCopy(relationship: string): string {
   return relationship || "your loved one";
 }
 
-function highlightLabel(index: number): string {
-  if (index === 0) return "Best Match";
-  if (index === 1) return "Strong Alternative";
-  if (index === 2) return "Good Alternative";
-  return "Worth Considering";
+function highlightLabel(rankDisplay?: string): string {
+  return rankDisplay ? "Ranked recommendation" : "Eligible option";
 }
 
-function recommendationTitle(index: number): string {
-  if (index === 0) return "#1 Recommendation";
-  if (index === 1) return "#2 Recommendation";
-  if (index === 2) return "#3 Recommendation";
-  return `#${index + 1} Recommendation`;
+function recommendationTitle(rankDisplay?: string): string {
+  return rankDisplay ? `${rankDisplay} Recommendation` : "Eligible option";
 }
 
 function eligibilityTone(status: string): string {
@@ -715,7 +709,7 @@ export function ResultsPageClient() {
 
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(index)}</p>
+              <p className="inline-flex rounded-full bg-[#e9f1e7] px-3 py-1 text-xs font-semibold text-[#4c6f5b]">{highlightLabel(recommendation.rank_display)}</p>
               <h3 className="mt-2 text-xl font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
               <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "NV"}</p>
               <p className="mt-1 text-xs font-semibold text-[#2f6d3e]">
@@ -1184,8 +1178,8 @@ export function ResultsPageClient() {
                 <section key={`top-${recommendation.canonical_facility_id}`} className="space-y-4 rounded-3xl border border-[#e8ddcc] bg-[#fffdf9] p-5 shadow-[0_12px_40px_-28px_rgba(69,58,43,0.35)]">
                   <div className="rounded-2xl border border-[#d9cfbf] bg-[linear-gradient(120deg,#f7efe0_0%,#fbf6ec_55%,#ffffff_100%)] p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#5f7f6b]">Advisor recommendation</p>
-                    <h3 className="mt-1 text-2xl font-semibold text-[#2f2a24]">{recommendationTitle(index)}</h3>
-                    <p className="mt-2 text-sm text-[#5f5548]">{highlightLabel(index)} for {relationship}, explained with patient-specific differences and clear verification next steps.</p>
+                    <h3 className="mt-1 text-2xl font-semibold text-[#2f2a24]">{recommendationTitle(recommendation.rank_display)}</h3>
+                    <p className="mt-2 text-sm text-[#5f5548]">{highlightLabel(recommendation.rank_display)} for {relationship}, explained with patient-specific differences and clear verification next steps.</p>
                   </div>
                   {renderRecommendationCard(recommendation, index)}
                 </section>
