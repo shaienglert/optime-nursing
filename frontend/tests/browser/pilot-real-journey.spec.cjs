@@ -101,6 +101,8 @@ test.describe('real synthetic-pilot customer journey', () => {
     const asked = await answerInterview(page, [
       [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
       [/About how old/i, { choose: scenario.age }],
+      [/Where in the Las Vegas Valley should we search\?/i, { choose: "Las Vegas" }],
+      [/How far would still feel close enough\?/i, { choose: scenario.distance }],
       [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
       [/usually get around\?/i, { choose: 'Independent' }],
       [/getting up, sitting down, or transferring\?/i, { choose: 'No' }],
@@ -124,12 +126,9 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/religious or faith community be important\?/i, { choose: 'No' }],
       [/pet need to move with/i, { choose: 'No' }],
       [/leave the community and go out on/i, { choose: 'Yes' }],
-      [/worries.*most about moving\?/i, { fill: 'Losing familiar routines' }],
       [/need parking at the community\?/i, { choose: 'No' }],
       [/provide more care later/i, { choose: scenario.futureCare }],
       [/How broadly would you like me to search\?/i, { choose: 'Show me both approaches' }],
-      [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: "Las Vegas" }],
-      [/What travel distance would you prefer\?/i, { choose: scenario.distance }],
     ]);
 
     // The interview must ask one question at a time and never repeat itself.
