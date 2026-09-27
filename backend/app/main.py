@@ -619,8 +619,8 @@ class ParameterRegistryOut(BaseModel):
 
 class PatientDecisionEngineRequestIn(BaseModel):
     questionnaire_state: Dict[str, Any]
-    natural_language_query: Optional[str] = ""
-    limit: int = 50
+    natural_language_query: Optional[str] = Field(default="", max_length=12000)
+    limit: int = Field(default=50, ge=1, le=200)
     intake_profile_id: Optional[str] = None
 
 
@@ -629,8 +629,8 @@ class PersonalDecisionReportRequestIn(BaseModel):
     # report for a case created by an earlier call -- the stored inputs are used and
     # the pipeline is re-run fresh against current facility data.
     questionnaire_state: Dict[str, Any] = Field(default_factory=dict)
-    natural_language_query: Optional[str] = ""
-    limit: int = 50
+    natural_language_query: Optional[str] = Field(default="", max_length=12000)
+    limit: int = Field(default=50, ge=1, le=200)
     # Returned by /decision-engine/recommendations. Reused only for identical inputs.
     decision_id: Optional[str] = None
     # Deprecated and ignored: a report is never built from a client-supplied decision.
@@ -641,7 +641,7 @@ class PersonalDecisionReportRequestIn(BaseModel):
 
 class PatientNeedsProfileRequestIn(BaseModel):
     questionnaire_state: Dict[str, Any]
-    natural_language_query: Optional[str] = ""
+    natural_language_query: Optional[str] = Field(default="", max_length=12000)
 
 
 class PatientComparisonContextRequestIn(BaseModel):
@@ -900,7 +900,7 @@ class DeferredReportIn(BaseModel):
     questionnaire: Dict[str, Any] = Field(default_factory=dict)
     query_text: str
     market: Optional[str] = None
-    limit: int = 5
+    limit: int = Field(default=5, ge=1, le=25)
     degraded_reason: Optional[str] = None
     eligible_at_request: Optional[int] = None
 
