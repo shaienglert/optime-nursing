@@ -54,7 +54,11 @@ async function answerInterview(page, answers, maxSteps = 120) {
     const heading = page.locator('main h1').first();
     await heading.waitFor({ state: 'visible' });
     const prompt = (await heading.innerText()).trim();
-    asked.push(prompt);
+    if (asked[asked.length - 1] === prompt) {
+      await page.waitForURL(/\/intake-confirmation(?:\?|$)/, { timeout: 5_000 }).catch(() => {});
+      if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
+      throw new Error(`Intake repeated a question without advancing: ${prompt}`);
+    }
 
     const entry = answers.find(([pattern]) => pattern.test(prompt));
     if (!entry) throw new Error(`No answer configured for intake question: "${prompt}"`);
@@ -64,9 +68,11 @@ async function answerInterview(page, answers, maxSteps = 120) {
       const choice = page.getByRole('button', { name: action.choose, exact: true });
       await choice.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => {});
       if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
+      asked.push(prompt);
       await choice.click();
       continue; // a single choice advances on its own
     }
+    asked.push(prompt);
     if (action.select) {
       for (const option of action.select) await page.getByRole('button', { name: option, exact: true }).click();
     }
