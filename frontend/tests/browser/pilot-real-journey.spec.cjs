@@ -91,6 +91,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     const asked = await answerInterview(page, [
       [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
       [/About how old (?:are they|is your (?:mother|father|grandmother|grandfather|spouse|relative|friend)|are you)\?/i, { choose: scenario.age }],
+      [/Where in the Las Vegas Valley should we search\?/i, { choose: "Anywhere in the Las Vegas Valley" }],
       [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
       [/How do they usually get around\?/i, { choose: 'Independent' }],
       [/getting up, sitting down, or transferring\?/i, { choose: 'No' }],
