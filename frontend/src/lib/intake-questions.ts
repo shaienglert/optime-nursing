@@ -760,7 +760,7 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "abilityToLeaveIndependently",
     section: SECTION_PRACTICAL,
-    prompt: "Can the person we’re finding a home for leave the community and go out on their own?"
+    prompt: "Can the person we’re finding a home for leave the community and go out on their own?",
     kind: "single",
     options: ["Yes", "With support", "No", "Not sure"],
     required: true,
