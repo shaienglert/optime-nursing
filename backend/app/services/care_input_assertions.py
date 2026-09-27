@@ -28,13 +28,34 @@ def extract_care_denials(text: str) -> dict[str, bool]:
         "fully independent", "completely independent", "independent with bathing",
         "independent with dressing", "independent with toileting", "independent with transfers",
     ))
-    no_adl_support = explicit_independence or any(phrase in normalized for phrase in (
-        "no adl support", "no help with daily activities", "does not need help with daily activities",
-        "doesn't need help with daily activities", "no personal care support",
+    # Keep a need explicitly stated for another person when this story also
+    # describes someone independent. A denial alone never creates a need.
+    positive_text = re.sub(
+        r"\b(?:does|do)\s+not\s+need\b[^.;!?]{0,60}\b(?:bathing|dressing|adl|shower|medications?)\b"
+        r"|\b(?:doesn't|don't)\s+need\b[^.;!?]{0,60}\b(?:bathing|dressing|adl|shower|medications?)\b",
+        "", normalized,
+    )
+    positive_adl = bool(re.search(
+        r"\b(?:needs?|requires?)\s+(?:(?:help|assistance|support)\s+(?:with\s+)?)?(?:bathing|dressing|adl|shower)\b",
+        positive_text,
     ))
-    no_medication_support = ((explicit_independence and present("medication")) or any(phrase in normalized for phrase in (
-        "no medication support", "no medication assistance", "does not need medication support", "doesn't need medication support",
-    )))
+    positive_medication = bool(re.search(
+        r"\b(?:needs?|requires?)\s+(?:(?:help|assistance|support)\s+(?:with\s+)?)?medications?\b",
+        positive_text,
+    ))
+    no_adl_support = (
+        explicit_independence or any(phrase in normalized for phrase in (
+            "no adl support", "no help with daily activities", "does not need help with daily activities",
+            "doesn't need help with daily activities", "no personal care support",
+        ))
+    ) and not positive_adl
+    no_medication_support = (
+        (explicit_independence and present("medication"))
+        or any(phrase in normalized for phrase in (
+            "no medication support", "no medication assistance",
+            "does not need medication support", "doesn't need medication support",
+        ))
+    ) and not positive_medication
     no_memory_support = any(phrase in normalized for phrase in (
         "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern",
         "does not need cognitive support", "doesn't need cognitive support", "no cognitive support",
