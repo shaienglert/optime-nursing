@@ -18,7 +18,7 @@ type DraftRoom = {
 };
 
 function emptyRoom(): DraftRoom {
-  return { room_type_name: "", description: "", monthly_price: "", availability_status: "AVAILABLE", photo_urls: "" };
+  return { room_type_name: "", description: "", monthly_price: "", availability_status: "UNKNOWN", photo_urls: "" };
 }
 
 export function FacilityOutreachResponseClient({ responseToken }: { responseToken: string }) {
