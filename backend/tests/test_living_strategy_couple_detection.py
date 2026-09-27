@@ -43,3 +43,7 @@ def test_parents_relationship_alone_does_not_invent_a_couple():
 
 def test_deceased_parents_are_not_a_current_couple():
     assert _household_type("My parents are both deceased. I need housing for myself.") == "SINGLE_OR_UNKNOWN"
+
+
+def test_explicit_couple_questionnaire_answer_is_authoritative():
+    assert _household_type("Looking for senior housing", relationship="Couple") == "COUPLE"
