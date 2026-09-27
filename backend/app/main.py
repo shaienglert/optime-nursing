@@ -3236,7 +3236,12 @@ async def persist_provider_verification_answers(
 async def get_facility_memory(
     facility_id: int,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
+    try:
+        provider_session_user_id(x_provider_token or "", facility_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
@@ -3519,7 +3524,15 @@ async def provider_facility_remove_photo(
 
 
 @app.get("/provider/facilities/{facility_id}/completeness")
-async def provider_facility_completeness(facility_id: int, db: Session = Depends(get_db)):
+async def provider_facility_completeness(
+    facility_id: int,
+    db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
+):
+    try:
+        provider_session_user_id(x_provider_token or "", facility_id)
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     return recompute_completeness(db, facility_id)
 
 
