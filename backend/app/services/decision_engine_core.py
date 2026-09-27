@@ -551,6 +551,14 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
         "does not need help getting", "doesn't need help getting",
         "does not need help to get", "doesn't need help to get",
     ))
+    # A different family member's independence cannot cancel an explicitly
+    # stated transfer need. Keep denial-only stories suppressed.
+    positive_transfer = re.search(
+        r"\b(?:needs?|requires?)\s+(?:help|assistance|support)\s+(?:with\s+|to\s+)?(?:transfers?|transferring|get(?:ting)?\s+(?:in|out|up)|mobility|lift)",
+        normalized,
+    )
+    if positive_transfer:
+        no_transfer_support = False
     bed_or_shower_help = re.search(
         r"\b(?:needs?\s+(?:one person\s+to\s+)?help|needs?\s+one person\s+to\s+help\s+(?:her|him|them)|help\s+(?:her|him|them))\s+(?:to\s+)?(?:get|getting)\s+(?:in\s+and\s+out\s+of|into|out\s+of)\s+(?:the\s+)?(?:bed|shower)\b",
         normalized,
