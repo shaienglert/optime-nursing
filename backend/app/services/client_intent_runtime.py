@@ -161,8 +161,10 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # policy but treating a *reliable* negative here as safe to hard-fail on.
             if row.get("license_expired") is True:
                 hard_fail.append(key)
-            else:
+            elif row.get("license_expired") is False:
                 must_pass.append(key)
+            else:
+                must_unknown.append(key)
         elif key == "LAS_VEGAS":
             las_vegas_valley_cities = {
                 "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
