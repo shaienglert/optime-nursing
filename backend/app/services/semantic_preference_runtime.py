@@ -136,6 +136,13 @@ def build_facility_claim_ledger(row: Dict[str, Any]) -> Dict[str, Any]:
         for key, value in row.items()
         if str(key) not in _DERIVED_OR_PRESENTATION_FIELDS and not str(key).startswith("__")
     }
+    # The pilot catalog is already verified fixture evidence. Include its raw
+    # parameter facts before presentation-heavy candidate metadata so the AI
+    # receives the same source facts as the deterministic MUST gate.
+    from app.services.governed_evidence_runtime import _pilot_parameter_payload
+    pilot = _pilot_parameter_payload(row)
+    if pilot:
+        governed_record = {"pilot_parameter_evidence": pilot, **governed_record}
     claims: List[Dict[str, Any]] = []
     _flatten_claims(governed_record, "facility", claims)
     return {

@@ -1,0 +1,60 @@
+name: Oomnik live pilot AI acceptance
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/oomnik-pilot-live-ai.yml'
+      - 'backend/app/services/intake_interpretation.py'
+      - 'frontend/tests/browser/pilot-live-scenarios.cjs'
+concurrency:
+  group: oomnik-live-pilot-ai
+  cancel-in-progress: false
+jobs:
+  pilot-live-ai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        scenario: [independent_social, bathing_dressing, falls_transfers, mild_memory_reminders, dementia_wandering, post_surgery_rehab, dialysis, oxygen_wound, medicaid_pending, couple_no_dementia]
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm install --no-save @playwright/test@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - name: Wait for the isolated pilot interpretation deployment
+        run: |
+          node - <<'NODE'
+          (async () => {
+            for (let i=0;i<40;i++) {
+              try {
+                const r=await fetch('https://oomnik-nursing-pilot-ui.onrender.com/api/backend/health', {signal:AbortSignal.timeout(15000)});
+                const d=await r.json();
+                if(d.market==='synthetic-pilot' && d.intake_interpretation_version==='intake-facts-v1') return;
+              } catch {}
+              await new Promise(r=>setTimeout(r,15000));
+            }
+            throw Error('Pilot deployment did not expose the required interpretation contract');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+      - name: Run live browser journey with real AI
+        env:
+          OOMNIK_PRODUCTION_URL: https://oomnik-nursing-pilot-ui.onrender.com
+          OOMNIK_EXPECTED_MARKET: synthetic-pilot
+          OOMNIK_SCENARIO: ${{ matrix.scenario }}
+        run: npx playwright test tests/browser/production-synthetic-journey.spec.cjs --reporter=line --workers=1
+      - name: Preserve live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-live-ai-${{ matrix.scenario }}
+          path: frontend/test-results
+          if-no-files-found: ignore

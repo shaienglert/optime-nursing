@@ -15,34 +15,8 @@ def _upper(value: Any) -> str:
 
 
 def _query_signals(questionnaire_state: Dict[str, Any], natural_language_query: str, *, care_denials=None) -> Dict[str, Any]:
-    from app.services.care_input_assertions import extract_care_denials
-    denials = care_denials if care_denials is not None else extract_care_denials(natural_language_query)
-    text = str(natural_language_query or "").lower()
-    assistance = str(questionnaire_state.get("assistanceLevel") or "").lower()
-    combined = f"{text} {assistance}"
-    temporary = any(token in combined for token in ("temporary", "temporarily", "3 months", "three months", "short term", "short-term", "post surgery", "after surgery", "recovery", "recovering"))
-    home_like = any(token in combined for token in ("intimate", "home-like", "homelike", "home like", "small community", "less institutional", "not institutional", "independent living", "independent senior living"))
-    part_time = any(token in combined for token in ("few hours", "a few hours", "couple hours", "part time", "part-time", "morning and evening", "morning/evening", "one hour", "1 hour"))
-    adl = not denials["adl"] and any(token in combined for token in ("bathing", "dressing", "adl", "personal care", "caregiver", "care giver", "shower"))
-    medication = not denials["medication"] and any(token in combined for token in ("medication", "meds", "med management", "pills", "prescription"))
-    meals_material = any(token in combined for token in ("meal", "meals", "food", "dining", "breakfast", "lunch", "dinner", "ארוחות", "אוכל"))
-    in_house_only_requested = any(token in combined for token in (
-        "everything in house", "everything in-house", "all in house", "all in-house",
-        "only in house", "only in-house", "in house only", "in-house only",
-        "no outside care", "no outside caregiver", "no external care", "no external agency",
-        "no outside agency", "not okay with outside caregivers", "not comfortable with outside caregivers",
-        "don't want outside caregivers", "do not want outside caregivers",
-    ))
-    return {
-        "temporary_care_need": temporary,
-        "home_like_or_independent_preference": home_like,
-        "part_time_care_pattern": part_time,
-        "adl_support_needed": adl,
-        "medication_support_needed": medication,
-        "meals_material": meals_material,
-        "in_house_only_requested": in_house_only_requested,
-        "external_care_strategy_material": adl and (temporary or home_like or part_time),
-    }
+    from app.services.intake_interpretation import extract_intake_facts
+    return extract_intake_facts(questionnaire_state, natural_language_query, care_denials=care_denials)["delivery"]
 
 
 def _agency_match_from_row(row: Dict[str, Any]) -> Dict[str, Any]:

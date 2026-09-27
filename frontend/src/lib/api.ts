@@ -291,6 +291,7 @@ export type PatientNeed = {
 };
 
 export type PatientNeedsProfile = {
+  interpretation_id?: string | null;
   intake_profile_id?: string | null;
   generated_from: { questionnaire: boolean; natural_language: boolean };
   needs: PatientNeed[];
