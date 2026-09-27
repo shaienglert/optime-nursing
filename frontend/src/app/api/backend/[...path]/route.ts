@@ -44,7 +44,7 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
     const body = await response.arrayBuffer();
     return new NextResponse(body, { status: response.status, headers: responseHeaders });
   } catch (error) {
-    console.error("backend_proxy_failed", { targetUrl, error: error instanceof Error ? error.message : String(error) });
+    console.error("backend_proxy_failed", { type: error instanceof Error ? error.name : "UnknownError" });
     return NextResponse.json(
       { error: "BACKEND_PROXY_FAILED", message: "Backend temporarily unavailable." },
       { status: 502, headers: { "Cache-Control": "no-store" } },
