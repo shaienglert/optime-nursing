@@ -2462,7 +2462,7 @@ async def get_placement_referral(referral_code: str, db: Session = Depends(get_d
 
 
 @app.post("/placement-referrals/{referral_code}/confirm-entry", response_model=PlacementReferralOut)
-async def post_confirm_placement_entry(referral_code: str, payload: PlacementReferralConfirmEntryIn, db: Session = Depends(get_db)):
+async def post_confirm_placement_entry(referral_code: str, payload: PlacementReferralConfirmEntryIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     entry_date = _parse_iso_datetime(payload.entry_date, field_name="entry_date")
     try:
         referral = placement_referral_service.confirm_entry(
@@ -2474,7 +2474,7 @@ async def post_confirm_placement_entry(referral_code: str, payload: PlacementRef
 
 
 @app.post("/placement-referrals/{referral_code}/report-departure", response_model=PlacementReferralOut)
-async def post_report_placement_departure(referral_code: str, payload: PlacementReferralDepartureIn, db: Session = Depends(get_db)):
+async def post_report_placement_departure(referral_code: str, payload: PlacementReferralDepartureIn, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     departure_date = _parse_iso_datetime(payload.departure_date, field_name="departure_date")
     try:
         referral = placement_referral_service.report_departure(
@@ -2743,7 +2743,7 @@ async def decision_engine_deferred_report(payload: DeferredReportIn, db: Session
 
 
 @app.post("/decision-engine/deferred-report/process")
-async def decision_engine_process_deferred_reports(limit: int = 25, db: Session = Depends(get_db)):
+async def decision_engine_process_deferred_reports(limit: int = 25, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     """Retry pending requests and send the ones that now rank. Safe to call repeatedly."""
     return process_pending_reports(db, limit=limit)
 
@@ -2879,7 +2879,7 @@ def post_patient_comparison_context(payload: PatientComparisonContextRequestIn):
 
 
 @app.post("/intelligence/run", response_model=IntelligenceRunSummaryOut)
-async def run_intelligence(facility_id: Optional[int] = Query(default=None), db: Session = Depends(get_db)):
+async def run_intelligence(facility_id: Optional[int] = Query(default=None), db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     if facility_id is not None:
         facility = db.query(Facility).filter(Facility.id == facility_id).first()
         if not facility:
@@ -2952,7 +2952,7 @@ async def search_agent_knowledge_reports(query: str = Query(..., min_length=2), 
 
 
 @app.post("/expert-agents/knowledge-reports/refresh", response_model=AgentKnowledgeRefreshOut)
-async def refresh_agent_knowledge_reports(db: Session = Depends(get_db)):
+async def refresh_agent_knowledge_reports(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     result = refresh_all_agent_reports(db, refresh_mode="manual", force=True)
     return AgentKnowledgeRefreshOut(
         attempted=int(result.get("attempted", 0)),
@@ -2980,7 +2980,7 @@ async def supervisor_overview(db: Session = Depends(get_db)):
 
 
 @app.post("/supervisor/run-cycle")
-async def supervisor_run_cycle(db: Session = Depends(get_db)):
+async def supervisor_run_cycle(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     ensure_reports_available(db)
     return run_supervisor_cycle(db)
 
@@ -3508,12 +3508,12 @@ async def provider_facility_completeness(facility_id: int, db: Session = Depends
 
 
 @app.post("/provider/identity/reverification/run")
-async def provider_identity_reverification_run(db: Session = Depends(get_db)):
+async def provider_identity_reverification_run(db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
     return run_annual_reverification(db)
 
 
 @app.get("/executive-report/latest")
-async def executive_report_latest():
+async def executive_report_latest(_: None = Depends(require_admin_token)):
     latest = get_latest_executive_report()
     if not latest:
         raise HTTPException(status_code=404, detail="No executive report generated yet")
@@ -3521,7 +3521,7 @@ async def executive_report_latest():
 
 
 @app.get("/executive-report/latest/full")
-async def executive_report_latest_full():
+async def executive_report_latest_full(_: None = Depends(require_admin_token)):
     payload = get_executive_report_payload()
     if not payload:
         raise HTTPException(status_code=404, detail="No executive report generated yet")
@@ -3529,7 +3529,7 @@ async def executive_report_latest_full():
 
 
 @app.get("/executive-report/by-id/{report_id}")
-async def executive_report_by_id(report_id: str):
+async def executive_report_by_id(report_id: str, _: None = Depends(require_admin_token)):
     payload = get_executive_report_payload(report_id=report_id)
     if not payload:
         raise HTTPException(status_code=404, detail="Executive report not found")
@@ -3537,12 +3537,12 @@ async def executive_report_by_id(report_id: str):
 
 
 @app.get("/executive-report/history")
-async def executive_report_history(limit: int = Query(default=30, ge=1, le=365)):
+async def executive_report_history(limit: int = Query(default=30, ge=1, le=365), _: None = Depends(require_admin_token)):
     return {"reports": get_executive_report_history(limit=limit)}
 
 
 @app.get("/executive-report/compare")
-async def executive_report_compare():
+async def executive_report_compare(_: None = Depends(require_admin_token)):
     return compare_latest_vs_previous()
 
 

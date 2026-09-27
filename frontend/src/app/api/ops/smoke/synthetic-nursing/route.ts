@@ -1,3 +1,4 @@
+import { requireOpsAuth } from "@/lib/server-ops-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -172,6 +173,8 @@ async function runMultiTurn(scenario: Scenario) {
 }
 
 export async function GET(request: NextRequest) {
+  const unauthorized = requireOpsAuth(request);
+  if (unauthorized) return unauthorized;
   try {
     const requestedId = request.nextUrl.searchParams.get("id");
     const mode = request.nextUrl.searchParams.get("mode") || "single";
