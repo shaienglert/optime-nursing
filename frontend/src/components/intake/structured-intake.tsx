@@ -101,9 +101,16 @@ export function StructuredIntake() {
   const question = questions[index];
   const missing = useMemo(() => missingQuestions(context), [context]);
 
+  function finishQuestionnaire(finalContext: IntakeContext) {
+    const submission = buildSubmission(finalContext);
+    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, submission);
+    setState(submission);
+    router.push("/intake-confirmation?next=%2Fresults");
+  }
+
   function goToIndex(nextIndex: number) {
     if (nextIndex >= questions.length) {
-      setPhase("summary");
+      finishQuestionnaire(context);
       return;
     }
     setShowError(false);
@@ -124,7 +131,7 @@ export function StructuredIntake() {
     const updated = visibleQuestions(next);
     const position = updated.findIndex((item) => item.id === question.id);
     if (position === -1 || position + 1 >= updated.length) {
-      setPhase("summary");
+      finishQuestionnaire(next);
       return;
     }
     setStepId(updated[position + 1].id);
