@@ -47,7 +47,7 @@ jobs:
       NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
       OPTIME_CANONICAL_MARKET: synthetic-pilot
       OOMNIK_PILOT_FACILITY_LIMIT: '200'
-      OPTIME_SEMANTIC_AI_ENABLED: '0'
+      OPTIME_SEMANTIC_AI_ENABLED: '1'
       OOMNIK_SCENARIO_START: ${{ github.event.inputs.scenario_start || '0' }}
       OOMNIK_SCENARIO_COUNT: ${{ github.event.inputs.scenario_count || '10' }}
       OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '200' }}
