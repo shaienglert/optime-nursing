@@ -75,6 +75,7 @@ from app.services.demographic_market_metrics_service import (
 from app.services.nevada_facility_scope import NEVADA_STATE_CODE, purge_non_nevada_facilities
 from app.services.nevada_runtime_facility_import import import_las_vegas_runtime_facilities
 from app.services.canonical_universe import configured_canonical_market
+from app.services.nearby_place_service import nearby_places
 
 
 from app.services.schema_migrations import ensure_deferred_report_schema
@@ -180,11 +181,27 @@ from app.services.supplier_intelligence_service import (
 )
 from app.services.supplier_verification_agent import supplier_verification_status
 
+class NearbyPlaceRequest(BaseModel):
+    latitude: float
+    longitude: float
+    categories: List[str]
+    radius_meters: int = Field(default=8047, ge=250, le=50000)
+
+
 app = FastAPI(
     title="OPTIME Nursing API",
     version="0.3.0",
     description="OPTIME Phase 1 CMS ingestion pipeline for Florida nursing homes",
 )
+
+
+@app.post("/api/places/nearby")
+def lookup_nearby_places(payload: NearbyPlaceRequest):
+    try:
+        return nearby_places(payload.latitude, payload.longitude, payload.categories, payload.radius_meters)
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=503, detail=f"Nearby-place provider unavailable: {exc}") from exc
+
 
 logger = logging.getLogger("optime.api")
 
