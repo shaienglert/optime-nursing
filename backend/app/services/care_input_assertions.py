@@ -11,6 +11,27 @@ _NEGATED_DEMENTIA = re.compile(
 )
 
 
+# "She does not need help with bathing" was not recognised as a denial of anything, so the
+# word "bathing" went on to create the very need the sentence rules out. A denial has to be
+# read for the ordinary ways families write one, not only for the handful of set phrases
+# each care area happened to list.
+_NEGATED_NEED = (
+    r"\b(?:(?:does|do|did)\s*n[o']t\s+(?:need|require|use)"
+    r"|(?:has|have|had)\s+no\s+need\s+for|no\s+need\s+for|never\s+(?:needed|required)"
+    r"|(?:is|are)\s*n[o']t\s+(?:in\s+need\s+of|receiving))"
+    r"\s+(?:any\s+)?(?:help|assistance|support)?\s*(?:with|getting|for)?\s*"
+    r"(?:her|his|their|the)?\s*(?:%s)\b"
+)
+
+_ADL_TERMS = r"bathing|bathe|showering|shower|dressing|dress|toileting|grooming|personal care|daily activities|daily living|adls?"
+_MEDICATION_TERMS = r"medications?|medicines?|pills?|meds"
+_MEMORY_TERMS = r"memory care|memory unit|memory support|dementia|alzheimer'?s?|cognitive support|secure unit"
+
+
+def _denies(normalized: str, terms: str) -> bool:
+    return re.search(_NEGATED_NEED % terms, normalized) is not None
+
+
 def without_negated_nursing(text: str) -> str:
     """Remove only the denied nursing mention; preserve other positive mentions."""
     return re.sub(
@@ -44,19 +65,20 @@ def extract_care_denials(text: str) -> dict[str, bool]:
         positive_text,
     ))
     no_adl_support = (
-        explicit_independence or any(phrase in normalized for phrase in (
+        explicit_independence or _denies(normalized, _ADL_TERMS) or any(phrase in normalized for phrase in (
             "no adl support", "no help with daily activities", "does not need help with daily activities",
             "doesn't need help with daily activities", "no personal care support",
         ))
     ) and not positive_adl
     no_medication_support = (
         (explicit_independence and present("medication"))
+        or _denies(normalized, _MEDICATION_TERMS)
         or any(phrase in normalized for phrase in (
             "no medication support", "no medication assistance",
             "does not need medication support", "doesn't need medication support",
         ))
     ) and not positive_medication
-    no_memory_support = any(phrase in normalized for phrase in (
+    no_memory_support = _denies(normalized, _MEMORY_TERMS) or any(phrase in normalized for phrase in (
         "no dementia", "without dementia", "mentally alert", "cognitively intact", "no memory concerns", "no memory concern",
         "does not need cognitive support", "doesn't need cognitive support", "no cognitive support",
     ))
