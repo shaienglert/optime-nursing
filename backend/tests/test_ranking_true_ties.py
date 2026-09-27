@@ -24,3 +24,13 @@ def test_names_do_not_break_true_intent_tie():
 
 def test_names_do_not_break_true_governed_result_tie():
     assert _result_sort_key(_row("Alpha")) == _result_sort_key(_row("Zulu"))
+
+
+def test_late_rank_metadata_preserves_true_tie():
+    from app.services.patient_decision_engine_runtime import _reassign_rank_metadata
+    rows = [_row("Alpha"), _row("Zulu")]
+    _reassign_rank_metadata(rows)
+    assert rows[0]["rank_position"] == 1
+    assert rows[1]["rank_position"] == 1
+    assert rows[0]["rank_tie_status"] == "JOINT_RANK"
+    assert rows[1]["rank_tie_status"] == "JOINT_RANK"
