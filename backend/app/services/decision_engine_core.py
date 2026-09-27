@@ -416,10 +416,13 @@ def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[s
 
     food = questionnaire.get("humanIntelligenceV2", {}).get("foodProfile", {})
     dietary = [item for item in (food.get("dietaryPreferences") or []) if str(item).strip()]
+    dietary_importance = _normalize(food.get("dietaryRequirementImportance"))
+    dietary_level = "HIGH" if dietary_importance == "essential requirement" else "PREFERENCE"
+    dietary_allowed = ["YES"] if dietary_level == "HIGH" else ["YES", "UNKNOWN"]
     if any("gluten" in _normalize(item) for item in dietary):
-        _add_need(needs_by_id, "gluten_free", "PREFERENCE", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.foodProfile.dietaryPreferences", 1.0, "Gluten-free option preferred")
+        _add_need(needs_by_id, "gluten_free", dietary_level, "YES", dietary_allowed, "SERVICE", "questionnaire.foodProfile.dietaryPreferences", 1.0, "Gluten-free requirement" if dietary_level == "HIGH" else "Gluten-free option preferred")
     if any("kosher" in _normalize(item) for item in dietary):
-        _add_need(needs_by_id, "kosher", "PREFERENCE", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.foodProfile.dietaryPreferences", 1.0, "Kosher option preferred")
+        _add_need(needs_by_id, "kosher", dietary_level, "YES", dietary_allowed, "SERVICE", "questionnaire.foodProfile.dietaryPreferences", 1.0, "Kosher requirement" if dietary_level == "HIGH" else "Kosher option preferred")
 
     distance = _normalize(questionnaire.get("distanceFromFamily"))
     if distance:
