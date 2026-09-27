@@ -47,3 +47,14 @@ def test_deceased_parents_are_not_a_current_couple():
 
 def test_explicit_couple_questionnaire_answer_is_authoritative():
     assert _household_type("Looking for senior housing", relationship="Couple") == "COUPLE"
+
+
+def test_couple_assistance_is_preserved_without_assigning_it_to_both_people():
+    context = build_living_strategy_context(
+        {"relationship": "Couple", "coupleAssistance": "Husband needs bathing help; wife is fully independent."},
+        "",
+    )
+    household = context["household"]
+    assert household["couple_assistance_statement"] == "Husband needs bathing help; wife is fully independent."
+    assert household["couple_assistance_assignment_status"] == "PRESERVED_PENDING_PERSON_ASSIGNMENT"
+    assert household["resident_profiles"][1]["current_needs"] == []
