@@ -171,6 +171,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         "requires_two_resident_model": couple,
         "resident_profiles": [],
     }
+    couple_assistance = str(questionnaire_state.get("coupleAssistance") or "").strip()
     if couple:
         household["resident_profiles"] = [
             {
@@ -185,6 +186,12 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
                 "trajectory": "STABLE_OR_UNKNOWN",
             },
         ]
+        if couple_assistance:
+            # Preserve the client's person-specific couple description as evidence.
+            # Do not project it onto either resident unless Semantic AI has explicitly
+            # resolved which partner each need belongs to.
+            household["couple_assistance_statement"] = couple_assistance
+            household["couple_assistance_assignment_status"] = "PRESERVED_PENDING_PERSON_ASSIGNMENT"
 
     care_search_approach = _norm(questionnaire_state.get("careSearchApproach"))
     strategy_candidates: List[Dict[str, Any]] = []
