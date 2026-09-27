@@ -301,9 +301,9 @@ export function SimpleResultsPageClient() {
                           <strong>Full monthly cost needs confirmation.</strong> The starting price alone does not show whether care, outside agency support, or a second resident is included. Request a written quote for everyone and every required service before treating this as within your ${state.budget.toLocaleString()} budget.
                         </p>
                       ) : null}
-                      {state.careSearchApproach !== "Care provided by the community" && item.starting_monthly_price ? (
+                      {item.starting_monthly_price && (item.combined_care_solution?.care_component?.delivery_model === "FACILITY_PLUS_EXTERNAL_AGENCY" || item.combined_care_solution?.medication_component?.delivery_model === "FACILITY_PLUS_EXTERNAL_AGENCY") ? (
                         <div className="mt-3 rounded-xl border border-[#cfe3da] bg-[#f7fbf9] px-4 py-3 text-sm leading-6 text-[#40564e]">
-                          <strong>Independent living + outside support:</strong> housing starts at ${"$"}{item.starting_monthly_price.toLocaleString()} / month. Outside-care cost is shown separately only when a verified provider price and required service package are available. Until then, the combined monthly cost remains <strong>to be verified</strong>.
+                          <strong>Verified care depends on an outside agency:</strong> housing starts at ${"$"}{item.starting_monthly_price.toLocaleString()} / month. Outside-care cost is shown separately only when a verified provider price and required service package are available. Until then, the combined monthly cost remains <strong>to be verified</strong>.
                         </div>
                       ) : null}
                     </div>
