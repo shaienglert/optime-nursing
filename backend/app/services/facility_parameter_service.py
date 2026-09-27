@@ -578,6 +578,8 @@ def query_facility_knowledge_catalog(
         capabilities = catalog[canonical_id]["capabilities"]
         if requested and all(
             str((capabilities.get(parameter_id) or {}).get("value") or "UNKNOWN").strip().upper() == "YES"
+            and str((capabilities.get(parameter_id) or {}).get("decision_eligibility") or "ELIGIBLE").strip().upper() != "NOT_ELIGIBLE"
+            and str((capabilities.get(parameter_id) or {}).get("evidence_strength") or "").strip().upper() != "TAXONOMY_INFERRED"
             for parameter_id in requested
         ):
             verified += 1
