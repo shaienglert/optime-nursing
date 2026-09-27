@@ -53,6 +53,7 @@ const FULL_CASE: Record<string, string | string[] | number> = {
   socialFrequency: "Weekly",
   communityStyle: "Medium",
   activities: ["Music"],
+  nearbyPlaces: ["Parks & walking paths"],
   moveLossConcerns: ["Privacy"],
   language: "English",
   religiousCommunity: "No",
@@ -62,7 +63,7 @@ const FULL_CASE: Record<string, string | string[] | number> = {
   parkingRequirement: "No",
   continuum: "Preferred",
   locationImportant: "Yes",
-  referenceAddress: "Summerlin, Las Vegas, NV",
+  referenceAddress: "Summerlin",
   maximumDistanceMiles: "20",
 };
 
@@ -86,7 +87,7 @@ describe("intake question list", () => {
     expect(initial).not.toContain("mobilityMethod");
     expect(initial).not.toContain("memoryWandering");
     expect(initial).not.toContain("medicalNeeds");
-    expect(initial).not.toContain("referenceAddress");
+    expect(initial).toContain("referenceAddress");
 
     context = answer(context, "assistance", ["Help with bathing"]);
     expect(visibleQuestions(context).map((q) => q.id)).toContain("mobilityMethod");
@@ -189,7 +190,7 @@ describe("submission", () => {
     expect(submitted.humanIntelligenceV2.socialProfile.socialInteractionFrequency).toBe("Weekly");
     expect(submitted.humanIntelligenceV2.languageProfile.preferredSpokenLanguage).toBe("English");
     expect(submitted.humanIntelligenceV2.futureCareProfile.avoidFutureMovesPreference).toBe("Preferred");
-    expect(submitted.referenceAddress).toBe("Summerlin, Las Vegas, NV");
+    expect(submitted.referenceAddress).toBe("Summerlin");
     expect(submitted.questionnaireCompletion.mandatoryComplete).toBe(true);
     expect(submitted.questionnaireCompletion.clientSummaryConfirmed).toBe(false);
   });
