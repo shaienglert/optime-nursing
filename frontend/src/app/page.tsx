@@ -58,7 +58,7 @@ const MEMORY_OPTIONS = [
   { label: "I am not sure yet", value: "Not sure" },
 ] as const;
 
-type HeroStep = "relationship" | "age" | "assistance" | "memory";
+type HeroStep = "relationship" | "age";
 
 function personCopy(label: string): string {
   if (label === "me") return "you";
@@ -134,33 +134,7 @@ export default function HomePage() {
 
   function chooseAge(label: string): void {
     setState((current) => ({ ...current, ageGroup: label.replaceAll("–", "-") }));
-    setHeroStep("assistance");
-  }
-
-  function toggleAssistance(label: string): void {
-    setSelectedAssistance((current) =>
-      current.includes(label) ? current.filter((item) => item !== label) : [...current, label],
-    );
-  }
-
-  function continueAfterAssistance(): void {
-    if (selectedAssistance.length === 0) return;
-
-    const supportSummary = selectedAssistance.map((item) => ASSISTANCE_VALUE_MAP[item]).join(", ");
-    setState((current) => {
-      const existingNotes = current.notes?.trim() || "";
-      const notes = [existingNotes, `Support needs selected: ${supportSummary}.`].filter(Boolean).join(" ");
-      return {
-        ...current,
-        assistanceLevel: supportSummary,
-        notes,
-      };
-    });
-    setHeroStep("memory");
-  }
-
-  function chooseMemory(value: string): void {
-    setState((current) => ({ ...current, memoryStatus: value }));
+    saveSessionJson(QUESTIONNAIRE_SESSION_KEY, { ...state, ageGroup: label.replaceAll("–", "-") });
     router.push("/intake");
   }
 
@@ -261,38 +235,6 @@ export default function HomePage() {
                 </div>
               )}
 
-              {heroStep === "assistance" && (
-                <div>
-                  <button type="button" onClick={() => setHeroStep("age")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change the age</button>
-                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">What kind of help is needed today?</h2>
-                  <p className="mt-3 max-w-2xl text-base leading-7 text-[#60716a]">Choose every answer that applies, then continue.</p>
-                  <div className="mt-3">
-                    {ASSISTANCE_OPTIONS.map((option) => (
-                      <ChoiceLink key={option} label={option} selected={selectedAssistance.includes(option)} onClick={() => toggleAssistance(option)} />
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    disabled={selectedAssistance.length === 0}
-                    onClick={continueAfterAssistance}
-                    className="mt-8 inline-flex items-center gap-4 border-b-2 border-[#4c8b7b] pb-2 text-4xl font-semibold text-[#285f51] transition hover:border-[#183f35] hover:text-[#183f35] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <OOmnikMark size={36} /> Next <span className="ml-1">→</span>
-                  </button>
-                </div>
-              )}
-
-              {heroStep === "memory" && (
-                <div>
-                  <button type="button" onClick={() => setHeroStep("assistance")} className="text-sm text-[#648077] hover:text-[#315f53]">← Change the support needed</button>
-                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#22332d] sm:text-6xl">One more thing before we continue — have you noticed any changes in memory lately?</h2>
-                  <div className="mt-3">
-                    {MEMORY_OPTIONS.map((option) => (
-                      <ChoiceLink key={option.label} label={option.label} onClick={() => chooseMemory(option.value)} />
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
             <p className="mt-12 max-w-none text-3xl font-medium leading-tight tracking-[-0.04em] text-[#20342c] sm:text-4xl">No paid placement determines your recommendation. Uncertainty is shown, not hidden.</p>
           </div>
