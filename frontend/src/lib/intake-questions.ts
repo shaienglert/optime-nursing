@@ -33,6 +33,7 @@ export type IntakeExtras = {
   secureMemory: string;
   language: string;
   medicalLanguage: string;
+  medicalOther: string;
   continuum: string;
 };
 
@@ -79,6 +80,7 @@ export const medicalOptions = [
   "Complex chronic condition",
   "Permanent medical equipment",
   "Nursing supervision",
+  "Other",
 ];
 
 export const moveConcernOptions = [
@@ -129,6 +131,7 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
     secureMemory: human.futureCareProfile.secureMemoryNeighborhoodNeed || "",
     language: human.languageProfile.preferredSpokenLanguage || "",
     medicalLanguage: human.languageProfile.medicalDiscussionLanguage || "",
+    medicalOther: state.medicalCareProfile.needs.find((item) => item.startsWith("Other: "))?.slice(7) || "",
     continuum: human.futureCareProfile.avoidFutureMovesPreference || "",
   };
 }
@@ -315,7 +318,19 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "medical need type",
     visible: needsMedicalDetails,
     get: ({ draft }) => draft.medicalCareProfile.needs,
-    set: (context, value) => setMedical(context, { needs: list(value) }),
+    set: (context, value) => setMedical(context, { needs: list(value).filter((item) => !item.startsWith("Other: ")) }),
+  },
+  {
+    id: "medicalOther",
+    section: SECTION_MEDICAL,
+    prompt: "What other medical care should we know about?",
+    kind: "text",
+    placeholder: "Describe it in your own words",
+    required: true,
+    label: "other medical care",
+    visible: (context) => context.draft.medicalCareProfile.needs.includes("Other"),
+    get: ({ extras }) => extras.medicalOther,
+    set: (context, value) => setExtra(context, { medicalOther: text(value) }),
   },
   {
     id: "dialysisFrequency",
@@ -798,6 +813,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
     },
     medicalCareProfile: {
       ...draft.medicalCareProfile,
+      needs: medicalDetails ? [...draft.medicalCareProfile.needs.filter((item) => item !== "Other" && !item.startsWith("Other: ")), ...(extras.medicalOther.trim() ? [`Other: ${extras.medicalOther.trim()}`] : [])] : [],
       mobilityMethod: mobility ? draft.medicalCareProfile.mobilityMethod : "",
       transferAssistance: mobility ? draft.medicalCareProfile.transferAssistance : "",
       recentFalls: mobility ? draft.medicalCareProfile.recentFalls : "",
