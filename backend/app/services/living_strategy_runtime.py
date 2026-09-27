@@ -93,7 +93,7 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     # `relationship` identifies who the search is for (for example, "my spouse");
     # it does not mean two residents are moving. Require an explicit joint-move or
     # co-residence statement before creating the COUPLE_CORESIDENCE hard gate.
-    couple = _mentions_couple(query)
+    couple = _mentions_couple(query) or _norm(questionnaire_state.get("relationship")) == "couple"
 
     no_dementia = denials["memory"] or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
     memory_care_needed = (
