@@ -101,8 +101,8 @@ test.describe('real synthetic-pilot customer journey', () => {
     const asked = await answerInterview(page, [
       [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
       [/About how old/i, { choose: scenario.age }],
-      [/Where in the Las Vegas Valley should we search\?/i, { choose: "Las Vegas" }],
-      [/How far would still feel close enough\?/i, { choose: scenario.distance }],
+      [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: "Las Vegas" }],
+      [/What travel distance would you prefer\?/i, { choose: scenario.distance }],
       [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
       [/usually get around\?/i, { choose: 'Independent' }],
       [/getting up, sitting down, or transferring\?/i, { choose: 'No' }],
@@ -136,7 +136,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(asked.length).toBeGreaterThan(20);
     expect(asked[0]).toMatch(/Who are we finding the right place for\?/i);
     expect(asked[1]).toMatch(/About how old/i);
-    expect(asked[2]).toMatch(/Where in the Las Vegas Valley should we search\?/i);
+    expect(asked[2]).toMatch(/Which part of the Las Vegas Valley would you prefer\?/i);
 
     if (!/\/intake-confirmation(?:\?|$)/.test(page.url())) {
       await page.getByText('Yes — this reflects what I told Oomnik.').click();
