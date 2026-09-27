@@ -247,6 +247,11 @@ def complete_email_verification(db: Session, facility_id: int, email: str, code:
         db.commit()
         raise ValueError("Verification code expired")
 
+    if int(challenge.attempt_count or 0) >= 5:
+        challenge.status = "LOCKED"
+        db.commit()
+        raise ValueError("Verification challenge locked after too many attempts")
+
     challenge.attempt_count = int(challenge.attempt_count or 0) + 1
     if challenge.code_hash != _hash_code(code):
         db.commit()
