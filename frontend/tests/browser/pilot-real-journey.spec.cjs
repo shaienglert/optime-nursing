@@ -134,6 +134,9 @@ test.describe('real synthetic-pilot customer journey', () => {
     // The interview must ask one question at a time and never repeat itself.
     expect(new Set(asked).size).toBe(asked.length);
     expect(asked.length).toBeGreaterThan(20);
+    expect(asked[0]).toMatch(/Who are we finding the right place for\?/i);
+    expect(asked[1]).toMatch(/About how old/i);
+    expect(asked[2]).toMatch(/Where in the Las Vegas Valley should we search\?/i);
 
     if (!/\/intake-confirmation(?:\?|$)/.test(page.url())) {
       await page.getByText('Yes — this reflects what I told Oomnik.').click();
