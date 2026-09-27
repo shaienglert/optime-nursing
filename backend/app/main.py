@@ -93,6 +93,7 @@ from app.services.provider_identity import (
     run_annual_reverification,
     start_email_verification,
     validate_license_ownership,
+    verify_provider_access_token,
 )
 from app.services.facility_profile_portal import (
     add_photo,
@@ -872,6 +873,8 @@ class IdentityVerificationCompleteOut(BaseModel):
     user_id: int
     verification_completed_at: str
     verification_method: str
+    access_token: str
+    access_token_expires_in_seconds: int
 
 
 class LicenseValidationIn(BaseModel):
@@ -3308,8 +3311,10 @@ async def provider_identity_field_update(
     facility_id: int,
     payload: FieldUpdateIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.user_id)
         result = apply_facility_field_update(
             db=db,
             facility_id=facility_id,
@@ -3333,8 +3338,10 @@ async def provider_identity_revert_audit(
     audit_id: int,
     payload: RevertAuditIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.reverted_by_user_id)
         result = revert_audit_change(
             db=db,
             facility_id=facility_id,
@@ -3355,8 +3362,10 @@ async def provider_identity_staff_invite(
     facility_id: int,
     payload: StaffInviteIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.inviter_user_id)
         result = invite_staff_member(
             db=db,
             facility_id=facility_id,
@@ -3379,8 +3388,10 @@ async def provider_identity_role_change(
     facility_id: int,
     payload: RoleChangeIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.actor_user_id)
         result = request_role_change(
             db=db,
             facility_id=facility_id,
@@ -3426,8 +3437,10 @@ async def provider_facility_save_capabilities(
     facility_id: int,
     payload: CapabilitySaveIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.user_id)
         result = save_capabilities(
             db=db,
             facility_id=facility_id,
@@ -3447,8 +3460,10 @@ async def provider_facility_add_photo(
     facility_id: int,
     payload: PhotoAddIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.user_id)
         return add_photo(
             db=db,
             facility_id=facility_id,
@@ -3470,8 +3485,10 @@ async def provider_facility_remove_photo(
     photo_id: int,
     payload: PhotoRemoveIn,
     db: Session = Depends(get_db),
+    x_provider_token: Optional[str] = Header(default=None),
 ):
     try:
+        verify_provider_access_token(x_provider_token or "", facility_id, payload.user_id)
         return deactivate_photo(
             db=db,
             facility_id=facility_id,
