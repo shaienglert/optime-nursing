@@ -182,11 +182,8 @@ export function StructuredIntake() {
         {phase === "questions" && question ? (
           <section className="mt-8">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#7d8b84]">{question.section}</p>
-            <div className="mt-4 flex items-start gap-3">
-              <div className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-[#079ff2] text-sm font-bold text-white">O</div>
-              <div className="rounded-[1.6rem] rounded-tl-md bg-[#eaf6fd] px-5 py-4">
-                <h1 className="text-2xl font-medium leading-8 text-[#183f55]">{displayPrompt}</h1>
-              </div>
+            <div className="mt-5">
+              <h1 className="text-4xl font-normal leading-tight tracking-[-0.025em] text-[#315f53] sm:text-5xl">{displayPrompt}</h1>
             </div>
 
             <div className="mt-7">
