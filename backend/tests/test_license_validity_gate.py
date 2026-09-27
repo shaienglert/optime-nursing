@@ -69,3 +69,11 @@ class LicenseExpiredHelperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_explicit_suspended_status_fails_even_with_future_expiration(self) -> None:
+        intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
+        row = self._row(license_expired=False)
+        row["license_status"] = "SUSPENDED"
+        result = evaluate_candidate_intent(row, intent)
+        self.assertIn("LICENSE_CURRENTLY_VALID", result["must_fail"])
