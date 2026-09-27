@@ -1024,7 +1024,7 @@ export function ResultsPageClient() {
                   {mobileCompareReference && mobileCompareTarget ? (
                     <article className="rounded-2xl border border-[#d9e3ec] bg-white p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#24425e]">Compare recommendations</p>
-                      <p className="mt-1 text-sm text-[#4a6076]">Focused comparison defaults to #{mobileCompareReference.rank_position || 1} versus your selected alternative.</p>
+                      <p className="mt-1 text-sm text-[#4a6076]">Focused comparison uses the current governed reference versus your selected alternative.</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {topRecommendations.slice(1).map((item, idx) => (
                           <button
