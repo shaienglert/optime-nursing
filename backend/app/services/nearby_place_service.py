@@ -59,3 +59,51 @@ def nearby_places(latitude: float, longitude: float, categories: list[str], radi
     for category in found:
         found[category] = sorted(found[category], key=lambda x: x["distance_miles"])[:5]
     return {"status": "OK", "places": found, "radius_meters": radius_meters, "source": "OpenStreetMap/Overpass"}
+
+
+def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dict[str, Any]) -> None:
+    categories = [str(x) for x in (questionnaire_state.get("nearbyPlaces") or []) if str(x) in CATEGORY_TAGS]
+    importance = str(questionnaire_state.get("nearbyPlacesImportance") or "No preference")
+    if not categories or importance == "No preference":
+        return
+    for row in rows:
+        try:
+            lat, lon = float(row.get("latitude")), float(row.get("longitude"))
+        except (TypeError, ValueError):
+            row["nearby_place_fit"] = {"status": "UNKNOWN", "reason": "facility coordinates unavailable", "importance": importance}
+            continue
+        try:
+            lookup = nearby_places(lat, lon, categories)
+        except requests.RequestException:
+            row["nearby_place_fit"] = {"status": "UNKNOWN", "reason": "place lookup unavailable", "importance": importance}
+            continue
+        nearest = {}
+        distances = []
+        for category in categories:
+            places = (lookup.get("places") or {}).get(category) or []
+            if places:
+                nearest[category] = places[0]
+                distances.append(float(places[0]["distance_miles"]))
+        coverage = len(nearest) / max(1, len(categories))
+        avg = sum(distances) / len(distances) if distances else None
+        # Deterministic ordinal fit only; no invented precision. Important preferences
+        # separate candidates more strongly than nice-to-have preferences.
+        if coverage == 1 and avg is not None and avg <= 3:
+            band = 3
+        elif coverage >= 0.5 and avg is not None and avg <= 5:
+            band = 2
+        elif coverage > 0:
+            band = 1
+        else:
+            band = 0
+        row["nearby_place_fit"] = {"status": "KNOWN", "importance": importance, "fit_band": band, "matched_categories": len(nearest), "requested_categories": len(categories), "nearest": nearest, "average_distance_miles": round(avg, 2) if avg is not None else None, "source": lookup.get("source")}
+
+
+def nearby_rank_key(row: dict[str, Any], importance: str) -> tuple[Any, ...]:
+    fit = row.get("nearby_place_fit") if isinstance(row.get("nearby_place_fit"), dict) else {}
+    if fit.get("status") != "KNOWN":
+        return (1, 0, 999.0)
+    band = int(fit.get("fit_band") or 0)
+    # Nice-to-have remains a weaker tie-break: same evidence, later in ranking tuple.
+    strength = band if importance == "Important" else min(band, 2)
+    return (0, -strength, float(fit.get("average_distance_miles") or 999.0))
