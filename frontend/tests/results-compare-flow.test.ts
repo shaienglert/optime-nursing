@@ -76,4 +76,23 @@ describe("results->favorites->compare flow helpers", () => {
     expect(mobileCardsPerRow(390)).toBe(1);
     expect(mobileCardsPerRow(680)).toBe(2);
   });
+
+  it("keeps unranked eligible options available after the ranked top group", () => {
+    const rows = [
+      { canonical_facility_id: "A", rank_position: 1 },
+      { canonical_facility_id: "B", rank_position: null },
+      { canonical_facility_id: "C", rank_position: 6 },
+    ];
+    expect(getResultsAfterTopFive(rows).map((item) => item.canonical_facility_id)).toEqual(["B", "C"]);
+  });
+
+  it("does not invent an OPTIME reference from an unranked first row", () => {
+    const rows = [
+      { canonical_facility_id: "A", rank_position: null },
+      { canonical_facility_id: "B", rank_position: 2 },
+    ];
+    expect(selectOptimeReference(rows)?.canonical_facility_id).toBe("B");
+    expect(selectOptimeReference([{ canonical_facility_id: "A", rank_position: null }])).toBeNull();
+  });
+
 });
