@@ -719,7 +719,7 @@ export function ResultsPageClient() {
               <h3 className="mt-2 text-xl font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
               <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "NV"}</p>
               <p className="mt-1 text-xs font-semibold text-[#2f6d3e]">
-                {recommendation.rank_display || `#${index + 1}`}
+                {recommendation.rank_display || "Rank pending verification"}
                 {recommendation.rank_tie_status === "JOINT_RANK" ? " (Tied)" : ""}
               </p>
             </div>
@@ -976,7 +976,7 @@ export function ResultsPageClient() {
                       <article key={`top5-mobile-${recommendation.canonical_facility_id}`} className="rounded-2xl border border-[#d9e3ec] bg-white p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || "Rank pending verification"}</p>
                             <h3 className="mt-1 text-lg font-semibold text-[#2f2a24]">{recommendation.facility_name}</h3>
                             <p className="mt-1 text-sm text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "NV"}</p>
                           </div>
@@ -1077,7 +1077,7 @@ export function ResultsPageClient() {
                                   }}
                                 />
                               </div>
-                              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || `#${index + 1}`}</p>
+                              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#5f7f6b]">{recommendation.rank_display || "Rank pending verification"}</p>
                               <p className="mt-1 text-sm font-semibold text-[#2f2a24]">{recommendation.facility_name}</p>
                               <p className="mt-1 text-xs text-[#6d655b]">{recommendation.city || "City unknown"}, {recommendation.state || "NV"}</p>
                               <p className="mt-1 text-xs text-[#6d655b]">{imageInfo.isVerifiedFacilityImage ? `Image source: ${imageInfo.sourceLabel}` : "No verified facility image available"}</p>
