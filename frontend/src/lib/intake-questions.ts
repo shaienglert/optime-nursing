@@ -399,7 +399,7 @@ export const QUESTIONS: IntakeQuestion[] = [
     section: SECTION_MEDICAL,
     prompt: "Describe what the community must provide or coordinate.",
     kind: "text",
-    placeholder: "Optional: condition, treatment, equipment, or nursing task"
+    placeholder: "Optional: condition, treatment, equipment, or nursing task",
     required: false,
     label: "complex medical details (optional)",
     visible: (context) => needsMedicalDetails(context) && context.draft.medicalCareProfile.needs.some((item) => COMPLEX_MEDICAL_NEEDS.includes(item)),
@@ -677,7 +677,7 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "abilityToLeaveIndependently",
     section: SECTION_PRACTICAL,
-    prompt: "Can the person we’re finding a home for leave the community and go out on their own?"
+    prompt: "Can the person we’re finding a home for leave the community and go out on their own?",
     kind: "single",
     options: ["Yes", "With support", "No", "Not sure"],
     required: true,
