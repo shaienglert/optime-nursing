@@ -158,3 +158,9 @@ def test_explicit_continuum_match_ranks_above_generic_active_adult_fit():
     active_adult["client_intent_fit"] = evaluate_candidate_intent(active_adult, intent)
 
     assert intent_rank_key(continuing_care) < intent_rank_key(active_adult)
+
+
+def test_rfg_taxonomy_does_not_auto_pass_adl_support():
+    fit = evaluate_candidate_intent(_row("ASSISTED_LIVING_RFG"), _intent("ADL_SUPPORT_AVAILABLE"))
+    assert fit["hard_gate"] == "PENDING_VERIFICATION"
+    assert "ADL_SUPPORT_AVAILABLE" in fit["must_unknown"]

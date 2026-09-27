@@ -46,6 +46,7 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Prefer one high-information clarification at a time.",
     "Populate questionnaire_patch from explicit client facts using only the exact field names and allowed enum values in required_output. Omit unknown or merely inferred fields; never copy defaults as client facts.",
     "Medical terms must be normalized into the structured taxonomy: for example CPAP/BiPAP/ventilator/cough-assist belongs in respiratory equipment details and Permanent medical equipment, dialysis in Dialysis, chronic wounds in Wound care, wheelchairs in mobilityMethod, and lift/two-person transfers in transferAssistance.",
+    "Never infer assistance intensity from a diagnosis, device, supervision label, hospitalization, or generic rehabilitation need. If the specific support/service is decision-relevant and not explicit, leave it UNKNOWN and ask one clarification question.",
     "Return a compact decision packet: preserve 100% statement accounting but avoid repetition and long prose.",
 ]
 
@@ -71,7 +72,8 @@ def _required_output_schema() -> Dict[str, Any]:
             "medicareStatus": "Original Medicare|Medicare Advantage|No Medicare|Not sure",
             "moveTiming": "Immediately|Within 30 days|1-3 months|3-6 months|Planning ahead|Not sure",
             "coupleAssistance": "explicit person-specific assistance description, preserving which partner needs which help",
-            "referenceLocationValue": "explicit city/market string",
+            "searchState": "explicit US state that bounds the search universe; never infer a different state from a city/person name",
+            "referenceLocationValue": "explicit city/market string within searchState",
             "referenceAddress": "explicit reference address; preserve full address if provided",
             "locationImportant": "Yes|No",
             "maximumDistanceMiles": "explicit maximum distance in miles as a numeric string; do not round to preset choices",
@@ -87,6 +89,8 @@ def _required_output_schema() -> Dict[str, Any]:
                 "oxygenUse": "At night|With activity|Continuously|Not sure",
                 "woundCareFrequency": "explicit frequency string",
                 "complexConditionDetails": "concise explicit conditions/equipment",
+                "complexConditionSupportLevel": "Independently|Some daily help|Clinical or nursing help|Not sure",
+                "rehabServicesNeeded": ["Physical therapy|Occupational therapy|Speech therapy|Not sure"],
                 "physicianCoordination": "No|Yes|Not sure",
             },
             "humanIntelligenceV2": {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
@@ -29,13 +29,20 @@ function Choice({ label, active, onClick }: { label: string; active: boolean; on
   );
 }
 
-function AnswerControl({ question, value, onAnswer }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void }) {
+function AnswerControl({ question, value, onAnswer, availableStates }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void; availableStates: Set<string> }) {
   if (question.kind === "single") {
     return (
       <div className="mt-4 flex flex-wrap gap-2">
-        {(question.options || []).map((option) => (
-          <Choice key={option} label={option} active={value === option} onClick={() => onAnswer(option, true)} />
-        ))}
+        {(question.options || []).map((option) => {
+          const stateUnavailable = question.id === "searchState" && !availableStates.has(option);
+          return stateUnavailable ? (
+            <button key={option} type="button" disabled title="Coming soon — no active facilities in the current database" className="rounded-full border border-[#ddd4c7] bg-[#f4f4f1] px-4 py-2 text-sm font-medium text-[#9a9a92] opacity-70">
+              {option} · Coming soon
+            </button>
+          ) : (
+            <Choice key={option} label={option} active={value === option} onClick={() => onAnswer(option, true)} />
+          );
+        })}
       </div>
     );
   }
@@ -85,6 +92,21 @@ export function StructuredIntake() {
   const [phase, setPhase] = useState<"questions" | "summary">("questions");
   const [confirmed, setConfirmed] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [availableStates, setAvailableStates] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/backend/public/search-states")
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("state inventory unavailable")))
+      .then((payload) => {
+        if (!cancelled) setAvailableStates(new Set(Array.isArray(payload?.available_states) ? payload.available_states : []));
+      })
+      .catch(() => {
+        // Fail closed: a state is never made selectable without inventory evidence.
+        if (!cancelled) setAvailableStates(new Set());
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const questions = useMemo(() => visibleQuestions(context), [context]);
 
@@ -182,7 +204,7 @@ export function StructuredIntake() {
 
             <div className="ml-12 mt-5 rounded-[1.4rem] bg-white px-5 py-5 shadow-sm">
               {question.note ? <p className="mb-3 text-base leading-7 text-[#527083]">{question.note}</p> : null}
-              <AnswerControl question={question} value={question.get(context)} onAnswer={answer} />
+              <AnswerControl question={question} value={question.get(context)} onAnswer={answer} availableStates={availableStates} />
               {question.kind === "multi" ? <p className="mt-3 text-sm text-[#7d8b84]">Choose anything that applies, then continue.</p> : null}
               {showError ? <p className="mt-3 text-sm font-semibold text-[#a4501f]">Please answer this before we continue.</p> : null}
             </div>

@@ -15,6 +15,7 @@ export type QuestionnaireState = {
   happinessPreferences: string[];
   budget: number;
   distanceFromFamily: string;
+  searchState: string;
   referenceLocationType: string;
   referenceLocationValue: string;
   locationImportant: string;
@@ -48,7 +49,9 @@ export type QuestionnaireState = {
     oxygenUse: string;
     woundCareFrequency: string;
     complexConditionDetails: string;
+    complexConditionSupportLevel: string;
     physicianCoordination: string;
+    rehabServicesNeeded: string[];
   };
   humanIntelligenceV2: HumanIntelligenceV2;
 };
@@ -95,6 +98,7 @@ export type HumanIntelligenceV2 = {
   };
   languageProfile: {
     preferredSpokenLanguage: string;
+    processLanguage: string;
     nativeLanguage: string;
     medicalDiscussionLanguage: string;
     socialInteractionLanguage: string;
@@ -224,6 +228,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
   happinessPreferences: [],
   budget: 0,
   distanceFromFamily: "",
+  searchState: "",
   referenceLocationType: "",
   referenceLocationValue: "",
   locationImportant: "",
@@ -257,7 +262,9 @@ export const DEFAULT_STATE: QuestionnaireState = {
     oxygenUse: "",
     woundCareFrequency: "",
     complexConditionDetails: "",
+    complexConditionSupportLevel: "",
     physicianCoordination: "",
+    rehabServicesNeeded: [],
   },
   humanIntelligenceV2: {
     socialProfile: {
@@ -301,6 +308,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
     },
     languageProfile: {
       preferredSpokenLanguage: "",
+      processLanguage: "",
       nativeLanguage: "",
       medicalDiscussionLanguage: "",
       socialInteractionLanguage: "",

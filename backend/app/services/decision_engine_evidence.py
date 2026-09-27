@@ -46,19 +46,17 @@ _GOVERNED_CITY_TOKENS = (
 
 
 def _explicit_location_city(questionnaire: Dict[str, Any], natural_language_query: str) -> str | None:
+    # Prefer the governed core parser so location semantics have one authority.
+    mapped = _legacy._map_natural_language(str(natural_language_query or ""), {}, care_denials={})
+    city = str(mapped.get("location_city") or "").strip().upper()
+    if city in {canonical for _, canonical in _GOVERNED_CITY_TOKENS}:
+        return city
     for key in ("locationCity", "location_city", "city"):
-        value = str(questionnaire.get(key) or "").strip()
-        lowered = value.lower()
+        value = str(questionnaire.get(key) or "").strip().lower()
         for token, canonical in _GOVERNED_CITY_TOKENS:
-            if token == lowered:
+            if value == token:
                 return canonical
-
-    normalized = str(natural_language_query or "").lower()
-    for token, canonical in _GOVERNED_CITY_TOKENS:
-        if token in normalized:
-            return canonical
     return None
-
 
 def build_patient_needs_profile(
     questionnaire_state: Dict[str, Any],
@@ -250,8 +248,6 @@ def _result_sort_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         -(float(row.get("capability_depth_score") or 0.0)),
         -(float(row.get("patient_relevant_outcomes_score") or 0.0)),
         -(float(row.get("practical_fit_score") or 0.0)),
-        str(row.get("facility_name") or ""),
-        str(row.get("canonical_facility_id") or ""),
     )
 
 

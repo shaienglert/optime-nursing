@@ -51,13 +51,39 @@ def _scope_rank(scope: str) -> int:
     return {"FACILITY": 4, "PROGRAM": 3, "UNIT": 2, "SERVICE": 1}.get(scope, 0)
 
 
+def _evidence_decision_eligible(item: Dict[str, Any]) -> bool:
+    verification = str(item.get("verification_status") or "VERIFIED").strip().upper()
+    conflict = str(item.get("conflict_status") or "NO_CONFLICT").strip().upper()
+    freshness = str(item.get("freshness_status") or "").strip().upper()
+    strength = str(item.get("evidence_strength") or "").strip().upper()
+    if verification not in {"VERIFIED", "PARTIALLY_VERIFIED"}:
+        return False
+    if conflict not in {"", "NONE", "NO_CONFLICT", "RESOLVED"}:
+        return False
+    if freshness == "STALE":
+        return False
+    # Nevada's real-market evidence currently omits verification_status and expresses
+    # provenance through evidence_strength. Regulatory/direct evidence may establish a
+    # hard fact. Taxonomy inference is useful for discovery/ranking, but cannot by itself
+    # prove a capability for a MUST gate.
+    if strength == "TAXONOMY_INFERRED":
+        return False
+    return True
+
+
 def _best_evidence_row(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    eligible = [item for item in rows if _evidence_decision_eligible(item)]
+    if not eligible:
+        # Preserve traceability while refusing to turn stale/conflicting/unverified
+        # evidence into a hard YES/NO used by retrieval or gating.
+        newest = sorted(rows, key=lambda item: str(item.get("last_verified") or ""), reverse=True)[0]
+        return {**newest, "value": "UNKNOWN", "decision_eligibility": "NOT_ELIGIBLE"}
     return sorted(
-        rows,
+        eligible,
         key=lambda item: (
-            _scope_rank(str(item.get("scope") or "")),
-            1 if str(item.get("confidence") or "") == "HIGH" else 0,
             str(item.get("last_verified") or ""),
+            1 if str(item.get("confidence") or "") == "HIGH" else 0,
+            _scope_rank(str(item.get("scope") or "")),
         ),
         reverse=True,
     )[0]

@@ -79,10 +79,11 @@ def _provider_identity_matches(row: Dict[str, Any], record: Dict[str, Any], cano
     aliases = {_norm(record.get("community_name"))}
     aliases.update(_norm(value) for value in record.get("aliases") or [])
     record_address = _norm_addr(record.get("address"))
-    if address and record_address and address == record_address:
-        return True
-    if _street_key(address) and _street_key(address) == _street_key(record_address):
-        return True
+    # Address is corroboration, not identity. Senior-living campuses commonly contain
+    # multiple separately licensed entities at the same street address (and sometimes
+    # different suites/units). Letting address alone match leaks one entity's capabilities
+    # into another. Prefer governed canonical IDs; otherwise require a provider name/alias
+    # match and use address/ZIP only to disambiguate it.
     if not (name and name in aliases):
         return False
     row_zip, record_zip = _zip(row.get("zip") or row.get("postal_code")), _zip(record.get("zip"))

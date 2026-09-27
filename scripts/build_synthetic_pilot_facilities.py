@@ -211,6 +211,13 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "accepts_resident_caregiver": index % 7 == 0,
             "parking_spaces_available": index % 5 != 0,
             "languages": capabilities["languages"],
+            "language_capabilities": {
+                "staff_languages": capabilities["languages"],
+                "languages_available_24_7": capabilities["languages"][:1],
+                "medical_communication_languages": capabilities["languages"][:1],
+                "interpreter_available": True,
+                "interpreter_languages": capabilities["languages"],
+            },
             "owner_profile_status": "COMPLETE_SYNTHETIC_PILOT",
             "source_identity_ids": {"synthetic_pilot_id": canonical_id},
         }

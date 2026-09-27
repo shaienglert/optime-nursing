@@ -52,36 +52,9 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         care_delivery_signals = _query_signals({}, natural_language_query)
     in_house_only_requested = bool(care_delivery_signals.get("in_house_only_requested"))
 
-    city = str(questionnaire_state.get("locationCity") or questionnaire_state.get("city") or "").strip().upper()
-    # The product market is the Las Vegas Valley, not only the incorporated city.
-    # Preserve a stated valley location such as Henderson as the canonical market
-    # MUST instead of dropping location merely because the words "Las Vegas" were
-    # not repeated in free text.
-    las_vegas_valley_terms = (
-        "las vegas",
-        "henderson",
-        "north las vegas",
-        "summerlin",
-        "clark county",
-    )
-    las_vegas_valley_cities = {
-        "LAS VEGAS",
-        "HENDERSON",
-        "NORTH LAS VEGAS",
-        "SUMMERLIN",
-        "PARADISE",
-        "SPRING VALLEY",
-        "ENTERPRISE",
-        "WINCHESTER",
-        "SUNRISE MANOR",
-    }
-    las_vegas_requested = any(term in query for term in las_vegas_valley_terms) or city in las_vegas_valley_cities
-    city_limits_only = any(token in query for token in ("las vegas city limits", "city limits only", "within las vegas city", "only in las vegas city"))
-    if las_vegas_requested:
-        if city_limits_only:
-            add_must("LAS_VEGAS_CITY_LIMITS", "The client explicitly restricted the search to Las Vegas city limits.", "canonical city/state")
-        else:
-            add_must("LAS_VEGAS", "The requested market is the Las Vegas Valley/metro area unless the client explicitly narrows to city limits.", "canonical Las Vegas Valley market geography")
+    # Geography is governed by searchState + the decision engine's local
+    # city/address/radius constraints. This intent layer must not create a second,
+    # Las-Vegas-specific geographic authority from free text.
 
     if household.get("type") == "COUPLE":
         add_must("COUPLE_CORESIDENCE", "The couple wants to live together; a solution that cannot house both partners is not acceptable.", "unit/occupancy policy")
@@ -188,8 +161,10 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # policy but treating a *reliable* negative here as safe to hard-fail on.
             if row.get("license_expired") is True:
                 hard_fail.append(key)
-            else:
+            elif row.get("license_expired") is False:
                 must_pass.append(key)
+            else:
+                must_unknown.append(key)
         elif key == "LAS_VEGAS":
             las_vegas_valley_cities = {
                 "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
@@ -214,14 +189,10 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE
             # above for why: the research pipeline cannot currently distinguish "confirmed not
             # offered" from "never researched" (both are stored as False).
-            # SKILLED_NURSING is included for the same reason ASSISTED_LIVING_RFG already is
-            # (see REHAB_PATH_AVAILABLE below, which already treats it as auto-pass): ADL
-            # assistance is a baseline requirement of that license category, not something a
-            # facility could hold the license without providing. Before this, every skilled
-            # nursing facility sat in MUST_PENDING_VERIFICATION on this key alone, even ones
-            # with governed CMS-sourced evidence (facility_parameter_service.py) confirming
-            # adl_support=YES that this gate simply never consulted.
-            if canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or any(
+            # RFG taxonomy alone does not prove the exact ADL service required by this person.
+            # Skilled Nursing remains intrinsic to the licensed care category; RFG requires
+            # direct/provider evidence before this MUST can pass.
+            if canonical_type == "SKILLED_NURSING" or any(
                 p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True
                 for p in payloads
             ):
@@ -462,7 +433,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         -int(reviews) if reviews_known else 0,
         -int(fit.get("relevant_evidence_known_count") or 0),
         int(fit.get("relevant_evidence_unknown_count") or 0),
-        str(row.get("facility_name") or ""),
     )
 
 

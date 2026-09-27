@@ -4,7 +4,7 @@ import { applyCanonicalIdentity } from "./canonical-intake-state";
 export function applySemanticQuestionnairePatch(state: QuestionnaireState, patch: Record<string, unknown>): QuestionnaireState {
   let next = JSON.parse(JSON.stringify(state)) as QuestionnaireState;
   const stringKeys: Array<keyof QuestionnaireState> = [
-    "ageGroup", "assistanceLevel", "memoryStatus",
+    "ageGroup", "searchState", "assistanceLevel", "memoryStatus",
     "medicaidStatus", "medicareStatus", "moveTiming", "referenceLocationValue",
     "referenceAddress", "locationImportant", "maximumDistanceMiles", "coupleAssistance",
     "parkingRequirement", "parkingVehicleCount",
@@ -38,7 +38,7 @@ export function applySemanticQuestionnairePatch(state: QuestionnaireState, patch
     const medicalStringKeys: Array<keyof QuestionnaireState["medicalCareProfile"]> = [
       "hasOngoingMedicalNeeds", "mobilityMethod", "transferAssistance", "recentFalls",
       "dialysisFrequency", "dialysisCenter", "dialysisTransportation", "oxygenUse",
-      "woundCareFrequency", "complexConditionDetails", "physicianCoordination",
+      "woundCareFrequency", "complexConditionDetails", "complexConditionSupportLevel", "physicianCoordination",
     ];
     for (const key of medicalStringKeys) {
       const value = source[key];
@@ -52,6 +52,9 @@ export function applySemanticQuestionnairePatch(state: QuestionnaireState, patch
         ...next.medicalCareProfile.needs,
         ...source.needs.map(String).map((value) => value.trim()).filter(Boolean),
       ]));
+    }
+    if (Array.isArray(source.rehabServicesNeeded) && next.medicalCareProfile.rehabServicesNeeded.length === 0) {
+      next.medicalCareProfile.rehabServicesNeeded = source.rehabServicesNeeded.map(String).map((value) => value.trim()).filter(Boolean);
     }
   }
 
