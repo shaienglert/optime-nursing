@@ -481,6 +481,47 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
 from app.services.care_input_assertions import extract_care_denials
 
 
+SERVED_CITIES = (
+    "north las vegas", "north miami", "coral gables", "las vegas",
+    "henderson", "hialeah", "homestead", "aventura", "miami", "doral",
+)
+# "Dr. Henderson", "Nurse Henderson" -- a person, not a market. Henderson is one of the
+# commonest surnames in the United States and also a city fifteen miles from Las Vegas.
+_PERSONAL_TITLE = re.compile(r"\b(?:dr|doctor|mr|mrs|ms|miss|nurse|sister|brother|pastor|rabbi|father|prof|professor)\.?\s+$")
+_LOCATION_LEAD = re.compile(r"\b(?:in|near|around|from|at|to|within|outside|by)\s+$")
+
+
+def _detect_location_city(normalized: str) -> Optional[str]:
+    """Pick the market the family is describing, out of the cities OPTIME serves.
+
+    A plain substring scan in a fixed order got two things wrong. It read the city out of
+    a person's name, so "Dr. Henderson is her physician, she lives in Miami" searched
+    Henderson, Nevada -- the surname beat the city the family actually stated. And because
+    "miami" was tested before "north miami" and the scan stopped at the first hit, a family
+    in North Miami was searched in Miami.
+
+    So: every mention is collected, a name that follows a personal title is not a place,
+    and of what remains the one introduced by a preposition wins, then the longest name
+    (North Miami over the Miami inside it), then the earliest.
+    """
+    candidates = []
+    for city in SERVED_CITIES:
+        for match in re.finditer(rf"\b{re.escape(city)}\b", normalized):
+            preceding = normalized[: match.start()]
+            if _PERSONAL_TITLE.search(preceding):
+                continue
+            candidates.append((
+                bool(_LOCATION_LEAD.search(preceding)),
+                len(city),
+                -match.start(),
+                city,
+            ))
+    if not candidates:
+        return None
+    candidates.sort(reverse=True)
+    return candidates[0][3].upper()
+
+
 def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_denials=None) -> Dict[str, Any]:
     normalized = _normalize(text)
     extraction_meta = {"text": text, "recognized_tokens": [], "unrecognized_segments": []}
@@ -601,7 +642,9 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
         (["physical therapy", "pt"], ("pt", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Physical therapy support")),
         (["occupational therapy", "ot"], ("ot", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.95, "Occupational therapy support")),
         (["speech therapy", "speech"], ("speech_therapy", "HIGH", "YES", ["YES", "UNKNOWN"], "SERVICE", "natural_language", 0.9, "Speech therapy support")),
-        (["transfer", "mobility", "lift"], ("transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.9, "Transfer assistance support")),
+        # "lift" on its own is the British word for an elevator, so "the building must
+        # have a lift" asked for hoist transfers. The hoist sense always names itself.
+        (["transfer", "mobility", "mechanical lift", "hoyer lift", "patient lift", "lift assist"], ("transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.9, "Transfer assistance support")),
         (["bathing", "dressing", "adl"], ("adl_support", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.9, "ADL support")),
         (["medication"], ("medication_support", "HIGH", "YES", ["YES"], "SERVICE", "natural_language", 0.92, "Medication management support")),
         (["dementia", "alzheimer", "memory care"], ("memory_care", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Memory care capability")),
@@ -627,11 +670,50 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
     ):
         _add_need(needs_by_id, "post_stroke_neuro_evidence", "HIGH", "YES", ["YES"], "PROGRAM", "natural_language", 0.95, "Post-stroke/neurological rehabilitation support")
         extraction_meta["recognized_tokens"].append("neurological rehabilitation")
+    denial_phrases = {
+        "transfer_assistance": ("no mobility limitation", "no mobility limitations", "walks independently", "no transfer assistance", "does not need transfer assistance", "does not need help getting", "doesn't need help getting", "no help getting", "does not need one person", "doesn't need one person", "does not need help to get", "doesn't need help to get"),
+        "nursing_24_7": ("no special medical or nursing needs", "no medical or nursing needs", "does not need nursing support", "doesn't need nursing support"),
+        "dialysis_arrangements": ("no dialysis", "not on dialysis", "does not need dialysis", "doesn't need dialysis"),
+        "wound_care": ("no wound", "no wounds", "no wound care", "does not need wound care", "doesn't need wound care", "no pressure wound", "no pressure ulcer", "no pressure sore", "without pressure wounds", "does not need dressing changes", "doesn't need dressing changes", "no daily dressing changes", "does not have a pressure wound", "doesn't have a pressure wound"),
+        "respiratory_trach_vent": ("no oxygen", "not on oxygen", "no continuous oxygen", "no respiratory support", "does not need oxygen", "doesn't need oxygen"),
+        "speech_therapy": ("no speech", "no swallowing or speech", "does not need speech therapy", "doesn't need speech therapy", "without speech problems"),
+    }
+    sentences = [part for part in re.split(r"(?<=[.!?;])\s+|\n+", normalized) if part.strip()]
+
+    def asserted_apart_from_the_denial(parameter_id: str, keywords) -> bool:
+        """Did the family state this need somewhere the denial does not reach?
+
+        A denial was matched against the whole story, so "she uses oxygen continuously for
+        COPD; there is no oxygen concentrator at home, so the community must supply it"
+        lost the oxygen requirement entirely: "no oxygen" is about equipment the family
+        does not own, not about a person who does not need it. Dropping a clinical need
+        recommends a community that cannot meet it, so a denial only silences a need when
+        the family did not also state it in a sentence the denial is not part of.
+        """
+        phrases = denial_phrases.get(parameter_id)
+        if not phrases:
+            return False
+        for sentence in sentences:
+            if any(phrase in sentence for phrase in phrases):
+                continue
+            # "She is fully independent with bathing, dressing, toileting, transfers,
+            # medications" names every care word in the vocabulary while saying the person
+            # needs none of them. A sentence like that is a denial in its own right, so it
+            # cannot be read as the family asserting the need.
+            if extract_care_denials(sentence)["independent"]:
+                continue
+            if any(re.search(rf"\b{re.escape(str(keyword).lower())}", sentence) for keyword in keywords):
+                return True
+        return False
 
     for keywords, need_tuple in keyword_rules:
         parameter_id = need_tuple[0]
         desired_value = need_tuple[2]
-        if desired_value == "YES" and suppressed_positive.get(parameter_id, False):
+        if (
+            desired_value == "YES"
+            and suppressed_positive.get(parameter_id, False)
+            and not asserted_apart_from_the_denial(parameter_id, keywords)
+        ):
             continue
         if any(present(keyword) for keyword in keywords):
             _add_need(needs_by_id, *need_tuple)
@@ -639,12 +721,9 @@ def _map_natural_language(text: str, needs_by_id: Dict[str, NeedItem], *, care_d
                 _add_need(needs_by_id, "skilled_nursing_capabilities", "REQUIRED", "YES", ["YES"], "FACILITY", "natural_language", 0.95, "Skilled nursing capability required")
             extraction_meta["recognized_tokens"].append(keywords[0])
 
-    location_city = None
-    for city in ["north las vegas", "las vegas", "henderson", "miami", "hialeah", "doral", "aventura", "homestead", "coral gables", "north miami"]:
-        if city in normalized:
-            location_city = city.upper()
-            extraction_meta["recognized_tokens"].append(city)
-            break
+    location_city = _detect_location_city(normalized)
+    if location_city:
+        extraction_meta["recognized_tokens"].append(location_city.lower())
     return {"extraction": extraction_meta, "location_city": location_city}
 
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, care_denials=None) -> Dict[str, Any]:

@@ -2,19 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
 import { LAS_VEGAS_MARKET_FACTS } from "@/content/public-market-content";
-import { buildResultsUrl } from "@/lib/results-url";
-import { extractExplicitMonthlyBudget } from "@/lib/story-budget";
 import { QUESTIONNAIRE_SESSION_KEY, clearCompareSelection, clearFavoriteFacilities, clearSearchSession, saveSessionJson } from "@/lib/search-session";
 import { OptimeStaticLogo } from "@/components/brand/optime-static-logo";
 import { OomnikMark as OOmnikMark } from "@/components/brand/oomnik-mark";
-
-const EXAMPLE_QUERY =
-  "My mother is 82, has early memory changes, enjoys music and social activities, speaks Hebrew and English, and our budget is $8,000 per month.";
 
 const RELATIONSHIP_OPTIONS = [
   { label: "me", value: "Myself" },
@@ -65,11 +60,8 @@ function ChoiceLink({
 export default function HomePage() {
   const router = useRouter();
   const { state, setState, resetState } = useQuestionnaire();
-  const [query, setQuery] = useState("");
   const [heroStep, setHeroStep] = useState<HeroStep>("relationship");
   const [relationshipLabel, setRelationshipLabel] = useState("your loved one");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Landing on "/" is always the start of a new case -- "Continue where I left
   // off" is the one sanctioned path back into an existing case, and it goes to
@@ -107,58 +99,6 @@ export default function HomePage() {
     flushSync(() => setState((current) => ({ ...current, ageGroup })));
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, nextState);
     router.push("/intake");
-  }
-
-  async function runSearch(inputQuery: string): Promise<void> {
-    const normalized = inputQuery.trim();
-    if (!normalized) {
-      setError("Please tell us a little more about the person and the situation.");
-      return;
-    }
-
-    setError(null);
-    setIsSubmitting(true);
-
-    try {
-      const explicitBudget = extractExplicitMonthlyBudget(normalized);
-      let nextQuestionnaire = state;
-      // Flush every queued wizard answer before deriving the navigation target.
-      // Functional updates preserve rapid selections instead of spreading a stale
-      // context snapshot from the previous case back into the current one.
-      flushSync(() => setState((current) => {
-        nextQuestionnaire = {
-          ...current,
-          // The untouched slider default is not a client statement. A budget written
-          // in the story is authoritative; otherwise leave it unknown until AI asks.
-          budget: explicitBudget ?? (current.questionnaireCompletion?.mandatoryComplete ? current.budget : 0),
-          notes: normalized,
-          locationImportant: current.locationImportant || "",
-          referenceAddress: current.referenceAddress || "",
-          maximumDistanceMiles: current.maximumDistanceMiles || "",
-          customDistanceMiles: current.customDistanceMiles || "",
-          otherInterests: current.otherInterests || "",
-        };
-        return nextQuestionnaire;
-      }));
-      // Persist before navigation. React state updates can otherwise lose a race
-      // with the adaptive page mounting and make a valid story look empty.
-      saveSessionJson(QUESTIONNAIRE_SESSION_KEY, nextQuestionnaire);
-      const resultsUrl = buildResultsUrl(nextQuestionnaire);
-
-      // Do not hold the user's navigation hostage to recommendation generation.
-      // The governed adaptive interview owns the next-question decision and can
-      // continue from the state persisted above.
-      router.push(`/adaptive-interview?next=${encodeURIComponent(resultsUrl)}`);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "We could not continue right now. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  function submit(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    void runSearch(query);
   }
 
   return (
