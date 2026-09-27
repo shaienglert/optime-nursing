@@ -116,7 +116,11 @@ def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dic
 def nearby_rank_key(row: dict[str, Any], importance: str) -> tuple[Any, ...]:
     fit = row.get("nearby_place_fit") if isinstance(row.get("nearby_place_fit"), dict) else {}
     if fit.get("status") != "KNOWN":
-        return (1, 0, 999.0)
+        # Missing information is not negative evidence. A community whose coordinates
+        # are unknown, whose lookup failed, or that fell outside the POI shortlist gets
+        # no nearby boost -- the same key as a KNOWN community with nothing nearby
+        # (band 0, no distance) -- instead of being sorted below every KNOWN community.
+        return (0, 0, 999.0)
     band = int(fit.get("fit_band") or 0)
     # Nice-to-have remains a weaker tie-break: same evidence, later in ranking tuple.
     strength = band if importance == "Important" else min(band, 2)
