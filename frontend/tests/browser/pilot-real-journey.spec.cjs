@@ -105,7 +105,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/feel about the idea of moving\?/i, { choose: scenario.attitude }],
       [/everyday life to be\?/i, { choose: scenario.social }],
       [/What kind of community would feel most comfortable\?/i, { choose: scenario.community }],
-      [/What do they genuinely enjoy doing\?/i, { select: scenario.activities }],
+      [/genuinely enjoy doing\?/i, { select: scenario.activities }],
       [/What would you like to have nearby\?/i, { select: ["Parks & walking paths"] }],
       [/How important is it to be close to these places\?/i, { choose: "Nice to have" }],
       [/hate for them to lose after the move\?/i, { select: scenario.concerns }],

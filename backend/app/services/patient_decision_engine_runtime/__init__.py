@@ -453,7 +453,7 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
         explanation["strategy_universe"] = universe_status
         explanation["care_partner_access"] = row.get("care_partner_access") or {"status": "NOT_APPLICABLE"}
         explanation["human_person_fit"] = row.get("human_person_fit")
-        explanation["nearby_place_fit"] = row.get("nearby_place_fit")
+        if row.get("nearby_place_fit") is not None:\n            explanation["nearby_place_fit"] = row["nearby_place_fit"]
         explanation["agent_person_fit_evidence"] = row.get("agent_person_fit_evidence") or []
         explanation["success_factor_summary"] = trace_summary
         audit_rows.append({"canonical_facility_id": row.get("canonical_facility_id"), "rank_position": row.get("rank_position"), "eligibility_status": row.get("eligibility_status"), "care_setting_fit": (row.get("care_setting_fit") or {}).get("status"), "client_intent_fit": row.get("client_intent_fit") or {}, "care_partner_access": row.get("care_partner_access") or {}, "matched_needs": [item.get("parameter_id") for item in row.get("matched_needs") or []], "unknown_critical_needs": [item.get("parameter_id") for item in row.get("unknown_critical_needs") or []], "success_factors_known_both_sides": trace_summary.get("known_on_both_sides") or [], "success_factors_facility_unknown": trace_summary.get("facility_evidence_unknown") or [], "agent_market_evidence_count": len(row.get("agent_person_fit_evidence") or [])})
