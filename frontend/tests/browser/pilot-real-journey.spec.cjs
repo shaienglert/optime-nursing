@@ -128,8 +128,8 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/need parking at the community\?/i, { choose: 'No' }],
       [/provide more care later/i, { choose: scenario.futureCare }],
       [/How broadly would you like me to search\?/i, { choose: 'Show me both approaches' }],
-      [/Where in the Las Vegas Valley should we search\?/i, { choose: "Las Vegas" }],
-      [/How far would still feel close enough\?/i, { choose: scenario.distance }],
+      [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: "Las Vegas" }],
+      [/What travel distance would you prefer\?/i, { choose: scenario.distance }],
     ]);
 
     // The interview must ask one question at a time and never repeat itself.
