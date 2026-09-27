@@ -55,11 +55,18 @@ def _evidence_decision_eligible(item: Dict[str, Any]) -> bool:
     verification = str(item.get("verification_status") or "VERIFIED").strip().upper()
     conflict = str(item.get("conflict_status") or "NO_CONFLICT").strip().upper()
     freshness = str(item.get("freshness_status") or "").strip().upper()
+    strength = str(item.get("evidence_strength") or "").strip().upper()
     if verification not in {"VERIFIED", "PARTIALLY_VERIFIED"}:
         return False
-    if conflict not in {"", "NO_CONFLICT", "RESOLVED"}:
+    if conflict not in {"", "NONE", "NO_CONFLICT", "RESOLVED"}:
         return False
     if freshness == "STALE":
+        return False
+    # Nevada's real-market evidence currently omits verification_status and expresses
+    # provenance through evidence_strength. Regulatory/direct evidence may establish a
+    # hard fact. Taxonomy inference is useful for discovery/ranking, but cannot by itself
+    # prove a capability for a MUST gate.
+    if strength == "TAXONOMY_INFERRED":
         return False
     return True
 
