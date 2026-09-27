@@ -466,7 +466,6 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
         -int(reviews) if reviews_known else 0,
         -int(fit.get("relevant_evidence_known_count") or 0),
         int(fit.get("relevant_evidence_unknown_count") or 0),
-        str(row.get("facility_name") or ""),
     )
 
 

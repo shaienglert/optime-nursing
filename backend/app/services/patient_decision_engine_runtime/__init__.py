@@ -159,11 +159,17 @@ def _rank_effect(explicit_person_fit: bool, explicit_social_fit: bool) -> str:
 
 
 def _reassign_rank_metadata(rows: List[Dict[str, Any]]) -> None:
+    keys = [intent_rank_key(row) for row in rows]
+    first_position: Dict[tuple[Any, ...], int] = {}
     for position, row in enumerate(rows, start=1):
-        row["rank_position"] = position
-        row["rank_display"] = f"#{position}"
-        row["rank_tie_status"] = "UNIQUE_RANK"
-        row["tied_with"] = []
+        key = keys[position - 1]
+        first_position.setdefault(key, position)
+        rank = first_position[key]
+        tied_indexes = [i for i, other in enumerate(keys) if i != position - 1 and other == key]
+        row["rank_position"] = rank
+        row["rank_display"] = f"Joint #{rank}" if tied_indexes else f"#{rank}"
+        row["rank_tie_status"] = "JOINT_RANK" if tied_indexes else "UNIQUE_RANK"
+        row["tied_with"] = [rows[i].get("canonical_facility_id") or rows[i].get("facility_name") for i in tied_indexes]
         fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
         row.setdefault("explanation", {})["ranking_sequence"] = {
             "must_gate": fit.get("hard_gate"),
