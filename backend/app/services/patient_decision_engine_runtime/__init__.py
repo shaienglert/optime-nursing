@@ -317,8 +317,10 @@ def _attach_facility_care_partner_access(rows: List[Dict[str, Any]], care_partne
         outside = facts.get("outside_care_allowed_verified", "UNKNOWN")
         if outside is True:
             access = "OUTSIDE_AGENCY_PATH_VERIFIED"
-        elif outside is False:
-            access = "OUTSIDE_AGENCY_NOT_ALLOWED"
+        else:
+            # False in research payloads can mean "not researched"; only a governed
+            # explicit negative may become NOT_ALLOWED.
+            access = "UNKNOWN"
         else:
             access = "FACILITY_AGENCY_ACCESS_UNKNOWN"
         row["care_partner_access"] = {
