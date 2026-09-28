@@ -194,6 +194,12 @@ test.describe('real synthetic-pilot customer journey', () => {
       candidate_discovery: payload.candidate_discovery,
       market_coverage_notice: payload.market_coverage_notice,
       availability_policy: payload.availability_policy,
+      canonical_decision_state: payload.decision_intelligence?.canonical_decision_state,
+      research_candidate_count: payload.decision_intelligence?.research_candidate_count,
+      recommendation_audit_trace: payload.recommendation_audit_trace && {
+        blocked_before_recommendation_visibility: payload.recommendation_audit_trace.blocked_before_recommendation_visibility,
+        recommendation_execution_allowed: payload.recommendation_audit_trace.recommendation_execution_allowed,
+      },
       needs: payload.patient_needs_profile?.needs?.map(need => ({ id: need.parameter_id, level: need.requirement_level, value: need.desired_value })),
     }));
     const classifiedCohort = payload.candidate_discovery?.total_facilities_classified;
