@@ -158,6 +158,11 @@ export function CanonicalFacilityProfileClient({ canonicalFacilityId, backHref, 
                 <span className="rounded-full border border-[#cfe2d8] bg-[#f4fbf7] px-3 py-1 text-[#315f53]">{table.canonical_type || "Type UNKNOWN"}</span>
                 <span className="rounded-full border border-[#d9cfbf] bg-[#faf7f1] px-3 py-1 text-[#6d655b]">Canonical ID: {table.canonical_facility_id}</span>
               </div>
+              {table.canonical_type === "INDEPENDENT_LIVING" && (
+                <p className="mt-4 rounded-xl border border-[#e8ddcc] bg-[#faf7f1] p-3 text-sm text-[#5b5245]">
+                  Independent housing: we have not verified a current Nevada care-facility license for this property. A business license or housing listing does not establish authorization to provide assisted living, memory care, or skilled nursing.
+                </p>
+              )}
             </div>
             <Link href={backHref} className="rounded-full border border-[#d9cfbf] bg-white px-4 py-2 text-sm font-semibold text-[#5b5245] hover:bg-[#f5eee2]">{backLabel}</Link>
           </div>
