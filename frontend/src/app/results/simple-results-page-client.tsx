@@ -269,6 +269,7 @@ export function SimpleResultsPageClient() {
               {pending.length > 0
                 ? "Some communities still need important details verified before I can recommend them."
                 : "No community is ready to recommend from this search. You can review your answers or return to the conversation."}
+              {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
             </div>
           )}
           <div className="mt-6 rounded-2xl border border-[#d9e3df] bg-[#f7faf8] p-5">
