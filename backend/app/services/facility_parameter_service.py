@@ -104,12 +104,37 @@ def _effective_market() -> str:
     return "las-vegas" if market in {"las-vegas", "nevada"} else market
 
 
+def _nevada_listing_eligible(row: Dict[str, Any]) -> bool:
+    """Allow care listings only with a current, identifiable Nevada care license.
+
+    Independent housing is not represented as licensed care. Its separate business
+    identity and care limitations must remain visible on its profile.
+    """
+    if str(row.get("canonical_type") or "").upper() == "INDEPENDENT_LIVING":
+        return True
+    license_id = str(row.get("nevada_license_id") or "").strip().upper()
+    detail = str(row.get("detail_url") or "").strip()
+    if license_id in {"", "UNKNOWN"} or not detail.startswith("https://nvdpbh.aithent.com/"):
+        return False
+    if str(row.get("license_status") or "").strip().upper() != "ACTIVE":
+        return False
+    expiration = str(row.get("expiration_date") or "").strip()
+    try:
+        expires = datetime.strptime(expiration, "%m/%d/%Y").date()
+    except ValueError:
+        return False
+    return expires >= datetime.now(timezone.utc).date()
+
+
 def _canonical_records_for_market(payload: Dict[str, Any], market: str) -> List[Dict[str, Any]]:
     rows = list(payload.get("records") or [])
     if market == "las-vegas":
         # The Nevada canonical artifact is statewide. Production Las Vegas search must
         # never silently rank Reno/other Nevada facilities merely because they exist.
-        rows = [row for row in rows if row.get("is_las_vegas_valley") is True]
+        rows = [
+            row for row in rows
+            if row.get("is_las_vegas_valley") is True and _nevada_listing_eligible(row)
+        ]
     elif market == "synthetic-pilot":
         catalog_size = int(os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "200"))
         if catalog_size != 200:
@@ -200,7 +225,8 @@ def _synthesize_nevada_evidence(canonical_rows: List[Dict[str, Any]], generated_
         }
 
         license_status = facility.get("license_status")
-        if license_status not in (None, "", "UNKNOWN"):
+        # An apartment/business registration is not a Nevada care-facility license.
+        if canonical_type != "INDEPENDENT_LIVING" and license_status not in (None, "", "UNKNOWN"):
             rows.append(_evidence_row(
                 canonical_id, "license_status", license_status,
                 source="Nevada HCQC / ALiS",
