@@ -610,6 +610,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "SEMANTIC_AI_INVALID_STATUS",
                 "SEMANTIC_AI_INVALID_KNOWLEDGE",
                 "SEMANTIC_AI_ASKED_WITHOUT_QUESTION",
+                "SEMANTIC_AI_MISSING_STATEMENT_TRACE",
             }
             if not repairable:
                 raise
