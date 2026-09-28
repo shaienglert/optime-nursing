@@ -21,6 +21,9 @@ assert(canonical.dataset_mode === 'SYNTHETIC_PILOT', 'canonical data must be lab
 assert(canonical.records.length === 200, 'pilot must contain exactly 200 facilities');
 assert(new Set(canonical.records.map((row) => row.canonical_id)).size === 200, 'pilot IDs must be unique');
 assert(canonical.records.every((row) => row.synthetic_pilot === true && row.truth_label.includes('FICTIONAL')), 'every facility must be visibly fictional');
+assert(canonical.records.every((row) => row.license_status === 'SYNTHETIC_PILOT_ACTIVE'
+  && row.expiration_date === '12/31/2030'
+  && row.license_expiration_source === 'SYNTHETIC_PILOT_TEST_ONLY'), 'all 200 pilot license expirations must be explicitly synthetic');
 // canonical_type is intentionally collapsed onto the 3 values backend/app/services/
 // patient_decision_engine's _care_setting_fit() recognizes (matching how real Nevada
 // data is coded); care-type diversity lives in synthetic_archetype instead.
