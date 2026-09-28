@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+// Trigger credentialed ten-scenario semantic-AI verification.
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
