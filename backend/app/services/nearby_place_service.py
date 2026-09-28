@@ -86,6 +86,37 @@ def _route_distance(latitude: float, longitude: float, destination_latitude: flo
     except (requests.RequestException, KeyError, TypeError, ValueError):
         return None
 
+
+def _geocode_private_destination(address: str) -> dict[str, Any] | None:
+    """Resolve a client-provided destination for this decision only; do not publish it as facility data."""
+    base = os.getenv("OOMNIK_GEOCODING_URL", "https://nominatim.openstreetmap.org").rstrip("/")
+    try:
+        response = requests.get(f"{base}/search", params={"q": address, "format": "jsonv2", "limit": 1, "countrycodes": "us"}, headers={"User-Agent": "OOmnik/1.0"}, timeout=8)
+        response.raise_for_status()
+        rows = response.json()
+        if not rows:
+            return None
+        return {"latitude": float(rows[0]["lat"]), "longitude": float(rows[0]["lon"])}
+    except (requests.RequestException, KeyError, TypeError, ValueError):
+        return None
+
+
+def _personal_destination_distances(latitude: float, longitude: float, questionnaire_state: dict[str, Any]) -> list[dict[str, Any]]:
+    results = []
+    for destination in questionnaire_state.get("personalDestinations") or []:
+        if not isinstance(destination, dict) or not str(destination.get("address") or "").strip():
+            continue
+        point = _geocode_private_destination(str(destination["address"]).strip())
+        if not point:
+            results.append({"label": str(destination.get("label") or "Personal destination"), "status": "UNKNOWN"})
+            continue
+        route = _route_distance(latitude, longitude, point["latitude"], point["longitude"])
+        item = {"label": str(destination.get("label") or "Personal destination"), "status": "KNOWN" if route else "ESTIMATED", "distance_miles": round(_distance_miles(latitude, longitude, point["latitude"], point["longitude"]), 1)}
+        if route:
+            item.update(route)
+        results.append(item)
+    return results
+
 def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dict[str, Any], max_candidates: int = 25) -> None:
     categories = [str(x) for x in (questionnaire_state.get("nearbyPlaces") or []) if str(x) in CATEGORY_TAGS]
     importance = str(questionnaire_state.get("nearbyPlacesImportance") or "No preference")
@@ -126,7 +157,7 @@ def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dic
             band = 1
         else:
             band = 0
-        row["nearby_place_fit"] = {"status": "KNOWN", "importance": importance, "fit_band": band, "matched_categories": len(nearest), "requested_categories": len(categories), "nearest": nearest, "average_distance_miles": round(avg, 2) if avg is not None else None, "source": lookup.get("source")}
+        row["nearby_place_fit"] = {"status": "KNOWN", "personal_destinations": personal_destinations, "importance": importance, "fit_band": band, "matched_categories": len(nearest), "requested_categories": len(categories), "nearest": nearest, "average_distance_miles": round(avg, 2) if avg is not None else None, "source": lookup.get("source")}
 
 
 def nearby_rank_key(row: dict[str, Any], importance: str) -> tuple[Any, ...]:
