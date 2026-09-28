@@ -127,12 +127,18 @@ def resolve_reference_point(
         }
 
     rows = list(canonical_rows)
-    written = " ".join(
-        str(questionnaire.get(key) or "")
-        for key in ("referenceAddress", "referenceLocationValue", "locationCity", "city")
-    ).strip()
+    # The intake writes the chosen area into more than one field ("Las Vegas" into both
+    # referenceAddress and referenceLocationValue). Each is tried on its own: joined, they
+    # read "Las Vegas Las Vegas", which names no city, and the limit silently never applied
+    # on the real site while every test that set one field passed.
+    written_values: List[str] = []
+    for key in ("referenceAddress", "referenceLocationValue", "locationCity", "city"):
+        value = str(questionnaire.get(key) or "").strip()
+        if value and value.lower() not in {v.lower() for v in written_values}:
+            written_values.append(value)
+    written = written_values[0] if written_values else ""
 
-    for candidate in filter(None, (location_city, written)):
+    for candidate in filter(None, (location_city, *written_values)):
         centroid = city_centroid(candidate, rows)
         if centroid:
             return {

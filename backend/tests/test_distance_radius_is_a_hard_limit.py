@@ -182,3 +182,40 @@ class TheScopeReachesTheFamilyTests(unittest.TestCase):
             availability_policy="confirm directly", location_scope=scope,
         ).model_dump()
         self.assertEqual(scope, body["location_scope"])
+
+
+class TheAreaAsTheIntakeWritesItTests(unittest.TestCase):
+    """The tests above name the area in locationCity and in the story. The intake does
+    neither: it writes the chosen area into referenceAddress AND referenceLocationValue, and
+    the story need not mention it. Joined, those read "Las Vegas Las Vegas" and the limit
+    never applied in any of the ten real browser journeys.
+    """
+
+    INTAKE = {"referenceAddress": "Las Vegas", "referenceLocationValue": "Las Vegas", "locationImportant": "Yes"}
+
+    def test_the_duplicated_area_is_still_placed(self):
+        rows = [
+            {"city": "LAS VEGAS", "latitude": 36.17, "longitude": -115.14},
+            {"city": "LAS VEGAS", "latitude": 36.11, "longitude": -115.17},
+        ]
+        reference = resolve_reference_point(dict(self.INTAKE), rows)
+        self.assertEqual("RESOLVED", reference["status"])
+        self.assertEqual("LAS VEGAS", reference["label"].upper())
+
+    def test_the_limit_applies_to_an_intake_shaped_request(self):
+        questionnaire = dict(
+            self.INTAKE, assistanceLevel=CARE_NEEDS, budget=8000, moveTiming="Planning ahead",
+            maximumDistanceMiles="10",
+        )
+        with patch.dict(
+            "os.environ",
+            {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200"},
+            clear=False,
+        ):
+            refresh_runtime_cache("radius-intake-shaped")
+            result = run_patient_decision_engine(questionnaire, "My mother needs help with bathing.", limit=8)
+        scope = result["location_scope"]
+        self.assertTrue(scope["applied"], scope)
+        for card in result["results"]:
+            self.assertIsNotNone(card.get("distance_miles"))
+            self.assertLessEqual(card["distance_miles"], scope["effective_miles"])
