@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
-import { DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
+import { createClientCase, DecisionEngineResponse, fetchPatientDecisionRecommendations } from "@/lib/api";
 import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, QUESTIONNAIRE_SESSION_KEY } from "@/lib/search-session";
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
@@ -53,6 +53,21 @@ export function SimpleResultsPageClient() {
   const oomnikerHistory = useRef<typeof state[]>([]);
   const beforeOOmnikerIds = useRef<string[]>([]);
   const [oomnikerDiff, setOOmnikerDiff] = useState<string>("");
+  const [saveCaseOpen, setSaveCaseOpen] = useState(false);
+  const [caseContact, setCaseContact] = useState({ name: "", email: "", phone: "", terms: false });
+  const [savingCase, setSavingCase] = useState(false);
+  const [savedCaseToken, setSavedCaseToken] = useState<string | null>(null);
+
+  async function saveClientCase() {
+    if (!caseContact.terms || (!caseContact.email.trim() && !caseContact.phone.trim())) return;
+    setSavingCase(true);
+    try {
+      const created = await createClientCase({ questionnaire_state: state as unknown as Record<string, unknown>, contact_name: caseContact.name.trim() || undefined, email: caseContact.email.trim() || undefined, phone: caseContact.phone.trim() || undefined, terms_accepted: true });
+      setSavedCaseToken(created.case_token);
+      window.localStorage.setItem("oomnik.client.case.token", created.case_token);
+      setSaveCaseOpen(false);
+    } finally { setSavingCase(false); }
+  }
 
   function applyOOmnikerChange() {
     const text = oomnikerText.trim();
@@ -256,6 +271,14 @@ export function SimpleResultsPageClient() {
                 : "No community is ready to recommend from this search. You can review your answers or return to the conversation."}
             </div>
           )}
+          <div className="mt-6 rounded-2xl border border-[#d9e3df] bg-[#f7faf8] p-5">
+            {savedCaseToken ? <p className="text-lg"><strong>Your OOmnik case is saved.</strong> Your questionnaire and future activity can now stay together under one case.</p> : <>
+              <p className="text-lg font-semibold">Want to save this case or have OOmnik help with the next steps?</p>
+              <p className="mt-1 text-base text-[#53635d]">Add contact details to save the case, keep your report, and track communities, referrals, tours and follow-ups.</p>
+              <button type="button" onClick={() => setSaveCaseOpen(true)} className="mt-3 rounded-full bg-[#315f53] px-6 py-3 font-semibold text-white">Save my case</button>
+            </>}
+          </div>
+          {saveCaseOpen ? <div className="mt-4 rounded-2xl border border-[#d9e3df] bg-white p-5"><h2 className="text-2xl font-semibold">Save your OOmnik case</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><input aria-label="Name" placeholder="Name" value={caseContact.name} onChange={e=>setCaseContact(v=>({...v,name:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Email" placeholder="Email" value={caseContact.email} onChange={e=>setCaseContact(v=>({...v,email:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Phone" placeholder="Phone" value={caseContact.phone} onChange={e=>setCaseContact(v=>({...v,phone:e.target.value}))} className="rounded-xl border p-3"/></div><label className="mt-4 flex gap-3"><input type="checkbox" checked={caseContact.terms} onChange={e=>setCaseContact(v=>({...v,terms:e.target.checked}))}/><span>I agree to the Terms of Use and allow OOmnik to save this case and contact me about it.</span></label><div className="mt-4 flex gap-3"><button type="button" disabled={savingCase || !caseContact.terms || (!caseContact.email.trim() && !caseContact.phone.trim())} onClick={saveClientCase} className="rounded-full bg-[#315f53] px-6 py-3 font-semibold text-white disabled:opacity-40">{savingCase?"Saving…":"Save case"}</button><button type="button" onClick={()=>setSaveCaseOpen(false)} className="rounded-full border px-6 py-3">Cancel</button></div></div> : null}
           <p className="mt-5 text-lg leading-8 text-[#53635d]">Confirm current pricing and availability before any move.</p>
           {state.locationImportant === "Yes" ? <p className="mt-2 text-lg leading-8 text-[#53635d]">Your selected area and travel distance are preferences. Community locations have not been verified for distance, so these results are not limited by that mileage. Confirm actual travel distance before contacting a community.</p> : null}
           {/medicaid/i.test(naturalLanguageQuery) ? <p className="mt-2 text-lg leading-8 text-[#53635d]">Medicaid eligibility and each community’s participation must be confirmed separately.</p> : null}
