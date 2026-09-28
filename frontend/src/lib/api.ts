@@ -413,6 +413,7 @@ export type DecisionEngineResponse = {
   results: DecisionEngineRecommendation[];
   result_count: number;
   total_candidates_scored: number;
+  market_coverage_notice?: string | null;
   candidate_discovery?: {
     status: string;
     catalog_version?: string;

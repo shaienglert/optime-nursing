@@ -119,6 +119,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/genuinely enjoy doing\?/i, { select: scenario.activities }],
       [/What would you like to have nearby\?/i, { select: ["Parks & walking paths"] }],
       [/How important is it to be close to these places\?/i, { choose: "Nice to have" }],
+      [/specific person or place it would be important to stay close to\?/i, { choose: "No specific destination" }],
       [/hate for .* to lose after the move\?/i, { select: scenario.concerns }],
       [/Anything specific we should preserve\?/i, { fill: `${scenario.id}: preserve familiar routines and preferred activities.` }],
       [/What language feels most natural day to day\?/i, { choose: 'English' }],
@@ -173,12 +174,14 @@ test.describe('real synthetic-pilot customer journey', () => {
     }
 
     await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible({ timeout: 300_000 });
+    const confirmRecommendations = page.getByRole('button', { name: /I confirm—show recommendations/i });
+    await expect(confirmRecommendations, 'Needs profile must finish loading before confirmation').toBeEnabled({ timeout: 300_000 });
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')
         && response.request().method() === 'POST',
       { timeout: 720_000 },
     );
-    await page.getByRole('button', { name: /I confirm—show recommendations/i }).click();
+    await confirmRecommendations.click();
     await expect(page).toHaveURL(/\/results/, { timeout: 180_000 });
 
     const response = await recommendationResponse;
