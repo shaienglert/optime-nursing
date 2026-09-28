@@ -379,6 +379,7 @@ export type DecisionEngineRecommendation = {
       requested_categories?: number;
       average_distance_miles?: number | null;
       nearest?: Record<string, { name?: string; distance_miles?: number; driving_distance_miles?: number; driving_time_minutes?: number; source?: string; routing_source?: string }>;
+      personal_destinations?: Array<{ label: string; status?: string; distance_miles?: number; driving_distance_miles?: number; driving_time_minutes?: number; routing_source?: string }>;
       source?: string;
       reason?: string;
     };
