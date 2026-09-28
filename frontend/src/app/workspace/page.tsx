@@ -36,7 +36,7 @@ export default function WorkspacePage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Workspace</p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-900">Saved Case Workspace</h1>
-            <p className="mt-2 text-sm text-slate-600">Reuse and review saved natural-language case descriptions from this browser.</p>
+            <p className="mt-2 text-sm text-slate-600">Persistent client-case tracking is being connected here. Saved results now create a server-side case with contact consent, timeline, facility status, referrals, tours and follow-ups.</p>
           </div>
           <Link href="/" className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300">
             Back Home
