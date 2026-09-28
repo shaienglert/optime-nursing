@@ -15,6 +15,7 @@ export type QuestionnaireState = {
   happinessPreferences: string[];
   nearbyPlaces: string[];
   nearbyPlacesImportance: string;
+  personalDestinations: Array<{ label: string; address: string; latitude?: number; longitude?: number }>;
   budget: number;
   distanceFromFamily: string;
   referenceLocationType: string;
@@ -227,6 +228,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
   happinessPreferences: [],
   nearbyPlaces: [],
   nearbyPlacesImportance: "",
+  personalDestinations: [],
   budget: 0,
   distanceFromFamily: "",
   referenceLocationType: "",
