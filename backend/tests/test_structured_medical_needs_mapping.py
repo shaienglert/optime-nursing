@@ -100,6 +100,19 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
         self.assertIn("medication_support", ids)
         self.assertTrue(ids.isdisjoint({"adl_support", "transfer_assistance"}))
 
+    def test_skilled_nursing_does_not_invent_medication_or_transfer_help(self):
+        base = build_patient_needs_profile({"assistanceLevel": "Skilled nursing care"}, "")
+        ids = {item["parameter_id"] for item in base["needs"]}
+        self.assertTrue({"skilled_nursing_capabilities", "nursing_24_7"} <= ids)
+        self.assertTrue(ids.isdisjoint({"medication_support", "transfer_assistance", "adl_support"}))
+
+        explicit = build_patient_needs_profile({
+            "assistanceLevel": "Skilled nursing care, Help with bathing, Help with medications",
+            "medicalCareProfile": {"transferAssistance": "One person"},
+        }, "")
+        explicit_ids = {item["parameter_id"] for item in explicit["needs"]}
+        self.assertTrue({"adl_support", "medication_support", "transfer_assistance"} <= explicit_ids)
+
     def test_bathing_and_dressing_do_not_imply_transfers(self):
         for label in ("Help with bathing", "Help with dressing", "Needs assistance with bathing and dressing", "Help with medications, Help with bathing"):
             profile = build_patient_needs_profile({"assistanceLevel": label}, "")
