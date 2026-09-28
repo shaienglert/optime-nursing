@@ -119,7 +119,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/genuinely enjoy doing\?/i, { select: scenario.activities }],
       [/What would you like to have nearby\?/i, { select: ["Parks & walking paths"] }],
       [/How important is it to be close to these places\?/i, { choose: "Nice to have" }],
-      [/specific person or place it would be important to stay close to\?/i, { choose: "No specific destination" }],
+      [/Is there a specific person or place it would be important to stay close to\?/i, { choose: 'No specific destination' }],
       [/hate for .* to lose after the move\?/i, { select: scenario.concerns }],
       [/Anything specific we should preserve\?/i, { fill: `${scenario.id}: preserve familiar routines and preferred activities.` }],
       [/What language feels most natural day to day\?/i, { choose: 'English' }],
@@ -174,20 +174,34 @@ test.describe('real synthetic-pilot customer journey', () => {
     }
 
     await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible({ timeout: 300_000 });
-    const confirmRecommendations = page.getByRole('button', { name: /I confirm—show recommendations/i });
-    await expect(confirmRecommendations, 'Needs profile must finish loading before confirmation').toBeEnabled({ timeout: 300_000 });
+    const confirmation = page.getByRole('button', { name: /I confirm—show recommendations/i });
+    await expect(confirmation, await page.locator('main').innerText()).toBeEnabled({ timeout: 30_000 });
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')
         && response.request().method() === 'POST',
       { timeout: 720_000 },
     );
-    await confirmRecommendations.click();
+    await confirmation.click();
     await expect(page).toHaveURL(/\/results/, { timeout: 180_000 });
 
     const response = await recommendationResponse;
     expect(response.status()).toBe(200);
     const payload = await response.json();
     const results = payload.results || [];
+    console.log('OOMNIK_PILOT_GATE_DIAGNOSTIC', JSON.stringify({
+      scenario_id: scenario.id, budget: scenario.budget, result_count: results.length,
+      must_eligible_count: payload.must_eligible_count,
+      candidate_discovery: payload.candidate_discovery,
+      market_coverage_notice: payload.market_coverage_notice,
+      availability_policy: payload.availability_policy,
+      canonical_decision_state: payload.decision_intelligence?.canonical_decision_state,
+      research_candidate_count: payload.decision_intelligence?.research_candidate_count,
+      recommendation_audit_trace: payload.recommendation_audit_trace && {
+        blocked_before_recommendation_visibility: payload.recommendation_audit_trace.blocked_before_recommendation_visibility,
+        recommendation_execution_allowed: payload.recommendation_audit_trace.recommendation_execution_allowed,
+      },
+      needs: payload.patient_needs_profile?.needs?.map(need => ({ id: need.parameter_id, level: need.requirement_level, value: need.desired_value })),
+    }));
     const classifiedCohort = payload.candidate_discovery?.total_facilities_classified;
     if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
@@ -197,6 +211,13 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
     if (scenario.budget < minimumCarePrice) {
       expect(results).toHaveLength(0);
+      await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
+    } else if (results.length === 0) {
+      const gate = payload.decision_intelligence?.canonical_decision_state;
+      expect(gate?.phase).toBe('EVIDENCE_COLLECTION');
+      expect(gate?.must).toBe('PENDING');
+      expect(gate?.can_show_recommendations).toBe(false);
+      expect(gate?.reason).toMatch(/unresolved MUST evidence/i);
       await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
     } else {
       expect(results.length).toBeGreaterThan(0);
