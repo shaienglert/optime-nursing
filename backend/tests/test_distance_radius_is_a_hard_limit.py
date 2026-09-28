@@ -164,3 +164,21 @@ class TheMeasurementItselfTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheScopeReachesTheFamilyTests(unittest.TestCase):
+    """The page can only say whether the limit was applied if the response carries it.
+
+    PatientDecisionEngineOut drops any field it does not declare, so location_scope was
+    computed and then thrown away on its way to the browser.
+    """
+
+    def test_the_http_response_model_keeps_the_location_scope(self):
+        from app.main import PatientDecisionEngineOut
+
+        scope = {"requested_miles": 10.0, "applied": False, "reason": "REFERENCE_POINT_NOT_GEOCODED"}
+        body = PatientDecisionEngineOut(
+            patient_needs_profile={}, results=[], result_count=0, total_candidates_scored=0,
+            availability_policy="confirm directly", location_scope=scope,
+        ).model_dump()
+        self.assertEqual(scope, body["location_scope"])

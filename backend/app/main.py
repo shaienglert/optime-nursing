@@ -760,6 +760,11 @@ class PatientDecisionEngineOut(BaseModel):
     # be declared here regardless: a field the response model does not know about is
     # dropped in serialisation, and the notice would never reach the family it is for.
     degraded_result_notice: Optional[Dict[str, Any]] = None
+    # What the family's distance limit actually did: the miles applied, the point measured
+    # from, how many communities fit, and any offer to widen. Declared for the same reason
+    # as the notice above -- undeclared, it is dropped and the page cannot say whether the
+    # limit was applied or why not.
+    location_scope: Optional[Dict[str, Any]] = None
     # Opaque handle to the server-held copy of this exact response; a personal report
     # for the same inputs can reuse it instead of re-running the engine.
     decision_id: Optional[str] = None

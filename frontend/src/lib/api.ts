@@ -396,6 +396,20 @@ export type DecisionEngineRecommendation = {
   success_factor_trace?: Record<string, unknown>;
 };
 
+export type LocationScope = {
+  applied: boolean;
+  reason?: "NO_RADIUS_REQUESTED" | "REFERENCE_POINT_NOT_GEOCODED" | string;
+  requested_miles: number | null;
+  effective_miles?: number;
+  expanded_by_client?: boolean;
+  reference?: { label?: string | null; method?: string; approximate?: boolean };
+  within_count?: number;
+  excluded_count?: number;
+  distance_unknown_count?: number;
+  expansion_offer?: { miles: number; additional_count: number; nearest_excluded_miles: number } | null;
+  client_action?: "CONFIRM_EXPANSION" | "CONFIRM_LOCATION" | null;
+};
+
 export type DecisionEngineResponse = {
   price_research_candidates?: Array<{
     canonical_facility_id: string;
@@ -414,6 +428,9 @@ export type DecisionEngineResponse = {
   result_count: number;
   total_candidates_scored: number;
   market_coverage_notice?: string | null;
+  // What the family's distance limit actually did. `applied: false` means results were
+  // not limited by distance, and `reason` says why.
+  location_scope?: LocationScope | null;
   candidate_discovery?: {
     status: string;
     catalog_version?: string;

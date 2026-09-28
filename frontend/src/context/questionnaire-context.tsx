@@ -25,6 +25,8 @@ export type QuestionnaireState = {
   referenceAddress: string;
   maximumDistanceMiles: string;
   customDistanceMiles: string;
+  // A wider radius the family accepted after being told how many more communities fit.
+  approvedSearchRadiusMiles: string;
   otherInterests: string;
   notes: string;
   parkingRequirement: string;
@@ -238,6 +240,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
   referenceAddress: "",
   maximumDistanceMiles: "",
   customDistanceMiles: "",
+  approvedSearchRadiusMiles: "",
   otherInterests: "",
   notes: "",
   parkingRequirement: "",

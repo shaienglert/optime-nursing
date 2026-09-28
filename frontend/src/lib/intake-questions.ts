@@ -245,8 +245,8 @@ export const QUESTIONS: IntakeQuestion[] = [
   {
     id: "maximumDistanceMiles",
     section: SECTION_PRACTICAL,
-    prompt: "What travel distance would you prefer?",
-    note: "We record this as a preference. Community distances are not yet verified, so these results are not limited to this mileage.",
+    prompt: "How far is still close enough?",
+    note: "We use this as a limit, measured from the area you chose. If we can’t measure from that area, the results page will say so. If more communities fit a little further out, we’ll ask before widening the search.",
     kind: "single",
     options: ["10", "20", "30", "50", "100"],
     required: true,

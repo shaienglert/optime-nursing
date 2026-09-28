@@ -102,7 +102,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
       [/About how old/i, { choose: scenario.age }],
       [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: "Las Vegas" }],
-      [/What travel distance would you prefer\?/i, { choose: scenario.distance }],
+      [/How far is still close enough\?/i, { choose: scenario.distance }],
       [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
       [/usually get around\?/i, { choose: 'Independent' }],
       [/getting up, sitting down, or transferring\?/i, { choose: 'No' }],
