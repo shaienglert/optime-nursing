@@ -1678,6 +1678,7 @@ export type ClientCaseRecord = {
   case_token: string; status: string; contact_name?: string | null; email?: string | null; phone?: string | null;
   terms_accepted_at?: string | null; assigned_to?: string | null; next_follow_up_at?: string | null;
   created_at?: string; updated_at?: string; questionnaire_state?: Record<string, unknown>;
+  questionnaire_versions?: Array<{ version: number; change_summary?: string | null; created_at?: string }>;
   events: Array<{ event_type: string; facility_id?: string | null; status?: string | null; note?: string | null; created_by?: string | null; created_at?: string }>;
   facilities: Array<{ facility_id: string; status: string; referred_at?: string | null; tour_at?: string | null; selected_at?: string | null; move_in_at?: string | null; sixty_day_status?: string | null; welcome_package_status?: string | null; fee_status?: string | null; notes?: string | null }>;
 };
@@ -1694,6 +1695,12 @@ export async function fetchClientCase(token: string): Promise<ClientCaseRecord> 
   return response.json();
 }
 
+
+export async function updateClientCaseQuestionnaire(token: string, questionnaire_state: Record<string, unknown>, change_summary?: string): Promise<{ case_token: string; version: number }> {
+  const response = await fetch(`/api/backend/api/client-cases/${encodeURIComponent(token)}/questionnaire`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ questionnaire_state, change_summary }) });
+  if (!response.ok) throw new Error("Unable to update client questionnaire.");
+  return response.json();
+}
 const BROWSER_BACKEND_PROXY_BASE = "/api/backend";
 
 function shouldUseDevelopmentFallbackData(): boolean {
