@@ -24,6 +24,8 @@ export type IntakeExtras = {
   nearbyPlaces: string[];
   nearbyOther: string;
   nearbyImportance: string;
+  personalDestinationLabel: string;
+  personalDestinationAddress: string;
   religiousCommunity: string;
   religion: string;
   religiousNeeds: string[];
@@ -126,6 +128,8 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
     nearbyPlaces: state.nearbyPlaces || [],
     nearbyOther: (state.nearbyPlaces || []).find((item) => item.startsWith("Other: "))?.slice(7) || "",
     nearbyImportance: state.nearbyPlacesImportance || "",
+    personalDestinationLabel: state.personalDestinations?.[0]?.label || "",
+    personalDestinationAddress: state.personalDestinations?.[0]?.address || "",
     religiousCommunity: religionImportance === "Yes" ? "Yes" : religionImportance === "No" ? "No" : "",
     religion: human.culturalProfile.faithTraditions[0] || "",
     religiousNeeds: human.culturalProfile.religiousSupportNeeds || [],
@@ -635,6 +639,30 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setExtra(context, { nearbyImportance: text(value) }),
   },
   {
+    id: "personalDestinationLabel",
+    section: SECTION_FIT,
+    prompt: "Is there a specific person or place it would be important to stay close to?",
+    kind: "single",
+    options: ["Daughter", "Son", "Family", "Friend", "Doctor / medical provider", "Place of worship", "Other", "No specific destination"],
+    required: true,
+    label: "personal destination",
+    visible: () => true,
+    get: ({ extras }) => extras.personalDestinationLabel,
+    set: (context, value) => setExtra(context, { personalDestinationLabel: text(value), personalDestinationAddress: text(value) === "No specific destination" ? "" : context.extras.personalDestinationAddress }),
+  },
+  {
+    id: "personalDestinationAddress",
+    section: SECTION_FIT,
+    prompt: "What address or ZIP code should we measure from?",
+    kind: "text",
+    placeholder: "Street address or ZIP code",
+    required: true,
+    label: "personal destination address",
+    visible: ({ extras }) => !!extras.personalDestinationLabel && extras.personalDestinationLabel !== "No specific destination",
+    get: ({ extras }) => extras.personalDestinationAddress,
+    set: (context, value) => setExtra(context, { personalDestinationAddress: text(value) }),
+  },
+  {
     id: "moveLossConcerns",
     section: SECTION_FIT,
     prompt: "What would you hate for them to lose after the move?",
@@ -874,6 +902,7 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
     happinessPreferences: extras.activities,
     nearbyPlaces: [...extras.nearbyPlaces.filter((item) => item !== "Other"), ...(extras.nearbyOther.trim() ? [`Other: ${extras.nearbyOther.trim()}`] : [])],
     nearbyPlacesImportance: extras.nearbyImportance,
+    personalDestinations: extras.personalDestinationLabel && extras.personalDestinationLabel !== "No specific destination" && extras.personalDestinationAddress.trim() ? [{ label: extras.personalDestinationLabel, address: extras.personalDestinationAddress.trim() }] : [],
     medicareStatus: extras.rehabNeed === "Yes" ? draft.medicareStatus : "",
     questionnaireCompletion: {
       mandatoryComplete: true,
