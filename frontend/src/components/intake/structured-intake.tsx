@@ -1,5 +1,6 @@
 "use client";
 
+import { updateClientCaseQuestionnaire } from "@/lib/api";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -128,6 +129,10 @@ export function StructuredIntake() {
     const submission = buildSubmission(finalContext);
     saveSessionJson(QUESTIONNAIRE_SESSION_KEY, submission);
     setState(submission);
+    const caseToken = typeof window !== "undefined" ? window.localStorage.getItem("oomnik.client.case.token") : null;
+    if (caseToken) {
+      void updateClientCaseQuestionnaire(caseToken, submission as unknown as Record<string, unknown>, "Client edited and completed the questionnaire").catch(() => undefined);
+    }
     router.push("/intake-confirmation?next=%2Fresults");
   }
 
