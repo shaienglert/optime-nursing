@@ -30,6 +30,17 @@ class ClientCase(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
 
+class ClientQuestionnaireVersion(Base):
+    __tablename__ = "client_questionnaire_versions"
+
+    id = Column(Integer, primary_key=True)
+    case_id = Column(Integer, ForeignKey("client_cases.id"), nullable=False, index=True)
+    version = Column(Integer, nullable=False)
+    questionnaire_state_json = Column(Text, nullable=False)
+    change_summary = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class ClientCaseEvent(Base):
     __tablename__ = "client_case_events"
 
