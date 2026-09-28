@@ -48,12 +48,21 @@ jobs:
       OPTIME_CANONICAL_MARKET: synthetic-pilot
       OOMNIK_PILOT_FACILITY_LIMIT: '200'
       OPTIME_SEMANTIC_AI_ENABLED: '1'
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPTIME_SEMANTIC_AI_REQUIRED: '1'
+      OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
+      OPTIME_SEMANTIC_AI_MODEL: gpt-4.1-mini
+      OPTIME_SEMANTIC_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OOMNIK_SCENARIO_START: ${{ github.event.inputs.scenario_start || '0' }}
       OOMNIK_SCENARIO_COUNT: ${{ github.event.inputs.scenario_count || '10' }}
       OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '200' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check semantic AI configuration
+        run: |
+          if [ -z "$OPTIME_SEMANTIC_AI_API_KEY" ]; then
+            echo 'OPENAI_API_KEY repository secret is required for live pilot journeys' >&2
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
