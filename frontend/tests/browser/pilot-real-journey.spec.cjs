@@ -174,12 +174,14 @@ test.describe('real synthetic-pilot customer journey', () => {
     }
 
     await expect(page.getByRole('heading', { name: /Please confirm what Oomnik understood/i })).toBeVisible({ timeout: 300_000 });
+    const confirmRecommendations = page.getByRole('button', { name: /I confirm—show recommendations/i });
+    await expect(confirmRecommendations, 'Needs profile must finish loading before confirmation').toBeEnabled({ timeout: 300_000 });
     const recommendationResponse = page.waitForResponse(
       (response) => response.url().includes('/decision-engine/recommendations')
         && response.request().method() === 'POST',
       { timeout: 720_000 },
     );
-    await page.getByRole('button', { name: /I confirm—show recommendations/i }).click();
+    await confirmRecommendations.click();
     await expect(page).toHaveURL(/\/results/, { timeout: 180_000 });
 
     const response = await recommendationResponse;
