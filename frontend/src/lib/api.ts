@@ -371,6 +371,17 @@ export type DecisionEngineRecommendation = {
     patient_relevant_outcomes?: { known: string[]; unknown: string[] };
     practical_fit?: { known: string[]; unknown: string[] };
     unknown_tie_break_dimensions?: string[];
+    nearby_place_fit?: {
+      status?: string;
+      importance?: string;
+      fit_band?: number;
+      matched_categories?: number;
+      requested_categories?: number;
+      average_distance_miles?: number | null;
+      nearest?: Record<string, { name?: string; distance_miles?: number; source?: string }>;
+      source?: string;
+      reason?: string;
+    };
   };
   tie_break_explanation_vs_next?: {
     why_ranked_above: string;
