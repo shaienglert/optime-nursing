@@ -195,6 +195,10 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "housing_modalities": [care_label.upper().replace("-", "_").replace(" ", "_")],
             "licensed_capacity": capacity,
             "license_status": "SYNTHETIC_PILOT_ACTIVE",
+            # Deliberately fictional; this exercises expiry handling without claiming
+            # that any pilot identity holds an actual Nevada care-facility license.
+            "expiration_date": "12/31/2030",
+            "license_expiration_source": "SYNTHETIC_PILOT_TEST_ONLY",
             "is_las_vegas_valley": True,
             "synthetic_pilot": True,
             "pilot_exposure_order": index,
