@@ -212,6 +212,13 @@ test.describe('real synthetic-pilot customer journey', () => {
     if (scenario.budget < minimumCarePrice) {
       expect(results).toHaveLength(0);
       await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
+    } else if (results.length === 0) {
+      const gate = payload.decision_intelligence?.canonical_decision_state;
+      expect(gate?.phase).toBe('EVIDENCE_COLLECTION');
+      expect(gate?.must).toBe('PENDING');
+      expect(gate?.can_show_recommendations).toBe(false);
+      expect(gate?.reason).toMatch(/unresolved MUST evidence/i);
+      await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
     } else {
       expect(results.length).toBeGreaterThan(0);
       await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
