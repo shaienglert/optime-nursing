@@ -48,6 +48,7 @@ jobs:
       OPTIME_CANONICAL_MARKET: synthetic-pilot
       OOMNIK_PILOT_FACILITY_LIMIT: '200'
       OPTIME_SEMANTIC_AI_ENABLED: '1'
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OOMNIK_SCENARIO_START: ${{ github.event.inputs.scenario_start || '0' }}
       OOMNIK_SCENARIO_COUNT: ${{ github.event.inputs.scenario_count || '10' }}
       OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '200' }}
