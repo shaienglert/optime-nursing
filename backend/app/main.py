@@ -195,6 +195,10 @@ class ClientCaseCreateRequest(BaseModel):
     phone: str | None = None
     terms_accepted: bool = False
 
+class ClientQuestionnaireUpdateRequest(BaseModel):
+    questionnaire_state: dict
+    change_summary: str | None = None
+
 class ClientCaseEventRequest(BaseModel):
     event_type: str
     facility_id: str | None = None
@@ -231,6 +235,17 @@ def get_client_case_endpoint(case_token: str):
         record = case_record(db, case_token)
         if record is None: raise HTTPException(status_code=404, detail="Client case not found")
         return record
+    finally:
+        db.close()
+
+@app.put("/api/client-cases/{case_token}/questionnaire")
+def update_client_questionnaire_endpoint(case_token: str, payload: ClientQuestionnaireUpdateRequest):
+    db = SessionLocal()
+    try:
+        case = db.query(app.models.client_case.ClientCase).filter_by(case_token=case_token).one_or_none()
+        if case is None: raise HTTPException(status_code=404, detail="Client case not found")
+        version = save_questionnaire_version(db, case, payload.questionnaire_state, payload.change_summary)
+        return {"case_token": case.case_token, "version": version.version}
     finally:
         db.close()
 
