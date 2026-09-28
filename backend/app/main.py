@@ -188,11 +188,73 @@ class NearbyPlaceRequest(BaseModel):
     radius_meters: int = Field(default=8047, ge=250, le=50000)
 
 
+class ClientCaseCreateRequest(BaseModel):
+    questionnaire_state: dict
+    contact_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    terms_accepted: bool = False
+
+class ClientCaseEventRequest(BaseModel):
+    event_type: str
+    facility_id: str | None = None
+    status: str | None = None
+    note: str | None = None
+    payload: dict | None = None
+    created_by: str | None = None
+
+class ClientFacilityStatusRequest(BaseModel):
+    facility_id: str
+    status: str
+    note: str | None = None
+
 app = FastAPI(
     title="OPTIME Nursing API",
     version="0.3.0",
     description="OPTIME Phase 1 CMS ingestion pipeline for Florida nursing homes",
 )
+
+
+@app.post("/api/client-cases")
+def create_client_case_endpoint(payload: ClientCaseCreateRequest):
+    db = SessionLocal()
+    try:
+        row = create_client_case(db, questionnaire_state=payload.questionnaire_state, contact_name=payload.contact_name, email=payload.email, phone=payload.phone, terms_accepted=payload.terms_accepted)
+        return {"case_token": row.case_token, "status": row.status}
+    finally:
+        db.close()
+
+@app.get("/api/client-cases/{case_token}")
+def get_client_case_endpoint(case_token: str):
+    db = SessionLocal()
+    try:
+        record = case_record(db, case_token)
+        if record is None: raise HTTPException(status_code=404, detail="Client case not found")
+        return record
+    finally:
+        db.close()
+
+@app.post("/api/client-cases/{case_token}/events")
+def add_client_case_event_endpoint(case_token: str, payload: ClientCaseEventRequest):
+    db = SessionLocal()
+    try:
+        case = db.query(app.models.client_case.ClientCase).filter_by(case_token=case_token).one_or_none()
+        if case is None: raise HTTPException(status_code=404, detail="Client case not found")
+        event = add_case_event(db, case, event_type=payload.event_type, facility_id=payload.facility_id, status=payload.status, note=payload.note, payload=payload.payload, created_by=payload.created_by)
+        return {"id": event.id, "created_at": event.created_at}
+    finally:
+        db.close()
+
+@app.post("/api/client-cases/{case_token}/facility-status")
+def set_client_facility_status_endpoint(case_token: str, payload: ClientFacilityStatusRequest):
+    db = SessionLocal()
+    try:
+        case = db.query(app.models.client_case.ClientCase).filter_by(case_token=case_token).one_or_none()
+        if case is None: raise HTTPException(status_code=404, detail="Client case not found")
+        journey = set_facility_status(db, case, payload.facility_id, payload.status, payload.note)
+        return {"facility_id": journey.facility_id, "status": journey.status}
+    finally:
+        db.close()
 
 
 @app.post("/api/places/nearby")
