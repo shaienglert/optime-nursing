@@ -62,13 +62,29 @@ def nearby_places(latitude: float, longitude: float, categories: list[str], radi
             continue
         for category in requested:
             if any((key in tags if value is None else tags.get(key) == value) for key, value in CATEGORY_TAGS[category]):
-                found[category].append({"name": tags.get("name") or category, "distance_miles": round(_distance_miles(latitude, longitude, float(lat), float(lon)), 2), "source": "OpenStreetMap/Overpass"})
+                found[category].append({"name": tags.get("name") or category, "latitude": float(lat), "longitude": float(lon), "distance_miles": round(_distance_miles(latitude, longitude, float(lat), float(lon)), 2), "source": "OpenStreetMap/Overpass"})
     for category in found:
         found[category] = sorted(found[category], key=lambda x: x["distance_miles"])[:5]
     result = {"status": "OK", "places": found, "radius_meters": radius_meters, "source": "OpenStreetMap/Overpass", "cache": "MISS"}
     _CACHE[cache_key] = (time.time(), result)
     return result
 
+
+
+def _route_distance(latitude: float, longitude: float, destination_latitude: float, destination_longitude: float) -> dict[str, Any] | None:
+    """Return real driving distance/time when a routing provider is reachable."""
+    base = os.getenv("OOMNIK_ROUTING_URL", "https://router.project-osrm.org").rstrip("/")
+    url = f"{base}/route/v1/driving/{longitude},{latitude};{destination_longitude},{destination_latitude}"
+    try:
+        response = requests.get(url, params={"overview": "false", "steps": "false"}, timeout=8)
+        response.raise_for_status()
+        routes = response.json().get("routes") or []
+        if not routes:
+            return None
+        route = routes[0]
+        return {"driving_distance_miles": round(float(route["distance"]) / 1609.344, 1), "driving_time_minutes": max(1, round(float(route["duration"]) / 60)), "routing_source": "OSRM"}
+    except (requests.RequestException, KeyError, TypeError, ValueError):
+        return None
 
 def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dict[str, Any], max_candidates: int = 25) -> None:
     categories = [str(x) for x in (questionnaire_state.get("nearbyPlaces") or []) if str(x) in CATEGORY_TAGS]
