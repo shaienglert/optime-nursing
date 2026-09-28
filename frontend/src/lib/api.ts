@@ -1673,6 +1673,26 @@ function getFallbackSearchFacilities(searchText?: string): SearchFacility[] {
   return filtered.length > 0 ? filtered : mapped;
 }
 
+export type ClientCaseRecord = {
+  case_token: string; status: string; contact_name?: string | null; email?: string | null; phone?: string | null;
+  terms_accepted_at?: string | null; assigned_to?: string | null; next_follow_up_at?: string | null;
+  created_at?: string; updated_at?: string; questionnaire_state?: Record<string, unknown>;
+  events: Array<{ event_type: string; facility_id?: string | null; status?: string | null; note?: string | null; created_by?: string | null; created_at?: string }>;
+  facilities: Array<{ facility_id: string; status: string; referred_at?: string | null; tour_at?: string | null; selected_at?: string | null; move_in_at?: string | null; sixty_day_status?: string | null; welcome_package_status?: string | null; fee_status?: string | null; notes?: string | null }>;
+};
+
+export async function createClientCase(payload: { questionnaire_state: Record<string, unknown>; contact_name?: string; email?: string; phone?: string; terms_accepted: boolean }): Promise<{ case_token: string; status: string }> {
+  const response = await fetch("/api/backend/api/client-cases", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  if (!response.ok) throw new Error("Unable to create client case.");
+  return response.json();
+}
+
+export async function fetchClientCase(token: string): Promise<ClientCaseRecord> {
+  const response = await fetch(`/api/backend/api/client-cases/${encodeURIComponent(token)}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Unable to load client case.");
+  return response.json();
+}
+
 const BROWSER_BACKEND_PROXY_BASE = "/api/backend";
 
 function shouldUseDevelopmentFallbackData(): boolean {
