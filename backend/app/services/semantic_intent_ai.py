@@ -288,7 +288,7 @@ def _ground_clinical_patch(result: Dict[str, Any], user_text: str, state: Dict[s
     return result
 
 
-def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
+def _validate_result(result: Dict[str, Any], *, allow_empty_statements: bool = False) -> Dict[str, Any]:
     patch = result.get("questionnaire_patch")
     if patch is None:
         # Backwards-compatible for deterministic test doubles and model providers
@@ -298,7 +298,7 @@ def _validate_result(result: Dict[str, Any]) -> Dict[str, Any]:
         raise RuntimeError("SEMANTIC_AI_INVALID_QUESTIONNAIRE_PATCH")
 
     statements = result.get("statements")
-    if not isinstance(statements, list) or not statements:
+    if not isinstance(statements, list) or (not statements and not allow_empty_statements):
         raise RuntimeError("SEMANTIC_AI_MISSING_STATEMENT_TRACE")
     allowed_status = {"USED", "ASKED", "RESEARCH_REQUIRED", "NOT_DECISION_RELEVANT"}
     allowed_importance = {"MUST", "NICE", "CONTEXT", "UNKNOWN"}
@@ -580,7 +580,9 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
         packet = _repair_live_readiness_mismatch(packet)
         # Validation normalizes advisory readiness, so check minimum dimensions
         # on the validated packet as well as question usability and repetition.
-        packet = _validate_result(packet)
+        # A fully structured questionnaire may contain no narrative statement.
+        # An empty trace is valid only when there is no free text to account for.
+        packet = _validate_result(packet, allow_empty_statements=not user_text.strip())
         missing = [key for key, known in _minimum_dimension_status(user_text, questionnaire_state).items() if not known]
         readiness = str(packet.get("decision_readiness") or "").upper()
         if missing and (readiness == "READY" or (readiness == "NEEDS_CLARIFICATION" and not _has_blocking_question(packet))):
@@ -623,7 +625,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             result = validate_live_packet(active_transport(repair_payload))
             result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}
     else:
-        result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state))
+        result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state), allow_empty_statements=not user_text.strip())
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
 
