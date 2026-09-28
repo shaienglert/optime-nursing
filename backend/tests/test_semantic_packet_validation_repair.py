@@ -83,3 +83,14 @@ def test_provider_failure_does_not_trigger_packet_repair():
         with pytest.raises(RuntimeError, match="HTTP_429"):
             interpret_client_intent_with_ai(user_text=TEXT)
     assert transport.call_count == 1
+
+
+def test_structured_only_case_may_have_no_narrative_statements():
+    structured = {"budget": 6500, "referenceLocationValue": "Las Vegas"}
+    response = packet()
+    response["statements"] = []
+    with patch("app.services.semantic_intent_ai._default_transport", return_value=response) as transport:
+        result = interpret_client_intent_with_ai(user_text="", questionnaire_state=structured)
+    assert transport.call_count == 1
+    assert result["statements"] == []
+    assert result["decision_readiness"] == "READY"
