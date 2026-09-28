@@ -119,6 +119,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/genuinely enjoy doing\?/i, { select: scenario.activities }],
       [/What would you like to have nearby\?/i, { select: ["Parks & walking paths"] }],
       [/How important is it to be close to these places\?/i, { choose: "Nice to have" }],
+      [/specific person or place it would be important to stay close to\?/i, { choose: "No specific destination" }],
       [/hate for .* to lose after the move\?/i, { select: scenario.concerns }],
       [/Anything specific we should preserve\?/i, { fill: `${scenario.id}: preserve familiar routines and preferred activities.` }],
       [/What language feels most natural day to day\?/i, { choose: 'English' }],
