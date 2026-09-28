@@ -28,11 +28,13 @@ def packet():
     }
 
 
-@pytest.mark.parametrize("failure", ["missing_readiness", "invalid_importance"])
+@pytest.mark.parametrize("failure", ["missing_readiness", "invalid_importance", "missing_statements"])
 def test_live_invalid_packet_gets_one_explicit_validation_repair(failure):
     bad = packet()
     if failure == "missing_readiness":
         del bad["decision_readiness"]
+    elif failure == "missing_statements":
+        bad["statements"] = []
     else:
         bad["statements"][0]["importance"] = "REQUIRED"
     with patch("app.services.semantic_intent_ai._default_transport", side_effect=[bad, packet()]) as transport:
