@@ -310,8 +310,11 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
         def otherwise_must_qualified(row: Dict[str, Any]) -> bool:
             fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
             failed = [value for value in (fit.get("must_fail") or []) if value != "SEMANTIC_BUDGET_VERIFICATION"]
-            unknown = [value for value in (fit.get("must_unknown") or []) if value != "SEMANTIC_BUDGET_VERIFICATION"]
-            return not failed and not unknown
+            # At this pre-research stage, must_unknown is intentionally provisional.
+            # Do not let temporary evidence gaps prevent a budget fallback candidate
+            # from being researched; the final MUST gate still blocks every unresolved
+            # non-budget requirement from recommendation.
+            return not failed
 
         qualified = [row for row in rows if otherwise_must_qualified(row)]
         strict = [row for row in qualified if isinstance(row.get("starting_monthly_price"), (int, float)) and row.get("starting_monthly_price") <= budget]
