@@ -292,7 +292,7 @@ def apply_must_ai_nice_pipeline(
             if isinstance(price, (int, float)) and not isinstance(price, bool):
                 variance = (float(price) - float(budget)) / float(budget)
                 row["budget_variance_pct"] = round(variance * 100, 1)
-                row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT" if variance > 0 else ("WITHIN_10_PERCENT_BELOW" if variance >= -0.10 else "BELOW_BUDGET")
+                row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT" if variance > 0 else ("AT_OR_WITHIN_10_PERCENT_BELOW" if variance >= -0.10 else "MORE_THAN_10_PERCENT_BELOW")
                 row["budget_exception"] = variance > 0
         # In-budget candidates always rank ahead of the permitted +10% expansion.
         # The normal ranking still decides quality within each band.
