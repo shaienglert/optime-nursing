@@ -164,7 +164,7 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             # a stated budget must stop a false PASS/FINAL recommendation, not silently
             # become a mere "prefer transparent pricing" preference as it was before.
             key, dimension = "SEMANTIC_BUDGET_VERIFICATION", "budget_verification"
-        elif "medicaid" in haystack:
+        elif "medicaid" in haystack or any(parameter == "medicaid_requirement" for parameter in mapped):
             # Facility Medicaid capability matters only when the structured client
             # state says Medicaid is or may be part of the payment pathway. Negative
             # states ("Not eligible", model paraphrases such as "negative") cannot
