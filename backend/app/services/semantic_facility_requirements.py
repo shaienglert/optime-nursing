@@ -45,6 +45,10 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
 
     medicaid_state = _upper((questionnaire_state or {}).get("medicaidStatus"))
     medicaid_requires_pathway = medicaid_state in {"APPROVED", "APPLICATION PENDING", "MAY QUALIFY"}
+    # When no structured Medicaid answer is supplied (e.g. a direct semantic-unit
+    # contract), an explicit client MUST such as "facility must accept Medicaid"
+    # remains authoritative. A supplied negative structured answer overrides model text.
+    medicaid_structured_answered = bool(medicaid_state)
 
     statements = _semantic_result(result).get("statements") or []
     for statement in statements:
@@ -157,7 +161,9 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             # state says Medicaid is or may be part of the payment pathway. Negative
             # states ("Not eligible", model paraphrases such as "negative") cannot
             # become a provider MUST regardless of model wording.
-            if not medicaid_requires_pathway:
+            if medicaid_structured_answered and not medicaid_requires_pathway:
+                continue
+            if not medicaid_requires_pathway and not explicit_requirement_language:
                 continue
             key, dimension = "SEMANTIC_MEDICAID_PATHWAY", "medicaid_pathway"
         else:
