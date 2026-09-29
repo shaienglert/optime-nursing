@@ -188,6 +188,15 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(response.status()).toBe(200);
     const payload = await response.json();
     const results = payload.results || [];
+    console.log('OOMNIK_PILOT_GATE_DIAGNOSTIC', JSON.stringify({
+      scenario_id: scenario.id, budget: scenario.budget, result_count: results.length,
+      must_eligible_count: payload.must_eligible_count,
+      must_pending_verification_count: payload.must_pending_verification_count,
+      canonical_decision_state: payload.decision_intelligence?.canonical_decision_state,
+      must_gate: payload.decision_intelligence?.must_gate,
+      semantic_facility_requirements: payload.decision_intelligence?.semantic_facility_requirements,
+      needs: payload.patient_needs_profile?.needs?.map(need => ({ id: need.parameter_id, level: need.requirement_level, value: need.desired_value })),
+    }));
     const classifiedCohort = payload.candidate_discovery?.total_facilities_classified;
     if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
