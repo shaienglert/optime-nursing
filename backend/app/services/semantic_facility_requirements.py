@@ -304,6 +304,17 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
     requirements = extract_semantic_facility_requirements(result, questionnaire_state)
     rows = list(result.get("results") or [])
     queued = 0
+    budget = (questionnaire_state or {}).get("budget")
+    budget_expansion_ids: set[str] = set()
+    if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
+        strict = [row for row in rows if isinstance(row.get("starting_monthly_price"), (int, float)) and row.get("starting_monthly_price") <= budget]
+        needed = max(0, 10 - len(strict))
+        if needed:
+            expansion = sorted(
+                [row for row in rows if isinstance(row.get("starting_monthly_price"), (int, float)) and budget < row.get("starting_monthly_price") <= budget * 1.10],
+                key=lambda row: float(row.get("starting_monthly_price") or 0),
+            )[:needed]
+            budget_expansion_ids = {str(row.get("canonical_facility_id") or "") for row in expansion}
     if requirements:
         for index, row in enumerate(rows):
             fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
@@ -333,6 +344,13 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                     # Disclosure proves that rates are published, not that the
                     # family's budget covers them. Always compare the price.
                     verified = _row_verifies_budget(row, questionnaire_state)
+                    if not verified and str(row.get("canonical_facility_id") or "") in budget_expansion_ids:
+                        verified = True
+                        price = float(row.get("starting_monthly_price"))
+                        variance = (price - float(budget)) / float(budget)
+                        row["budget_variance_pct"] = round(variance * 100, 1)
+                        row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT"
+                        row["budget_exception"] = True
                 else:
                     verified = True in verdicts
                 if verified:
