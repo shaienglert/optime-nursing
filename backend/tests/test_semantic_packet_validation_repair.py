@@ -28,11 +28,13 @@ def packet():
     }
 
 
-@pytest.mark.parametrize("failure", ["missing_readiness", "invalid_importance"])
+@pytest.mark.parametrize("failure", ["missing_readiness", "invalid_importance", "missing_statements"])
 def test_live_invalid_packet_gets_one_explicit_validation_repair(failure):
     bad = packet()
     if failure == "missing_readiness":
         del bad["decision_readiness"]
+    elif failure == "missing_statements":
+        bad["statements"] = []
     else:
         bad["statements"][0]["importance"] = "REQUIRED"
     with patch("app.services.semantic_intent_ai._default_transport", side_effect=[bad, packet()]) as transport:
@@ -81,3 +83,14 @@ def test_provider_failure_does_not_trigger_packet_repair():
         with pytest.raises(RuntimeError, match="HTTP_429"):
             interpret_client_intent_with_ai(user_text=TEXT)
     assert transport.call_count == 1
+
+
+def test_structured_only_case_may_have_no_narrative_statements():
+    structured = {"budget": 6500, "referenceLocationValue": "Las Vegas"}
+    response = packet()
+    response["statements"] = []
+    with patch("app.services.semantic_intent_ai._default_transport", return_value=response) as transport:
+        result = interpret_client_intent_with_ai(user_text="", questionnaire_state=structured)
+    assert transport.call_count == 1
+    assert result["statements"] == []
+    assert result["decision_readiness"] == "READY"
