@@ -77,6 +77,20 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
         )
         if negated_non_requirement:
             continue
+        # Structured preference/concern fields are intentionally softer than MUST.
+        # The model may summarize their importance strongly, but it cannot promote them
+        # into a facility hard gate unless the client's own statement contains explicit
+        # requirement language.
+        explicit_requirement_language = any(phrase in statement_text for phrase in (
+            "must ", "required", "requirement", "cannot move without", "only if",
+            "non-negotiable", "essential",
+        ))
+        structured_preference_only = (
+            any(parameter.startswith("futurecareprofile.") for parameter in mapped)
+            or any(parameter in {"movelossconcerns", "movetiming", "humanintelligencev2.transitionriskprofile.attitudetowardmove"} for parameter in mapped)
+        )
+        if structured_preference_only and not explicit_requirement_language:
+            continue
         # A model-selected questionnaire mapping is not proof that the client
         # requested a future-care continuum.  Require the client's statement
         # (or its semantic meaning) to say so explicitly.  This prevents a
