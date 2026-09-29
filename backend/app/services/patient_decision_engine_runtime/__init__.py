@@ -135,7 +135,7 @@ def _is_rankable_candidate(row: Dict[str, Any]) -> bool:
     """Only candidates without a verified mismatch may be shown as recommendations."""
     return (
         ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")
-        and str(row.get("eligibility_status") or "") != "INELIGIBLE"
+        and str(row.get("eligibility_status") or "") == "ELIGIBLE"
     )
 
 
