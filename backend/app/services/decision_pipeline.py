@@ -358,6 +358,13 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
                 strict.append(row)
             elif price <= budget * 1.10:
                 fallback.append(row)
+        # Normalize budget metadata for every priced, otherwise-qualified row so
+        # the API/UI never has to infer whether a missing flag means "in budget".
+        for row in strict:
+            variance = (float(row["starting_monthly_price"]) - float(budget)) / float(budget)
+            row["budget_variance_pct"] = round(variance * 100, 1)
+            row["budget_band"] = "AT_OR_WITHIN_10_PERCENT_BELOW" if variance >= -0.10 else "MORE_THAN_10_PERCENT_BELOW"
+            row["budget_exception"] = False
         needed = max(0, int(limit or 0) - len(strict))
         for row in sorted(fallback, key=lambda x: float(x.get("starting_monthly_price") or 0))[:needed]:
             fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
