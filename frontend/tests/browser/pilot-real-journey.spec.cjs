@@ -34,22 +34,30 @@ const GOLDEN_ORACLE = {
 
 
 function scenarioFor(index) {
-  const pick = (values, offset = 0) => values[(index + offset) % values.length];
-  return {
-    id: `pilot-${String(index + 1).padStart(3, '0')}`,
-    relationship: pick(['Mom', 'Dad', 'Grandma', 'Grandpa', 'Spouse', 'Myself', 'Relative', 'Friend']),
-    age: pick(['60-64', '65-69', '70-74', '75-79', '80-84', '85-89', '90-94', '95+'], 3),
-    budget: 3600 + ((index * 700) % 10500),
-    moveTiming: pick(['Immediately', 'Within 30 days', '1-3 months', '3-6 months', 'Planning ahead']),
-    attitude: pick(['Wants to move', 'Positive', 'Cautious but open', 'Anxious', 'Resistant'], 1),
-    social: pick(['Daily', 'Several times weekly', 'Weekly', 'Occasionally', 'Very little'], 2),
-    community: pick(['Small and familiar', 'Medium', 'Large and active', 'Quiet', 'No preference'], 3),
-    activities: [pick(['Music', 'Movies', 'Games', 'Exercise', 'Outdoor activities']), pick(['Religious life', 'Cultural activities', 'Classes', 'Volunteering'], 2)],
-    concerns: [pick(['Good food', 'Privacy', 'Independence', 'Social life', 'Proximity to family']), pick(['Daily routine', 'Space for visitors', 'A pet', 'Transportation'], 1)],
-    diet: pick(['Vegetarian', 'Vegan', 'Low sodium', 'Diabetic', 'Gluten free']),
-    futureCare: pick(['Required', 'Preferred', 'Not important', 'Not sure'], 1),
-    distance: pick(['10', '20', '30', '50', '100'], 2),
+  const id = `pilot-${String(index + 1).padStart(3, '0')}`;
+  const oracle = GOLDEN_ORACLE[id];
+  if (!oracle) throw new Error(`Missing golden oracle for ${id}`);
+  const base = {
+    id, relationship: 'Mom', age: '80-84', budget: oracle.budget,
+    moveTiming: '1-3 months', attitude: 'Cautious but open', social: 'Weekly',
+    community: 'No preference', activities: ['Music', 'Classes'],
+    concerns: ['Independence', 'Daily routine'], diet: 'Low sodium',
+    futureCare: oracle.futureCare || 'Preferred', distance: oracle.distance,
+    location: oracle.location,
   };
+  const overrides = {
+    "pilot-001": { relationship: "Mom", age: "75-79", social: "Daily", community: "Large and active", activities: ["Music","Cultural activities"] },
+    "pilot-002": { relationship: "Dad", age: "80-84", moveTiming: "Within 30 days" },
+    "pilot-003": { relationship: "Dad", age: "80-84", community: "Small and familiar" },
+    "pilot-004": { relationship: "Dad", age: "80-84", moveTiming: "Immediately" },
+    "pilot-005": { relationship: "Couple", age: "80-84", community: "Medium" },
+    "pilot-006": { relationship: "Mom", age: "80-84", moveTiming: "Within 30 days" },
+    "pilot-007": { relationship: "Grandma", age: "80-84", activities: ["Religious life","Cultural activities"], diet: "Kosher" },
+    "pilot-008": { relationship: "Mom", age: "75-79", social: "Daily", community: "Large and active", activities: ["Exercise","Classes"] },
+    "pilot-009": { relationship: "Dad", age: "75-79", moveTiming: "Within 30 days" },
+    "pilot-010": { relationship: "Myself", age: "70-74", moveTiming: "Planning ahead", futureCare: "Required" },
+  };
+  return { ...base, ...(overrides[id] || {}) };
 }
 
 /**
@@ -119,7 +127,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     const asked = await answerInterview(page, [
       [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
       [/About how old/i, { choose: scenario.age }],
-      [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: "Las Vegas" }],
+      [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: scenario.location }],
       [/How far is still close enough\?/i, { choose: scenario.distance }],
       [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
       [/usually get around\?/i, { choose: 'Independent' }],
