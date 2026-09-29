@@ -137,6 +137,14 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         add_nice("AVAILABILITY_FIT", "Verified availability should fit the client's requested move timing.")
 
     future_profile = human_profile.get("futureCareProfile") if isinstance(human_profile.get("futureCareProfile"), dict) else {}
+    continuum_required = any(
+        str(value or "").strip().lower() == "required"
+        for value in (
+            future_profile.get("avoidFutureMovesPreference"),
+            future_profile.get("continuumOfCarePreference"),
+            questionnaire_state.get("futureCarePreference"),
+        )
+    )
     continuum_preference = " ".join(
         str(value or "").lower()
         for value in (
@@ -145,7 +153,9 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
             questionnaire_state.get("futureCarePreference"),
         )
     )
-    if (
+    if continuum_required:
+        add_must("CONTINUUM_OF_CARE_REQUIRED", "The client marked future care continuity as required.", "verified life-plan care continuum")
+    elif (
         any(token in query for token in ("continuum of care", "continuing care", "life plan", "ccrc"))
         or any(token in continuum_preference for token in ("required", "preferred", "important", "continuum"))
     ):
@@ -276,6 +286,17 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 or p.get("same_apartment_transition_verified") is True
                 for p in payloads
             ):
+                must_pass.append(key)
+            else:
+                must_unknown.append(key)
+        elif key == "CONTINUUM_OF_CARE_REQUIRED":
+            # The governed pilot catalog explicitly classifies continuing-care
+            # communities. Real facilities need a life-plan modality or curated
+            # provider evidence; an unknown capability is never assumed to pass.
+            synthetic_continuum = row.get("synthetic_pilot") is True and _upper(row.get("synthetic_archetype")) == "CONTINUING_CARE"
+            provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
+            evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else {}
+            if synthetic_continuum or "LIFE_PLAN_CCRC" in modalities or evidence.get("continuum_of_care_verified") is True:
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
