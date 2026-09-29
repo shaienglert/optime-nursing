@@ -110,7 +110,9 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
         r"\b(?:not|no|without)\s+(?:a\s+)?(?:locked|secure)\s+memory(?:[- ]care)?\b",
         query,
     ))
-    if signals.get("no_dementia") or refuses_locked_memory_unit:
+    if signals.get("no_dementia"):
+        add_must("NO_FORCED_MEMORY_PLACEMENT", "A cognitively intact resident should not be placed in a locked memory-care-only setting.", "care setting classification")
+    elif refuses_locked_memory_unit:
         add_must("NO_FORCED_MEMORY_PLACEMENT", "A resident who does not need or explicitly declines a locked memory-care-only setting should not be placed there.", "care setting classification")
 
     if signals.get("high_social_culture_priority"):
