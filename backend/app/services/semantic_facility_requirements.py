@@ -43,6 +43,9 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             "source": "QUESTIONNAIRE_CLIENT_INTENT",
         })
 
+    medicaid_state = _upper((questionnaire_state or {}).get("medicaidStatus"))
+    medicaid_requires_pathway = medicaid_state in {"APPROVED", "APPLICATION PENDING", "MAY QUALIFY"}
+
     statements = _semantic_result(result).get("statements") or []
     for statement in statements:
         if not isinstance(statement, dict):
@@ -150,6 +153,12 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             # become a mere "prefer transparent pricing" preference as it was before.
             key, dimension = "SEMANTIC_BUDGET_VERIFICATION", "budget_verification"
         elif "medicaid" in haystack:
+            # Facility Medicaid capability matters only when the structured client
+            # state says Medicaid is or may be part of the payment pathway. Negative
+            # states ("Not eligible", model paraphrases such as "negative") cannot
+            # become a provider MUST regardless of model wording.
+            if not medicaid_requires_pathway:
+                continue
             key, dimension = "SEMANTIC_MEDICAID_PATHWAY", "medicaid_pathway"
         else:
             key, dimension = "SEMANTIC_FACILITY_EVIDENCE", "semantic_facility_evidence"
