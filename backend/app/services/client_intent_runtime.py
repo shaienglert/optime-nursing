@@ -15,6 +15,7 @@ and auditable. Numeric values are used only where an explicit user-preference fi
 already has a governed score (for example community-environment congruence).
 """
 
+import re
 from typing import Any, Dict, List
 
 from app.services import governed_evidence_runtime
@@ -105,8 +106,14 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if signals.get("expected_recovery"):
         add_must("RECOVERY_TRANSITION_COMPATIBLE", "The solution must remain appropriate as temporary care needs decrease after recovery.", "care transition / outside-care / continuum policy")
 
+    refuses_locked_memory_unit = bool(re.search(
+        r"\b(?:not|no|without)\s+(?:a\s+)?(?:locked|secure)\s+memory(?:[- ]care)?\b",
+        query,
+    ))
     if signals.get("no_dementia"):
         add_must("NO_FORCED_MEMORY_PLACEMENT", "A cognitively intact resident should not be placed in a locked memory-care-only setting.", "care setting classification")
+    elif refuses_locked_memory_unit:
+        add_must("NO_FORCED_MEMORY_PLACEMENT", "A resident who does not need or explicitly declines a locked memory-care-only setting should not be placed there.", "care setting classification")
 
     if signals.get("high_social_culture_priority"):
         add_nice("RICH_CULTURE_AND_ACTIVITIES", "The clients explicitly want substantial culture, classes, events and social opportunities.")
