@@ -204,13 +204,24 @@ test.describe('real synthetic-pilot customer journey', () => {
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
     expect(budgetNeed.desired_value).toBe(scenario.budget);
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
-    if (scenario.budget < minimumCarePrice) {
+    // A verified option may be shown up to ten percent over the stated budget, labelled as
+    // an exception and ranked after every in-budget option. Nothing further over is shown.
+    const budgetCeiling = scenario.budget * 1.1;
+    if (budgetCeiling < minimumCarePrice) {
       expect(results).toHaveLength(0);
       await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
     } else {
       expect(results.length).toBeGreaterThan(0);
       await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
     }
+    for (const item of results) {
+      const price = Number(item.starting_monthly_price);
+      if (!Number.isFinite(price)) continue;
+      expect(price, `${item.canonical_facility_id} exceeds the ten-percent budget ceiling`).toBeLessThanOrEqual(budgetCeiling);
+      expect(Boolean(item.budget_exception), `${item.canonical_facility_id} budget exception label`).toBe(price > scenario.budget);
+    }
+    const firstException = results.findIndex((item) => item.budget_exception);
+    if (firstException >= 0) expect(results.slice(firstException).every((item) => item.budget_exception), 'in-budget options rank ahead of over-budget exceptions').toBe(true);
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);
     expect(results.every((item) => String(item.canonical_facility_id || '').startsWith('PILOT-NV-'))).toBe(true);
     expect(errors.filter((message) => !/favicon/i.test(message))).toEqual([]);
