@@ -251,19 +251,17 @@ def _map_assistance_level(questionnaire: Dict[str, Any], needs_by_id: Dict[str, 
     if "24/7 nursing" in level or "24x7 nursing" in level or "round the clock nursing" in level or "skilled nursing" in level or "complex" in level:
         _add_need(needs_by_id, "skilled_nursing_capabilities", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs skilled nursing capability")
         _add_need(needs_by_id, "nursing_24_7", "REQUIRED", "YES", ["YES"], "FACILITY", "questionnaire.assistanceLevel", 1.0, "Needs 24/7 nursing")
-        _add_need(needs_by_id, "transfer_assistance", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs transfer assistance")
-        _add_need(needs_by_id, "medication_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.9, "Needs medication support")
-    elif (
-        "bathing" in level or "light" in level or "assistance" in level
-        or "dressing" in level or "toileting" in level or "medications" in level
-        or "supervision" in level or "24/7" in level
+    # Clinical nursing does not establish medication or transfer assistance.
+    # Keep separately selected daily-living help even when nursing is selected.
+    daily_level = re.sub(r"24/7 nursing|24x7 nursing|round the clock nursing|skilled nursing|complex", "", level)
+    if (
+        "bathing" in daily_level or "light" in daily_level or "assistance" in daily_level
+        or "dressing" in daily_level or "toileting" in daily_level
+        or "supervision" in daily_level or "24/7" in daily_level
     ):
-        # Every checkbox on the "daily assistance" question except "Fully independent"
-        # falls through to here unless it already matched the clinical branch above --
-        # each one is a real signal that daily-living support is needed, not just the
-        # two or three keywords this used to recognize.
+        # Daily-living help remains explicit even when selected alongside nursing.
         _add_need(needs_by_id, "adl_support", "HIGH", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 1.0, "Needs ADL support")
-        if not any(word in level for word in ("bathing", "dressing")) or any(word in level for word in ("transfer", "lift")):
+        if not any(word in daily_level for word in ("bathing", "dressing")) or any(word in daily_level for word in ("transfer", "lift")):
             _add_need(needs_by_id, "transfer_assistance", "MEDIUM", "YES", ["YES"], "SERVICE", "questionnaire.assistanceLevel", 0.8, "May need transfer help")
 
 
@@ -277,7 +275,7 @@ STRUCTURED_INTAKE_MAPPING_CONTRACT = {
         "Help with medications": {"classification": "NEED", "parameter_ids": ["medication_support"]},
         "Daytime supervision": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
         "24/7 support required": {"classification": "NEED", "parameter_ids": ["adl_support", "transfer_assistance"]},
-        "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities", "nursing_24_7", "transfer_assistance", "medication_support"]},
+        "Skilled nursing care": {"classification": "NEED", "parameter_ids": ["skilled_nursing_capabilities", "nursing_24_7"]},
     },
     "medicalCareProfile.needs": {
         "Dialysis": {"classification": "NEED", "parameter_ids": ["dialysis_arrangements"]},
