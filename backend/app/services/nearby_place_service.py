@@ -157,7 +157,7 @@ def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dic
             band = 1
         else:
             band = 0
-        row["nearby_place_fit"] = {"status": "KNOWN", "personal_destinations": personal_destinations, "importance": importance, "fit_band": band, "matched_categories": len(nearest), "requested_categories": len(categories), "nearest": nearest, "average_distance_miles": round(avg, 2) if avg is not None else None, "source": lookup.get("source")}
+        row["nearby_place_fit"] = {"status": "KNOWN", "importance": importance, "fit_band": band, "matched_categories": len(nearest), "requested_categories": len(categories), "nearest": nearest, "average_distance_miles": round(avg, 2) if avg is not None else None, "source": lookup.get("source")}
 
 
 def nearby_rank_key(row: dict[str, Any], importance: str) -> tuple[Any, ...]:
