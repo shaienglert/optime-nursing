@@ -17,6 +17,22 @@ const scenarioStart = Number(process.env.OOMNIK_SCENARIO_START || 0);
 const scenarioCount = Number(process.env.OOMNIK_SCENARIO_COUNT || 1);
 const expectedCohort = Number(process.env.OOMNIK_EXPECTED_COHORT || 0);
 
+// Golden acceptance oracle: these cases intentionally cover distinct decision contracts.
+// They replace accidental combinatorial variation with explicit expected behavior.
+const GOLDEN_ORACLE = {
+  "pilot-001": { care: ["INDEPENDENT_LIVING","ASSISTED_LIVING"], forbidden: ["MEMORY_CARE_ONLY","SKILLED_NURSING_ONLY","REHABILITATION_ONLY"], budget: 5000, location: "Las Vegas", distance: "10", futureCare: "Preferred" },
+  "pilot-002": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["adl_support","medication_support"], budget: 6000, location: "Henderson", distance: "10", availability: "REQUIRED" },
+  "pilot-003": { care: ["MEMORY_CARE"], required: ["memory_care","wandering_safety"], forbidden: ["INDEPENDENT_LIVING"], budget: 7000, location: "Las Vegas", distance: "20" },
+  "pilot-004": { care: ["REHABILITATION","SKILLED_NURSING"], required: ["rehabilitation"], forbidden: ["INDEPENDENT_LIVING","MEMORY_CARE_ONLY"], budget: 7000, location: "Las Vegas", distance: "20" },
+  "pilot-005": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["couple_coresidence","adl_support"], budget: 8000, location: "Henderson", distance: "20", couple: true },
+  "pilot-006": { care: ["ASSISTED_LIVING","SMALL_GROUP_HOME"], required: ["adl_support","medicaid_pathway"], budget: 3000, location: "Las Vegas", distance: "30", medicaid: "REQUIRED" },
+  "pilot-007": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["adl_support","kosher"], preferred: ["hebrew"], budget: 6500, location: "Las Vegas", distance: "30" },
+  "pilot-008": { care: ["INDEPENDENT_LIVING","ASSISTED_LIVING"], forbidden: ["MEMORY_CARE_ONLY"], preferred: ["social_fit","nearby_places"], budget: 5000, location: "Las Vegas", distance: "30" },
+  "pilot-009": { care: ["SKILLED_NURSING","ASSISTED_LIVING"], required: ["dialysis","wound_care"], budget: 7500, location: "Las Vegas", distance: "20" },
+  "pilot-010": { care: ["CONTINUING_CARE"], required: ["continuum_of_care"], forbidden: ["INDEPENDENT_LIVING_ONLY","ASSISTED_LIVING_ONLY"], budget: 9900, location: "Las Vegas", distance: "50", futureCare: "Required" },
+};
+
+
 function scenarioFor(index) {
   const pick = (values, offset = 0) => values[(index + offset) % values.length];
   return {
@@ -89,6 +105,8 @@ test.describe('real synthetic-pilot customer journey', () => {
 
   for (let scenarioIndex = scenarioStart; scenarioIndex < scenarioStart + scenarioCount; scenarioIndex += 1) {
     const scenario = scenarioFor(scenarioIndex);
+    const oracle = GOLDEN_ORACLE[scenario.id];
+    if (!oracle) throw new Error(`Missing golden oracle for ${scenario.id}`);
     test(`${scenario.id} completes the real customer journey`, async ({ page }) => {
     page.setDefaultTimeout(15_000);
     const errors = [];
@@ -206,7 +224,11 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
     // A verified option may be shown up to ten percent over the stated budget, labelled as
     // an exception and ranked after every in-budget option. Nothing further over is shown.
-    const budgetCeiling = scenario.budget * 1.1;
+    // Golden contract: budget is strict first. Expansion is capped at +10% and
+    // may only fill a shortlist after otherwise-qualified in-budget candidates.
+    const expectedBudget = oracle.budget;
+    expect(scenario.budget, `${scenario.id} fixture budget drifted from golden oracle`).toBe(expectedBudget);
+    const budgetCeiling = expectedBudget * 1.1;
     if (budgetCeiling < minimumCarePrice) {
       expect(results).toHaveLength(0);
       await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
@@ -222,6 +244,10 @@ test.describe('real synthetic-pilot customer journey', () => {
     }
     const firstException = results.findIndex((item) => item.budget_exception);
     if (firstException >= 0) expect(results.slice(firstException).every((item) => item.budget_exception), 'in-budget options rank ahead of over-budget exceptions').toBe(true);
+    // Universal golden invariants: a visible recommendation must have passed the
+    // governed MUST gate; UNKNOWN evidence never becomes PASS, distance is a hard
+    // limit when measurable, and no result may exceed the explicit +10% ceiling.
+    expect(results.every((item) => item.eligibility_status === 'ELIGIBLE')).toBe(true);
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);
     expect(results.every((item) => String(item.canonical_facility_id || '').startsWith('PILOT-NV-'))).toBe(true);
     expect(errors.filter((message) => !/favicon/i.test(message))).toEqual([]);
