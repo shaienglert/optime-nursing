@@ -249,12 +249,11 @@ def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any
         return False
     if not isinstance(price, (int, float)) or isinstance(price, bool):
         return False
-    # Budget is a soft search band: when the strict budget does not yield enough
-    # otherwise-qualified communities, Oomnik may show options up to 10% above it.
-    # The lower side of the comparison band is 90% of budget; being cheaper is never
-    # penalized or rejected. The caller annotates over-budget rows for ranking/UI.
-    upper = budget * 1.10
-    return price <= upper
+    # Strict budget verification stays strict here. The optional +10% search
+    # expansion is applied later, after the engine knows how many otherwise-qualified
+    # in-budget candidates exist; it must not turn every over-budget row into a MUST pass
+    # or enqueue unnecessary provider research.
+    return price <= budget
 
 
 def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int = 0) -> bool:
