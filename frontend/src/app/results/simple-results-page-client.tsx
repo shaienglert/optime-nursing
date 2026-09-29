@@ -11,6 +11,7 @@ import { loadDecisionResponseCache, saveDecisionResponseCache, saveSessionJson, 
 import { isFinalRecommendation, isPendingRecommendation } from "@/lib/recommendation-eligibility";
 import { applyAdaptiveAnswer } from "@/lib/adaptive-answer";
 import { resultsClientState } from "@/lib/results-client-state";
+import { DistanceScope } from "./distance-scope";
 
 const TOP_COUNT = 5;
 
@@ -81,7 +82,10 @@ export function SimpleResultsPageClient() {
       const budget = lower.match(/(?:budget|up to|maximum|max)[^$0-9]{0,20}\$?([0-9][0-9,]*)/);
       if (budget) next.budget = Number(budget[1].replaceAll(",", ""));
       const miles = lower.match(/([0-9]+)\s*miles?/);
-      if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.locationImportant = "Yes"; }
+      // A distance stated here replaces the limit outright, including any wider radius
+      // accepted earlier -- otherwise "make it 10 miles" after widening to 30 would change
+      // nothing, because the engine applies the larger of the two.
+      if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
       if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
       if (/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "No preference";
       if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";
@@ -101,6 +105,18 @@ export function SimpleResultsPageClient() {
     setOOmnikerOpen(false);
   }
 
+  // Widening waits for the family: the engine only counts who fits a little further out,
+  // and this is the one place that radius is accepted. It is undoable like any OOMNIKER change.
+  function acceptRadiusExpansion(miles: number) {
+    beforeOOmnikerIds.current = (response?.results || []).filter(isFinalRecommendation).map((item) => item.canonical_facility_id);
+    setOOmnikerDiff("");
+    setState((current) => {
+      oomnikerHistory.current.push(JSON.parse(JSON.stringify(current)));
+      return { ...JSON.parse(JSON.stringify(current)), approvedSearchRadiusMiles: String(miles) };
+    });
+    setOOmnikerNotice(`Got it. I’m widening the search to ${miles} miles and leaving everything else as we agreed.`);
+  }
+
   const activeCriteria = [
     state.assistanceLevel && ["Care", state.assistanceLevel],
     state.medicalCareProfile.mobilityMethod && ["Mobility", state.medicalCareProfile.mobilityMethod],
@@ -110,7 +126,7 @@ export function SimpleResultsPageClient() {
     state.humanIntelligenceV2.independenceProfile.petOwnershipImportance && ["Pet", state.humanIntelligenceV2.independenceProfile.petOwnershipImportance],
     state.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently && ["Independent outings", state.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently],
     state.budget > 0 && ["Budget", `Up to ${state.budget.toLocaleString("en-US")}/month`],
-    state.maximumDistanceMiles && ["Preferred distance (unverified)", `${state.maximumDistanceMiles} miles`],
+    state.maximumDistanceMiles && ["Distance limit", `${state.approvedSearchRadiusMiles && Number(state.approvedSearchRadiusMiles) > Number(state.maximumDistanceMiles) ? state.approvedSearchRadiusMiles : state.maximumDistanceMiles} miles`],
     state.moveTiming && ["Timing", state.moveTiming],
   ].filter(Boolean) as string[][];
 
@@ -281,7 +297,7 @@ export function SimpleResultsPageClient() {
           </div>
           {saveCaseOpen ? <div className="mt-4 rounded-2xl border border-[#d9e3df] bg-white p-5"><h2 className="text-2xl font-semibold">Save your OOmnik case</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><input aria-label="Name" placeholder="Name" value={caseContact.name} onChange={e=>setCaseContact(v=>({...v,name:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Email" placeholder="Email" value={caseContact.email} onChange={e=>setCaseContact(v=>({...v,email:e.target.value}))} className="rounded-xl border p-3"/><input aria-label="Phone" placeholder="Phone" value={caseContact.phone} onChange={e=>setCaseContact(v=>({...v,phone:e.target.value}))} className="rounded-xl border p-3"/></div><label className="mt-4 flex gap-3"><input type="checkbox" checked={caseContact.terms} onChange={e=>setCaseContact(v=>({...v,terms:e.target.checked}))}/><span>I agree to the Terms of Use and allow OOmnik to save this case and contact me about it.</span></label><div className="mt-4 flex gap-3"><button type="button" disabled={savingCase || !caseContact.terms || (!caseContact.email.trim() && !caseContact.phone.trim())} onClick={saveClientCase} className="rounded-full bg-[#315f53] px-6 py-3 font-semibold text-white disabled:opacity-40">{savingCase?"Saving…":"Save case"}</button><button type="button" onClick={()=>setSaveCaseOpen(false)} className="rounded-full border px-6 py-3">Cancel</button></div></div> : null}
           <p className="mt-5 text-lg leading-8 text-[#53635d]">Confirm current pricing and availability before any move.</p>
-          {state.locationImportant === "Yes" ? <p className="mt-2 text-lg leading-8 text-[#53635d]">Your selected area and travel distance are preferences. Community locations have not been verified for distance, so these results are not limited by that mileage. Confirm actual travel distance before contacting a community.</p> : null}
+          <DistanceScope scope={response.location_scope} onWiden={acceptRadiusExpansion} />
           {/medicaid/i.test(naturalLanguageQuery) ? <p className="mt-2 text-lg leading-8 text-[#53635d]">Medicaid eligibility and each community’s participation must be confirmed separately.</p> : null}
         </section>
 
@@ -393,7 +409,7 @@ export function SimpleResultsPageClient() {
           </div>
           <div className="mt-5 flex flex-wrap gap-2">{activeCriteria.map(([label,value]) => <span key={label} className="rounded-full border border-[#bcd9e7] bg-white px-4 py-2 text-sm"><strong>{label}:</strong> {value}</span>)}</div>
           {oomnikerNotice ? <div className="mt-4 rounded-2xl bg-white p-4 text-base text-[#315f53]">{oomnikerNotice}{oomnikerDiff ? <p className="mt-2 font-medium">{oomnikerDiff}</p> : null} {oomnikerHistory.current.length > 0 ? <button type="button" onClick={() => { const previous = oomnikerHistory.current.pop(); if (previous) { setState(previous); setOOmnikerNotice("Done. I’ve put the previous preference back and I’m reassessing the earlier search."); } }} className="ml-2 font-semibold underline underline-offset-4">Undo last change</button> : null}</div> : null}
-          {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="Try: Prefer a different area, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
+          {oomnikerOpen ? <div className="mt-6"><textarea value={oomnikerText} onChange={(e) => setOOmnikerText(e.target.value)} rows={3} placeholder="Try: Change the distance to 30 miles, or budget can go to $8,000…" className="w-full rounded-2xl border border-[#bcd9e7] bg-white px-5 py-4 text-lg outline-none focus:border-[#079ff2]" /><button type="button" onClick={applyOOmnikerChange} disabled={!oomnikerText.trim()} className="mt-3 rounded-full bg-[#234f63] px-6 py-3 font-semibold text-white disabled:opacity-40">Update results</button></div> : null}
         </section>
 
         <section className="mt-8 flex flex-wrap gap-4 pb-10">

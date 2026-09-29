@@ -24,6 +24,11 @@ from app.services.facility_parameter_service import (
 )
 from app.services.canonical_universe import configured_canonical_market
 from app.services.care_input_assertions import without_negated_nursing
+from app.services.location_radius import (
+    annotate_distances,
+    plan_radius_scope,
+    resolve_reference_point,
+)
 from app.services.facility_media_registry import build_visual_media_payload, get_facility_media_record
 
 
@@ -1967,6 +1972,21 @@ def run_patient_decision_engine(
         round(_scoring_ms, 1),
     )
 
+    # A stated radius is a limit, not a preference. Until now a geo bonus nudged the score
+    # and nothing was excluded, so a family asking for ten miles was shown communities at
+    # eleven, and the same list came back whether they said ten miles or a hundred.
+    #
+    # The filter runs before ranking, so the result limit applies to the communities that
+    # actually qualify rather than to a list that was truncated first, and the expansion
+    # offer is counted over every community that met the needs.
+    location_reference = resolve_reference_point(
+        questionnaire_state, canonical_index.values(), location_city=requested_city
+    )
+    annotate_distances(results, location_reference, canonical_index)
+    radius_plan = plan_radius_scope(results, questionnaire_state, location_reference)
+    location_scope = radius_plan["scope"]
+    results = radius_plan["rows"]
+
     results, pairwise_decisions = _rank_with_true_ties(results, decision_limit=limit)
 
     decision_lookup: Dict[Tuple[str, str], Dict[str, Any]] = {}
@@ -2016,6 +2036,9 @@ def run_patient_decision_engine(
             ordered_parameter_ids=ordered_parameter_ids,
             medication_overlay=medication_overlay,
         )
+        # Every card states its distance from the reference point, or None when the
+        # reference point could not be placed -- never a number we did not measure.
+        detail["distance_miles"] = item.get("distance_miles")
         detail["rank_position"] = item.get("rank_position")
         detail["rank_tie_status"] = item.get("rank_tie_status")
         detail["rank_display"] = item.get("rank_display")
@@ -2050,6 +2073,12 @@ def run_patient_decision_engine(
             )
             if notice
         ) or None,
+        # States what was actually enforced: the miles asked for, the point measured from
+        # and how it was placed, how many communities fit, and -- when fewer fit than the
+        # family can choose from -- how many more fit a little further out. Widening waits
+        # for the family to say so. When the reference point had no coordinates this says
+        # the radius was not applied, rather than implying it was.
+        "location_scope": location_scope,
         "availability_policy": "Current availability must be confirmed directly with the facility.",
         "tie_break_policy": {
             "thresholds": TIE_THRESHOLD_POLICY,
