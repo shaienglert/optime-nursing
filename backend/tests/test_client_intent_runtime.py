@@ -126,6 +126,28 @@ def test_future_care_preference_becomes_explicit_continuum_nice_to_have():
     assert "CONTINUUM_OF_CARE" in keys
 
 
+def test_required_future_care_continuum_is_a_must_and_independent_only_is_not_recommended():
+    intent = build_client_intent(
+        {"futureCarePreference": "Required"},
+        "I need a continuing care community so I can stay as needs change.",
+        {"signals": {}, "household": {}},
+        {},
+    )
+    assert "CONTINUUM_OF_CARE_REQUIRED" in {item["key"] for item in intent["must_haves"]}
+    assert "CONTINUUM_OF_CARE" not in {item["key"] for item in intent["nice_to_haves"]}
+
+    independent = evaluate_candidate_intent(
+        _row("INDEPENDENT_LIVING", synthetic_pilot=True, synthetic_archetype="INDEPENDENT_LIVING"), intent
+    )
+    continuing = evaluate_candidate_intent(
+        _row("ASSISTED_LIVING_RFG", synthetic_pilot=True, synthetic_archetype="CONTINUING_CARE"), intent
+    )
+    assert independent["hard_gate"] == "PENDING_VERIFICATION"
+    assert "CONTINUUM_OF_CARE_REQUIRED" in independent["must_unknown"]
+    assert continuing["hard_gate"] == "PASS"
+    assert "CONTINUUM_OF_CARE_REQUIRED" in continuing["must_pass"]
+
+
 def test_continuing_care_matches_continuum_preference_and_active_adult_does_not():
     intent = {"must_haves": [], "nice_to_haves": [{"key": "CONTINUUM_OF_CARE"}]}
 
