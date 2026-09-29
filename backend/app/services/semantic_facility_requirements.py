@@ -57,6 +57,26 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             str(statement.get("meaning") or "").lower(),
         ])
         haystack = " ".join(mapped + [statement_text])
+        # A negative/client-state statement is not a facility requirement. Semantic AI
+        # may still label it MUST because the fact itself is important to understanding
+        # the client; that must never turn "no complex care required" or "not eligible
+        # for Medicaid" into a provider capability gate.
+        negated_non_requirement = (
+            any(phrase in statement_text for phrase in (
+                "no skilled nursing", "no complex medical", "no chronic or complex",
+                "no ongoing medical", "does not require", "doesn't require",
+                "not required", "no medical care required",
+            ))
+            or (
+                "medicaid" in haystack
+                and any(phrase in statement_text for phrase in (
+                    "not eligible", "ineligible", "does not qualify", "doesn't qualify",
+                    "not applying", "not using medicaid",
+                ))
+            )
+        )
+        if negated_non_requirement:
+            continue
         # A model-selected questionnaire mapping is not proof that the client
         # requested a future-care continuum.  Require the client's statement
         # (or its semantic meaning) to say so explicitly.  This prevents a
