@@ -43,12 +43,13 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             "source": "QUESTIONNAIRE_CLIENT_INTENT",
         })
 
-    medicaid_state = _upper((questionnaire_state or {}).get("medicaidStatus"))
+    medicaid_raw = (questionnaire_state or {}).get("medicaidStatus")
+    medicaid_state = _upper(medicaid_raw)
     medicaid_requires_pathway = medicaid_state in {"APPROVED", "APPLICATION PENDING", "MAY QUALIFY"}
     # When no structured Medicaid answer is supplied (e.g. a direct semantic-unit
     # contract), an explicit client MUST such as "facility must accept Medicaid"
     # remains authoritative. A supplied negative structured answer overrides model text.
-    medicaid_structured_answered = bool(medicaid_state)
+    medicaid_structured_answered = medicaid_raw not in (None, "")
 
     statements = _semantic_result(result).get("statements") or []
     for statement in statements:
@@ -97,6 +98,13 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             or any(parameter in {"movelossconcerns", "movetiming", "humanintelligencev2.transitionriskprofile.attitudetowardmove"} for parameter in mapped)
         )
         if structured_preference_only and not explicit_requirement_language:
+            continue
+        # A general dietary preference (for example low sodium) is not a hard facility
+        # gate merely because the model described accommodation as important. Preserve
+        # explicit safety/religious requirements such as allergy, gluten or kosher.
+        dietary_preference_only = any(parameter == "foodprofile.dietarypreferences" for parameter in mapped)
+        explicit_dietary_must = any(token in haystack for token in ("kosher", "gluten", "allergy", "cross_contact", "cross-contact"))
+        if dietary_preference_only and not explicit_requirement_language and not explicit_dietary_must:
             continue
         # A model-selected questionnaire mapping is not proof that the client
         # requested a future-care continuum.  Require the client's statement
