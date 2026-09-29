@@ -117,7 +117,7 @@ export default function HomePage() {
             <h1 className="mt-5 max-w-none text-4xl font-semibold leading-[1.08] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
               A difficult decision deserves time, care, and the right guidance.
             </h1>
-            <div className="flex justify-center py-12 sm:py-16"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div>
+            <div className="flex justify-center overflow-hidden py-12 sm:py-16"><div className="origin-center scale-[0.62] sm:scale-100"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div></div>
             <p className="max-w-none text-3xl font-medium leading-tight tracking-[-0.04em] text-[#52645d] sm:text-4xl">
               Choosing senior living has many important dimensions. Answer a few questions, and <span className="whitespace-nowrap"><span>OOmn</span><span className="relative inline-block">ı<span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 rounded-full bg-orange-500" style={{ width: "0.18em", height: "0.18em", top: "0.30em" }} /></span><span>k</span></span> will understand the case, research the options, explain what is still unknown, and help you move forward with confidence.
             </p>
