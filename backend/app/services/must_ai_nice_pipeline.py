@@ -266,6 +266,14 @@ def apply_must_ai_nice_pipeline(
     for row in rows:
         fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
         gate = str(fit.get("hard_gate") or "PENDING_VERIFICATION").upper()
+        # Base facility eligibility is authoritative and cannot be bypassed by a
+        # client-intent PASS. A recommendation must satisfy both layers.
+        base_eligibility = str(row.get("eligibility_status") or "").upper()
+        if base_eligibility != "ELIGIBLE":
+            row["must_eligibility"] = "MUST_PENDING_VERIFICATION" if base_eligibility in {"", "INSUFFICIENT_EVIDENCE", "PENDING_VERIFICATION", "UNKNOWN"} else "MUST_REJECTED"
+            row["must_disposition_reason"] = "BASE_ELIGIBILITY_NOT_CONFIRMED"
+            (pending if row["must_eligibility"] == "MUST_PENDING_VERIFICATION" else rejected).append(row)
+            continue
         if gate == "PASS":
             row["must_eligibility"] = "MUST_ELIGIBLE"
             row["must_disposition_reason"] = "MUST_PASS"
