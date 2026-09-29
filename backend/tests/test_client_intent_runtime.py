@@ -148,6 +148,20 @@ def test_required_future_care_continuum_is_a_must_and_independent_only_is_not_re
     assert "CONTINUUM_OF_CARE_REQUIRED" in continuing["must_pass"]
 
 
+def test_explicit_refusal_of_locked_memory_unit_survives_mild_memory_need():
+    intent = build_client_intent(
+        {},
+        "He has mild memory changes and wants medication reminders, not a locked memory unit.",
+        {"signals": {"no_dementia": False}, "household": {}},
+        {},
+    )
+    assert "NO_FORCED_MEMORY_PLACEMENT" in {item["key"] for item in intent["must_haves"]}
+    locked = evaluate_candidate_intent(_row("MEMORY_CARE_ONLY", synthetic_archetype="MEMORY_CARE"), intent)
+    assisted = evaluate_candidate_intent(_row("ASSISTED_LIVING_RFG"), intent)
+    assert locked["hard_gate"] == "FAIL"
+    assert assisted["hard_gate"] == "PASS"
+
+
 def test_continuing_care_matches_continuum_preference_and_active_adult_does_not():
     intent = {"must_haves": [], "nice_to_haves": [{"key": "CONTINUUM_OF_CARE"}]}
 
