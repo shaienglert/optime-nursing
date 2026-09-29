@@ -16,4 +16,4 @@ def test_successful_nearby_lookup_attaches_verified_places():
     fit = rows[0]["nearby_place_fit"]
     assert fit["status"] == "KNOWN"
     assert fit["fit_band"] == 3
-    assert fit["nearest"]["Parks & walking paths"][0]["name"] == "A park"
+    assert fit["nearest"]["Parks & walking paths"]["name"] == "A park"
