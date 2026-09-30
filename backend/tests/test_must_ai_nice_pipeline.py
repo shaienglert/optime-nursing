@@ -40,6 +40,19 @@ def _thin_row(cid: str, gate: str = "PASS"):
 
 
 class MustAiNicePipelineTests(unittest.TestCase):
+    def test_ai_cannot_place_budget_expansion_before_in_budget_option(self):
+        a, b = [_row(cid, "PASS") for cid in ["A", "B"]]
+        a["starting_monthly_price"] = 5000
+        b["starting_monthly_price"] = 5400
+        for row in [a, b]:
+            row["ai_ranking"] = {"global_score": 90, "reason": "AI assessment"}
+        result = {"results": [a, b], "decision_intelligence": {"client_intent": {}, "human_intelligence": {}, "living_strategy": {}}}
+        with patch("app.services.must_ai_nice_pipeline.rank_must_eligible_candidates", return_value=([b, a], {"status": "AI_RANKED"})):
+            out = apply_must_ai_nice_pipeline(result, {"budget": 5000}, "", 5)
+        assert [r["canonical_facility_id"] for r in out["results"]] == ["A", "B"]
+        assert [r["rank_display"] for r in out["results"]] == ["#1", "#2"]
+        assert out["tie_break_decisions"][0]["decision_dimension"] == "strict_budget_before_expansion"
+
     def test_final_ai_pairs_replace_stale_reasons_and_do_not_claim_false_ties(self):
         a, b, c = [_row(cid, "PASS") for cid in ["A", "B", "C"]]
         for score, row in zip([90, 99, 80], [a, b, c]):
