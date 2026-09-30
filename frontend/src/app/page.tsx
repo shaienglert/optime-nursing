@@ -106,15 +106,15 @@ export default function HomePage() {
       <section className="relative overflow-hidden border-b border-[#dbe4df] bg-[radial-gradient(circle_at_12%_8%,rgba(219,239,229,0.88),transparent_33%),radial-gradient(circle_at_90%_0%,rgba(255,232,202,0.72),transparent_36%),linear-gradient(180deg,#fbfaf7_0%,#f7f4ee_100%)]">
         <div className="mx-auto w-full max-w-[1600px] px-5 pb-24 pt-6 sm:px-10 lg:px-16 lg:pb-32">
           <nav className="flex items-center justify-end" aria-label="Main navigation">
-            <div className="flex items-center gap-5 text-2xl font-medium">
-              <Link href="/workspace" className="hidden px-3 py-2 text-[#486057] hover:text-[#234f43] sm:inline-flex">My workspace</Link>
-              <Link href="/intake" className="border-b border-[#6c9c8e] px-1 py-2 text-[#315f53] transition hover:border-[#244f43] hover:text-[#244f43]">Continue where I left off</Link>
+            <div className="flex max-w-full items-center gap-2 text-base font-medium sm:gap-5 sm:text-2xl">
+              <Link href="/workspace" className="hidden px-3 py-2 text-[#486057] hover:text-[#234f43] md:inline-flex">My workspace</Link>
+              <Link href="/intake" className="max-w-[80vw] border-b border-[#6c9c8e] px-1 py-2 text-right text-[#315f53] transition hover:border-[#244f43] hover:text-[#244f43] sm:max-w-none">Continue where I left off</Link>
             </div>
           </nav>
 
           <div className="pt-10 sm:pt-14">
-            <p className="text-5xl font-semibold tracking-[-0.03em] text-[#1e4f43]">Welcome</p>
-            <h1 className="mt-5 max-w-none text-4xl font-semibold leading-[1.08] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
+            <p className="text-4xl font-semibold tracking-[-0.03em] text-[#1e4f43] sm:text-5xl">Welcome</p>
+            <h1 className="mt-5 max-w-none text-[2.65rem] font-semibold leading-[1.08] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
               A difficult decision deserves time, care, and the right guidance.
             </h1>
             <div className="flex w-full justify-center overflow-visible py-10 sm:py-16"><div className="flex w-full justify-center sm:hidden"><OptimeStaticLogo variant="primary" height={64} className="items-center" /></div><div className="hidden justify-center sm:flex"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div></div>
