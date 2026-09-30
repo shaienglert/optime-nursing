@@ -15,6 +15,25 @@ import { DistanceScope } from "./distance-scope";
 
 const TOP_COUNT = 5;
 
+const missingEvidenceLabels: Record<string, string> = {
+  SEMANTIC_BUDGET_VERIFICATION: "a current price within your budget",
+  SEMANTIC_SOCIAL_DELIVERY: "the social activities you asked for",
+  SEMANTIC_FUTURE_CARE_PATH: "a verified future care pathway",
+  SEMANTIC_MOBILITY_LAYOUT: "an accessible layout",
+  SEMANTIC_DIETARY_SAFETY: "dietary safety",
+  SEMANTIC_ALL_DAILY_MEALS: "daily meal service",
+  SEMANTIC_CLINICAL_ACUITY: "the clinical support needed",
+  SEMANTIC_KOSHER_DIET: "kosher meals",
+  SEMANTIC_LANGUAGE_SUPPORT: "language support",
+  SEMANTIC_MEDICAID_PATHWAY: "Medicaid participation",
+  MEDICATION_SUPPORT_AVAILABLE: "medication support",
+  ADL_SUPPORT_AVAILABLE: "help with daily activities",
+  SECURE_MEMORY_CARE_CONFIRMED: "secure memory care",
+  REHAB_PATH_AVAILABLE: "a rehabilitation pathway",
+  COUPLE_CORESIDENCE: "a shared living arrangement",
+  RECOVERY_TRANSITION_COMPATIBLE: "a suitable recovery transition",
+};
+
 function personLabel(relationship: string, query: string): string {
   if (relationship === "Myself") return "you";
   if (relationship === "Couple") return "both of you";
@@ -216,7 +235,11 @@ export function SimpleResultsPageClient() {
     [response],
   );
   const top = eligible.slice(0, TOP_COUNT);
-  const syntheticPilot = (response?.results || []).some((item) => item.synthetic_pilot);
+  const pendingEvidence = response?.pending_evidence_summary;
+  const missingEvidence = [...new Set(pendingEvidence?.unresolved_requirements || [])]
+    .map((key) => missingEvidenceLabels[key] || "another required facility detail");
+  const syntheticPilot = (response?.results || []).some((item) => item.synthetic_pilot)
+    || pendingEvidence?.synthetic_pilot === true;
   const relationship = personLabel(state.relationship, naturalLanguageQuery);
   const detailsHref = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const personalReportHref = `/results/personal-report${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
@@ -285,6 +308,11 @@ export function SimpleResultsPageClient() {
               {pending.length > 0
                 ? "Some communities still need important details verified before I can recommend them."
                 : "No community is ready to recommend from this search. You can review your answers or return to the conversation."}
+              {pendingEvidence && pendingEvidence.candidate_count > 0 ? <p className="mt-3 text-base leading-7">
+                {pendingEvidence.candidate_count} communit{pendingEvidence.candidate_count === 1 ? "y needs" : "ies need"} more evidence before I can recommend {pendingEvidence.candidate_count === 1 ? "it" : "them"}.
+                {missingEvidence.length > 0 ? ` I still need to verify ${missingEvidence.join(", ")}.` : " I still need to verify the required conditions."}
+                {" These are open questions, not confirmed mismatches."}
+              </p> : null}
               {response.market_coverage_notice ? <p className="mt-3 text-base leading-7">{response.market_coverage_notice}</p> : null}
             </div>
           )}

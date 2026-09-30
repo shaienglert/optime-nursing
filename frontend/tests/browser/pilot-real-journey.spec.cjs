@@ -207,8 +207,16 @@ test.describe('real synthetic-pilot customer journey', () => {
     if (scenario.budget < minimumCarePrice) {
       expect(results).toHaveLength(0);
       await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
+    } else if (results.length === 0) {
+      // A price under budget does not verify another mandatory facility claim.
+      // Semantic AI may correctly identify dietary safety or another client MUST
+      // for which the pilot has no evidence. Require an explicit pending gate,
+      // never silently call the empty result an affordable recommendation.
+      expect(payload.pending_evidence_summary?.candidate_count).toBeGreaterThan(0);
+      expect(payload.decision_intelligence?.canonical_decision_state?.must).toBe('PENDING');
+      await expect(page.getByText(/communities need more evidence before I can recommend them/i)).toBeVisible();
+      await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
     } else {
-      expect(results.length).toBeGreaterThan(0);
       await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
     }
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);

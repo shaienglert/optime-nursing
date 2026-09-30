@@ -744,6 +744,8 @@ class PatientComparisonContextRequestIn(BaseModel):
 
 class PatientDecisionEngineOut(BaseModel):
     patient_needs_profile: Dict[str, Any]
+    # Aggregate only: candidate identities remain hidden while MUST evidence is pending.
+    pending_evidence_summary: Optional[Dict[str, Any]] = None
     price_research_candidates: List[Dict[str, Any]] = Field(default_factory=list)
     results: List[Dict[str, Any]]
     result_count: int
@@ -2854,6 +2856,22 @@ def post_patient_decision_recommendations(payload: PatientDecisionEngineRequestI
                           natural_language_query=artifact["natural_language_query"],
                           prepared_profile=artifact["profile"])
     response = run_patient_decision_engine(**run_inputs)
+
+    pending_candidates = response.get("must_pending_verification_candidates") or []
+    if pending_candidates:
+        response["pending_evidence_summary"] = {
+            "candidate_count": len(pending_candidates),
+            "unresolved_requirements": sorted({
+                str(key)
+                for candidate in pending_candidates if isinstance(candidate, dict)
+                for key in candidate.get("must_unknown") or []
+                if key
+            }),
+            "synthetic_pilot": any(
+                candidate.get("synthetic_pilot") is True
+                for candidate in pending_candidates if isinstance(candidate, dict)
+            ),
+        }
 
     ccn_to_facility_id = {
         str(facility.cms_id): int(facility.id)

@@ -411,6 +411,11 @@ export type LocationScope = {
 };
 
 export type DecisionEngineResponse = {
+  pending_evidence_summary?: {
+    candidate_count: number;
+    unresolved_requirements: string[];
+    synthetic_pilot?: boolean;
+  };
   price_research_candidates?: Array<{
     canonical_facility_id: string;
     facility_name: string;
