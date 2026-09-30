@@ -20,7 +20,7 @@ export function OptimeStaticLogo({ href = "/", className = "", variant = "compac
       className={`inline-flex max-w-full flex-col items-center leading-none [container-type:inline-size] ${className}`.trim()}
       aria-label="OOmnik Home"
     >
-      <span className="inline-flex items-center font-semibold text-[#079ff2] max-[640px]:origin-center max-[640px]:scale-[0.68]" style={{ gap, transformOrigin: "center" }}>
+      <span className="inline-flex items-center font-semibold text-[#079ff2] max-[640px]:origin-center max-[640px]:scale-[0.84]" style={{ gap, transformOrigin: "center" }}>
         <span className="inline-flex items-center" aria-hidden="true">
           <span className="inline-block rounded-full border-current" style={{ width: ring, height: ring, borderWidth: stroke }} />
           <span className="inline-block rounded-full border-current" style={{ width: ring, height: ring, borderWidth: stroke, marginLeft: -stroke }} />
@@ -32,7 +32,7 @@ export function OptimeStaticLogo({ href = "/", className = "", variant = "compac
         </span>
       </span>
       {variant === "primary" ? (
-        <span className="mt-1 whitespace-nowrap font-light text-[#168fe0] max-[640px]:-mt-3 max-[640px]:scale-[0.78]" style={{ fontSize: Math.max(9, Math.round(10*scale)), letterSpacing: "0.125em" }}>
+        <span className="mt-1 whitespace-nowrap font-light text-[#168fe0] max-[640px]:-mt-1 max-[640px]:scale-[0.9]" style={{ fontSize: Math.max(9, Math.round(10*scale)), letterSpacing: "0.125em" }}>
           Finding You the Right Way
         </span>
       ) : null}
