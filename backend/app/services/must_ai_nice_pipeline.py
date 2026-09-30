@@ -269,6 +269,11 @@ def apply_must_ai_nice_pipeline(
         if gate == "PASS":
             row["must_eligibility"] = "MUST_ELIGIBLE"
             row["must_disposition_reason"] = "MUST_PASS"
+            # The governed MUST decision is the final recommendation authority.
+            # Keep legacy evidence fields for audit, but do not expose a contradictory
+            # POTENTIALLY_ELIGIBLE/INSUFFICIENT_EVIDENCE status on an approved card.
+            row["legacy_eligibility_status"] = row.get("eligibility_status")
+            row["eligibility_status"] = "ELIGIBLE"
             eligible.append(row)
         elif gate == "FAIL":
             row["must_eligibility"] = "MUST_REJECTED"
