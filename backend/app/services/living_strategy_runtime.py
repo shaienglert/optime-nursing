@@ -96,9 +96,16 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     couple = _mentions_couple(query)
 
     no_dementia = denials["memory"] or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
+    # Strip denied mentions locally; "no wandering" is not a wandering signal.
+    # Preserve a positive memory-care need elsewhere in the same narrative.
+    memory_query = re.sub(
+        r"\b(?:no|without|not|does not (?:need|require|have)|doesn't (?:need|require|have))\s+"
+        r"(?:any\s+)?(?:wandering|memory care|secure(?:-unit| unit)?(?: need)?|locked memory unit)\b",
+        "", query,
+    )
     memory_care_needed = (
         not no_dementia
-        and _contains(query, "dementia", "alzheimer", "memory care", "wandering", "cognitive decline", "cognitive impairment")
+        and _contains(memory_query, "dementia", "alzheimer", "memory care", "wandering", "cognitive decline", "cognitive impairment")
     ) or _norm(questionnaire_state.get("memoryStatus")) in {"yes", "dementia", "memory care", "alzheimer", "alzheimers"}
 
     surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")

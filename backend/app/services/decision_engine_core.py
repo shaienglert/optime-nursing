@@ -1762,6 +1762,7 @@ def _build_ranked_candidate_detail(
         "role_classification": table.get("role_classification"),
         "source_identity_ids": canonical_meta.get("source_identity_ids") or {},
         "synthetic_pilot": bool(canonical_meta.get("synthetic_pilot")),
+        "pilot_service_evidence": canonical_meta.get("pilot_service_evidence") if canonical_meta.get("synthetic_pilot") else None,
         "synthetic_archetype": canonical_meta.get("synthetic_archetype") if canonical_meta.get("synthetic_pilot") else None,
         "accepts_couples": canonical_meta.get("accepts_couples") if canonical_meta.get("synthetic_pilot") else None,
         # Pilot identity attributes are verified fields in the governed synthetic

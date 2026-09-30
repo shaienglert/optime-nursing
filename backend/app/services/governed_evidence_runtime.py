@@ -110,6 +110,9 @@ def agent_and_provider_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     (agent evidence first, then provider evidence, then life-plan-derived flags).
     """
     out: List[Dict[str, Any]] = list(agent_only_payloads(row))
+    pilot = pilot_service_payload(row)
+    if pilot:
+        out.append(pilot)
 
     provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
     provider_evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else None
@@ -129,6 +132,21 @@ def agent_and_provider_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
             out.append(direct)
 
     return out
+
+
+def pilot_service_payload(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Only explicitly fictional, identity-bound, verified pilot service records."""
+    payload = row.get("pilot_service_evidence")
+    if row.get("synthetic_pilot") is not True or not isinstance(payload, dict):
+        return {}
+    provenance = payload.get("provenance") or {}
+    if (payload.get("source") != "SYNTHETIC_PILOT_SERVICE_FIXTURE"
+            or payload.get("verification_status") != "VERIFIED"
+            or payload.get("canonical_facility_id") != row.get("canonical_facility_id")
+            or provenance.get("synthetic_pilot") is not True
+            or provenance.get("not_real_world_evidence") is not True):
+        return {}
+    return payload
 
 
 __all__ = [

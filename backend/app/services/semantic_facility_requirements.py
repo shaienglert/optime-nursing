@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
@@ -115,6 +116,7 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             "futurecare", "future_care", "future-care", "continuum", "aginginplace",
             "future care", "aging in place", "aging_in_place", "avoid future moves",
             "avoidfuturemoves", "avoid_future_moves", "life plan",
+            "ccrc", "avoid another move", "avoid repeated moves",
         ))
         if future_care:
             key, dimension = "SEMANTIC_FUTURE_CARE_PATH", "recovery_transition"
@@ -237,6 +239,44 @@ def _row_payloads(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     return governed_evidence_runtime.agent_and_provider_payloads(row)
 
 
+def _pilot_verifies_requirement(row: Dict[str, Any], requirement: Dict[str, Any], questionnaire: Dict[str, Any]) -> bool:
+    payload = governed_evidence_runtime.pilot_service_payload(row)
+    if not payload:
+        return False
+    key = requirement["key"]
+    if key == "SEMANTIC_LANGUAGE_SUPPORT":
+        profile = (questionnaire.get("humanIntelligenceV2") or {}).get("languageProfile") or {}
+        languages = [str(profile.get(field) or "").strip().lower() for field in (
+            "preferredSpokenLanguage", "medicalDiscussionLanguage", "socialInteractionLanguage",
+        )]
+        languages = [value for value in languages if value]
+        if not languages:
+            languages = [str(questionnaire.get("preferredLanguage") or "").strip().lower()]
+        return bool(languages) and all(language and language in payload.get("supported_languages", []) for language in languages)
+    if key == "SEMANTIC_CLINICAL_ACUITY":
+        medical = questionnaire.get("medicalCareProfile") or {}
+        text = " ".join([str(requirement.get("reason") or ""), *requirement.get("mapped_parameters", []), *medical.get("needs", [])]).lower()
+        checks = []
+        if "dialysis" in text:
+            frequency = str(medical.get("dialysisFrequency") or "") + " " + text
+            match = re.search(r"\b(\d+)\s*(?:times|sessions)\s*(?:a |per )?(?:week|weekly)", frequency)
+            weekly = int(match.group(1)) if match else (3 if "three" in frequency.lower() else None)
+            checks.append(payload.get("dialysis_verified") is True and payload.get("dialysis_transport_verified") is True
+                          and (weekly is None or weekly <= payload.get("dialysis_sessions_per_week", 0)))
+        if "wound" in text:
+            checks.append(payload.get("wound_care_verified") is True and payload.get("wound_care_frequency") == "Daily")
+        if "oxygen" in text or "respiratory" in text:
+            checks.append(payload.get("oxygen_support_verified") is True)
+        if "nursing" in text:
+            checks.append(payload.get("nursing_support_verified") is True)
+        return bool(checks) and all(checks)
+    if key == "SEMANTIC_MOBILITY_LAYOUT":
+        # A verified accessible route is not proof of a particular unit distance.
+        if re.search(r"\d+\s*(?:meters?|metres?|feet|ft)\b", str(requirement.get("reason") or ""), re.I):
+            return False
+    return _payload_verifies(payload, key) is True
+
+
 def _row_verifies_future_care(row: Dict[str, Any]) -> bool:
     """Accept continuum proof only from the evidence record that owns that claim.
 
@@ -245,6 +285,8 @@ def _row_verifies_future_care(row: Dict[str, Any]) -> bool:
     to settle this safety-relevant MUST. Provider-curated primary evidence or an
     explicit life-plan modality are the only positive paths here.
     """
+    if governed_evidence_runtime.pilot_service_payload(row).get("continuum_of_care_verified") is True:
+        return True
     provider = row.get("provider_housing_evidence") if isinstance(row.get("provider_housing_evidence"), dict) else {}
     evidence = provider.get("evidence") if isinstance(provider.get("evidence"), dict) else {}
     if evidence.get("continuum_of_care_verified") is True:
@@ -370,7 +412,10 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 # not offered". Matches the same policy already applied to the
                 # ADL/MEDICATION/REHAB/RECOVERY_TRANSITION gates in client_intent_runtime.py:
                 # agent evidence may only confirm a MUST (PASS), never exclude on it (FAIL).
-                verdicts = [_payload_verifies(payload, key) for payload in payloads]
+                # Pilot language/clinical proof is requirement-specific, never a
+                # blanket True that accepts an unsupported language or treatment.
+                pilot = governed_evidence_runtime.pilot_service_payload(row)
+                verdicts = [_payload_verifies(payload, key) for payload in payloads if payload is not pilot]
                 if key == "SEMANTIC_FUTURE_CARE_PATH":
                     verified = _row_verifies_future_care(row)
                 elif key == "SEMANTIC_BUDGET_VERIFICATION":
@@ -385,7 +430,7 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                         row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT"
                         row["budget_exception"] = True
                 else:
-                    verified = True in verdicts
+                    verified = True in verdicts or _pilot_verifies_requirement(row, requirement, questionnaire_state or {})
                 if verified:
                     if key not in passed: passed.append(key)
                     status = "PASS"
