@@ -114,7 +114,7 @@ export default function HomePage() {
 
           <div className="pt-10 sm:pt-14">
             <p className="text-4xl font-semibold tracking-[-0.03em] text-[#1e4f43] sm:text-5xl">Welcome</p>
-            <h1 className="mt-5 max-w-none text-[2.65rem] font-semibold leading-[1.08] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
+            <h1 className="mt-5 max-w-none text-[2.25rem] font-semibold leading-[1.12] tracking-[-0.05em] text-[#1e2e28] sm:text-[3.5rem] lg:text-[4.4rem]">
               A difficult decision deserves time, care, and the right guidance.
             </h1>
             <div className="flex w-full justify-center overflow-visible py-10 sm:py-16"><div className="flex w-full justify-center sm:hidden"><OptimeStaticLogo variant="primary" height={64} className="items-center" /></div><div className="hidden justify-center sm:flex"><OptimeStaticLogo variant="primary" height={112} className="items-center" /></div></div>
