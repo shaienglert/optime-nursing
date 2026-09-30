@@ -443,8 +443,42 @@ def apply_must_ai_nice_pipeline(
                     "unknown_dimensions": [],
                     "deterministic_display_order": True,
                 })
+            elif _ai_ranking_succeeded(ai_status):
+                # The previous deterministic comparison does not explain an AI
+                # rerank. Record every unequal final pair, so the UI cannot turn
+                # a missing old pair into a false "True tie" or stale staffing claim.
+                ranking = row.get("ai_ranking") or {}
+                reason = str(ranking.get("reason") or "AI assessment of this resident's needs and the supplied evidence places this option higher.")
+                if ranking.get("citation_validation") == "PARTIAL":
+                    reason += " Some supporting comparison references remain unverified."
+                row["tie_break_explanation_vs_next"] = {
+                    "why_ranked_above": reason,
+                    "deciding_dimension": "resident_specific_ai_assessment",
+                    "remained_equal": [],
+                    "remaining_unknown": list(ranking.get("information_deficits") or []),
+                }
+                final_tie_breaks.append({
+                    "higher_canonical_facility_id": pair[0],
+                    "lower_canonical_facility_id": pair[1],
+                    "decision_dimension": "resident_specific_ai_assessment",
+                    "reason": reason,
+                    "equal_dimensions": [],
+                    "unknown_dimensions": list(ranking.get("information_deficits") or []),
+                })
             elif pair in existing_tie_breaks:
+                row["tie_break_explanation_vs_next"] = {
+                    "why_ranked_above": existing_tie_breaks[pair].get("reason") or "Ranked by the governed deterministic comparison.",
+                    "deciding_dimension": existing_tie_breaks[pair].get("decision_dimension"),
+                    "remained_equal": existing_tie_breaks[pair].get("equal_dimensions") or [],
+                    "remaining_unknown": existing_tie_breaks[pair].get("unknown_dimensions") or [],
+                }
                 final_tie_breaks.append(existing_tie_breaks[pair])
+            else:
+                reason = "The governed comparison orders these options differently; a specific comparison explanation is not yet available."
+                row["tie_break_explanation_vs_next"] = {"why_ranked_above": reason, "deciding_dimension": "final_authoritative_ranking_key", "remained_equal": [], "remaining_unknown": ["comparison explanation"]}
+                final_tie_breaks.append({"higher_canonical_facility_id": pair[0], "lower_canonical_facility_id": pair[1], "decision_dimension": "final_authoritative_ranking_key", "reason": reason, "equal_dimensions": [], "unknown_dimensions": ["comparison explanation"]})
+        elif not is_joint_rank:
+            row.pop("tie_break_explanation_vs_next", None)
 
     selected_ids = {str(row.get("canonical_facility_id")) for row in selected}
     complete_selected = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) in selected_ids]
