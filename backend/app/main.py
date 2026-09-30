@@ -748,6 +748,8 @@ class PatientDecisionEngineOut(BaseModel):
     pending_evidence_summary: Optional[Dict[str, Any]] = None
     price_research_candidates: List[Dict[str, Any]] = Field(default_factory=list)
     results: List[Dict[str, Any]]
+    # Final comparisons must reach the detailed results page after serialization.
+    tie_break_decisions: List[Dict[str, Any]] = Field(default_factory=list)
     result_count: int
     total_candidates_scored: int
     candidate_discovery: Optional[Dict[str, Any]] = None
