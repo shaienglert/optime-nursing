@@ -255,7 +255,9 @@ test.describe('real synthetic-pilot customer journey', () => {
     // Universal golden invariants: a visible recommendation must have passed the
     // governed MUST gate; UNKNOWN evidence never becomes PASS, distance is a hard
     // limit when measurable, and no result may exceed the explicit +10% ceiling.
-    expect(results.every((item) => item.eligibility_status === 'ELIGIBLE')).toBe(true);
+    expect(results.every((item) => item.must_eligibility === 'MUST_ELIGIBLE')).toBe(true);
+    expect(results.every((item) => (item.client_intent_fit?.hard_gate || '').toUpperCase() === 'PASS')).toBe(true);
+    expect(results.every((item) => (item.client_intent_fit?.must_unknown || []).length === 0)).toBe(true);
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);
     expect(results.every((item) => String(item.canonical_facility_id || '').startsWith('PILOT-NV-'))).toBe(true);
     expect(errors.filter((message) => !/favicon/i.test(message))).toEqual([]);
