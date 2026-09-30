@@ -171,17 +171,25 @@ test.describe('real synthetic-pilot customer journey', () => {
       await page.waitForURL(/\/(adaptive-interview|intake-confirmation)(?:\?|$)/, { timeout: 60_000 });
     }
 
-    for (let turn = 0; turn < 25 && /\/adaptive-interview(?:\?|$)/.test(page.url()); turn += 1) {
+    for (let turn = 0; turn < 25; turn += 1) {
       await page.waitForLoadState('domcontentloaded');
       const adaptivePrompt = await page.locator('main').innerText().catch(() => '');
       console.log('OOMNIK_ADAPTIVE_TURN', JSON.stringify({ scenario_id: scenario.id, turn, url: page.url(), prompt: adaptivePrompt.slice(0, 1200) }));
       const finalConfirmation = page.getByRole('button', { name: /I confirm—show recommendations/i });
-      await Promise.race([
-        finalConfirmation.waitFor({ state: 'visible', timeout: 300_000 }),
-        page.getByLabel('Your answer').waitFor({ state: 'visible', timeout: 300_000 }),
-        page.locator('main section button').first().waitFor({ state: 'visible', timeout: 300_000 }),
-      ]).catch(() => {});
-      if (await finalConfirmation.isVisible()) break;
+      const continueReview = page.getByRole('button', { name: 'Continue our conversation', exact: true });
+      let phase = 'LOADING';
+      await expect.poll(async () => {
+        phase = await finalConfirmation.isVisible() && await finalConfirmation.isEnabled() ? 'READY'
+          : await continueReview.isVisible() ? 'CONTINUE_REVIEW'
+          : await page.getByLabel('Your answer').isVisible() ? 'ANSWER'
+          : await page.locator('main section button').first().isVisible() ? 'OPTION' : 'LOADING';
+        return phase;
+      }, { timeout: 60_000, message: 'Interview must expose a ready confirmation or a next action' }).not.toBe('LOADING');
+      if (phase === 'READY') break;
+      if (phase === 'CONTINUE_REVIEW') {
+        await continueReview.click();
+        continue;
+      }
       // A runtime failure is not an interview option. Fail with the rendered
       // explanation instead of silently clicking Try again up to 25 times.
       const retry = page.getByRole('button', { name: 'Try again', exact: true });
@@ -189,7 +197,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       const answerBox = page.getByLabel('Your answer');
       const continueButton = page.getByRole('button', { name: /^Continue$/ });
       if (await answerBox.count()) {
-        await answerBox.fill('No additional requirement; use the confirmed questionnaire answers.');
+        await answerBox.fill(`Use the confirmed questionnaire facts: English for daily life, medical discussions and social interaction; budget $${scenario.budget} per month including all required care${oracle.couple ? ' and both residents, who must live together' : ''}; ${scenario.location} within ${scenario.distance} miles; ${scenario.diet === 'Kosher' ? 'kosher meals are required, a religious community is not required' : 'low sodium is a preference, not a mandatory clinical diet'}; future care ${scenario.futureCare.toLowerCase()}. No additional medical requirement beyond the questionnaire.`);
         await continueButton.click();
       } else {
         const offeredOption = page.locator('main section button').first();
