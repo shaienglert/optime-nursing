@@ -179,10 +179,13 @@ test.describe('real synthetic-pilot customer journey', () => {
       const continueReview = page.getByRole('button', { name: 'Continue our conversation', exact: true });
       let phase = 'LOADING';
       await expect.poll(async () => {
+        const adaptive = /\/adaptive-interview(?:\?|$)/.test(page.url());
+        const answer = page.getByLabel('Your answer');
+        const option = page.locator('main section button').first();
         phase = await finalConfirmation.isVisible() && await finalConfirmation.isEnabled() ? 'READY'
-          : await continueReview.isVisible() ? 'CONTINUE_REVIEW'
-          : await page.getByLabel('Your answer').isVisible() ? 'ANSWER'
-          : await page.locator('main section button').first().isVisible() ? 'OPTION' : 'LOADING';
+          : await continueReview.isVisible() && await continueReview.isEnabled() ? 'CONTINUE_REVIEW'
+          : adaptive && await answer.isVisible() && await answer.isEnabled() ? 'ANSWER'
+          : adaptive && await option.isVisible() && await option.isEnabled() ? 'OPTION' : 'LOADING';
         return phase;
       }, { timeout: 60_000, message: 'Interview must expose a ready confirmation or a next action' }).not.toBe('LOADING');
       if (phase === 'READY') break;
