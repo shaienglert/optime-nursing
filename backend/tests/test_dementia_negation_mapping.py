@@ -25,6 +25,7 @@ def _memory(text: str):
     "He has no dementia diagnosis.",
     "She has never been diagnosed with dementia.",
     "No signs of dementia.",
+    "He has mild forgetfulness but no diagnosed dementia.",
 ])
 def test_denied_dementia_is_not_a_positive_memory_care_need(text):
     need = _memory(text)

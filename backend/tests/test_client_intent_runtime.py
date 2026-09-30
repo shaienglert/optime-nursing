@@ -12,6 +12,25 @@ def _row(canonical_type: str, **extra) -> dict:
     return {"canonical_type": canonical_type, "city": "LAS VEGAS", "state": "NV", **extra}
 
 
+def test_secure_questionnaire_answer_requires_secured_unit_evidence():
+    questionnaire = {"humanIntelligenceV2": {"futureCareProfile": {"secureMemoryNeighborhoodNeed": "Yes"}}}
+    strategy = build_living_strategy_context(questionnaire, "My father has dementia")
+    intent = build_client_intent(questionnaire, "My father has dementia", strategy, {})
+    assert "SECURED_UNIT_AVAILABLE" in {item["key"] for item in intent["must_haves"]}
+
+
+def test_memory_care_classification_does_not_prove_secured_units():
+    intent = _intent("SECURED_UNIT_AVAILABLE")
+    row = _row("MEMORY_CARE", memory_care_classification="CONFIRMED")
+    assert evaluate_candidate_intent(row, intent)["hard_gate"] == "PENDING_VERIFICATION"
+    row["secured_unit_evidence"] = {"value": "YES", "verified": False}
+    assert evaluate_candidate_intent(row, intent)["hard_gate"] == "PENDING_VERIFICATION"
+    row["secured_unit_evidence"]["verified"] = True
+    assert evaluate_candidate_intent(row, intent)["hard_gate"] == "PASS"
+    row["secured_unit_evidence"]["value"] = "NO"
+    assert evaluate_candidate_intent(row, intent)["hard_gate"] == "FAIL"
+
+
 def test_skilled_nursing_auto_passes_adl_support_available():
     # Same regulatory logic already applied to ASSISTED_LIVING_RFG below: a licensed
     # skilled nursing facility cannot hold that license without providing ADL

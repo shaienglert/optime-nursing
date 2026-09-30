@@ -100,6 +100,12 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
             "Nevada official-detail memory-care classification",
         )
 
+    human = questionnaire_state.get("humanIntelligenceV2") or {}
+    future = human.get("futureCareProfile") or {}
+    transition = human.get("transitionRiskProfile") or {}
+    if _upper(future.get("secureMemoryNeighborhoodNeed")) == "YES" or _upper(transition.get("wanderingConcerns")) == "YES":
+        add_must("SECURED_UNIT_AVAILABLE", "The resident explicitly needs a secure setting or wandering protection.", "verified secured-unit capability")
+
     if signals.get("rehabilitation_need_detected"):
         add_must("REHAB_PATH_AVAILABLE", "The recovery plan requires access to appropriate rehabilitation/PT/OT, either onsite or through a verified external pathway.", "rehab/PT/OT evidence")
 
@@ -258,6 +264,14 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         elif key == "SECURE_MEMORY_CARE_CONFIRMED":
             if str(row.get("memory_care_classification") or "").strip().upper() == "CONFIRMED":
                 must_pass.append(key)
+            else:
+                must_unknown.append(key)
+        elif key == "SECURED_UNIT_AVAILABLE":
+            secured = row.get("secured_unit_evidence") or {}
+            if _upper(secured.get("value")) == "YES" and secured.get("verified") is True:
+                must_pass.append(key)
+            elif _upper(secured.get("value")) == "NO" and secured.get("verified") is True:
+                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "REHAB_PATH_AVAILABLE":

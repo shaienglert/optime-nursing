@@ -448,7 +448,7 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
             "FACILITY",
             "questionnaire.moveTiming",
             1.0,
-            "Verified current availability is required for the requested move timing",
+            "Current availability must be confirmed directly before the requested move date",
         )
     elif move_timing in {"1-3 months", "3-6 months"}:
         _add_need(
@@ -1774,6 +1774,16 @@ def _build_ranked_candidate_detail(
         "licensed_capacity": canonical_meta.get("licensed_capacity") if canonical_meta.get("synthetic_pilot") else None,
         "starting_monthly_price": _to_number(current_price.get("raw_value")),
         "availability_status": str(current_availability.get("raw_value") or "UNKNOWN"),
+        "secured_unit_evidence": {
+            "value": (row_by_param.get("secured_units") or {}).get("raw_value", "UNKNOWN"),
+            "verified": _is_verified_row(row_by_param.get("secured_units") or {}),
+            "source": (row_by_param.get("secured_units") or {}).get("source"),
+        },
+        "verified_capabilities": {
+            parameter: evidence.get("raw_value")
+            for parameter, evidence in row_by_param.items()
+            if _is_verified_row(evidence)
+        },
         "visual_media": build_visual_media_payload(get_facility_media_record(canonical_id)),
         "eligibility_status": eligibility["eligibility_status"],
         "match_score": match_score,

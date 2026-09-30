@@ -29,6 +29,7 @@ const missingEvidenceLabels: Record<string, string> = {
   MEDICATION_SUPPORT_AVAILABLE: "medication support",
   ADL_SUPPORT_AVAILABLE: "help with daily activities",
   SECURE_MEMORY_CARE_CONFIRMED: "secure memory care",
+  SECURED_UNIT_AVAILABLE: "a secured unit with wandering protection",
   REHAB_PATH_AVAILABLE: "a rehabilitation pathway",
   COUPLE_CORESIDENCE: "a shared living arrangement",
   RECOVERY_TRANSITION_COMPATIBLE: "a suitable recovery transition",
@@ -296,7 +297,7 @@ export function SimpleResultsPageClient() {
           <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Here’s where I’d start for {relationship}</h1>
           <p className="mt-5 max-w-4xl text-xl leading-8 text-[#53635d]">
             {top.length > 0
-              ? "The options below meet the verified must-haves for this case. I’ll explain their fit and any details that still need confirmation."
+              ? "The options below have verified care capabilities for this case. Availability and admission details still need direct confirmation."
               : "I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch."}
           </p>
           {top.length > 0 ? (
@@ -384,7 +385,7 @@ export function SimpleResultsPageClient() {
                       ) : null}
                     </div>
                     <div className="flex flex-col items-start gap-2 sm:items-end">
-                      <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">Meets verified must-haves</span>
+                      <span className="w-fit rounded-full bg-[#eaf6ef] px-4 py-2 text-lg font-semibold text-[#25613f]">Verified care capabilities</span>
                       <Link
                         href={`/facility/canonical?canonical=${encodeURIComponent(item.canonical_facility_id)}&back=${encodeURIComponent(`/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`}
                         className="rounded-full border border-[#315f53] px-4 py-2 text-base font-semibold text-[#315f53] hover:bg-[#f4fbf7]"

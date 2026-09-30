@@ -111,3 +111,18 @@ def test_required_dialysis_need_reaches_full_engine_candidate_discovery() -> Non
         )
 
     assert "dialysis_arrangements" in decision["candidate_discovery"]["required_parameter_ids"]
+
+
+def test_secure_setting_requirement_remains_pending_when_pilot_has_no_secured_unit_proof() -> None:
+    questionnaire = {
+        "memoryStatus": "Yes", "budget": 6000,
+        "humanIntelligenceV2": {"futureCareProfile": {"secureMemoryNeighborhoodNeed": "Yes"}},
+    }
+    with patch.dict("os.environ", {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200"}, clear=False):
+        refresh_runtime_cache("secure-setting-proof-regression")
+        decision = run_patient_decision_engine(questionnaire, "My father has dementia and needs a secure setting in Las Vegas.", limit=10)
+    assert decision["results"] == []
+    assert decision["must_pending_verification_candidates"]
+    for row in decision["must_pending_verification_candidates"]:
+        assert "SECURED_UNIT_AVAILABLE" in row["must_unknown"]
+        assert "SECURED_UNIT_AVAILABLE" not in row["must_fail"]
