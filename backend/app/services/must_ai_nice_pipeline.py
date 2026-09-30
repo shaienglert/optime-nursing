@@ -56,8 +56,8 @@ def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     ai_ranking = row.get("ai_ranking") if isinstance(row.get("ai_ranking"), dict) else {}
     global_score = ai_ranking.get("global_score")
     if isinstance(global_score, (int, float)):
-        return ("AI_SCORE", round(float(global_score), 3))
-    return ("DETERMINISTIC", *_fallback_key(row)[:-1])
+        return (bool(row.get("budget_exception")), "AI_SCORE", round(float(global_score), 3))
+    return (bool(row.get("budget_exception")), "DETERMINISTIC", *_fallback_key(row)[:-1])
 
 
 def _has_differentiating_evidence(rows: List[Dict[str, Any]], dynamic_preferences: Dict[str, Any]) -> bool:
@@ -147,7 +147,7 @@ def _env_true(name: str) -> bool:
 
 
 def _ai_ranking_succeeded(ai_status: Dict[str, Any]) -> bool:
-    return str(ai_status.get("status") or "").upper() in {"AI_RANKED", "AI_BATCH_RANKED"}
+    return str(ai_status.get("status") or "").upper() in {"AI_RANKED", "AI_BATCH_RANKED", "AI_BATCH_RANKED_RECOVERY"}
 
 
 def _resolve_nice_wave_search_cap() -> int:
@@ -324,6 +324,10 @@ def apply_must_ai_nice_pipeline(
             deterministic_fallback_key=_fallback_key,
         )
 
+    # Preserve the approved strict-budget-first rule after the AI has reranked
+    # the shortlist. Stable partition retains its order within each budget band.
+    ranked.sort(key=lambda row: bool(row.get("budget_exception")))
+
     ai_ranking_degraded = (
         not thin_evidence_bypass
         and bool(live_shortlist)
@@ -443,8 +447,46 @@ def apply_must_ai_nice_pipeline(
                     "unknown_dimensions": [],
                     "deterministic_display_order": True,
                 })
+            elif not row.get("budget_exception") and following.get("budget_exception"):
+                reason = "This option fits the stated monthly budget; the next option uses the permitted budget expansion."
+                row["tie_break_explanation_vs_next"] = {"why_ranked_above": reason, "deciding_dimension": "strict_budget_before_expansion", "remained_equal": [], "remaining_unknown": []}
+                final_tie_breaks.append({"higher_canonical_facility_id": pair[0], "lower_canonical_facility_id": pair[1], "decision_dimension": "strict_budget_before_expansion", "reason": reason, "equal_dimensions": [], "unknown_dimensions": []})
+            elif _ai_ranking_succeeded(ai_status):
+                # The previous deterministic comparison does not explain an AI
+                # rerank. Record every unequal final pair, so the UI cannot turn
+                # a missing old pair into a false "True tie" or stale staffing claim.
+                ranking = row.get("ai_ranking") or {}
+                reason = str(ranking.get("reason") or "AI assessment of this resident's needs and the supplied evidence places this option higher.")
+                if ranking.get("citation_validation") == "PARTIAL":
+                    reason += " Some supporting comparison references remain unverified."
+                row["tie_break_explanation_vs_next"] = {
+                    "why_ranked_above": reason,
+                    "deciding_dimension": "resident_specific_ai_assessment",
+                    "remained_equal": [],
+                    "remaining_unknown": list(ranking.get("information_deficits") or []),
+                }
+                final_tie_breaks.append({
+                    "higher_canonical_facility_id": pair[0],
+                    "lower_canonical_facility_id": pair[1],
+                    "decision_dimension": "resident_specific_ai_assessment",
+                    "reason": reason,
+                    "equal_dimensions": [],
+                    "unknown_dimensions": list(ranking.get("information_deficits") or []),
+                })
             elif pair in existing_tie_breaks:
+                row["tie_break_explanation_vs_next"] = {
+                    "why_ranked_above": existing_tie_breaks[pair].get("reason") or "Ranked by the governed deterministic comparison.",
+                    "deciding_dimension": existing_tie_breaks[pair].get("decision_dimension"),
+                    "remained_equal": existing_tie_breaks[pair].get("equal_dimensions") or [],
+                    "remaining_unknown": existing_tie_breaks[pair].get("unknown_dimensions") or [],
+                }
                 final_tie_breaks.append(existing_tie_breaks[pair])
+            else:
+                reason = "The governed comparison orders these options differently; a specific comparison explanation is not yet available."
+                row["tie_break_explanation_vs_next"] = {"why_ranked_above": reason, "deciding_dimension": "final_authoritative_ranking_key", "remained_equal": [], "remaining_unknown": ["comparison explanation"]}
+                final_tie_breaks.append({"higher_canonical_facility_id": pair[0], "lower_canonical_facility_id": pair[1], "decision_dimension": "final_authoritative_ranking_key", "reason": reason, "equal_dimensions": [], "unknown_dimensions": ["comparison explanation"]})
+        elif not is_joint_rank:
+            row.pop("tie_break_explanation_vs_next", None)
 
     selected_ids = {str(row.get("canonical_facility_id")) for row in selected}
     complete_selected = [row for row in nice_complete_rows if str(row.get("canonical_facility_id")) in selected_ids]

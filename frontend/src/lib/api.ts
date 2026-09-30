@@ -315,6 +315,11 @@ export type DecisionEngineRecommendation = {
   facility_profile_id?: number | null;
   synthetic_pilot?: boolean;
   starting_monthly_price?: number | null;
+  monthly_price_basis?: "SINGLE_RESIDENT" | "TWO_RESIDENT_TOTAL";
+  monthly_rate_includes_verified_care?: boolean;
+  second_resident_monthly_fee?: number | null;
+  single_resident_starting_monthly_price?: number | null;
+  entrance_fee?: number | null;
   combined_care_solution?: {
     delivery_model?: string;
     care_component?: { delivery_model?: string };

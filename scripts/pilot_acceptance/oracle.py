@@ -82,6 +82,9 @@ def grade(case: Dict[str, Any], profile: Dict[str, Any], decision: Dict[str, Any
         facility_id = item.get("canonical_facility_id")
         record, evidence = universe().get(facility_id, {}), facts().get(facility_id, {})
         price = evidence.get("current_price")
+        if case.get("requires_couple_accepting") and isinstance(price, (int, float)):
+            fee = (record.get("pilot_service_evidence") or {}).get("second_resident_monthly_fee")
+            price = price + fee if isinstance(fee, (int, float)) else None
         rows.append({
             "id": facility_id,
             "name": record.get("facility_name"),
@@ -96,6 +99,8 @@ def grade(case: Dict[str, Any], profile: Dict[str, Any], decision: Dict[str, Any
     failures: List[str] = []
 
     for row in rows:
+        if case.get("requires_couple_accepting") and row["price"] is None:
+            failures.append(f"{row['id']} has no verified monthly total for two residents")
         if row["over_budget"]:
             failures.append(f"{row['id']} costs ${row['price']:,} against a ${budget:,.0f} budget")
         if row["missing"]:

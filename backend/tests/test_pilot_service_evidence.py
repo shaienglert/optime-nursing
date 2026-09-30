@@ -3,6 +3,7 @@ import importlib.util
 
 from app.services.governed_evidence_runtime import agent_and_provider_payloads, pilot_service_payload
 from app.services.semantic_facility_requirements import _pilot_verifies_requirement, _row_verifies_future_care
+from app.services.semantic_facility_requirements import _apply_pilot_monthly_cost, _row_verifies_budget
 from app.services.living_strategy_runtime import build_living_strategy_context
 
 spec = importlib.util.spec_from_file_location("pilot_builder", Path(__file__).resolve().parents[2] / "scripts/build_synthetic_pilot_facilities.py")
@@ -76,3 +77,35 @@ def test_denied_wandering_preserves_mild_memory_without_secure_gate():
 def test_positive_wandering_still_needs_memory_care():
     strategy = build_living_strategy_context({"memoryStatus": "Mild changes"}, "Dad has wandering and needs memory care.")
     assert strategy["signals"]["memory_care_needed"] is True
+
+
+def test_couple_budget_uses_total_and_cost_application_is_idempotent():
+    row = candidate()
+    row.update(starting_monthly_price=7600, client_intent_fit={"must_pass": ["COUPLE_CORESIDENCE"]})
+    _apply_pilot_monthly_cost(row)
+    assert row["starting_monthly_price"] == 8350
+    assert row["monthly_price_basis"] == "TWO_RESIDENT_TOTAL"
+    assert not _row_verifies_budget(row, {"budget": 8000})
+    _apply_pilot_monthly_cost(row)
+    assert row["starting_monthly_price"] == 8350
+    assert row["single_resident_starting_monthly_price"] == 7600
+
+
+def test_single_resident_price_and_real_facility_are_preserved():
+    row = candidate()
+    row["starting_monthly_price"] = 7600
+    _apply_pilot_monthly_cost(row)
+    assert row["starting_monthly_price"] == 7600
+    assert row["monthly_price_basis"] == "SINGLE_RESIDENT"
+    row["synthetic_pilot"] = False
+    row["client_intent_fit"] = {"must_pass": ["COUPLE_CORESIDENCE"]}
+    _apply_pilot_monthly_cost(row)
+    assert row["starting_monthly_price"] == 7600
+
+
+def test_unverified_couple_fee_is_not_invented():
+    row = candidate(6)
+    row.update(starting_monthly_price=6000, client_intent_fit={"must_unknown": ["COUPLE_CORESIDENCE"]})
+    _apply_pilot_monthly_cost(row)
+    assert row["starting_monthly_price"] == 6000
+    assert "monthly_price_basis" not in row

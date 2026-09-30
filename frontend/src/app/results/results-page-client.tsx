@@ -542,8 +542,8 @@ export function ResultsPageClient() {
       if (!decision) {
         return {
           facilityId: recommendation.canonical_facility_id,
-          label: "True tie",
-          text: "No governed ranking difference was verified at this comparison step.",
+          label: "Comparison pending",
+          text: "An explanation for this comparison is not yet available.",
           payload: null,
         };
       }
@@ -551,7 +551,7 @@ export function ResultsPageClient() {
       const summary = decision.reason || `${recommendation.facility_name} is below ${above.facility_name} because of a governed difference in ${decision.decision_dimension}.`;
       return {
         facilityId: recommendation.canonical_facility_id,
-        label: "Ranking difference",
+        label: decision.decision_dimension === "true_tie" ? "True tie" : "Ranking difference",
         text: summary,
         payload: {
           facilityName: recommendation.facility_name,
@@ -729,6 +729,13 @@ export function ResultsPageClient() {
               <p className="text-[10px] text-[#5e7264]">{eligibilitySummary(recommendation.eligibility_status)}</p>
             </div>
           </div>
+
+          {recommendation.synthetic_pilot && recommendation.monthly_price_basis === "TWO_RESIDENT_TOTAL" ? (
+            <p className="text-sm text-[#334b42]">Pilot monthly total for two residents: ${Number(recommendation.starting_monthly_price || 0).toLocaleString()}, including verified care and the second-resident fee. The comparison table's current price is the single-resident base.</p>
+          ) : null}
+          {recommendation.synthetic_pilot && Number(recommendation.entrance_fee || 0) > 0 ? (
+            <p className="text-sm text-[#6a5431]">Separate one-time entrance fee: ${Number(recommendation.entrance_fee).toLocaleString()}. This is additional to the monthly budget.</p>
+          ) : null}
 
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-[#d9e3ec] bg-[#f6fbff] px-3 py-2">

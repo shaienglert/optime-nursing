@@ -321,6 +321,28 @@ def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any
     return price <= budget
 
 
+def _apply_pilot_monthly_cost(row: Dict[str, Any]) -> None:
+    payload = governed_evidence_runtime.pilot_service_payload(row)
+    if not payload:
+        return
+    fit = row.get("client_intent_fit") or {}
+    couple = "COUPLE_CORESIDENCE" in [*fit.get("must_pass", []), *fit.get("must_unknown", []), *fit.get("must_fail", [])]
+    price = row.get("single_resident_starting_monthly_price", row.get("starting_monthly_price"))
+    fee = payload.get("second_resident_monthly_fee")
+    if not isinstance(price, (int, float)) or isinstance(price, bool):
+        return
+    if couple:
+        if payload.get("couple_coresidence_verified") is not True or not isinstance(fee, (int, float)) or isinstance(fee, bool):
+            return
+        row["single_resident_starting_monthly_price"] = price
+        row["starting_monthly_price"] = price + fee
+        row["second_resident_monthly_fee"] = fee
+        row["monthly_price_basis"] = "TWO_RESIDENT_TOTAL"
+    else:
+        row["monthly_price_basis"] = "SINGLE_RESIDENT"
+    row["monthly_rate_includes_verified_care"] = payload.get("monthly_rate_includes_verified_care") is True
+
+
 def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int = 0) -> bool:
     canonical_id = str(row.get("canonical_facility_id") or "").strip()
     if not canonical_id:
@@ -368,6 +390,8 @@ def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candida
 def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_limit: int = 20, questionnaire_state: Dict[str, Any] | None = None) -> Dict[str, Any]:
     requirements = extract_semantic_facility_requirements(result, questionnaire_state)
     rows = list(result.get("results") or [])
+    for row in rows:
+        _apply_pilot_monthly_cost(row)
     queued = 0
     budget = (questionnaire_state or {}).get("budget")
     budget_expansion_ids: set[str] = set()
