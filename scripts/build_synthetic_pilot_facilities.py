@@ -163,6 +163,40 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
     }
 
 
+def pilot_service_evidence(index: int, archetype: str) -> dict:
+    """Explicit fictional service fixtures, not estimates of real-world provision."""
+    caps = capability_map(index, archetype)
+    yes = lambda key: caps.get(key) == "YES"
+    return {
+        "canonical_facility_id": f"PILOT-NV-{index:03d}",
+        "verification_status": "VERIFIED",
+        "source": "SYNTHETIC_PILOT_SERVICE_FIXTURE",
+        "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
+        "adl_support_verified": yes("adl_support"),
+        "medication_support_verified": yes("medication_support"),
+        "rehab_verified": yes("pt") and yes("ot"),
+        "pt_ot_verified": yes("pt") and yes("ot"),
+        "continuum_of_care_verified": archetype == "CONTINUING_CARE",
+        "social_engagement_verified": yes("activities"),
+        "activity_schedule": "Daily organized music, classes and social activities",
+        "kosher_verified": yes("kosher"),
+        "kosher_meal_service": "All daily meals" if yes("kosher") else None,
+        "language_support_verified": True,
+        "supported_languages": [x.strip().lower() for x in str(caps["languages"]).split(",")],
+        "clinical_languages": [x.strip().lower() for x in str(caps["languages"]).split(",")],
+        "mobility_layout_verified": yes("accessibility"),
+        "walker_and_wheelchair_routes_verified": yes("accessibility"),
+        "dialysis_verified": yes("dialysis_arrangements") and yes("transportation"),
+        "dialysis_sessions_per_week": 3 if yes("dialysis_arrangements") and yes("transportation") else 0,
+        "dialysis_transport_verified": yes("dialysis_arrangements") and yes("transportation"),
+        "wound_care_verified": yes("wound_care"),
+        "wound_care_frequency": "Daily" if yes("wound_care") else None,
+        "physician_coordination_verified": yes("skilled_nursing_capabilities"),
+        "nursing_support_verified": yes("nursing_24_7"),
+        "oxygen_support_verified": yes("respiratory_trach_vent"),
+    }
+
+
 def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]:
     facilities: list[dict] = []
     evidence: list[dict] = []
@@ -201,6 +235,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "license_expiration_source": "SYNTHETIC_PILOT_TEST_ONLY",
             "is_las_vegas_valley": True,
             "synthetic_pilot": True,
+            "pilot_service_evidence": pilot_service_evidence(index, archetype_id),
             "pilot_exposure_order": index,
             "truth_label": "FICTIONAL COMMUNITY — TEST DATA ONLY",
             "provider_reported_at": now,
