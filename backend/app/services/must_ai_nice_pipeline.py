@@ -269,6 +269,11 @@ def apply_must_ai_nice_pipeline(
         if gate == "PASS":
             row["must_eligibility"] = "MUST_ELIGIBLE"
             row["must_disposition_reason"] = "MUST_PASS"
+            # The governed MUST decision is the final recommendation authority.
+            # Keep legacy evidence fields for audit, but do not expose a contradictory
+            # POTENTIALLY_ELIGIBLE/INSUFFICIENT_EVIDENCE status on an approved card.
+            row["legacy_eligibility_status"] = row.get("eligibility_status")
+            row["eligibility_status"] = "ELIGIBLE"
             eligible.append(row)
         elif gate == "FAIL":
             row["must_eligibility"] = "MUST_REJECTED"
@@ -285,7 +290,20 @@ def apply_must_ai_nice_pipeline(
 
     # Pending MUST evidence is a research queue, never a recommendation pool.
     rankable = list(eligible)
-    rankable.sort(key=_fallback_key)
+    budget = questionnaire_state.get("budget")
+    if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
+        for row in rankable:
+            price = row.get("starting_monthly_price")
+            if isinstance(price, (int, float)) and not isinstance(price, bool):
+                variance = (float(price) - float(budget)) / float(budget)
+                row["budget_variance_pct"] = round(variance * 100, 1)
+                row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT" if variance > 0 else ("AT_OR_WITHIN_10_PERCENT_BELOW" if variance >= -0.10 else "MORE_THAN_10_PERCENT_BELOW")
+                row["budget_exception"] = variance > 0
+        # In-budget candidates always rank ahead of the permitted +10% expansion.
+        # The normal ranking still decides quality within each band.
+        rankable.sort(key=lambda row: (1 if row.get("budget_exception") else 0, _fallback_key(row)))
+    else:
+        rankable.sort(key=_fallback_key)
     interactive_shortlist_limit = _resolve_interactive_shortlist_limit(limit)
     live_shortlist = rankable[:interactive_shortlist_limit]
 

@@ -340,6 +340,9 @@ export type DecisionEngineRecommendation = {
   capability_depth_score: number | null;
   patient_relevant_outcomes_score: number | null;
   practical_fit_score: number | null;
+  budget_variance_pct?: number;
+  budget_band?: "OVER_BUDGET_WITHIN_10_PERCENT" | "AT_OR_WITHIN_10_PERCENT_BELOW" | "MORE_THAN_10_PERCENT_BELOW";
+  budget_exception?: boolean;
   match_evidence_profile?: {
     proven_critical_matches: number;
     taxonomy_supported_critical_matches: number;

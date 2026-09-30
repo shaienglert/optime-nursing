@@ -43,6 +43,14 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             "source": "QUESTIONNAIRE_CLIENT_INTENT",
         })
 
+    medicaid_raw = (questionnaire_state or {}).get("medicaidStatus")
+    medicaid_state = _upper(medicaid_raw)
+    medicaid_requires_pathway = medicaid_state in {"APPROVED", "APPLICATION PENDING", "MAY QUALIFY"}
+    # When no structured Medicaid answer is supplied (e.g. a direct semantic-unit
+    # contract), an explicit client MUST such as "facility must accept Medicaid"
+    # remains authoritative. A supplied negative structured answer overrides model text.
+    medicaid_structured_answered = medicaid_raw not in (None, "")
+
     statements = _semantic_result(result).get("statements") or []
     for statement in statements:
         if not isinstance(statement, dict):
@@ -90,6 +98,13 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             or any(parameter in {"movelossconcerns", "movetiming", "humanintelligencev2.transitionriskprofile.attitudetowardmove"} for parameter in mapped)
         )
         if structured_preference_only and not explicit_requirement_language:
+            continue
+        # A general dietary preference (for example low sodium) is not a hard facility
+        # gate merely because the model described accommodation as important. Preserve
+        # explicit safety/religious requirements such as allergy, gluten or kosher.
+        dietary_preference_only = any(parameter == "foodprofile.dietarypreferences" for parameter in mapped)
+        explicit_dietary_must = any(token in haystack for token in ("kosher", "gluten", "allergy", "cross_contact", "cross-contact"))
+        if dietary_preference_only and not explicit_requirement_language and not explicit_dietary_must:
             continue
         # A model-selected questionnaire mapping is not proof that the client
         # requested a future-care continuum.  Require the client's statement
@@ -149,7 +164,15 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             # a stated budget must stop a false PASS/FINAL recommendation, not silently
             # become a mere "prefer transparent pricing" preference as it was before.
             key, dimension = "SEMANTIC_BUDGET_VERIFICATION", "budget_verification"
-        elif "medicaid" in haystack:
+        elif "medicaid" in haystack or any(parameter == "medicaid_requirement" for parameter in mapped):
+            # Facility Medicaid capability matters only when the structured client
+            # state says Medicaid is or may be part of the payment pathway. Negative
+            # states ("Not eligible", model paraphrases such as "negative") cannot
+            # become a provider MUST regardless of model wording.
+            if medicaid_structured_answered and not medicaid_requires_pathway:
+                continue
+            if not medicaid_requires_pathway and not explicit_requirement_language:
+                continue
             key, dimension = "SEMANTIC_MEDICAID_PATHWAY", "medicaid_pathway"
         else:
             key, dimension = "SEMANTIC_FACILITY_EVIDENCE", "semantic_facility_evidence"
@@ -249,6 +272,10 @@ def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any
         return False
     if not isinstance(price, (int, float)) or isinstance(price, bool):
         return False
+    # Strict budget verification stays strict here. The optional +10% search
+    # expansion is applied later, after the engine knows how many otherwise-qualified
+    # in-budget candidates exist; it must not turn every over-budget row into a MUST pass
+    # or enqueue unnecessary provider research.
     return price <= budget
 
 
@@ -300,6 +327,27 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
     requirements = extract_semantic_facility_requirements(result, questionnaire_state)
     rows = list(result.get("results") or [])
     queued = 0
+    budget = (questionnaire_state or {}).get("budget")
+    budget_expansion_ids: set[str] = set()
+    if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
+        def otherwise_must_qualified(row: Dict[str, Any]) -> bool:
+            fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
+            failed = [value for value in (fit.get("must_fail") or []) if value != "SEMANTIC_BUDGET_VERIFICATION"]
+            # At this pre-research stage, must_unknown is intentionally provisional.
+            # Do not let temporary evidence gaps prevent a budget fallback candidate
+            # from being researched; the final MUST gate still blocks every unresolved
+            # non-budget requirement from recommendation.
+            return not failed
+
+        qualified = [row for row in rows if otherwise_must_qualified(row)]
+        strict = [row for row in qualified if isinstance(row.get("starting_monthly_price"), (int, float)) and row.get("starting_monthly_price") <= budget]
+        needed = max(0, 10 - len(strict))
+        if needed:
+            expansion = sorted(
+                [row for row in qualified if isinstance(row.get("starting_monthly_price"), (int, float)) and budget < row.get("starting_monthly_price") <= budget * 1.10],
+                key=lambda row: float(row.get("starting_monthly_price") or 0),
+            )[:needed]
+            budget_expansion_ids = {str(row.get("canonical_facility_id") or "") for row in expansion}
     if requirements:
         for index, row in enumerate(rows):
             fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
@@ -329,6 +377,13 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                     # Disclosure proves that rates are published, not that the
                     # family's budget covers them. Always compare the price.
                     verified = _row_verifies_budget(row, questionnaire_state)
+                    if not verified and str(row.get("canonical_facility_id") or "") in budget_expansion_ids:
+                        verified = True
+                        price = float(row.get("starting_monthly_price"))
+                        variance = (price - float(budget)) / float(budget)
+                        row["budget_variance_pct"] = round(variance * 100, 1)
+                        row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT"
+                        row["budget_exception"] = True
                 else:
                     verified = True in verdicts
                 if verified:

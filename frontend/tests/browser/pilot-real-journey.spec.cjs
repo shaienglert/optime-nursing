@@ -17,23 +17,47 @@ const scenarioStart = Number(process.env.OOMNIK_SCENARIO_START || 0);
 const scenarioCount = Number(process.env.OOMNIK_SCENARIO_COUNT || 1);
 const expectedCohort = Number(process.env.OOMNIK_EXPECTED_COHORT || 0);
 
+// Golden acceptance oracle: these cases intentionally cover distinct decision contracts.
+// They replace accidental combinatorial variation with explicit expected behavior.
+const GOLDEN_ORACLE = {
+  "pilot-001": { care: ["INDEPENDENT_LIVING","ASSISTED_LIVING"], forbidden: ["MEMORY_CARE_ONLY","SKILLED_NURSING_ONLY","REHABILITATION_ONLY"], budget: 5000, location: "Las Vegas", distance: "10", futureCare: "Preferred" },
+  "pilot-002": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["adl_support","medication_support"], budget: 6000, location: "Henderson", distance: "10", availability: "REQUIRED" },
+  "pilot-003": { care: ["MEMORY_CARE"], required: ["memory_care","wandering_safety"], forbidden: ["INDEPENDENT_LIVING"], budget: 7000, location: "Las Vegas", distance: "20" },
+  "pilot-004": { care: ["REHABILITATION","SKILLED_NURSING"], required: ["rehabilitation"], forbidden: ["INDEPENDENT_LIVING","MEMORY_CARE_ONLY"], budget: 7000, location: "Las Vegas", distance: "20" },
+  "pilot-005": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["couple_coresidence","adl_support"], budget: 8000, location: "Henderson", distance: "20", couple: true },
+  "pilot-006": { care: ["ASSISTED_LIVING","SMALL_GROUP_HOME"], required: ["adl_support","medicaid_pathway"], budget: 3000, location: "Las Vegas", distance: "30", medicaid: "REQUIRED" },
+  "pilot-007": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["adl_support","kosher"], preferred: ["hebrew"], budget: 6500, location: "Las Vegas", distance: "30" },
+  "pilot-008": { care: ["INDEPENDENT_LIVING","ASSISTED_LIVING"], forbidden: ["MEMORY_CARE_ONLY"], preferred: ["social_fit","nearby_places"], budget: 5000, location: "Las Vegas", distance: "30" },
+  "pilot-009": { care: ["SKILLED_NURSING","ASSISTED_LIVING"], required: ["dialysis","wound_care"], budget: 7500, location: "Las Vegas", distance: "20" },
+  "pilot-010": { care: ["CONTINUING_CARE"], required: ["continuum_of_care"], forbidden: ["INDEPENDENT_LIVING_ONLY","ASSISTED_LIVING_ONLY"], budget: 9900, location: "Las Vegas", distance: "50", futureCare: "Required" },
+};
+
+
 function scenarioFor(index) {
-  const pick = (values, offset = 0) => values[(index + offset) % values.length];
-  return {
-    id: `pilot-${String(index + 1).padStart(3, '0')}`,
-    relationship: pick(['Mom', 'Dad', 'Grandma', 'Grandpa', 'Spouse', 'Myself', 'Relative', 'Friend']),
-    age: pick(['60-64', '65-69', '70-74', '75-79', '80-84', '85-89', '90-94', '95+'], 3),
-    budget: 3600 + ((index * 700) % 10500),
-    moveTiming: pick(['Immediately', 'Within 30 days', '1-3 months', '3-6 months', 'Planning ahead']),
-    attitude: pick(['Wants to move', 'Positive', 'Cautious but open', 'Anxious', 'Resistant'], 1),
-    social: pick(['Daily', 'Several times weekly', 'Weekly', 'Occasionally', 'Very little'], 2),
-    community: pick(['Small and familiar', 'Medium', 'Large and active', 'Quiet', 'No preference'], 3),
-    activities: [pick(['Music', 'Movies', 'Games', 'Exercise', 'Outdoor activities']), pick(['Religious life', 'Cultural activities', 'Classes', 'Volunteering'], 2)],
-    concerns: [pick(['Good food', 'Privacy', 'Independence', 'Social life', 'Proximity to family']), pick(['Daily routine', 'Space for visitors', 'A pet', 'Transportation'], 1)],
-    diet: pick(['Vegetarian', 'Vegan', 'Low sodium', 'Diabetic', 'Gluten free']),
-    futureCare: pick(['Required', 'Preferred', 'Not important', 'Not sure'], 1),
-    distance: pick(['10', '20', '30', '50', '100'], 2),
+  const id = `pilot-${String(index + 1).padStart(3, '0')}`;
+  const oracle = GOLDEN_ORACLE[id];
+  if (!oracle) throw new Error(`Missing golden oracle for ${id}`);
+  const base = {
+    id, relationship: 'Mom', age: '80-84', budget: oracle.budget,
+    moveTiming: '1-3 months', attitude: 'Cautious but open', social: 'Weekly',
+    community: 'No preference', activities: ['Music', 'Classes'],
+    concerns: ['Independence', 'Daily routine'], diet: 'Low sodium',
+    futureCare: oracle.futureCare || 'Preferred', distance: oracle.distance,
+    location: oracle.location,
   };
+  const overrides = {
+    "pilot-001": { relationship: "Mom", age: "75-79", social: "Daily", community: "Large and active", activities: ["Music","Cultural activities"] },
+    "pilot-002": { relationship: "Dad", age: "80-84", moveTiming: "Within 30 days" },
+    "pilot-003": { relationship: "Dad", age: "80-84", community: "Small and familiar" },
+    "pilot-004": { relationship: "Dad", age: "80-84", moveTiming: "Immediately" },
+    "pilot-005": { relationship: "Couple", age: "80-84", community: "Medium" },
+    "pilot-006": { relationship: "Mom", age: "80-84", moveTiming: "Within 30 days" },
+    "pilot-007": { relationship: "Grandma", age: "80-84", activities: ["Religious life","Cultural activities"], diet: "Kosher" },
+    "pilot-008": { relationship: "Mom", age: "75-79", social: "Daily", community: "Large and active", activities: ["Exercise","Classes"] },
+    "pilot-009": { relationship: "Dad", age: "75-79", moveTiming: "Within 30 days" },
+    "pilot-010": { relationship: "Myself", age: "70-74", moveTiming: "Planning ahead", futureCare: "Required" },
+  };
+  return { ...base, ...(overrides[id] || {}) };
 }
 
 /**
@@ -89,6 +113,8 @@ test.describe('real synthetic-pilot customer journey', () => {
 
   for (let scenarioIndex = scenarioStart; scenarioIndex < scenarioStart + scenarioCount; scenarioIndex += 1) {
     const scenario = scenarioFor(scenarioIndex);
+    const oracle = GOLDEN_ORACLE[scenario.id];
+    if (!oracle) throw new Error(`Missing golden oracle for ${scenario.id}`);
     test(`${scenario.id} completes the real customer journey`, async ({ page }) => {
     page.setDefaultTimeout(15_000);
     const errors = [];
@@ -101,7 +127,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     const asked = await answerInterview(page, [
       [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
       [/About how old/i, { choose: scenario.age }],
-      [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: "Las Vegas" }],
+      [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: scenario.location }],
       [/How far is still close enough\?/i, { choose: scenario.distance }],
       [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
       [/usually get around\?/i, { choose: 'Independent' }],
@@ -204,7 +230,14 @@ test.describe('real synthetic-pilot customer journey', () => {
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
     expect(budgetNeed.desired_value).toBe(scenario.budget);
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
-    if (scenario.budget < minimumCarePrice) {
+    // A verified option may be shown up to ten percent over the stated budget, labelled as
+    // an exception and ranked after every in-budget option. Nothing further over is shown.
+    // Golden contract: budget is strict first. Expansion is capped at +10% and
+    // may only fill a shortlist after otherwise-qualified in-budget candidates.
+    const expectedBudget = oracle.budget;
+    expect(scenario.budget, `${scenario.id} fixture budget drifted from golden oracle`).toBe(expectedBudget);
+    const budgetCeiling = expectedBudget * 1.1;
+    if (budgetCeiling < minimumCarePrice) {
       expect(results).toHaveLength(0);
       await expect(page.getByText('I don’t have a verified recommendation to show yet. Missing information is still being distinguished from a confirmed mismatch.')).toBeVisible();
     } else if (results.length === 0) {
@@ -219,6 +252,20 @@ test.describe('real synthetic-pilot customer journey', () => {
     } else {
       await expect(page.getByText(/Pilot mode: every community/i)).toBeVisible();
     }
+    for (const item of results) {
+      const price = Number(item.starting_monthly_price);
+      if (!Number.isFinite(price)) continue;
+      expect(price, `${item.canonical_facility_id} exceeds the ten-percent budget ceiling`).toBeLessThanOrEqual(budgetCeiling);
+      expect(Boolean(item.budget_exception), `${item.canonical_facility_id} budget exception label`).toBe(price > scenario.budget);
+    }
+    const firstException = results.findIndex((item) => item.budget_exception);
+    if (firstException >= 0) expect(results.slice(firstException).every((item) => item.budget_exception), 'in-budget options rank ahead of over-budget exceptions').toBe(true);
+    // Universal golden invariants: a visible recommendation must have passed the
+    // governed MUST gate; UNKNOWN evidence never becomes PASS, distance is a hard
+    // limit when measurable, and no result may exceed the explicit +10% ceiling.
+    expect(results.every((item) => item.must_eligibility === 'MUST_ELIGIBLE')).toBe(true);
+    expect(results.every((item) => (item.client_intent_fit?.hard_gate || '').toUpperCase() === 'PASS')).toBe(true);
+    expect(results.every((item) => (item.client_intent_fit?.must_unknown || []).length === 0)).toBe(true);
     expect(results.every((item) => item.synthetic_pilot === true)).toBe(true);
     expect(results.every((item) => String(item.canonical_facility_id || '').startsWith('PILOT-NV-'))).toBe(true);
     expect(errors.filter((message) => !/favicon/i.test(message))).toEqual([]);

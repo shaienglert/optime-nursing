@@ -17,10 +17,10 @@ export function OptimeStaticLogo({ href = "/", className = "", variant = "compac
   return (
     <Link
       href={href}
-      className={`inline-flex flex-col items-center leading-none ${className}`.trim()}
+      className={`inline-flex max-w-full flex-col items-center leading-none ${className}`.trim()}
       aria-label="OOmnik Home"
     >
-      <span className="inline-flex items-center font-semibold text-[#079ff2]" style={{ gap }}>
+      <span className="inline-flex max-w-full items-center font-semibold text-[#079ff2]" style={{ gap, transformOrigin: "center" }}>
         <span className="inline-flex items-center" aria-hidden="true">
           <span className="inline-block rounded-full border-current" style={{ width: ring, height: ring, borderWidth: stroke }} />
           <span className="inline-block rounded-full border-current" style={{ width: ring, height: ring, borderWidth: stroke, marginLeft: -stroke }} />

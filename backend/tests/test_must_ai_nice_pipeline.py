@@ -293,3 +293,19 @@ class DeterministicWaterfallThinEvidenceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_must_eligible_reconciles_legacy_status_for_visible_card():
+    from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
+    row = {
+        "canonical_facility_id": "FAC-RECONCILE",
+        "facility_name": "Reconciled Community",
+        "eligibility_status": "POTENTIALLY_ELIGIBLE",
+        "client_intent_fit": {"hard_gate": "PASS", "must_pass": ["ADL_SUPPORT_AVAILABLE"], "must_unknown": [], "must_fail": []},
+    }
+    result = {"results": [row], "decision_intelligence": {"client_intent": {}, "human_intelligence": {}, "living_strategy": {}}}
+    out = apply_must_ai_nice_pipeline(result, {}, "", 10)
+    visible = out["results"][0]
+    assert visible["must_eligibility"] == "MUST_ELIGIBLE"
+    assert visible["eligibility_status"] == "ELIGIBLE"
+    assert visible["legacy_eligibility_status"] == "POTENTIALLY_ELIGIBLE"
