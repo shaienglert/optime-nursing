@@ -136,6 +136,13 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if any(token in query for token in ("dining", "restaurant", "food")):
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
     human_profile = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
+    # A stated preferred language is a NICE the Structured Profile carries; it used to be
+    # dropped before ranking (golden ranking oracle, persona 007).
+    language_profile = human_profile.get("languageProfile") if isinstance(human_profile.get("languageProfile"), dict) else {}
+    preferred_language = str(language_profile.get("preferredSpokenLanguage") or language_profile.get("medicalDiscussionLanguage") or "").strip()
+    if preferred_language and preferred_language.lower() not in {"english", "no preference", "unknown", "not sure"}:
+        add_nice("PREFERRED_LANGUAGE_SUPPORT", f"The resident prefers {preferred_language}; verified language support should rank higher.")
+        nice[-1]["value"] = preferred_language
     food_profile = human_profile.get("foodProfile") if isinstance(human_profile.get("foodProfile"), dict) else {}
     dietary_preferences = " ".join(str(value or "").lower() for value in food_profile.get("dietaryPreferences") or [])
     if "kosher" in query or "kosher" in dietary_preferences:
@@ -390,6 +397,18 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             if any(p.get("transportation_verified") is True for p in payloads):
                 nice_match.append(key)
                 nice_fit_scores[key] = 100.0
+            else:
+                nice_unknown.append(key)
+        elif key == "PREFERRED_LANGUAGE_SUPPORT":
+            wanted = str(nice.get("value") or "").strip().lower()
+            verified = str((row.get("verified_capabilities") or {}).get("languages") or "").lower()
+            if wanted and verified and verified != "unknown":
+                if wanted in verified:
+                    nice_match.append(key)
+                    nice_fit_scores[key] = 100.0
+                else:
+                    nice_mismatch.append(key)
+                    nice_fit_scores[key] = 0.0
             else:
                 nice_unknown.append(key)
         elif key == "DINING_EXPERIENCE":

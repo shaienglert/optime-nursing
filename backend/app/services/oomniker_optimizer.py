@@ -7,6 +7,13 @@ PREFERENCE='PREFERENCE'
 
 # What Oomniker may never offer to relax: legal/system rules and the family's care needs.
 _IMMUTABLE_AUTHORITIES = {"SYSTEM_MUST", "CARE_MUST", "CARE_NEED"}
+# A CLIENT MUST can be offered for reconsideration only when the Structured Profile has an
+# answer that expresses the relaxed choice; otherwise Oomniker can only explain it.
+CLIENT_MUST_LEVERS = {
+    "KOSHER_MEALS": "humanIntelligenceV2.culturalProfile.kosherRequirements",
+    "CONTINUUM_OF_CARE_REQUIRED": "humanIntelligenceV2.futureCareProfile.continuumOfCarePreference",
+    "MEDICAID_PATHWAY_REQUIRED": "medicaidStatus",
+}
 
 
 def analyze_oomniker(profile:dict[str,Any], candidates:list[dict[str,Any]], *, filtered_universe:list[dict[str,Any]]|None=None, decision_context:Optional[Dict[str,Any]]=None)->dict[str,Any]:
@@ -95,8 +102,13 @@ def _counterfactual(profile: Dict[str, Any], shown: List[Dict[str, Any]], contex
             if prices:
                 entry["lowest_price_unlocked"] = prices[0]
                 entry["budget_needed_for_first_option"] = round(prices[0] / 1.10)
+        elif authority == "CLIENT_MUST" and reason not in CLIENT_MUST_LEVERS:
+            entry["action"] = "EXPLAIN_NARROWING"
+            entry["profile_lever"] = None
+            entry["note"] = "This requirement narrows the choice; the interview has no answer that relaxes it, so it is explained, not offered."
         elif authority == "CLIENT_MUST":
             entry["action"] = "ASK_CLIENT_TO_RECONSIDER"
+            entry["profile_lever"] = CLIENT_MUST_LEVERS[reason]
             entry["note"] = "A CLIENT MUST is removed only with the family's approval."
             if reason == "MEDICAID_PATHWAY_REQUIRED":
                 entry["note"] = "Private pay is below the care-qualified price floor; these communities do not accept Medicaid. Funding alternatives can be explained, the requirement is not removed without approval."
