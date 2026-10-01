@@ -395,26 +395,6 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
         _apply_pilot_monthly_cost(row)
     queued = 0
     budget = (questionnaire_state or {}).get("budget")
-    budget_expansion_ids: set[str] = set()
-    if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
-        def otherwise_must_qualified(row: Dict[str, Any]) -> bool:
-            fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-            failed = [value for value in (fit.get("must_fail") or []) if value != "SEMANTIC_BUDGET_VERIFICATION"]
-            # At this pre-research stage, must_unknown is intentionally provisional.
-            # Do not let temporary evidence gaps prevent a budget fallback candidate
-            # from being researched; the final MUST gate still blocks every unresolved
-            # non-budget requirement from recommendation.
-            return not failed
-
-        qualified = [row for row in rows if otherwise_must_qualified(row)]
-        strict = [row for row in qualified if isinstance(row.get("starting_monthly_price"), (int, float)) and row.get("starting_monthly_price") <= budget]
-        needed = max(0, 10 - len(strict))
-        if needed:
-            expansion = sorted(
-                [row for row in qualified if isinstance(row.get("starting_monthly_price"), (int, float)) and budget < row.get("starting_monthly_price") <= budget * 1.10],
-                key=lambda row: float(row.get("starting_monthly_price") or 0),
-            )[:needed]
-            budget_expansion_ids = {str(row.get("canonical_facility_id") or "") for row in expansion}
     if requirements:
         for index, row in enumerate(rows):
             fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
@@ -447,13 +427,6 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                     # Disclosure proves that rates are published, not that the
                     # family's budget covers them. Always compare the price.
                     verified = _row_verifies_budget(row, questionnaire_state)
-                    if not verified and str(row.get("canonical_facility_id") or "") in budget_expansion_ids:
-                        verified = True
-                        price = float(row.get("starting_monthly_price"))
-                        variance = (price - float(budget)) / float(budget)
-                        row["budget_variance_pct"] = round(variance * 100, 1)
-                        row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT"
-                        row["budget_exception"] = True
                 else:
                     verified = True in verdicts or _pilot_verifies_requirement(row, requirement, questionnaire_state or {})
                 if verified:
