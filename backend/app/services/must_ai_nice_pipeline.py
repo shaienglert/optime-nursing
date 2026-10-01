@@ -3,7 +3,7 @@ from __future__ import annotations
 """Final facility selection pipeline.
 
 1. Deterministic MUST gate, no AI discretion.
-2. Semantic AI owns an open-ended preference model and ranks only MUST_ELIGIBLE rows.
+2. Deterministic governed evidence ranks MUST_ELIGIBLE rows; AI has no ranking authority.
 3. Dynamic preference verification is evidence-closed-world: MATCH/MISMATCH requires
    governed claims; missing evidence stays UNKNOWN.
 4. Legacy structured NICE signals are audit-only and cannot drive the authoritative
@@ -32,7 +32,7 @@ from copy import deepcopy
 import os
 from typing import Any, Dict, List
 
-from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates
+from app.services.ai_candidate_ranking_runtime import attach_nice_coverage
 from app.services.client_intent_runtime import intent_rank_key
 from app.services.human_intelligence_runtime_verified import person_fit_sort_key
 from app.services.semantic_preference_runtime import build_dynamic_preference_model, verify_dynamic_preferences
@@ -312,29 +312,19 @@ def apply_must_ai_nice_pipeline(
     ranking_intent = deepcopy(client_intent)
     ranking_intent["nice_to_haves"] = []
 
-    thin_evidence_bypass = bool(live_shortlist) and not _has_differentiating_evidence(live_shortlist, dynamic_preferences)
-    if thin_evidence_bypass:
-        ranked, ai_status = _deterministic_waterfall_rank(live_shortlist)
-    else:
-        ranked, ai_status = rank_must_eligible_candidates(
-            live_shortlist,
-            client_intent=ranking_intent,
-            human_context=human_context,
-            strategy=strategy,
-            deterministic_fallback_key=_fallback_key,
-        )
-
-    # Preserve the approved strict-budget-first rule after the AI has reranked
-    # the shortlist. Stable partition retains its order within each budget band.
+    # Single ranking authority: governed deterministic evidence. Candidate-ranking
+    # AI is intentionally outside the production decision path; it may not break ties
+    # or reorder facilities. Budget band remains the first ordering partition.
+    ranked, deterministic_status = _deterministic_waterfall_rank(live_shortlist)
     ranked.sort(key=lambda row: bool(row.get("budget_exception")))
-
-    ai_ranking_degraded = (
-        not thin_evidence_bypass
-        and bool(live_shortlist)
-        and _env_true("OPTIME_SEMANTIC_AI_ENABLED")
-        and _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED")
-        and not _ai_ranking_succeeded(ai_status)
-    )
+    ai_status = {
+        "status": "NOT_DECISION_AUTHORITY",
+        "authority": "DETERMINISTIC_DECISION_ENGINE",
+        "candidate_count": len(ranked),
+        "deterministic_status": deterministic_status,
+    }
+    ai_ranking_degraded = False
+    thin_evidence_bypass = True
 
     audit_rows = deepcopy(ranked)
     for audit_row in audit_rows:
