@@ -259,3 +259,19 @@ Example client framing: “We found 2 communities that meet your requirements wi
 - True ties: preserve the true tie; do not manufacture a ranking distinction. Present the tied options and offer Oomniker so the family can adjust parameters/preferences if they want to differentiate or reveal alternatives.
 - Pets: an explicitly non-negotiable pet requirement is a MUST. A preference remains NICE.
 - Personal destination / proximity constraints: do not force the family through an extra REQUIRED-vs-PREFERRED question. Treat the stated target as the preferred result band. Show the best matches that satisfy it first; when supply is insufficient, continue with the best otherwise-eligible options outside the target and visibly state the distance/deviation, following the same transparent fallback presentation principle used for budget. Never imply that an outside-target option met the requested proximity.
+
+
+## Owner decision — availability and Oomniker (2026-10-01)
+
+Availability is not Booking-style real-time inventory and must never be presented as such. OOmnik always tells the family that final availability must be checked directly with the selected community.
+
+Timing policy:
+- Move around 30 days or later: current availability does not affect initial ranking. Rank the best clinical/practical/lifestyle matches first. Availability is shown as a current, non-final fact and is verified with shortlisted communities.
+- Immediate move: current availability has more practical weight, but the same transparent fallback pattern applies. Show the best otherwise-eligible matches with currently usable availability first; then show strong matches with LIMITED/UNKNOWN availability with an explicit caveat that OOmnik must verify it directly. A current NO is disclosed clearly and cannot be represented as available.
+- Because senior-living inventory is fluid, today's availability must not permanently downgrade the underlying quality/fit of a community for a non-immediate move.
+
+Oomniker behavior:
+- When constraints leave few strong options, ties remain, or fallback options carry deviations/caveats, offer Oomniker.
+- Oomniker analyzes the confirmed profile and the actual candidate universe and identifies which user-changeable parameters are constraining supply.
+- It explains the likely effect of changing each parameter (for example budget, radius, preference strictness) and recommends which changes would reveal the most meaningful additional options.
+- Oomniker never changes a parameter automatically. The family chooses any change, the profile is updated/reconfirmed where required, and the engine reruns.
