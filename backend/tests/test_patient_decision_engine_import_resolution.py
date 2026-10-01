@@ -142,7 +142,7 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         self.assertIn("client_intent", result["decision_intelligence"])
         self.assertIn("must_gate", result["decision_intelligence"])
         self.assertEqual(len(result["decision_intelligence"]["success_factor_policy"]["factors"]), 16)
-        self.assertTrue(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
 
 
 if __name__ == "__main__":
