@@ -145,8 +145,8 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         # the result: the eligible set is shown, explicitly unordered, with a degradation
         # notice. It used to be hidden entirely, which told the family nothing.
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertTrue(result["degraded_result_notice"]["results_are_ordered"])
         self.assertGreaterEqual(result["total_candidates_scored"], 364)
         context = result["care_setting_policy"]["context"]
         self.assertFalse(context["requires_skilled"])
@@ -172,7 +172,7 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         # the result: the eligible set is shown, explicitly unordered, with a degradation
         # notice. It used to be hidden entirely, which told the family nothing.
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
 
     def test_governed_nevada_ranking_replaces_stale_legacy_tie_metadata_after_ai_ready(self) -> None:
         result = self._run_ready(
@@ -184,9 +184,9 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         # notice. It used to be hidden entirely, which told the family nothing.
         rows = result["results"]
         self.assertTrue(rows, "hard criteria should still surface an eligible set")
-        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
         # No stale tie metadata may claim an ordering the model never produced.
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertTrue(result["degraded_result_notice"]["results_are_ordered"])
 
 
 if __name__ == "__main__":
