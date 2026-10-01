@@ -133,19 +133,17 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         "ongoing help",
         "not expected to recover",
     )
-    expected_recovery = not explicitly_persistent and _contains(
-        query,
-        "expected to walk",
-        "should walk again",
-        "return to walking",
-        "expected to recover",
-        "temporary",
-        "short-term",
-        "short term",
-    )
-    duration = _duration_months(query)
-    if duration is not None and duration <= 6:
-        expected_recovery = True
+    recovery = transition if isinstance(transition, dict) else {}
+    recovery_answer = _norm(recovery.get("expectedRecovery"))
+    expected_recovery = recovery_answer == "yes"
+    duration = None
+    try:
+        raw_duration = recovery.get("temporarySupportMonths")
+        duration = float(raw_duration) if raw_duration not in (None, "") else None
+    except (TypeError, ValueError):
+        duration = None
+    if recovery_answer in {"no", "not sure"}:
+        expected_recovery = False
 
     explicit_independence = denials["independent"] or _contains(_norm(questionnaire_state.get("assistanceLevel")), "fully independent", "independent")
     no_adl_support = explicit_independence or denials["adl"]
