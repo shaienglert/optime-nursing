@@ -1,4 +1,4 @@
-from app.services.canonical_structured_profile import build_structured_profile
+from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
 
 def test_button_ai_disagreement_becomes_conflict():
     profile=build_structured_profile(
@@ -23,3 +23,10 @@ def test_nested_human_intelligence_fields_are_not_dropped():
     profile=build_structured_profile({"humanIntelligenceV2":{"foodProfile":{"dietaryPreferences":["Kosher"]},"languageProfile":{"preferredSpokenLanguage":"Hebrew"}}})
     assert profile["fields"]["humanIntelligenceV2.foodProfile.dietaryPreferences"]["value"]==["Kosher"]
     assert profile["fields"]["humanIntelligenceV2.languageProfile.preferredSpokenLanguage"]["value"]=="Hebrew"
+
+
+def test_materializer_excludes_conflict_from_decision_input():
+    profile=build_structured_profile({"memoryStatus":"No"},{"questionnaire_patch":{"memoryStatus":"Dementia diagnosed"},"statements":[{"raw_text":"dementia","mapped_parameters":["memoryStatus"],"knowledge_state":"KNOWN"}]})
+    q=materialize_questionnaire(profile)
+    assert "memoryStatus" not in q
+    assert q["_structured_profile_authoritative"] is True
