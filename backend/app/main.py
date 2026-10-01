@@ -464,7 +464,18 @@ class FacilityRoomTypeOut(BaseModel):
     room_type_name: str
     description: str
     monthly_price: Optional[float] = None
+    pricing_qualifier: str = "UNKNOWN"
+    care_fee: Optional[float] = None
+    mandatory_monthly_fees: Optional[float] = None
+    second_person_fee: Optional[float] = None
+    entrance_fee: Optional[float] = None
+    total_known_monthly_cost: Optional[float] = None
+    total_affordability_status: str = "PENDING"
+    occupancy_type: Optional[str] = None
+    source_url: Optional[str] = None
+    observed_at: Optional[str] = None
     availability_status: str
+    final_availability_status: str = "REQUIRES_DIRECT_VERIFICATION"
     source: str
     last_verified_at: Optional[str] = None
     photos: List[FacilityRoomPhotoOut] = Field(default_factory=list)
@@ -506,6 +517,13 @@ class RoomSubmissionIn(BaseModel):
     room_type_name: str
     description: str = ""
     monthly_price_cents: Optional[int] = None
+    pricing_qualifier: str = "UNKNOWN"
+    care_fee_cents: Optional[int] = None
+    mandatory_monthly_fees_cents: Optional[int] = None
+    second_person_fee_cents: Optional[int] = None
+    entrance_fee_cents: Optional[int] = None
+    occupancy_type: Optional[str] = None
+    source_url: Optional[str] = None
     availability_status: str = "UNKNOWN"
     photo_urls: List[str] = Field(default_factory=list)
 
