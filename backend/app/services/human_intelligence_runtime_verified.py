@@ -445,15 +445,21 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             user_text=natural_language_query,
         )
         blocking_keys = set(gap_policy.get("blocking_gap_keys") or [])
-        has_question = bool(str(result.get("next_question") or "").strip()) and not suppress_misaligned_question
-        if suppress_misaligned_question:
-            readiness = "NEEDS_RESEARCH"
-        elif gap_policy.get("escalation_required"):
+        # Deterministic policy owns WHETHER another client fact is required and WHICH
+        # fact is next.  Semantic AI owns only the conversational wording for that
+        # already-selected target.  A missing/misaligned AI question therefore cannot
+        # change readiness or choose an unstructured target.
+        canonical_blockers = [
+            row for row in all_guardian_gaps
+            if str(row.get("fact_key") or "") in blocking_keys
+        ]
+        selected_blocker = canonical_blockers[0] if canonical_blockers else None
+        if gap_policy.get("escalation_required") or blocking_keys:
             readiness = "NEEDS_CLARIFICATION"
-        elif blocking_keys:
-            readiness = "NEEDS_CLARIFICATION" if has_question else "NEEDS_RESEARCH"
         else:
             readiness = "READY"
+        if selected_blocker is not None:
+            context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
         context["canonical_gap_policy"] = gap_policy
         context["readiness_guardian"]["client_owned_blockers"] = [
             row for row in all_guardian_gaps if str(row.get("fact_key") or "") in blocking_keys
@@ -473,6 +479,13 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         context["adaptive_questions"] = []
 
         next_question = "" if suppress_misaligned_question else str(result.get("next_question") or "").strip()
+        # The model's wording is accepted only when it addresses the deterministic
+        # target. Otherwise use neutral canonical wording for the same target.
+        if readiness == "NEEDS_CLARIFICATION" and selected_blocker is not None and (
+            not next_question or not _question_matches_guardian_target(result, selected_blocker)
+        ):
+            fallback = _canonical_fallback_result({}, selected_blocker)
+            next_question = str(fallback.get("next_question") or "")
         if readiness == "NEEDS_CLARIFICATION" and next_question:
             question_key = _semantic_question_key(next_question)
             answered_keys = _answered_adaptive_keys(questionnaire_state)
