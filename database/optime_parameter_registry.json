@@ -1,6 +1,6 @@
 {
   "generated_at_utc": "2026-07-21T15:01:12+00:00",
-  "record_count": 59,
+  "record_count": 60,
   "missing_registry_definitions": [],
   "records": [
     {
@@ -1609,6 +1609,30 @@
         "coverage_source": "reports/FLORIDA_PARAMETER_COVERAGE_MATRIX.json",
         "legacy_source": "recovered_governed_report",
         "legacy_raw_field": "recovered_governed_report"
+      }
+    },
+    {
+      "parameter_id": "medicaid_household_out_of_pocket",
+      "family": "FINANCIAL_ACCESS",
+      "display_name": "Monthly household cost under Medicaid",
+      "consumer_description": "What the household pays each month at this community when Medicaid is the funding pathway (room and board / share of cost). Not the private-pay price.",
+      "value_type": "CURRENCY",
+      "allowed_values": null,
+      "applicable_scope": "FACILITY",
+      "source_priority": [
+        "DIRECT_FACILITY_CONFIRMATION",
+        "STATE_MEDICAID_AGENCY"
+      ],
+      "freshness_rule": "Direct facility or state Medicaid confirmation required; never inferred from the private-pay price.",
+      "ranking_eligibility": false,
+      "hard_filter_eligibility": true,
+      "requires_facility_confirmation": true,
+      "dynamic": true,
+      "personalization_tags": [],
+      "recovered_from": {
+        "coverage_source": "owner_rule_2026_10_01_funding_pathway",
+        "legacy_source": "none",
+        "legacy_raw_field": "none"
       }
     }
   ]

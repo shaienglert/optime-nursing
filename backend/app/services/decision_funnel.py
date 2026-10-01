@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Optional
 
-from app.services.affordability_floor import CARE_MUST_KEYS, NON_CARE_CLIENT_MUST_KEYS, SYSTEM_MUST_KEYS
+from app.services.affordability_floor import CARE_MUST_KEYS, NON_CARE_CLIENT_MUST_KEYS, SYSTEM_MUST_KEYS, relevant_monthly_cost
 
 BUDGET_TOLERANCE = 0.10
 # Semantic keys that restate a canonical fact; the funnel reads the fact itself.
@@ -45,7 +45,9 @@ def ledger_rows(rows: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
             ],
             "must_fail": list(fit.get("must_fail") or []),
             "must_unknown": list(fit.get("must_unknown") or []),
-            "price": row.get("starting_monthly_price") if isinstance(row.get("starting_monthly_price"), (int, float)) and not isinstance(row.get("starting_monthly_price"), bool) else None,
+            # The cost the budget is compared with under the funding pathway.
+            "price": relevant_monthly_cost(row),
+            "cost_basis": row.get("relevant_cost_basis") or "PRIVATE_PAY_PRICE",
         })
     return out
 
@@ -56,9 +58,15 @@ def merge_late_fit(ledger: List[Dict[str, Any]], rows: Iterable[Dict[str, Any]])
     for row in rows:
         item = by_id.get(row.get("canonical_facility_id"))
         fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-        if item is not None and fit:
-            item["must_fail"] = list(fit.get("must_fail") or [])
-            item["must_unknown"] = list(fit.get("must_unknown") or [])
+        if item is not None:
+            if fit:
+                item["must_fail"] = list(fit.get("must_fail") or [])
+                item["must_unknown"] = list(fit.get("must_unknown") or [])
+            item["price"] = relevant_monthly_cost(row)
+
+
+def _unknown_cost_reason(item: Dict[str, Any]) -> str:
+    return "medicaid_household_out_of_pocket_unknown" if item.get("cost_basis") == "MEDICAID_HOUSEHOLD_OUT_OF_POCKET" else "current_price_unknown"
 
 
 def _key_class(key: str) -> str:
@@ -152,11 +160,12 @@ def build_funnel(
     survivors = _remove(
         survivors, "MUST_EVIDENCE_UNKNOWN",
         lambda i: [key for key in i["must_unknown"] if _key_class(key) != "BUDGET"]
-        + (["current_price_unknown"] if ceiling is not None and i["price"] is None else [])
+        + ([_unknown_cost_reason(i)] if ceiling is not None and i["price"] is None else [])
         + (["total_monthly_cost_unverified"] if i["price"] is not None and any(_key_class(k) == "BUDGET" for k in i["must_unknown"]) else []),
-        stages, must_order + ["current_price_unknown", "total_monthly_cost_unverified"],
+        stages, must_order + ["current_price_unknown", "medicaid_household_out_of_pocket_unknown", "total_monthly_cost_unverified"],
     )
     recommendable = len(survivors)
+    recommendable_ids = sorted(str(item.get("canonical_facility_id") or "") for item in survivors)
     stages.append({"stage": "RECOMMENDABLE", "remaining": recommendable})
     stages.append({"stage": "SHOWN", "remaining": shown_count})
 
@@ -180,6 +189,7 @@ def build_funnel(
         "version": "decision-funnel-v1",
         "stages": stages,
         "recommendable_count": recommendable,
+        "recommendable_ids": recommendable_ids,
         "shown_count": shown_count,
         "zero_result_classification": classification,
         "zero_result_reason": reason,
@@ -190,4 +200,29 @@ def build_funnel(
     }
 
 
-__all__ = ["build_funnel", "ledger_rows", "merge_late_fit"]
+def blocking_reasons(item: Dict[str, Any], budget: Optional[float]) -> List[Dict[str, str]]:
+    """Every reason one candidate is not recommendable, with its authority class --
+    the same classification the funnel uses. Empty list = recommendable."""
+    reasons: List[Dict[str, str]] = []
+    if item.get("eligibility_status") == "INELIGIBLE":
+        for parameter in item.get("unmet_critical_needs") or []:
+            reasons.append({"reason": parameter, "authority": "CLIENT_NEED" if parameter in _NON_CARE_NEEDS else "CARE_NEED", "kind": "VERIFIED_GAP"})
+    for key in item.get("must_fail") or []:
+        klass = _key_class(key)
+        if klass != "BUDGET":
+            reasons.append({"reason": key, "authority": klass, "kind": "VERIFIED_FAIL"})
+    ceiling = budget * (1 + BUDGET_TOLERANCE) if budget else None
+    over = (ceiling is not None and item.get("price") is not None and item["price"] > ceiling) or any(_key_class(k) == "BUDGET" for k in item.get("must_fail") or [])
+    if over:
+        reasons.append({"reason": "budget", "authority": "CLIENT_BUDGET", "kind": "VERIFIED_FAIL"})
+    for key in item.get("must_unknown") or []:
+        if _key_class(key) != "BUDGET":
+            reasons.append({"reason": key, "authority": _key_class(key), "kind": "UNKNOWN"})
+    if ceiling is not None and item.get("price") is None:
+        reasons.append({"reason": "medicaid_household_out_of_pocket" if item.get("cost_basis") == "MEDICAID_HOUSEHOLD_OUT_OF_POCKET" else "current_price", "authority": "CLIENT_BUDGET", "kind": "UNKNOWN"})
+    elif item.get("price") is not None and not over and any(_key_class(k) == "BUDGET" for k in item.get("must_unknown") or []):
+        reasons.append({"reason": "total_monthly_cost", "authority": "CLIENT_BUDGET", "kind": "UNKNOWN"})
+    return reasons
+
+
+__all__ = ["blocking_reasons", "build_funnel", "ledger_rows", "merge_late_fit"]

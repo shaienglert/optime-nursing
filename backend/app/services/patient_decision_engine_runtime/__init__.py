@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 logger = logging.getLogger(__name__)
 
 from app.services.client_intent_runtime import attach_client_intent_fit, build_client_intent, intent_rank_key
-from app.services.affordability_floor import apply_medicaid_affordability_rule
+from app.services.affordability_floor import apply_funding_pathway, apply_medicaid_affordability_rule
 from app.services.decision_funnel import ledger_rows
 from app.services.decision_agent_bridge_fast import attach_agent_evidence_and_queue_gaps_fast as attach_agent_evidence_and_queue_gaps
 from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
@@ -365,6 +365,7 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     affordability = apply_medicaid_affordability_rule(rows, client_intent, questionnaire_state, patient_profile)
     if affordability.get("promoted"):
         attach_client_intent_fit(rows, client_intent)
+    apply_funding_pathway(rows, client_intent)
     _stage_started = _mark("affordability_floor_ms", _stage_started)
 
     indexed_pre_agent = list(enumerate(rows))

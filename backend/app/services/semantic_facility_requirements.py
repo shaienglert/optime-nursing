@@ -317,8 +317,9 @@ def _row_budget_verdict(row: Dict[str, Any], questionnaire_state: Dict[str, Any]
     A known price above the limit is negative evidence, not an unknown: research cannot
     change it, and a room base price above the limit means the total is above it too.
     """
+    from app.services.affordability_floor import relevant_monthly_cost
     budget = (questionnaire_state or {}).get("budget")
-    price = row.get("starting_monthly_price")
+    price = relevant_monthly_cost(row)
     if not isinstance(budget, (int, float)) or isinstance(budget, bool) or budget <= 0:
         return None
     if not isinstance(price, (int, float)) or isinstance(price, bool):
@@ -337,8 +338,9 @@ def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any
     at or under what the client stated; otherwise this stays unknown/pending, same
     as when no price is on file at all, until real pricing data exists to compare.
     """
+    from app.services.affordability_floor import relevant_monthly_cost
     budget = (questionnaire_state or {}).get("budget")
-    price = row.get("starting_monthly_price")
+    price = relevant_monthly_cost(row)
     if not isinstance(budget, (int, float)) or isinstance(budget, bool) or budget <= 0:
         return False
     if not isinstance(price, (int, float)) or isinstance(price, bool):

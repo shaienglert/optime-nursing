@@ -322,13 +322,13 @@ def _merge_funnel_fit(result: dict[str, Any]) -> None:
         merge_late_fit(ledger, result.get("results") or [])
 
 
-def _attach_decision_funnel(result: dict[str, Any], decision_questionnaire: dict[str, Any]) -> None:
+def _attach_decision_funnel(result: dict[str, Any], decision_questionnaire: dict[str, Any]) -> list | None:
     """Mechanical funnel + zero-result classification (decision_funnel.py)."""
     from app.services.decision_funnel import build_funnel
     ledger = result.pop("decision_funnel_ledger", None)
     catalog = result.pop("decision_funnel_catalog", None)
     if not isinstance(ledger, list) or not isinstance(catalog, dict):
-        return
+        return None
     decision = result.setdefault("decision_intelligence", {})
     intent = decision.get("client_intent") if isinstance(decision.get("client_intent"), dict) else {}
     must_order = [str(m.get("key") or "") for m in intent.get("must_haves") or []]
@@ -348,6 +348,7 @@ def _attach_decision_funnel(result: dict[str, Any], decision_questionnaire: dict
         shown_count=shown,
         requested_must_coverage=coverage,
     )
+    return ledger
 
 
 def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
@@ -433,11 +434,21 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
     result = apply_canonical_decision_state_authority(result)
     result = _suppress_unverified_recommendations(result)
-    _attach_decision_funnel(result, decision_questionnaire)
+    ledger = _attach_decision_funnel(result, decision_questionnaire)
     from app.services.oomniker_optimizer import analyze_oomniker
-    oomniker_profile = dict(questionnaire_state or {})
-    oomniker_profile.setdefault("radius_miles", questionnaire_state.get("approvedSearchRadiusMiles") or questionnaire_state.get("maximumDistanceMiles"))
-    result["oomniker"] = analyze_oomniker(oomniker_profile, list(result.get("results") or []))
+    # Oomniker reads the same canonical profile, client intent and full candidate ledger
+    # the decision used -- never the raw questionnaire -- so it can say which parameter
+    # narrows supply and what changing it would do.
+    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+    oomniker_context = None
+    if ledger is not None:
+        oomniker_context = {
+            "ledger": ledger,
+            "client_intent": decision.get("client_intent") or {},
+            "funnel": result.get("decision_funnel") or {},
+            "location_scope": result.get("location_scope") or {},
+        }
+    result["oomniker"] = analyze_oomniker(dict(decision_questionnaire), list(result.get("results") or []), decision_context=oomniker_context)
     result = _attach_pipeline_trace(result)
     logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
     return result

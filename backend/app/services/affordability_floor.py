@@ -188,7 +188,56 @@ def apply_medicaid_affordability_rule(
     return {**record, "promoted": promoted}
 
 
+# ---- Funding pathway (owner, 2026-10-01) ------------------------------------------------
+# The funding pathway is decided before the final affordability gate, and the budget is
+# compared with the cost the household actually pays under that pathway:
+#   PRIVATE_PAY                       -> private-pay price
+#   MEDICAID (CLIENT MUST active)     -> verified household out-of-pocket under Medicaid
+# An unknown relevant cost is EVIDENCE_PENDING (never PASS, never FAIL). Nothing is
+# inferred from the private-pay price.
+MEDICAID_OOP_PARAMETER = "medicaid_household_out_of_pocket"
+FUNDING_EVIDENCE_PARAMETER_IDS = frozenset({MEDICAID_OOP_PARAMETER})
+
+
+def _money(value: Any) -> Optional[float]:
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number >= 0 else None
+
+
+def apply_funding_pathway(rows: List[Dict[str, Any]], client_intent: Dict[str, Any]) -> str:
+    keys = {str(m.get("key") or "") for m in client_intent.get("must_haves") or []}
+    pathway = "MEDICAID" if MEDICAID_PATHWAY_KEY in keys else "PRIVATE_PAY"
+    client_intent["funding_pathway"] = pathway
+    for row in rows:
+        row["funding_pathway"] = pathway
+        if pathway == "MEDICAID":
+            row["relevant_monthly_cost"] = _money((row.get("verified_capabilities") or {}).get(MEDICAID_OOP_PARAMETER))
+            row["relevant_cost_basis"] = "MEDICAID_HOUSEHOLD_OUT_OF_POCKET"
+        else:
+            row["relevant_monthly_cost"] = _money(row.get("starting_monthly_price"))
+            row["relevant_cost_basis"] = "PRIVATE_PAY_PRICE"
+    return pathway
+
+
+def relevant_monthly_cost(row: Dict[str, Any]) -> Optional[float]:
+    """The cost the budget is compared with for this row (see apply_funding_pathway)."""
+    if row.get("funding_pathway") == "MEDICAID":
+        return row.get("relevant_monthly_cost")
+    # Private pay: always the current price (later stages may complete it, e.g. a couple's
+    # second-resident fee), never a stale copy.
+    return _money(row.get("starting_monthly_price"))
+
+
 __all__ = [
+    "MEDICAID_OOP_PARAMETER",
+    "FUNDING_EVIDENCE_PARAMETER_IDS",
+    "apply_funding_pathway",
+    "relevant_monthly_cost",
     "MEDICAID_PATHWAY_KEY",
     "SYSTEM_MUST_KEYS",
     "CARE_MUST_KEYS",

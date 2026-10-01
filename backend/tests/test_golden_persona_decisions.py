@@ -141,7 +141,11 @@ def _violations(persona: Dict[str, Any], decision: Dict[str, Any]) -> List[str]:
     for row in results:
         fid = row.get("canonical_facility_id")
         facts, record = FACTS.get(fid, {}), index.get(fid, {})
-        price = row.get("starting_monthly_price")
+        # The budget is compared with the cost under the funding pathway: private-pay
+        # price, or the household out-of-pocket under Medicaid (never the private price).
+        price = row.get("relevant_monthly_cost") if row.get("funding_pathway") == "MEDICAID" else row.get("starting_monthly_price")
+        if row.get("funding_pathway") == "MEDICAID" and not isinstance(price, (int, float)):
+            problems.append(f"{fid} shown under the Medicaid pathway with no verified household cost")
         if isinstance(price, (int, float)):
             if price > ceiling:
                 problems.append(f"{fid} ${price:g} exceeds budget+10% (${ceiling:g})")

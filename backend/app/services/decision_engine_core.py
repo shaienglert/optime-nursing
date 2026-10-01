@@ -25,6 +25,7 @@ from app.services.facility_parameter_service import (
 from app.services.canonical_universe import configured_canonical_market
 from app.services.license_standing import license_standing
 from app.services.must_evidence_sources import MUST_EVIDENCE_PARAMETER_IDS
+from app.services.affordability_floor import FUNDING_EVIDENCE_PARAMETER_IDS
 from app.services.regulatory_quality_layer import QUALITY_PARAMETERS as REGULATORY_QUALITY_PARAMETERS
 from app.services.care_input_assertions import without_negated_nursing
 from app.services.location_radius import (
@@ -1904,6 +1905,7 @@ def run_patient_decision_engine(
         *PRACTICAL_FIT_PARAMETER_IDS,
         *MUST_EVIDENCE_PARAMETER_IDS,
         *REGULATORY_QUALITY_PARAMETERS,
+        *FUNDING_EVIDENCE_PARAMETER_IDS,
         "current_price",
         "current_availability",
     }

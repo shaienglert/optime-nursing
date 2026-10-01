@@ -170,3 +170,30 @@ def test_floor_is_a_property_of_the_care_universe_not_of_budget_or_funding(perso
     for (status, budget), has_must in musts.items():
         expected = status == "Application pending" and floor_price is not None and budget < floor_price
         assert has_must is expected, (status, budget, floor_price)
+
+
+# ---- Funding pathway decides which cost the budget is compared with ---------------------
+
+def test_medicaid_pathway_compares_budget_with_household_cost_never_private_price():
+    from app.services.affordability_floor import apply_funding_pathway, relevant_monthly_cost
+    from app.services.semantic_facility_requirements import _row_budget_verdict
+
+    intent = {"must_haves": [{"key": MEDICAID_PATHWAY_KEY}]}
+    known_in = {"starting_monthly_price": 6000, "verified_capabilities": {"medicaid_household_out_of_pocket": "2800"}}
+    known_over = {"starting_monthly_price": 2000, "verified_capabilities": {"medicaid_household_out_of_pocket": "3600"}}
+    unknown = {"starting_monthly_price": 2000, "verified_capabilities": {}}
+    assert apply_funding_pathway([known_in, known_over, unknown], intent) == "MEDICAID"
+    state = {"budget": 3000}
+    assert relevant_monthly_cost(known_in) == 2800 and _row_budget_verdict(known_in, state) is True
+    assert _row_budget_verdict(known_over, state) is False
+    # A private price inside the budget proves nothing about the Medicaid household cost.
+    assert relevant_monthly_cost(unknown) is None and _row_budget_verdict(unknown, state) is None
+
+
+def test_private_pay_pathway_keeps_the_current_private_price():
+    from app.services.affordability_floor import apply_funding_pathway, relevant_monthly_cost
+
+    row = {"starting_monthly_price": 4000, "verified_capabilities": {"medicaid_household_out_of_pocket": "100"}}
+    assert apply_funding_pathway([row], {"must_haves": []}) == "PRIVATE_PAY"
+    row["starting_monthly_price"] = 4750  # e.g. second-resident fee added later
+    assert relevant_monthly_cost(row) == 4750

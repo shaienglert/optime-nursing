@@ -310,8 +310,11 @@ def apply_must_ai_nice_pipeline(
     rankable = list(eligible)
     budget = questionnaire_state.get("budget")
     if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
+        from app.services.affordability_floor import relevant_monthly_cost
         for row in rankable:
-            price = row.get("starting_monthly_price")
+            # Compared with the cost under the family's funding pathway (private pay, or
+            # household out-of-pocket under Medicaid) -- affordability_floor.py.
+            price = relevant_monthly_cost(row)
             if isinstance(price, (int, float)) and not isinstance(price, bool):
                 variance = (float(price) - float(budget)) / float(budget)
                 row["budget_variance_pct"] = round(variance * 100, 1)

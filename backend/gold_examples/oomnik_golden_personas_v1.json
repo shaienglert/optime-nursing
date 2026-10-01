@@ -64,7 +64,7 @@
       "id": "pilot-006",
       "title": "Very low budget, Medicaid application pending",
       "answers": { "relationship": "Mom", "ageGroup": "80-84", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "30", "budget": 3000, "moveTiming": "Within 30 days", "medicaidStatus": "Application pending" },
-      "oracle": { "care": ["ASSISTED_LIVING", "SMALL_GROUP_HOME"], "required": ["adl_support", "medicaid_pathway"], "budget": 3000, "location": "Las Vegas", "distance": "30", "medicaid": "REQUIRED" }
+      "oracle": { "care": ["ASSISTED_LIVING", "SMALL_GROUP_HOME"], "required": ["adl_support", "medicaid_pathway"], "budget": 3000, "location": "Las Vegas", "distance": "30", "medicaid": "REQUIRED", "zero_result": "EVIDENCE_PENDING" }
     },
     {
       "id": "pilot-007",

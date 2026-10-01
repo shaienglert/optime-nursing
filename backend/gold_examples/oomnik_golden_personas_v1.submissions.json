@@ -2258,7 +2258,8 @@
         "budget": 3000,
         "location": "Las Vegas",
         "distance": "30",
-        "medicaid": "REQUIRED"
+        "medicaid": "REQUIRED",
+        "zero_result": "EVIDENCE_PENDING"
       },
       "steps": [
         {
