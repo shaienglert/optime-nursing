@@ -6,6 +6,8 @@ on:
     paths:
       - 'backend/app/services/**'
       - 'backend/tests/**'
+      - 'backend/gold_examples/oomnik_golden_decision_v01.json'
+      - 'scripts/golden_decision_independent_oracle.py'
       - 'frontend/src/app/results/**'
       - 'frontend/tests/browser/**'
       - 'scripts/validate_oomnik_launch_contract.cjs'
@@ -36,6 +38,10 @@ jobs:
         env:
           PYTHONPATH: backend
         run: python -m unittest backend.tests.test_launch_practical_constraints backend.tests.test_client_intent_runtime backend.tests.test_semantic_facility_requirements backend.tests.test_main_decision_runtime_contract -v
+      - name: Verify owner-approved golden decision oracle
+        env:
+          PYTHONPATH: .
+        run: python -m pytest backend/tests/test_golden_decision_contract_v01.py backend/tests/test_golden_decision_independent_oracle.py -q
       - name: Verify frontend types
         working-directory: frontend
         run: npm install && npm run typecheck
