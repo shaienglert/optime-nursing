@@ -61,7 +61,7 @@ SCHEMA_FIELDS = frozenset({
 # Closed leaf allowlist only. A legal parent object never authorizes arbitrary child keys.
 # Every decision-capable AI path must be named explicitly here.
 SCHEMA_FIELDS = frozenset(set(SCHEMA_FIELDS) | {
-    *(f"humanIntelligenceV2.socialProfile.{k}" for k in ("livingAloneDuration","socialInteractionFrequency","newFriendsImportance","hobbyParticipation","preferredSocialIntensity")),
+    *(f"humanIntelligenceV2.socialProfile.{k}" for k in ("livingAloneDuration","socialInteractionFrequency","newFriendsImportance","hobbyParticipation","preferredSocialIntensity","activityRequirementLevel")),
     *(f"humanIntelligenceV2.familyProfile.{k}" for k in ("involvedFamilyMembers","visitFrequencyExpectation","grandchildrenPresence","grandchildrenImportance","familyDecisionDynamics","emergencySupportNetwork","coupleStayTogetherPreference","widowStatus","lossTiming","socialActivityChangeSinceLoss","socialInteractionNeed","temporarySeparationAcceptance","griefSupportInterest")),
     *(f"humanIntelligenceV2.personalityProfile.{k}" for k in ("communitySizePreference",)),
     *(f"humanIntelligenceV2.independenceProfile.{k}" for k in ("mobilityMethod","transferAssistance","recentFalls")),
