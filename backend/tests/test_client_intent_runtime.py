@@ -213,3 +213,18 @@ def test_explicit_continuum_match_ranks_above_generic_active_adult_fit():
     active_adult["client_intent_fit"] = evaluate_candidate_intent(active_adult, intent)
 
     assert intent_rank_key(continuing_care) < intent_rank_key(active_adult)
+
+
+def test_license_validity_distinguishes_expired_current_and_missing():
+    expected = [
+        (True, "must_fail", "FAIL"),
+        (False, "must_pass", "PASS"),
+        (None, "must_unknown", "PENDING_VERIFICATION"),
+    ]
+    for expired, bucket, gate in expected:
+        fit = evaluate_candidate_intent(
+            _row("ASSISTED_LIVING_RFG", license_expired=expired),
+            _intent("LICENSE_CURRENTLY_VALID"),
+        )
+        assert "LICENSE_CURRENTLY_VALID" in fit[bucket]
+        assert fit["hard_gate"] == gate

@@ -205,14 +205,14 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     for must in intent.get("must_haves") or []:
         key = str(must.get("key") or "")
         if key == "LICENSE_CURRENTLY_VALID":
-            # Only a confirmed-past expiration_date (a curated registry field, not agent
-            # evidence) fails this; missing/unparseable data passes rather than blocking
-            # on absence of information, matching the "never fail on unverified data"
-            # policy but treating a *reliable* negative here as safe to hard-fail on.
+            # Curated registry expiration is conclusive only when known. Missing
+            # or invalid expiration is not positive proof of a valid license.
             if row.get("license_expired") is True:
                 hard_fail.append(key)
-            else:
+            elif row.get("license_expired") is False:
                 must_pass.append(key)
+            else:
+                must_unknown.append(key)
         elif key == "LAS_VEGAS":
             las_vegas_valley_cities = {
                 "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
