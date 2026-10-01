@@ -224,3 +224,19 @@ def test_kosher_requirement_is_client_must_not_nice():
     nice={x["key"] for x in intent["nice_to_haves"]}
     assert "KOSHER_MEALS" in must
     assert "KOSHER_MEALS" not in nice
+
+
+def test_required_language_is_must_while_preference_is_nice():
+    base={"humanIntelligenceV2":{"languageProfile":{"preferredSpokenLanguage":"Hebrew","languageNeedScope":"Requirement"}}}
+    required=build_client_intent(base,"",{}, {})
+    assert "REQUIRED_LANGUAGE_SUPPORT" in {x["key"] for x in required["must_haves"]}
+    base["humanIntelligenceV2"]["languageProfile"]["languageNeedScope"]="Preference"
+    preferred=build_client_intent(base,"",{}, {})
+    assert "PREFERRED_LANGUAGE_SUPPORT" in {x["key"] for x in preferred["nice_to_haves"]}
+
+
+def test_required_activities_are_must_only_when_explicitly_marked():
+    q={"humanIntelligenceV2":{"socialProfile":{"hobbyParticipation":["Music","Classes"],"activityRequirementLevel":"Requirement"}}}
+    intent=build_client_intent(q,"",{}, {})
+    row=next(x for x in intent["must_haves"] if x["key"]=="REQUIRED_ACTIVITIES")
+    assert row["value"]==["Music","Classes"]
