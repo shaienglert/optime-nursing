@@ -199,11 +199,11 @@ jobs:
               row['gap_key'] == 'loneliness_severity' and row['classification'] == 'IMPORTANT_NON_BLOCKING'
               for row in human['canonical_gap_policy']['assessments']
           )
-          # Ranking AI is advisory: its unavailability must preserve the verified
-          # MUST-qualified set, explicitly labeled as degraded and unranked.
+          # Candidate-ranking AI is retired from authority. Deterministic governed evidence
+          # preserves and ranks the MUST-qualified set.
           assert nonblocking['result_count'] == 5 and len(nonblocking['results']) == 5
           assert nonblocking['decision_intelligence']['recommendation_execution_allowed'] is True
-          assert nonblocking['decision_intelligence']['canonical_decision_state']['phase'] == 'UNRANKED_ELIGIBLE_SET'
+          assert nonblocking['decision_intelligence']['canonical_decision_state']['phase'] == 'FINAL_RECOMMENDATION'
 
           hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
