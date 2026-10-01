@@ -108,9 +108,10 @@ if __name__ == "__main__":
     unittest.main()
 
 
-def test_availability_yes_and_no_both_require_direct_confirmation(self):
+def test_availability_yes_and_no_both_require_direct_confirmation():
+    from app.services import decision_engine_core as core
     need={"parameter_id":"current_availability","requirement_level":"HIGH","desired_value":"YES","acceptable_values":["YES"]}
     for raw in ("YES","NO","LIMITED","UNKNOWN"):
-        status, reason = self.core._evaluate_need(need,{"current_availability":{"raw_value":raw,"source":"provider evidence"}})
-        self.assertEqual(status,"UNKNOWN")
-        self.assertIn("direct facility confirmation",reason)
+        status, reason = core._evaluate_need(need,{"current_availability":{"raw_value":raw,"source":"provider evidence"}})
+        assert status == "UNKNOWN"
+        assert "direct facility confirmation" in reason
