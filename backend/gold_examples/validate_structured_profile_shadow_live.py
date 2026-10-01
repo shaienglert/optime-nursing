@@ -11,8 +11,9 @@ def needs(profile):
     return {str(x.get("parameter_id")):str(x.get("requirement_level"))+"="+str(x.get("desired_value")) for x in profile.get("needs") or [] if isinstance(x,dict)}
 
 def main():
-    from app.main import init_db
-    init_db()
+    import app.main  # registers all ORM models
+    from app.database import Base, engine
+    Base.metadata.create_all(bind=engine)
     report=[]; blocking=0
     for key,case in CASES.items():
         q=case["questionnaire"]; text=case["query"]
