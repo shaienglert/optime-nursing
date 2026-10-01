@@ -109,7 +109,7 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         self.assertTrue(intelligence["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual("ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE", intelligence["person_fit_rank_effect"])
         self.assertEqual([], human["adaptive_questions"])
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
 
     def test_explicit_small_home_preference_affects_rank_after_ai_ready(self):
         result = self._run(
@@ -127,7 +127,7 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         self.assertTrue(intelligence["recommendation_execution_allowed"])
         self.assertTrue(intelligence["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual("ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE", intelligence["person_fit_rank_effect"])
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
 
 
 if __name__ == "__main__":
