@@ -200,11 +200,6 @@ def _to_number(value: Any) -> Optional[float]:
 
 def _is_verified_row(row: Dict[str, Any]) -> bool:
     raw = row.get("raw_value")
-    if need["parameter_id"] == "current_availability":
-        # Availability is volatile by definition. Catalog/provider evidence is useful context
-        # but never a final PASS/FAIL; both recorded YES and NO require direct confirmation
-        # for the requested move date.
-        return "UNKNOWN", f"Recorded availability is {raw or 'UNKNOWN'}; direct facility confirmation is required."
     source = _normalize(row.get("source"))
     if raw in {None, "UNKNOWN"}:
         return False
@@ -814,6 +809,10 @@ def _evaluate_need(need: Dict[str, Any], row_by_param: Dict[str, Dict[str, Any]]
         return "UNKNOWN", "No evidence row available for this parameter."
 
     raw = row.get("raw_value")
+    if need["parameter_id"] == "current_availability":
+        # Availability is volatile by definition. Preserve the evidence for disclosure,
+        # but YES/NO/LIMITED all remain pending direct confirmation for the requested date.
+        return "UNKNOWN", f"Recorded availability is {raw or 'UNKNOWN'}; direct facility confirmation is required."
     if need["parameter_id"] == "current_price":
         price = _to_number(raw)
         budget = _to_number(need.get("desired_value"))
