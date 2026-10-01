@@ -267,7 +267,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 hard_fail.append(key)
         elif key == "REQUIRED_ACTIVITIES":
-            wanted = [str(x).strip().lower() for x in must_item.get("value") or [] if str(x).strip()]
+            wanted = [str(x).strip().lower() for x in must.get("value") or [] if str(x).strip()]
             verified = str((row.get("verified_capabilities") or {}).get("activities") or "").lower()
             if not verified or verified == "unknown":
                 must_unknown.append(key)
