@@ -149,11 +149,11 @@ jobs:
           }
           EXPECTED_RANKING_ORDER = [
               'DETERMINISTIC_MUST_GATE',
-              'SEMANTIC_AI_DYNAMIC_PREFERENCES',
-              'SEMANTIC_AI_ALL_GOVERNED_EVIDENCE',
+              'GOVERNED_STRUCTURED_PREFERENCES',
+              'DETERMINISTIC_ALL_GOVERNED_EVIDENCE',
               'EVIDENCE_GROUNDED_PREFERENCE_COVERAGE',
               'PROVIDER_VERIFICATION',
-              'AI_RERANK',
+              'DETERMINISTIC_RANK',
           ]
 
           base = {
