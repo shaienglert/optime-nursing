@@ -402,7 +402,10 @@ def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[s
     if any("gluten" in _normalize(item) for item in dietary):
         _add_need(needs_by_id, "gluten_free", "PREFERENCE", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.foodProfile.dietaryPreferences", 1.0, "Gluten-free option preferred")
     if any("kosher" in _normalize(item) for item in dietary):
-        _add_need(needs_by_id, "kosher", "PREFERENCE", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.foodProfile.dietaryPreferences", 1.0, "Kosher option preferred")
+        cultural = human.get("culturalProfile") if isinstance(human.get("culturalProfile"), dict) else {}
+        kosher_level = _normalize(cultural.get("kosherRequirements"))
+        kosher_required = kosher_level in {"requirement", "required", "must"}
+        _add_need(needs_by_id, "kosher", "HIGH" if kosher_required else "PREFERENCE", "YES", ["YES"] if kosher_required else ["YES", "UNKNOWN"], "SERVICE", "questionnaire.culturalProfile.kosherRequirements", 1.0, "Kosher meals are required" if kosher_required else "Kosher option preferred")
 
     distance = _normalize(questionnaire.get("distanceFromFamily"))
     if distance:
