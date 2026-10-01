@@ -106,8 +106,8 @@ class MustAiNicePipelineTests(unittest.TestCase):
         self.assertEqual(result["results"][0]["must_eligibility"], "MUST_ELIGIBLE")
         self.assertEqual(result["results"][0]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
         self.assertEqual(result["results"][1]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
-        self.assertEqual(result["results"][0]["legacy_structured_nice_fit"]["nice_unknown"], ["SOCIAL"])
-        self.assertEqual(result["results"][1]["legacy_structured_nice_fit"]["nice_match"], ["SOCIAL"])
+        self.assertEqual(result["results"][0]["legacy_structured_nice_fit"]["nice_match"], ["SOCIAL"])
+        self.assertEqual(result["results"][1]["legacy_structured_nice_fit"]["nice_unknown"], ["SOCIAL"])
         pipeline = result["decision_intelligence"]["facility_selection_pipeline"]
         self.assertEqual(pipeline["ai_ranking"]["status"], "NOT_DECISION_AUTHORITY")
         self.assertFalse(pipeline["legacy_structured_nice_authoritative"])
