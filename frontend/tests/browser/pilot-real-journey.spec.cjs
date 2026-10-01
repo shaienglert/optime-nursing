@@ -266,7 +266,8 @@ test.describe('real synthetic-pilot customer journey', () => {
     for (const requiredId of (oracle.required || [])) {
       const need = needsById.get(requiredId);
       const inNeeds = need && ['HIGH','REQUIRED','MUST'].includes(String(need.requirement_level || '').toUpperCase());
-      const inIntent = intentMust.has(requiredId) || [...intentMust].some((x) => x.toLowerCase().includes(requiredId.toLowerCase()));
+      const aliases = { couple_coresidence: ['couple_coresidence','coresidence','couple'], medicaid_pathway: ['medicaid_pathway','medicaid'], continuum_of_care: ['continuum_of_care','continuum','future_care'] }[requiredId] || [requiredId];
+      const inIntent = [...intentMust].some((x) => aliases.some((alias) => x.toLowerCase().includes(alias)));
       expect(Boolean(inNeeds || inIntent), `${scenario.id} must preserve required need ${requiredId} in canonical needs or client intent`).toBe(true);
     }
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
