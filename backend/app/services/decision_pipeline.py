@@ -385,6 +385,10 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
     result = apply_canonical_decision_state_authority(result)
     result = _suppress_unverified_recommendations(result)
+    from app.services.oomniker_optimizer import analyze_oomniker
+    oomniker_profile = dict(questionnaire_state or {})
+    oomniker_profile.setdefault("radius_miles", questionnaire_state.get("approvedSearchRadiusMiles") or questionnaire_state.get("maximumDistanceMiles"))
+    result["oomniker"] = analyze_oomniker(oomniker_profile, list(result.get("results") or []))
     result = _attach_pipeline_trace(result)
     logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
     return result
