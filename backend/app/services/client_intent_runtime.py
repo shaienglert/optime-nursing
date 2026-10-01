@@ -210,14 +210,16 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     for must in intent.get("must_haves") or []:
         key = str(must.get("key") or "")
         if key == "LICENSE_CURRENTLY_VALID":
-            # Only a confirmed-past expiration_date (a curated registry field, not agent
-            # evidence) fails this; missing/unparseable data passes rather than blocking
-            # on absence of information, matching the "never fail on unverified data"
-            # policy but treating a *reliable* negative here as safe to hard-fail on.
-            if row.get("license_expired") is True:
+            # One authority: license_standing (also used by the market listing filter).
+            # Where a license is legally required, missing/unverified is PENDING, never PASS.
+            from app.services.license_standing import license_standing, VERIFIED_CURRENT, NOT_REQUIRED, EXPIRED, NOT_ACTIVE
+            standing = row.get("license_standing") or license_standing(row)
+            if standing in {VERIFIED_CURRENT, NOT_REQUIRED}:
+                must_pass.append(key)
+            elif standing in {EXPIRED, NOT_ACTIVE}:
                 hard_fail.append(key)
             else:
-                must_pass.append(key)
+                must_unknown.append(key)
         elif key == "LAS_VEGAS":
             las_vegas_valley_cities = {
                 "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
@@ -255,8 +257,13 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # verified Medicaid acceptance. UNKNOWN is a verification item, never a pass; and
             # since the research pipeline stores "not found" and "not researched" alike, an
             # unverified False never fails a community either.
-            if any(p.get("medicaid_accepted_verified") is True for p in payloads):
+            # Governed facility parameter first (verified YES/NO is real evidence either
+            # way); then agent payloads, which may confirm but never exclude.
+            governed = _upper((row.get("verified_capabilities") or {}).get("medicaid_attributes"))
+            if governed == "YES" or any(p.get("medicaid_accepted_verified") is True for p in payloads):
                 must_pass.append(key)
+            elif governed == "NO":
+                hard_fail.append(key)
             else:
                 must_unknown.append(key)
         elif key == "ADL_SUPPORT_AVAILABLE":
@@ -270,12 +277,15 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # nursing facility sat in MUST_PENDING_VERIFICATION on this key alone, even ones
             # with governed CMS-sourced evidence (facility_parameter_service.py) confirming
             # adl_support=YES that this gate simply never consulted.
-            if canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or any(
+            governed = _upper((row.get("verified_capabilities") or {}).get("adl_support"))
+            if canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or governed == "YES" or any(
                 p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True
                 for p in payloads
             ):
                 must_pass.append(key)
             else:
+                # A verified in-house NO is still not a fail: external_care_policy lets a
+                # verified agency pathway satisfy the care need (combined care layer).
                 must_unknown.append(key)
         elif key == "MEDICATION_SUPPORT_AVAILABLE":
             # Entry into the candidate list must never turn on an unverified "False": the
@@ -283,7 +293,8 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # "never researched" (both are stored as False), so a hard_fail here would wrongly
             # exclude facilities with no real negative finding. In-house-vs-external-agency
             # delivery is a ranking signal (see combined_care_solution_runtime.py), never a gate.
-            if any(p.get("medication_support_verified") is True for p in payloads):
+            governed = _upper((row.get("verified_capabilities") or {}).get("medication_support"))
+            if governed == "YES" or any(p.get("medication_support_verified") is True for p in payloads):
                 must_pass.append(key)
             else:
                 must_unknown.append(key)

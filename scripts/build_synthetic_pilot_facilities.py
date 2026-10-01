@@ -163,6 +163,58 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
     }
 
 
+# Coverage parameters (owner rule 2026-10-01): every MUST the engine can ask for needs an
+# evidence source in the market. These are deliberately mixed YES / NO / UNKNOWN (None =
+# no record at all) so the engine is exercised on verified pass, verified fail and pending.
+# Values are fictional and say nothing about any real community.
+def coverage_evidence(index: int, archetype: str) -> dict[str, str | None]:
+    # Archetypes repeat every 8 ids, so index % n would be constant within an archetype;
+    # vary on the ordinal within the archetype instead.
+    index = (index - 1) // len(ARCHETYPES)
+    secured = {
+        "MEMORY_CARE": None if index % 7 == 0 else ("NO" if index % 5 == 0 else "YES"),
+        "CONTINUING_CARE": "YES" if index % 3 == 0 else ("NO" if index % 3 == 1 else None),
+        "SKILLED_NURSING": "YES" if index % 4 == 0 else "NO",
+        "ASSISTED_LIVING_RFG": None if index % 4 == 0 else "NO",
+        "SMALL_GROUP_HOME": None if index % 2 == 0 else "NO",
+        "REHABILITATION": "NO",
+        "INDEPENDENT_LIVING": "NO",
+        "ACTIVE_ADULT_55_PLUS": "NO",
+    }[archetype]
+    medicaid = {
+        "SKILLED_NURSING": "NO" if index % 4 == 0 else "YES",
+        "REHABILITATION": "YES" if index % 2 == 0 else "NO",
+        "ASSISTED_LIVING_RFG": ["YES", "NO", None][index % 3],
+        "SMALL_GROUP_HOME": "YES" if index % 2 == 0 else None,
+        "MEMORY_CARE": "YES" if index % 4 == 0 else ("NO" if index % 4 == 1 else None),
+        "CONTINUING_CARE": "NO" if index % 3 else None,
+        "INDEPENDENT_LIVING": "NO",
+        "ACTIVE_ADULT_55_PLUS": "NO",
+    }[archetype]
+    return {"secured_units": secured, "medicaid_attributes": medicaid}
+
+
+def evidence_record(canonical_id: str, name: str, parameter_id: str, value, now: str) -> dict:
+    return {
+        "canonical_facility_id": canonical_id,
+        "parameter_id": parameter_id,
+        "value": value,
+        "source": "Synthetic owner-completed pilot profile",
+        "scope": "FACILITY",
+        "scope_name": name,
+        "last_verified": now,
+        "source_record_id": canonical_id,
+        "evidence_text": f"Synthetic provider response for {parameter_id.replace('_', ' ')}",
+        "evidence_value": value,
+        "evidence_date": now,
+        "confidence": "HIGH",
+        "evidence_strength": "FACILITY_REPORTED",
+        "verification_status": "VERIFIED",
+        "conflict_status": "NONE",
+        "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
+    }
+
+
 def pilot_service_evidence(index: int, archetype: str) -> dict:
     """Explicit fictional service fixtures, not estimates of real-world provision."""
     caps = capability_map(index, archetype)
@@ -299,6 +351,9 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
                 "conflict_status": "NONE",
                 "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
             })
+        for parameter_id, value in coverage_evidence(index, archetype_id).items():
+            if value is not None:
+                evidence.append(evidence_record(canonical_id, name, parameter_id, value, now))
         evidence.append({
             "canonical_facility_id": canonical_id,
             "parameter_id": "current_price",

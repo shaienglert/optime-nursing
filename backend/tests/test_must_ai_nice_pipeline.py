@@ -310,7 +310,12 @@ class DeterministicWaterfallThinEvidenceTests(unittest.TestCase):
         ), patch("app.services.ai_candidate_ranking_runtime._default_transport", return_value=packet):
             out = apply_must_ai_nice_pipeline(result, {}, "", 5)
 
-        self.assertEqual([r["canonical_facility_id"] for r in out["results"]], ["B", "A"])
+        # Owner rule 2026-10-01 (Regulatory/Quality Evidence Layer): a rating only one of
+        # the two has is not a basis to rank them -- UNKNOWN is not negative evidence. It
+        # used to put B (rated) above A (unrated); now the two are a true tie.
+        by_id = {r["canonical_facility_id"]: r for r in out["results"]}
+        self.assertEqual(by_id["A"]["rank_position"], by_id["B"]["rank_position"])
+        self.assertEqual({"JOINT_RANK"}, {by_id["A"]["rank_tie_status"], by_id["B"]["rank_tie_status"]})
         self.assertEqual(out["results"][0]["ai_ranking"]["status"], "DETERMINISTIC_THIN_EVIDENCE_WATERFALL")
 
 

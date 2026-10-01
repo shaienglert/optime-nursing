@@ -67,8 +67,12 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
         self.assertFalse(context["requires_skilled"])
         il = _governed._care_setting_fit(context, {"canonical_type": "INDEPENDENT_LIVING"}, {"canonical_type": "INDEPENDENT_LIVING"})
         al = _governed._care_setting_fit(context, {"canonical_type": "ASSISTED_LIVING_RFG"}, {"canonical_type": "ASSISTED_LIVING_RFG"})
+        al_verified = _governed._care_setting_fit(context, {"canonical_type": "ASSISTED_LIVING_RFG", "matched_needs": [{"parameter_id": "respiratory_trach_vent"}]}, {"canonical_type": "ASSISTED_LIVING_RFG"})
+        # Unlicensed housing may not provide care in-house (regulation). A licensed RFG
+        # covers medication help by licence, but oxygen capability needs its own evidence.
         self.assertEqual("INSUFFICIENT_SETTING", il["status"])
-        self.assertEqual("PRIMARY_FIT", al["status"])
+        self.assertEqual("POSSIBLE_FIT", al["status"])
+        self.assertEqual("PRIMARY_FIT", al_verified["status"])
 
     def test_dialysis_alone_without_a_skilled_nursing_checkbox_still_requires_skilled_setting(self) -> None:
         profile = build_patient_needs_profile(
@@ -83,8 +87,14 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
         self.assertTrue(context["requires_skilled"])
         snf = _governed._care_setting_fit(context, {"canonical_type": "SKILLED_NURSING"}, {"canonical_type": "SKILLED_NURSING"})
         al = _governed._care_setting_fit(context, {"canonical_type": "ASSISTED_LIVING_RFG"}, {"canonical_type": "ASSISTED_LIVING_RFG"})
-        self.assertEqual("PRIMARY_FIT", snf["status"])
-        self.assertEqual("INSUFFICIENT_SETTING", al["status"])
+        al_with_dialysis = _governed._care_setting_fit(context, {"canonical_type": "ASSISTED_LIVING_RFG", "matched_needs": [{"parameter_id": "dialysis_arrangements"}]}, {"canonical_type": "ASSISTED_LIVING_RFG"})
+        snf_without = _governed._care_setting_fit(context, {"canonical_type": "SKILLED_NURSING", "unmet_verified_needs": [{"parameter_id": "dialysis_arrangements"}]}, {"canonical_type": "SKILLED_NURSING"})
+        # Owner rule 2026-10-01 (PR-009): dialysis capability is decided by evidence, not by
+        # facility type. Without evidence either way it is a verification item.
+        self.assertEqual("POSSIBLE_FIT", snf["status"])
+        self.assertEqual("POSSIBLE_FIT", al["status"])
+        self.assertEqual("PRIMARY_FIT", al_with_dialysis["status"])
+        self.assertEqual("INSUFFICIENT_SETTING", snf_without["status"])
 
     def test_assistance_checkboxes_previously_unrecognized_now_register(self) -> None:
         # "Help with dressing"/"toileting"/"medications" and "Daytime supervision" matched

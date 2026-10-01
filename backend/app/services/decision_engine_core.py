@@ -23,6 +23,9 @@ from app.services.facility_parameter_service import (
     get_runtime_metadata,
 )
 from app.services.canonical_universe import configured_canonical_market
+from app.services.license_standing import license_standing
+from app.services.must_evidence_sources import MUST_EVIDENCE_PARAMETER_IDS
+from app.services.regulatory_quality_layer import QUALITY_PARAMETERS as REGULATORY_QUALITY_PARAMETERS
 from app.services.care_input_assertions import without_negated_nursing
 from app.services.location_radius import (
     annotate_distances,
@@ -1769,6 +1772,8 @@ def _build_ranked_candidate_detail(
         "county": table.get("county"),
         "license_expiration_date": canonical_meta.get("expiration_date"),
         "license_expired": _license_expired(canonical_meta.get("expiration_date")),
+        "license_status": canonical_meta.get("license_status"),
+        "license_standing": license_standing({**canonical_meta, "canonical_type": table.get("canonical_type") or canonical_meta.get("canonical_type")}),
         "zip": table.get("zip"),
         "canonical_type": table.get("canonical_type"),
         "role_classification": table.get("role_classification"),
@@ -1795,6 +1800,15 @@ def _build_ranked_candidate_detail(
             parameter: evidence.get("raw_value")
             for parameter, evidence in row_by_param.items()
             if _is_verified_row(evidence)
+        },
+        # Verified government/quality measures with their source, for the Regulatory /
+        # Quality Evidence Layer (regulatory_quality_layer.py). Values stay in their units.
+        "regulatory_quality_evidence": {
+            parameter: {"value": row_by_param[parameter].get("raw_value"), "source_family": str(row_by_param[parameter].get("source") or "UNKNOWN_SOURCE")}
+            for parameter in REGULATORY_QUALITY_PARAMETERS
+            if parameter in row_by_param
+            and _is_verified_row(row_by_param[parameter])
+            and str(row_by_param[parameter].get("raw_value") or "UNKNOWN").upper() != "UNKNOWN"
         },
         "visual_media": build_visual_media_payload(get_facility_media_record(canonical_id)),
         "eligibility_status": eligibility["eligibility_status"],
@@ -1888,6 +1902,8 @@ def run_patient_decision_engine(
         *STAFFING_PARAMETER_IDS,
         *OUTCOME_PARAMETER_IDS,
         *PRACTICAL_FIT_PARAMETER_IDS,
+        *MUST_EVIDENCE_PARAMETER_IDS,
+        *REGULATORY_QUALITY_PARAMETERS,
         "current_price",
         "current_availability",
     }
@@ -1912,9 +1928,23 @@ def run_patient_decision_engine(
         ],
     )
     discovered_ids = list(catalog_query["candidate_ids"])
+    universe_ids = set(discovered_ids)
+    for excluded in (catalog_query.get("excluded_ids_by_parameter") or {}).values():
+        universe_ids.update(excluded)
     if configured_canonical_market() == "synthetic-pilot":
         exposed_ids = set(get_exposed_canonical_facility_ids())
         discovered_ids = [canonical_id for canonical_id in discovered_ids if canonical_id in exposed_ids]
+        universe_ids &= exposed_ids
+    # Mechanical funnel, stage 1: who entered the market universe and who left at catalog
+    # retrieval on verified NO for a required need (decision_funnel.py reads this).
+    catalog_stage = {
+        "market_universe_count": len(universe_ids),
+        "discovered_count": len(discovered_ids),
+        "excluded_ids_by_parameter": {
+            parameter: sorted(set(ids) & universe_ids)
+            for parameter, ids in (catalog_query.get("excluded_ids_by_parameter") or {}).items()
+        },
+    }
 
     results = []
     requested_city = profile.get("location_city")
@@ -2007,6 +2037,7 @@ def run_patient_decision_engine(
         questionnaire_state, canonical_index.values(), location_city=requested_city
     )
     annotate_distances(results, location_reference, canonical_index)
+    scored_count = len(results)
     radius_plan = plan_radius_scope(results, questionnaire_state, location_reference)
     location_scope = radius_plan["scope"]
     results = radius_plan["rows"]
@@ -2103,6 +2134,7 @@ def run_patient_decision_engine(
         # for the family to say so. When the reference point had no coordinates this says
         # the radius was not applied, rather than implying it was.
         "location_scope": location_scope,
+        "decision_funnel_catalog": {**catalog_stage, "scored_count": scored_count, "in_scope_count": len(results)},
         "availability_policy": "Current availability must be confirmed directly with the facility.",
         "tie_break_policy": {
             "thresholds": TIE_THRESHOLD_POLICY,

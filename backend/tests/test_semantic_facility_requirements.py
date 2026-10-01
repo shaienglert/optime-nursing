@@ -499,11 +499,13 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_pass"])
         self.assertEqual("PASS", fit["hard_gate"])
 
-    def test_budget_verification_stays_pending_when_confirmed_price_exceeds_budget(self) -> None:
+    def test_confirmed_price_above_budget_is_a_verified_fail_not_pending(self) -> None:
         # A confirmed price that is clearly over budget must never be treated as
         # satisfying the client's stated budget MUST -- that would turn a genuine
-        # mismatch into a false "final" recommendation, which is exactly the failure
-        # this MUST gate exists to prevent.
+        # mismatch into a false "final" recommendation. It is also not UNKNOWN: a known
+        # price above budget+10% is negative evidence research cannot change, and
+        # AGENTS.md forbids collapsing negative evidence into unknown (it used to sit in
+        # the research queue as PENDING).
         result = {
             "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
                 "statements": [{
@@ -527,8 +529,9 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         out = apply_semantic_facility_requirements(result, research_limit=0, questionnaire_state={"budget": 3000})
         fit = out["results"][0]["client_intent_fit"]
         self.assertNotIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_pass"])
-        self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_unknown"])
-        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+        self.assertNotIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_unknown"])
+        self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_fail"])
+        self.assertEqual("FAIL", fit["hard_gate"])
 
     def test_context_level_medicaid_mention_is_not_promoted(self) -> None:
         # Live behavior for the same persona: Semantic AI classified Medicaid
@@ -551,18 +554,20 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         }
         self.assertEqual([], extract_semantic_facility_requirements(result))
 
-    def test_used_explicit_medicaid_requirement_survives_to_the_gate(self) -> None:
+    def test_semantic_medicaid_statement_never_decides_the_must(self) -> None:
+        # Owner rule 2026-10-01: Medicaid MUST/PREFERENCE is decided once, by the canonical
+        # client intent (affordability floor). A semantic MUST statement is not a second
+        # authority -- it neither adds a gate nor removes one.
+        statement = {
+            "raw_text": "the facility must accept Medicaid",
+            "meaning": "Medicaid acceptance is a hard requirement",
+            "importance": "MUST",
+            "knowledge_state": "KNOWN",
+            "status": "USED",
+            "mapped_parameters": ["medicaid_requirement"],
+        }
         result = {
-            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
-                "statements": [{
-                    "raw_text": "the facility must accept Medicaid",
-                    "meaning": "Medicaid acceptance is a hard requirement",
-                    "importance": "MUST",
-                    "knowledge_state": "KNOWN",
-                    "status": "USED",
-                    "mapped_parameters": ["medicaid_requirement"],
-                }]
-            }}}},
+            "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {"statements": [statement]}}}},
             "results": [{
                 "canonical_facility_id": "NO-MEDICAID-EVIDENCE",
                 "facility_name": "Generic Community",
@@ -570,12 +575,31 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
                 "agent_person_fit_evidence": [],
             }],
         }
+        for status in ("May qualify", "Application pending", None):
+            self.assertEqual([], extract_semantic_facility_requirements(result, {"medicaidStatus": status} if status else {}))
+        out = apply_semantic_facility_requirements(result, research_limit=0, questionnaire_state={"medicaidStatus": "May qualify"})
+        fit = out["results"][0]["client_intent_fit"]
+        self.assertEqual([], fit["must_unknown"] + fit["must_pass"] + fit["must_fail"])
+
+    def test_canonical_medicaid_must_is_an_evidence_request_not_a_second_gate(self) -> None:
+        result = {
+            "decision_intelligence": {
+                "client_intent": {"must_haves": [{"key": "MEDICAID_PATHWAY_REQUIRED"}]},
+                "human_intelligence": {"semantic_ai": {"result": {"statements": []}}},
+            },
+            "results": [{
+                "canonical_facility_id": "PENDING-MEDICAID",
+                "facility_name": "Generic Community",
+                "client_intent_fit": {"must_pass": [], "must_unknown": ["MEDICAID_PATHWAY_REQUIRED"], "must_fail": []},
+                "agent_person_fit_evidence": [],
+            }],
+        }
         requirements = extract_semantic_facility_requirements(result)
-        self.assertEqual(["SEMANTIC_MEDICAID_PATHWAY"], [item["key"] for item in requirements])
+        self.assertTrue(all(item.get("evidence_request_only") for item in requirements))
         out = apply_semantic_facility_requirements(result, research_limit=0)
         fit = out["results"][0]["client_intent_fit"]
-        self.assertIn("SEMANTIC_MEDICAID_PATHWAY", fit["must_unknown"])
-        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+        self.assertEqual(["MEDICAID_PATHWAY_REQUIRED"], fit["must_unknown"])
+        self.assertNotIn("SEMANTIC_MEDICAID_PATHWAY", fit["must_unknown"] + fit["must_pass"])
 
     def test_structured_questionnaire_budget_survives_even_without_ai_statements(self) -> None:
         # Reproduces the live finding for recently_widowed_isolation_risk: the client's

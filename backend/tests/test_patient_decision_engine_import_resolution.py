@@ -57,17 +57,23 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         module = importlib.import_module("app.services.patient_decision_engine")
         governed = module._governed
         memory = governed._care_setting_fit(
-            {"requires_memory": True, "requires_skilled": False, "requires_rehab": False, "requires_stroke": False, "needs_residential_assistance": True},
+            {"care_need_ids": ["adl_support", "memory_care"]},
             {"canonical_type": "ASSISTED_LIVING_RFG"},
             {"memory_care_classification": "CONFIRMED", "synthetic_archetype": "MEMORY_CARE"},
         )
         rehab = governed._care_setting_fit(
-            {"requires_memory": False, "requires_skilled": False, "requires_rehab": True, "requires_stroke": False, "needs_residential_assistance": True},
-            {"canonical_type": "SKILLED_NURSING"},
+            {"care_need_ids": ["adl_support", "pt", "ot"]},
+            {"canonical_type": "SKILLED_NURSING", "matched_needs": [{"parameter_id": "pt"}, {"parameter_id": "ot"}]},
             {"synthetic_archetype": "REHABILITATION"},
+        )
+        rehab_unverified = governed._care_setting_fit(
+            {"care_need_ids": ["adl_support", "pt", "ot"]},
+            {"canonical_type": "ASSISTED_LIVING_RFG"},
+            {"synthetic_archetype": "CONTINUING_CARE"},
         )
         self.assertEqual("PRIMARY_FIT", memory["status"])
         self.assertEqual("PRIMARY_FIT", rehab["status"])
+        self.assertEqual("POSSIBLE_FIT", rehab_unverified["status"])
 
     def test_ineligible_candidate_cannot_enter_visible_ranking(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")

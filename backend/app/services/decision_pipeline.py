@@ -315,6 +315,41 @@ def _suppress_unverified_recommendations(result: dict[str, Any]) -> dict[str, An
     return result
 
 
+def _merge_funnel_fit(result: dict[str, Any]) -> None:
+    from app.services.decision_funnel import merge_late_fit
+    ledger = result.get("decision_funnel_ledger")
+    if isinstance(ledger, list):
+        merge_late_fit(ledger, result.get("results") or [])
+
+
+def _attach_decision_funnel(result: dict[str, Any], decision_questionnaire: dict[str, Any]) -> None:
+    """Mechanical funnel + zero-result classification (decision_funnel.py)."""
+    from app.services.decision_funnel import build_funnel
+    ledger = result.pop("decision_funnel_ledger", None)
+    catalog = result.pop("decision_funnel_catalog", None)
+    if not isinstance(ledger, list) or not isinstance(catalog, dict):
+        return
+    decision = result.setdefault("decision_intelligence", {})
+    intent = decision.get("client_intent") if isinstance(decision.get("client_intent"), dict) else {}
+    must_order = [str(m.get("key") or "") for m in intent.get("must_haves") or []]
+    budget = decision_questionnaire.get("budget")
+    budget = float(budget) if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0 else None
+    shown = len(result.get("results") or [])
+    coverage = None
+    if shown == 0:
+        from app.services.must_evidence_sources import market_must_coverage
+        coverage = market_must_coverage(must_order)
+    result["decision_funnel"] = build_funnel(
+        catalog=catalog,
+        location_scope=result.get("location_scope") or {},
+        ledger=ledger,
+        must_order=must_order,
+        budget=budget,
+        shown_count=shown,
+        requested_must_coverage=coverage,
+    )
+
+
 def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
     from app.services.decision_pipeline_trace import attach_decision_pipeline_trace
     return attach_decision_pipeline_trace(result)
@@ -387,6 +422,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     # over-budget rows are needed.  This avoids the former duplicate "fill shortlist"
     # policy and preserves the owner rule: in-budget first, then all otherwise-eligible
     # candidates up to +10%, with transparent deviation.
+    _merge_funnel_fit(result)
     result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
     stage_started = _mark("apply_must_ai_nice_pipeline_ms", stage_started)
     # Re-seal after the MUST/ranking stages before the process owner reads
@@ -397,6 +433,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
     result = apply_canonical_decision_state_authority(result)
     result = _suppress_unverified_recommendations(result)
+    _attach_decision_funnel(result, decision_questionnaire)
     from app.services.oomniker_optimizer import analyze_oomniker
     oomniker_profile = dict(questionnaire_state or {})
     oomniker_profile.setdefault("radius_miles", questionnaire_state.get("approvedSearchRadiusMiles") or questionnaire_state.get("maximumDistanceMiles"))

@@ -22,8 +22,14 @@ def test_disclosure_flag_cannot_bypass_missing_or_over_budget_price(source, pric
     )
     fit = result["results"][0]["client_intent_fit"]
     assert "SEMANTIC_BUDGET_VERIFICATION" not in fit["must_pass"]
-    assert "SEMANTIC_BUDGET_VERIFICATION" in fit["must_unknown"]
-    assert fit["hard_gate"] == "PENDING_VERIFICATION"
+    if price is None:
+        # No price on file: unknown, a verification item.
+        assert "SEMANTIC_BUDGET_VERIFICATION" in fit["must_unknown"]
+        assert fit["hard_gate"] == "PENDING_VERIFICATION"
+    else:
+        # A known price above budget+10% is negative evidence, not unknown.
+        assert "SEMANTIC_BUDGET_VERIFICATION" in fit["must_fail"]
+        assert fit["hard_gate"] == "FAIL"
 
 
 def test_disclosure_and_within_budget_price_remain_eligible():

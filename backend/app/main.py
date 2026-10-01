@@ -799,6 +799,10 @@ class PatientDecisionEngineOut(BaseModel):
     # as the notice above -- undeclared, it is dropped and the page cannot say whether the
     # limit was applied or why not.
     location_scope: Optional[Dict[str, Any]] = None
+    # Mechanical funnel and zero-result classification (decision_funnel.py): how many
+    # communities entered, how many left at each stage and why, and which parameter took
+    # the result to zero. Declared so it is not dropped in serialisation.
+    decision_funnel: Optional[Dict[str, Any]] = None
     # Opaque handle to the server-held copy of this exact response; a personal report
     # for the same inputs can reuse it instead of re-running the engine.
     decision_id: Optional[str] = None

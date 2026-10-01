@@ -9,7 +9,9 @@ def _intent(*must_keys: str) -> dict:
 
 
 def _row(canonical_type: str, **extra) -> dict:
-    return {"canonical_type": canonical_type, "city": "LAS VEGAS", "state": "NV", **extra}
+    # A verified current license, so these fixtures exercise the MUST under test only
+    # (missing/unverified license is PENDING by owner rule -- test_license_validity_gate).
+    return {"canonical_type": canonical_type, "city": "LAS VEGAS", "state": "NV", "license_status": "Active", "expiration_date": "12/31/2099", **extra}
 
 
 def test_secure_questionnaire_answer_requires_secured_unit_evidence():

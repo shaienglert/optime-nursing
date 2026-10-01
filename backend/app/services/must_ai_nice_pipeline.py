@@ -42,6 +42,22 @@ def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     return (*person_fit_sort_key(row), *intent_rank_key(row))
 
 
+# intent_rank_key = (gate, care setting, NICE match, NICE mismatch, community fit known,
+# community fit, <regulatory...>, <reputation...>, <evidence counts>). The family's own
+# criteria are the first six; everything after is government/quality/reputation evidence,
+# which belongs to the Regulatory/Quality Evidence Layer and is applied there instead.
+_FAMILY_CRITERIA_LENGTH = 6
+
+
+def _family_criteria_key(row: Dict[str, Any]) -> tuple[Any, ...]:
+    return (*person_fit_sort_key(row), *intent_rank_key(row)[:_FAMILY_CRITERIA_LENGTH])
+
+
+def _layered_rank(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    from app.services.regulatory_quality_layer import rank_with_evidence_layer
+    return rank_with_evidence_layer(rows, lambda row: (1 if row.get("budget_exception") else 0, *_family_criteria_key(row)))
+
+
 def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     """The value two rows must share to be a genuine tie in the *actual* order this
     pipeline produced.
@@ -57,6 +73,8 @@ def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     global_score = ai_ranking.get("global_score")
     if isinstance(global_score, (int, float)):
         return (bool(row.get("budget_exception")), "AI_SCORE", round(float(global_score), 3))
+    if row.get("rank_group_signature") is not None:
+        return (bool(row.get("budget_exception")), "LAYERED", row["rank_group_signature"])
     return (bool(row.get("budget_exception")), "DETERMINISTIC", *_fallback_key(row)[:-1])
 
 
@@ -110,7 +128,7 @@ def _deterministic_waterfall_rank(rows: List[Dict[str, Any]]) -> tuple[List[Dict
     point 8. Same ai_ranking row shape as the AI paths (minus global_score, which
     _rank_group_key correctly reads as "no AI score, use the deterministic key" for
     tie detection -- exactly the right behavior here too)."""
-    ranked = sorted(rows, key=_fallback_key)
+    ranked = _layered_rank(list(rows))
     for position, row in enumerate(ranked, start=1):
         row["ai_ranking"] = {
             "status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL",
@@ -301,9 +319,8 @@ def apply_must_ai_nice_pipeline(
                 row["budget_exception"] = variance > 0
         # In-budget candidates always rank ahead of the permitted +10% expansion.
         # The normal ranking still decides quality within each band.
-        rankable.sort(key=lambda row: (1 if row.get("budget_exception") else 0, _fallback_key(row)))
-    else:
-        rankable.sort(key=_fallback_key)
+    # The shortlist cut uses the same layered order as the final ranking.
+    rankable = _layered_rank(rankable)
     interactive_shortlist_limit = _resolve_interactive_shortlist_limit(limit)
     live_shortlist = rankable[:interactive_shortlist_limit]
 

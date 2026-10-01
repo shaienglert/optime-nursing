@@ -116,14 +116,9 @@ def _nevada_listing_eligible(row: Dict[str, Any]) -> bool:
     detail = str(row.get("detail_url") or "").strip()
     if license_id in {"", "UNKNOWN"} or not detail.startswith("https://nvdpbh.aithent.com/"):
         return False
-    if str(row.get("license_status") or "").strip().upper() != "ACTIVE":
-        return False
-    expiration = str(row.get("expiration_date") or "").strip()
-    try:
-        expires = datetime.strptime(expiration, "%m/%d/%Y").date()
-    except ValueError:
-        return False
-    return expires >= datetime.now(timezone.utc).date()
+    # Status and expiry come from the single license authority.
+    from app.services.license_standing import license_standing, VERIFIED_CURRENT
+    return license_standing(row) == VERIFIED_CURRENT
 
 
 def _canonical_records_for_market(payload: Dict[str, Any], market: str) -> List[Dict[str, Any]]:
@@ -584,11 +579,13 @@ def query_facility_knowledge_catalog(
     requested = sorted({str(value).strip() for value in (required_parameter_ids or []) if str(value).strip()})
     candidate_ids = set(all_ids)
     excluded_by_parameter: Dict[str, int] = {}
+    excluded_ids_by_parameter: Dict[str, List[str]] = {}
     for parameter_id in requested:
         values = runtime["capability_value_index"].get(parameter_id, {})
         explicitly_negative = set(values.get("NO", set()))
         candidate_ids.difference_update(explicitly_negative)
         excluded_by_parameter[parameter_id] = len(explicitly_negative)
+        excluded_ids_by_parameter[parameter_id] = sorted(explicitly_negative)
 
     verified = 0
     pending = 0
@@ -619,6 +616,7 @@ def query_facility_knowledge_catalog(
         "pending_verification_count": pending,
         "excluded_explicit_negative_count": len(all_ids) - len(candidate_ids),
         "excluded_by_parameter": excluded_by_parameter,
+        "excluded_ids_by_parameter": excluded_ids_by_parameter,
         "classification_counts": dict(sorted(classification_counts.items())),
         "unknown_is_not_negative": True,
     }

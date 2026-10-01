@@ -28,19 +28,39 @@ class LicenseValidityGateTests(unittest.TestCase):
         result = evaluate_candidate_intent(self._row(license_expired=True), intent)
         self.assertIn("LICENSE_CURRENTLY_VALID", result["must_fail"])
 
-    def test_confirmed_valid_license_passes(self) -> None:
+    def test_verified_active_current_license_passes(self) -> None:
         intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
-        result = evaluate_candidate_intent(self._row(license_expired=False), intent)
+        result = evaluate_candidate_intent(self._row(license_status="Active", expiration_date="12/31/2099"), intent)
         self.assertIn("LICENSE_CURRENTLY_VALID", result["must_pass"])
 
-    def test_missing_expiration_data_passes_rather_than_blocking(self) -> None:
-        # No license_expired field at all (the shape of every pre-existing row/test
-        # fixture in the whole suite) must never turn into UNKNOWN/PENDING noise.
+    def test_missing_or_unverified_license_is_pending_never_pass(self) -> None:
+        # Owner rule 2026-10-01: where a license is legally required, missing/unverified
+        # is PENDING until verified -- not PASS, and not FAIL.
         intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
-        result = evaluate_candidate_intent(self._row(), intent)
+        for extra in ({}, {"license_expired": False}, {"license_status": "Active"}, {"expiration_date": "12/31/2099"}, {"license_status": "UNKNOWN", "expiration_date": "12/31/2099"}):
+            result = evaluate_candidate_intent(self._row(**extra), intent)
+            self.assertIn("LICENSE_CURRENTLY_VALID", result["must_unknown"], msg=str(extra))
+            self.assertEqual("PENDING_VERIFICATION", result["hard_gate"], msg=str(extra))
+
+    def test_explicitly_inactive_license_fails(self) -> None:
+        intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
+        result = evaluate_candidate_intent(self._row(license_status="Revoked", expiration_date="12/31/2099"), intent)
+        self.assertIn("LICENSE_CURRENTLY_VALID", result["must_fail"])
+
+    def test_license_not_required_for_independent_housing(self) -> None:
+        intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
+        result = evaluate_candidate_intent(self._row(canonical_type="INDEPENDENT_LIVING"), intent)
         self.assertIn("LICENSE_CURRENTLY_VALID", result["must_pass"])
-        self.assertNotIn("LICENSE_CURRENTLY_VALID", result["must_unknown"])
-        self.assertNotIn("LICENSE_CURRENTLY_VALID", result["must_fail"])
+
+    def test_listing_filter_and_must_gate_share_one_authority(self) -> None:
+        from app.services.facility_parameter_service import _nevada_listing_eligible
+        base = {"canonical_type": "ASSISTED_LIVING_RFG", "nevada_license_id": "X1", "detail_url": "https://nvdpbh.aithent.com/x"}
+        intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
+        for extra in ({"license_status": "Active", "expiration_date": "12/31/2099"}, {"license_status": "Active", "expiration_date": "01/01/2020"}, {"license_status": "Active"}, {"license_status": "Revoked", "expiration_date": "12/31/2099"}):
+            row = {**base, **extra}
+            listed = _nevada_listing_eligible(row)
+            passed = "LICENSE_CURRENTLY_VALID" in evaluate_candidate_intent(self._row(**extra), intent)["must_pass"]
+            self.assertEqual(listed, passed, msg=str(extra))
 
 
 class LicenseExpiredHelperTests(unittest.TestCase):

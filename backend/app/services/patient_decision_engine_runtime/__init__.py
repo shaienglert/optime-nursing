@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 from app.services.client_intent_runtime import attach_client_intent_fit, build_client_intent, intent_rank_key
 from app.services.affordability_floor import apply_medicaid_affordability_rule
+from app.services.decision_funnel import ledger_rows
 from app.services.decision_agent_bridge_fast import attach_agent_evidence_and_queue_gaps_fast as attach_agent_evidence_and_queue_gaps
 from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
 from app.services.human_intelligence_runtime_verified import attach_human_person_fit, build_human_intelligence_context, has_explicit_person_fit_preference, person_fit_sort_key
@@ -379,6 +380,7 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
 
     attach_client_intent_fit(rows, client_intent)
     _stage_started = _mark("attach_client_intent_fit_2_ms", _stage_started)
+    core["decision_funnel_ledger"] = ledger_rows(rows)
     survivors = [row for row in rows if _is_rankable_candidate(row)]
     nearby_importance = str(questionnaire_state.get("nearbyPlacesImportance") or "No preference")
     attach_nearby_place_fit(survivors, questionnaire_state)

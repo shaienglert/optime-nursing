@@ -67,6 +67,8 @@ EVIDENCE_CHECK = {
     "wound_care": lambda facts, row: facts.get("wound_care") == "YES",
     "kosher": lambda facts, row: facts.get("kosher") == "YES",
     "couple_coresidence": lambda facts, row: row.get("accepts_couples") is True,
+    "wandering_safety": lambda facts, row: facts.get("secured_units") == "YES",
+    "medicaid_pathway": lambda facts, row: facts.get("medicaid_attributes") == "YES",
 }
 FORBIDDEN_ARCHETYPES = {
     "MEMORY_CARE_ONLY": {"MEMORY_CARE"},
@@ -159,6 +161,25 @@ def _violations(persona: Dict[str, Any], decision: Dict[str, Any]) -> List[str]:
         problems.append("an in-budget community is ranked after an over-budget exception")
     if not scope.get("applied"):
         problems.append(f"distance limit not applied: {scope.get('reason')}")
+
+    # 3. The mechanical funnel reconciles, and a zero result is explained, never assumed.
+    funnel = response.get("decision_funnel") or {}
+    if not funnel:
+        problems.append("no decision funnel")
+    else:
+        if funnel.get("reconciliation_errors"):
+            problems.append(f"funnel does not reconcile: {funnel['reconciliation_errors']}")
+        if funnel.get("shown_count") != len(results):
+            problems.append(f"funnel shown {funnel.get('shown_count')} != results {len(results)}")
+        if not results:
+            klass = funnel.get("zero_result_classification")
+            if klass not in {"CORRECT_ZERO", "EVIDENCE_PENDING"}:
+                problems.append(f"zero result classified {klass}: {funnel.get('zero_result_reason')}")
+            elif not funnel.get("zeroing_parameter"):
+                problems.append(f"zero result ({klass}) names no zeroing parameter")
+            expected = oracle.get("zero_result")
+            if expected and expected != klass:
+                problems.append(f"zero result {klass} at {funnel.get('zeroing_stage')}/{funnel.get('zeroing_parameter')}, oracle expects {expected}")
     return problems
 
 
