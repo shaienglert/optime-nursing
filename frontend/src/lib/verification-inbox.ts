@@ -1,19 +1,6 @@
-import { QuestionnaireState } from "@/context/questionnaire-context";
-import { SearchFacility } from "@/lib/api";
-import {
-  applyVerificationResponses,
-  EngineOutput,
-  getFacilityKnowledgeMemory,
-} from "@/lib/optime-v2-engine";
+import { DecisionEngineRecommendation } from "@/lib/api";
 
 type VerificationState = "YES" | "NO" | "UNKNOWN" | "LIMITED";
-
-type VerificationChecklistItem = {
-  label: string;
-  state: VerificationState;
-  category: string;
-  rationale: string;
-};
 
 type VerificationInboxQuestion = {
   capability_key: string;
@@ -23,98 +10,46 @@ type VerificationInboxQuestion = {
 };
 
 export type ProviderVerificationInboxItem = {
-  facility_id: number;
+  canonical_facility_id: string;
   facility_name: string;
   created_at: string;
   status: "OPEN" | "RESOLVED";
   question_count: number;
   questions: VerificationInboxQuestion[];
-  privacy: {
-    resident_info_shared: false;
-    notes: string;
-  };
+  privacy: { resident_info_shared: false; notes: string };
 };
 
-export type ProviderVerificationAnswerPayload = {
-  facility: SearchFacility;
-  state: QuestionnaireState;
-  checklist: VerificationChecklistItem[];
-  answers: Record<string, "YES" | "NO" | "LIMITED">;
-  verifiedAt?: string;
-  expiresInDays?: number;
-};
-
-function toQuestionKey(label: string): string {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+function keyOf(item: Record<string, unknown>): string {
+  return String(item.parameter_id || item.need_key || item.need_text || "unknown_requirement");
 }
 
-export function createVerificationInbox(engineOutput: EngineOutput): ProviderVerificationInboxItem[] {
+export function createVerificationInbox(recommendations: DecisionEngineRecommendation[]): ProviderVerificationInboxItem[] {
   const now = new Date().toISOString();
-  const items: ProviderVerificationInboxItem[] = [];
-
-  engineOutput.accepted.forEach((recommendation) => {
-    const checklist = recommendation.report.audit.verificationChecklist as VerificationChecklistItem[];
-    const unknownItems = checklist.filter((item) => item.state === "UNKNOWN");
-    if (unknownItems.length === 0) {
-      return;
-    }
-
-    items.push({
-      facility_id: recommendation.facility.id,
-      facility_name: recommendation.facility.name,
+  return recommendations.flatMap((recommendation) => {
+    const unknown = recommendation.unknown_critical_needs || [];
+    if (!unknown.length) return [];
+    return [{
+      canonical_facility_id: recommendation.canonical_facility_id,
+      facility_name: recommendation.facility_name,
       created_at: now,
-      status: "OPEN",
-      question_count: unknownItems.length,
-      questions: unknownItems.map((item) => ({
-        capability_key: toQuestionKey(item.label),
-        question: item.label,
-        current_state: item.state,
-        rationale: item.rationale,
+      status: "OPEN" as const,
+      question_count: unknown.length,
+      questions: unknown.map((item) => ({
+        capability_key: keyOf(item),
+        question: `Please verify the current facility fact: ${keyOf(item).replace(/_/g, " ")}.`,
+        current_state: "UNKNOWN" as const,
+        rationale: "Required facility evidence is currently unknown in the backend decision snapshot.",
       })),
       privacy: {
-        resident_info_shared: false,
-        notes: "Inbox contains capability-only questions. No resident demographic, contact, budget, or clinical history data is shared.",
+        resident_info_shared: false as const,
+        notes: "Capability-only verification. No resident identity, family contact, budget, or clinical narrative is shared.",
       },
-    });
+    }];
   });
-
-  return items;
 }
 
-export function applyProviderVerificationAnswers(payload: ProviderVerificationAnswerPayload): {
-  updatedChecklist: VerificationChecklistItem[];
-  updatedRequest: {
-    unknownCount: number;
-    confidenceScore: number;
-    visitReadinessScore: number;
-    nextStepMessage: string;
-  };
-  memorySnapshot: ReturnType<typeof getFacilityKnowledgeMemory>;
-} {
-  const result = applyVerificationResponses(
-    payload.facility,
-    payload.state,
-    payload.checklist,
-    payload.answers,
-    {
-      source: "PROVIDER_PORTAL",
-      verifiedAt: payload.verifiedAt,
-      expiresInDays: payload.expiresInDays,
-    },
-  );
-
-  return {
-    updatedChecklist: result.checklist,
-    updatedRequest: {
-      unknownCount: result.request.unknownCount,
-      confidenceScore: result.request.confidenceScore,
-      visitReadinessScore: result.request.visitReadinessScore,
-      nextStepMessage: result.request.nextStepMessage,
-    },
-    memorySnapshot: getFacilityKnowledgeMemory(payload.facility.id),
-  };
-}
+/*
+Provider answers must be written through the backend Facility Evidence Profile API.
+This frontend module deliberately does not mutate recommendation state or maintain a
+second facility-memory/decision engine.
+*/
