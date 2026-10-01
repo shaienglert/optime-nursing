@@ -101,7 +101,16 @@ async function answerInterview(page, answers, maxSteps = 120) {
       for (const option of action.select) await page.getByRole('button', { name: option, exact: true }).click();
     }
     if (action.fill !== undefined) {
-      await page.locator('main input[type="text"], main input[type="number"]').first().fill(String(action.fill));
+      const range = page.locator('main input[type="range"]');
+      if (await range.count()) {
+        await range.first().evaluate((el, value) => {
+          el.value = String(value);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }, action.fill);
+      } else {
+        await page.locator('main input[type="text"], main input[type="number"]').first().fill(String(action.fill));
+      }
     }
     await page.getByRole('button', { name: /^(Next →|See the summary →)$/ }).click();
   }
