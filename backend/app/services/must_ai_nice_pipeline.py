@@ -539,6 +539,7 @@ def apply_must_ai_nice_pipeline(
         "dynamic_preferences": dynamic_summary,
         "legacy_structured_nice_audit": structured_nice_summary,
         "legacy_structured_nice_authoritative": False,
+        "governed_structured_nice_authoritative": True,
         "top_nice_complete_count": len(complete_selected),
         "top_nice_complete_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_selected],
         "nice_complete_beyond_display_count": len(complete_beyond_display),
