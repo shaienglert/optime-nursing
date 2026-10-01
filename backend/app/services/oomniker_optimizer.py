@@ -1,20 +1,32 @@
 from __future__ import annotations
 from typing import Any
 
-def analyze_oomniker(profile:dict[str,Any], candidates:list[dict[str,Any]])->dict[str,Any]:
-    """Explain user-changeable constraints; never mutate profile or rerank candidates."""
+IMMUTABLE_SYSTEM_MUST='SYSTEM_MUST'
+CLIENT_MUST='CLIENT_MUST'
+PREFERENCE='PREFERENCE'
+
+def analyze_oomniker(profile:dict[str,Any], candidates:list[dict[str,Any]], *, filtered_universe:list[dict[str,Any]]|None=None)->dict[str,Any]:
+    """Advisory AI boundary: maximize viable choice only after SYSTEM MUST filtering."""
+    universe=list(filtered_universe if filtered_universe is not None else candidates)
+    constraints=profile.get('constraints') if isinstance(profile.get('constraints'),list) else []
     suggestions=[]
-    budget=profile.get("budget")
-    radius=profile.get("radius_miles") or profile.get("maximumDistanceMiles")
+    immutable=[]
+    for constraint in constraints:
+        if not isinstance(constraint,dict): continue
+        level=str(constraint.get('authority') or constraint.get('requirement_level') or PREFERENCE).upper()
+        key=str(constraint.get('parameter') or constraint.get('parameter_id') or '')
+        if level==IMMUTABLE_SYSTEM_MUST:
+            immutable.append(key); continue
+        matching=sum(1 for row in universe if key in set(row.get('matched_parameter_ids') or []))
+        lost=max(0,len(universe)-matching)
+        if not lost: continue
+        if level==CLIENT_MUST:
+            suggestions.append({'parameter':key,'authority':CLIENT_MUST,'action':'ASK_CLIENT_TO_RECONSIDER','requires_client_approval':True,'options_preserved':matching,'additional_options_if_relaxed':lost,'may_auto_change':False})
+        else:
+            suggestions.append({'parameter':key,'authority':PREFERENCE,'action':'RECOMMEND_TRANSPARENT_ALTERNATIVE','requires_client_approval':True,'options_preserved':matching,'additional_options_if_relaxed':lost,'may_auto_change':False})
+    budget=profile.get('budget')
     if isinstance(budget,(int,float)) and budget>0:
-        within=sum(1 for r in candidates if isinstance(r.get("starting_monthly_price"),(int,float)) and r["starting_monthly_price"]<=budget)
-        tolerance=sum(1 for r in candidates if isinstance(r.get("starting_monthly_price"),(int,float)) and budget<r["starting_monthly_price"]<=budget*1.10)
-        if tolerance:
-            suggestions.append({"parameter":"budget","current":budget,"suggested_max":round(budget*1.10,2),"additional_options":tolerance,"reason":f"{tolerance} otherwise relevant options are within 10% of the requested budget."})
-    if isinstance(radius,(int,float)) and radius>0:
-        current=sum(1 for r in candidates if isinstance(r.get("distance_miles"),(int,float)) and r["distance_miles"]<=radius)
-        expanded=sum(1 for r in candidates if isinstance(r.get("distance_miles"),(int,float)) and radius<r["distance_miles"]<=radius*2)
-        if expanded:
-            suggestions.append({"parameter":"radius_miles","current":radius,"suggested_max":radius*2,"additional_options":expanded,"reason":f"Expanding the radius could reveal {expanded} additional otherwise relevant options."})
-    suggestions.sort(key=lambda x:(-int(x.get("additional_options") or 0),str(x.get("parameter"))))
-    return {"status":"ADVISORY_ONLY","profile_mutated":False,"suggestions":suggestions,"candidate_count":len(candidates)}
+        tolerance=sum(1 for r in universe if isinstance(r.get('starting_monthly_price'),(int,float)) and budget<r['starting_monthly_price']<=budget*1.10)
+        if tolerance: suggestions.append({'parameter':'budget','authority':PREFERENCE,'action':'RECOMMEND_WITHIN_APPROVED_10_PERCENT','requires_client_approval':True,'additional_options_if_relaxed':tolerance,'may_auto_change':False})
+    suggestions.sort(key=lambda x:(-int(x.get('additional_options_if_relaxed') or 0),str(x.get('parameter'))))
+    return {'status':'AI_ADVISOR_WITH_GOVERNED_BOUNDARIES','system_must_immutable':immutable,'input_universe':'POST_SYSTEM_MUST_FILTER_ONLY','profile_mutated':False,'suggestions':suggestions,'candidate_count':len(universe)}
