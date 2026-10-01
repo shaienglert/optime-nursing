@@ -251,3 +251,11 @@ Results presentation:
 6. Oomniker never changes budget/radius/preferences without the family's action.
 
 Example client framing: “We found 2 communities that meet your requirements within your requested budget. Below are additional strong matches that are slightly above it. You can use Oomniker to adjust your preferences and reveal more options.”
+
+
+## Owner decisions — 2026-10-01
+
+- Result count: show up to 10 recommendations.
+- True ties: preserve the true tie; do not manufacture a ranking distinction. Present the tied options and offer Oomniker so the family can adjust parameters/preferences if they want to differentiate or reveal alternatives.
+- Pets: an explicitly non-negotiable pet requirement is a MUST. A preference remains NICE.
+- Personal destination / proximity constraints: do not force the family through an extra REQUIRED-vs-PREFERRED question. Treat the stated target as the preferred result band. Show the best matches that satisfy it first; when supply is insufficient, continue with the best otherwise-eligible options outside the target and visibly state the distance/deviation, following the same transparent fallback presentation principle used for budget. Never imply that an outside-target option met the requested proximity.
