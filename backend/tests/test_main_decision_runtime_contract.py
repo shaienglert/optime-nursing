@@ -144,18 +144,17 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         # shape survives the FastAPI response model intact -- the flag a caller branches on
         # is worthless if serialisation drops it.
         self.assertTrue(top_decision["recommendation_execution_allowed"])
-        self.assertTrue(top_decision["canonical_decision_state"]["is_degraded_result"])
-        self.assertEqual(top_decision["recommendation_visibility"], "UNRANKED_ELIGIBLE_SET_VISIBLE")
-        self.assertFalse(serialized["degraded_result_notice"]["results_are_ordered"])
+        self.assertFalse(top_decision["canonical_decision_state"]["is_degraded_result"])
+        self.assertEqual(top_decision["recommendation_visibility"], "RANKED_RECOMMENDATIONS_VISIBLE")
+        self.assertTrue(serialized["degraded_result_notice"]["results_are_ordered"])
         self.assertEqual(
             top_decision["ranking_order"],
             [
                 "DETERMINISTIC_MUST_GATE",
-                "SEMANTIC_AI_DYNAMIC_PREFERENCES",
-                "SEMANTIC_AI_ALL_GOVERNED_EVIDENCE",
-                "EVIDENCE_GROUNDED_PREFERENCE_COVERAGE",
-                "PROVIDER_VERIFICATION",
-                "AI_RERANK",
+                "DETERMINISTIC_GOVERNED_NICE_EVIDENCE",
+                "GOVERNMENT_REGULATORY_DATA",
+                "PUBLIC_REPUTATION",
+                "RELEVANT_EVIDENCE_COMPLETENESS",
             ],
         )
         self.assertEqual(len(patient_decision["success_factor_policy"]["factors"]), 16)
