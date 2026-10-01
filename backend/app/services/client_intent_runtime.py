@@ -141,8 +141,18 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     language_profile = human_profile.get("languageProfile") if isinstance(human_profile.get("languageProfile"), dict) else {}
     preferred_language = str(language_profile.get("preferredSpokenLanguage") or language_profile.get("medicalDiscussionLanguage") or "").strip()
     if preferred_language and preferred_language.lower() not in {"english", "no preference", "unknown", "not sure"}:
-        add_nice("PREFERRED_LANGUAGE_SUPPORT", f"The resident prefers {preferred_language}; verified language support should rank higher.")
-        nice[-1]["value"] = preferred_language
+        language_required = _upper(language_profile.get("languageNeedScope")) in {"REQUIREMENT", "REQUIRED", "MUST"}
+        if language_required:
+            add_must("REQUIRED_LANGUAGE_SUPPORT", f"The resident explicitly requires {preferred_language} language support.", "verified language capability")
+            must[-1]["value"] = preferred_language
+        else:
+            add_nice("PREFERRED_LANGUAGE_SUPPORT", f"The resident prefers {preferred_language}; verified language support should rank higher.")
+            nice[-1]["value"] = preferred_language
+    social_profile = human_profile.get("socialProfile") if isinstance(human_profile.get("socialProfile"), dict) else {}
+    activities = [str(x).strip() for x in social_profile.get("hobbyParticipation") or [] if str(x).strip()]
+    if activities and _upper(social_profile.get("activityRequirementLevel")) in {"REQUIREMENT", "REQUIRED", "MUST"}:
+        add_must("REQUIRED_ACTIVITIES", "The family explicitly marked the selected activities as required.", "verified activities/programming evidence")
+        must[-1]["value"] = activities
     food_profile = human_profile.get("foodProfile") if isinstance(human_profile.get("foodProfile"), dict) else {}
     dietary_preferences = " ".join(str(value or "").lower() for value in food_profile.get("dietaryPreferences") or [])
     if "kosher" in query or "kosher" in dietary_preferences:
@@ -247,6 +257,24 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 hard_fail.append(key)
             else:
                 must_pass.append(key)
+        elif key == "REQUIRED_LANGUAGE_SUPPORT":
+            wanted = str(must_item.get("value") or "").strip().lower()
+            verified = str((row.get("verified_capabilities") or {}).get("languages") or "").lower()
+            if not verified or verified == "unknown":
+                must_unknown.append(key)
+            elif wanted and wanted in verified:
+                must_pass.append(key)
+            else:
+                hard_fail.append(key)
+        elif key == "REQUIRED_ACTIVITIES":
+            wanted = [str(x).strip().lower() for x in must_item.get("value") or [] if str(x).strip()]
+            verified = str((row.get("verified_capabilities") or {}).get("activities") or "").lower()
+            if not verified or verified == "unknown":
+                must_unknown.append(key)
+            elif all(x in verified for x in wanted):
+                must_pass.append(key)
+            else:
+                hard_fail.append(key)
         elif key == "KOSHER_MEALS":
             # Same evidence authority as the needs engine and the NICE branch below: the
             # governed kosher parameter. Verified YES passes, verified incompatible evidence
