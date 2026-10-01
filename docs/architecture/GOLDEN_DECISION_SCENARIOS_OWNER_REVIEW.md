@@ -7,8 +7,9 @@ Global invariants for every scenario:
 - Explicit MUST failure excludes a facility.
 - No facility outside an approved hard geographic radius may be shown as a recommendation.
 - Active/required licensing evidence is enforced according to the jurisdiction/care type policy.
-- In-budget eligible options rank before permitted budget exceptions.
-- A budget exception may be shown only when needed to fill the shortlist and never above +10%; it is visibly labelled.
+- Budget is a ranking band, not a hard exclusion, within the owner-approved +10% tolerance. Every candidate must still pass every non-budget MUST.
+- Eligible options at or below the stated budget are shown first. Eligible options above budget may follow, but never above +10%, and every such card visibly states the dollar and percentage deviation.
+- OOmnik does not calculate or hide an arbitrary number of over-budget options merely to fill a target count. It shows the best eligible matches in these two bands and explains when few options meet the requested budget.
 - NICE preferences influence order only after all MUST gates pass.
 - Missing provider evidence is surfaced as pending verification, never invented.
 - AI never changes eligibility or deterministic business facts.
@@ -103,24 +104,28 @@ Social/transition preferences only when confirmed.
 ## D14 — Location hard radius
 Profile: Henderson reference address/location; maximum 15 miles; location constraint confirmed hard.
 Expected: every recommended facility with measurable distance is <=15 miles from the confirmed reference point.
-Las Vegas facilities outside radius excluded regardless of match score.
+Facilities outside radius excluded regardless of match score.
 Unknown/unmeasurable location evidence cannot silently PASS a hard radius.
+
+## D14B — Named supported area radius
+Profile: Summerlin reference area; maximum 10 miles; location constraint confirmed hard.
+Expected: Summerlin resolves to an approved canonical geographic entity/coordinate; every measurable recommendation is within 10 miles. The product must not offer a named area it cannot geocode.
 
 ## D15 — Duplicate location text robustness
 Confirmed structured profile contains Las Vegas once; narrative may contain duplicated wording such as “Las Vegas Las Vegas”.
 Expected decision output is identical because raw narrative is not consumed by the decision engine.
 
-## D16 — Budget strict pool sufficient
-Profile budget $6,000; at least 10 otherwise-qualified verified candidates <=$6,000.
-Expected: top 10 all <=$6,000. No +10% exception appears.
+## D16 — Budget: strong in-budget supply
+Profile budget $6,000.
+Expected: every otherwise-qualified option <=$6,000 is ordered before any otherwise-qualified option from $6,000.01–$6,600. Over-budget cards may still be shown after the in-budget group and must state the deviation. No candidate >$6,600 is shown.
 
-## D17 — Budget expansion needed
-Profile budget $4,300; fewer than 10 otherwise-qualified in-budget candidates; verified alternatives exist up to $4,730.
-Expected: all in-budget candidates first; only enough >$4,300 candidates to fill shortlist; every exception labelled with variance; none >$4,730.
+## D17 — Budget: no in-budget matches but options inside tolerance
+Profile budget $4,300; otherwise-qualified verified alternatives exist from $4,328 up to $4,730.
+Expected: show the best eligible matches within the +10% band; each is clearly labelled above budget with dollar and percentage deviation. Explain that no verified option was found at or below $4,300. Never show >$4,730.
 
-## D18 — Budget expansion cannot rescue another MUST failure
+## D18 — Budget tolerance cannot rescue another MUST failure
 Candidate price is +5% but fails a clinical/location/licensing MUST.
-Expected: excluded. +10% policy applies only to otherwise-qualified candidates.
+Expected: excluded. The +10% tolerance changes only budget disposition/order; it never relaxes another MUST.
 
 ## D19 — Unknown price
 Profile has hard budget. Candidate has no verified/current usable price.
@@ -231,3 +236,18 @@ For each scenario, the executable fixture must include:
 - expected client-facing explanation assertions.
 
 Facility IDs and exact top order must be generated from the frozen synthetic corpus, then reviewed and approved by the owner before they become golden truth. The engine or AI may not self-author the expected answer.
+
+
+## Owner-approved budget presentation (2026-10-01)
+
+The stated budget remains the family's stated number. OOmnik applies a fixed product tolerance of +10% without asking the family to restate a higher ceiling.
+
+Results presentation:
+1. show the best fully eligible matches at or below budget first;
+2. then show the best fully eligible matches up to +10%;
+3. label every over-budget result with exact dollar and percentage deviation;
+4. never let the tolerance repair another MUST failure;
+5. when only a small number meet the requested budget, say how many were found and invite the family to use Oomniker to change parameters and reveal additional options;
+6. Oomniker never changes budget/radius/preferences without the family's action.
+
+Example client framing: “We found 2 communities that meet your requirements within your requested budget. Below are additional strong matches that are slightly above it. You can use Oomniker to adjust your preferences and reveal more options.”
