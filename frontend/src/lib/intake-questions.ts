@@ -176,6 +176,11 @@ const setMedical = (context: IntakeContext, patch: Partial<QuestionnaireState["m
 });
 
 const setExtra = (context: IntakeContext, patch: Partial<IntakeExtras>): IntakeContext => ({ ...context, extras: { ...context.extras, ...patch } });
+const setRecovery = (context: IntakeContext, patch: Partial<QuestionnaireState["humanIntelligenceV2"]["transitionRiskProfile"]>, extras: Partial<IntakeExtras>): IntakeContext => ({
+  ...context,
+  extras: { ...context.extras, ...extras },
+  draft: { ...context.draft, humanIntelligenceV2: { ...context.draft.humanIntelligenceV2, transitionRiskProfile: { ...context.draft.humanIntelligenceV2.transitionRiskProfile, ...patch } } },
+});
 
 const setIndependence = (context: IntakeContext, patch: Partial<QuestionnaireState["humanIntelligenceV2"]["independenceProfile"]>): IntakeContext => ({
   ...context,
@@ -509,7 +514,7 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "recent procedure",
     visible: ({ extras }) => extras.recentHospitalization === "Yes",
     get: ({ extras }) => extras.recentProcedure,
-    set: (context, value) => setExtra(context, { recentProcedure: text(value) }),
+    set: (context, value) => setRecovery(context, { recentProcedure: text(value) }, { recentProcedure: text(value) }),
   },
   {
     id: "procedureType",
@@ -520,7 +525,7 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "procedure type",
     visible: ({ extras }) => extras.recentProcedure === "Yes",
     get: ({ extras }) => extras.procedureType,
-    set: (context, value) => setExtra(context, { procedureType: text(value) }),
+    set: (context, value) => setRecovery(context, { procedureType: text(value) }, { procedureType: text(value) }),
   },
   {
     id: "expectedRecovery",
@@ -532,7 +537,7 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "expected recovery",
     visible: ({ extras }) => extras.recentProcedure === "Yes",
     get: ({ extras }) => extras.expectedRecovery,
-    set: (context, value) => setExtra(context, { expectedRecovery: text(value) }),
+    set: (context, value) => setRecovery(context, { expectedRecovery: text(value) }, { expectedRecovery: text(value) }),
   },
   {
     id: "temporarySupportMonths",
@@ -543,7 +548,7 @@ export const QUESTIONS: IntakeQuestion[] = [
     label: "temporary support duration",
     visible: ({ extras }) => extras.expectedRecovery === "Yes",
     get: ({ extras }) => extras.temporarySupportMonths,
-    set: (context, value) => setExtra(context, { temporarySupportMonths: text(value) }),
+    set: (context, value) => setRecovery(context, { temporarySupportMonths: text(value) }, { temporarySupportMonths: text(value) }),
   },
   {
     id: "rehabNeed",
