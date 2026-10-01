@@ -370,44 +370,11 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, internal_limit)
     stage_started = _mark("apply_combined_care_layer_ms", stage_started)
 
-    # Budget expansion belongs after every non-budget MUST has been reconciled.
-    # Admit only enough otherwise-qualified candidates to fill the requested shortlist,
-    # never more than 10% over budget. The final ranking keeps these behind in-budget rows.
-    budget = questionnaire_state.get("budget")
-    if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
-        rows = list(result.get("results") or [])
-        strict = []
-        fallback = []
-        for row in rows:
-            fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-            failed = list(fit.get("must_fail") or [])
-            unknown_non_budget = [x for x in (fit.get("must_unknown") or []) if x != "SEMANTIC_BUDGET_VERIFICATION"]
-            price = row.get("starting_monthly_price")
-            if failed or unknown_non_budget or not isinstance(price, (int, float)):
-                continue
-            if price <= budget:
-                strict.append(row)
-            elif price <= budget * 1.10:
-                fallback.append(row)
-        # Normalize budget metadata for every priced, otherwise-qualified row so
-        # the API/UI never has to infer whether a missing flag means "in budget".
-        for row in strict:
-            variance = (float(row["starting_monthly_price"]) - float(budget)) / float(budget)
-            row["budget_variance_pct"] = round(variance * 100, 1)
-            row["budget_band"] = "AT_OR_WITHIN_10_PERCENT_BELOW" if variance >= -0.10 else "MORE_THAN_10_PERCENT_BELOW"
-            row["budget_exception"] = False
-        needed = max(0, int(limit or 0) - len(strict))
-        for row in sorted(fallback, key=lambda x: float(x.get("starting_monthly_price") or 0))[:needed]:
-            fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-            fit["must_unknown"] = [x for x in (fit.get("must_unknown") or []) if x != "SEMANTIC_BUDGET_VERIFICATION"]
-            if "SEMANTIC_BUDGET_VERIFICATION" not in (fit.get("must_pass") or []):
-                fit.setdefault("must_pass", []).append("SEMANTIC_BUDGET_VERIFICATION")
-            fit["hard_gate"] = "PASS" if not fit.get("must_fail") and not fit.get("must_unknown") else "PENDING_VERIFICATION"
-            variance = (float(row["starting_monthly_price"]) - float(budget)) / float(budget)
-            row["budget_variance_pct"] = round(variance * 100, 1)
-            row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT"
-            row["budget_exception"] = True
-            row["client_intent_fit"] = fit
+    # Budget authority is centralized in must_ai_nice_pipeline.  Earlier stages may
+    # expose price evidence but must not admit/remove candidates or decide how many
+    # over-budget rows are needed.  This avoids the former duplicate "fill shortlist"
+    # policy and preserves the owner rule: in-budget first, then all otherwise-eligible
+    # candidates up to +10%, with transparent deviation.
     result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
     stage_started = _mark("apply_must_ai_nice_pipeline_ms", stage_started)
     # Re-seal after the MUST/ranking stages before the process owner reads
