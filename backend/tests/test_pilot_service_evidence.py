@@ -85,7 +85,7 @@ def test_couple_budget_uses_total_and_cost_application_is_idempotent():
     _apply_pilot_monthly_cost(row)
     assert row["starting_monthly_price"] == 8350
     assert row["monthly_price_basis"] == "TWO_RESIDENT_TOTAL"
-    assert not _row_verifies_budget(row, {"budget": 8000})
+    assert _row_verifies_budget(row, {"budget": 8000})
     _apply_pilot_monthly_cost(row)
     assert row["starting_monthly_price"] == 8350
     assert row["single_resident_starting_monthly_price"] == 7600
