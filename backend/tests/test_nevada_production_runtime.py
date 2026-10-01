@@ -146,7 +146,7 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         # notice. It used to be hidden entirely, which told the family nothing.
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
         self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
-        self.assertTrue(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
         self.assertGreaterEqual(result["total_candidates_scored"], 364)
         context = result["care_setting_policy"]["context"]
         self.assertFalse(context["requires_skilled"])
@@ -186,7 +186,7 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         self.assertTrue(rows, "hard criteria should still surface an eligible set")
         self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
         # No stale tie metadata may claim an ordering the model never produced.
-        self.assertTrue(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
 
 
 if __name__ == "__main__":
