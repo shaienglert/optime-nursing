@@ -1,3 +1,4 @@
+from app.database import Base, engine
 """Live shadow gate: legacy narrative profile vs AI->Structured Profile->deterministic profile."""
 import json
 from scripts.pilot_acceptance.cases import CASES
@@ -9,6 +10,7 @@ def needs(profile):
     return {str(x.get("parameter_id")):str(x.get("requirement_level"))+"="+str(x.get("desired_value")) for x in profile.get("needs") or [] if isinstance(x,dict)}
 
 def main():
+    Base.metadata.create_all(bind=engine)
     report=[]; blocking=0
     for key,case in CASES.items():
         q=case["questionnaire"]; text=case["query"]
