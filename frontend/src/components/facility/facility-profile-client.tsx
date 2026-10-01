@@ -80,7 +80,7 @@ function useFacilityRecommendation(
     const decision = loadDecisionResponseCache<DecisionEngineResponse>(requestKey);
     if (!decision) return null;
     return (decision.results || []).find((item) =>
-      String(item.canonical_facility_id || item.facility_id || "") === String(facilityId)
+      String(item.canonical_facility_id || "") === String(facilityId)
     ) || null;
   }, [facilityId, state]);
 }
@@ -233,7 +233,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
 
             <div className="mt-4 space-y-2 text-sm text-[#4f473d]">
               <p><span className="font-semibold text-[#2f2a24]">Profile link:</span> {canonicalFacilityId ? "Confirmed" : "Not available"}</p>
-              <p><span className="font-semibold text-[#2f2a24]">Record status:</span> {identity === "CONFIRMED_CANONICAL_ID" ? "Confirmed facility record" : "Under review"}</p>
+              <p><span className="font-semibold text-[#2f2a24]">Record status:</span> {identity === "CANONICAL_BACKEND_IDENTITY" ? "Confirmed facility record" : "Under review"}</p>
               <p><span className="font-semibold text-[#2f2a24]">Website:</span> {facility.website ? <a className="text-[#5f7f6b] underline" href={facility.website} target="_blank" rel="noreferrer">Verified website</a> : "Not verified"}</p>
               <p><span className="font-semibold text-[#2f2a24]">Phone:</span> {facility.phone || "Not verified"}</p>
               <p><span className="font-semibold text-[#2f2a24]">Price estimate:</span> {priceLine}</p>
@@ -369,11 +369,11 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                 <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#2f2a24]">Confidence</p>
                   <p className="font-semibold text-[#2f2a24]">Confidence</p>
-                  <p className="mt-1">{recommendation?.confidenceExplanation ? recommendation.confidenceExplanation.replace(/\b0 case-relevant requirements are independently verified and 0 still require verification\b/i, "the current evidence set is limited but internally consistent") : "Governed confidence not yet available."}</p>
+                  <p className="mt-1">{recommendation ? `${recommendation.match_score}% governed match score; ${unknownItems.length} item${unknownItems.length === 1 ? "" : "s"} still require verification.` : "Governed confidence not yet available."}</p>
                 </div>
                 <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#2f2a24]">Next step</p>
-                  <p className="mt-1">{recommendation?.report.audit.verificationRequest.nextStepMessage || "Verify the unresolved items with the facility."}</p>
+                  <p className="mt-1">{unknownItems.length ? "Verify the unresolved items with the facility before proceeding." : "Review the current facility facts and confirm availability directly with the facility."}</p>
                 </div>
               </div>
             </section>
