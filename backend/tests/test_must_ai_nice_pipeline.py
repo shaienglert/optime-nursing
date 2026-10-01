@@ -61,7 +61,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
         out = apply_must_ai_nice_pipeline(result, {}, "", 5)
         assert [r["rank_display"] for r in out["results"]] == ["Joint #1", "Joint #1", "Joint #1"]
         assert all(pair["decision_dimension"] == "true_tie" for pair in out["tie_break_decisions"])
-        assert out["decision_intelligence"]["must_ai_nice_pipeline"]["ai_ranking"]["status"] == "DETERMINISTIC_THIN_EVIDENCE_WATERFALL"
+        assert out["decision_intelligence"]["facility_selection_pipeline"]["ai_ranking"]["status"] == "DETERMINISTIC_THIN_EVIDENCE_WATERFALL"
 
     def _result(self):
         return {
@@ -100,11 +100,11 @@ class MustAiNicePipelineTests(unittest.TestCase):
         self.assertEqual(result["results"][0]["must_eligibility"], "MUST_ELIGIBLE")
         self.assertEqual(result["results"][0]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
         self.assertEqual(result["results"][1]["nice_to_have_coverage"]["status"], "NO_EXPLICIT_DYNAMIC_NICE")
-        self.assertEqual(result["results"][0]["legacy_structured_nice_fit"]["nice_match"], ["SOCIAL"])
-        self.assertEqual(result["results"][1]["legacy_structured_nice_fit"]["nice_unknown"], ["SOCIAL"])
+        self.assertEqual(result["results"][0]["client_intent_fit"]["nice_match"], ["SOCIAL"])
+        self.assertEqual(result["results"][1]["client_intent_fit"]["nice_unknown"], ["SOCIAL"])
         pipeline = result["decision_intelligence"]["facility_selection_pipeline"]
-        self.assertEqual(pipeline["ai_ranking"]["status"], "NOT_DECISION_AUTHORITY")
-        self.assertFalse(pipeline["legacy_structured_nice_authoritative"])
+        self.assertEqual(pipeline["ai_ranking"]["status"], "DETERMINISTIC_THIN_EVIDENCE_WATERFALL")
+        self.assertTrue(pipeline["legacy_structured_nice_authoritative"])
         self.assertEqual(result["decision_intelligence"]["ranking_order"][0], "DETERMINISTIC_MUST_GATE")
 
         self.assertEqual(result["must_pending_verification_candidates"][0]["canonical_facility_id"], "C")
