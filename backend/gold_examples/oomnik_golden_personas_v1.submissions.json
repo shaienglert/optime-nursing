@@ -296,7 +296,8 @@
               "Music",
               "Cultural activities"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -376,7 +377,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -739,7 +744,8 @@
               "Music",
               "Classes"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -819,7 +825,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -1195,7 +1205,8 @@
               "Music",
               "Classes"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -1275,7 +1286,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "Yes"
+            "wanderingConcerns": "Yes",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -1686,7 +1701,8 @@
               "Music",
               "Classes"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -1766,7 +1782,11 @@
             "recentHospitalization": "Yes",
             "hospitalizationRecency": "Within 30 days",
             "postHospitalRehabNeed": "Yes",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "No",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -2129,7 +2149,8 @@
               "Music",
               "Classes"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -2209,7 +2230,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -2573,7 +2598,8 @@
               "Music",
               "Classes"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -2653,7 +2679,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -3036,7 +3066,8 @@
               "Religious life",
               "Cultural activities"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -3075,7 +3106,7 @@
             "nativeLanguage": "",
             "medicalDiscussionLanguage": "Hebrew",
             "socialInteractionLanguage": "",
-            "languageNeedScope": "",
+            "languageNeedScope": "Preference",
             "languagesUnderstood": [],
             "familyLanguages": [],
             "bilingualStaffRequired": ""
@@ -3116,7 +3147,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -3481,7 +3516,8 @@
               "Exercise",
               "Classes"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -3561,7 +3597,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -3965,7 +4005,8 @@
               "Music",
               "Classes"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -4045,7 +4086,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -4410,7 +4455,8 @@
               "Music",
               "Classes"
             ],
-            "preferredSocialIntensity": ""
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
           },
           "familyProfile": {
             "involvedFamilyMembers": "",
@@ -4490,7 +4536,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": ""
+            "wanderingConcerns": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
