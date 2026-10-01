@@ -36,6 +36,10 @@ export type IntakeExtras = {
   recentHospitalization: string;
   rehabNeed: string;
   hospitalTiming: string;
+  recentProcedure: string;
+  procedureType: string;
+  expectedRecovery: string;
+  temporarySupportMonths: string;
   memoryWandering: string;
   secureMemory: string;
   language: string;
@@ -141,6 +145,10 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
     recentHospitalization: human.transitionRiskProfile.recentHospitalization || "",
     rehabNeed: human.transitionRiskProfile.postHospitalRehabNeed || "",
     hospitalTiming: human.transitionRiskProfile.hospitalizationRecency || "",
+    recentProcedure: human.transitionRiskProfile.recentProcedure || "",
+    procedureType: human.transitionRiskProfile.procedureType || "",
+    expectedRecovery: human.transitionRiskProfile.expectedRecovery || "",
+    temporarySupportMonths: human.transitionRiskProfile.temporarySupportMonths || "",
     memoryWandering: human.transitionRiskProfile.wanderingConcerns || "",
     secureMemory: human.futureCareProfile.secureMemoryNeighborhoodNeed || "",
     language: human.languageProfile.preferredSpokenLanguage || "",
@@ -490,6 +498,52 @@ export const QUESTIONS: IntakeQuestion[] = [
     visible: ({ extras }) => extras.recentHospitalization === "Yes",
     get: ({ extras }) => extras.hospitalTiming,
     set: (context, value) => setExtra(context, { hospitalTiming: text(value) }),
+  },
+  {
+    id: "recentProcedure",
+    section: SECTION_MEDICAL,
+    prompt: "Was the recent hospital stay related to a surgery or medical procedure?",
+    kind: "single",
+    options: ["Yes", "No", "Not sure"],
+    required: true,
+    label: "recent procedure",
+    visible: ({ extras }) => extras.recentHospitalization === "Yes",
+    get: ({ extras }) => extras.recentProcedure,
+    set: (context, value) => setExtra(context, { recentProcedure: text(value) }),
+  },
+  {
+    id: "procedureType",
+    section: SECTION_MEDICAL,
+    prompt: "What surgery or procedure was it?",
+    kind: "text",
+    required: true,
+    label: "procedure type",
+    visible: ({ extras }) => extras.recentProcedure === "Yes",
+    get: ({ extras }) => extras.procedureType,
+    set: (context, value) => setExtra(context, { procedureType: text(value) }),
+  },
+  {
+    id: "expectedRecovery",
+    section: SECTION_MEDICAL,
+    prompt: "Is the current extra support expected to be temporary as recovery progresses?",
+    kind: "single",
+    options: ["Yes", "No", "Not sure"],
+    required: true,
+    label: "expected recovery",
+    visible: ({ extras }) => extras.recentProcedure === "Yes",
+    get: ({ extras }) => extras.expectedRecovery,
+    set: (context, value) => setExtra(context, { expectedRecovery: text(value) }),
+  },
+  {
+    id: "temporarySupportMonths",
+    section: SECTION_MEDICAL,
+    prompt: "About how many months is the extra support expected to be needed?",
+    kind: "number",
+    required: true,
+    label: "temporary support duration",
+    visible: ({ extras }) => extras.expectedRecovery === "Yes",
+    get: ({ extras }) => extras.temporarySupportMonths,
+    set: (context, value) => setExtra(context, { temporarySupportMonths: text(value) }),
   },
   {
     id: "rehabNeed",
