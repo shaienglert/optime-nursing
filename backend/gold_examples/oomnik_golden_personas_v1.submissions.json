@@ -137,6 +137,12 @@
           ]
         },
         {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
           "id": "nearbyPlaces",
           "kind": "multi",
           "required": true,
@@ -572,6 +578,12 @@
             "Music",
             "Classes"
           ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
         },
         {
           "id": "nearbyPlaces",
@@ -1024,6 +1036,12 @@
           ]
         },
         {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
           "id": "nearbyPlaces",
           "kind": "multi",
           "required": true,
@@ -1444,6 +1462,12 @@
           "answer": "Within 30 days"
         },
         {
+          "id": "recentProcedure",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
           "id": "rehabNeed",
           "kind": "single",
           "required": true,
@@ -1499,6 +1523,12 @@
             "Music",
             "Classes"
           ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
         },
         {
           "id": "nearbyPlaces",
@@ -1940,6 +1970,12 @@
           ]
         },
         {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
           "id": "nearbyPlaces",
           "kind": "multi",
           "required": true,
@@ -2376,6 +2412,12 @@
             "Music",
             "Classes"
           ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
         },
         {
           "id": "nearbyPlaces",
@@ -2817,6 +2859,12 @@
           ]
         },
         {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
           "id": "nearbyPlaces",
           "kind": "multi",
           "required": true,
@@ -2856,6 +2904,12 @@
           "kind": "single",
           "required": true,
           "answer": "Hebrew"
+        },
+        {
+          "id": "languageImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
         },
         {
           "id": "medicalLanguage",
@@ -3266,6 +3320,12 @@
             "Exercise",
             "Classes"
           ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
         },
         {
           "id": "nearbyPlaces",
@@ -3743,6 +3803,12 @@
           ]
         },
         {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
           "id": "nearbyPlaces",
           "kind": "multi",
           "required": true,
@@ -4183,6 +4249,12 @@
             "Music",
             "Classes"
           ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
         },
         {
           "id": "nearbyPlaces",
