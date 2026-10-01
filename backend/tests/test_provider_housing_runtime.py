@@ -104,6 +104,13 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
             "humanIntelligenceV2": {
                 "personalityProfile": {"communitySizePreference": "Large community"},
                 "familyProfile": {"socialInteractionNeed": "Very important"},
+                "transitionRiskProfile": {
+                    "recentProcedure": "Yes",
+                    "procedureType": "spinal surgery",
+                    "expectedRecovery": "Yes",
+                    "temporarySupportMonths": "3",
+                    "postHospitalRehabNeed": "Yes",
+                },
             },
         }
         query = (
@@ -111,10 +118,10 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
             "The husband had spinal surgery and needs rehabilitation and temporary help with bathing and dressing for 3 months. "
             "The wife is independent and they want to live together."
         )
-        strategy = build_living_strategy_context(state, query)
+        strategy = build_living_strategy_context(state, "")
         human = build_human_intelligence_context(questionnaire_state=state, natural_language_query=query)
         human["living_strategy"] = strategy
-        intent = build_client_intent(state, query, strategy, human)
+        intent = build_client_intent(state, "", strategy, human)
         row = {
             "facility_name": "Unknown IL",
             "address": "1 Test St",
@@ -131,7 +138,7 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
 
     def test_las_ventanas_primary_evidence_satisfies_couple_rehab_musts(self) -> None:
         state = {
-            "relationship": "Wife",
+            "relationship": "Couple",
             "ageGroup": "80+",
             "assistanceLevel": "Needs assistance with bathing and dressing",
             "memoryStatus": "No",
