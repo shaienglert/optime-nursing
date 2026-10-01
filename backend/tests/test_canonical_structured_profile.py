@@ -62,3 +62,19 @@ def test_semantically_equivalent_memory_wording_is_not_conflict():
         {"questionnaire_patch":{"memoryStatus":"Mild memory issues"},"statements":[{"raw_text":"forgets appointments","mapped_parameters":["memoryStatus"],"knowledge_state":"EXPLICIT"}]},
     )
     assert profile["conflicts"]==[]
+
+
+def test_unknown_nested_language_field_has_zero_authority():
+    semantic={"questionnaire_patch":{"humanIntelligenceV2":{"languageProfile":{"inventedDecisionField":"Hebrew"}}},"statements":[{"mapped_parameters":["humanIntelligenceV2.languageProfile.inventedDecisionField"],"raw_text":"Hebrew"}]}
+    profile=build_structured_profile({},semantic,family_text="Hebrew")
+    assert "humanIntelligenceV2.languageProfile.inventedDecisionField" not in profile["fields"]
+    assert any(x.get("field")=="humanIntelligenceV2.languageProfile.inventedDecisionField" and x.get("status")=="OUT_OF_SCHEMA" for x in profile["out_of_schema"])
+    assert "inventedDecisionField" not in str(materialize_questionnaire(profile))
+
+
+def test_ai_quote_without_family_source_never_materializes():
+    path="humanIntelligenceV2.languageProfile.preferredSpokenLanguage"
+    semantic={"questionnaire_patch":{"humanIntelligenceV2":{"languageProfile":{"preferredSpokenLanguage":"Hebrew"}}},"statements":[{"mapped_parameters":[path],"raw_text":"Hebrew"}]}
+    profile=build_structured_profile({},semantic)
+    assert profile["fields"][path]["state"]=="UNCLEAR"
+    assert "preferredSpokenLanguage" not in str(materialize_questionnaire(profile))
