@@ -546,7 +546,9 @@ def build_human_intelligence_context(
     semantic = context.get("semantic_ai") or {}
     has_narrative = bool(str(natural_language_query or "").strip())
     narrative_extraction_required = has_narrative and not structured_complete
-    semantic_unavailable = semantic.get("status") in {"FAILED", "REQUIRED_BUT_DISABLED"}
+    # Without a working interpreter the text is UNPROCESSED -- whether the AI failed, is
+    # required but off, or is simply disabled. No regex reads it in its place.
+    semantic_unavailable = semantic.get("status") in {"FAILED", "REQUIRED_BUT_DISABLED", "DISABLED"}
     # Structured answers remain usable when semantic extraction is unavailable.  Any
     # free text that could not be interpreted is explicitly marked UNPROCESSED and
     # must not influence matching until it is successfully extracted and confirmed.
