@@ -146,7 +146,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertTrue(top_decision["recommendation_execution_allowed"])
         self.assertFalse(top_decision["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual(top_decision["recommendation_visibility"], "RANKED_RECOMMENDATIONS_VISIBLE")
-        self.assertTrue(serialized["degraded_result_notice"]["results_are_ordered"])
+        self.assertIsNone(serialized["degraded_result_notice"])
         self.assertEqual(
             top_decision["ranking_order"],
             [
