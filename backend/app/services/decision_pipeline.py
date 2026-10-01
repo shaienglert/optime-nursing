@@ -350,7 +350,13 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     # rows through those stages wrote thousands of records for one family
     # search and could restart the production web worker.
     internal_limit = max(60, min(100, int(limit or 50)))
-    result = runner(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=internal_limit, prepared_profile=profile)
+    # Cutover: conversation AI may read narrative upstream; decision engine gets structured facts only.
+    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+    decision_profile = build_structured_profile(questionnaire_state)
+    decision_questionnaire = materialize_questionnaire(decision_profile)
+    if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
+        decision_questionnaire["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
+    result = runner(questionnaire_state=decision_questionnaire, natural_language_query="", limit=internal_limit, prepared_profile=profile)
     stage_started = _mark("run_patient_decision_engine_deterministic_ms", stage_started)
     if not isinstance(result, dict):
         return result
