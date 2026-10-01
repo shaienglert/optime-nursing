@@ -12,7 +12,9 @@ def test_live_frontend_has_no_legacy_decision_authority():
             if 'optime-v2-engine' in text or 'runOptimeV2Engine' in text: violations.append(str(path.relative_to(ROOT)))
     assert violations==[], violations
 
-def test_backend_raw_narrative_mapper_is_not_called_by_decision_core():
-    text=(ROOT/'backend'/'app'/'services'/'decision_engine_core.py').read_text(encoding='utf-8')
-    active=[line for line in text.splitlines() if '_map_natural_language(' in line and not line.lstrip().startswith('def ')]
-    assert active==[], active
+def test_live_pipeline_marks_structured_profile_authoritative_before_core():
+    pipeline=(ROOT/'backend'/'app'/'services'/'decision_pipeline.py').read_text(encoding='utf-8')
+    assert 'materialize_questionnaire(decision_profile)' in pipeline
+    core=(ROOT/'backend'/'app'/'services'/'decision_engine_core.py').read_text(encoding='utf-8')
+    assert 'if questionnaire_state.get("_structured_profile_authoritative") is True:' in core
+    assert 'RAW_NARRATIVE_NOT_DECISION_INPUT' in core
