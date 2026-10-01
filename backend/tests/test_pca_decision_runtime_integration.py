@@ -68,17 +68,11 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
         return result
 
-    @unittest.expectedFailure
     def test_post_spine_recovery_il_strategy_surfaces_governed_pca_candidates(self) -> None:
         # Single authority (owner, 2026-10-01): every fact the story below used to feed the
         # decision through a regex is now a structured answer where the intake has one
         # (couple, Las Vegas, bathing/dressing, budget, Medicare, move timing, no entrance
         # fee, no skilled rehab). The story is no longer decision input.
-        # KNOWN APP GAP (left failing): the PCA layer activates only on the
-        # INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE strategy, which needs
-        # living_strategy_runtime's expected_recovery signal; expected_recovery (and the
-        # temporary-support duration) is derived only from free text and has no
-        # structured/interpreter field, so a structured profile can never reach it.
         state = {
             "relationship": "Couple",
             "locationCity": "Las Vegas",
@@ -96,6 +90,11 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
                 "familyProfile": {"socialInteractionNeed": "Very important"},
                 "transitionRiskProfile": {
                     "attitudeTowardMove": "Wants to move",
+                    "recentHospitalization": "Yes",
+                    "recentProcedure": "Yes",
+                    "procedureType": "spinal surgery",
+                    "expectedRecovery": "Yes",
+                    "temporarySupportMonths": "3",
                     "postHospitalRehabNeed": "No",
                 },
             },
