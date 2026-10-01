@@ -44,7 +44,7 @@ jobs:
         run: python -m pytest backend/tests/test_golden_decision_contract_v01.py backend/tests/test_golden_decision_independent_oracle.py backend/tests/test_authority_map_contract.py backend/tests/test_no_live_frontend_decision_engine.py backend/tests/test_no_legacy_engine_library_dependencies.py backend/tests/test_facility_evidence_contract.py backend/tests/test_research_institute_scheduler.py backend/tests/test_canonical_structured_profile.py backend/tests/test_deterministic_question_authority.py backend/tests/test_single_budget_authority.py backend/tests/test_client_structured_profile_schema.py backend/tests/test_client_case_structured_profile_persistence.py backend/tests/test_research_event_refresh.py backend/tests/test_research_source_change_detection.py backend/tests/test_legacy_authority_reconciliation.py backend/tests/test_facility_intelligence_readiness.py backend/tests/test_room_pricing_research_ingestion.py backend/tests/test_oomniker_optimizer.py backend/tests/test_market_price_floor_location_scope.py backend/tests/test_golden_intake_personas.py backend/tests/test_free_text_structured_equivalence.py backend/tests/test_oomniker_ai.py backend/tests/test_cutover_authority_gate.py -q
       - name: Verify live Golden Interpreter
         env:
-          PYTHONPATH: backend
+          PYTHONPATH: backend:.
           OPTIME_SEMANTIC_AI_ENABLED: '1'
           OPTIME_SEMANTIC_AI_REQUIRED: '1'
           OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
@@ -53,7 +53,7 @@ jobs:
         run: python backend/gold_examples/validate_golden_interpreter_live.py
       - name: Verify structured profile shadow live
         env:
-          PYTHONPATH: backend
+          PYTHONPATH: backend:.
           OPTIME_SEMANTIC_AI_ENABLED: '1'
           OPTIME_SEMANTIC_AI_REQUIRED: '1'
           OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
