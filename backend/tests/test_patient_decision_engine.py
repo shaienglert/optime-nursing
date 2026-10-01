@@ -75,7 +75,7 @@ class EligibilitySemanticsTests(unittest.TestCase):
         self.assertEqual(within[0], "MATCH")
         self.assertEqual(over[0], "GAP")
 
-    def test_limited_does_not_satisfy_yes_only_critical_need(self) -> None:
+    def test_limited_availability_remains_pending_direct_confirmation(self) -> None:
         need = {
             "parameter_id": "current_availability",
             "requirement_level": "HIGH",
@@ -86,7 +86,7 @@ class EligibilitySemanticsTests(unittest.TestCase):
             need,
             {"current_availability": {"raw_value": "LIMITED", "source": "Facility reported"}},
         )
-        self.assertEqual(result[0], "GAP")
+        self.assertEqual(result[0], "UNKNOWN")
 
     def test_unknown_required_need_is_not_automatically_ineligible(self) -> None:
         needs = [
