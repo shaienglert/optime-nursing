@@ -254,8 +254,14 @@ test.describe('real synthetic-pilot customer journey', () => {
     if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
+    const needsById = new Map((payload.patient_needs_profile?.needs || []).map((item) => [item.parameter_id, item]));
+    for (const requiredId of (oracle.required || [])) {
+      const need = needsById.get(requiredId);
+      expect(need, `${scenario.id} must preserve required need ${requiredId}`).toBeTruthy();
+      expect(['HIGH','REQUIRED','MUST'].includes(String(need.requirement_level || '').toUpperCase()), `${scenario.id} ${requiredId} must remain mandatory`).toBe(true);
+    }
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
-    expect(Math.abs(Number(budgetNeed.desired_value) - scenario.budget)).toBeLessThanOrEqual(100);
+    expect(Number(budgetNeed.desired_value)).toBe(Number(scenario.budget));
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
     // A verified option may be shown up to ten percent over the stated budget, labelled as
     // an exception and ranked after every in-budget option. Nothing further over is shown.
