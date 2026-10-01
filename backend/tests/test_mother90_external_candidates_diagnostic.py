@@ -77,7 +77,7 @@ class Mother90ExternalCandidateDiagnosticTests(unittest.TestCase):
         self.assertEqual(len(shown), result.get("result_count"))
         if shown:
             self.assertTrue(decision.get("canonical_decision_state", {}).get("is_degraded_result"))
-            self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+            self.assertNotIn("degraded_result_notice", result)
         else:
             self.assertFalse(decision.get("recommendation_execution_allowed"))
             self.assertEqual("BLOCKED_EVIDENCE_COLLECTION", decision.get("recommendation_visibility"))
