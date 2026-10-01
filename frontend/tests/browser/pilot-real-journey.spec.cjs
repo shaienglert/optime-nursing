@@ -108,7 +108,7 @@ async function answerInterview(page, answers, maxSteps = 120) {
         const max = Number(await slider.getAttribute('max') || 15000);
         const step = Number(await slider.getAttribute('step') || 1);
         const requested = Number(action.fill);
-        const snapped = Math.min(max, Math.max(min, Math.round(requested / step) * step));
+        const snapped = Math.min(max, Math.max(min, requested));
         await slider.evaluate((el, value) => {
           const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
           setter.call(el, String(value));
