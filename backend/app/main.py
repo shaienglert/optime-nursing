@@ -228,6 +228,12 @@ def create_client_case_endpoint(payload: ClientCaseCreateRequest):
     finally:
         db.close()
 
+@app.post("/api/oomniker/advice")
+def oomniker_advice_endpoint(payload: dict):
+    from app.services.oomniker_ai import advise_with_ai
+    return advise_with_ai(analysis=payload.get("analysis") or {}, client_context=payload.get("client_context") or {})
+
+
 @app.post("/api/market-price-floor")
 def market_price_floor_endpoint(questionnaire_state: dict):
     from app.services.market_price_floor import minimum_price_for_questionnaire
