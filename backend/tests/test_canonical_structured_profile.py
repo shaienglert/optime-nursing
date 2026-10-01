@@ -30,3 +30,18 @@ def test_materializer_excludes_conflict_from_decision_input():
     q=materialize_questionnaire(profile)
     assert "memoryStatus" not in q
     assert q["_structured_profile_authoritative"] is True
+
+def test_semantically_equivalent_adl_wording_is_not_conflict():
+    profile=build_structured_profile(
+        {"assistanceLevel":"Needs assistance with bathing and dressing"},
+        {"questionnaire_patch":{"assistanceLevel":"Help with bathing"},"statements":[{"raw_text":"He needs help with bathing","mapped_parameters":["assistanceLevel"],"knowledge_state":"EXPLICIT"}]},
+    )
+    assert profile["conflicts"]==[]
+    assert profile["fields"]["assistanceLevel"]["value"]=="Needs assistance with bathing and dressing"
+
+def test_semantically_equivalent_memory_wording_is_not_conflict():
+    profile=build_structured_profile(
+        {"memoryStatus":"Mild forgetfulness"},
+        {"questionnaire_patch":{"memoryStatus":"Mild memory issues"},"statements":[{"raw_text":"forgets appointments","mapped_parameters":["memoryStatus"],"knowledge_state":"EXPLICIT"}]},
+    )
+    assert profile["conflicts"]==[]
