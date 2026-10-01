@@ -103,11 +103,18 @@ async function answerInterview(page, answers, maxSteps = 120) {
     if (action.fill !== undefined) {
       const range = page.locator('main input[type="range"]');
       if (await range.count()) {
-        await range.first().evaluate((el, value) => {
-          el.value = String(value);
+        const slider = range.first();
+        const min = Number(await slider.getAttribute('min') || 1);
+        const max = Number(await slider.getAttribute('max') || 15000);
+        const step = Number(await slider.getAttribute('step') || 1);
+        const requested = Number(action.fill);
+        const snapped = Math.min(max, Math.max(min, min + Math.round((requested - min) / step) * step));
+        await slider.evaluate((el, value) => {
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+          setter.call(el, String(value));
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
-        }, action.fill);
+        }, snapped);
       } else {
         await page.locator('main input[type="text"], main input[type="number"]').first().fill(String(action.fill));
       }
@@ -248,7 +255,7 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
-    expect(budgetNeed.desired_value).toBe(scenario.budget);
+    expect(Math.abs(Number(budgetNeed.desired_value) - scenario.budget)).toBeLessThanOrEqual(100);
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
     // A verified option may be shown up to ten percent over the stated budget, labelled as
     // an exception and ranked after every in-budget option. Nothing further over is shown.
