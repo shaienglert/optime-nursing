@@ -576,8 +576,8 @@ def build_human_intelligence_context(
     post_strategy = build_living_strategy_context(post_patch_questionnaire, "")
     post_base = _base.build_human_intelligence_context(post_patch_questionnaire, "")
     post_guarded = _governed_context(post_base, post_strategy, "", post_patch_questionnaire)
-    context["readiness_guardian"] = post_guarded["readiness_guardian"]
-    context["living_strategy_guardian"] = post_guarded["living_strategy_guardian"]
+    context["readiness_guardian"] = {**(context.get("readiness_guardian") or {}), **post_guarded["readiness_guardian"]}
+    context["living_strategy_guardian"] = {**(context.get("living_strategy_guardian") or {}), **post_guarded["living_strategy_guardian"]}
     blockers = {str(x.get("fact_key") or "") for x in context["readiness_guardian"].get("client_owned_blockers") or []}
     current_questions = [q for q in context.get("adaptive_questions") or [] if str(q.get("target_fact_key") or q.get("question_key") or "") in blockers]
     context["adaptive_questions"] = current_questions
