@@ -63,7 +63,7 @@ from app.services.cms_quality_import import import_quality_data
 from app.services.cms_staffing_import import import_staffing_data
 from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_public_activity_categories, import_activity_categories
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
-from app.services.schema_migrations import ensure_client_structured_profile_schema, ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
+from app.services.schema_migrations import ensure_client_structured_profile_schema, ensure_facility_room_pricing_schema, ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
 from app.services.schema_migrations import ensure_market_metric_observation_schema, ensure_market_supply_signal_schema, ensure_state_license_schema
 from app.services.market_report_service import market_report
@@ -1658,6 +1658,7 @@ def startup() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
     ensure_client_structured_profile_schema(engine)
+    ensure_facility_room_pricing_schema(engine)
     ensure_state_license_schema(engine)
     ensure_market_supply_signal_schema(engine)
     ensure_market_metric_observation_schema(engine)
