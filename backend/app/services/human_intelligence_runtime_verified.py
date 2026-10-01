@@ -556,6 +556,11 @@ def build_human_intelligence_context(
         else "UNPROCESSED" if structured_complete and unprocessed_narrative
         else "ASSESSED"
     )
+    from app.services.canonical_structured_profile import build_structured_profile
+    semantic_result = semantic.get("result") if isinstance(semantic.get("result"), dict) else {}
+    if unprocessed_narrative:
+        semantic_result = {**semantic_result, "_unprocessed_narrative": str(natural_language_query or "")}
+    context["structured_profile_shadow"] = build_structured_profile(questionnaire_state, semantic_result)
     context["intake_resolution"] = {
         "source": "STRUCTURED" if structured_complete else "NARRATIVE",
         "narrative_extraction_required": narrative_extraction_required,
