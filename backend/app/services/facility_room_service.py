@@ -16,8 +16,9 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.facility_room_offering import FacilityRoomPhoto, FacilityRoomType
 
-VALID_AVAILABILITY_STATUSES = {"AVAILABLE", "WAITLIST", "UNAVAILABLE", "UNKNOWN"}
-VALID_SOURCES = {"OUTREACH", "MANUAL", "EXISTING_DATABASE"}
+VALID_AVAILABILITY_STATUSES = {"AVAILABLE", "LIMITED", "WAITLIST", "UNAVAILABLE", "UNKNOWN"}
+VALID_PRICING_QUALIFIERS = {"EXACT", "STARTING_AT", "RANGE", "UNKNOWN"}
+VALID_SOURCES = {"OUTREACH", "MANUAL", "EXISTING_DATABASE", "PROVIDER", "OFFICIAL_WEBSITE", "RESEARCH"}
 
 
 def list_room_types(db: Session, canonical_facility_id: str) -> List[FacilityRoomType]:
@@ -37,12 +38,22 @@ def upsert_room_type(
     room_type_name: str,
     description: str = "",
     monthly_price_cents: Optional[int] = None,
+    pricing_qualifier: str = "UNKNOWN",
+    care_fee_cents: Optional[int] = None,
+    mandatory_monthly_fees_cents: Optional[int] = None,
+    second_person_fee_cents: Optional[int] = None,
+    entrance_fee_cents: Optional[int] = None,
+    occupancy_type: Optional[str] = None,
+    source_url: Optional[str] = None,
+    observed_at = None,
     availability_status: str = "UNKNOWN",
     source: str = "MANUAL",
     photo_urls: Optional[List[str]] = None,
 ) -> FacilityRoomType:
     if availability_status not in VALID_AVAILABILITY_STATUSES:
         raise ValueError(f"invalid availability_status: {availability_status}")
+    if pricing_qualifier not in VALID_PRICING_QUALIFIERS:
+        raise ValueError(f"invalid pricing_qualifier: {pricing_qualifier}")
     if source not in VALID_SOURCES:
         raise ValueError(f"invalid source: {source}")
 
@@ -60,6 +71,14 @@ def upsert_room_type(
 
     room.description = description
     room.monthly_price_cents = monthly_price_cents
+    room.pricing_qualifier = pricing_qualifier
+    room.care_fee_cents = care_fee_cents
+    room.mandatory_monthly_fees_cents = mandatory_monthly_fees_cents
+    room.second_person_fee_cents = second_person_fee_cents
+    room.entrance_fee_cents = entrance_fee_cents
+    room.occupancy_type = occupancy_type
+    room.source_url = source_url
+    room.observed_at = observed_at
     room.availability_status = availability_status
     room.source = source
     db.flush()
