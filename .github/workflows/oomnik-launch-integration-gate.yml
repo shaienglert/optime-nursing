@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install backend contract dependencies
-        run: pip install -r backend/requirements.txt
+        run: pip install -r backend/requirements.txt pytest
       - name: Verify ten-scenario launch contract
         run: node scripts/validate_oomnik_launch_contract.cjs
       - name: Verify decision and evidence contracts
