@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 SCHEMA_VERSION = "oomnik-structured-profile/0.1"
+ARCHITECTURE_CUTOVER_VERSION = "2026-10-01"
 VALID_STATES = {"EXPLICIT","NEGATED","UNCLEAR","UNKNOWN","CONFLICT"}
 VALID_PROVENANCE = {"BUTTON","AI_EXTRACTED"}
 
