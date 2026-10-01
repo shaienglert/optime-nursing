@@ -52,3 +52,16 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
     if semantic_result.get("_unprocessed_narrative"):
         unprocessed.append({"text":str(semantic_result.get("_unprocessed_narrative")),"status":"UNPROCESSED"})
     return {"schema_version":SCHEMA_VERSION,"profile_status":"DRAFT","fields":fields,"out_of_schema":out,"conflicts":conflicts,"unprocessed":unprocessed}
+
+
+def materialize_questionnaire(profile: Dict[str,Any]) -> Dict[str,Any]:
+    """Reconstruct only confirmed structured facts; conflicts/unclear never become decision input."""
+    out={}
+    for path,item in (profile.get("fields") or {}).items():
+        if not isinstance(item,dict) or item.get("state") not in {"EXPLICIT","NEGATED"}: continue
+        target=out; parts=str(path).split(".")
+        for part in parts[:-1]: target=target.setdefault(part,{})
+        target[parts[-1]]=item.get("value")
+    out["_structured_profile_authoritative"]=True
+    out["_structured_profile_schema_version"]=profile.get("schema_version")
+    return out
