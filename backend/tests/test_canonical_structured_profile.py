@@ -17,3 +17,9 @@ def test_ai_extracted_fact_keeps_exact_quote():
     profile=build_structured_profile({},{"questionnaire_patch":{"oxygenUse":"At night"},"statements":[{"raw_text":"uses oxygen at night","mapped_parameters":["oxygenUse"],"knowledge_state":"EXPLICIT"}]})
     assert profile["fields"]["oxygenUse"]["provenance"]=="AI_EXTRACTED"
     assert profile["fields"]["oxygenUse"]["quote"]=="uses oxygen at night"
+
+
+def test_nested_human_intelligence_fields_are_not_dropped():
+    profile=build_structured_profile({"humanIntelligenceV2":{"foodProfile":{"dietaryPreferences":["Kosher"]},"languageProfile":{"preferredSpokenLanguage":"Hebrew"}}})
+    assert profile["fields"]["humanIntelligenceV2.foodProfile.dietaryPreferences"]["value"]==["Kosher"]
+    assert profile["fields"]["humanIntelligenceV2.languageProfile.preferredSpokenLanguage"]["value"]=="Hebrew"
