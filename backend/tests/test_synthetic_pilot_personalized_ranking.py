@@ -5,12 +5,23 @@ from unittest.mock import patch
 from app.services.facility_parameter_service import refresh_runtime_cache
 from app.services.patient_decision_engine import run_patient_decision_engine
 
+# Single authority (owner, 2026-10-01): decision facts come only from the Canonical
+# Structured Profile. The area these tests used to pass as the free-text story ("Las Vegas")
+# is the intake's structured area answer, and the interview is finished; without the
+# interpreter, story-only intake leaves the interview not ready and the text UNPROCESSED.
+READY_AREA = {
+    "referenceAddress": "Las Vegas",
+    "referenceLocationValue": "Las Vegas",
+    "questionnaireCompletion": {"mandatoryComplete": True, "conditionalFollowUpsComplete": True},
+}
+
 
 def _rank_for_budget(budget: int) -> list[dict]:
     questionnaire = {
         "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
         "budget": budget,
         "moveTiming": "Planning ahead",
+        **READY_AREA,
     }
     with patch.dict(
         "os.environ",
@@ -18,7 +29,7 @@ def _rank_for_budget(budget: int) -> list[dict]:
         clear=False,
     ):
         refresh_runtime_cache(f"personalized-ranking-{budget}")
-        return run_patient_decision_engine(questionnaire, "Las Vegas", limit=10)["results"]
+        return run_patient_decision_engine(questionnaire, "", limit=10)["results"]
 
 
 def _decision_for_budget(budget: int) -> dict:
@@ -26,6 +37,7 @@ def _decision_for_budget(budget: int) -> dict:
         "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
         "budget": budget,
         "moveTiming": "Planning ahead",
+        **READY_AREA,
     }
     with patch.dict(
         "os.environ",
@@ -33,7 +45,7 @@ def _decision_for_budget(budget: int) -> dict:
         clear=False,
     ):
         refresh_runtime_cache(f"budget-coverage-{budget}")
-        return run_patient_decision_engine(questionnaire, "Las Vegas", limit=10)
+        return run_patient_decision_engine(questionnaire, "", limit=10)
 
 
 def _rank_for_size(preference: str) -> list[dict]:
@@ -44,6 +56,7 @@ def _rank_for_size(preference: str) -> list[dict]:
         "humanIntelligenceV2": {
             "personalityProfile": {"communitySizePreference": preference},
         },
+        **READY_AREA,
     }
     with patch.dict(
         "os.environ",
@@ -51,7 +64,7 @@ def _rank_for_size(preference: str) -> list[dict]:
         clear=False,
     ):
         refresh_runtime_cache(f"size-ranking-{preference}")
-        return run_patient_decision_engine(questionnaire, "Las Vegas", limit=10)["results"]
+        return run_patient_decision_engine(questionnaire, "", limit=10)["results"]
 
 
 def test_budget_changes_ranking_and_top_results_fit_budget() -> None:
@@ -129,10 +142,12 @@ def test_secure_setting_requirement_is_decided_by_secured_unit_evidence() -> Non
     questionnaire = {
         "memoryStatus": "Yes", "budget": 9000,
         "humanIntelligenceV2": {"futureCareProfile": {"secureMemoryNeighborhoodNeed": "Yes"}},
+        "relationship": "Dad",
+        **READY_AREA,
     }
     with patch.dict("os.environ", {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200"}, clear=False):
         refresh_runtime_cache("secure-setting-proof-regression")
-        decision = run_patient_decision_engine(questionnaire, "My father has dementia and needs a secure setting in Las Vegas.", limit=10)
+        decision = run_patient_decision_engine(questionnaire, "", limit=10)
     assert decision["results"]
     for row in decision["results"]:
         assert secured.get(row["canonical_facility_id"]) == "YES", row["canonical_facility_id"]

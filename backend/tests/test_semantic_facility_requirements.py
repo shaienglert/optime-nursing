@@ -3,8 +3,79 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
+import pytest
+
+from app.services.client_intent_runtime import evaluate_candidate_intent
+from app.services.license_standing import VERIFIED_CURRENT
+from app.services.patient_decision_engine import build_patient_needs_profile
 from app.services.semantic_intent_ai import interpret_client_intent_with_ai
 from app.services.semantic_facility_requirements import apply_semantic_facility_requirements, extract_semantic_facility_requirements
+
+try:
+    from .interpreter_road import interpreter_off
+except ImportError:  # pragma: no cover - direct module import
+    from interpreter_road import interpreter_off
+
+
+# Single authority (owner, 2026-10-01): a semantic MUST statement is shadow-only -- it is
+# recorded in decision_intelligence.semantic_facility_requirements.shadow_requirements for
+# comparison, never gates a facility and never queues research. A client requirement gates
+# only as a canonical client-intent MUST built from the Canonical Structured Profile and
+# evaluated per facility by client_intent_runtime.evaluate_candidate_intent. The tests below
+# that used to assert a SEMANTIC_* gate now assert (1) the shadow record and (2) the same
+# per-facility expectations on the canonical MUST, or a strict xfail naming the canonical gap.
+
+GAP_LANGUAGE = (
+    "canonical evaluator gap: build_client_intent creates no language-support MUST from "
+    "humanIntelligenceV2.languageProfile (preferredSpokenLanguage / bilingualStaffRequired), and "
+    "evaluate_candidate_intent has no language_support_verified check"
+)
+GAP_CLINICAL = (
+    "canonical evaluator gap: build_client_intent creates no clinical-acuity MUST from "
+    "medicalCareProfile.needs (Dialysis / Wound care); the needs become dialysis_arrangements / "
+    "wound_care needs only, and evaluate_candidate_intent has no clinical_acuity_verified check"
+)
+GAP_SOCIAL = (
+    "canonical evaluator gap: no structured field creates a social-programming MUST; "
+    "RICH_CULTURE_AND_ACTIVITIES is a NICE driven only by the free-text high_social signal "
+    "(living_strategy_runtime), so there is no canonical MUST whose stamped-False agent evidence "
+    "could be checked against a hard fail"
+)
+
+
+def _canonical_intent(questionnaire_state: dict) -> dict:
+    """Client intent as the runtime builds it from the Canonical Structured Profile."""
+    with interpreter_off():
+        return build_patient_needs_profile(questionnaire_state, "")["client_intent"]
+
+
+def _must_keys(intent: dict) -> set:
+    return {str(item.get("key")) for item in intent.get("must_haves") or []}
+
+
+def _licensed(row: dict) -> dict:
+    # Keep LICENSE_CURRENTLY_VALID (an unconditional canonical MUST) out of the way so the
+    # hard gate reflects only the requirement under test.
+    return {**row, "license_standing": VERIFIED_CURRENT}
+
+
+CONTINUUM_REQUIRED = {"humanIntelligenceV2": {"futureCareProfile": {"continuumOfCarePreference": "Required"}}}
+
+
+def _assert_shadow_only(test: unittest.TestCase, result: dict, key: str, *, check_rows: bool = True) -> dict:
+    """The semantic statement is recorded as shadow and gates no row."""
+    before = [dict((row.get("client_intent_fit") or {})) for row in result.get("results") or []] if check_rows else []
+    out = apply_semantic_facility_requirements(result, research_limit=0)
+    record = out["decision_intelligence"]["semantic_facility_requirements"]
+    test.assertIn(key, {item["key"] for item in record["shadow_requirements"]})
+    test.assertTrue(all(item.get("shadow_only") for item in record["shadow_requirements"]))
+    test.assertNotIn(key, {item["key"] for item in record["requirements"]})
+    test.assertEqual(0, record["tasks_queued"])
+    for row, fit_before in zip(out.get("results") or [], before):
+        fit = row.get("client_intent_fit") or {}
+        test.assertNotIn(key, list(fit.get("must_pass") or []) + list(fit.get("must_unknown") or []) + list(fit.get("must_fail") or []))
+        test.assertEqual(fit_before.get("hard_gate"), fit.get("hard_gate"))
+    return out
 
 
 class SemanticFacilityRequirementTests(unittest.TestCase):
@@ -174,11 +245,19 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
 
         requirements = extract_semantic_facility_requirements(result)
         self.assertEqual(["SEMANTIC_FUTURE_CARE_PATH"], [item["key"] for item in requirements])
-        out = apply_semantic_facility_requirements(result, research_limit=0)
-        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", out["results"][0]["client_intent_fit"]["must_pass"])
-        self.assertEqual("PASS", out["results"][0]["client_intent_fit"]["hard_gate"])
-        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", out["results"][1]["client_intent_fit"]["must_unknown"])
-        self.assertEqual("PENDING_VERIFICATION", out["results"][1]["client_intent_fit"]["hard_gate"])
+        self.assertTrue(requirements[0]["shadow_only"])
+        rows = [dict(row) for row in result["results"]]
+        _assert_shadow_only(self, result, "SEMANTIC_FUTURE_CARE_PATH")
+
+        # The gate: the structured continuum answer -> canonical MUST, verified per facility.
+        intent = _canonical_intent(CONTINUUM_REQUIRED)
+        self.assertEqual({"LICENSE_CURRENTLY_VALID", "CONTINUUM_OF_CARE_REQUIRED"}, _must_keys(intent))
+        verified = evaluate_candidate_intent(_licensed(rows[0]), intent)
+        self.assertIn("CONTINUUM_OF_CARE_REQUIRED", verified["must_pass"])
+        self.assertEqual("PASS", verified["hard_gate"])
+        unknown = evaluate_candidate_intent(_licensed(rows[1]), intent)
+        self.assertIn("CONTINUUM_OF_CARE_REQUIRED", unknown["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", unknown["hard_gate"])
 
     def test_same_apartment_transition_alone_does_not_prove_future_care_path(self) -> None:
         result = {
@@ -211,10 +290,11 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
             }],
         }
 
-        out = apply_semantic_facility_requirements(result, research_limit=0)
-        fit = out["results"][0]["client_intent_fit"]
-        self.assertNotIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_pass"])
-        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
+        row = dict(result["results"][0])
+        _assert_shadow_only(self, result, "SEMANTIC_FUTURE_CARE_PATH")
+        fit = evaluate_candidate_intent(_licensed(row), _canonical_intent(CONTINUUM_REQUIRED))
+        self.assertNotIn("CONTINUUM_OF_CARE_REQUIRED", fit["must_pass"])
+        self.assertIn("CONTINUUM_OF_CARE_REQUIRED", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
     def test_future_care_mapping_alone_does_not_create_continuum_must(self) -> None:
@@ -261,9 +341,11 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
             }],
         }
 
-        out = apply_semantic_facility_requirements(result, research_limit=0)
-        fit = out["results"][0]["client_intent_fit"]
-        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
+        row = dict(result["results"][0])
+        _assert_shadow_only(self, result, "SEMANTIC_FUTURE_CARE_PATH")
+        fit = evaluate_candidate_intent(_licensed(row), _canonical_intent(CONTINUUM_REQUIRED))
+        self.assertNotIn("CONTINUUM_OF_CARE_REQUIRED", fit["must_pass"])
+        self.assertIn("CONTINUUM_OF_CARE_REQUIRED", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
     def test_agent_interpretation_alone_cannot_settle_future_care_must(self) -> None:
@@ -293,12 +375,33 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
             }],
         }
 
-        out = apply_semantic_facility_requirements(result, research_limit=0)
-        fit = out["results"][0]["client_intent_fit"]
-        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
+        row = dict(result["results"][0])
+        _assert_shadow_only(self, result, "SEMANTIC_FUTURE_CARE_PATH")
+        fit = evaluate_candidate_intent(_licensed(row), _canonical_intent(CONTINUUM_REQUIRED))
+        self.assertNotIn("CONTINUUM_OF_CARE_REQUIRED", fit["must_pass"])
+        self.assertIn("CONTINUUM_OF_CARE_REQUIRED", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
-    def test_recalculation_removes_stale_semantic_pass(self) -> None:
+    def test_recalculation_removes_stale_continuum_pass(self) -> None:
+        # The stale pass now lives on the canonical key: a row carrying an earlier
+        # CONTINUUM_OF_CARE_REQUIRED pass is recomputed from evidence, never inherited.
+        stale_row = {
+            "canonical_facility_id": "STALE-PASS",
+            "facility_name": "Independent-only Community",
+            "client_intent_fit": {
+                "must_pass": ["LICENSE_CURRENTLY_VALID", "CONTINUUM_OF_CARE_REQUIRED"],
+                "must_unknown": [],
+                "must_fail": [],
+                "hard_gate": "PASS",
+            },
+            "agent_person_fit_evidence": [],
+        }
+        fit = evaluate_candidate_intent(_licensed(stale_row), _canonical_intent(CONTINUUM_REQUIRED))
+        self.assertNotIn("CONTINUUM_OF_CARE_REQUIRED", fit["must_pass"])
+        self.assertIn("CONTINUUM_OF_CARE_REQUIRED", fit["must_unknown"])
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
+    def test_semantic_future_care_statement_on_recalculation_is_shadow_only(self) -> None:
         result = {
             "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
                 "statements": [{
@@ -323,18 +426,15 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
             }],
         }
 
-        out = apply_semantic_facility_requirements(result, research_limit=0)
-        fit = out["results"][0]["client_intent_fit"]
-        self.assertNotIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_pass"])
-        self.assertIn("SEMANTIC_FUTURE_CARE_PATH", fit["must_unknown"])
-        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+        # A recalculation records the semantic statement as shadow and queues nothing; the
+        # row's gate is the canonical evaluator's (test above), not this module's.
+        _assert_shadow_only(self, result, "SEMANTIC_FUTURE_CARE_PATH", check_rows=False)
 
-    def test_used_dialysis_and_wound_care_musts_survive_to_the_gate(self) -> None:
-        # Reproduces the live finding: Semantic AI correctly tags dialysis coordination
-        # and wound care as MUST/KNOWN, but marks them USED (client-side fact is
-        # understood) rather than RESEARCH_REQUIRED -- before this fix that meant they
-        # were silently dropped and every facility, including plain independent living,
-        # passed the MUST gate with zero visibility into the unverified clinical need.
+    def test_used_dialysis_and_wound_care_musts_are_recorded_as_shadow(self) -> None:
+        # Original live finding: Semantic AI tags dialysis coordination and wound care as
+        # MUST/KNOWN but USED, and they were silently dropped. They are still detected (not
+        # dropped) but are shadow-only now; the gate must come from the structured clinical
+        # needs -- see the strict xfail below for the canonical gap.
         result = {
             "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
                 "statements": [
@@ -376,17 +476,22 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
 
         requirements = extract_semantic_facility_requirements(result)
         self.assertEqual(["SEMANTIC_CLINICAL_ACUITY"], [item["key"] for item in requirements])
+        self.assertTrue(requirements[0]["shadow_only"])
+        _assert_shadow_only(self, result, "SEMANTIC_CLINICAL_ACUITY")
 
-        out = apply_semantic_facility_requirements(result, research_limit=0)
-        independent = out["results"][0]["client_intent_fit"]
-        self.assertIn("SEMANTIC_CLINICAL_ACUITY", independent["must_unknown"])
+    @pytest.mark.xfail(strict=True, reason=GAP_CLINICAL)
+    def test_structured_dialysis_and_wound_care_must_is_verified_per_facility(self) -> None:
+        intent = _canonical_intent({"medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Dialysis", "Wound care"], "dialysisFrequency": "Three times a week"}})
+        clinical = _must_keys(intent) - {"LICENSE_CURRENTLY_VALID"}
+        self.assertTrue(clinical, "no canonical clinical MUST was created from the structured dialysis/wound needs")
+        independent = evaluate_candidate_intent(_licensed({"canonical_facility_id": "INDEPENDENT-LIVING", "agent_person_fit_evidence": []}), intent)
+        self.assertTrue(clinical & set(independent["must_unknown"]))
         self.assertEqual("PENDING_VERIFICATION", independent["hard_gate"])
-
-        verified = out["results"][1]["client_intent_fit"]
-        self.assertIn("SEMANTIC_CLINICAL_ACUITY", verified["must_pass"])
+        verified = evaluate_candidate_intent(_licensed({"canonical_facility_id": "VERIFIED-DIALYSIS", "agent_person_fit_evidence": [{"payload": {"clinical_acuity_verified": True}}]}), intent)
+        self.assertTrue(clinical <= set(verified["must_pass"]))
         self.assertEqual("PASS", verified["hard_gate"])
 
-    def test_used_kosher_and_hebrew_musts_survive_to_the_gate(self) -> None:
+    def test_used_kosher_and_hebrew_musts_are_recorded_as_shadow(self) -> None:
         result = {
             "decision_intelligence": {"human_intelligence": {"semantic_ai": {"result": {
                 "statements": [
@@ -418,14 +523,32 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
 
         requirements = extract_semantic_facility_requirements(result)
         self.assertEqual({"SEMANTIC_LANGUAGE_SUPPORT", "SEMANTIC_KOSHER_DIET"}, {item["key"] for item in requirements})
+        self.assertTrue(all(item["shadow_only"] for item in requirements))
+        _assert_shadow_only(self, result, "SEMANTIC_LANGUAGE_SUPPORT")
+        _assert_shadow_only(self, result, "SEMANTIC_KOSHER_DIET")
 
-        out = apply_semantic_facility_requirements(result, research_limit=0)
-        fit = out["results"][0]["client_intent_fit"]
-        self.assertIn("SEMANTIC_LANGUAGE_SUPPORT", fit["must_unknown"])
-        self.assertIn("SEMANTIC_KOSHER_DIET", fit["must_unknown"])
+    def test_structured_kosher_requirement_is_a_canonical_must_pending_without_evidence(self) -> None:
+        intent = _canonical_intent({"humanIntelligenceV2": {
+            "foodProfile": {"dietaryPreferences": ["Kosher"]},
+            "culturalProfile": {"kosherRequirements": "Required"},
+        }})
+        self.assertIn("KOSHER_MEALS", _must_keys(intent))
+        fit = evaluate_candidate_intent(_licensed({"canonical_facility_id": "NO-EVIDENCE", "agent_person_fit_evidence": []}), intent)
+        self.assertIn("KOSHER_MEALS", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
-    def test_used_budget_must_survives_to_the_gate(self) -> None:
+    @pytest.mark.xfail(strict=True, reason=GAP_LANGUAGE)
+    def test_structured_hebrew_requirement_is_a_canonical_must_pending_without_evidence(self) -> None:
+        intent = _canonical_intent({"humanIntelligenceV2": {"languageProfile": {
+            "preferredSpokenLanguage": "Hebrew", "nativeLanguage": "Hebrew", "bilingualStaffRequired": "Yes",
+        }}})
+        language = _must_keys(intent) - {"LICENSE_CURRENTLY_VALID"}
+        self.assertTrue(language, "no canonical language MUST was created from the structured Hebrew answer")
+        fit = evaluate_candidate_intent(_licensed({"canonical_facility_id": "NO-EVIDENCE", "agent_person_fit_evidence": []}), intent)
+        self.assertTrue(language <= set(fit["must_unknown"]))
+        self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
+
+    def test_structured_budget_must_survives_to_the_gate_and_ai_budget_statement_is_shadow(self) -> None:
         # Reproduces the live finding for budget_constrained_high_adl: Semantic AI
         # tags the stated monthly budget as MUST/KNOWN/USED. Before this fix, budget
         # only ever became a PREFERENCE-level "prefer transparent pricing" need in
@@ -463,8 +586,15 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
 
         requirements = extract_semantic_facility_requirements(result)
         self.assertEqual(["SEMANTIC_BUDGET_VERIFICATION"], [item["key"] for item in requirements])
+        # The AI statement alone is shadow-only ...
+        self.assertTrue(requirements[0]["shadow_only"])
+        _assert_shadow_only(self, result, "SEMANTIC_BUDGET_VERIFICATION")
 
-        out = apply_semantic_facility_requirements(result, research_limit=0)
+        # ... the gate comes from the same $3,000 as a Structured Profile budget (the
+        # interpreter's questionnaire_patch or the button), which survives to the gate.
+        out = apply_semantic_facility_requirements(result, research_limit=0, questionnaire_state={"budget": 3000})
+        gating = out["decision_intelligence"]["semantic_facility_requirements"]["requirements"]
+        self.assertEqual(["QUESTIONNAIRE_CLIENT_INTENT"], [item["source"] for item in gating if item["key"] == "SEMANTIC_BUDGET_VERIFICATION"])
         fit = out["results"][0]["client_intent_fit"]
         self.assertIn("SEMANTIC_BUDGET_VERIFICATION", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
@@ -631,7 +761,7 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertEqual([], extract_semantic_facility_requirements(result, {}))
         self.assertEqual([], extract_semantic_facility_requirements(result, None))
 
-    def test_stamped_false_agent_evidence_never_hard_fails_a_semantic_must(self) -> None:
+    def test_stamped_false_agent_evidence_never_hard_fails_a_shadow_semantic_must(self) -> None:
         # decision_research_worker.py stamps social_engagement_verified=False by default
         # on every research record, regardless of which dimension was actually
         # requested -- so a facility with unrelated agent research (e.g. a
@@ -666,11 +796,34 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
                 }
             ],
         }
+        # Default research_limit, as before: a shadow statement queues nothing either.
+        before = dict(result["results"][0]["client_intent_fit"])
         out = apply_semantic_facility_requirements(result)
+        record = out["decision_intelligence"]["semantic_facility_requirements"]
+        self.assertIn("SEMANTIC_SOCIAL_DELIVERY", {item["key"] for item in record["shadow_requirements"]})
+        self.assertEqual(0, record["tasks_queued"])
         fit = out["results"][0]["client_intent_fit"]
         self.assertNotIn("SEMANTIC_SOCIAL_DELIVERY", fit["must_fail"])
+        self.assertNotEqual("FAIL", fit.get("hard_gate"))
+        self.assertEqual(before, fit)
+
+    @pytest.mark.xfail(strict=True, reason=GAP_SOCIAL)
+    def test_stamped_false_agent_evidence_never_hard_fails_a_canonical_social_must(self) -> None:
+        intent = _canonical_intent({"humanIntelligenceV2": {
+            "socialProfile": {"socialInteractionFrequency": "Daily", "hobbyParticipation": ["Card games"]},
+            "familyProfile": {"socialInteractionNeed": "Daily"},
+        }})
+        social = _must_keys(intent) - {"LICENSE_CURRENTLY_VALID"}
+        self.assertTrue(social, "no canonical social-programming MUST was created from the structured answers")
+        fit = evaluate_candidate_intent(_licensed({
+            "canonical_facility_id": "TEST-1",
+            "agent_person_fit_evidence": [
+                {"payload": {"dimension": "couple_coresidence", "social_engagement_verified": False, "couple_coresidence_verified": True}}
+            ],
+        }), intent)
+        self.assertFalse(social & set(fit["must_fail"]))
         self.assertNotEqual("FAIL", fit["hard_gate"])
-        self.assertIn("SEMANTIC_SOCIAL_DELIVERY", fit["must_unknown"])
+        self.assertTrue(social <= set(fit["must_unknown"]))
 
 
 if __name__ == "__main__":

@@ -69,8 +69,20 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         return result
 
     def test_post_spine_recovery_il_strategy_surfaces_governed_pca_candidates(self) -> None:
+        # Single authority (owner, 2026-10-01): every fact the story below used to feed the
+        # decision through a regex is now a structured answer where the intake has one
+        # (couple, Las Vegas, bathing/dressing, budget, Medicare, move timing, no entrance
+        # fee, no skilled rehab). The story is no longer decision input.
+        # KNOWN APP GAP (left failing): the PCA layer activates only on the
+        # INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE strategy, which needs
+        # living_strategy_runtime's expected_recovery signal; expected_recovery (and the
+        # temporary-support duration) is derived only from free text and has no
+        # structured/interpreter field, so a structured profile can never reach it.
         state = {
-            "relationship": "Wife",
+            "relationship": "Couple",
+            "locationCity": "Las Vegas",
+            "referenceAddress": "Las Vegas",
+            "referenceLocationValue": "Las Vegas",
             "ageGroup": "80+",
             "assistanceLevel": "Needs assistance with bathing and dressing",
             "memoryStatus": "No",
@@ -94,7 +106,8 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
             "we want to live together. The clinical team says he needs personal-care help rather than skilled rehabilitation. "
             "We can spend up to $8,000 per month, have Original Medicare, want to move during recovery, and do not want a CCRC entrance fee."
         )
-        result = self._run_ready(state, query, limit=10)
+        del query  # kept above only as the human-readable scenario
+        result = self._run_ready(state, "", limit=10)
         layer = result["decision_intelligence"]["care_partner_layer"]
         evidence = load_personal_care_agency_evidence()
         self.assertEqual(layer["licensed_valley_universe_count"], 363)

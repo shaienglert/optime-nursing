@@ -166,9 +166,19 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3.1")
 
     def test_couple_spine_rehab_unknowns_are_guardian_inputs_not_scripted_questions(self) -> None:
+        # Single authority (owner, 2026-10-01): the couple / spine-surgery / rehab facts used
+        # to reach the strategy only through a regex reading of _couple_rehab_query(). The
+        # couple is now the structured "Couple" answer, and the interpreter's
+        # questionnaire_patch carries what the story adds (rehab after hospitalization,
+        # staying together, Las Vegas, a large active community).
+        # KNOWN APP GAP (left failing): living_strategy_runtime derives post_surgical,
+        # rehabilitation_need_detected and expected_recovery only from free text, so no
+        # structured/interpreted field can raise the medicare_status and
+        # move_timing_vs_rehab material unknowns (postHospitalRehabNeed only sets
+        # skilled_rehab_known, which neither question reads).
         decision = importlib.import_module("app.services.patient_decision_engine")
         state = {
-            "relationship": "Dad",
+            "relationship": "Couple",
             "ageGroup": "80+",
             "assistanceLevel": "Needs assistance with bathing and dressing",
             "memoryStatus": "No",
@@ -179,7 +189,18 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             },
         }
         question = "Which unresolved care-strategy issue should we clarify first?"
-        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []}
+        ai_result = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": question,
+            "statements": [],
+            "questionnaire_patch": {
+                "referenceLocationValue": "Las Vegas",
+                "humanIntelligenceV2": {
+                    "transitionRiskProfile": {"recentHospitalization": "Yes", "postHospitalRehabNeed": "Yes"},
+                    "familyProfile": {"coupleStayTogetherPreference": "They want to live together"},
+                },
+            },
+        }
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
         ):

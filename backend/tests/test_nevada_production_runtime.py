@@ -161,9 +161,16 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         self.assertEqual([row["canonical_facility_id"] for row in son["results"]], [row["canonical_facility_id"] for row in self_search["results"]])
 
     def test_explicit_las_vegas_market_is_preserved_as_valley_after_ai_ready(self) -> None:
+        # Single authority (owner, 2026-10-01): the market is a structured answer, not a word
+        # found in the story (the story's facts -- father, bathing/dressing, no dementia,
+        # $6,500 -- are all structured answers here as well).
         result = self._run_ready(
-            {"relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 6500},
-            "My father lives in Las Vegas and needs help with bathing and dressing. No dementia. His monthly budget is $6,500.",
+            {
+                "relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing",
+                "memoryStatus": "No", "budget": 6500,
+                "locationCity": "Las Vegas", "referenceAddress": "Las Vegas", "referenceLocationValue": "Las Vegas",
+            },
+            "",
         )
         profile = result["patient_needs_profile"]
         self.assertEqual(profile["location_city"], "LAS VEGAS")

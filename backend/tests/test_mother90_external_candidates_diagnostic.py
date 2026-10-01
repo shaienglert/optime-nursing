@@ -23,11 +23,21 @@ def _payloads_with_verified_budget(row):
 
 class Mother90ExternalCandidateDiagnosticTests(unittest.TestCase):
     def test_medication_need_blocks_unverified_candidates_from_visible_ranking(self) -> None:
+        # Single authority (owner, 2026-10-01): decision facts come only from the Canonical
+        # Structured Profile. The medication-help need and the Las Vegas Valley market used
+        # to reach the decision only through a regex reading of the story below; they are
+        # now structured answers (the interpreter mock returns no questionnaire_patch).
+        # KNOWN APP GAP (left failing): living_strategy_runtime sets
+        # medication_support_needed only from free text, so the structured "Help with
+        # medications" answer never creates the MEDICATION_SUPPORT_AVAILABLE MUST.
         state = {
             "relationship": "Mom",
             "ageGroup": "90+",
-            "assistanceLevel": "Needs assistance with bathing and dressing",
+            "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
             "memoryStatus": "No",
+            "referenceLocationValue": "Las Vegas",
+            "referenceAddress": "Las Vegas",
+            "medicalCareProfile": {"mobilityMethod": "Independent"},
             "budget": 8000,
             "distanceFromFamily": "Balanced location",
             "humanIntelligenceV2": {

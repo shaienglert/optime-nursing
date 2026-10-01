@@ -4,6 +4,11 @@ import unittest
 
 from app.services import patient_decision_engine as production_runtime
 
+try:
+    from .interpreter_road import decision_facts, interpreter_off, interpreter_packet, interpreter_returning, statement
+except ImportError:  # pragma: no cover - direct module import
+    from interpreter_road import decision_facts, interpreter_off, interpreter_packet, interpreter_returning, statement
+
 
 class LaunchPracticalConstraintContractTests(unittest.TestCase):
     @classmethod
@@ -13,25 +18,58 @@ class LaunchPracticalConstraintContractTests(unittest.TestCase):
         # patient_decision_engine module/package name for private contracts.
         cls.core = production_runtime._governed._legacy
 
+    # Single authority (owner, 2026-10-01): free text reaches the production profile only as
+    # the interpreter's questionnaire_patch (AI_EXTRACTED Structured Profile fields). The old
+    # recognized_tokens assertions checked the regex reader itself; that responsibility now
+    # belongs to the Live Golden Interpreter set, and the regex mapping no longer runs
+    # (status RAW_NARRATIVE_NOT_DECISION_INPUT).
+    BUDGET_MEDICAID_TEXT = "Her budget is $5,000 per month and Medicaid eligibility is pending."
+    NEGATED_MEDICAID_TEXT = "He has Medicare and is not applying for Medicaid."
+
     def test_budget_and_pending_medicaid_survive_the_production_profile(self) -> None:
-        profile = production_runtime.build_patient_needs_profile(
-            {},
-            "Her budget is $5,000 per month and Medicaid eligibility is pending.",
+        packet = interpreter_packet(
+            {"budget": 5000, "medicaidStatus": "Application pending"},
+            [statement(self.BUDGET_MEDICAID_TEXT, ["budget", "medicaidStatus"])],
         )
+        with interpreter_returning(packet):
+            profile = production_runtime.build_patient_needs_profile({}, self.BUDGET_MEDICAID_TEXT)
         needs = {item["parameter_id"]: item for item in profile["needs"]}
         self.assertIn("published_rates", needs)
         self.assertIn("medicaid_attributes", needs)
-        self.assertIn("budget", profile["natural_language_mapping"]["extraction"]["recognized_tokens"])
-        self.assertIn("medicaid", profile["natural_language_mapping"]["extraction"]["recognized_tokens"])
+        fields = profile["canonical_structured_profile"]["fields"]
+        self.assertEqual("AI_EXTRACTED", fields["budget"]["provenance"])
+        self.assertEqual("AI_EXTRACTED", fields["medicaidStatus"]["provenance"])
+        self.assertEqual("RAW_NARRATIVE_NOT_DECISION_INPUT", profile["natural_language_mapping"]["status"])
+
+    def test_budget_and_medicaid_text_without_the_interpreter_changes_no_decision_fact(self) -> None:
+        with interpreter_off():
+            baseline = decision_facts(production_runtime.build_patient_needs_profile({}, ""))
+            profile = production_runtime.build_patient_needs_profile({}, self.BUDGET_MEDICAID_TEXT)
+        self.assertEqual(baseline, decision_facts(profile))
+        needs = {item["parameter_id"] for item in profile["needs"]}
+        self.assertNotIn("published_rates", needs)
+        self.assertNotIn("medicaid_attributes", needs)
 
     def test_negated_medicaid_does_not_become_a_preference(self) -> None:
-        profile = production_runtime.build_patient_needs_profile(
+        packet = interpreter_packet(
             {"medicaidStatus": "Not eligible"},
-            "He has Medicare and is not applying for Medicaid.",
+            [statement("not applying for Medicaid", ["medicaidStatus"], knowledge_state="NEGATED")],
         )
+        with interpreter_returning(packet):
+            profile = production_runtime.build_patient_needs_profile({"medicaidStatus": "Not eligible"}, self.NEGATED_MEDICAID_TEXT)
         needs = {item["parameter_id"]: item for item in profile["needs"]}
         self.assertNotIn("medicaid_attributes", needs)
-        self.assertNotIn("medicaid", profile["natural_language_mapping"]["extraction"]["recognized_tokens"])
+        self.assertEqual("Not eligible", profile["canonical_decision_questionnaire"]["medicaidStatus"])
+
+    def test_negated_medicaid_text_without_the_interpreter_changes_no_decision_fact(self) -> None:
+        # Negation handling inside the regex reader is now the Live Golden Interpreter
+        # set's responsibility; with AI off the sentence has no decision effect at all.
+        state = {"medicaidStatus": "Not eligible"}
+        with interpreter_off():
+            baseline = decision_facts(production_runtime.build_patient_needs_profile(state, ""))
+            profile = production_runtime.build_patient_needs_profile(state, self.NEGATED_MEDICAID_TEXT)
+        self.assertEqual(baseline, decision_facts(profile))
+        self.assertNotIn("medicaid_attributes", {item["parameter_id"] for item in profile["needs"]})
 
     def test_structured_medicaid_status_survives_without_keyword_in_story(self) -> None:
         profile = production_runtime.build_patient_needs_profile(
