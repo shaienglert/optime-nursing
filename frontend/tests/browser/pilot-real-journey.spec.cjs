@@ -200,22 +200,9 @@ test.describe('real synthetic-pilot customer journey', () => {
     if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
-    const needsById = new Map((payload.patient_needs_profile?.needs || []).map((item) => [item.parameter_id, item]));
-    const intentMust = new Set([
-      ...((payload.decision_intelligence?.client_intent?.must_have_parameter_ids) || []),
-      ...((payload.decision_intelligence?.client_intent?.must_haves) || []).flatMap((x) => [x?.parameter_id, x?.key]).filter(Boolean),
-    ].map(String));
-    for (const requiredId of (oracle.required || [])) {
-      const need = needsById.get(requiredId);
-      const inNeeds = need && ['HIGH','REQUIRED','MUST'].includes(String(need.requirement_level || '').toUpperCase());
-      const aliases = { couple_coresidence: ['couple_coresidence','coresidence','couple'], medicaid_pathway: ['medicaid_pathway','medicaid'], continuum_of_care: ['continuum_of_care','continuum','future_care'] }[requiredId] || [requiredId];
-      const inIntent = [...intentMust].some((x) => aliases.some((alias) => x.toLowerCase().includes(alias)));
-      expect(Boolean(inNeeds || inIntent), `${scenario.id} must preserve required need ${requiredId} in canonical needs or client intent`).toBe(true);
-    }
-    if (scenario.id === 'pilot-006') {
-      const medicaidNeed = needsById.get('medicaid_attributes');
-      expect(medicaidNeed, 'pilot-006 Medicaid pathway must reach governed needs').toBeTruthy();
-    }
+    // Whether each oracle requirement became a MUST is graded by
+    // backend/tests/test_golden_persona_decisions.py, from the same persona, against the
+    // engine's real parameter ids. The browser checks the flow and the universal invariants.
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
     expect(Number(budgetNeed.desired_value)).toBe(Number(scenario.budget));
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
