@@ -566,6 +566,23 @@ def build_human_intelligence_context(
     if unprocessed_narrative:
         semantic_result = {**semantic_result, "_unprocessed_narrative": str(natural_language_query or "")}
     context["structured_profile_shadow"] = build_structured_profile(questionnaire_state, semantic_result, family_text=str(natural_language_query or ""))
+    # Same-turn authority ordering: interpreter -> validated canonical patch -> materialized
+    # questionnaire -> Guardian gap evaluation. A fact extracted this turn must close its
+    # blocker before any follow-up question is exposed.
+    from app.services.canonical_structured_profile import materialize_questionnaire
+    post_patch_questionnaire = materialize_questionnaire(context["structured_profile_shadow"])
+    if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
+        post_patch_questionnaire["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
+    post_strategy = build_living_strategy_context(post_patch_questionnaire, "")
+    post_base = _base.build_human_intelligence_context(post_patch_questionnaire, "")
+    post_guarded = _governed_context(post_base, post_strategy, "", post_patch_questionnaire)
+    context["readiness_guardian"] = post_guarded["readiness_guardian"]
+    context["living_strategy_guardian"] = post_guarded["living_strategy_guardian"]
+    blockers = {str(x.get("fact_key") or "") for x in context["readiness_guardian"].get("client_owned_blockers") or []}
+    current_questions = [q for q in context.get("adaptive_questions") or [] if str(q.get("target_fact_key") or q.get("question_key") or "") in blockers]
+    context["adaptive_questions"] = current_questions
+    if not blockers:
+        context["decision_readiness"] = "READY"
     context["intake_resolution"] = {
         "source": "STRUCTURED" if structured_complete else "NARRATIVE",
         "narrative_extraction_required": narrative_extraction_required,
