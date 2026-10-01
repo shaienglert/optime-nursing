@@ -6,7 +6,7 @@ import re
 _NEGATED_DEMENTIA = re.compile(
     r"\b(?:neither(?:\s+of\s+them)?\s+(?:has|have|had)|nor\s+(?:has|have|does)"
     r"|(?:does|do|did)\s*n[o']t\s+have|(?:has|have)\s+no|never\s+(?:had|been\s+diagnosed\s+with)"
-    r"|not\s+diagnosed\s+with|no\s+(?:signs?|history|diagnosis)\s+of|free\s+of)"
+    r"|not\s+diagnosed\s+with|no\s+diagnosed|no\s+(?:signs?|history|diagnosis)\s+of|free\s+of)"
     r"\s+(?:any\s+)?(?:dementia|alzheimer'?s?|memory\s+(?:problems?|issues?|loss))\b"
 )
 

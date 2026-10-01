@@ -3,6 +3,11 @@ from __future__ import annotations
 from app.services.living_strategy_runtime import build_living_strategy_context
 
 
+def test_mild_forgetfulness_with_no_diagnosed_dementia_does_not_require_memory_care():
+    strategy = build_living_strategy_context({"memoryStatus": "Mild concerns"}, "He forgets doses and appointments, with no diagnosed dementia and no wandering.")
+    assert strategy["signals"]["memory_care_needed"] is False
+
+
 def _household_type(query: str, relationship: str = "") -> str:
     context = build_living_strategy_context({"relationship": relationship}, query)
     return context["household"]["type"]

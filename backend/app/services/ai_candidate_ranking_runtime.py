@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import logging
 import os
+import re
 from typing import Any, Dict, List
 
 from app.services.semantic_intent_ai import _default_transport
@@ -242,6 +243,53 @@ def _remove_deficits_contradicted_by_governed_evidence(row: Dict[str, Any], defi
     return filtered
 
 
+def _ground_ranking_reason(row: Dict[str, Any], reason: str, rows: List[Dict[str, Any]]) -> str:
+    """Keep presentation claims consistent with the supplied governed facts.
+
+    This does not change scores or ranking. Remove contradictory sentences rather
+    than replace them with another inferred justification.
+    """
+    capabilities = row.get("verified_capabilities") or {}
+    positive_terms = {
+        "medication_support": ("medication",),
+        "adl_support": ("adl support", "daily activities"),
+        "pt": ("physical therapy",),
+        "ot": ("occupational therapy",),
+    }
+    prices = [other.get("starting_monthly_price") for other in rows]
+    prices = [value for value in prices if isinstance(value, (int, float)) and not isinstance(value, bool)]
+    price = row.get("starting_monthly_price")
+    sentences = re.split(r"(?<=[.!?])\s+", str(reason or ""))
+    retained = []
+    for sentence in sentences:
+        normalized = sentence.lower()
+        def denies_capability(terms: tuple[str, ...]) -> bool:
+            names = "(?:" + "|".join(re.escape(term) for term in terms) + ")"
+            return bool(re.search(
+                r"\b(?:no verified|unverified|not confirmed|not verified)\s+(?:in.house\s+)?" + names
+                + "|" + names + r"(?:\s+(?:support|assistance|management|pathway|services|is|are|has|been|was|remains|still))*\s+(?:not verified|unverified|not confirmed)\b",
+                normalized,
+            ))
+
+        passed = set((row.get("client_intent_fit") or {}).get("must_pass") or [])
+        contradicted = any(
+            key in passed and denies_capability(terms)
+            for key, terms in _MUST_EVIDENCE_TERMS.items()
+        ) or any(
+            str(capabilities.get(parameter)).upper() == "YES" and denies_capability(terms)
+            for parameter, terms in positive_terms.items()
+        )
+        if denies_capability(("pt/ot", "pt and ot")):
+            contradicted = contradicted or any(str(capabilities.get(parameter)).upper() == "YES" for parameter in ("pt", "ot"))
+        false_price_superlative = (
+            bool(prices) and isinstance(price, (int, float)) and price > min(prices)
+            and any(term in normalized for term in ("lowest price", "cheapest", "least expensive"))
+        )
+        if not contradicted and not false_price_superlative:
+            retained.append(sentence)
+    return " ".join(retained).strip() or "A specific ranking explanation consistent with the verified evidence is not yet available."
+
+
 def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]], deterministic_fallback_key=None) -> List[Dict[str, Any]]:
     supplied = {str(row.get("canonical_facility_id") or "") for row in rows if row.get("canonical_facility_id")}
     ranked = packet.get("ranked_candidates") if isinstance(packet.get("ranked_candidates"), list) else []
@@ -265,7 +313,7 @@ def _validate(packet: Dict[str, Any], rows: List[Dict[str, Any]], deterministic_
             "row": row,
             "ai_position": ai_position,
             "score": score,
-            "reason": str(item.get("reason") or ""),
+            "reason": _ground_ranking_reason(row, str(item.get("reason") or ""), rows),
             "information_deficits": _remove_deficits_contradicted_by_governed_evidence(
                 row, [str(v) for v in item.get("information_deficits") or []]
             ),
@@ -320,7 +368,7 @@ def _validate_scores(packet: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict
         drivers, risks, citation_stripped = _validated_citations("AI_CANDIDATE_SCORING_INVALID_CLAIM_CITATION", canonical_id, item, _claim_ids(by_id[canonical_id]))
         validated[canonical_id] = {
             "score": round(score, 3),
-            "reason": str(item.get("reason") or ""),
+            "reason": _ground_ranking_reason(by_id[canonical_id], str(item.get("reason") or ""), rows),
             "information_deficits": _remove_deficits_contradicted_by_governed_evidence(
                 by_id[canonical_id], [str(v) for v in item.get("information_deficits") or []]
             ),

@@ -183,7 +183,7 @@ test('results default view is readable and does not expose internal evidence jar
   await expect(page.getByRole('heading', { name: /Here’s where I’d start for Mom/i })).toBeVisible();
   await expect(page.getByText('Verified Community')).toBeVisible();
   await expect(page.getByText('Community Still Under Review')).toBeVisible();
-  await expect(page.getByText('Meets verified must-haves')).toBeVisible();
+  await expect(page.getByText('Verified care capabilities', { exact: true })).toBeVisible();
   await expect(page.getByText('Bathing and dressing support is verified.')).toBeVisible();
   await expect(page.getByText('Medication support is not verified.')).toHaveCount(0);
   await expect(page.getByText('ADL support is not verified.')).toHaveCount(0);
@@ -206,7 +206,7 @@ test('price research is visible without pretending it is a recommendation', asyn
   await expect(page.getByRole('heading', { name: 'Price not verified — not a recommendation' })).toBeVisible();
   await expect(page.getByText('Research Community', { exact: true })).toBeVisible();
   await expect(page.getByText(/We cannot confirm affordability/)).toBeVisible();
-  await expect(page.getByText('Meets verified must-haves')).toHaveCount(0);
+  await expect(page.getByText('Verified care capabilities', { exact: true })).toHaveCount(0);
   await expect(page.getByText(/obtain a current written quote/)).toBeVisible();
 });
 

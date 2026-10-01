@@ -24,6 +24,7 @@ import {
   sortRelevantParameterIds,
 } from "@/lib/comparison-flow";
 import { resolveFacilityImage } from "@/lib/facility-experience";
+import { facilityRankingExplanation } from "@/lib/ranking-explanation";
 import { EvidenceDetailsModal, type EvidenceDetailsPayload, type EvidenceDetailRecord } from "@/components/compare/evidence-details-modal";
 import {
   clearCompareSelection,
@@ -160,7 +161,7 @@ function confidenceBand(value: number | null | undefined): string {
 }
 
 function eligibilitySummary(status: DecisionEngineRecommendation["eligibility_status"]): string {
-  if (status === "ELIGIBLE") return "Verified fit for current critical needs";
+  if (status === "ELIGIBLE") return "Verified care capabilities; admission details need confirmation";
   if (status === "POTENTIALLY_ELIGIBLE") return "Potential fit pending direct verification";
   if (status === "INSUFFICIENT_EVIDENCE") return "Insufficient evidence for critical needs";
   return "Verified critical gaps present";
@@ -506,69 +507,27 @@ export function ResultsPageClient() {
   const recommendedMatrixRows = useMemo(() => matrixRows.filter((row) => row.section === "RECOMMENDED"), [matrixRows]);
 
   const rankingDifferenceByPair = useMemo(() => {
-    type TieBreakDecision = NonNullable<DecisionEngineResponse["tie_break_decisions"]>[number];
-    const map = new Map<string, TieBreakDecision>();
+    const map = new Map<string, NonNullable<DecisionEngineResponse["tie_break_decisions"]>[number]>();
     for (const item of decisionResponse?.tie_break_decisions || []) {
       map.set(`${item.higher_canonical_facility_id}::${item.lower_canonical_facility_id}`, item);
     }
     return map;
   }, [decisionResponse?.tie_break_decisions]);
 
-  const rankingRows = useMemo(() => {
-    return topRecommendations.map((recommendation, index) => {
-      if (index === 0) {
-        const leadReason = recommendation.tie_break_explanation_vs_next?.why_ranked_above || recommendation.explanation.why_matches?.[0] || "Top ranked from governed patient-specific evidence.";
-        return {
-          facilityId: recommendation.canonical_facility_id,
-          label: "Why this rank",
-          text: leadReason,
-          payload: {
-            facilityName: recommendation.facility_name,
-            parameterLabel: "Ranking difference",
-            summary: leadReason,
-            records: [
-              {
-                title: "Why #1 leads",
-                description: leadReason,
-                sourceOrganization: "OPTIME decision engine explainability",
-              },
-            ],
-          } satisfies EvidenceDetailsPayload,
-        };
-      }
-
-      const above = topRecommendations[index - 1];
-      const decision = rankingDifferenceByPair.get(`${above.canonical_facility_id}::${recommendation.canonical_facility_id}`);
-      if (!decision) {
-        return {
-          facilityId: recommendation.canonical_facility_id,
-          label: "Comparison pending",
-          text: "An explanation for this comparison is not yet available.",
-          payload: null,
-        };
-      }
-
-      const summary = decision.reason || `${recommendation.facility_name} is below ${above.facility_name} because of a governed difference in ${decision.decision_dimension}.`;
-      return {
-        facilityId: recommendation.canonical_facility_id,
-        label: decision.decision_dimension === "true_tie" ? "True tie" : "Ranking difference",
-        text: summary,
-        payload: {
-          facilityName: recommendation.facility_name,
-          parameterLabel: "Ranking difference",
-          summary,
-          records: [
-            {
-              title: `Why below ${above.facility_name}`,
-              description: summary,
-              eventType: decision.decision_dimension,
-              sourceOrganization: "OPTIME decision engine explainability",
-            },
-          ],
-        } satisfies EvidenceDetailsPayload,
-      };
-    });
-  }, [rankingDifferenceByPair, topRecommendations]);
+  const rankingRows = useMemo(() => topRecommendations.map((recommendation) => {
+    const reason = facilityRankingExplanation(recommendation);
+    return {
+      facilityId: recommendation.canonical_facility_id,
+      label: "Why this rank",
+      text: reason || "An explanation for this ranking is not yet available.",
+      payload: reason ? {
+        facilityName: recommendation.facility_name,
+        parameterLabel: "Ranking explanation",
+        summary: reason,
+        records: [{ title: "Why this option was ranked here", description: reason, sourceOrganization: "OOmnik recommendation evidence" }],
+      } satisfies EvidenceDetailsPayload : null,
+    };
+  }), [topRecommendations]);
 
   const mobileCompareReference = topRecommendations[0] || null;
   const effectiveMobileCompareFacilityId =
