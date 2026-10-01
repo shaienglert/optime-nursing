@@ -21,6 +21,7 @@ export type IntakeExtras = {
   activities: string[];
   dietary: string[];
   dietaryOther: string;
+  kosherImportance: string;
   nearbyPlaces: string[];
   nearbyOther: string;
   nearbyImportance: string;
@@ -125,6 +126,7 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
     activities: state.happinessPreferences || [],
     dietary: (human.foodProfile.dietaryPreferences || []).filter((item) => !item.startsWith("Other: ")),
     dietaryOther: (human.foodProfile.dietaryPreferences || []).find((item) => item.startsWith("Other: "))?.slice(7) || "",
+    kosherImportance: human.culturalProfile.kosherRequirements || "",
     nearbyPlaces: state.nearbyPlaces || [],
     nearbyOther: (state.nearbyPlaces || []).find((item) => item.startsWith("Other: "))?.slice(7) || "",
     nearbyImportance: state.nearbyPlacesImportance || "",
@@ -726,6 +728,27 @@ export const QUESTIONS: IntakeQuestion[] = [
       if (added === "No restrictions / eats everything") return setExtra(context, { dietary: ["No restrictions / eats everything"], dietaryOther: "" });
       return setExtra(context, { dietary: next.filter((item) => item !== "No restrictions / eats everything") });
     },
+  },
+  {
+    id: "kosherImportance",
+    section: SECTION_FIT,
+    prompt: "Is keeping kosher a requirement, or a preference?",
+    kind: "single",
+    options: ["Requirement", "Preference"],
+    required: true,
+    label: "kosher requirement level",
+    visible: ({ extras }) => extras.dietary.includes("Kosher"),
+    get: ({ extras }) => extras.kosherImportance,
+    set: (context, value) => ({
+      ...setExtra(context, { kosherImportance: text(value) }),
+      draft: {
+        ...context.draft,
+        humanIntelligenceV2: {
+          ...context.draft.humanIntelligenceV2,
+          culturalProfile: { ...context.draft.humanIntelligenceV2.culturalProfile, kosherRequirements: text(value) },
+        },
+      },
+    }),
   },
   {
     id: "dietaryOther",
