@@ -58,23 +58,31 @@ SCHEMA_FIELDS = frozenset({
     "humanIntelligenceV2.interestsProfile",
     "humanIntelligenceV2.foodProfile.dietaryPreferences",
 })
-# Closed leaf allowlist only. A legal parent object never authorizes arbitrary child keys.
-# Every decision-capable AI path must be named explicitly here.
-SCHEMA_FIELDS = frozenset(set(SCHEMA_FIELDS) | {
-    *(f"humanIntelligenceV2.socialProfile.{k}" for k in ("livingAloneDuration","socialInteractionFrequency","newFriendsImportance","hobbyParticipation","preferredSocialIntensity","activityRequirementLevel")),
-    *(f"humanIntelligenceV2.familyProfile.{k}" for k in ("involvedFamilyMembers","visitFrequencyExpectation","grandchildrenPresence","grandchildrenImportance","familyDecisionDynamics","emergencySupportNetwork","coupleStayTogetherPreference","widowStatus","lossTiming","socialActivityChangeSinceLoss","socialInteractionNeed","temporarySeparationAcceptance","griefSupportInterest")),
-    *(f"humanIntelligenceV2.personalityProfile.{k}" for k in ("communitySizePreference",)),
-    *(f"humanIntelligenceV2.independenceProfile.{k}" for k in ("mobilityMethod","transferAssistance","recentFalls")),
-    *(f"humanIntelligenceV2.culturalProfile.{k}" for k in ("religionImportance","faithTraditions","religiousSupportNeeds","kosherRequirements","synagogueChurchAccess","holidayCelebrations","culturalIdentity","israeliJewishCommunityPreference","whatFeelsLikeHome","worshipAccessRequirement","jewishProgrammingImportance","churchAccessRequirement","christianServiceRequirement","halalMealsRequirement","prayerFacilityRequirement")),
-    *(f"humanIntelligenceV2.languageProfile.{k}" for k in ("preferredSpokenLanguage","nativeLanguage","medicalDiscussionLanguage","socialInteractionLanguage","languageNeedScope","languagesUnderstood","familyLanguages","bilingualStaffRequired")),
-    *(f"humanIntelligenceV2.familyCultureProfile.{k}" for k in ("involvementExpectation","decisionRole")),
-})
+SCHEMA_FIELDS = SCHEMA_FIELDS | frozenset(
+    f"humanIntelligenceV2.{group}.{field}"
+    for group, fields in {
+        "socialProfile": ("livingAloneDuration", "socialInteractionFrequency", "newFriendsImportance", "hobbyParticipation", "preferredSocialIntensity", "activityRequirementLevel"),
+        "familyProfile": ("involvedFamilyMembers", "visitFrequencyExpectation", "grandchildrenPresence", "grandchildrenImportance", "familyDecisionDynamics", "emergencySupportNetwork", "coupleStayTogetherPreference", "widowStatus", "lossTiming", "socialActivityChangeSinceLoss", "socialInteractionNeed", "temporarySeparationAcceptance", "griefSupportInterest"),
+        "personalityProfile": ("introvertExtrovert", "communitySizePreference", "privacyImportance", "structureFlexibilityPreference"),
+        "independenceProfile": ("mobilityMethod", "transferAssistance", "recentFalls", "drivingImportance", "cookingImportance", "abilityToLeaveIndependently", "petOwnershipImportance", "hostingFamilyImportance"),
+        "culturalProfile": ("religionImportance", "faithTraditions", "religiousSupportNeeds", "kosherRequirements", "synagogueChurchAccess", "holidayCelebrations", "culturalIdentity", "israeliJewishCommunityPreference", "whatFeelsLikeHome", "worshipAccessRequirement", "jewishProgrammingImportance", "churchAccessRequirement", "christianServiceRequirement", "halalMealsRequirement", "prayerFacilityRequirement"),
+        "languageProfile": ("preferredSpokenLanguage", "nativeLanguage", "medicalDiscussionLanguage", "socialInteractionLanguage", "languageNeedScope", "languagesUnderstood", "familyLanguages", "bilingualStaffRequired"),
+        "familyCultureProfile": ("involvementExpectation", "decisionRole"),
+        "distanceProfile.referenceLocations": ("parentCurrentHome", "primaryCaregiverHome", "secondaryFamilyHomes", "preferredHospital", "placeOfWorship"),
+        "distanceProfile.driveTimes": ("normal", "rushHour", "emergency"),
+        "distanceProfile.familyGeographyModel": ("involvedFamilyMembers", "familyCenterOfGravity", "multiLocationOptimization"),
+        "distanceProfile.emotionalDistanceFactors": ("emergencyAccessImportance", "spontaneousVisitsImportance", "grandchildrenVisitsImportance"),
+    }.items()
+    for field in fields
+)
+
 
 def in_schema(path: str) -> bool:
     return path in SCHEMA_FIELDS
 
-def _normalized_text(text: Any) -> str:
-    return " ".join(str(text or "").lower().split())
+
+def _exact_source_quote(quote: Any, source_text: Any) -> bool:
+    return isinstance(source_text, str) and isinstance(quote, str) and bool(quote.strip()) and quote in source_text
 
 
 def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result: Dict[str,Any]|None=None, family_text: str|None=None) -> Dict[str,Any]:
@@ -95,21 +103,25 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
     for key,value in flattened_buttons.items():
         fields[key]={"value":value,"state":"EXPLICIT","provenance":"BUTTON","quote":None,"source_question_key":key}
     conflicts=[]; out=[]; unprocessed=[]
-    source_text=_normalized_text(family_text if family_text is not None else semantic_result.get("_family_text"))
+    # Source is supplied by the caller, never asserted by the interpreter itself.
+    source_text = family_text if isinstance(family_text, str) else ""
     for key,value in patch.items():
         candidates=by_key.get(str(key),[])
-        quote=next((str(s.get("raw_text")) for s in candidates if str(s.get("raw_text") or "").strip()),None)
+        grounded = next((s for s in candidates if _exact_source_quote(s.get("raw_text"), source_text)), None)
+        cited = grounded or next((s for s in candidates if isinstance(s.get("raw_text"), str) and s["raw_text"].strip()), {})
+        quote = cited.get("raw_text")
         if not in_schema(str(key)):
             # Contract: no canonical field -> OUT_OF_SCHEMA, zero decision weight.
             out.append({"field":key,"text":quote or str(value),"quote":quote,"reason":"NO_CANONICAL_FIELD","status":"OUT_OF_SCHEMA"})
             continue
-        knowledge=next((str(s.get("knowledge_state") or "").upper() for s in candidates if s.get("knowledge_state")), "")
+        knowledge=str(cited.get("knowledge_state") or "").upper()
         state="NEGATED" if knowledge=="NEGATED" else "UNCLEAR" if knowledge in {"AMBIGUOUS","UNCLEAR"} else "EXPLICIT"
         # Contract: AI_EXTRACTED requires an exact quote present in the family text.
         # Without one the value is UNCLEAR and never materialized.
-        quote_ok=bool(source_text) and bool(quote) and _normalized_text(quote) in source_text
+        quote_ok = grounded is not None
         if not quote_ok:
             state="UNCLEAR"
+            unprocessed.append({"field":key,"text":quote or str(value),"quote":quote,"reason":"NO_EXACT_QUOTE_IN_FAMILY_TEXT","status":"UNPROCESSED"})
         extracted={"value":value,"state":state,"provenance":"AI_EXTRACTED","quote":quote,"source_question_key":None,**({} if quote_ok else {"unverified_reason":"NO_EXACT_QUOTE_IN_FAMILY_TEXT"})}
         if key in fields and not quote_ok:
             continue  # an unquoted AI value can neither override nor contest a button answer
@@ -128,7 +140,7 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
             out.append({"text":raw,"quote":raw,"reason":"NO_CANONICAL_FIELD","status":"OUT_OF_SCHEMA"})
     if semantic_result.get("_unprocessed_narrative"):
         unprocessed.append({"text":str(semantic_result.get("_unprocessed_narrative")),"status":"UNPROCESSED"})
-    return {"schema_version":SCHEMA_VERSION,"profile_status":"DRAFT","fields":fields,"out_of_schema":out,"conflicts":conflicts,"unprocessed":unprocessed}
+    return {"schema_version":SCHEMA_VERSION,"profile_status":"DRAFT","fields":fields,"out_of_schema":out,"conflicts":conflicts,"unprocessed":unprocessed,"family_text":source_text}
 
 
 def materialize_questionnaire(profile: Dict[str,Any]) -> Dict[str,Any]:
@@ -136,6 +148,9 @@ def materialize_questionnaire(profile: Dict[str,Any]) -> Dict[str,Any]:
     out={}
     for path,item in (profile.get("fields") or {}).items():
         if not isinstance(item,dict) or item.get("state") not in {"EXPLICIT","NEGATED"}: continue
+        if item.get("provenance") == "AI_EXTRACTED" and (
+            not in_schema(str(path)) or not _exact_source_quote(item.get("quote"), profile.get("family_text"))
+        ): continue
         target=out; parts=str(path).split(".")
         for part in parts[:-1]: target=target.setdefault(part,{})
         target[parts[-1]]=item.get("value")
