@@ -74,6 +74,11 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         }
         state = self._state()
         state.update({"budget": 17000, "referenceLocationValue": "Las Vegas"})
+        state["humanIntelligenceV2"]["transitionRiskProfile"].update({
+            "recentHospitalization": "Yes",
+            "hospitalizationRecency": "Within 30 days",
+            "postHospitalRehabNeed": "Yes",
+        })
         query = (
             "My father recently had a stroke and needs bathing, dressing, transfers, medication management, "
             "PT, OT and speech therapy in Las Vegas for $17,000 monthly."
@@ -253,7 +258,8 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         context = self._run(self._state(), {
             "decision_readiness": "READY",
             "next_question": None,
-            "statements": [],
+            "questionnaire_patch": {"budget": 8000},
+            "statements": [{"mapped_parameters": ["budget"], "raw_text": "$8,000", "knowledge_state": "KNOWN"}],
         }, "My father lives in Las Vegas and his monthly budget is up to $8,000.")
         self.assertIn("monthly_budget", context["readiness_guardian"]["acknowledged_fact_keys"])
         self.assertNotIn(
@@ -265,7 +271,8 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         context = self._run(self._state(), {
             "decision_readiness": "READY",
             "next_question": None,
-            "statements": [],
+            "questionnaire_patch": {"budget": 17000},
+            "statements": [{"mapped_parameters": ["budget"], "raw_text": "$17,000", "knowledge_state": "KNOWN"}],
         }, "My father lives in Las Vegas and we can spend up to $17,000 per month.")
         self.assertIn("monthly_budget", context["readiness_guardian"]["acknowledged_fact_keys"])
         self.assertNotIn(
