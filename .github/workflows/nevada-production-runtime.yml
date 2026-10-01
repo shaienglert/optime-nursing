@@ -282,7 +282,7 @@ jobs:
           }
 
           couple_state = {
-              'relationship': 'Wife',
+              'relationship': 'Couple',
               'ageGroup': '80+',
               'assistanceLevel': 'Needs assistance with bathing and dressing',
               'memoryStatus': 'No',
@@ -290,7 +290,14 @@ jobs:
               'humanIntelligenceV2': {
                   'familyProfile': {'socialInteractionNeed': 'Very important'},
                   'personalityProfile': {'communitySizePreference': 'No preference'},
-                  'transitionRiskProfile': {'attitudeTowardMove': 'Wants to move'},
+                  'transitionRiskProfile': {
+                      'attitudeTowardMove': 'Wants to move',
+                      'recentHospitalization': 'Yes',
+                      'recentProcedure': 'Yes',
+                      'procedureType': 'spinal surgery',
+                      'expectedRecovery': 'Yes',
+                      'temporarySupportMonths': '3',
+                  },
               },
           }
           couple_query = (
