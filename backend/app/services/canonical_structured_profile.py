@@ -58,15 +58,20 @@ SCHEMA_FIELDS = frozenset({
     "humanIntelligenceV2.interestsProfile",
     "humanIntelligenceV2.foodProfile.dietaryPreferences",
 })
-SCHEMA_PREFIXES = tuple(f"humanIntelligenceV2.{group}." for group in (
-    "socialProfile", "familyProfile", "personalityProfile", "independenceProfile",
-    "culturalProfile", "languageProfile", "familyCultureProfile", "interestsProfile",
-))
-
+# Closed leaf allowlist only. A legal parent object never authorizes arbitrary child keys.
+# Every decision-capable AI path must be named explicitly here.
+SCHEMA_FIELDS = frozenset(set(SCHEMA_FIELDS) | {
+    *(f"humanIntelligenceV2.socialProfile.{k}" for k in ("livingAloneDuration","socialInteractionFrequency","newFriendsImportance","hobbyParticipation","preferredSocialIntensity")),
+    *(f"humanIntelligenceV2.familyProfile.{k}" for k in ("involvedFamilyMembers","visitFrequencyExpectation","grandchildrenPresence","grandchildrenImportance","familyDecisionDynamics","emergencySupportNetwork","coupleStayTogetherPreference","widowStatus","lossTiming","socialActivityChangeSinceLoss","socialInteractionNeed","temporarySeparationAcceptance","griefSupportInterest")),
+    *(f"humanIntelligenceV2.personalityProfile.{k}" for k in ("communitySizePreference",)),
+    *(f"humanIntelligenceV2.independenceProfile.{k}" for k in ("mobilityMethod","transferAssistance","recentFalls")),
+    *(f"humanIntelligenceV2.culturalProfile.{k}" for k in ("religionImportance","faithTraditions","religiousSupportNeeds","kosherRequirements","synagogueChurchAccess","holidayCelebrations","culturalIdentity","israeliJewishCommunityPreference","whatFeelsLikeHome","worshipAccessRequirement","jewishProgrammingImportance","churchAccessRequirement","christianServiceRequirement","halalMealsRequirement","prayerFacilityRequirement")),
+    *(f"humanIntelligenceV2.languageProfile.{k}" for k in ("preferredSpokenLanguage","nativeLanguage","medicalDiscussionLanguage","socialInteractionLanguage","languageNeedScope","languagesUnderstood","familyLanguages","bilingualStaffRequired")),
+    *(f"humanIntelligenceV2.familyCultureProfile.{k}" for k in ("involvementExpectation","decisionRole")),
+})
 
 def in_schema(path: str) -> bool:
-    return path in SCHEMA_FIELDS or path.startswith(SCHEMA_PREFIXES)
-
+    return path in SCHEMA_FIELDS
 
 def _normalized_text(text: Any) -> str:
     return " ".join(str(text or "").lower().split())
@@ -102,7 +107,7 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
         state="NEGATED" if knowledge=="NEGATED" else "UNCLEAR" if knowledge in {"AMBIGUOUS","UNCLEAR"} else "EXPLICIT"
         # Contract: AI_EXTRACTED requires an exact quote present in the family text.
         # Without one the value is UNCLEAR and never materialized.
-        quote_ok=bool(quote) and (not source_text or _normalized_text(quote) in source_text)
+        quote_ok=bool(source_text) and bool(quote) and _normalized_text(quote) in source_text
         if not quote_ok:
             state="UNCLEAR"
         extracted={"value":value,"state":state,"provenance":"AI_EXTRACTED","quote":quote,"source_question_key":None,**({} if quote_ok else {"unverified_reason":"NO_EXACT_QUOTE_IN_FAMILY_TEXT"})}
