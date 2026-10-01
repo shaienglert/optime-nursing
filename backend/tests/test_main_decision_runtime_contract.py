@@ -145,7 +145,7 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         # is worthless if serialisation drops it.
         self.assertTrue(top_decision["recommendation_execution_allowed"])
         self.assertFalse(top_decision["canonical_decision_state"]["is_degraded_result"])
-        self.assertEqual(top_decision["recommendation_visibility"], "RANKED_RECOMMENDATIONS_VISIBLE")
+        self.assertEqual(top_decision["recommendation_visibility"], "FINAL_RECOMMENDATION_VISIBLE")
         self.assertIsNone(serialized["degraded_result_notice"])
         self.assertEqual(
             top_decision["ranking_order"],
