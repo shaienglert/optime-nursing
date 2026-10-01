@@ -30,7 +30,7 @@ function Choice({ label, active, onClick }: { label: string; active: boolean; on
   );
 }
 
-function AnswerControl({ question, value, onAnswer }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void }) {
+function AnswerControl({ question, value, onAnswer, budgetFloor = 1 }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void; budgetFloor?: number }) {
   if (question.kind === "single") {
     return (
       <div className="mt-4 flex flex-wrap gap-2">
@@ -49,6 +49,12 @@ function AnswerControl({ question, value, onAnswer }: { question: IntakeQuestion
         ))}
       </div>
     );
+  }
+  if (question.kind === "number" && question.id === "budget") {
+    const min = Math.max(1, Math.round(budgetFloor));
+    const max = Math.max(15000, min + 10000);
+    const current = Number(value) > 0 ? Number(value) : min;
+    return <div className="mt-4"><input type="range" min={min} max={max} step="100" value={Math.min(max, Math.max(min, current))} onChange={(event) => onAnswer(Number(event.target.value), false)} className="w-full" /><div className="mt-2 flex justify-between text-sm text-[#606a64]"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div><p className="mt-2 text-xs text-[#68766f]">Starts at the lowest current published room price OOmnik has for this market. Final total cost may include care and mandatory fees.</p></div>;
   }
   if (question.kind === "number") {
     return (
@@ -86,6 +92,8 @@ export function StructuredIntake() {
   const [phase, setPhase] = useState<"questions" | "summary">("questions");
   const [confirmed, setConfirmed] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [budgetFloor, setBudgetFloor] = useState(1);
+  useEffect(() => { fetch("/api/backend/api/market-price-floor").then((r) => r.ok ? r.json() : null).then((v) => { if (v?.minimum_monthly_price) setBudgetFloor(Number(v.minimum_monthly_price)); }).catch(() => undefined); }, []);
 
   const questions = useMemo(() => visibleQuestions(context), [context]);
 
@@ -214,7 +222,7 @@ export function StructuredIntake() {
 
             <div className="mt-7">
               {question.note ? <p className="mb-3 text-base leading-7 text-[#527083]">{question.note}</p> : null}
-              <AnswerControl question={question} value={question.get(context)} onAnswer={answer} />
+              <AnswerControl question={question} value={question.get(context)} onAnswer={answer} budgetFloor={budgetFloor} />
               {question.kind === "multi" ? <p className="mt-3 text-sm text-[#7d8b84]">Choose anything that applies, then continue.</p> : null}
               {showError ? <p className="mt-3 text-sm font-semibold text-[#a4501f]">Please answer this before we continue.</p> : null}
             </div>
