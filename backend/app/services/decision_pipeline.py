@@ -114,11 +114,42 @@ def _ranking_basis(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+
+def _attach_room_pricing_truth(rows: list[dict[str, Any]]) -> None:
+    """Attach room-level governed price truth before budget policy runs."""
+    from app.database import SessionLocal
+    from app.services.facility_room_service import list_room_types
+    db=SessionLocal()
+    try:
+        for row in rows:
+            cid=str(row.get("canonical_facility_id") or "")
+            if not cid: continue
+            rooms=list_room_types(db,cid)
+            priced=[]
+            for room in rooms:
+                if room.monthly_price_cents is None: continue
+                total=(room.monthly_price_cents or 0)+(room.care_fee_cents or 0)+(room.mandatory_monthly_fees_cents or 0)
+                complete=room.care_fee_cents is not None and room.mandatory_monthly_fees_cents is not None
+                priced.append({"room_type":room.room_type_name,"base_price":room.monthly_price_cents/100,"total_known_monthly_cost":total/100,"total_affordability_status":"KNOWN" if complete else "PENDING","pricing_qualifier":room.pricing_qualifier or "UNKNOWN","availability_status":room.availability_status,"final_availability_status":"REQUIRES_DIRECT_VERIFICATION"})
+            row["room_pricing_options"]=priced
+            known=[x for x in priced if x["total_affordability_status"]=="KNOWN"]
+            if known:
+                best=min(known,key=lambda x:x["total_known_monthly_cost"])
+                row["starting_monthly_price"]=best["total_known_monthly_cost"]
+                row["price_truth_basis"]="ROOM_TOTAL_KNOWN_MONTHLY_COST"
+                row["total_affordability_status"]="KNOWN"
+            elif priced:
+                row["price_truth_basis"]="ROOM_BASE_ONLY_TOTAL_PENDING"
+                row["total_affordability_status"]="PENDING"
+    finally:
+        db.close()
+
 def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict[str, Any], natural_language_query: str, limit: int) -> dict[str, Any]:
     from app.services.client_intent_runtime import intent_rank_key
     from app.services.combined_care_solution_runtime import attach_combined_care_solutions
 
     rows = list(result.get("results") or [])
+    _attach_room_pricing_truth(rows)
     for row in rows:
         row["external_care_agency_matches"] = _agency_matches_for_row(row, result)
     profile = result.get("patient_needs_profile") or {}
