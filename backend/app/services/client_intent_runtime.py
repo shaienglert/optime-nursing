@@ -139,7 +139,12 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     food_profile = human_profile.get("foodProfile") if isinstance(human_profile.get("foodProfile"), dict) else {}
     dietary_preferences = " ".join(str(value or "").lower() for value in food_profile.get("dietaryPreferences") or [])
     if "kosher" in query or "kosher" in dietary_preferences:
-        add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
+        cultural_profile = human_profile.get("culturalProfile") if isinstance(human_profile.get("culturalProfile"), dict) else {}
+        kosher_level = _upper(cultural_profile.get("kosherRequirements"))
+        if kosher_level in {"REQUIREMENT", "REQUIRED", "MUST"}:
+            add_must("KOSHER_MEALS", "The client explicitly marked keeping kosher as a requirement.", "verified kosher meal capability")
+        else:
+            add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
 
     budget = questionnaire_state.get("budget")
     if isinstance(budget, (int, float)) and float(budget) > 0:
