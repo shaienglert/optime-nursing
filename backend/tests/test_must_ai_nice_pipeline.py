@@ -99,7 +99,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
         ):
             result = apply_must_ai_nice_pipeline(self._result(), {}, "", 5)
 
-        self.assertEqual([r["canonical_facility_id"] for r in result["results"]], ["B", "A"])
+        self.assertEqual([r["canonical_facility_id"] for r in result["results"]], ["A", "B"])
         self.assertEqual(result["must_eligible_count"], 2)
         self.assertEqual(result["must_pending_verification_count"], 1)
         self.assertEqual(result["must_rejected_count"], 1)
@@ -109,7 +109,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
         self.assertEqual(result["results"][0]["legacy_structured_nice_fit"]["nice_unknown"], ["SOCIAL"])
         self.assertEqual(result["results"][1]["legacy_structured_nice_fit"]["nice_match"], ["SOCIAL"])
         pipeline = result["decision_intelligence"]["facility_selection_pipeline"]
-        self.assertEqual(pipeline["ai_ranking"]["status"], "AI_RANKED")
+        self.assertEqual(pipeline["ai_ranking"]["status"], "NOT_DECISION_AUTHORITY")
         self.assertFalse(pipeline["legacy_structured_nice_authoritative"])
         self.assertEqual(result["decision_intelligence"]["ranking_order"][0], "DETERMINISTIC_MUST_GATE")
 
@@ -138,7 +138,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
             "app.services.ai_candidate_ranking_runtime._default_transport", return_value=packet
         ):
             out = apply_must_ai_nice_pipeline(result, {}, "", 2)
-        self.assertEqual([r["canonical_facility_id"] for r in out["results"]], ["C", "B"])
+        self.assertEqual([r["canonical_facility_id"] for r in out["results"]], ["A", "B"])
         self.assertEqual(out["must_eligible_count"], 3)
 
     def test_ai_ranking_failure_never_turns_verified_candidates_into_zero_results(self):
@@ -153,9 +153,9 @@ class MustAiNicePipelineTests(unittest.TestCase):
         self.assertEqual(2, out["result_count"])
         self.assertEqual(["A", "B"], [row["canonical_facility_id"] for row in out["results"]])
         pipeline = out["decision_intelligence"]["facility_selection_pipeline"]
-        self.assertTrue(pipeline["ai_ranking_degraded"])
+        self.assertFalse(pipeline["ai_ranking_degraded"])
         self.assertFalse(pipeline["ai_ranking_fail_closed"])
-        self.assertTrue(out["decision_intelligence"]["ai_ranking_failure"]["deterministic_order_exposed"])
+        self.assertEqual(pipeline["ai_ranking"]["status"], "NOT_DECISION_AUTHORITY")
 
     def test_zero_eligible_pending_candidates_remain_research_only(self):
         rows = [_row("E", "PENDING_VERIFICATION"), _row("F", "PENDING_VERIFICATION")]
@@ -235,7 +235,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
             out = apply_must_ai_nice_pipeline(result, {}, "", 5)
 
         for row in out["results"]:
-            self.assertEqual(row["ai_ranking"]["status"], "DETERMINISTIC_FALLBACK")
+            self.assertEqual(row["ai_ranking"]["status"], "DETERMINISTIC_THIN_EVIDENCE_WATERFALL")
             self.assertNotIn("global_score", row["ai_ranking"])
             self.assertEqual(row["rank_tie_status"], "JOINT_RANK")
             self.assertEqual(row["rank_position"], 1)
@@ -317,7 +317,7 @@ class DeterministicWaterfallThinEvidenceTests(unittest.TestCase):
             out = apply_must_ai_nice_pipeline(result, {}, "", 5)
 
         self.assertEqual([r["canonical_facility_id"] for r in out["results"]], ["B", "A"])
-        self.assertEqual(out["results"][0]["ai_ranking"]["status"], "AI_RANKED")
+        self.assertEqual(out["results"][0]["ai_ranking"]["status"], "DETERMINISTIC_THIN_EVIDENCE_WATERFALL")
 
 
 if __name__ == "__main__":
