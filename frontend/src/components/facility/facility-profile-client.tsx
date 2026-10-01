@@ -161,27 +161,27 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
   const imageTruth = facility ? resolveFacilityImage(facility) : null;
   const priceTruth = facility ? resolvePriceTruth(facility) : null;
 
-  const verifiedItems = recommendation?.report.audit.verificationChecklist.filter((item) => item.state === "YES") || [];
-  const unknownItems = recommendation?.report.audit.verificationChecklist.filter((item) => item.state === "UNKNOWN") || [];
-  const noItems = recommendation?.report.audit.verificationChecklist.filter((item) => item.state === "NO") || [];
-  const questions = recommendation?.report.audit.clinicalReasoning.questionsForFacility || [];
-  const mustFailed = recommendation?.report.audit.governedFacilityDecision?.must_failed || [];
-  const mustUnknown = recommendation?.report.audit.governedFacilityDecision?.must_unknown || [];
-  const identity = recommendation?.report.audit.governedFacilityDecision?.identity_status || "UNRESOLVED_IDENTITY";
+  const verifiedItems = (recommendation?.matched_needs || []).map((item) => ({ label: String(item.parameter_id || item.need_text || "Verified need"), state: "YES" as const }));
+  const unknownItems = (recommendation?.unknown_critical_needs || []).map((item) => ({ label: String(item.parameter_id || item.need_text || "Needs verification"), state: "UNKNOWN" as const }));
+  const noItems = (recommendation?.unmet_verified_needs || []).map((item) => ({ label: String(item.parameter_id || item.need_text || "Verified gap"), state: "NO" as const }));
+  const questions = recommendation?.explanation?.needs_verification || [];
+  const mustFailed = recommendation?.unmet_verified_needs || [];
+  const mustUnknown = recommendation?.unknown_critical_needs || [];
+  const identity = recommendation?.canonical_facility_id ? "CANONICAL_BACKEND_IDENTITY" : "UNRESOLVED_IDENTITY";
   const canonicalFacilityId =
-    recommendation?.report.audit.governedFacilityDecision?.canonical_facility_id
+    recommendation?.canonical_facility_id
     || parameterTable?.canonical_facility_id
     || facility?.canonical_facility_id
     || canonicalFromQuery
     || facility?.id
     || null;
 
-  const whySelected = recommendation?.report.audit.clinicalReasoning.whyThisCommunity || recommendation?.whyThisFits;
-  const rankReason = recommendation?.rankReason || recommendation?.confidenceExplanation;
+  const whySelected = recommendation?.explanation?.why_matches?.[0] || null;
+  const rankReason = recommendation?.ai_ranking?.reason || recommendation?.explanation?.why_matches?.join(" ");
   const priceLine = priceTruth ? `${priceTruth.label}: ${priceTruth.value}` : "Current pricing not verified - contact facility";
   const priceDisclosure = priceTruth?.truthState === "UNKNOWN"
     ? "Pricing is not published by the backend for this facility."
-    : "Pricing is a derived estimate from the governed frontend model, not a facility quote.";
+    : "Pricing shown here comes from the backend facility evidence record and is not a final facility quote.";
 
   if (isLoading) {
     return <main className="min-h-screen bg-[#fffdf8] px-6 py-12 text-[#5d5548]">Loading facility profile...</main>;
