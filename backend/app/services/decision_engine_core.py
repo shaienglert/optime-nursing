@@ -1944,6 +1944,9 @@ def run_patient_decision_engine(
             for need in needs
             if isinstance(need, dict)
             and str(need.get("requirement_level") or "").upper() in {"", "REQUIRED", "HIGH"}
+            # Volatile availability is evidence for disclosure/research, never a catalog
+            # exclusion. Direct confirmation for the requested date is the sole decision gate.
+            and str(need.get("parameter_id") or "") != "current_availability"
         ],
     )
     discovered_ids = list(catalog_query["candidate_ids"])
