@@ -93,7 +93,7 @@ export function StructuredIntake() {
   const [confirmed, setConfirmed] = useState(false);
   const [showError, setShowError] = useState(false);
   const [budgetFloor, setBudgetFloor] = useState(1);
-  useEffect(() => { fetch("/api/backend/api/market-price-floor").then((r) => r.ok ? r.json() : null).then((v) => { if (v?.minimum_monthly_price) setBudgetFloor(Number(v.minimum_monthly_price)); }).catch(() => undefined); }, []);
+  useEffect(() => { fetch("/api/backend/api/market-price-floor", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(context.draft) }).then((r) => r.ok ? r.json() : null).then((v) => { if (v?.minimum_monthly_price) setBudgetFloor(Number(v.minimum_monthly_price)); }).catch(() => undefined); }, [context.draft.referenceLocationValue, context.draft.referenceAddress, context.draft.maximumDistanceMiles, context.draft.customDistanceMiles, context.draft.approvedSearchRadiusMiles]);
 
   const questions = useMemo(() => visibleQuestions(context), [context]);
 
