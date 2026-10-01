@@ -231,7 +231,9 @@ def _classify_facilities_before_ranking(profile: dict[str, Any]) -> dict[str, An
         str(need.get("parameter_id") or "").strip()
         for need in (profile.get("needs") or [])
         if isinstance(need, dict)
-        and str(need.get("requirement_level") or "").upper() in {"", "REQUIRED", "HIGH"}\n        and str(need.get("parameter_id") or "") != "current_availability"\n    })
+        and str(need.get("requirement_level") or "").upper() in {"", "REQUIRED", "HIGH"}
+        and str(need.get("parameter_id") or "") != "current_availability"
+    })
     query = query_facility_knowledge_catalog(required_parameter_ids=need_ids)
     return {
         "status": "COMPLETED_PRE_RANKING",
