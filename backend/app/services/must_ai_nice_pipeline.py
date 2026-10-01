@@ -587,11 +587,10 @@ def apply_must_ai_nice_pipeline(
     }
     decision["ranking_order"] = [
         "DETERMINISTIC_MUST_GATE",
-        "SEMANTIC_AI_DYNAMIC_PREFERENCES",
-        "SEMANTIC_AI_ALL_GOVERNED_EVIDENCE",
-        "EVIDENCE_GROUNDED_PREFERENCE_COVERAGE",
-        "PROVIDER_VERIFICATION",
-        "AI_RERANK",
+        "DETERMINISTIC_GOVERNED_NICE_EVIDENCE",
+        "GOVERNMENT_REGULATORY_DATA",
+        "PUBLIC_REPUTATION",
+        "RELEVANT_EVIDENCE_COMPLETENESS",
     ]
 
     if ai_ranking_degraded:
