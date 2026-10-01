@@ -19,6 +19,8 @@ import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 export type IntakeExtras = {
   assistance: string[];
   activities: string[];
+  activityImportance: string;
+  languageImportance: string;
   dietary: string[];
   dietaryOther: string;
   kosherImportance: string;
@@ -128,6 +130,8 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
   return {
     assistance: state.assistanceLevel ? state.assistanceLevel.split(", ") : [],
     activities: state.happinessPreferences || [],
+    activityImportance: human.socialProfile.activityRequirementLevel || "",
+    languageImportance: human.languageProfile.languageNeedScope || "",
     dietary: (human.foodProfile.dietaryPreferences || []).filter((item) => !item.startsWith("Other: ")),
     dietaryOther: (human.foodProfile.dietaryPreferences || []).find((item) => item.startsWith("Other: "))?.slice(7) || "",
     kosherImportance: human.culturalProfile.kosherRequirements || "",
@@ -659,6 +663,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setExtra(context, { activities: list(value) }),
   },
   {
+    id: "activityImportance",
+    section: SECTION_FIT,
+    prompt: "Are these activities a requirement for the community, or preferences?",
+    kind: "single",
+    options: ["Requirement", "Preference"],
+    required: true,
+    label: "activity requirement level",
+    visible: ({ extras }) => extras.activities.length > 0,
+    get: ({ extras }) => extras.activityImportance,
+    set: (context, value) => setExtra(context, { activityImportance: text(value) }),
+  },
+  {
     id: "nearbyPlaces",
     section: SECTION_FIT,
     prompt: "What would you like to have nearby?",
@@ -758,6 +774,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     visible: () => true,
     get: ({ extras }) => extras.language,
     set: (context, value) => setExtra(context, { language: text(value) }),
+  },
+  {
+    id: "languageImportance",
+    section: SECTION_FIT,
+    prompt: "Is support in this language a requirement, or a preference?",
+    kind: "single",
+    options: ["Requirement", "Preference"],
+    required: true,
+    label: "language requirement level",
+    visible: ({ extras }) => Boolean(extras.language) && extras.language !== "English",
+    get: ({ extras }) => extras.languageImportance,
+    set: (context, value) => setExtra(context, { languageImportance: text(value) }),
   },
   {
     id: "medicalLanguage",
@@ -1008,14 +1036,14 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
     },
     humanIntelligenceV2: {
       ...draft.humanIntelligenceV2,
-      socialProfile: { ...draft.humanIntelligenceV2.socialProfile, socialInteractionFrequency: extras.socialFrequency, hobbyParticipation: extras.activities },
+      socialProfile: { ...draft.humanIntelligenceV2.socialProfile, socialInteractionFrequency: extras.socialFrequency, hobbyParticipation: extras.activities, activityRequirementLevel: extras.activityImportance },
       culturalProfile: {
         ...draft.humanIntelligenceV2.culturalProfile,
         religionImportance: extras.religiousCommunity,
         faithTraditions: extras.religiousCommunity === "Yes" ? [extras.religion] : [],
         religiousSupportNeeds: extras.religiousCommunity === "Yes" ? extras.religiousNeeds : [],
       },
-      languageProfile: { ...draft.humanIntelligenceV2.languageProfile, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage },
+      languageProfile: { ...draft.humanIntelligenceV2.languageProfile, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage, languageNeedScope: extras.languageImportance },
       foodProfile: { dietaryPreferences: [...extras.dietary.filter((item) => item !== "Other"), ...(extras.dietaryOther.trim() ? [`Other: ${extras.dietaryOther.trim()}`] : [])] },
       personalityProfile: { ...draft.humanIntelligenceV2.personalityProfile, communitySizePreference: extras.communityStyle },
       transitionRiskProfile: {
