@@ -689,8 +689,6 @@ def _resolve_rows_for_facility_lean(
             raw_value = "UNKNOWN"
             source = "Not verified"
             detail_scope = parameter["applicable_scope"]
-        if parameter["parameter_id"] == "current_availability":
-            raw_value = "UNKNOWN"
         resolved.append({
             "parameter_id": parameter["parameter_id"],
             "raw_value": raw_value,
