@@ -29,3 +29,15 @@ This file is a guardrail against duplicate decision layers. Each concern has exa
 - Research evidence may not overwrite provider facts silently.
 - Raw family narrative may not enter Decision Engine after Structured Profile cutover.
 - Availability snapshot may not become final availability in either direction.
+
+
+## Oomniker governed advisory boundary
+
+Oomniker receives only the universe that already survived SYSTEM MUST filtering.
+
+- SYSTEM_MUST: immutable. Oomniker may explain it or propose another verified delivery model that still satisfies it, but may never ask the family to waive it.
+- CLIENT_MUST: Oomniker may quantify how much the requirement reduces viable supply. When supply is poor, it may ask the family explicitly whether the requirement is still a MUST. It may not change it without informed approval.
+- PREFERENCE/NICE: Oomniker may recommend a transparent alternative or relaxation, including an external solution that preserves the underlying goal. The family must approve any profile change.
+- Every accepted change creates a new Structured Profile version and a fresh deterministic decision run.
+- Oomniker never edits ranking, eligibility, SYSTEM MUST, or the Structured Profile directly.
+- Objective: maximize the family's viable choice set while preserving system safety and explicit client agency.
