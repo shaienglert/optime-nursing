@@ -23,6 +23,9 @@ class ClientCase(Base):
     phone = Column(String(80), nullable=True)
     terms_accepted_at = Column(DateTime(timezone=True), nullable=True)
     questionnaire_state_json = Column(Text, nullable=False, default="{}")
+    structured_profile_schema_version = Column(String(80), nullable=False, default="oomnik-structured-profile/0.1")
+    structured_profile_version = Column(Integer, nullable=False, default=1)
+    structured_profile_json = Column(Text, nullable=True)
     latest_decision_id = Column(String(80), nullable=True)
     assigned_to = Column(String(160), nullable=True)
     next_follow_up_at = Column(DateTime(timezone=True), nullable=True)
@@ -37,6 +40,8 @@ class ClientQuestionnaireVersion(Base):
     case_id = Column(Integer, ForeignKey("client_cases.id"), nullable=False, index=True)
     version = Column(Integer, nullable=False)
     questionnaire_state_json = Column(Text, nullable=False)
+    structured_profile_schema_version = Column(String(80), nullable=False, default="oomnik-structured-profile/0.1")
+    structured_profile_json = Column(Text, nullable=True)
     change_summary = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
