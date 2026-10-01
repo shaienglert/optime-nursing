@@ -1,4 +1,8 @@
 name: Backend full test suite
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 # Before this workflow, 69 of 117 backend test files were not run by any workflow,
 # so broken tests stayed invisible. This runs all of them. Known failures are listed,
 # with reasons, in backend/tests/known_failures.txt; anything else failing turns CI red.
