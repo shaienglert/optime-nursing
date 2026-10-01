@@ -66,6 +66,7 @@ export type HumanIntelligenceV2 = {
     newFriendsImportance: string;
     hobbyParticipation: string[];
     preferredSocialIntensity: string;
+    activityRequirementLevel: string;
   };
   familyProfile: {
     involvedFamilyMembers: string;
@@ -281,6 +282,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
       newFriendsImportance: "",
       hobbyParticipation: [],
       preferredSocialIntensity: "",
+      activityRequirementLevel: "",
     },
     familyProfile: {
       involvedFamilyMembers: "",
