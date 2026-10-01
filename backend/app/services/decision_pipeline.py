@@ -124,7 +124,13 @@ def _attach_room_pricing_truth(rows: list[dict[str, Any]]) -> None:
         for row in rows:
             cid=str(row.get("canonical_facility_id") or "")
             if not cid: continue
-            rooms=list_room_types(db,cid)
+            try:
+                rooms=list_room_types(db,cid)
+            except Exception as exc:
+                if "facility_room_types" in str(exc) and ("no such table" in str(exc).lower() or "does not exist" in str(exc).lower()):
+                    db.rollback()
+                    continue
+                raise
             priced=[]
             for room in rooms:
                 if room.monthly_price_cents is None: continue
