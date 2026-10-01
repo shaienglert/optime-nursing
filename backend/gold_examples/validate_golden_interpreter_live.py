@@ -14,7 +14,11 @@ def run():
     results=[]
     for case in CASES:
         baseline={"referenceLocationValue":"Las Vegas, Nevada","budget":6000,"questionnaireCompletion":{"complete":False}}
-        out=interpret_client_intent_with_ai(user_text=case["text"],questionnaire_state=baseline)
+        try:
+            out=interpret_client_intent_with_ai(user_text=case["text"],questionnaire_state=baseline)
+        except Exception as exc:
+            results.append({"id":case["id"],"pass":False,"errors":[str(exc)]})
+            continue
         blob=json.dumps(out.get("questionnaire_patch") or {},ensure_ascii=False)
         low=blob.lower()
         errors=[]
