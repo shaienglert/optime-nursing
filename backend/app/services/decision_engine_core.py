@@ -466,6 +466,19 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
     if medicaid_status in {"approved", "application pending", "may qualify", "not sure"}:
         numeric_budget = _to_number(budget)
         private_floor = _to_number(questionnaire.get("_market_private_price_floor") or questionnaire.get("marketPrivatePriceFloor"))
+        if private_floor is None:
+            observed_prices = []
+            for facility_id in get_exposed_canonical_facility_ids():
+                try:
+                    table = get_facility_parameter_table(facility_id, priority_parameter_ids=["current_price"], include_evidence_records=False)
+                except (KeyError, ValueError):
+                    continue
+                for row in table.get("rows") or []:
+                    if row.get("parameter_id") == "current_price":
+                        price = _to_number(row.get("raw_value"))
+                        if price is not None and price > 0:
+                            observed_prices.append(price)
+            private_floor = min(observed_prices) if observed_prices else None
         medicaid_is_client_must = (
             medicaid_status in {"approved", "application pending"}
             and numeric_budget is not None
