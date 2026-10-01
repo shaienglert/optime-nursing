@@ -110,7 +110,6 @@ jobs:
 
           os.environ['OPTIME_SEMANTIC_AI_ENABLED'] = '1'
           os.environ['OPTIME_SEMANTIC_AI_REQUIRED'] = '1'
-          os.environ['OPTIME_AI_CANDIDATE_RANKING_REQUIRED'] = '1'
 
           # Every persona below states a budget, now also a facility-owned MUST (see
           # semantic_facility_requirements.py's SEMANTIC_BUDGET_VERIFICATION). No
