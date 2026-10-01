@@ -158,6 +158,15 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/Which of these are part of the current routine\?/i, { select: scenario.id === 'pilot-009' ? ['Dialysis','Wound care'] : [] }],
       [/How often is dialysis needed\?/i, { fill: '3 times a week' }],
       [/hospital stay recently\?/i, { choose: scenario.recentHospital || 'No' }],
+      [/secure memory-care setting feel necessary\?/i, { choose: 'Yes' }],
+      [/Roughly when was that\?/i, { choose: 'Within 30 days' }],
+      [/rehabilitation or closer monitoring still needed\?/i, { choose: 'Yes' }],
+      [/current Medicare situation\?/i, { choose: 'Original Medicare' }],
+      [/Describe what the community must provide/i, { fill: scenario.id === 'pilot-009' ? 'Dialysis three times a week and daily wound care must be supported.' : 'Post-hospital rehabilitation and closer monitoring are required.' }],
+      [/coordinated doctors/i, { choose: 'Yes' }],
+      [/Which dialysis center is used today\?/i, { fill: 'Current local dialysis center' }],
+      [/transportation to dialysis be needed\?/i, { choose: 'Yes' }],
+      [/How often is wound care required\?/i, { choose: 'Daily' }],
       [/Medicaid situation\?/i, { choose: scenario.medicaid || 'Not eligible' }],
       [/What monthly budget would feel comfortable\?/i, { fill: scenario.budget }],
       [/When would you ideally like the move to happen\?/i, { choose: scenario.moveTiming }],
@@ -224,7 +233,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       const answerBox = page.getByLabel('Your answer');
       const continueButton = page.getByRole('button', { name: /^Continue$/ });
       if (await answerBox.count()) {
-        await answerBox.fill(`Use the confirmed questionnaire facts: English for daily life, medical discussions and social interaction; budget $${scenario.budget} per month including all required care${oracle.couple ? ' and both residents, who must live together' : ''}; ${scenario.location} within ${scenario.distance} miles; ${scenario.diet === 'Kosher' ? 'kosher meals are required, a religious community is not required' : 'low sodium is a preference, not a mandatory clinical diet'}; future care ${scenario.futureCare.toLowerCase()}. No additional medical requirement beyond the questionnaire.`);
+        await answerBox.fill(`Use the confirmed questionnaire facts: ${scenario.language || 'English'} for daily life, medical discussions and social interaction; budget $${scenario.budget} per month including all required care${oracle.couple ? ' and both residents, who must live together' : ''}; ${scenario.location} within ${scenario.distance} miles; ${scenario.diet === 'Kosher' ? 'kosher meals are required, a religious community is not required' : 'low sodium is a preference, not a mandatory clinical diet'}; future care ${scenario.futureCare.toLowerCase()}. No additional medical requirement beyond the questionnaire.`);
         await continueButton.click();
       } else {
         const offeredOption = page.locator('main section button').first();
