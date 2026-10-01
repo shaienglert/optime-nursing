@@ -118,9 +118,11 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         )
     )
 
-    surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")
-    spine_or_back = _contains(query, "spine", "spinal", "back surgery", "back operation")
-    rehab = _contains(query, "rehab", "rehabilitation", "physical therapy", "physiotherapy", "pt ", " pt", "occupational therapy")
+    procedure_status = _norm(transition.get("recentProcedure"))
+    procedure_type = _norm(transition.get("procedureType"))
+    surgery = procedure_status == "yes"
+    spine_or_back = surgery and _contains(procedure_type, "spine", "spinal", "back surgery", "back operation", "laminectomy", "fusion")
+    rehab = _norm(transition.get("postHospitalRehabNeed")) == "yes"
     # A phrase such as "not temporary" must not be mistaken for temporary recovery merely
     # because it contains the word "temporary". Persistent ADL support belongs on the
     # Assisted Living path, while a genuine recovery episode can lead with lower intensity.
