@@ -143,6 +143,10 @@ export type HumanIntelligenceV2 = {
     recentHospitalization: string;
     hospitalizationRecency: string;
     postHospitalRehabNeed: string;
+    recentProcedure: string;
+    procedureType: string;
+    expectedRecovery: string;
+    temporarySupportMonths: string;
     wanderingConcerns: string;
   };
   futureCareProfile: {
@@ -354,6 +358,10 @@ export const DEFAULT_STATE: QuestionnaireState = {
       recentHospitalization: "",
       hospitalizationRecency: "",
       postHospitalRehabNeed: "",
+      recentProcedure: "",
+      procedureType: "",
+      expectedRecovery: "",
+      temporarySupportMonths: "",
       wanderingConcerns: "",
     },
     futureCareProfile: {
