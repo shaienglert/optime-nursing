@@ -183,6 +183,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       [/language.*medical|medical.*language/i, { fill: scenario.medicalLanguage || scenario.language || 'English' }],
       [/Which language is needed for medical communication\?/i, { fill: scenario.language || 'English' }],
       [/food preferences or requirements/i, { select: [scenario.diet] }],
+      [/keeping kosher a requirement, or a preference\?/i, { choose: scenario.id === 'pilot-007' ? 'Requirement' : 'Preference' }],
       [/religious or faith community be important\?/i, { choose: 'No' }],
       [/pet need to move with/i, { choose: 'No' }],
       [/leave the community and go out on/i, { choose: 'Yes' }],
