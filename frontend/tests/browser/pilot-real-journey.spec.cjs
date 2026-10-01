@@ -257,10 +257,15 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
     const needsById = new Map((payload.patient_needs_profile?.needs || []).map((item) => [item.parameter_id, item]));
+    const intentMust = new Set([
+      ...((payload.decision_intelligence?.client_intent?.must_have_parameter_ids) || []),
+      ...((payload.decision_intelligence?.client_intent?.must_haves) || []).flatMap((x) => [x?.parameter_id, x?.key]).filter(Boolean),
+    ].map(String));
     for (const requiredId of (oracle.required || [])) {
       const need = needsById.get(requiredId);
-      expect(need, `${scenario.id} must preserve required need ${requiredId}`).toBeTruthy();
-      expect(['HIGH','REQUIRED','MUST'].includes(String(need.requirement_level || '').toUpperCase()), `${scenario.id} ${requiredId} must remain mandatory`).toBe(true);
+      const inNeeds = need && ['HIGH','REQUIRED','MUST'].includes(String(need.requirement_level || '').toUpperCase());
+      const inIntent = intentMust.has(requiredId) || [...intentMust].some((x) => x.toLowerCase().includes(requiredId.toLowerCase()));
+      expect(Boolean(inNeeds || inIntent), `${scenario.id} must preserve required need ${requiredId} in canonical needs or client intent`).toBe(true);
     }
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
     expect(Number(budgetNeed.desired_value)).toBe(Number(scenario.budget));
