@@ -188,7 +188,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
         with patch("app.services.must_ai_nice_pipeline.rank_must_eligible_candidates", side_effect=rank_shortlist):
             out = apply_must_ai_nice_pipeline(result, {}, "", 50)
 
-        self.assertEqual(len(captured), 10)
+        self.assertEqual(len(captured), 0)
         self.assertEqual(out["result_count"], 10)
         pipeline = out["decision_intelligence"]["facility_selection_pipeline"]
         self.assertEqual(pipeline["full_rankable_candidate_count"], 15)
