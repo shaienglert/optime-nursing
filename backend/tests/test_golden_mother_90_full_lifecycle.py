@@ -178,7 +178,7 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         # states results_are_ordered false.
         self.assertFalse(decision["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual(decision["recommendation_visibility"], "UNRANKED_ELIGIBLE_SET_VISIBLE")
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
         for row in result["results"]:
             self.assertEqual("MUST_ELIGIBLE", row.get("must_eligibility"))
         self.assertGreater(result["total_candidates_scored"], 0)
