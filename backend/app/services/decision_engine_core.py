@@ -464,16 +464,24 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
         )
     medicaid_status = _normalize(questionnaire.get("medicaidStatus"))
     if medicaid_status in {"approved", "application pending", "may qualify", "not sure"}:
+        numeric_budget = _to_number(budget)
+        private_floor = _to_number(questionnaire.get("_market_private_price_floor") or questionnaire.get("marketPrivatePriceFloor"))
+        medicaid_is_client_must = (
+            medicaid_status in {"approved", "application pending"}
+            and numeric_budget is not None
+            and private_floor is not None
+            and numeric_budget < private_floor
+        )
         _add_need(
             needs_by_id,
             "medicaid_attributes",
-            "PREFERENCE",
+            "HIGH" if medicaid_is_client_must else "PREFERENCE",
             "YES",
-            ["YES", "UNKNOWN"],
+            ["YES"] if medicaid_is_client_must else ["YES", "UNKNOWN"],
             "FACILITY",
             "questionnaire.medicaidStatus",
             1.0,
-            "Medicaid/payment pathway must be confirmed",
+            "Medicaid/payment pathway is required because the stated budget is below the known private-pay floor" if medicaid_is_client_must else "Medicaid/payment pathway should be confirmed",
         )
 
 
