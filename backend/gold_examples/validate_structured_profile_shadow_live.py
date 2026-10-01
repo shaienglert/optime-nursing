@@ -4,6 +4,8 @@ from scripts.pilot_acceptance.cases import CASES
 from app.services.semantic_intent_ai import interpret_client_intent_with_ai
 from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
 from app.services.patient_decision_engine import build_patient_needs_profile
+from app.database import engine
+from app.models.agent_execution import AgentKnowledgeReportSnapshot
 
 def needs(profile):
     return {str(x.get("parameter_id")):str(x.get("requirement_level"))+"="+str(x.get("desired_value")) for x in profile.get("needs") or [] if isinstance(x,dict)}
