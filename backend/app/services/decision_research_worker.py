@@ -229,6 +229,27 @@ def _apply_keyword_fallback(research: Dict[str, Any], text: str) -> None:
     research["continuum_of_care_verified"] = _contains_any(text, _CONTINUUM_TERMS)
 
 
+def _ingest_room_pricing(db, canonical_id: str, source_url: str, interpretation: Dict[str, Any]) -> int:
+    from app.services.facility_room_service import upsert_room_type
+    count = 0
+    for item in interpretation.get("room_pricing") or []:
+        if not isinstance(item, dict) or not str(item.get("room_type_name") or "").strip():
+            continue
+        def money(key):
+            value = item.get(key)
+            return round(float(value) * 100) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+        upsert_room_type(
+            db, canonical_facility_id=canonical_id, room_type_name=str(item["room_type_name"]).strip(),
+            description=str(item.get("evidence_summary") or ""), monthly_price_cents=money("base_monthly_price"),
+            pricing_qualifier=str(item.get("pricing_qualifier") or "UNKNOWN").upper(),
+            care_fee_cents=money("care_fee"), mandatory_monthly_fees_cents=money("mandatory_monthly_fees"),
+            second_person_fee_cents=money("second_person_fee"), entrance_fee_cents=money("entrance_fee"),
+            occupancy_type=str(item.get("occupancy_type") or "") or None, source_url=source_url,
+            availability_status=str(item.get("availability_status") or "UNKNOWN").upper(), source="OFFICIAL_WEBSITE",
+        )
+        count += 1
+    return count
+
 def _persist_record(db, *, agent_key: str, canonical_id: str, facility_name: str, source_url: str, payload: Dict[str, Any]) -> None:
     latest = db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.agent_key == agent_key, AgentKnowledgeRecord.entity_key == canonical_id, AgentKnowledgeRecord.record_type == "las_vegas_decision_evidence").order_by(AgentKnowledgeRecord.id.desc()).first()
     encoded = json.dumps(payload, sort_keys=True)
@@ -290,6 +311,8 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
                         )
                         if not _apply_semantic_capabilities(research, interpretation):
                             _apply_keyword_fallback(research, text)
+                        if dimension == "room_pricing":
+                            research["room_pricing_records_ingested"] = _ingest_room_pricing(db, canonical_id, source_url, interpretation)
         except requests.RequestException as exc:
             research["research_error"] = exc.__class__.__name__
     _persist_record(db, agent_key=str(item.agent_key or "provider_intelligence"), canonical_id=canonical_id, facility_name=facility_name, source_url=source_url or "", payload=research)
