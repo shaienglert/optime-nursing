@@ -149,7 +149,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
         pipeline = out["decision_intelligence"]["facility_selection_pipeline"]
         self.assertFalse(pipeline["ai_ranking_degraded"])
         self.assertFalse(pipeline["ai_ranking_fail_closed"])
-        self.assertEqual(pipeline["ai_ranking"]["status"], "NOT_DECISION_AUTHORITY")
+        self.assertEqual(pipeline["ai_ranking"]["status"], "DETERMINISTIC_THIN_EVIDENCE_WATERFALL")
 
     def test_zero_eligible_pending_candidates_remain_research_only(self):
         rows = [_row("E", "PENDING_VERIFICATION"), _row("F", "PENDING_VERIFICATION")]
