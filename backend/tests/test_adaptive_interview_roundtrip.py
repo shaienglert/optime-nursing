@@ -279,8 +279,8 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             "next_question": None,
             "statements": [],
         })
-        self.assertEqual("NEEDS_RESEARCH", context["decision_readiness"])
-        self.assertEqual([], context["adaptive_questions"])
+        self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
+        self.assertEqual(1, len(context["adaptive_questions"]))
 
     def test_required_ai_unavailable_preserves_canonical_blocker_and_fallback(self) -> None:
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "0", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False):
