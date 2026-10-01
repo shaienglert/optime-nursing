@@ -51,7 +51,7 @@ SCHEMA_FIELDS = frozenset({
     "nearbyPlaces", "nearbyPlacesImportance", "personalDestinations", "futureCarePreference",
     "happinessPreferences", "moveLossConcerns", "otherInterests", "parkingRequirement", "parkingVehicleCount",
     *(f"medicalCareProfile.{k}" for k in ("hasOngoingMedicalNeeds", "needs", "mobilityMethod", "transferAssistance", "recentFalls", "dialysisFrequency", "dialysisCenter", "dialysisTransportation", "oxygenUse", "woundCareFrequency", "complexConditionDetails", "physicianCoordination")),
-    *(f"humanIntelligenceV2.transitionRiskProfile.{k}" for k in ("biggestFear", "attitudeTowardMove", "previousMoves", "bereavementStatus", "lonelinessRisk", "socialIsolationConcern", "recentHospitalization", "hospitalizationRecency", "postHospitalRehabNeed", "wanderingConcerns")),
+    *(f"humanIntelligenceV2.transitionRiskProfile.{k}" for k in ("biggestFear", "attitudeTowardMove", "previousMoves", "bereavementStatus", "lonelinessRisk", "socialIsolationConcern", "recentHospitalization", "hospitalizationRecency", "postHospitalRehabNeed", "recentProcedure", "procedureType", "expectedRecovery", "temporarySupportMonths", "wanderingConcerns")),
     *(f"humanIntelligenceV2.distanceProfile.{k}" for k in ("referenceLocations", "driveTimes", "familyVisitExpectation", "familyGeographyModel", "emotionalDistanceFactors", "optimizationStrategy")),
     *(f"humanIntelligenceV2.futureCareProfile.{k}" for k in ("agingInPlaceImportance", "avoidFutureMovesPreference", "continuumOfCarePreference", "secureMemoryNeighborhoodNeed", "familiarLanguageRequirement")),
     "humanIntelligenceV2.communityPreferenceProfile.preferredEnvironment",
