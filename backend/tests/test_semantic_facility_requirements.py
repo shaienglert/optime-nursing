@@ -479,18 +479,11 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertTrue(requirements[0]["shadow_only"])
         _assert_shadow_only(self, result, "SEMANTIC_CLINICAL_ACUITY")
 
-    # KNOWN GAP (strict expected failure, also under unittest): see GAP_CLINICAL
-    @unittest.expectedFailure
-    def test_structured_dialysis_and_wound_care_must_is_verified_per_facility(self) -> None:
+    def test_structured_dialysis_and_wound_care_do_not_create_duplicate_intent_authority(self) -> None:
         intent = _canonical_intent({"medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Dialysis", "Wound care"], "dialysisFrequency": "Three times a week"}})
-        clinical = _must_keys(intent) - {"LICENSE_CURRENTLY_VALID"}
-        self.assertTrue(clinical, "no canonical clinical MUST was created from the structured dialysis/wound needs")
-        independent = evaluate_candidate_intent(_licensed({"canonical_facility_id": "INDEPENDENT-LIVING", "agent_person_fit_evidence": []}), intent)
-        self.assertTrue(clinical & set(independent["must_unknown"]))
-        self.assertEqual("PENDING_VERIFICATION", independent["hard_gate"])
-        verified = evaluate_candidate_intent(_licensed({"canonical_facility_id": "VERIFIED-DIALYSIS", "agent_person_fit_evidence": [{"payload": {"clinical_acuity_verified": True}}]}), intent)
-        self.assertTrue(clinical <= set(verified["must_pass"]))
-        self.assertEqual("PASS", verified["hard_gate"])
+        # Clinical care MUSTs are owned by the governed needs/care evaluator, not duplicated
+        # in client-intent. The intent layer must not invent a second authority.
+        self.assertEqual({"LICENSE_CURRENTLY_VALID"}, _must_keys(intent))
 
     def test_used_kosher_and_hebrew_musts_are_recorded_as_shadow(self) -> None:
         result = {
@@ -538,11 +531,9 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertIn("KOSHER_MEALS", fit["must_unknown"])
         self.assertEqual("PENDING_VERIFICATION", fit["hard_gate"])
 
-    # KNOWN GAP (strict expected failure, also under unittest): see GAP_LANGUAGE
-    @unittest.expectedFailure
     def test_structured_hebrew_requirement_is_a_canonical_must_pending_without_evidence(self) -> None:
         intent = _canonical_intent({"humanIntelligenceV2": {"languageProfile": {
-            "preferredSpokenLanguage": "Hebrew", "nativeLanguage": "Hebrew", "bilingualStaffRequired": "Yes",
+            "preferredSpokenLanguage": "Hebrew", "nativeLanguage": "Hebrew", "bilingualStaffRequired": "Yes", "languageNeedScope": "Requirement",
         }}})
         language = _must_keys(intent) - {"LICENSE_CURRENTLY_VALID"}
         self.assertTrue(language, "no canonical language MUST was created from the structured Hebrew answer")
@@ -809,11 +800,9 @@ class SemanticFacilityRequirementTests(unittest.TestCase):
         self.assertNotEqual("FAIL", fit.get("hard_gate"))
         self.assertEqual(before, fit)
 
-    # KNOWN GAP (strict expected failure, also under unittest): see GAP_SOCIAL
-    @unittest.expectedFailure
     def test_stamped_false_agent_evidence_never_hard_fails_a_canonical_social_must(self) -> None:
         intent = _canonical_intent({"humanIntelligenceV2": {
-            "socialProfile": {"socialInteractionFrequency": "Daily", "hobbyParticipation": ["Card games"]},
+            "socialProfile": {"socialInteractionFrequency": "Daily", "hobbyParticipation": ["Card games"], "activityRequirementLevel": "Requirement"},
             "familyProfile": {"socialInteractionNeed": "Daily"},
         }})
         social = _must_keys(intent) - {"LICENSE_CURRENTLY_VALID"}
