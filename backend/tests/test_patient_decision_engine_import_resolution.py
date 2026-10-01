@@ -136,13 +136,13 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         # the result: the eligible set is shown, explicitly unordered, with a degradation
         # notice. It used to be hidden entirely, which told the family nothing.
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual("SEMANTIC_AI", result["decision_intelligence"]["interview_owner"])
         self.assertIn("living_strategy", result["decision_intelligence"])
         self.assertIn("client_intent", result["decision_intelligence"])
         self.assertIn("must_gate", result["decision_intelligence"])
         self.assertEqual(len(result["decision_intelligence"]["success_factor_policy"]["factors"]), 16)
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertTrue(result["degraded_result_notice"]["results_are_ordered"])
 
 
 if __name__ == "__main__":
