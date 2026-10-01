@@ -4,19 +4,32 @@ from typing import Any, Dict
 
 SCHEMA_VERSION = "oomnik-structured-profile/0.1"
 VALID_STATES = {"EXPLICIT","NEGATED","UNCLEAR","UNKNOWN","CONFLICT"}
-VALID_PROVENANCE = {"BUTTON","AI_EXTRACTED"}\n\ndef _flatten(data: Dict[str,Any], prefix: str = "") -> Dict[str,Any]:\n    out={}\n    for key,value in data.items():\n        path=f"{prefix}.{key}" if prefix else str(key)\n        if isinstance(value,dict): out.update(_flatten(value,path))\n        elif value not in ("",None,[],{}): out[path]=value\n    return out
+VALID_PROVENANCE = {"BUTTON","AI_EXTRACTED"}
+
+def _flatten(data: Dict[str,Any], prefix: str = "") -> Dict[str,Any]:
+    out={}
+    for key,value in data.items():
+        path=f"{prefix}.{key}" if prefix else str(key)
+        if isinstance(value,dict): out.update(_flatten(value,path))
+        elif value not in ("",None,[],{}): out[path]=value
+    return out
 
 def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result: Dict[str,Any]|None=None) -> Dict[str,Any]:
     semantic_result=semantic_result or {}
     fields: Dict[str,Any]={}
-    raw_patch=semantic_result.get("questionnaire_patch") if isinstance(semantic_result.get("questionnaire_patch"),dict) else {}\n    patch=_flatten(raw_patch)
+    raw_patch=semantic_result.get("questionnaire_patch") if isinstance(semantic_result.get("questionnaire_patch"),dict) else {}
+    patch=_flatten(raw_patch)
     statements=[s for s in semantic_result.get("statements") or [] if isinstance(s,dict)]
     by_key={}
     for s in statements:
         keys=[s.get("gap_key"),s.get("target_fact_key"),*(s.get("mapped_parameters") or [])]
         for key in keys:
             if key: by_key.setdefault(str(key),[]).append(s)
-    button_state={k:v for k,v in questionnaire_state.items() if k not in {"notes","questionnaireCompletion"}}\n    flattened_buttons=_flatten(button_state)\n    for key,value in flattened_buttons.items():\n        fields[key]={"value":value,"state":"EXPLICIT","provenance":"BUTTON","quote":None,"source_question_key":key}\n    conflicts=[]; out=[]; unprocessed=[]
+    button_state={k:v for k,v in questionnaire_state.items() if k not in {"notes","questionnaireCompletion"}}
+    flattened_buttons=_flatten(button_state)
+    for key,value in flattened_buttons.items():
+        fields[key]={"value":value,"state":"EXPLICIT","provenance":"BUTTON","quote":None,"source_question_key":key}
+    conflicts=[]; out=[]; unprocessed=[]
     for key,value in patch.items():
         candidates=by_key.get(str(key),[])
         quote=next((str(s.get("raw_text")) for s in candidates if str(s.get("raw_text") or "").strip()),None)
