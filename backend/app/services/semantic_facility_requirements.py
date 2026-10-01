@@ -314,11 +314,12 @@ def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any
         return False
     if not isinstance(price, (int, float)) or isinstance(price, bool):
         return False
-    # Strict budget verification stays strict here. The optional +10% search
-    # expansion is applied later, after the engine knows how many otherwise-qualified
-    # in-budget candidates exist; it must not turn every over-budget row into a MUST pass
-    # or enqueue unnecessary provider research.
-    return price <= budget
+    # Owner-approved single budget rule: verified total price is acceptable up to
+    # +10%. Ranking, not eligibility, keeps at/below-budget options ahead of this band.
+    # A room base price whose total affordability is pending cannot prove affordability.
+    if row.get("total_affordability_status") == "PENDING" and row.get("price_truth_basis") == "ROOM_BASE_ONLY_TOTAL_PENDING":
+        return False
+    return price <= budget * 1.10
 
 
 def _apply_pilot_monthly_cost(row: Dict[str, Any]) -> None:
