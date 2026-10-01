@@ -141,3 +141,12 @@ Every production bug becomes a golden case before its fix is accepted.
 ## Freeze
 
 During shadow migration, legacy interpreters are frozen except critical production fixes. Any exception must be documented and reflected in the comparison baseline.
+
+
+## Conversational AI ownership — owner clarification
+
+The client experience is not a form. The AI is the conversational expert and owns the dialogue experience end-to-end: it explains why a fact matters, acknowledges prior answers, phrases the next question naturally, gives short relevant education, reflects uncertainty, and prepares the final understanding for confirmation.
+
+Decision authority remains separate. Deterministic policy supplies the AI with the next target fact, allowed answer contract and any safety/decision context. The AI may decide *how to conduct that turn* — wording, explanation, tone and concise follow-up framing — but may not silently choose a different decision fact, infer an unconfirmed value, promote a preference to MUST, or decide facility eligibility/ranking.
+
+The UI may render buttons/choices inside the conversation, but they are interaction controls in an expert-led dialogue, not a visible conventional form.
