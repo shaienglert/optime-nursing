@@ -228,6 +228,12 @@ def create_client_case_endpoint(payload: ClientCaseCreateRequest):
     finally:
         db.close()
 
+@app.get("/api/market-price-floor")
+def market_price_floor_endpoint():
+    from app.services.market_price_floor import minimum_market_monthly_price
+    return minimum_market_monthly_price()
+
+
 @app.get("/api/client-cases/{case_token}")
 def get_client_case_endpoint(case_token: str):
     db = SessionLocal()
