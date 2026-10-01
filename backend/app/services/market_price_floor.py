@@ -17,3 +17,16 @@ def minimum_market_monthly_price(*, canonical_ids:list[str]|None=None)->dict[str
         return {"minimum_monthly_price":room.monthly_price_cents/100,"canonical_facility_id":room.canonical_facility_id,"room_type_name":room.room_type_name,"pricing_qualifier":room.pricing_qualifier or "UNKNOWN","basis":"LOWEST_CURRENT_PUBLISHED_ROOM_BASE_PRICE"}
     finally:
         db.close()
+
+def minimum_price_for_questionnaire(questionnaire:dict[str,Any])->dict[str,Any]:
+    from app.services.facility_parameter_service import get_canonical_facility_index
+    from app.services.location_radius import annotate_distances, plan_radius_scope, resolve_reference_point
+    index=get_canonical_facility_index()
+    rows=[{**row,"canonical_facility_id":str(cid)} for cid,row in index.items() if row.get("synthetic_pilot") is not True]
+    reference=resolve_reference_point(questionnaire,rows,location_city=str(questionnaire.get("locationCity") or "") or None)
+    annotate_distances(rows,reference,index)
+    scoped=plan_radius_scope(rows,questionnaire,reference)
+    ids=[str(row.get("canonical_facility_id")) for row in scoped["rows"] if row.get("canonical_facility_id")]
+    result=minimum_market_monthly_price(canonical_ids=ids)
+    result["location_scope"]=scoped["scope"]
+    return result
