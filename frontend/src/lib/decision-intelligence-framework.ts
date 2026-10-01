@@ -1,6 +1,6 @@
 import { QuestionnaireState } from "@/context/questionnaire-context";
 import { resolveBudgetValue } from "@/lib/budget-utils";
-import { RankedRecommendation } from "@/lib/optime-v2-engine";
+import { DecisionEngineRecommendation } from "@/lib/api";
 
 export type StructuredResidentProfile = {
   relationship: string;
@@ -97,7 +97,7 @@ function unique(items: string[]): string[] {
   return Array.from(new Set(items.map((item) => item.trim()).filter(Boolean)));
 }
 
-function buildResidentProfile(state: QuestionnaireState, recommendations: RankedRecommendation[]): StructuredResidentProfile {
+function buildResidentProfile(state: QuestionnaireState, recommendations: DecisionEngineRecommendation[]): StructuredResidentProfile {
   const familyPriorities = unique([
     state.humanIntelligenceV2.familyProfile.visitFrequencyExpectation,
     state.humanIntelligenceV2.familyCultureProfile.involvementExpectation,
@@ -147,7 +147,7 @@ function verificationLabel(
   return "REQUIRES_CONFIRMATION";
 }
 
-function buildDimensionScores(recommendation: RankedRecommendation): RecommendationDimensionReasoning[] {
+function buildDimensionScores(recommendation: DecisionEngineRecommendation): RecommendationDimensionReasoning[] {
   const audit = recommendation.report.audit;
   const evidence = recommendation.report.intelligenceSourcesUsed;
 
@@ -229,7 +229,7 @@ function buildDimensionScores(recommendation: RankedRecommendation): Recommendat
 
 export function buildRecommendationPackage(
   state: QuestionnaireState,
-  recommendations: RankedRecommendation[],
+  recommendations: DecisionEngineRecommendation[],
 ): RecommendationPackage {
   const residentProfile = buildResidentProfile(state, recommendations);
   const ranking = recommendations.map((recommendation, index) => {
