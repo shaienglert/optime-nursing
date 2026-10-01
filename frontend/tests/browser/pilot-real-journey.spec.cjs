@@ -274,6 +274,10 @@ test.describe('real synthetic-pilot customer journey', () => {
       const inIntent = [...intentMust].some((x) => aliases.some((alias) => x.toLowerCase().includes(alias)));
       expect(Boolean(inNeeds || inIntent), `${scenario.id} must preserve required need ${requiredId} in canonical needs or client intent`).toBe(true);
     }
+    if (scenario.id === 'pilot-006') {
+      const medicaidNeed = needsById.get('medicaid_attributes');
+      expect(medicaidNeed, 'pilot-006 Medicaid pathway must reach governed needs').toBeTruthy();
+    }
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
     expect(Number(budgetNeed.desired_value)).toBe(Number(scenario.budget));
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
