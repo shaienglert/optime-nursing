@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import logging
 import re
 import threading
@@ -295,6 +296,11 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
             research["http_status"] = status
             if status == 200:
                 text = _strip_html(body)
+                research["source_content_sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+                previous = db.query(AgentKnowledgeRecord).filter(AgentKnowledgeRecord.entity_key == canonical_id, AgentKnowledgeRecord.record_type == "las_vegas_decision_evidence").order_by(AgentKnowledgeRecord.id.desc()).first()
+                previous_payload = json.loads(previous.payload_json or "{}") if previous is not None else {}
+                previous_hash = previous_payload.get("source_content_sha256")
+                research["source_changed_since_last_observation"] = bool(previous_hash and previous_hash != research["source_content_sha256"])
                 identity_ok = _identity_matches(text, facility_name, city)
                 domain = urlparse(source_url).netloc.lower()
                 if dimension == "facility_quality_safety":
