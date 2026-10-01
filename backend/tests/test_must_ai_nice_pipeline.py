@@ -104,7 +104,7 @@ class MustAiNicePipelineTests(unittest.TestCase):
         self.assertEqual(result["results"][1]["client_intent_fit"]["nice_unknown"], ["SOCIAL"])
         pipeline = result["decision_intelligence"]["facility_selection_pipeline"]
         self.assertEqual(pipeline["ai_ranking"]["status"], "DETERMINISTIC_THIN_EVIDENCE_WATERFALL")
-        self.assertTrue(pipeline["legacy_structured_nice_authoritative"])
+        self.assertTrue(pipeline["governed_structured_nice_authoritative"])
         self.assertEqual(result["decision_intelligence"]["ranking_order"][0], "DETERMINISTIC_MUST_GATE")
 
         self.assertEqual(result["must_pending_verification_candidates"][0]["canonical_facility_id"], "C")
