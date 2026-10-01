@@ -308,9 +308,10 @@ def apply_must_ai_nice_pipeline(
     live_shortlist = rankable[:interactive_shortlist_limit]
 
     audit_intent = deepcopy(client_intent)
-    _remove_legacy_nice_from_authoritative_path(live_shortlist)
+    # Structured NICE evidence remains part of the deterministic ranking key. It is
+    # evidence, not a second decision engine. Dynamic/open-ended preferences remain
+    # UNKNOWN until verified and therefore cannot invent a ranking advantage.
     ranking_intent = deepcopy(client_intent)
-    ranking_intent["nice_to_haves"] = []
 
     # Single ranking authority: governed deterministic evidence. Candidate-ranking
     # AI is intentionally outside the production decision path; it may not break ties
@@ -318,7 +319,7 @@ def apply_must_ai_nice_pipeline(
     ranked, deterministic_status = _deterministic_waterfall_rank(live_shortlist)
     ranked.sort(key=lambda row: bool(row.get("budget_exception")))
     ai_status = {
-        "status": "NOT_DECISION_AUTHORITY",
+        "status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL",
         "authority": "DETERMINISTIC_DECISION_ENGINE",
         "candidate_count": len(ranked),
         "deterministic_status": deterministic_status,
