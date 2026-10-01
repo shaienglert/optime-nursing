@@ -755,9 +755,10 @@ def _resolve_rows_for_facility(
             evidence_records = []
 
         if parameter["parameter_id"] == "current_availability":
-            raw_value = "UNKNOWN"
-            display_value = "Confirm directly with facility"
-            source = "Direct facility confirmation required"
+            # Preserve governed evidence (YES/NO/LIMITED/UNKNOWN) as the single factual
+            # source. Decision policy treats every value as volatile and pending direct
+            # confirmation; presentation must not erase the evidence to achieve that.
+            display_value = f"{raw_value} — confirm directly with facility"
 
         resolved.append({
             "parameter_id": parameter["parameter_id"],
