@@ -2,7 +2,11 @@
   "schema_version": "oomnik-golden-personas/1",
   "about": "The ten golden browser personas, as answers keyed by intake question id (frontend/src/lib/intake-questions.ts QUESTIONS[].id) -- never by prompt wording. The intake's own set() functions turn them into a QuestionnaireState, which is the Structured Profile's BUTTON layer. frontend/tests/golden-personas.test.ts validates every persona against the live question graph and writes oomnik_golden_personas_v1.submissions.json; backend tests run those submissions through the decision engine; the browser journey only replays the same answers by data-question-id. Edit this file, then regenerate with `GOLDEN_PERSONAS_WRITE=1 npx vitest run tests/golden-personas.test.ts`.",
   "defaults": {
-    "assistance": ["Help with bathing", "Help with dressing", "Help with medications"],
+    "assistance": [
+      "Help with bathing",
+      "Help with dressing",
+      "Help with medications"
+    ],
     "mobilityMethod": "Independent",
     "transferAssistance": "No",
     "recentFalls": "No",
@@ -14,81 +18,348 @@
     "moveAttitude": "Cautious but open",
     "socialFrequency": "Weekly",
     "communityStyle": "No preference",
-    "activities": ["Music", "Classes"],
-    "nearbyPlaces": ["Parks & walking paths"],
+    "activities": [
+      "Music",
+      "Classes"
+    ],
+    "nearbyPlaces": [
+      "Parks & walking paths"
+    ],
     "nearbyImportance": "Nice to have",
     "personalDestinationLabel": "No specific destination",
-    "moveLossConcerns": ["Independence", "Daily routine"],
+    "moveLossConcerns": [
+      "Independence",
+      "Daily routine"
+    ],
     "otherInterests": "Preserve familiar routines and preferred activities.",
     "language": "English",
-    "dietary": ["Low sodium"],
+    "dietary": [
+      "Low sodium"
+    ],
     "religiousCommunity": "No",
     "petOwnershipImportance": "No",
     "abilityToLeaveIndependently": "Yes",
     "parkingRequirement": "No",
     "continuum": "Preferred",
-    "careSearchApproach": "Show me both approaches"
+    "careSearchApproach": "Show me both approaches",
+    "activityImportance": "Preference"
   },
   "personas": [
     {
       "id": "pilot-001",
       "title": "Independent, social, light help",
-      "answers": { "relationship": "Mom", "ageGroup": "75-79", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "10", "budget": 5000, "socialFrequency": "Daily", "communityStyle": "Large and active", "activities": ["Music", "Cultural activities"] },
-      "oracle": { "care": ["INDEPENDENT_LIVING", "ASSISTED_LIVING"], "forbidden": ["MEMORY_CARE_ONLY", "SKILLED_NURSING_ONLY", "REHABILITATION_ONLY"], "budget": 5000, "location": "Las Vegas", "distance": "10", "futureCare": "Preferred" }
+      "answers": {
+        "relationship": "Mom",
+        "ageGroup": "75-79",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "10",
+        "budget": 5000,
+        "socialFrequency": "Daily",
+        "communityStyle": "Large and active",
+        "activities": [
+          "Music",
+          "Cultural activities"
+        ]
+      },
+      "oracle": {
+        "care": [
+          "INDEPENDENT_LIVING",
+          "ASSISTED_LIVING"
+        ],
+        "forbidden": [
+          "MEMORY_CARE_ONLY",
+          "SKILLED_NURSING_ONLY",
+          "REHABILITATION_ONLY"
+        ],
+        "budget": 5000,
+        "location": "Las Vegas",
+        "distance": "10",
+        "futureCare": "Preferred"
+      }
     },
     {
       "id": "pilot-002",
       "title": "ADL and medications, Henderson, moving within 30 days",
-      "answers": { "relationship": "Dad", "ageGroup": "80-84", "referenceAddress": "Henderson", "maximumDistanceMiles": "10", "budget": 6000, "moveTiming": "Within 30 days" },
-      "oracle": { "care": ["ASSISTED_LIVING", "CONTINUING_CARE"], "required": ["adl_support", "medication_support"], "budget": 6000, "location": "Henderson", "distance": "10", "availability": "REQUIRED" }
+      "answers": {
+        "relationship": "Dad",
+        "ageGroup": "80-84",
+        "referenceAddress": "Henderson",
+        "maximumDistanceMiles": "10",
+        "budget": 6000,
+        "moveTiming": "Within 30 days"
+      },
+      "oracle": {
+        "care": [
+          "ASSISTED_LIVING",
+          "CONTINUING_CARE"
+        ],
+        "required": [
+          "adl_support",
+          "medication_support"
+        ],
+        "budget": 6000,
+        "location": "Henderson",
+        "distance": "10",
+        "availability": "REQUIRED"
+      }
     },
     {
       "id": "pilot-003",
       "title": "Significant memory issues with wandering",
-      "answers": { "relationship": "Dad", "ageGroup": "80-84", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "20", "budget": 7000, "communityStyle": "Small and familiar", "memoryStatus": "Significant memory issues", "memoryWandering": "Yes", "secureMemory": "Yes" },
-      "oracle": { "care": ["MEMORY_CARE"], "required": ["memory_care", "wandering_safety"], "forbidden": ["INDEPENDENT_LIVING"], "budget": 7000, "location": "Las Vegas", "distance": "20" }
+      "answers": {
+        "relationship": "Dad",
+        "ageGroup": "80-84",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "20",
+        "budget": 7000,
+        "communityStyle": "Small and familiar",
+        "memoryStatus": "Significant memory issues",
+        "memoryWandering": "Yes",
+        "secureMemory": "Yes"
+      },
+      "oracle": {
+        "care": [
+          "MEMORY_CARE"
+        ],
+        "required": [
+          "memory_care",
+          "wandering_safety"
+        ],
+        "forbidden": [
+          "INDEPENDENT_LIVING"
+        ],
+        "budget": 7000,
+        "location": "Las Vegas",
+        "distance": "20"
+      }
     },
     {
       "id": "pilot-004",
       "title": "Post-hospital rehabilitation, immediate move",
-      "answers": { "relationship": "Dad", "ageGroup": "80-84", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "20", "budget": 7000, "moveTiming": "Immediately", "hasOngoingMedicalNeeds": "Yes", "medicalNeeds": ["Complex chronic condition"], "complexConditionDetails": "Post-hospital rehabilitation and closer monitoring are required.", "physicianCoordination": "Yes", "recentHospitalization": "Yes", "hospitalTiming": "Within 30 days", "rehabNeed": "Yes", "medicareStatus": "Original Medicare" },
-      "oracle": { "care": ["REHABILITATION", "SKILLED_NURSING"], "required": ["rehabilitation"], "forbidden": ["INDEPENDENT_LIVING", "MEMORY_CARE_ONLY"], "budget": 7000, "location": "Las Vegas", "distance": "20" }
+      "answers": {
+        "relationship": "Dad",
+        "ageGroup": "80-84",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "20",
+        "budget": 7000,
+        "moveTiming": "Immediately",
+        "hasOngoingMedicalNeeds": "Yes",
+        "medicalNeeds": [
+          "Complex chronic condition"
+        ],
+        "complexConditionDetails": "Post-hospital rehabilitation and closer monitoring are required.",
+        "physicianCoordination": "Yes",
+        "recentHospitalization": "Yes",
+        "hospitalTiming": "Within 30 days",
+        "rehabNeed": "Yes",
+        "medicareStatus": "Original Medicare",
+        "recentProcedure": "No"
+      },
+      "oracle": {
+        "care": [
+          "REHABILITATION",
+          "SKILLED_NURSING"
+        ],
+        "required": [
+          "rehabilitation"
+        ],
+        "forbidden": [
+          "INDEPENDENT_LIVING",
+          "MEMORY_CARE_ONLY"
+        ],
+        "budget": 7000,
+        "location": "Las Vegas",
+        "distance": "20"
+      }
     },
     {
       "id": "pilot-005",
       "title": "Couple moving together",
-      "answers": { "relationship": "Couple", "ageGroup": "80-84", "referenceAddress": "Henderson", "maximumDistanceMiles": "20", "budget": 8000, "communityStyle": "Medium" },
-      "oracle": { "care": ["ASSISTED_LIVING", "CONTINUING_CARE"], "required": ["couple_coresidence", "adl_support"], "budget": 8000, "location": "Henderson", "distance": "20", "couple": true }
+      "answers": {
+        "relationship": "Couple",
+        "ageGroup": "80-84",
+        "referenceAddress": "Henderson",
+        "maximumDistanceMiles": "20",
+        "budget": 8000,
+        "communityStyle": "Medium"
+      },
+      "oracle": {
+        "care": [
+          "ASSISTED_LIVING",
+          "CONTINUING_CARE"
+        ],
+        "required": [
+          "couple_coresidence",
+          "adl_support"
+        ],
+        "budget": 8000,
+        "location": "Henderson",
+        "distance": "20",
+        "couple": true
+      }
     },
     {
       "id": "pilot-006",
       "title": "Very low budget, Medicaid application pending",
-      "answers": { "relationship": "Mom", "ageGroup": "80-84", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "30", "budget": 3000, "moveTiming": "Within 30 days", "medicaidStatus": "Application pending" },
-      "oracle": { "care": ["ASSISTED_LIVING", "SMALL_GROUP_HOME"], "required": ["adl_support", "medicaid_pathway"], "budget": 3000, "location": "Las Vegas", "distance": "30", "medicaid": "REQUIRED", "zero_result": "EVIDENCE_PENDING" }
+      "answers": {
+        "relationship": "Mom",
+        "ageGroup": "80-84",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "30",
+        "budget": 3000,
+        "moveTiming": "Within 30 days",
+        "medicaidStatus": "Application pending"
+      },
+      "oracle": {
+        "care": [
+          "ASSISTED_LIVING",
+          "SMALL_GROUP_HOME"
+        ],
+        "required": [
+          "adl_support",
+          "medicaid_pathway"
+        ],
+        "budget": 3000,
+        "location": "Las Vegas",
+        "distance": "30",
+        "medicaid": "REQUIRED",
+        "zero_result": "EVIDENCE_PENDING"
+      }
     },
     {
       "id": "pilot-007",
       "title": "Kosher required, Hebrew speaker",
-      "answers": { "relationship": "Grandma", "ageGroup": "80-84", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "30", "budget": 6500, "activities": ["Religious life", "Cultural activities"], "dietary": ["Kosher"], "kosherImportance": "Requirement", "language": "Hebrew", "medicalLanguage": "Hebrew" },
-      "oracle": { "care": ["ASSISTED_LIVING", "CONTINUING_CARE"], "required": ["adl_support", "kosher"], "preferred": ["hebrew"], "budget": 6500, "location": "Las Vegas", "distance": "30" }
+      "answers": {
+        "relationship": "Grandma",
+        "ageGroup": "80-84",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "30",
+        "budget": 6500,
+        "activities": [
+          "Religious life",
+          "Cultural activities"
+        ],
+        "dietary": [
+          "Kosher"
+        ],
+        "kosherImportance": "Requirement",
+        "language": "Hebrew",
+        "medicalLanguage": "Hebrew",
+        "languageImportance": "Preference"
+      },
+      "oracle": {
+        "care": [
+          "ASSISTED_LIVING",
+          "CONTINUING_CARE"
+        ],
+        "required": [
+          "adl_support",
+          "kosher"
+        ],
+        "preferred": [
+          "hebrew"
+        ],
+        "budget": 6500,
+        "location": "Las Vegas",
+        "distance": "30"
+      }
     },
     {
       "id": "pilot-008",
       "title": "Very social, nearby places",
-      "answers": { "relationship": "Mom", "ageGroup": "75-79", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "30", "budget": 5000, "socialFrequency": "Daily", "communityStyle": "Large and active", "activities": ["Exercise", "Classes"] },
-      "oracle": { "care": ["INDEPENDENT_LIVING", "ASSISTED_LIVING"], "forbidden": ["MEMORY_CARE_ONLY"], "preferred": ["social_fit", "nearby_places"], "budget": 5000, "location": "Las Vegas", "distance": "30" }
+      "answers": {
+        "relationship": "Mom",
+        "ageGroup": "75-79",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "30",
+        "budget": 5000,
+        "socialFrequency": "Daily",
+        "communityStyle": "Large and active",
+        "activities": [
+          "Exercise",
+          "Classes"
+        ]
+      },
+      "oracle": {
+        "care": [
+          "INDEPENDENT_LIVING",
+          "ASSISTED_LIVING"
+        ],
+        "forbidden": [
+          "MEMORY_CARE_ONLY"
+        ],
+        "preferred": [
+          "social_fit",
+          "nearby_places"
+        ],
+        "budget": 5000,
+        "location": "Las Vegas",
+        "distance": "30"
+      }
     },
     {
       "id": "pilot-009",
       "title": "Dialysis and daily wound care",
-      "answers": { "relationship": "Dad", "ageGroup": "75-79", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "20", "budget": 7500, "moveTiming": "Within 30 days", "hasOngoingMedicalNeeds": "Yes", "medicalNeeds": ["Dialysis", "Wound care"], "dialysisFrequency": "3 times a week", "dialysisCenter": "Current local dialysis center", "dialysisTransportation": "Yes", "woundCareFrequency": "Daily", "physicianCoordination": "Yes" },
-      "oracle": { "care": ["SKILLED_NURSING", "ASSISTED_LIVING"], "required": ["dialysis", "wound_care"], "budget": 7500, "location": "Las Vegas", "distance": "20" }
+      "answers": {
+        "relationship": "Dad",
+        "ageGroup": "75-79",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "20",
+        "budget": 7500,
+        "moveTiming": "Within 30 days",
+        "hasOngoingMedicalNeeds": "Yes",
+        "medicalNeeds": [
+          "Dialysis",
+          "Wound care"
+        ],
+        "dialysisFrequency": "3 times a week",
+        "dialysisCenter": "Current local dialysis center",
+        "dialysisTransportation": "Yes",
+        "woundCareFrequency": "Daily",
+        "physicianCoordination": "Yes"
+      },
+      "oracle": {
+        "care": [
+          "SKILLED_NURSING",
+          "ASSISTED_LIVING"
+        ],
+        "required": [
+          "dialysis",
+          "wound_care"
+        ],
+        "budget": 7500,
+        "location": "Las Vegas",
+        "distance": "20"
+      }
     },
     {
       "id": "pilot-010",
       "title": "Self, planning ahead, continuum of care required",
-      "answers": { "relationship": "Myself", "ageGroup": "70-74", "referenceAddress": "Las Vegas", "maximumDistanceMiles": "50", "budget": 9900, "moveTiming": "Planning ahead", "continuum": "Required" },
-      "oracle": { "care": ["CONTINUING_CARE"], "required": ["continuum_of_care"], "forbidden": ["INDEPENDENT_LIVING_ONLY", "ASSISTED_LIVING_ONLY"], "budget": 9900, "location": "Las Vegas", "distance": "50", "futureCare": "Required" }
+      "answers": {
+        "relationship": "Myself",
+        "ageGroup": "70-74",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "50",
+        "budget": 9900,
+        "moveTiming": "Planning ahead",
+        "continuum": "Required"
+      },
+      "oracle": {
+        "care": [
+          "CONTINUING_CARE"
+        ],
+        "required": [
+          "continuum_of_care"
+        ],
+        "forbidden": [
+          "INDEPENDENT_LIVING_ONLY",
+          "ASSISTED_LIVING_ONLY"
+        ],
+        "budget": 9900,
+        "location": "Las Vegas",
+        "distance": "50",
+        "futureCare": "Required"
+      }
     }
   ]
 }
