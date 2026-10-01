@@ -16,7 +16,8 @@ import {
   fetchSearchFacilities,
 } from "@/lib/api";
 import { personLabel, resolveFacilityImage, resolvePriceTruth } from "@/lib/facility-experience";
-import { runOptimeV2Engine } from "@/lib/optime-v2-engine";
+import { DecisionEngineResponse } from "@/lib/api";
+import { loadDecisionResponseCache } from "@/lib/search-session";
 
 type FacilityProfileClientProps = {
   facilityId: string;
@@ -69,22 +70,19 @@ function describeEvidenceConfidence(text?: string | null): string {
 
 function useFacilityRecommendation(
   facilityId: string,
-  facilities: SearchFacility[],
-  governanceContext: GovernanceRuntimeContext | null,
   state: ReturnType<typeof useQuestionnaire>["state"],
 ) {
   return useMemo(() => {
     const completion = state.questionnaireCompletion;
     if (!completion?.mandatoryComplete || !completion.conditionalFollowUpsComplete || !completion.clientSummaryConfirmed) return null;
-    if (!governanceContext || facilities.length === 0) return null;
-    const engineOutput = runOptimeV2Engine(facilities, state, { governanceContext });
-    return (
-      engineOutput.displayedRecommendations.find((item) => String(item.facility.id) === facilityId)
-      || engineOutput.accepted.find((item) => String(item.facility.id) === facilityId)
-      || engineOutput.rejected.find((item) => String(item.facility.id) === facilityId)
-      || null
-    );
-  }, [facilities, facilityId, governanceContext, state]);
+    const naturalLanguageQuery = String(state.notes || "").trim();
+    const requestKey = JSON.stringify({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 });
+    const decision = loadDecisionResponseCache<DecisionEngineResponse>(requestKey);
+    if (!decision) return null;
+    return (decision.results || []).find((item) =>
+      String(item.canonical_facility_id || item.facility_id || "") === String(facilityId)
+    ) || null;
+  }, [facilityId, state]);
 }
 
 function badgeRow(title: string, values: string[]) {
@@ -158,7 +156,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
     };
   }, [canonicalFromQuery, facilityId]);
 
-  const recommendation = useFacilityRecommendation(facilityId, facilities, governanceContext, state);
+  const recommendation = useFacilityRecommendation(facilityId, state);
   const person = personLabel(state.relationship || "your family member");
   const imageTruth = facility ? resolveFacilityImage(facility) : null;
   const priceTruth = facility ? resolvePriceTruth(facility) : null;
