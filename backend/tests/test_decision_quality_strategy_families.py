@@ -64,8 +64,15 @@ def test_golden_memory_need_leads_with_memory_care():
 
 def test_golden_temporary_adl_recovery_preserves_lower_intensity_option():
     result = _strategy(
-        "My father is recovering after surgery and temporarily needs help with bathing and dressing for 3 months. "
-        "He has no dementia and is expected to recover."
+        "",
+        assistanceLevel="Needs assistance with bathing and dressing",
+        humanIntelligenceV2={"transitionRiskProfile": {
+            "recentProcedure": "Yes",
+            "procedureType": "surgery",
+            "expectedRecovery": "Yes",
+            "temporarySupportMonths": "3",
+            "postHospitalRehabNeed": "No",
+        }},
     )
     assert "INDEPENDENT_LIVING_PLUS_TEMPORARY_CARE" in _leading_ids(result)
     assisted = next(row for row in result["strategy_candidates"] if row["strategy_id"] == "ASSISTED_LIVING")
@@ -74,7 +81,14 @@ def test_golden_temporary_adl_recovery_preserves_lower_intensity_option():
 
 def test_golden_skilled_rehab_is_separated_from_long_term_residence():
     result = _strategy(
-        "My father had back surgery and requires skilled rehabilitation with physical therapy and occupational therapy before returning to independent living."
+        "",
+        humanIntelligenceV2={"transitionRiskProfile": {
+            "recentProcedure": "Yes",
+            "procedureType": "back surgery",
+            "expectedRecovery": "Yes",
+            "temporarySupportMonths": "3",
+            "postHospitalRehabNeed": "Yes",
+        }},
     )
     assert "POST_ACUTE_REHAB_THEN_INDEPENDENT_LIVING" in _leading_ids(result)
     assert "SHORT_STAY_SKILLED_NURSING_REHAB" in _ranked_ids(result)
