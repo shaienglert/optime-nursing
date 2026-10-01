@@ -204,3 +204,23 @@ def ensure_client_structured_profile_schema(engine: Engine) -> None:
             for name, ddl in specs:
                 if name not in columns:
                     connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {name} {ddl}"))
+
+
+def ensure_facility_room_pricing_schema(engine: Engine) -> None:
+    columns = _column_names(engine, "facility_room_types")
+    if not columns:
+        return
+    specs = [
+        ("pricing_qualifier", "VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN'"),
+        ("care_fee_cents", "INTEGER NULL"),
+        ("mandatory_monthly_fees_cents", "INTEGER NULL"),
+        ("second_person_fee_cents", "INTEGER NULL"),
+        ("entrance_fee_cents", "INTEGER NULL"),
+        ("occupancy_type", "VARCHAR(32) NULL"),
+        ("source_url", "TEXT NULL"),
+        ("observed_at", "DATETIME NULL"),
+    ]
+    with engine.begin() as connection:
+        for name, ddl in specs:
+            if name not in columns:
+                connection.execute(text(f"ALTER TABLE facility_room_types ADD COLUMN {name} {ddl}"))
