@@ -740,7 +740,11 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     _map_personal_preferences(questionnaire_state, needs_by_id)
     _map_financial(questionnaire_state, needs_by_id)
 
-    # Shadow migration: direct legacy callers keep mapping until Structured Profile is explicitly authoritative.\n    if questionnaire_state.get("_structured_profile_authoritative") is True:\n        nl_meta = {"status": "RAW_NARRATIVE_NOT_DECISION_INPUT", "location_city": None}\n    else:\n        nl_meta = _map_natural_language(natural_language_query or "", needs_by_id, care_denials=care_denials)
+    # Shadow migration: direct legacy callers keep mapping until Structured Profile is explicitly authoritative.
+    if questionnaire_state.get("_structured_profile_authoritative") is True:
+        nl_meta = {"status": "RAW_NARRATIVE_NOT_DECISION_INPUT", "location_city": None}
+    else:
+        nl_meta = _map_natural_language(natural_language_query or "", needs_by_id, care_denials=care_denials)
 
     needs = [
         {
