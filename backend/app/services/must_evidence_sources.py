@@ -25,6 +25,8 @@ MUST_EVIDENCE_SOURCES: Dict[str, Dict[str, List[str]]] = {
     "SECURE_MEMORY_CARE_CONFIRMED": {"canonical_fields": ["memory_care_classification"]},
     "COUPLE_CORESIDENCE": {"canonical_fields": ["accepts_couples"], "payload_fields": ["couple_coresidence_verified", "same_apartment_transition_verified"]},
     "KOSHER_MEALS": {"parameters": ["kosher"]},
+    "REQUIRED_LANGUAGE_SUPPORT": {"parameters": ["languages"]},
+    "REQUIRED_ACTIVITIES": {"parameters": ["activities"]},
     "CONTINUUM_OF_CARE_REQUIRED": {"canonical_fields": ["housing_modalities", "synthetic_archetype"], "payload_fields": ["continuum_of_care_verified"]},
     "MEDICAID_PATHWAY_REQUIRED": {"parameters": ["medicaid_attributes"], "payload_fields": ["medicaid_accepted_verified"]},
 }
