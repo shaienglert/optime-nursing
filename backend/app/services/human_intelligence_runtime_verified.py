@@ -276,7 +276,10 @@ def _canonical_fallback_result(base_result: Dict[str, Any], blocker: Dict[str, A
         "decision_readiness": "NEEDS_CLARIFICATION",
         "next_question": fallback_question,
         "selected_fact_key": fact_key,
-        "statements": [{
+        # Keep the interpreter's own statements: they carry the exact family quotes that
+        # every AI_EXTRACTED profile field needs. Dropping them used to leave the patch
+        # in place without its quotes. The policy question is appended, not substituted.
+        "statements": [*[s for s in base_result.get("statements") or [] if isinstance(s, dict) and str(s.get("status") or "").upper() != "ASKED"], {
             "raw_text": str(blocker.get("reason") or readable_fact),
             "meaning": str(blocker.get("reason") or readable_fact),
             "importance": "MUST",
@@ -562,7 +565,7 @@ def build_human_intelligence_context(
     semantic_result = semantic.get("result") if isinstance(semantic.get("result"), dict) else {}
     if unprocessed_narrative:
         semantic_result = {**semantic_result, "_unprocessed_narrative": str(natural_language_query or "")}
-    context["structured_profile_shadow"] = build_structured_profile(questionnaire_state, semantic_result)
+    context["structured_profile_shadow"] = build_structured_profile(questionnaire_state, semantic_result, family_text=str(natural_language_query or ""))
     context["intake_resolution"] = {
         "source": "STRUCTURED" if structured_complete else "NARRATIVE",
         "narrative_extraction_required": narrative_extraction_required,

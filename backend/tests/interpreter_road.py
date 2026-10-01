@@ -34,7 +34,23 @@ def statement(raw_text: str, mapped: Iterable[str], *, knowledge_state: str = "K
     }
 
 
+def _paths(data: Dict[str, Any], prefix: str = "") -> List[str]:
+    out: List[str] = []
+    for key, value in data.items():
+        path = f"{prefix}.{key}" if prefix else str(key)
+        out.extend(_paths(value, path) if isinstance(value, dict) else [path])
+    return out
+
+
 def interpreter_packet(questionnaire_patch: Dict[str, Any], statements: List[Dict[str, Any]] | None = None) -> Dict[str, Any]:
+    # Contract: every AI_EXTRACTED field carries an exact quote from the family text. A
+    # real interpreter maps each patched field to the sentence it came from; this double
+    # maps any patched field the caller did not cover to the first statement's quote.
+    statements = [dict(item) for item in statements or []]
+    if statements:
+        covered = {p for item in statements for p in item.get("mapped_parameters") or []}
+        missing = [p for p in _paths(questionnaire_patch) if p not in covered]
+        statements[0]["mapped_parameters"] = list(statements[0].get("mapped_parameters") or []) + missing
     return {
         "decision_readiness": "READY",
         "next_question": None,

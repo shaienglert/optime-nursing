@@ -14,9 +14,26 @@ def test_unmapped_statement_is_out_of_schema_not_hidden_must():
     assert profile["out_of_schema"]==[{"text":"room with a mountain view","quote":"room with a mountain view","reason":"NO_CANONICAL_FIELD","status":"OUT_OF_SCHEMA"}]
 
 def test_ai_extracted_fact_keeps_exact_quote():
-    profile=build_structured_profile({},{"questionnaire_patch":{"oxygenUse":"At night"},"statements":[{"raw_text":"uses oxygen at night","mapped_parameters":["oxygenUse"],"knowledge_state":"EXPLICIT"}]})
-    assert profile["fields"]["oxygenUse"]["provenance"]=="AI_EXTRACTED"
-    assert profile["fields"]["oxygenUse"]["quote"]=="uses oxygen at night"
+    # The schema path is medicalCareProfile.oxygenUse (contract); a bare "oxygenUse" is
+    # not a canonical field and is now OUT_OF_SCHEMA.
+    profile=build_structured_profile({},{"questionnaire_patch":{"medicalCareProfile":{"oxygenUse":"At night"}},"statements":[{"raw_text":"uses oxygen at night","mapped_parameters":["medicalCareProfile.oxygenUse"],"knowledge_state":"EXPLICIT"}]},family_text="Mom uses oxygen at night.")
+    assert profile["fields"]["medicalCareProfile.oxygenUse"]["provenance"]=="AI_EXTRACTED"
+    assert profile["fields"]["medicalCareProfile.oxygenUse"]["quote"]=="uses oxygen at night"
+
+
+def test_unknown_ai_field_is_out_of_schema_and_never_decision_input():
+    profile=build_structured_profile({},{"questionnaire_patch":{"scoringEngine":{"boost":"10"},"facilityMustBeFancy":"Yes"},"statements":[]})
+    assert not profile["fields"]
+    assert {o["field"] for o in profile["out_of_schema"]}=={"scoringEngine.boost","facilityMustBeFancy"}
+    assert set(materialize_questionnaire(profile))=={"_structured_profile_authoritative","_structured_profile_schema_version"}
+
+
+def test_ai_field_without_an_exact_quote_is_unclear_and_not_materialized():
+    profile=build_structured_profile({},{"questionnaire_patch":{"medicaidStatus":"Approved"},"statements":[{"raw_text":"she was approved for medicaid","mapped_parameters":["medicaidStatus"],"knowledge_state":"KNOWN"}]},family_text="We are still waiting to hear about Medicaid.")
+    assert profile["fields"]["medicaidStatus"]["state"]=="UNCLEAR"
+    assert "medicaidStatus" not in materialize_questionnaire(profile)
+    unquoted=build_structured_profile({"memoryStatus":"No"},{"questionnaire_patch":{"memoryStatus":"Dementia diagnosed"},"statements":[]})
+    assert unquoted["fields"]["memoryStatus"]["provenance"]=="BUTTON" and not unquoted["conflicts"]
 
 
 def test_nested_human_intelligence_fields_are_not_dropped():

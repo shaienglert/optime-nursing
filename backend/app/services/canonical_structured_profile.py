@@ -41,7 +41,40 @@ def _compatible_values(key: str, button: Any, ai: Any) -> bool:
         return bool(b) and bool(a) and (set(a).issubset(set(b)) or set(b).issubset(set(a)))
     return False
 
-def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result: Dict[str,Any]|None=None) -> Dict[str,Any]:
+# Approved schema (docs/architecture/CANONICAL_STRUCTURED_PROFILE_CONTRACT.md). The
+# interpreter may write only these paths; anything else is OUT_OF_SCHEMA with zero weight.
+SCHEMA_FIELDS = frozenset({
+    "relationship", "gender", "ageGroup", "coupleAssistance", "moveTiming", "careSearchApproach",
+    "assistanceLevel", "memoryStatus", "budget", "medicareStatus", "medicaidStatus",
+    "searchState", "locationImportant", "referenceLocationType", "referenceLocationValue", "referenceAddress",
+    "maximumDistanceMiles", "customDistanceMiles", "approvedSearchRadiusMiles", "distanceFromFamily",
+    "nearbyPlaces", "nearbyPlacesImportance", "personalDestinations", "futureCarePreference",
+    "happinessPreferences", "moveLossConcerns", "otherInterests", "parkingRequirement", "parkingVehicleCount",
+    *(f"medicalCareProfile.{k}" for k in ("hasOngoingMedicalNeeds", "needs", "mobilityMethod", "transferAssistance", "recentFalls", "dialysisFrequency", "dialysisCenter", "dialysisTransportation", "oxygenUse", "woundCareFrequency", "complexConditionDetails", "physicianCoordination")),
+    *(f"humanIntelligenceV2.transitionRiskProfile.{k}" for k in ("biggestFear", "attitudeTowardMove", "previousMoves", "bereavementStatus", "lonelinessRisk", "socialIsolationConcern", "recentHospitalization", "hospitalizationRecency", "postHospitalRehabNeed", "wanderingConcerns")),
+    *(f"humanIntelligenceV2.distanceProfile.{k}" for k in ("referenceLocations", "driveTimes", "familyVisitExpectation", "familyGeographyModel", "emotionalDistanceFactors", "optimizationStrategy")),
+    *(f"humanIntelligenceV2.futureCareProfile.{k}" for k in ("agingInPlaceImportance", "avoidFutureMovesPreference", "continuumOfCarePreference", "secureMemoryNeighborhoodNeed", "familiarLanguageRequirement")),
+    "humanIntelligenceV2.communityPreferenceProfile.preferredEnvironment",
+    "humanIntelligenceV2.interestsProfile",
+    "humanIntelligenceV2.foodProfile.dietaryPreferences",
+})
+SCHEMA_PREFIXES = tuple(f"humanIntelligenceV2.{group}." for group in (
+    "socialProfile", "familyProfile", "personalityProfile", "independenceProfile",
+    "culturalProfile", "languageProfile", "familyCultureProfile", "interestsProfile",
+))
+
+
+def in_schema(path: str) -> bool:
+    return path in SCHEMA_FIELDS or path.startswith(SCHEMA_PREFIXES)
+
+
+def _normalized_text(text: Any) -> str:
+    return " ".join(str(text or "").lower().split())
+
+
+def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result: Dict[str,Any]|None=None, family_text: str|None=None) -> Dict[str,Any]:
+    """family_text: the family's own words the interpreter read. When given, an
+    AI_EXTRACTED field must carry an exact quote found in it (contract rule)."""
     semantic_result=semantic_result or {}
     fields: Dict[str,Any]={}
     raw_patch=semantic_result.get("questionnaire_patch") if isinstance(semantic_result.get("questionnaire_patch"),dict) else {}
@@ -57,12 +90,24 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
     for key,value in flattened_buttons.items():
         fields[key]={"value":value,"state":"EXPLICIT","provenance":"BUTTON","quote":None,"source_question_key":key}
     conflicts=[]; out=[]; unprocessed=[]
+    source_text=_normalized_text(family_text if family_text is not None else semantic_result.get("_family_text"))
     for key,value in patch.items():
         candidates=by_key.get(str(key),[])
         quote=next((str(s.get("raw_text")) for s in candidates if str(s.get("raw_text") or "").strip()),None)
+        if not in_schema(str(key)):
+            # Contract: no canonical field -> OUT_OF_SCHEMA, zero decision weight.
+            out.append({"field":key,"text":quote or str(value),"quote":quote,"reason":"NO_CANONICAL_FIELD","status":"OUT_OF_SCHEMA"})
+            continue
         knowledge=next((str(s.get("knowledge_state") or "").upper() for s in candidates if s.get("knowledge_state")), "")
         state="NEGATED" if knowledge=="NEGATED" else "UNCLEAR" if knowledge in {"AMBIGUOUS","UNCLEAR"} else "EXPLICIT"
-        extracted={"value":value,"state":state,"provenance":"AI_EXTRACTED","quote":quote,"source_question_key":None}
+        # Contract: AI_EXTRACTED requires an exact quote present in the family text.
+        # Without one the value is UNCLEAR and never materialized.
+        quote_ok=bool(quote) and (not source_text or _normalized_text(quote) in source_text)
+        if not quote_ok:
+            state="UNCLEAR"
+        extracted={"value":value,"state":state,"provenance":"AI_EXTRACTED","quote":quote,"source_question_key":None,**({} if quote_ok else {"unverified_reason":"NO_EXACT_QUOTE_IN_FAMILY_TEXT"})}
+        if key in fields and not quote_ok:
+            continue  # an unquoted AI value can neither override nor contest a button answer
         if key in fields and not _compatible_values(key, fields[key]["value"], value):
             fields[key]={"value":None,"state":"CONFLICT","provenance":"BUTTON","quote":quote,"source_question_key":key}
             conflicts.append({"field":key,"button_value":flattened_buttons.get(key),"ai_value":value,"quote":quote})
