@@ -258,7 +258,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             else:
                 must_pass.append(key)
         elif key == "REQUIRED_LANGUAGE_SUPPORT":
-            wanted = str(must_item.get("value") or "").strip().lower()
+            wanted = str(must.get("value") or "").strip().lower()
             verified = str((row.get("verified_capabilities") or {}).get("languages") or "").lower()
             if not verified or verified == "unknown":
                 must_unknown.append(key)
