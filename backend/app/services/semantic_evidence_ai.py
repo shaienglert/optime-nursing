@@ -137,7 +137,7 @@ def _validate(packet: Dict[str, Any]) -> Dict[str, Any]:
         "status": "AI_SEMANTIC_EVIDENCE_INTERPRETED",
         "closed_world_validated": True,
         "capabilities": [by_key[key] for key in CAPABILITY_SCHEMA],
-        "room_pricing": [item for item in (packet.get("room_pricing") or []) if isinstance(item, dict) and str(item.get("room_type_name") or "").strip()],
+        "room_pricing": [item for item in (packet.get("room_pricing") or []) if isinstance(item, dict) and str(item.get("room_type_name") or "").strip() and str(item.get("pricing_qualifier") or "UNKNOWN").upper() in {"EXACT", "STARTING_AT", "RANGE", "UNKNOWN"} and str(item.get("availability_status") or "UNKNOWN").upper() in {"AVAILABLE", "LIMITED", "WAITLIST", "UNAVAILABLE", "UNKNOWN"}],
     }
 
 
