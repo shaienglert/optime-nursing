@@ -200,6 +200,11 @@ def _to_number(value: Any) -> Optional[float]:
 
 def _is_verified_row(row: Dict[str, Any]) -> bool:
     raw = row.get("raw_value")
+    if need["parameter_id"] == "current_availability":
+        # Availability is volatile by definition. Catalog/provider evidence is useful context
+        # but never a final PASS/FAIL; both recorded YES and NO require direct confirmation
+        # for the requested move date.
+        return "UNKNOWN", f"Recorded availability is {raw or 'UNKNOWN'}; direct facility confirmation is required."
     source = _normalize(row.get("source"))
     if raw in {None, "UNKNOWN"}:
         return False
