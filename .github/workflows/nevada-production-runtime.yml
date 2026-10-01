@@ -149,13 +149,11 @@ jobs:
           }
           EXPECTED_RANKING_ORDER = [
               'DETERMINISTIC_MUST_GATE',
-              'GOVERNED_STRUCTURED_PREFERENCES',
-              'DETERMINISTIC_ALL_GOVERNED_EVIDENCE',
-              'EVIDENCE_GROUNDED_PREFERENCE_COVERAGE',
-              'PROVIDER_VERIFICATION',
-              'DETERMINISTIC_RANK',
+              'DETERMINISTIC_GOVERNED_NICE_EVIDENCE',
+              'GOVERNMENT_REGULATORY_DATA',
+              'PUBLIC_REPUTATION',
+              'RELEVANT_EVIDENCE_COMPLETENESS',
           ]
-
           base = {
               'relationship': 'Dad',
               'ageGroup': '80-84',
