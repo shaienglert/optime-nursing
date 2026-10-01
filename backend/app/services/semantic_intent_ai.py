@@ -92,6 +92,10 @@ def _required_output_schema() -> Dict[str, Any]:
             "humanIntelligenceV2": {
                 "transitionRiskProfile": {
                     "recentHospitalization": "No|Yes|Not sure",
+                    "recentProcedure": "No|Yes|Not sure",
+                    "procedureType": "explicit surgery or procedure",
+                    "expectedRecovery": "No|Yes|Not sure",
+                    "temporarySupportMonths": "explicit number of months",
                     "postHospitalRehabNeed": "No|Yes|Not sure",
                     "wanderingConcerns": "No|Yes|Not sure",
                     "attitudeTowardMove": "Wants to move|Positive|Cautious but open|Anxious|Resistant|Not sure",
@@ -99,10 +103,12 @@ def _required_output_schema() -> Dict[str, Any]:
                 "languageProfile": {
                     "preferredSpokenLanguage": "explicit language",
                     "nativeLanguage": "explicit language",
+                    "languageNeedScope": "Requirement|Preference",
                 },
                 "foodProfile": {"dietaryPreferences": ["explicit dietary requirement"]},
                 "futureCareProfile": {"secureMemoryNeighborhoodNeed": "No|Yes|Not sure", "continuumOfCarePreference": "Required|Preferred|Not important|Not sure"},
                 "culturalProfile": {"religionImportance": "Yes|No", "faithTraditions": ["explicit faith tradition"]},
+                "socialProfile": {"activityRequirementLevel": "Requirement|Preference"},
                 "familyProfile": {"socialInteractionNeed": "Daily|Several times weekly|Weekly|Occasionally|Very little", "coupleStayTogetherPreference": "explicit preference to stay together"},
                 "personalityProfile": {"communitySizePreference": "Small and familiar|Medium|Large and active|Quiet|No preference"},
             },
