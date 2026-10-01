@@ -1,6 +1,8 @@
 import json,re
 from pathlib import Path
 from app.services.semantic_intent_ai import interpret_client_intent_with_ai
+from app.database import engine
+from app.models.agent_execution import AgentKnowledgeReportSnapshot
 
 ROOT=Path(__file__).resolve().parents[2]
 CASES=json.loads((ROOT/"backend/gold_examples/oomnik_golden_interpreter_v01.json").read_text())["cases"]
