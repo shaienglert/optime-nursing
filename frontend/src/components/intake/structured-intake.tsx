@@ -218,7 +218,7 @@ export function StructuredIntake() {
           <section className="mt-8">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#7d8b84]">{question.section}</p>
             <div className="mt-5">
-              <h1 className="text-4xl font-normal leading-tight tracking-[-0.025em] text-[#315f53] sm:text-5xl">{displayPrompt}</h1>
+              <h1 data-question-id={question?.id} data-question-kind={question?.kind} className="text-4xl font-normal leading-tight tracking-[-0.025em] text-[#315f53] sm:text-5xl">{displayPrompt}</h1>
             </div>
 
             <div className="mt-7">
