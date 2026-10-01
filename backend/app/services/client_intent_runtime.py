@@ -238,6 +238,27 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 hard_fail.append(key)
             else:
                 must_pass.append(key)
+        elif key == "KOSHER_MEALS":
+            # Same evidence authority as the needs engine and the NICE branch below: the
+            # governed kosher parameter. Verified YES passes, verified incompatible evidence
+            # fails, and UNKNOWN stays a verification item.
+            matched = {str(item.get("parameter_id") or "") for item in row.get("matched_needs") or []}
+            gaps = {str(item.get("parameter_id") or "") for item in row.get("unmet_verified_needs") or []}
+            if "kosher" in matched:
+                must_pass.append(key)
+            elif "kosher" in gaps:
+                hard_fail.append(key)
+            else:
+                must_unknown.append(key)
+        elif key == "MEDICAID_PATHWAY_REQUIRED":
+            # Added by the affordability-floor rule (affordability_floor.py). Passes only on
+            # verified Medicaid acceptance. UNKNOWN is a verification item, never a pass; and
+            # since the research pipeline stores "not found" and "not researched" alike, an
+            # unverified False never fails a community either.
+            if any(p.get("medicaid_accepted_verified") is True for p in payloads):
+                must_pass.append(key)
+            else:
+                must_unknown.append(key)
         elif key == "ADL_SUPPORT_AVAILABLE":
             # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE
             # above for why: the research pipeline cannot currently distinguish "confirmed not

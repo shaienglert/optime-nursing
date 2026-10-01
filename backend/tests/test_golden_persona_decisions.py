@@ -53,6 +53,7 @@ INTENT_KEYS = {
     "couple_coresidence": {"COUPLE_CORESIDENCE"},
     "continuum_of_care": {"CONTINUUM_OF_CARE_REQUIRED"},
     "adl_support": {"ADL_SUPPORT_AVAILABLE"},
+    "medicaid_pathway": {"MEDICAID_PATHWAY_REQUIRED"},
 }
 MUST_LEVELS = {"HIGH", "REQUIRED", "MUST"}
 
