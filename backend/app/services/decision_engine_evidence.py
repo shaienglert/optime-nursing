@@ -46,7 +46,7 @@ _GOVERNED_CITY_TOKENS = (
 
 
 def _explicit_location_city(questionnaire: Dict[str, Any], natural_language_query: str) -> str | None:
-    for key in ("locationCity", "location_city", "city"):
+    for key in ("locationCity", "location_city", "city", "referenceLocationValue", "referenceAddress"):
         value = str(questionnaire.get(key) or "").strip()
         lowered = value.lower()
         for token, canonical in _GOVERNED_CITY_TOKENS:

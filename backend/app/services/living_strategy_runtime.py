@@ -104,10 +104,19 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         r"(?:any\s+)?(?:wandering|memory care|secure(?:-unit| unit)?(?: need)?|locked memory unit)\b",
         "", query,
     )
+    future = hi.get("futureCareProfile") if isinstance(hi.get("futureCareProfile"), dict) else {}
+    structured_memory = _norm(questionnaire_state.get("memoryStatus"))
     memory_care_needed = (
         not no_dementia
         and _contains(memory_query, "dementia", "alzheimer", "memory care", "wandering", "cognitive decline", "cognitive impairment")
-    ) or _norm(questionnaire_state.get("memoryStatus")) in {"yes", "dementia", "memory care", "alzheimer", "alzheimers"}
+    ) or structured_memory in {"yes", "dementia", "memory care", "alzheimer", "alzheimers"} or (
+        # The intake's own structured answers (the canonical profile carries these).
+        not no_dementia and (
+            _contains(structured_memory, "significant memory", "dementia", "alzheimer", "memory care")
+            or _norm(transition.get("wanderingConcerns")) == "yes"
+            or _norm(future.get("secureMemoryNeighborhoodNeed")) == "yes"
+        )
+    )
 
     surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")
     spine_or_back = _contains(query, "spine", "spinal", "back surgery", "back operation")
@@ -163,11 +172,16 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         )
         or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance")
     )
-    medication = (not no_medication_support) and _contains(query, "medication", "medications", "medicine")
+    medication = (not no_medication_support) and (
+        _contains(query, "medication", "medications", "medicine")
+        or _contains(_norm(questionnaire_state.get("assistanceLevel")), "medication")
+    )
     high_social = _contains(query, "culture", "cultural", "classes", "activities", "social", "clubs", "lectures", "music", "art", "events")
 
     raw_rehab_need = _norm(transition.get("postHospitalRehabNeed"))
     skilled_rehab_known = raw_rehab_need in {"yes", "required", "high"} or _contains(query, "physical therapy", "occupational therapy", "skilled rehab", "rehabilitation")
+    # A structured "needs rehabilitation" answer is a rehabilitation need, same as the words.
+    rehab = rehab or raw_rehab_need in {"yes", "required", "high"}
 
     move_timing = _norm(transition.get("moveTiming") or questionnaire_state.get("moveTiming"))
     budget = _first_known(questionnaire_state, "budget", "monthlyBudget")

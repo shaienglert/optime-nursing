@@ -506,6 +506,17 @@ _PERSONAL_TITLE = re.compile(r"\b(?:dr|doctor|mr|mrs|ms|miss|nurse|sister|brothe
 _LOCATION_LEAD = re.compile(r"\b(?:in|near|around|from|at|to|within|outside|by)\s+$")
 
 
+def _structured_location_city(questionnaire: Dict[str, Any]) -> Optional[str]:
+    """City from the structured location answers the intake writes (canonical fields)."""
+    for key in ("locationCity", "city", "referenceLocationValue", "referenceAddress"):
+        value = str(questionnaire.get(key) or "").strip().lower()
+        if value:
+            detected = _detect_location_city(value)
+            if detected:
+                return detected
+    return None
+
+
 def _detect_location_city(normalized: str) -> Optional[str]:
     """Pick the market the family is describing, out of the cities OPTIME serves.
 
@@ -785,7 +796,9 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
         "need_tags": need_tags,
         "priority_parameter_ids": priority_parameter_ids,
         "profile_key": profile_key,
-        "location_city": nl_meta.get("location_city"),
+        # The structured location answer is the authority; free-text city only on the
+        # legacy (non-authoritative) path.
+        "location_city": _structured_location_city(questionnaire_state) or nl_meta.get("location_city"),
         "natural_language_mapping": nl_meta,
     }
 
