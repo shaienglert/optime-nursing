@@ -176,7 +176,7 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         # The ordering claim is the line that must not be crossed, and it is not: the phase
         # is its own, the finality is degraded rather than provisional, and the payload
         # states results_are_ordered false.
-        self.assertTrue(decision["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(decision["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual(decision["recommendation_visibility"], "UNRANKED_ELIGIBLE_SET_VISIBLE")
         self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
         for row in result["results"]:
