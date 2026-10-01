@@ -532,7 +532,7 @@ def apply_must_ai_nice_pipeline(
             for row in rows
         ],
         "ai_ranking": ai_status,
-        "ai_ranking_required": _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED"),
+        "ai_ranking_required": False,
         "ai_ranking_fail_closed": False,
         "ai_ranking_degraded": ai_ranking_degraded,
         "dynamic_preferences": dynamic_summary,
