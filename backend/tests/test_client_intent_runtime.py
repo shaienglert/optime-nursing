@@ -213,3 +213,12 @@ def test_explicit_continuum_match_ranks_above_generic_active_adult_fit():
     active_adult["client_intent_fit"] = evaluate_candidate_intent(active_adult, intent)
 
     assert intent_rank_key(continuing_care) < intent_rank_key(active_adult)
+
+
+def test_kosher_requirement_is_client_must_not_nice():
+    questionnaire={"humanIntelligenceV2":{"foodProfile":{"dietaryPreferences":["Kosher"]},"culturalProfile":{"kosherRequirements":"Requirement"}}}
+    intent=build_client_intent(questionnaire,"",{}, {})
+    must={x["key"] for x in intent["must_haves"]}
+    nice={x["key"] for x in intent["nice_to_haves"]}
+    assert "KOSHER_MEALS" in must
+    assert "KOSHER_MEALS" not in nice
