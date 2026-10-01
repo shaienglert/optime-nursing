@@ -4,22 +4,19 @@ from typing import Any, Dict
 
 SCHEMA_VERSION = "oomnik-structured-profile/0.1"
 VALID_STATES = {"EXPLICIT","NEGATED","UNCLEAR","UNKNOWN","CONFLICT"}
-VALID_PROVENANCE = {"BUTTON","AI_EXTRACTED"}
+VALID_PROVENANCE = {"BUTTON","AI_EXTRACTED"}\n\ndef _flatten(data: Dict[str,Any], prefix: str = "") -> Dict[str,Any]:\n    out={}\n    for key,value in data.items():\n        path=f"{prefix}.{key}" if prefix else str(key)\n        if isinstance(value,dict): out.update(_flatten(value,path))\n        elif value not in ("",None,[],{}): out[path]=value\n    return out
 
 def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result: Dict[str,Any]|None=None) -> Dict[str,Any]:
     semantic_result=semantic_result or {}
     fields: Dict[str,Any]={}
-    patch=semantic_result.get("questionnaire_patch") if isinstance(semantic_result.get("questionnaire_patch"),dict) else {}
+    raw_patch=semantic_result.get("questionnaire_patch") if isinstance(semantic_result.get("questionnaire_patch"),dict) else {}\n    patch=_flatten(raw_patch)
     statements=[s for s in semantic_result.get("statements") or [] if isinstance(s,dict)]
     by_key={}
     for s in statements:
         keys=[s.get("gap_key"),s.get("target_fact_key"),*(s.get("mapped_parameters") or [])]
         for key in keys:
             if key: by_key.setdefault(str(key),[]).append(s)
-    for key,value in questionnaire_state.items():
-        if key in {"notes","questionnaireCompletion","humanIntelligenceV2"} or value in ("",None,[],{}): continue
-        fields[key]={"value":value,"state":"EXPLICIT","provenance":"BUTTON","quote":None,"source_question_key":key}
-    conflicts=[]; out=[]; unprocessed=[]
+    button_state={k:v for k,v in questionnaire_state.items() if k not in {"notes","questionnaireCompletion"}}\n    flattened_buttons=_flatten(button_state)\n    for key,value in flattened_buttons.items():\n        fields[key]={"value":value,"state":"EXPLICIT","provenance":"BUTTON","quote":None,"source_question_key":key}\n    conflicts=[]; out=[]; unprocessed=[]
     for key,value in patch.items():
         candidates=by_key.get(str(key),[])
         quote=next((str(s.get("raw_text")) for s in candidates if str(s.get("raw_text") or "").strip()),None)
@@ -28,7 +25,7 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
         extracted={"value":value,"state":state,"provenance":"AI_EXTRACTED","quote":quote,"source_question_key":None}
         if key in fields and fields[key]["value"] != value:
             fields[key]={"value":None,"state":"CONFLICT","provenance":"BUTTON","quote":quote,"source_question_key":key}
-            conflicts.append({"field":key,"button_value":questionnaire_state.get(key),"ai_value":value,"quote":quote})
+            conflicts.append({"field":key,"button_value":flattened_buttons.get(key),"ai_value":value,"quote":quote})
         elif key in fields:
             pass
         else:
