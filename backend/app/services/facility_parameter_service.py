@@ -80,7 +80,6 @@ def _best_evidence_row(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         reverse=True,
     )[0]
 
-
 def _base_priority(parameter: Dict[str, Any]) -> float:
     score = 100.0
     if parameter.get("hard_filter_eligibility"):

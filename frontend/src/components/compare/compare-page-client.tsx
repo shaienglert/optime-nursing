@@ -644,7 +644,7 @@ export function ComparePageClient() {
             <h2 className="mt-2 text-lg font-semibold text-[#2f2a24]">
               Your choice: {selectedFacilities.find((facility) => facility.facilityId === favoriteFacilityId)?.facilityName || "Selected facility"}
               {" "}vs{" "}
-              OPTIME recommendation {decisionResponse?.results.find((item) => item.canonical_facility_id === optimeReferenceId)?.rank_display || "#1"}: {selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId)?.facilityName || "Current best applicable recommendation"}
+              OPTIME recommendation {decisionResponse?.results.find((item) => item.canonical_facility_id === optimeReferenceId)?.rank_display || "rank pending verification"}: {selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId)?.facilityName || "Current best applicable recommendation"}
             </h2>
             <p className="mt-2 text-sm text-[#4a6076]">
               Current OPTIME reference: {selectedFacilities.find((facility) => facility.facilityId === optimeReferenceId)?.facilityName || "current highest applicable recommendation"}.

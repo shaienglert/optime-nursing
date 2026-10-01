@@ -167,16 +167,17 @@ def _apply_verified_registry_evidence(research: Dict[str, Any], canonical_id: st
         source_url = str(provider_record.get("source_url") or "").strip()
         if source_url and source_url.upper() != "UNKNOWN":
             research["source_url"] = source_url
-        research["social_engagement_verified"] = evidence.get("social_engagement_verified") is True
-        research["medication_support_verified"] = evidence.get("medication_support_verified") is True
-        research["adl_support_verified"] = evidence.get("adl_support_verified") is True
-        research["transportation_verified"] = evidence.get("transportation_verified") is True
-        research["dining_verified"] = evidence.get("dining_verified") is True
-        research["rehab_verified"] = evidence.get("rehab_verified") is True
+        research["social_engagement_verified"] = True if evidence.get("social_engagement_verified") is True else None
+        research["medication_support_verified"] = True if evidence.get("medication_support_verified") is True else None
+        research["adl_support_verified"] = True if evidence.get("adl_support_verified") is True else None
+        research["transportation_verified"] = True if evidence.get("transportation_verified") is True else None
+        research["dining_verified"] = True if evidence.get("dining_verified") is True else None
+        research["rehab_verified"] = True if evidence.get("rehab_verified") is True else None
         research["pt_ot_verified"] = evidence.get("pt_ot_verified") is True or evidence.get("pt_ot_external_path_verified") is True
-        research["couple_coresidence_verified"] = evidence.get("couple_coresidence_verified") is True or evidence.get("couple_unit_possible") is True
-        research["outside_care_allowed_verified"] = evidence.get("outside_care_allowed_verified") is True
-        research["continuum_of_care_verified"] = evidence.get("continuum_of_care_verified") is True
+        research["couple_coresidence_verified"] = True if evidence.get("couple_coresidence_verified") is True else None
+        research["couple_unit_possible"] = evidence.get("couple_unit_possible") is True
+        research["outside_care_allowed_verified"] = True if evidence.get("outside_care_allowed_verified") is True else None
+        research["continuum_of_care_verified"] = True if evidence.get("continuum_of_care_verified") is True else None
         research["verified_registry_used"] = True
         research["evidence_interpretation_mode"] = "GOVERNED_REGISTRY_EVIDENCE"
     reputation = overlay.get("reputation") if isinstance(overlay.get("reputation"), dict) else {}
@@ -258,9 +259,9 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
         "dimension": dimension, "requested_parameters": requested, "research_completed": True,
         "source_url": source_url, "observed_at": datetime.now(timezone.utc).isoformat(),
         "official_identity_verified": False, "regulatory_source_verified": False, "regulatory_parameters_verified": [],
-        "social_engagement_verified": False, "medication_support_verified": False, "adl_support_verified": False,
-        "transportation_verified": False, "dining_verified": False, "rehab_verified": False, "pt_ot_verified": False,
-        "couple_coresidence_verified": False, "outside_care_allowed_verified": False, "continuum_of_care_verified": False,
+        "social_engagement_verified": None, "medication_support_verified": None, "adl_support_verified": None,
+        "transportation_verified": None, "dining_verified": None, "rehab_verified": None, "pt_ot_verified": None,
+        "couple_coresidence_verified": None, "outside_care_allowed_verified": None, "continuum_of_care_verified": None,
         "public_rating": "UNKNOWN", "public_review_count": "UNKNOWN", "public_reputation_source": "UNKNOWN",
         "evidence_interpretation_mode": "UNRESOLVED",
     }

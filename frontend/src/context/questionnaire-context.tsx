@@ -54,6 +54,7 @@ export type QuestionnaireState = {
     oxygenUse: string;
     woundCareFrequency: string;
     complexConditionDetails: string;
+    medicalEquipmentSupport: string;
     physicianCoordination: string;
   };
   humanIntelligenceV2: HumanIntelligenceV2;
@@ -111,6 +112,7 @@ export type HumanIntelligenceV2 = {
   };
   foodProfile: {
     dietaryPreferences: string[];
+    dietaryRequirementImportance: string;
   };
   familyCultureProfile: {
     involvementExpectation: string;
@@ -268,6 +270,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
     oxygenUse: "",
     woundCareFrequency: "",
     complexConditionDetails: "",
+    medicalEquipmentSupport: "",
     physicianCoordination: "",
   },
   humanIntelligenceV2: {
@@ -322,6 +325,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
     },
     foodProfile: {
       dietaryPreferences: [],
+      dietaryRequirementImportance: "",
     },
     familyCultureProfile: {
       involvementExpectation: "",

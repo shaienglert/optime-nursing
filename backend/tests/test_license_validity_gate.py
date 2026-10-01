@@ -33,14 +33,18 @@ class LicenseValidityGateTests(unittest.TestCase):
         result = evaluate_candidate_intent(self._row(license_expired=False), intent)
         self.assertIn("LICENSE_CURRENTLY_VALID", result["must_pass"])
 
-    def test_missing_expiration_data_passes_rather_than_blocking(self) -> None:
-        # No license_expired field at all (the shape of every pre-existing row/test
-        # fixture in the whole suite) must never turn into UNKNOWN/PENDING noise.
+    def test_missing_expiration_data_requires_verification(self) -> None:
+        # Missing safety evidence is UNKNOWN, never a silent PASS.
         intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
         result = evaluate_candidate_intent(self._row(), intent)
-        self.assertIn("LICENSE_CURRENTLY_VALID", result["must_pass"])
-        self.assertNotIn("LICENSE_CURRENTLY_VALID", result["must_unknown"])
+        self.assertIn("LICENSE_CURRENTLY_VALID", result["must_unknown"])
+        self.assertNotIn("LICENSE_CURRENTLY_VALID", result["must_pass"])
         self.assertNotIn("LICENSE_CURRENTLY_VALID", result["must_fail"])
+
+    def test_explicit_suspended_status_fails_even_with_future_expiration(self) -> None:
+        intent = {"must_haves": [{"key": "LICENSE_CURRENTLY_VALID"}]}
+        result = evaluate_candidate_intent(self._row(license_expired=False, license_status="SUSPENDED"), intent)
+        self.assertIn("LICENSE_CURRENTLY_VALID", result["must_fail"])
 
 
 class LicenseExpiredHelperTests(unittest.TestCase):

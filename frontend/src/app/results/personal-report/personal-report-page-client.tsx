@@ -157,7 +157,7 @@ export function PersonalReportPageClient() {
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-lg font-semibold text-[#3e7868]">#{index + 1} current match</p>
+                      <p className="text-lg font-semibold text-[#3e7868]">{candidate.rank_position ? `#${candidate.rank_position} current match` : "Eligible current match"}</p>
                       <h2 className="mt-1 text-3xl font-semibold leading-tight sm:text-4xl">{candidate.facility_name}</h2>
                     </div>
                     <div className="flex flex-col items-start gap-2 sm:items-end">
