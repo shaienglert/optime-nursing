@@ -93,7 +93,8 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     # `relationship` identifies who the search is for (for example, "my spouse");
     # it does not mean two residents are moving. Require an explicit joint-move or
     # co-residence statement before creating the COUPLE_CORESIDENCE hard gate.
-    couple = _mentions_couple(query)
+    structured_relationship = _norm(questionnaire_state.get("relationship") or questionnaire_state.get("whoFor") or questionnaire_state.get("personType"))
+    couple = structured_relationship in {"couple", "both", "two residents"} or bool(questionnaire_state.get("coupleCoresidenceRequired")) or _mentions_couple(query)
 
     no_dementia = denials["memory"] or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
     # Strip denied mentions locally; "no wandering" is not a wandering signal.
