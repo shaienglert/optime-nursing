@@ -51,7 +51,8 @@ function AnswerControl({ question, value, onAnswer, budgetFloor = 1 }: { questio
     );
   }
   if (question.kind === "number" && question.id === "budget") {
-    const min = Math.max(1, Math.round(budgetFloor));
+    const rawFloor = Math.max(1, Math.ceil(budgetFloor));
+    const min = Math.max(100, Math.ceil(rawFloor / 100) * 100);
     const max = Math.max(15000, min + 10000);
     const current = Number(value) > 0 ? Number(value) : min;
     return <div className="mt-4"><input type="range" min={min} max={max} step="100" value={Math.min(max, Math.max(min, current))} onChange={(event) => onAnswer(Number(event.target.value), false)} className="w-full" /><div className="mt-2 flex justify-between text-sm text-[#606a64]"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div><p className="mt-2 text-xs text-[#68766f]">Starts at the lowest current published room price OOmnik has for this market. Final total cost may include care and mandatory fees.</p></div>;
