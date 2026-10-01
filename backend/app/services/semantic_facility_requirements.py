@@ -186,6 +186,10 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             "research_task": str(statement.get("research_task") or "Verify this requirement against current facility-specific evidence."),
             "mapped_parameters": mapped,
             "source": "SEMANTIC_AI_CLIENT_INTENT",
+            # Single authority (owner, 2026-10-01): a semantic statement reaches the
+            # decision only through the Canonical Structured Profile. Detected here for the
+            # shadow comparison; it never gates a facility or queues research by itself.
+            "shadow_only": True,
         })
     requirements.extend(_canonical_evidence_requests(result))
     return requirements
@@ -420,7 +424,9 @@ def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candida
 
 
 def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_limit: int = 20, questionnaire_state: Dict[str, Any] | None = None) -> Dict[str, Any]:
-    requirements = extract_semantic_facility_requirements(result, questionnaire_state)
+    detected = extract_semantic_facility_requirements(result, questionnaire_state)
+    shadow_requirements = [item for item in detected if item.get("shadow_only")]
+    requirements = [item for item in detected if not item.get("shadow_only")]
     rows = list(result.get("results") or [])
     for row in rows:
         _apply_pilot_monthly_cost(row)
@@ -491,6 +497,8 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     decision["semantic_facility_requirements"] = {
         "requirements": requirements,
+        "shadow_requirements": shadow_requirements,
+        "shadow_rule": "Semantic MUST statements are recorded for comparison with the Canonical Structured Profile; they have no decision authority.",
         "tasks_queued": queued,
         "rule": "Semantic AI identifies client MUSTs; facility evidence or direct verification decides PASS/FAIL. UNKNOWN never becomes PASS.",
     }

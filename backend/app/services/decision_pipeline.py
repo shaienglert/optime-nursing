@@ -388,10 +388,17 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     internal_limit = max(60, min(100, int(limit or 50)))
     # Cutover: conversation AI may read narrative upstream; decision engine gets structured facts only.
     from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
-    decision_profile = build_structured_profile(questionnaire_state)
-    decision_questionnaire = materialize_questionnaire(decision_profile)
-    if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
-        decision_questionnaire["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
+    # The profile builder already produced the canonical decision questionnaire from the
+    # Structured Profile (interpreter output included). Every decision stage below reads
+    # it -- never the raw questionnaire_state or the free text.
+    canonical = profile.get("canonical_decision_questionnaire") if isinstance(profile, dict) else None
+    if isinstance(canonical, dict):
+        decision_questionnaire = dict(canonical)
+    else:
+        decision_profile = build_structured_profile(questionnaire_state)
+        decision_questionnaire = materialize_questionnaire(decision_profile)
+        if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
+            decision_questionnaire["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
     result = runner(questionnaire_state=decision_questionnaire, natural_language_query="", limit=internal_limit, prepared_profile=profile)
     stage_started = _mark("run_patient_decision_engine_deterministic_ms", stage_started)
     if not isinstance(result, dict):
@@ -410,12 +417,12 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     from app.services.ai_process_owner_guard_patch import attach_ai_process_owner_guarded
     from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
 
-    result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit), questionnaire_state=questionnaire_state)
+    result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit), questionnaire_state=decision_questionnaire)
     stage_started = _mark("apply_semantic_facility_requirements_ms", stage_started)
     decision = result.setdefault("decision_intelligence", {})
     decision["interview_owner"] = "SEMANTIC_AI"
     decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
-    result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, internal_limit)
+    result = _apply_combined_care_layer(result, decision_questionnaire, "", internal_limit)
     stage_started = _mark("apply_combined_care_layer_ms", stage_started)
 
     # Budget authority is centralized in must_ai_nice_pipeline.  Earlier stages may
@@ -424,7 +431,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     # policy and preserves the owner rule: in-budget first, then all otherwise-eligible
     # candidates up to +10%, with transparent deviation.
     _merge_funnel_fit(result)
-    result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
+    result = apply_must_ai_nice_pipeline(result, decision_questionnaire, "", limit)
     stage_started = _mark("apply_must_ai_nice_pipeline_ms", stage_started)
     # Re-seal after the MUST/ranking stages before the process owner reads
     # phase or visibility.  Raw pipeline facts may change; control state may
