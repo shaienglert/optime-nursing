@@ -45,12 +45,20 @@ jobs:
       - name: Verify live Golden Interpreter
         env:
           PYTHONPATH: backend
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPTIME_SEMANTIC_AI_ENABLED: '1'
+          OPTIME_SEMANTIC_AI_REQUIRED: '1'
+          OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
+          OPTIME_SEMANTIC_AI_MODEL: gpt-4.1-mini
+          OPTIME_SEMANTIC_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python backend/gold_examples/validate_golden_interpreter_live.py
       - name: Verify structured profile shadow live
         env:
           PYTHONPATH: backend
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPTIME_SEMANTIC_AI_ENABLED: '1'
+          OPTIME_SEMANTIC_AI_REQUIRED: '1'
+          OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
+          OPTIME_SEMANTIC_AI_MODEL: gpt-4.1-mini
+          OPTIME_SEMANTIC_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python backend/gold_examples/validate_structured_profile_shadow_live.py
       - name: Verify frontend types
         working-directory: frontend
