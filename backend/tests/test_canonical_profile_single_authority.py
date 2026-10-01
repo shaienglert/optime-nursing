@@ -79,6 +79,8 @@ def test_interpreter_patch_is_the_only_road_from_text_to_a_fact():
         "questionnaire_patch": {"medicalCareProfile": {"needs": ["Dialysis"]}},
         "statements": [{"raw_text": "She needs dialysis", "mapped_parameters": ["medicalCareProfile.needs"], "knowledge_state": "KNOWN"}],
     }
-    profile = build_structured_profile(state, semantic)
+    profile = build_structured_profile(state, semantic, family_text="Mom is 82. She needs dialysis three times a week.")
     assert profile["fields"]["medicalCareProfile.needs"]["provenance"] == "AI_EXTRACTED"
+    # Without the family text the quote cannot be verified, so the fact is not decision input.
+    assert "medicalCareProfile" not in materialize_questionnaire(build_structured_profile(state, semantic))
     assert materialize_questionnaire(profile)["medicalCareProfile"]["needs"] == ["Dialysis"]
