@@ -32,7 +32,7 @@ from copy import deepcopy
 import os
 from typing import Any, Dict, List
 
-from app.services.ai_candidate_ranking_runtime import attach_nice_coverage
+from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates  # compatibility symbol; never called by production pipeline
 from app.services.client_intent_runtime import intent_rank_key
 from app.services.human_intelligence_runtime_verified import person_fit_sort_key
 from app.services.semantic_preference_runtime import build_dynamic_preference_model, verify_dynamic_preferences
