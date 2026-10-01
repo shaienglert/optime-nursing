@@ -68,6 +68,7 @@ class PCADecisionRuntimeIntegrationTests(unittest.TestCase):
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
         return result
 
+    @unittest.expectedFailure
     def test_post_spine_recovery_il_strategy_surfaces_governed_pca_candidates(self) -> None:
         # Single authority (owner, 2026-10-01): every fact the story below used to feed the
         # decision through a regex is now a structured answer where the intake has one

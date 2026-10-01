@@ -174,7 +174,8 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         )
         profile = result["patient_needs_profile"]
         self.assertEqual(profile["location_city"], "LAS VEGAS")
-        self.assertEqual(profile["natural_language_mapping"]["location_city"], "LAS VEGAS")
+        # The regex narrative mapper is no longer a decision input on the authoritative path.
+        self.assertEqual(profile["natural_language_mapping"]["status"], "RAW_NARRATIVE_NOT_DECISION_INPUT")
         # The ranking model is unavailable in this environment, so the hard criteria carry
         # the result: the eligible set is shown, explicitly unordered, with a degradation
         # notice. It used to be hidden entirely, which told the family nothing.
