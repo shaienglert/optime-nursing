@@ -73,20 +73,36 @@ def _merge_strategy_questions(human_context: Dict[str, Any], strategy: Dict[str,
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
     from app.services.canonical_intake_state import canonicalize_intake_state
     questionnaire_state = canonicalize_intake_state(questionnaire_state)
-    from app.services.care_input_assertions import extract_care_denials
-    care_denials = extract_care_denials(natural_language_query)
-    profile = _governed.build_patient_needs_profile(questionnaire_state, natural_language_query, care_denials=care_denials)
-    strategy = build_living_strategy_context(questionnaire_state, natural_language_query, care_denials=care_denials)
+    # Single authority (owner, 2026-10-01). Free text is read in exactly one place: the
+    # interpreter pass (human intelligence / semantic AI), whose only output that counts is
+    # the Canonical Structured Profile. Every decision fact below -- needs, MUSTs, strategy,
+    # care-delivery signals, care-partner requirements -- is derived from that profile with
+    # no free text, so no downstream regex or keyword reading can re-decide a fact.
+    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+    interpreter_strategy = build_living_strategy_context(questionnaire_state, "")
+    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=interpreter_strategy)
+    structured = human_context.get("structured_profile_shadow") if isinstance(human_context.get("structured_profile_shadow"), dict) else build_structured_profile(questionnaire_state)
+    decision_questionnaire = materialize_questionnaire(structured)
+    if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
+        decision_questionnaire["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
+    decision_questionnaire = canonicalize_intake_state(decision_questionnaire)
+    profile = _governed.build_patient_needs_profile(decision_questionnaire, "", care_denials=None)
+    strategy = build_living_strategy_context(decision_questionnaire, "")
     _apply_strategy_needs(profile, strategy)
-    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=strategy)
     _merge_strategy_questions(human_context, strategy)
+    from app.services.human_intelligence_runtime import _community_size_preference
+    signals = human_context.setdefault("signals", {})
+    if isinstance(signals, dict):
+        signals["community_size_preference"] = _community_size_preference(decision_questionnaire)
     from app.services.combined_care_solution_runtime import _query_signals
-    delivery_signals = _query_signals(questionnaire_state, natural_language_query, care_denials=care_denials)
-    client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context, care_delivery_signals=delivery_signals)
-    factor_policy = build_success_factor_trace(questionnaire_state, profile)
+    delivery_signals = _query_signals(decision_questionnaire, "", care_denials=None)
+    client_intent = build_client_intent(decision_questionnaire, "", strategy, human_context, care_delivery_signals=delivery_signals)
+    factor_policy = build_success_factor_trace(decision_questionnaire, profile)
+    profile["canonical_structured_profile"] = structured
+    profile["canonical_decision_questionnaire"] = decision_questionnaire
     profile["living_strategy"] = strategy
     profile["care_delivery_signals"] = delivery_signals
-    profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, questionnaire_state, natural_language_query)
+    profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, decision_questionnaire, "")
     profile["client_intent"] = client_intent
     profile["decision_intelligence"] = {
         "version": "decision-intelligence-runtime-v3.1",
