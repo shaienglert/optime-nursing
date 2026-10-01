@@ -1,4 +1,8 @@
 name: Pilot acceptance cases
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 # Runs the ten family situations against the synthetic-pilot market, where every one of
 # the 200 communities has a curated record and verified evidence for 31 parameters, and
 # grades each recommendation against those records rather than against the engine's own
