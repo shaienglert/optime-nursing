@@ -3711,3 +3711,8 @@ async def evidence_facility_material_claims(facility_id: int, db: Session = Depe
 @app.get("/evidence/recommendations/{recommendation_key}/score-trace")
 async def evidence_recommendation_score_trace(recommendation_key: str, db: Session = Depends(get_db)):
     return recommendation_score_trace(db, recommendation_key)
+
+
+# Owner-authorized event-driven technical incident reporting.
+from app.services.user_incident_reporting import install_incident_reporting
+install_incident_reporting(app, allowed_origins)
