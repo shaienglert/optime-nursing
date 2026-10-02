@@ -45,6 +45,7 @@ def ledger_rows(rows: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
             ],
             "must_fail": list(fit.get("must_fail") or []),
             "must_unknown": list(fit.get("must_unknown") or []),
+            "must_pending_reasons": dict(fit.get("must_pending_reasons") or {}),
             # The cost the budget is compared with under the funding pathway.
             "price": relevant_monthly_cost(row),
             "cost_basis": row.get("relevant_cost_basis") or "PRIVATE_PAY_PRICE",
@@ -62,11 +63,18 @@ def merge_late_fit(ledger: List[Dict[str, Any]], rows: Iterable[Dict[str, Any]])
             if fit:
                 item["must_fail"] = list(fit.get("must_fail") or [])
                 item["must_unknown"] = list(fit.get("must_unknown") or [])
+                item["must_pending_reasons"] = dict(fit.get("must_pending_reasons") or {})
             item["price"] = relevant_monthly_cost(row)
 
 
 def _unknown_cost_reason(item: Dict[str, Any]) -> str:
     return "medicaid_household_out_of_pocket_unknown" if item.get("cost_basis") == "MEDICAID_HOUSEHOLD_OUT_OF_POCKET" else "current_price_unknown"
+
+
+def _pending_label(item: Dict[str, Any], key: str) -> str:
+    """e.g. CURRENT_AVAILABILITY_FOR_URGENT_MOVE:PENDING_RECONFIRMATION -- why it is pending."""
+    reason = (item.get("must_pending_reasons") or {}).get(key)
+    return f"{key}:{reason}" if reason else key
 
 
 def _key_class(key: str) -> str:
@@ -87,14 +95,14 @@ def _remove(survivors: List[Dict[str, Any]], stage: str, reasons_for, stages: Li
     for item in survivors:
         reasons = reasons_for(item)
         if reasons:
-            first = min(reasons, key=lambda r: (order.index(r) if r in order else len(order), r))
+            first = min(reasons, key=lambda r: (order.index(r.split(":")[0]) if r.split(":")[0] in order else len(order), r))
             removed_by[first] = removed_by.get(first, 0) + 1
         else:
             kept.append(item)
     if survivors and not kept and removed_by:
         # The reason that removed the last survivors when applied one key at a time.
         remaining = list(survivors)
-        for reason in sorted(removed_by, key=lambda r: (order.index(r) if r in order else len(order), r)):
+        for reason in sorted(removed_by, key=lambda r: (order.index(r.split(":")[0]) if r.split(":")[0] in order else len(order), r)):
             remaining = [item for item in remaining if reason not in reasons_for(item)]
             if not remaining:
                 zeroing_reason = reason
@@ -159,7 +167,7 @@ def build_funnel(
     )
     survivors = _remove(
         survivors, "MUST_EVIDENCE_UNKNOWN",
-        lambda i: [key for key in i["must_unknown"] if _key_class(key) != "BUDGET"]
+        lambda i: [_pending_label(i, key) for key in i["must_unknown"] if _key_class(key) != "BUDGET"]
         + ([_unknown_cost_reason(i)] if ceiling is not None and i["price"] is None else [])
         + (["total_monthly_cost_unverified"] if i["price"] is not None and any(_key_class(k) == "BUDGET" for k in i["must_unknown"]) else []),
         stages, must_order + ["current_price_unknown", "medicaid_household_out_of_pocket_unknown", "total_monthly_cost_unverified"],
@@ -217,7 +225,7 @@ def blocking_reasons(item: Dict[str, Any], budget: Optional[float]) -> List[Dict
         reasons.append({"reason": "budget", "authority": "CLIENT_BUDGET", "kind": "VERIFIED_FAIL"})
     for key in item.get("must_unknown") or []:
         if _key_class(key) != "BUDGET":
-            reasons.append({"reason": key, "authority": _key_class(key), "kind": "UNKNOWN"})
+            reasons.append({"reason": _pending_label(item, key), "authority": _key_class(key), "kind": "UNKNOWN"})
     if ceiling is not None and item.get("price") is None:
         reasons.append({"reason": "medicaid_household_out_of_pocket" if item.get("cost_basis") == "MEDICAID_HOUSEHOLD_OUT_OF_POCKET" else "current_price", "authority": "CLIENT_BUDGET", "kind": "UNKNOWN"})
     elif item.get("price") is not None and not over and any(_key_class(k) == "BUDGET" for k in item.get("must_unknown") or []):

@@ -145,17 +145,29 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
             "humanIntelligenceV2": {
                 "personalityProfile": {"communitySizePreference": "Large community"},
                 "familyProfile": {"socialInteractionNeed": "Very important"},
+                # Canonical recovery facts (single authority) -- the story below repeats
+                # them but no longer reaches the decision by itself.
+                "transitionRiskProfile": {
+                    "recentProcedure": "Yes",
+                    "procedureType": "spinal surgery",
+                    "expectedRecovery": "Yes",
+                    "temporarySupportMonths": "3",
+                    "postHospitalRehabNeed": "Yes",
+                },
             },
+            "happinessPreferences": ["Classes", "Cultural activities"],
+            "locationCity": "Las Vegas",
+            "referenceLocationValue": "Las Vegas",
         }
         query = (
             "My husband and I are both over 80 and want to move to senior living in Las Vegas with lots of culture, classes and activities. "
             "My husband had spinal surgery and needs rehabilitation. He is expected to return to walking, but for the next 3 months he needs help with bathing and dressing. "
             "I am independent and we want to live together."
         )
-        strategy = build_living_strategy_context(state, query)
+        strategy = build_living_strategy_context(state, "")
         human = build_human_intelligence_context(questionnaire_state=state, natural_language_query=query)
         human["living_strategy"] = strategy
-        intent = build_client_intent(state, query, strategy, human)
+        intent = build_client_intent(state, "", strategy, human)
 
         index = get_canonical_facility_index()
         row = dict(index["NV-LIC-4000-AGC-31"], canonical_facility_id="NV-LIC-4000-AGC-31")

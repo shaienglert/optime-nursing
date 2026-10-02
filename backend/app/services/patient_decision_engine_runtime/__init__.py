@@ -78,22 +78,15 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     # the Canonical Structured Profile. Every decision fact below -- needs, MUSTs, strategy,
     # care-delivery signals, care-partner requirements -- is derived from that profile with
     # no free text, so no downstream regex or keyword reading can re-decide a fact.
-    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
-    interpreter_strategy = build_living_strategy_context(questionnaire_state, "")
-    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=interpreter_strategy)
-    structured = human_context.get("structured_profile_shadow") if isinstance(human_context.get("structured_profile_shadow"), dict) else build_structured_profile(questionnaire_state)
-    decision_questionnaire = materialize_questionnaire(structured)
-    if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
-        decision_questionnaire["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
-    decision_questionnaire = canonicalize_intake_state(decision_questionnaire)
+    # Interpreter -> canonical profile -> strategy/guardian once (human intelligence owns
+    # the order); everything here reads only its canonical outputs.
+    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+    structured = human_context["structured_profile_shadow"]
+    decision_questionnaire = human_context["canonical_decision_questionnaire"]
+    strategy = human_context["canonical_living_strategy"]
     profile = _governed.build_patient_needs_profile(decision_questionnaire, "", care_denials=None)
-    strategy = build_living_strategy_context(decision_questionnaire, "")
     _apply_strategy_needs(profile, strategy)
     _merge_strategy_questions(human_context, strategy)
-    from app.services.human_intelligence_runtime import _community_size_preference
-    signals = human_context.setdefault("signals", {})
-    if isinstance(signals, dict):
-        signals["community_size_preference"] = _community_size_preference(decision_questionnaire)
     from app.services.combined_care_solution_runtime import _query_signals
     delivery_signals = _query_signals(decision_questionnaire, "", care_denials=None)
     client_intent = build_client_intent(decision_questionnaire, "", strategy, human_context, care_delivery_signals=delivery_signals)
@@ -154,7 +147,6 @@ def _is_rankable_candidate(row: Dict[str, Any]) -> bool:
     return (
         ((row.get("client_intent_fit") or {}).get("hard_gate") != "FAIL")
         and str(row.get("eligibility_status") or "") != "INELIGIBLE"
-        and str(row.get("availability_decision_state") or "") != "PENDING_RECONFIRMATION"
     )
 
 
@@ -398,6 +390,10 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
 
     attach_client_intent_fit(rows, client_intent)
     _stage_started = _mark("attach_client_intent_fit_2_ms", _stage_started)
+    for row in rows:
+        # Display field derived from the single authority (the client-intent MUST).
+        reasons = (row.get("client_intent_fit") or {}).get("must_pending_reasons") or {}
+        row["availability_decision_state"] = reasons.get("CURRENT_AVAILABILITY_FOR_URGENT_MOVE")
     # Complete each candidate's monthly cost (e.g. a couple's second-resident fee) for the
     # WHOLE universe before it is recorded, not only for the rows later stages look at.
     from app.services.semantic_facility_requirements import _apply_pilot_monthly_cost

@@ -377,11 +377,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -825,11 +825,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -1286,11 +1286,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "Yes",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": "Yes"
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -1782,11 +1782,11 @@
             "recentHospitalization": "Yes",
             "hospitalizationRecency": "Within 30 days",
             "postHospitalRehabNeed": "Yes",
-            "wanderingConcerns": "",
             "recentProcedure": "No",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -2230,11 +2230,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -2679,11 +2679,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -3147,11 +3147,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -3597,11 +3597,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -4086,11 +4086,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",
@@ -4536,11 +4536,11 @@
             "recentHospitalization": "No",
             "hospitalizationRecency": "",
             "postHospitalRehabNeed": "",
-            "wanderingConcerns": "",
             "recentProcedure": "",
             "procedureType": "",
             "expectedRecovery": "",
-            "temporarySupportMonths": ""
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
           },
           "futureCareProfile": {
             "agingInPlaceImportance": "",

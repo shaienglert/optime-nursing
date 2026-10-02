@@ -216,10 +216,18 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
             "My father recently had a stroke and needs hands-on bathing, dressing and transfer help, "
             "plus PT, OT and speech therapy in Las Vegas for up to $17,000 monthly."
         )
+        # Single authority (owner, 2026-10-01/02): the rehab need reaches the guardian only
+        # as a quoted interpreter fact in the canonical profile; the Medicare blocker then
+        # follows from canonical state, not from a regex over the story.
         bad = {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": "Is he still in rehabilitation?",
-            "statements": [],
+            "statements": [{
+                "raw_text": "plus PT, OT and speech therapy", "meaning": "needs rehabilitation",
+                "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED",
+                "mapped_parameters": ["humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed"],
+            }],
+            "questionnaire_patch": {"humanIntelligenceV2": {"transitionRiskProfile": {"postHospitalRehabNeed": "Yes"}}},
         }
         medicare_wording_only = {
             "decision_readiness": "NEEDS_CLARIFICATION",
@@ -313,9 +321,13 @@ class AdaptiveInterviewRoundTripTests(unittest.TestCase):
         ):
             context = build_human_intelligence_context(state, query)
         self.assertEqual("FAILED", context["semantic_ai"]["status"])
+        # The model failure cannot make the interview READY: the story was never
+        # interpreted, so it is UNAVAILABLE and the facts it holds (stroke, rehab) are not
+        # invented by a regex -- there is therefore no Medicare blocker to ask about yet.
         self.assertEqual("NEEDS_CLARIFICATION", context["decision_readiness"])
-        self.assertEqual("medicare_status", context["adaptive_questions"][0]["target_fact_key"])
-        self.assertEqual("DETERMINISTIC_CANONICAL_FALLBACK", context["adaptive_questions"][0]["question_owner"])
+        self.assertEqual("UNAVAILABLE", context["intake_resolution"]["status"])
+        self.assertTrue(context["intake_resolution"]["unprocessed_narrative"])
+        self.assertEqual([], [q for q in context["adaptive_questions"] if q.get("question_owner") == "SEMANTIC_AI"])
 
     def test_answered_semantic_question_is_not_reissued(self) -> None:
         question = "What monthly budget would be comfortable?"

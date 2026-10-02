@@ -28,6 +28,7 @@ MUST_EVIDENCE_SOURCES: Dict[str, Dict[str, List[str]]] = {
     "REQUIRED_LANGUAGE_SUPPORT": {"parameters": ["languages"]},
     "REQUIRED_ACTIVITIES": {"parameters": ["activities"]},
     "CONTINUUM_OF_CARE_REQUIRED": {"canonical_fields": ["housing_modalities", "synthetic_archetype"], "payload_fields": ["continuum_of_care_verified"]},
+    "CURRENT_AVAILABILITY_FOR_URGENT_MOVE": {"parameters": ["current_availability"]},
     "MEDICAID_PATHWAY_REQUIRED": {"parameters": ["medicaid_attributes"], "payload_fields": ["medicaid_accepted_verified"]},
 }
 

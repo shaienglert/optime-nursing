@@ -379,6 +379,18 @@ def _apply_pilot_monthly_cost(row: Dict[str, Any]) -> None:
     row["monthly_rate_includes_verified_care"] = payload.get("monthly_rate_includes_verified_care") is True
 
 
+def _research_request(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int) -> Dict[str, Any]:
+    synthetic = row.get("synthetic_pilot") is True or str(row.get("canonical_facility_id") or "").startswith("PILOT-NV-")
+    return {
+        "canonical_facility_id": row.get("canonical_facility_id"),
+        "requirement_key": requirement.get("canonical_must_key") or requirement.get("key"),
+        "dimension": requirement.get("dimension"),
+        "requested_parameters": requirement.get("mapped_parameters") or [],
+        "research_priority": semantic_must_research_priority(candidate_rank_index),
+        "acquisition": "NOT_APPLICABLE_SYNTHETIC" if synthetic else "RESEARCH_INSTITUTE_SCHEDULER",
+    }
+
+
 def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int = 0) -> bool:
     canonical_id = str(row.get("canonical_facility_id") or "").strip()
     if not canonical_id:
@@ -431,6 +443,7 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
     for row in rows:
         _apply_pilot_monthly_cost(row)
     queued = 0
+    research_requests: List[Dict[str, Any]] = []
     budget = (questionnaire_state or {}).get("budget")
     if requirements:
         for index, row in enumerate(rows):
@@ -444,8 +457,8 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 key = str(requirement["key"])
                 if requirement.get("evidence_request_only"):
                     canonical_key = str(requirement.get("canonical_must_key") or "")
-                    if canonical_key in unknown and index < research_limit and _queue_requirement(row, requirement, index):
-                        queued += 1
+                    if canonical_key in unknown and index < research_limit:
+                        research_requests.append(_research_request(row, requirement, index))
                     trace.append({**requirement, "status": "REQUESTED" if canonical_key in unknown else "NOT_NEEDED"})
                     continue
                 # This function runs before and after asynchronous research.  A
@@ -483,8 +496,8 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 else:
                     if key not in unknown: unknown.append(key)
                     status = "UNKNOWN"
-                    if index < research_limit and _queue_requirement(row, requirement, index):
-                        queued += 1
+                    if index < research_limit:
+                        research_requests.append(_research_request(row, requirement, index))
                 trace.append({**requirement, "status": status})
             fit["must_pass"] = passed
             fit["must_unknown"] = unknown
@@ -492,14 +505,18 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
             fit["hard_gate"] = "FAIL" if failed else ("PENDING_VERIFICATION" if unknown else "PASS")
             fit["semantic_must_trace"] = trace
             row["client_intent_fit"] = fit
-    if queued:
-        _kick_worker_async()
+    # A family search is read-only with respect to public research (AUTHORITY_MAP; same
+    # rule as decision_agent_bridge_fast): it never queues work and never starts a
+    # crawler. It records which evidence is missing; the Research Institute scheduler
+    # owns acquisition, and never for synthetic pilot identities.
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     decision["semantic_facility_requirements"] = {
         "requirements": requirements,
         "shadow_requirements": shadow_requirements,
         "shadow_rule": "Semantic MUST statements are recorded for comparison with the Canonical Structured Profile; they have no decision authority.",
         "tasks_queued": queued,
+        "research_requests": research_requests,
+        "research_policy": "SEARCH_IS_READ_ONLY_RESEARCH_INSTITUTE_OWNS_ACQUISITION",
         "rule": "Semantic AI identifies client MUSTs; facility evidence or direct verification decides PASS/FAIL. UNKNOWN never becomes PASS.",
     }
     result["decision_intelligence"] = decision

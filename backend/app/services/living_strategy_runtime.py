@@ -176,7 +176,16 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         _contains(query, "medication", "medications", "medicine")
         or _contains(_norm(questionnaire_state.get("assistanceLevel")), "medication")
     )
-    high_social = _contains(query, "culture", "cultural", "classes", "activities", "social", "clubs", "lectures", "music", "art", "events")
+    # Structured social priority (single authority): an explicit activity requirement or
+    # preference, a "very important" social need, or daily social contact.
+    social = hi.get("socialProfile") if isinstance(hi.get("socialProfile"), dict) else {}
+    family = hi.get("familyProfile") if isinstance(hi.get("familyProfile"), dict) else {}
+    high_social = (
+        _norm(social.get("activityRequirementLevel")) in {"requirement", "preference"}
+        or _norm(family.get("socialInteractionNeed")) == "very important"
+        or _norm(social.get("socialInteractionFrequency")) == "daily"
+        or _contains(query, "culture", "cultural", "classes", "activities", "social", "clubs", "lectures", "music", "art", "events")
+    )
 
     raw_rehab_need = _norm(transition.get("postHospitalRehabNeed"))
     skilled_rehab_known = raw_rehab_need in {"yes", "required", "high"} or _contains(query, "physical therapy", "occupational therapy", "skilled rehab", "rehabilitation")

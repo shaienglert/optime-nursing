@@ -26,6 +26,10 @@ def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
 
 
+URGENT_MOVE_TIMINGS = {"immediately", "within 30 days"}
+URGENT_AVAILABILITY_KEY = "CURRENT_AVAILABILITY_FOR_URGENT_MOVE"
+
+
 def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any], *, care_delivery_signals=None) -> Dict[str, Any]:
     query = str(natural_language_query or "").lower()
     signals = living_strategy.get("signals") if isinstance(living_strategy.get("signals"), dict) else {}
@@ -167,8 +171,15 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if isinstance(budget, (int, float)) and float(budget) > 0:
         add_nice("BUDGET_FIT", "The verified starting monthly price should fit the client's stated budget.")
 
+    # Availability depends on move timing (owner, 2026-10-02). For an urgent move it is a
+    # CLIENT MUST: only current YES/LIMITED evidence passes; a recorded NO is
+    # PENDING_RECONFIRMATION (volatile, never a permanent fail) and no/stale evidence is
+    # EVIDENCE_PENDING -- neither is shown as a recommendation now. For a later move it is
+    # informational and never excludes a community.
     move_timing = str(questionnaire_state.get("moveTiming") or "").strip()
-    if move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
+    if move_timing.lower() in URGENT_MOVE_TIMINGS:
+        add_must(URGENT_AVAILABILITY_KEY, f"The family needs to move {move_timing.lower()}; current availability must be confirmed.", "current availability YES/LIMITED from governed evidence or direct confirmation")
+    elif move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
         add_nice("AVAILABILITY_FIT", "Verified availability should fit the client's requested move timing.")
 
     future_profile = human_profile.get("futureCareProfile") if isinstance(human_profile.get("futureCareProfile"), dict) else {}
@@ -210,6 +221,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
 def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Dict[str, Any]:
     hard_fail: List[str] = []
     must_unknown: List[str] = []
+    pending_reasons: Dict[str, str] = {}
     must_pass: List[str] = []
     nice_match: List[str] = []
     nice_unknown: List[str] = []
@@ -275,6 +287,13 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 must_pass.append(key)
             else:
                 hard_fail.append(key)
+        elif key == URGENT_AVAILABILITY_KEY:
+            recorded = _upper((row.get("verified_capabilities") or {}).get("current_availability"))
+            if recorded in {"YES", "LIMITED"}:
+                must_pass.append(key)
+            else:
+                must_unknown.append(key)
+                pending_reasons[key] = "PENDING_RECONFIRMATION" if recorded == "NO" else "EVIDENCE_PENDING"
         elif key == "KOSHER_MEALS":
             # Same evidence authority as the needs engine and the NICE branch below: the
             # governed kosher parameter. Verified YES passes, verified incompatible evidence
@@ -510,6 +529,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "hard_gate": "FAIL" if hard_fail else ("PENDING_VERIFICATION" if must_unknown else "PASS"),
         "must_pass": must_pass,
         "must_unknown": must_unknown,
+        "must_pending_reasons": pending_reasons,
         "must_fail": hard_fail,
         "nice_match": nice_match,
         "nice_unknown": nice_unknown,

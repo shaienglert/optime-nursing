@@ -115,7 +115,15 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
     def test_ready_decision_context_and_success_factor_trace_survive_fastapi_response_model(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
-        ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        # Single authority: "recently widowed" reaches the decision as a quoted interpreter
+        # fact in the canonical profile, not via a regex over the story.
+        ai_result = {
+            "decision_readiness": "READY", "next_question": None,
+            "statements": [{"raw_text": "recently widowed", "meaning": "recent loss of spouse", "importance": "CONTEXT",
+                            "knowledge_state": "KNOWN", "status": "USED",
+                            "mapped_parameters": ["humanIntelligenceV2.familyProfile.widowStatus"]}],
+            "questionnaire_patch": {"humanIntelligenceV2": {"familyProfile": {"widowStatus": "Recently widowed"}}},
+        }
         # The fixture's stated budget (a required minimum client dimension -- removing
         # it blocks the interview as incomplete before this test's actual scenario is
         # even reached) is now also a facility-owned MUST (see
@@ -165,22 +173,9 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertTrue(serialized["results"], "the eligible set is shown even when the model is unavailable")
         self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3.1")
 
-    @unittest.expectedFailure
     def test_couple_spine_rehab_unknowns_are_guardian_inputs_not_scripted_questions(self) -> None:
-        # OPEN GAP (owner decision pending, 2026-10-01): the interview guardian computes its
-        # blockers from the strategy BEFORE the interpreter's questionnaire_patch exists in
-        # the same turn, so an AI-extracted rehab need raises medicare_status only on the
-        # next turn; expected_recovery / post-surgery have no structured intake field at all.
-        # Single authority (owner, 2026-10-01): the couple / spine-surgery / rehab facts used
-        # to reach the strategy only through a regex reading of _couple_rehab_query(). The
-        # couple is now the structured "Couple" answer, and the interpreter's
-        # questionnaire_patch carries what the story adds (rehab after hospitalization,
-        # staying together, Las Vegas, a large active community).
-        # KNOWN APP GAP (left failing): living_strategy_runtime derives post_surgical,
-        # rehabilitation_need_detected and expected_recovery only from free text, so no
-        # structured/interpreted field can raise the medicare_status and
-        # move_timing_vs_rehab material unknowns (postHospitalRehabNeed only sets
-        # skilled_rehab_known, which neither question reads).
+        # Closed 2026-10-02: the guardian now runs once, AFTER the interpreter's quoted
+        # patch is in the canonical profile, and recovery facts are canonical fields.
         decision = importlib.import_module("app.services.patient_decision_engine")
         state = {
             "relationship": "Couple",
@@ -197,11 +192,26 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         ai_result = {
             "decision_readiness": "NEEDS_CLARIFICATION",
             "next_question": question,
-            "statements": [],
+            # Every patched fact carries its exact quote from the family text (contract).
+            "statements": [
+                {"raw_text": quote, "meaning": quote, "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": [path]}
+                for quote, path in (
+                    ("in Las Vegas", "referenceLocationValue"),
+                    ("had spinal surgery", "humanIntelligenceV2.transitionRiskProfile.recentProcedure"),
+                    ("spinal surgery", "humanIntelligenceV2.transitionRiskProfile.procedureType"),
+                    ("needs rehabilitation", "humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed"),
+                    ("expected to return to walking", "humanIntelligenceV2.transitionRiskProfile.expectedRecovery"),
+                    ("for the next 3 months", "humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths"),
+                    ("they want to live together", "humanIntelligenceV2.familyProfile.coupleStayTogetherPreference"),
+                )
+            ],
             "questionnaire_patch": {
                 "referenceLocationValue": "Las Vegas",
                 "humanIntelligenceV2": {
-                    "transitionRiskProfile": {"recentHospitalization": "Yes", "postHospitalRehabNeed": "Yes"},
+                    "transitionRiskProfile": {
+                        "recentProcedure": "Yes", "procedureType": "spinal surgery", "postHospitalRehabNeed": "Yes",
+                        "expectedRecovery": "Yes", "temporarySupportMonths": "3",
+                    },
                     "familyProfile": {"coupleStayTogetherPreference": "They want to live together"},
                 },
             },

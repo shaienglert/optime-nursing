@@ -447,12 +447,14 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
 
     move_timing = _normalize(questionnaire.get("moveTiming"))
     if move_timing in {"immediately", "within 30 days"}:
+        # Disclosure only. The urgent-move gate is the CLIENT MUST
+        # CURRENT_AVAILABILITY_FOR_URGENT_MOVE (client_intent_runtime) -- one authority.
         _add_need(
             needs_by_id,
             "current_availability",
-            "HIGH",
+            "PREFERENCE",
             "YES",
-            ["YES"],
+            ["YES", "LIMITED"],
             "FACILITY",
             "questionnaire.moveTiming",
             1.0,
@@ -1969,7 +1971,6 @@ def run_patient_decision_engine(
     }
 
     results = []
-    move_timing = _normalize(questionnaire_state.get("moveTiming"))
     requested_city = profile.get("location_city")
 
     _table_lookup_ms = 0.0
@@ -1991,12 +1992,9 @@ def run_patient_decision_engine(
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
 
         eligibility = _eligibility_from_needs(needs, row_by_param)
-        if move_timing in {"immediately", "within 30 days"}:
-            availability_row = row_by_param.get("current_availability") or {}
-            if _normalize(availability_row.get("raw_value")) == "no" and _normalize(availability_row.get("source")) not in {"", "not verified"}:
-                eligibility["unknown_critical_needs"] = [item for item in eligibility.get("unknown_critical_needs") or [] if item.get("parameter_id") != "current_availability"] + [{"parameter_id": "current_availability", "requirement_level": "HIGH", "status": "UNKNOWN", "reason": "Recorded NO for urgent move; direct reconfirmation required before recommendation.", "decision_state": "PENDING_RECONFIRMATION"}]
-                eligibility["eligibility_status"] = "INSUFFICIENT_EVIDENCE"
-                eligibility["availability_decision_state"] = "PENDING_RECONFIRMATION"
+        # Urgent-move availability is gated once, by the CLIENT MUST
+        # CURRENT_AVAILABILITY_FOR_URGENT_MOVE (client_intent_runtime): YES/LIMITED pass,
+        # recorded NO -> PENDING_RECONFIRMATION, none/stale -> EVIDENCE_PENDING.
         scoring = _score_result(needs, eligibility)
         geo_note, geo_bonus = _facility_geo_match({"city": table.get("city")}, requested_city)
 
@@ -2037,7 +2035,6 @@ def run_patient_decision_engine(
                 "synthetic_archetype": canonical_meta.get("synthetic_archetype") if canonical_meta.get("synthetic_pilot") else None,
                 "accepts_couples": canonical_meta.get("accepts_couples") if canonical_meta.get("synthetic_pilot") else None,
                 "eligibility_status": eligibility["eligibility_status"],
-                "availability_decision_state": eligibility.get("availability_decision_state"),
                 "match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "patient_match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "quality_safety_score": quality_safety_score,
