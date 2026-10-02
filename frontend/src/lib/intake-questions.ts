@@ -243,19 +243,6 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setDraft(context, { referenceAddress: text(value), referenceLocationValue: text(value), locationImportant: text(value) === "Anywhere in the Las Vegas Valley" ? "No" : "Yes" }),
   },
   {
-    id: "maximumDistanceMiles",
-    section: SECTION_PRACTICAL,
-    prompt: "How far is still close enough?",
-    note: "We use this as a limit, measured from the area you chose. If we can’t measure from that area, the results page will say so. If more communities fit a little further out, we’ll ask before widening the search.",
-    kind: "single",
-    options: ["10", "20", "30", "50", "100"],
-    required: true,
-    label: "maximum distance",
-    visible: ({ draft }) => draft.locationImportant === "Yes",
-    get: ({ draft }) => draft.maximumDistanceMiles,
-    set: (context, value) => setDraft(context, { maximumDistanceMiles: text(value) }),
-  },
-  {
     id: "assistance",
     section: SECTION_PERSON,
     prompt: "What kind of help makes everyday life easier? Choose anything that fits.",
@@ -898,6 +885,9 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
 
   return {
     ...draft,
+    maximumDistanceMiles: "",
+    customDistanceMiles: "",
+    approvedSearchRadiusMiles: "",
     assistanceLevel: extras.assistance.join(", "),
     happinessPreferences: extras.activities,
     nearbyPlaces: [...extras.nearbyPlaces.filter((item) => item !== "Other"), ...(extras.nearbyOther.trim() ? [`Other: ${extras.nearbyOther.trim()}`] : [])],
