@@ -171,6 +171,13 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             ],
             "instruction": "Example of field-by-field source accounting only. Never copy these values or quotes into the answer; use the actual user_text.",
         },
+        "clarification_trace_example": {
+            "source_example": "I need some daily assistance.",
+            "statement": {"raw_text": "some daily assistance", "meaning": "The specific daily tasks requiring assistance remain unclear.", "importance": "MUST", "knowledge_state": "AMBIGUOUS", "status": "ASKED", "mapped_parameters": ["assistanceLevel"], "clarification_question": "Which daily tasks require assistance?"},
+            "next_question": "Which daily tasks require assistance?",
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "instruction": "Question trace example only. An unresolved MUST needs an ASKED statement, even when other statements are known. Do not invent a confirmed assistanceLevel value while its source is ambiguous. Never copy this example into the answer; use the actual record and AI-authored question.",
+        },
     }
 
 
@@ -663,7 +670,13 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "prior_packet": {key: value for key, value in prior_packet.items() if key not in {"governance", "learning_center"}},
                 "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness, questionnaire_patch and questionnaire_patch_sources. Preserve explicit client facts and unknowns. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, put its full dotted path in questionnaire_patch_sources with a quote copied exactly from original user_text; also account for the fact in statements. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. gender must not be inferred from kinship/pronouns; coupleAssistance must be a string. If a material client question remains, include one ASKED MUST/UNKNOWN statement and its identical next_question. Otherwise return READY with statement accounting.",
             }
-            result = validate_live_packet(active_transport(repair_payload))
+            repaired_packet = active_transport(repair_payload)
+            try:
+                result = validate_live_packet(repaired_packet)
+            except RuntimeError as final_error:
+                if not hasattr(final_error, "patch_diagnostic"):
+                    final_error.patch_diagnostic = {"patch": repaired_packet.get("questionnaire_patch"), "sources": repaired_packet.get("questionnaire_patch_sources"), "statements": repaired_packet.get("statements"), "decision_readiness": repaired_packet.get("decision_readiness"), "next_question": repaired_packet.get("next_question")}
+                raise
             result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}
     else:
         result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state), allow_empty_statements=not user_text.strip())
