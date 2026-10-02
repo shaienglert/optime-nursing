@@ -36,12 +36,12 @@ def main():
         ok=not missing and not conflicts
         if not ok: blocking+=1
         unquoted=[k for k,v in (structured.get("fields") or {}).items() if v.get("unverified_reason")]
-        report.append({"case":key,"pass":ok,"missing_critical_needs":missing,"conflicts":conflicts,"unquoted_ai_fields":unquoted,"legacy_need_count":len(a),"structured_need_count":len(b)})
+        report.append({"case":key,"pass":ok,"missing_critical_needs":missing,"conflicts":conflicts,"unquoted_ai_fields":unquoted,"ai_fields":{k:v.get("value") for k,v in (structured.get("fields") or {}).items() if v.get("provenance")=="AI_EXTRACTED"},"out_of_schema":[o.get("field") for o in (structured.get("out_of_schema") or [])],"raw_patch":semantic.get("questionnaire_patch"),"legacy_need_count":len(a),"structured_need_count":len(b)})
     print(json.dumps({"blocking":blocking,"cases":report},indent=2))
     for item in report:
         if not item["pass"]:
-            detail=json.dumps({"missing":item["missing_critical_needs"],"conflicts":item["conflicts"],"unquoted":item["unquoted_ai_fields"]},ensure_ascii=False)
-            print(f"::error title=shadow-live {item['case']}::{detail}"[:900])
+            detail=json.dumps({"missing":item["missing_critical_needs"],"conflicts":item["conflicts"],"unquoted":item["unquoted_ai_fields"],"ai":item["ai_fields"],"oos":item["out_of_schema"],"patch":item["raw_patch"]},ensure_ascii=False)
+            print(f"::error title=shadow-live {item['case']}::{detail}"[:3000])
     raise SystemExit(0 if blocking==0 else 1)
 
 if __name__=="__main__": main()
