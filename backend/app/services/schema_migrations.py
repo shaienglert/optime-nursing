@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import inspect, text
+from sqlalchemy import DateTime, inspect, text
 from sqlalchemy.engine import Engine
 
 
@@ -13,6 +13,7 @@ def _column_names(engine: Engine, table_name: str) -> set[str]:
 
 
 def ensure_provider_identity_schema(engine: Engine) -> None:
+    datetime_type = DateTime().compile(dialect=engine.dialect)
     columns = _column_names(engine, "facility_users")
     if not columns:
         return
@@ -20,17 +21,17 @@ def ensure_provider_identity_schema(engine: Engine) -> None:
     alter_statements: list[str] = []
 
     if "is_verified" not in columns:
-        alter_statements.append("ALTER TABLE facility_users ADD COLUMN is_verified BOOLEAN NOT NULL DEFAULT 0")
+        alter_statements.append("ALTER TABLE facility_users ADD COLUMN is_verified BOOLEAN NOT NULL DEFAULT FALSE")
     if "verification_sent_at" not in columns:
-        alter_statements.append("ALTER TABLE facility_users ADD COLUMN verification_sent_at DATETIME NULL")
+        alter_statements.append(f"ALTER TABLE facility_users ADD COLUMN verification_sent_at {datetime_type} NULL")
     if "verification_completed_at" not in columns:
-        alter_statements.append("ALTER TABLE facility_users ADD COLUMN verification_completed_at DATETIME NULL")
+        alter_statements.append(f"ALTER TABLE facility_users ADD COLUMN verification_completed_at {datetime_type} NULL")
     if "verification_method" not in columns:
         alter_statements.append("ALTER TABLE facility_users ADD COLUMN verification_method VARCHAR(40) NULL")
     if "verified_badge" not in columns:
-        alter_statements.append("ALTER TABLE facility_users ADD COLUMN verified_badge BOOLEAN NOT NULL DEFAULT 0")
+        alter_statements.append("ALTER TABLE facility_users ADD COLUMN verified_badge BOOLEAN NOT NULL DEFAULT FALSE")
     if "next_reverification_due_at" not in columns:
-        alter_statements.append("ALTER TABLE facility_users ADD COLUMN next_reverification_due_at DATETIME NULL")
+        alter_statements.append(f"ALTER TABLE facility_users ADD COLUMN next_reverification_due_at {datetime_type} NULL")
 
     if not alter_statements:
         return
@@ -69,6 +70,7 @@ def ensure_facility_intelligence_profile_schema(engine: Engine) -> None:
 
 
 def ensure_agent_knowledge_report_snapshot_schema(engine: Engine) -> None:
+    datetime_type = DateTime().compile(dialect=engine.dialect)
     columns = _column_names(engine, "agent_knowledge_report_snapshots")
     if not columns:
         return
@@ -80,13 +82,13 @@ def ensure_agent_knowledge_report_snapshot_schema(engine: Engine) -> None:
     if "knowledge_age_seconds" not in columns:
         alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN knowledge_age_seconds INTEGER NOT NULL DEFAULT 0")
     if "last_successful_refresh" not in columns:
-        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN last_successful_refresh DATETIME NULL")
+        alter_statements.append(f"ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN last_successful_refresh {datetime_type} NULL")
     if "last_refresh_attempt" not in columns:
-        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN last_refresh_attempt DATETIME NULL")
+        alter_statements.append(f"ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN last_refresh_attempt {datetime_type} NULL")
     if "refresh_duration_ms" not in columns:
         alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN refresh_duration_ms INTEGER NOT NULL DEFAULT 0")
     if "verified_until" not in columns:
-        alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN verified_until DATETIME NULL")
+        alter_statements.append(f"ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN verified_until {datetime_type} NULL")
     if "ttl_seconds" not in columns:
         alter_statements.append("ALTER TABLE agent_knowledge_report_snapshots ADD COLUMN ttl_seconds INTEGER NOT NULL DEFAULT 3600")
     if "pending_changes" not in columns:
@@ -207,6 +209,7 @@ def ensure_client_structured_profile_schema(engine: Engine) -> None:
 
 
 def ensure_facility_room_pricing_schema(engine: Engine) -> None:
+    datetime_type = DateTime().compile(dialect=engine.dialect)
     columns = _column_names(engine, "facility_room_types")
     if not columns:
         return
@@ -218,7 +221,7 @@ def ensure_facility_room_pricing_schema(engine: Engine) -> None:
         ("entrance_fee_cents", "INTEGER NULL"),
         ("occupancy_type", "VARCHAR(32) NULL"),
         ("source_url", "TEXT NULL"),
-        ("observed_at", "DATETIME NULL"),
+        ("observed_at", f"{datetime_type} NULL"),
     ]
     with engine.begin() as connection:
         for name, ddl in specs:
