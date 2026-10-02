@@ -16,6 +16,10 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
   if (contentType) headers.set("content-type", contentType);
+  if (path.join("/") === "api/user-incidents") {
+    const origin = request.headers.get("origin");
+    if (origin) headers.set("origin", origin);
+  }
   const authorization = request.headers.get("authorization");
   if (authorization) headers.set("authorization", authorization);
   // Staff-only backend endpoints authenticate with this header. Forwarding only
