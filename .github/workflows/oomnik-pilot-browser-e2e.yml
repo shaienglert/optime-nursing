@@ -37,7 +37,7 @@ on:
       expected_cohort:
         description: Expected synthetic facility cohort size
         required: true
-        default: '200'
+        default: '500'
 
 jobs:
   real-pilot-browser:
@@ -50,7 +50,7 @@ jobs:
       BACKEND_INTERNAL_API_URL: http://127.0.0.1:8000
       NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
       OPTIME_CANONICAL_MARKET: synthetic-pilot
-      OOMNIK_PILOT_FACILITY_LIMIT: '200'
+      OOMNIK_PILOT_FACILITY_LIMIT: '500'
       OPTIME_SEMANTIC_AI_ENABLED: '1'
       OPTIME_SEMANTIC_AI_REQUIRED: '1'
       OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
@@ -58,7 +58,7 @@ jobs:
       OPTIME_SEMANTIC_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OOMNIK_SCENARIO_START: ${{ github.event.inputs.scenario_start || '0' }}
       OOMNIK_SCENARIO_COUNT: ${{ github.event.inputs.scenario_count || '10' }}
-      OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '200' }}
+      OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '500' }}
     steps:
       - uses: actions/checkout@v4
       - name: Check semantic AI configuration
