@@ -421,6 +421,16 @@ def run_patient_decision_engine(
         round((_t5 - _t4) * 1000, 1),
     )
     selected = results[: max(0, int(limit or 0))]
+    # Reporting enrichment happens after ranking and cannot influence eligibility
+    # or ordering. One ledger read for the selected facilities, never a web request.
+    from app.services.institutional_research import load_observations, facility_research_report
+    research_ids = [str(row.get("canonical_facility_id") or "") for row in selected]
+    real_ids = [cid for cid in research_ids if not cid.startswith("PILOT-NV-") and (canonical_index.get(cid) or {}).get("synthetic_pilot") is not True]
+    research_records, ledger_error = load_observations(real_ids)
+    for row, cid in zip(selected, research_ids):
+        row["institutional_research"] = facility_research_report(
+            cid, canonical_index.get(cid) or {}, research_records.get(cid, {}), ledger_error=ledger_error,
+        )
 
     core["results"] = selected
     core["result_count"] = len(selected)

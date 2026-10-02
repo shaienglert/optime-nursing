@@ -19,9 +19,13 @@ from app.services.facility_parameter_service import get_canonical_facility_index
 from app.services.provider_housing_runtime import get_provider_housing_evidence
 from app.services.public_reputation_runtime import get_public_reputation
 from app.services.semantic_evidence_ai import capability_map, interpret_facility_evidence_with_ai
+from app.services.research_coverage_contract import TOPICS, permitted_source
+from app.services.institutional_research import save_observation
+from app.services.institutional_research_collectors import ResearchCollectionContext, collect_topic
 
 _TIMEOUT = 12
 _RUN_LOCK = threading.Lock()
+_COLLECTION_CONTEXT = None
 _LOG = logging.getLogger(__name__)
 _SKIP_DOMAINS = ("aplaceformom.com", "caring.com", "seniorly.com", "yelp.com", "facebook.com", "instagram.com", "linkedin.com", "youtube.com", "google.com", "mapquest.com")
 _REGULATORY_DOMAINS = ("nvdpbh.aithent.com", "myhealthfacilitylicense.nv.gov", "dpbh.nv.gov", "health.nv.gov")
@@ -267,14 +271,23 @@ def _persist_record(db, *, agent_key: str, canonical_id: str, facility_name: str
     db.add(AgentKnowledgeRecord(agent_key=agent_key, record_type="las_vegas_decision_evidence", entity_key=canonical_id, summary=summary, payload_json=encoded, confidence=0.9 if payload.get("regulatory_source_verified") is True else (0.82 if verified else 0.65), source=source))
 
 
-def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
+def _process_item(db, item: AgentQueueItem, collection_context=None) -> Dict[str, Any]:
     payload = json.loads(item.payload_json or "{}")
     canonical_id = str(payload.get("canonical_facility_id") or "")
     facility_name = str(payload.get("facility_name") or canonical_id)
     city = str(payload.get("city") or "LAS VEGAS")
     dimension = str(payload.get("dimension") or "")
+    if dimension in TOPICS:
+        facility = get_canonical_facility_index().get(canonical_id)
+        if not facility:
+            raise ValueError("Research facility no longer exists in canonical catalog")
+        result = collect_topic(canonical_id, facility, dimension, collection_context or ResearchCollectionContext())
+        save_observation(db, canonical_id, dimension, result)
+        return {**result, "institutional_research": True, "research_completed": True}
     requested = [str(x) for x in payload.get("requested_parameters") or []]
     source_url = _candidate_regulatory_url(facility_name, city) if dimension == "facility_quality_safety" else _candidate_official_url(facility_name, city, canonical_id)
+    if source_url and not permitted_source(source_url):
+        source_url = None
     research: Dict[str, Any] = {
         "market": "las-vegas", "canonical_facility_id": canonical_id, "facility_name": facility_name,
         "dimension": dimension, "requested_parameters": requested, "research_completed": True,
@@ -290,6 +303,14 @@ def _process_item(db, item: AgentQueueItem) -> Dict[str, Any]:
         _apply_verified_registry_evidence(research, canonical_id, dimension)
         if research.get("source_url"):
             source_url = str(research["source_url"])
+        if source_url and not permitted_source(source_url):
+            research["source_url"] = None
+            research["official_identity_verified"] = False
+            research["verified_registry_used"] = False
+            for key in list(research):
+                if key.endswith("_verified"):
+                    research[key] = False
+            source_url = None
     if source_url and not research.get("verified_registry_used"):
         try:
             body, status = _fetch(source_url)
@@ -388,6 +409,7 @@ def _priority_ordered_pending_items(db, limit: int) -> List[AgentQueueItem]:
 
 
 def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
+    global _COLLECTION_CONTEXT
     if not _RUN_LOCK.acquire(blocking=False):
         return {"status": "ALREADY_RUNNING", "processed": 0, "succeeded": 0, "failed": 0, "remaining": None, "market": "las-vegas"}
     db = SessionLocal()
@@ -396,25 +418,40 @@ def process_pending_decision_research(limit: int = 20) -> Dict[str, Any]:
     db.add(run); db.commit(); db.refresh(run)
     try:
         items = _priority_ordered_pending_items(db, max(1, int(limit)))
+        if _COLLECTION_CONTEXT is None or (datetime.now(timezone.utc) - _COLLECTION_CONTEXT.now).total_seconds() > 3600:
+            _COLLECTION_CONTEXT = ResearchCollectionContext()
+        collection_context = _COLLECTION_CONTEXT
+        delivered = 0
+        delivery_states = {}
         for item in items:
             item.status = "RUNNING"; item.started_at = datetime.now(timezone.utc); item.attempts = int(item.attempts or 0) + 1; db.commit(); processed += 1
             try:
-                result = _process_item(db, item)
+                result = _process_item(db, item, collection_context)
                 item.status = "DONE"; item.finished_at = datetime.now(timezone.utc)
                 positive = any(result.get(k) is True for k in ("social_engagement_verified", "medication_support_verified", "adl_support_verified", "transportation_verified", "dining_verified", "rehab_verified", "pt_ot_verified", "couple_coresidence_verified", "outside_care_allowed_verified", "continuum_of_care_verified", "regulatory_source_verified", "public_reputation_identity_verified"))
-                item.error_message = None if positive else "RESEARCH_COMPLETED_NO_REQUESTED_PUBLIC_CLAIM_VERIFIED"; succeeded += 1
+                if result.get("evidence_interpretation_mode") == "KEYWORD_FALLBACK_DIAGNOSTIC_ONLY":
+                    positive = False
+                if result.get("dimension") == "facility_quality_safety":
+                    positive = bool(result.get("regulatory_parameters_verified"))
+                if result.get("institutional_research"):
+                    state = str(result.get("status") or "UNKNOWN")
+                    positive = state == "VERIFIED"
+                    delivery_states[state] = delivery_states.get(state, 0) + 1
+                delivered += int(positive)
+                item.error_message = None if positive else str(result.get("status") or "RESEARCH_COMPLETED_NO_REQUESTED_PUBLIC_CLAIM_VERIFIED"); succeeded += 1
             except Exception as exc:
                 _LOG.exception("decision evidence item failed id=%s", item.id)
                 if int(item.attempts or 0) >= int(item.max_attempts or 3): item.status = "FAILED"; item.finished_at = datetime.now(timezone.utc)
                 else: item.status = "PENDING"
                 item.error_message = f"{exc.__class__.__name__}: {str(exc)[:300]}"; failed += 1
             db.commit()
-        run.status = "SUCCESS" if failed == 0 else ("PARTIAL" if succeeded else "FAILED")
-        run.finished_at = datetime.now(timezone.utc); run.items_processed = processed; run.items_added = succeeded; run.errors = failed
+        run.status = "SUCCESS" if failed == 0 and delivered == processed else ("PARTIAL" if succeeded else "FAILED")
+        run.finished_at = datetime.now(timezone.utc); run.items_processed = processed; run.items_added = delivered; run.errors = failed
+        run.knowledge_gained_json = json.dumps({"attempts_completed": succeeded, "verified_deliveries": delivered, "delivery_states": delivery_states})
         remaining = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").count()
         _reconcile_worker_delivery_metrics(db, remaining)
         db.commit()
-        return {"status": run.status, "processed": processed, "succeeded": succeeded, "failed": failed, "remaining": remaining, "market": "las-vegas"}
+        return {"status": run.status, "processed": processed, "succeeded": succeeded, "verified_deliveries": delivered, "delivery_states": delivery_states, "failed": failed, "remaining": remaining, "market": "las-vegas"}
     except Exception:
         _LOG.exception("decision evidence worker run failed"); raise
     finally:

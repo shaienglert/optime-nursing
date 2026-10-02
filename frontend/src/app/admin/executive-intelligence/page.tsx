@@ -1,4 +1,5 @@
 "use client";
+import { ResearchInstituteCoveragePanel } from "@/components/research-institute-coverage-panel";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -356,6 +357,7 @@ export default function ExecutiveIntelligenceAdminPage() {
                 </div>
               ) : null}
 
+              {adminToken ? <ResearchInstituteCoveragePanel adminToken={adminToken} /> : null}
               {isLoadingIntelligence ? <p className="mt-5 text-sm text-slate-400">Loading live agent output...</p> : null}
               {intelligenceError ? <p className="mt-5 rounded-2xl border border-rose-500/40 bg-rose-950/30 p-4 text-sm text-rose-200">{intelligenceError}</p> : null}
 

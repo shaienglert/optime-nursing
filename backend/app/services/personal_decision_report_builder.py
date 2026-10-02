@@ -229,6 +229,29 @@ def _candidate_claims(row: Mapping[str, Any]) -> list[tuple[ApprovedReportClaim,
             ReportSection.WHY_THIS_PLACE,
         ))
 
+    research = row.get("institutional_research") or {}
+    for topic in research.get("topics") or []:
+        if topic.get("topic") != "official_complaints":
+            continue
+        data = topic.get("data") or {}
+        findings = topic.get("known_findings") or (data.get("findings") if topic.get("status") in {"VERIFIED", "PARTIAL"} else []) or []
+        sources = [str(topic.get("source_url") or f"facility:{facility_id}.official_complaints:UNKNOWN")]
+        # Complaint-related inspection findings are facts only when the current
+        # collector verified identity. Stale/failing attempts are uncertainty.
+        if findings:
+            for index, finding in enumerate(findings):
+                pairs.append((_claim(
+                    f"facility:{facility_id}.complaint_finding.{index}", ClaimType.VERIFIED_FACT,
+                    f"Official complaint-related inspection finding dated {finding.get('date')}: {finding.get('subject') or 'See official report'}. Correction status: {finding.get('correction_status', 'UNKNOWN')}.",
+                    [str(finding.get("source_url") or sources[0])], [ReportSection.WHY_THIS_PLACE],
+                ), ReportSection.WHY_THIS_PLACE))
+        if topic.get("status") != "VERIFIED" or data.get("complaint_count") is None:
+            pairs.append((_claim(
+                f"facility:{facility_id}.official_complaints_unknown", ClaimType.UNKNOWN,
+                "A complete record of official complaints filed in the last 12 months has not been verified. " + str(topic.get("limitation") or ""),
+                sources, [ReportSection.BEFORE_YOU_DECIDE],
+            ), ReportSection.BEFORE_YOU_DECIDE))
+
     for index, text in enumerate(explanation.get("needs_verification") or []):
         pairs.append((
             _claim(

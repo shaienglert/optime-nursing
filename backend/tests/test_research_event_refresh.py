@@ -13,6 +13,6 @@ def test_event_refresh_queues_room_pricing_for_real_facility():
     with patch("app.services.research_institute_scheduler.SessionLocal",return_value=DB()), patch(
         "app.services.research_institute_scheduler.get_canonical_facility_index",
         return_value={"NV-1":{"facility_name":"Real Home","city":"LAS VEGAS"}},
-    ), patch("app.services.research_institute_scheduler._ensure_worker"):
+    ), patch("app.services.research_institute_scheduler._ensure_worker"), patch("app.services.research_institute_scheduler._active_tasks", return_value=set()):
         result=queue_event_refresh(canonical_facility_id="NV-1",reason="official page changed")
     assert result["queued"]==2
