@@ -48,8 +48,8 @@ SALES_LINES = [
     },
     {
         "id": "aligned_incentive",
-        "title": "Why payment starts after 60 days",
-        "line": "Our incentive is not to produce a lead or force a move-in. Our incentive is a successful match. Because we believe in the quality of the matching process, the standard fee becomes payable only after the resident has remained for 60 days.",
+        "title": "Why payment starts after 90 days",
+        "line": "Our incentive is not to produce a lead or force a move-in. Our incentive is a successful match. Because we believe in the quality of the matching process, the standard fee becomes payable only after the resident has remained for 90 days.",
     },
     {
         "id": "objective_fair",
@@ -76,10 +76,10 @@ SALES_LINES = [
         "title": "We can do the profile work with you",
         "line": "You do not need to assign someone to build the profile alone. We can schedule a guided online session, complete the fields with your authorized contact, use the materials you already maintain, and send the completed information back for confirmation. You remain the source and approve what is published; we handle the structured entry work.",
     },
-    {"id": "vacancy_economics", "title": "Compare the fee with occupancy value", "line": "One additional successful resident can represent substantial annual revenue. Oomnik's standard fee is earned only after the match has remained in place for 60 days."},
+    {"id": "vacancy_economics", "title": "Compare the fee with occupancy value", "line": "One additional successful resident can represent substantial annual revenue. Oomnik's standard fee is earned only after the match has remained in place for 90 days."},
     {"id": "qualified_not_more", "title": "Fewer irrelevant inquiries", "line": "We are not trying to send you more names. We are trying to reduce irrelevant inquiries and introduce residents whose needs, budget, timing, and preferences genuinely fit your community."},
     {"id": "mismatch_cost", "title": "The cost of a poor match", "line": "A poor match can create an early move-out, family complaints, staff pressure, reputational damage, and another vacancy. The goal is not simply to fill a room; it is to fill it with the right resident."},
-    {"id": "outcome_payment", "title": "Payment follows a sustained outcome", "line": "Many marketing channels charge for visibility or leads whether they work or not. Oomnik's standard fee is earned only after the resident has remained for 60 days, so our commercial interest begins with a sustainable match."},
+    {"id": "outcome_payment", "title": "Payment follows a sustained outcome", "line": "Many marketing channels charge for visibility or leads whether they work or not. Oomnik's standard fee is earned only after the resident has remained for 90 days, so our commercial interest begins with a sustainable match."},
     {"id": "structured_inventory", "title": "Website versus structured profile", "line": "Your website tells your story. Your Oomnik profile gives the matching engine structured, supportable facts it can use to understand exactly which resident may be right for your community."},
     {"id": "hidden_strengths", "title": "Do not hide real strengths", "line": "If you offer overnight nursing, specialized diets, transportation, flexible care levels, or particular room options and we do not have verified information about them, the engine cannot rely on those strengths when matching a family."},
     {"id": "unknown_terminology", "title": "Families may not know what to search", "line": "Families do not always know which category or service they need. Oomnik can identify a relevant community from the resident's actual needs even when the family did not know the correct industry terminology to search for."},
@@ -96,8 +96,8 @@ SALES_LINES = [
     {"id": "additional_channel", "title": "Add a channel without replacing others", "line": "Participating gives your community another path to relevant discovery without requiring you to replace your website, CRM, professional referrals, or existing marketing channels."},
     {"id": "early_no_fit", "title": "An early no-fit saves resources", "line": "If your community is not appropriate for a resident, identifying that early protects your team, the family, and the resident from investing in a process that should not continue."},
     {"id": "outcome_learning", "title": "Outcome reporting improves matching", "line": "When facilities report contact, tour, assessment, decision, and move-in outcomes, Oomnik can identify where a process succeeded or failed and improve future matching within its governed learning process."},
-    {"id": "master_pitch", "title": "Complete Oomnik value statement", "line": "Oomnik does not ask you to buy visibility. It asks you to document what your community genuinely does well so the right family can find it. The more complete, relevant, and verifiable your information is, the more accurately we can match an appropriate resident to your community. We earn our standard placement fee only after the resident has remained for 60 days, because a lead is not our definition of success; a sustainable match is."},
-    {"id": "welcome_package", "title": "The $500 Welcome Package", "line": "The $500 Welcome Package is available only for an eligible private-pay placement through a participating community that has registered with Oomnik, signed the facility agreement, and completed the required onboarding. It is not available when the placement or related care is funded in whole or in part by Medicare, Medicaid, the VA, or another government health care program. On the first qualifying placement, the community pays the full $500 and pays no Oomnik placement fee. From the second successful placement onward, the community contributes $250 and Oomnik contributes $250; the standard Oomnik placement fee is $1,999 and is earned after 60 days."},
+    {"id": "master_pitch", "title": "Complete Oomnik value statement", "line": "Oomnik does not ask you to buy visibility. It asks you to document what your community genuinely does well so the right family can find it. The more complete, relevant, and verifiable your information is, the more accurately we can match an appropriate resident to your community. We earn our standard placement fee only after the resident has remained for 90 days, because a lead is not our definition of success; a sustainable match is."},
+    {"id": "welcome_package", "title": "The $500 Welcome Package", "line": "The $500 Welcome Package is available only for an eligible private-pay placement through a participating community that has registered with Oomnik, signed the facility agreement, and completed the required onboarding. It is not available when the placement or related care is funded in whole or in part by Medicare, Medicaid, the VA, or another government health care program. On the first qualifying placement, the community pays the full $500 and pays no Oomnik placement fee. From the second successful placement onward, the community contributes $250 and Oomnik contributes $250; the standard Oomnik placement fee is $1,999 and is earned after 90 days."},
     {"id": "welcome_alignment", "title": "Why the Welcome Package matters", "line": "The Welcome Package is part of the Oomnik offer, not an unrelated promotion. It gives the resident practical support around the move and gives the community, Oomnik, and the family a shared start focused on a successful transition."},
 ]
 
@@ -169,9 +169,9 @@ APPROVED_KNOWLEDGE = [
     {
         "id": "successful_match_incentive",
         "title": "Our incentive is a successful match",
-        "keywords": ["successful match", "our incentive", "believe in product", "60 days", "aligned incentive", "why wait to charge"],
-        "answer": "Oomnik's interest is aligned with a successful match, not merely a lead or a signed move-in. Because we believe in the matching process, the standard fee becomes payable only after the resident has remained for 60 days.",
-        "proof": "The 60-day term demonstrates alignment; it is not a guarantee that every placement will succeed.",
+        "keywords": ["successful match", "our incentive", "believe in product", "90 days", "aligned incentive", "why wait to charge"],
+        "answer": "Oomnik's interest is aligned with a successful match, not merely a lead or a signed move-in. Because we believe in the matching process, the standard fee becomes payable only after the resident has remained for 90 days.",
+        "proof": "The 90-day term demonstrates alignment; it is not a guarantee that every placement will succeed.",
     },
     {
         "id": "identity",
@@ -212,21 +212,21 @@ APPROVED_KNOWLEDGE = [
         "id": "standard_fee",
         "title": "Standard placement fee",
         "keywords": ["price", "fee", "cost", "commission", "1999", "additional placement"],
-        "answer": "After the first placement, the standard Oomnik fee is $1,999 for each successful placement and is earned after 60 days. The $500 Welcome Package is funded $250 by the facility and $250 by Oomnik. Final payment details are confirmed in the facility agreement.",
+        "answer": "After the first placement, the standard Oomnik fee is $1,999 for each successful placement and is earned after 90 days. The $500 Welcome Package is funded $250 by the facility and $250 by Oomnik. Final payment details are confirmed in the facility agreement.",
         "proof": "The facility's later-placement obligation is the $1,999 Oomnik fee plus its $250 Welcome Package contribution. Do not improvise discounts, taxes, payment dates, or exceptions.",
     },
     {
         "id": "welcome_package_terms",
         "title": "$500 Welcome Package funding",
         "keywords": ["welcome package", "welcome benefit", "who pays", "500", "250", "split welcome", "resident benefit"],
-        "answer": "The Welcome Package is a $500 resident transition benefit available only for an eligible private-pay placement through a participating facility that has registered with Oomnik, signed the facility agreement, and completed the required onboarding. It is not available when the placement or related care is funded in whole or in part by Medicare, Medicaid, the VA, or another government health care program. A non-participating facility may still appear in an objective comparison, but it does not receive or advertise the package. For the first qualifying placement, the facility funds the full $500 and pays no Oomnik placement fee. From the second successful placement onward, the facility contributes $250 and Oomnik contributes $250; the standard $1,999 fee is earned after 60 days.",
+        "answer": "The Welcome Package is a $500 resident transition benefit available only for an eligible private-pay placement through a participating facility that has registered with Oomnik, signed the facility agreement, and completed the required onboarding. It is not available when the placement or related care is funded in whole or in part by Medicare, Medicaid, the VA, or another government health care program. A non-participating facility may still appear in an objective comparison, but it does not receive or advertise the package. For the first qualifying placement, the facility funds the full $500 and pays no Oomnik placement fee. From the second successful placement onward, the facility contributes $250 and Oomnik contributes $250; the standard $1,999 fee is earned after 90 days.",
         "proof": "Verify both facility participation and private-pay eligibility before mentioning the package as available. Never attach it to a government-funded placement, an unsigned facility, or a non-participating facility.",
     },
     {
         "id": "successful_placement",
         "title": "When a placement becomes payable",
-        "keywords": ["successful", "60 days", "payable", "death", "death before 60 days", "dies before 60 days", "resident dies", "left", "move out", "refund"],
-        "answer": "A placement is treated as successful after 60 days. If the resident dies within the first 60 days, the approved commercial term is 50% of the applicable placement fee ($999.50 on the standard $1,999 fee). Other early departures are handled under Oomnik's responsibility, subject to the signed agreement.",
+        "keywords": ["successful", "90 days", "payable", "death", "death before 90 days", "dies before 90 days", "resident dies", "left", "move out", "refund"],
+        "answer": "A placement is treated as successful after 90 days. If the resident dies within the first 90 days, the approved commercial term is 50% of the applicable placement fee ($999.50 on the standard $1,999 fee). Other early departures are handled under Oomnik's responsibility, subject to the signed agreement.",
         "proof": "For a live contract discussion, read the exact agreement language rather than paraphrasing legal terms.",
     },
     {

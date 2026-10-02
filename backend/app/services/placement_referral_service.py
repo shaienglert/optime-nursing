@@ -5,13 +5,13 @@ asks OPTIME to follow up with a facility, and OPTIME is paid only once a qualify
 outcome is confirmed -- never on the referral itself. Business rules (revised
 2026-09-15, supersedes the 2026-09-08 flat-fee version):
 
-- Full 60-day retention: OPTIME is owed the full fee, FULL_FEE_CENTS ($1,999).
-- Death before day 60 completes: OPTIME is owed 50% of the full fee,
+- Full 90-day retention: OPTIME is owed the full fee, FULL_FEE_CENTS ($1,999).
+- Death before day 90 completes: OPTIME is owed 50% of the full fee,
   DEATH_PARTIAL_FEE_CENTS ($999.50) -- billable as soon as death is reported, no
   day-30 threshold (unlike the superseded 2026-09-08 version).
-- A voluntary departure before day 60 waives the fee entirely -- the risk is
+- A voluntary departure before day 90 waives the fee entirely -- the risk is
   OPTIME's.
-- If no departure is reported by day 60, OPTIME bills automatically. The burden
+- If no departure is reported by day 90, OPTIME bills automatically. The burden
   is on reporting a departure to block billing, not on anyone confirming success
   -- nobody has a financial incentive to report an early voluntary departure the
   way the facility is incentivized (via its Welcome Package credit) to report
@@ -45,11 +45,11 @@ from sqlalchemy.orm import Session
 from app.models.placement_referral import PlacementReferral
 from app.services.facility_agreement_service import get_agreement
 
-FULL_FEE_CENTS = 199900  # $1,999 -- full 60-day retention
-DEATH_PARTIAL_FEE_CENTS = 99950  # $999.50 -- 50% of FULL_FEE_CENTS, death before day 60
+FULL_FEE_CENTS = 199900  # $1,999 -- full 90-day retention
+DEATH_PARTIAL_FEE_CENTS = 99950  # $999.50 -- 50% of FULL_FEE_CENTS, death before day 90
 WELCOME_PACKAGE_CENTS = 50000  # $500 total client Welcome Package
 OOMNIK_WELCOME_CONTRIBUTION_CENTS = 25000  # $250 -- OPTIME's half, from the facility's 2nd placement onward
-RETENTION_DAYS = 60
+RETENTION_DAYS = 90
 FOUNDING_OFFER_DAYS = 90  # days from OOMNIK_LAUNCH_AT a facility must complete onboarding within
 
 VALID_DEPARTURE_REASONS = {"VOLUNTARY", "DECEASED"}
@@ -165,16 +165,16 @@ def billable_status(db: Session, referral: PlacementReferral, *, now: Optional[d
 
     now = _aware(now or _utc_now())
     entry_confirmed_at = _aware(referral.entry_confirmed_at)
-    day_60 = entry_confirmed_at + timedelta(days=RETENTION_DAYS)
+    day_90 = entry_confirmed_at + timedelta(days=RETENTION_DAYS)
     departure_date = _aware(referral.departure_date) if referral.departure_date is not None else None
 
-    if referral.departure_reason == "VOLUNTARY" and departure_date is not None and departure_date < day_60:
+    if referral.departure_reason == "VOLUNTARY" and departure_date is not None and departure_date < day_90:
         return "WAIVED_VOLUNTARY_DEPARTURE"
 
-    if referral.departure_reason == "DECEASED" and departure_date is not None and departure_date < day_60:
+    if referral.departure_reason == "DECEASED" and departure_date is not None and departure_date < day_90:
         return "DUE"
 
-    if now >= day_60 or (departure_date is not None and departure_date >= day_60):
+    if now >= day_90 or (departure_date is not None and departure_date >= day_90):
         return "DUE"
 
     return "TRACKING"
@@ -186,9 +186,9 @@ def commission_due_cents(db: Session, referral: PlacementReferral, *, now: Optio
     if billable_status(db, referral, now=now) != "DUE":
         return 0
     entry_confirmed_at = _aware(referral.entry_confirmed_at)
-    day_60 = entry_confirmed_at + timedelta(days=RETENTION_DAYS)
+    day_90 = entry_confirmed_at + timedelta(days=RETENTION_DAYS)
     departure_date = _aware(referral.departure_date) if referral.departure_date is not None else None
-    if referral.departure_reason == "DECEASED" and departure_date is not None and departure_date < day_60:
+    if referral.departure_reason == "DECEASED" and departure_date is not None and departure_date < day_90:
         return DEATH_PARTIAL_FEE_CENTS
     return FULL_FEE_CENTS
 

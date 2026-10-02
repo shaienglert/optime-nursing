@@ -59,7 +59,7 @@ const CORE_PLAYBOOK = [
     points: [
       "Booking.com analogy: hospitality changed when customers could compare options clearly online. Senior living is moving in the same direction, with Oomnik focused on match rather than a simple listing.",
       "Digital matching analogy: technology already helps people make highly personal choices. Oomnik applies that shift to senior living with stronger evidence, transparency, and safeguards.",
-      "Aligned incentive: Oomnik earns the standard fee only after 60 days because the commercial objective is a sustained outcome.",
+      "Aligned incentive: Oomnik earns the standard fee only after 90 days because the commercial objective is a sustained outcome.",
       "Why participate now: early participants can document their real strengths before digital decision support becomes the normal family expectation.",
       "Why fill the profile: Oomnik can recognize only the advantages supported by current, relevant information. Proven information is stronger than UNKNOWN for that specific need.",
     ],
@@ -122,7 +122,7 @@ const DIFFERENCES = [
   ],
   [
     "Commercial alignment",
-    "Standard fee is earned only after 60 days",
+    "Standard fee is earned only after 90 days",
     "Many referral fees are triggered at move-in",
   ],
   [
@@ -433,7 +433,7 @@ export default function FacilitySalesCopilotPage() {
               Our interest is a successful match—not the fastest referral and
               not the highest-paying facility. That is why payment cannot
               influence ranking, and why our standard fee is earned only after
-              the resident has remained for 60 days.
+              the resident has remained for 90 days.
             </p>
           </div>
           <p className="mt-6 rounded-2xl border border-[#d8e7e1] bg-white p-5 text-2xl font-bold text-[#0b2850]">
@@ -525,7 +525,7 @@ export default function FacilitySalesCopilotPage() {
             <p className="text-xs font-bold uppercase tracking-[.18em] text-sky-700">
               Standard placement
             </p>
-            <p className="mt-3 text-3xl font-black">$1,999 after 60 days</p>
+            <p className="mt-3 text-3xl font-black">$1,999 after 90 days</p>
             <p className="mt-2 text-sm text-[#48645b]">
               Outcome-aligned fee. From placement two onward, the Welcome
               Package is split $250 facility / $250 Oomnik.

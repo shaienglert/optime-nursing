@@ -72,11 +72,11 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         )
         self.assertIsNone(self.client.get(f"/placement-referrals/{code}").json()["entry_confirmed_at"])
 
-    def test_full_lifecycle_confirm_entry_then_due_at_day_60(self) -> None:
+    def test_full_lifecycle_confirm_entry_then_due_at_day_90(self) -> None:
         created = self.client.post("/placement-referrals", json={"canonical_facility_id": self.real_canonical_id}).json()
         referral_code = created["referral_code"]
 
-        entry_date = (datetime.now(timezone.utc) - timedelta(days=61)).isoformat()
+        entry_date = (datetime.now(timezone.utc) - timedelta(days=91)).isoformat()
         confirm_response = self.client.post(
             f"/placement-referrals/{referral_code}/confirm-entry",
             headers=_ADMIN_HEADERS,
@@ -96,7 +96,7 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         status_response = self.client.get(f"/placement-referrals/{referral_code}")
         self.assertEqual(status_response.json()["billable_status"], "DUE")
 
-    def test_voluntary_departure_before_day_60_waives_via_endpoint(self) -> None:
+    def test_voluntary_departure_before_day_90_waives_via_endpoint(self) -> None:
         created = self.client.post("/placement-referrals", json={"canonical_facility_id": self.real_canonical_id}).json()
         referral_code = created["referral_code"]
         entry_date = datetime.now(timezone.utc) - timedelta(days=40)
@@ -114,7 +114,7 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
         self.assertEqual(departure_response.json()["billable_status"], "WAIVED_VOLUNTARY_DEPARTURE")
         self.assertEqual(departure_response.json()["commission_due"], 0)
 
-    def test_death_before_day_60_bills_999_50(self) -> None:
+    def test_death_before_day_90_bills_999_50(self) -> None:
         created = self.client.post("/placement-referrals", json={"canonical_facility_id": self.real_canonical_id}).json()
         referral_code = created["referral_code"]
         entry_date = datetime.now(timezone.utc) - timedelta(days=40)
@@ -176,7 +176,7 @@ class PlacementReferralEndpointsTests(unittest.TestCase):
             self.assertTrue(mark_response.json()["is_founding_facility"])
 
             created = self.client.post("/placement-referrals", json={"canonical_facility_id": self.real_canonical_id}).json()
-            entry_date = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+            entry_date = (datetime.now(timezone.utc) - timedelta(days=120)).isoformat()
             confirm_response = self.client.post(
                 f"/placement-referrals/{created['referral_code']}/confirm-entry",
                 headers=_ADMIN_HEADERS,

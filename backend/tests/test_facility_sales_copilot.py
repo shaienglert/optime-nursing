@@ -132,13 +132,13 @@ def test_bootstrap_contains_live_call_training() -> None:
 
 
 def test_sixty_day_pitch_explains_aligned_incentive_without_guarantee() -> None:
-    result = ask_sales_copilot("Why do you wait 60 days to charge?", transport=lambda _: {})
+    result = ask_sales_copilot("Why do you wait 90 days to charge?", transport=lambda _: {})
     assert "successful match" in result["answer"].lower()
     assert "successful_match_incentive" in result["knowledge_ids"]
 
 
 def test_death_before_day_sixty_uses_approved_half_fee() -> None:
-    result = ask_sales_copilot("What happens to the fee if the resident dies before 60 days?", transport=lambda _: {})
+    result = ask_sales_copilot("What happens to the fee if the resident dies before 90 days?", transport=lambda _: {})
     assert "50%" in result["answer"]
     assert "$999.50" in result["answer"]
     assert "59%" not in result["answer"]
@@ -201,7 +201,7 @@ def test_cost_objection_selects_outcome_economics_argument() -> None:
     result = ask_sales_copilot("Why is your fee worth the cost?", transport=lambda _: {})
     assert result["objection_guidance"]["category"] == "objection_cost"
     assert result["objection_guidance"]["primary"]["id"] == "vacancy_economics"
-    assert "60 days" in result["say_this"]
+    assert "90 days" in result["say_this"]
 
 
 def test_no_staff_objection_routes_to_assisted_onboarding_argument() -> None:
