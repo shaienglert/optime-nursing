@@ -128,7 +128,7 @@ def test_every_client_must_key_is_classified_for_the_floor():
 
 SUBMISSIONS = ROOT / "backend/gold_examples/oomnik_golden_personas_v1.submissions.json"
 PERSONAS = json.loads(SUBMISSIONS.read_text(encoding="utf-8"))["personas"]
-PILOT_ENV = {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200", "OPTIME_SEMANTIC_AI_ENABLED": "0"}
+PILOT_ENV = {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "500", "OPTIME_SEMANTIC_AI_ENABLED": "0"}
 
 
 @pytest.fixture(scope="module")

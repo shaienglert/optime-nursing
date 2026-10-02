@@ -43,7 +43,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 PILOT = ROOT / "database" / "synthetic_pilot"
 PERSONAS = json.loads((ROOT / "backend/gold_examples/oomnik_golden_personas_v1.submissions.json").read_text())["personas"]
-ENV = {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200", "OPTIME_SEMANTIC_AI_ENABLED": "0"}
+ENV = {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "500", "OPTIME_SEMANTIC_AI_ENABLED": "0"}
 MEASURES = (
     ("inspection_rating", "higher"),
     ("deficiency_count", "lower"),

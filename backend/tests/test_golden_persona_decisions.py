@@ -29,7 +29,7 @@ SUBMISSIONS = ROOT / "backend" / "gold_examples" / "oomnik_golden_personas_v1.su
 EVIDENCE = ROOT / "database" / "synthetic_pilot" / "facility_parameter_evidence.json.gz.b64"
 PILOT_ENV = {
     "OPTIME_CANONICAL_MARKET": "synthetic-pilot",
-    "OOMNIK_PILOT_FACILITY_LIMIT": "200",
+    "OOMNIK_PILOT_FACILITY_LIMIT": "500",
     "OPTIME_SEMANTIC_AI_ENABLED": "0",
 }
 
