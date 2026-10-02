@@ -130,6 +130,7 @@ def _required_output_schema() -> Dict[str, Any]:
 
 
 def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_advice: Dict[str, Any]) -> Dict[str, Any]:
+    from app.services.semantic_field_contract import describe_fields
     return {
         "role": "OPTIME_NURSING_EXPERT_SEMANTIC_INTERPRETER",
         "mission": "Understand the resident/family request at senior-living expert level before matching. Distinguish decision-critical client clarification from downstream facility research and non-blocking NICE/CONTEXT ambiguity.",
@@ -162,6 +163,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
         "user_text": user_text,
         "learning_center_advice": learning_advice,
         "required_output": _required_output_schema(),
+        "field_contract": describe_fields(_required_output_schema()["questionnaire_patch"]),
         "field_trace_example": {
             "source_example": "My aunt receives dialysis and enjoys group activities.",
             "questionnaire_patch": {"relationship": "Relative", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Dialysis"]}, "humanIntelligenceV2": {"socialProfile": {"activityRequirementLevel": "Preference"}}},
@@ -314,13 +316,13 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise RuntimeError(f"SEMANTIC_AI_HTTP_{response.status_code}:{response.text[:500]}")
     body = response.json()
     if uses_responses_api:
-        return normalize_wire(_extract_responses_output(body), required_output)
+        return normalize_wire(_extract_responses_output(body), required_output, family_text=str(payload.get("user_text") or ""))
     if isinstance(body, dict) and "choices" in body:
-        return normalize_wire(parse_wire_json(body["choices"][0]["message"]["content"]), required_output)
+        return normalize_wire(parse_wire_json(body["choices"][0]["message"]["content"]), required_output, family_text=str(payload.get("user_text") or ""))
     if isinstance(body, dict) and "output" in body and isinstance(body["output"], dict):
-        return normalize_wire(body["output"], required_output)
+        return normalize_wire(body["output"], required_output, family_text=str(payload.get("user_text") or ""))
     if isinstance(body, dict):
-        return normalize_wire(body, required_output)
+        return normalize_wire(body, required_output, family_text=str(payload.get("user_text") or ""))
     raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
 
 
@@ -690,12 +692,13 @@ def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict
 
     profile = build_structured_profile(state, packet, family_text=user_text)
     issues = [f"OUT_OF_SCHEMA:{item['field']}" for item in profile["out_of_schema"] if item.get("field")]
-    issues.extend(f"NO_EXACT_FIELD_QUOTE:{path}" for path, field in profile["fields"].items()
-                  if field.get("provenance") == "AI_EXTRACTED" and field.get("unverified_reason"))
-    months = profile["fields"].get("humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths") or {}
-    if (months.get("provenance") == "AI_EXTRACTED" and months.get("state") == "EXPLICIT"
-            and not re.search(r"\bmonths?\b|חודש(?:ים|יים)?", str(months.get("quote") or ""), re.IGNORECASE)):
-        issues.append("NO_EXPLICIT_MONTH_UNIT:humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths")
+    from app.services.semantic_field_contract import compile_fields, leaves, profile_issues
+    contracts = compile_fields(_required_output_schema()["questionnaire_patch"])
+    # Validate every supplied leaf, including values hidden by button conflicts.
+    for path, value in leaves(packet.get("questionnaire_patch") or {}):
+        if path in contracts:
+            contracts[path].normalize(value, path)
+    issues.extend(profile_issues(profile, contracts))
     # Accounting is bidirectional: a known client fact cannot be marked USED
     # while its declared canonical field is absent from the decision profile.
     # Facility parameter IDs are deliberately outside this check; research
@@ -706,17 +709,6 @@ def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict
         for path in statement.get("mapped_parameters") or []:
             if in_schema(path) and path not in profile["fields"]:
                 issues.append(f"KNOWN_FIELD_NOT_MATERIALIZED:{path}")
-    # Existing medical taxonomy: detail fields must not lose the explicitly
-    # established need they describe. Require AI repair, never infer/add facts.
-    medical = (packet.get("questionnaire_patch") or {}).get("medicalCareProfile") or {}
-    need_field = profile["fields"].get("medicalCareProfile.needs") or {}
-    clinical_needs = set(need_field.get("value") or []) if need_field.get("state") == "EXPLICIT" else set()
-    for detail, need in {"dialysisFrequency": "Dialysis", "dialysisCenter": "Dialysis",
-                         "oxygenUse": "Oxygen", "woundCareFrequency": "Wound care"}.items():
-        field = profile["fields"].get(f"medicalCareProfile.{detail}") or {}
-        if (medical.get(detail) and str(medical[detail]).strip().lower() not in {"not sure", "unknown", "none", "no"}
-                and field.get("state") == "EXPLICIT" and need not in clinical_needs):
-            issues.append(f"MEDICAL_DETAIL_WITHOUT_NEED:medicalCareProfile.{detail}:{need}")
     if issues:
         error = RuntimeError("SEMANTIC_AI_PATCH_CONTRACT:" + ",".join(issues))
         error.patch_diagnostic = {"patch": packet.get("questionnaire_patch"), "sources": packet.get("questionnaire_patch_sources"), "statements": packet.get("statements")}
@@ -781,8 +773,8 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "issue_actions": {
                     "NO_EXACT_FIELD_QUOTE": "Supply the field's own genuine source quote, or omit the unsupported field. Questionnaire defaults are not quotes from user_text.",
                     "KNOWN_FIELD_NOT_MATERIALIZED": "If the exact field value is explicit, include one {path,value,quote} entry in questionnaire_patch_fields. If the path was only loosely related or inferred, remove that path from mapped_parameters instead of inventing its value; retain the original meaningful statement and its actual supported fields.",
-                    "MEDICAL_DETAIL_WITHOUT_NEED": "Keep the explicitly established detail AND include a separate medicalCareProfile.needs entry with the named parent need and its genuine treatment quote. This entry is an array of selected needs, not a detail string. Unknown or denied treatment is not a positive parent need.",
-                    "NO_EXPLICIT_MONTH_UNIT": "The quoted duration does not establish months. Remove temporarySupportMonths and its mapping; retain the stated duration in statement accounting. Never copy a number of weeks into months or estimate a conversion.",
+                    "UNSATISFIED_DEPENDENCY": "Supply the explicitly established parent field named in the contract error with its genuine source quote, or remove an unsupported detail. Never infer a parent fact or drop an explicit need.",
+                    "UNSUPPORTED_UNIT": "The source does not establish the field unit named in the contract error. Remove that unsupported field and mapping; retain the original statement. Never estimate or silently convert units.",
                 },
                 "client_dimension_status": _minimum_dimension_status(user_text, questionnaire_state),
                 "clarification_contract": {

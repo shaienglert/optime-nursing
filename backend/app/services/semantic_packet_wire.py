@@ -7,10 +7,11 @@ from __future__ import annotations
 
 import json
 import re
-from functools import lru_cache
 from typing import Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, TypeAdapter, ValidationError, create_model
+from pydantic import BaseModel, ConfigDict, StrictStr, ValidationError, create_model
+
+from app.services.semantic_field_contract import compile_fields, leaves as _leaves
 
 WIRE_VERSION = "semantic-extraction-v1"
 CONFIG = ConfigDict(extra="forbid", strict=True)
@@ -60,32 +61,17 @@ class Implication(BaseModel):
     requires_confirmation: bool
 
 
-def _leaves(obj, prefix=""):
-    for key, value in obj.items():
-        path = f"{prefix}.{key}" if prefix else key
-        if isinstance(value, dict):
-            yield from _leaves(value, path)
-        else:
-            yield path, value
-
-
-@lru_cache(maxsize=1)
 def _model(declarations_json):
     declarations = json.loads(declarations_json)
     # Sparse, full canonical paths avoid opaque aliases and mandatory empty
     # slots. Group by existing representation, not by clinical interpretation.
     groups = {}
-    for path, declaration in _leaves(declarations):
-        # Constrain representation at generation time instead of letting the
-        # provider choose an invalid value kind and spending another live call
-        # on repair. These are existing encodings, not new enum authority.
-        kind = "Selections" if path == "assistanceLevel" else "List" if isinstance(declaration, list) else "Integer" if declaration == "positive monthly integer" else "Months" if declaration == "explicit number of months" else "Text"
-        types = {"Selections": Union[StrictStr, list[StrictStr]], "List": list[StrictStr],
-                 "Integer": StrictInt, "Months": Union[StrictStr, StrictInt], "Text": StrictStr}
-        groups.setdefault(kind, []).append(path)
-    entries = [create_model("Quoted" + kind, __config__=CONFIG,
-        path=(Literal[tuple(paths)], ...), value=(types[kind], ...), quote=(StrictStr, ...))
-        for kind, paths in groups.items()]
+    contracts = compile_fields(declarations)
+    for path, contract in contracts.items():
+        groups.setdefault((contract.kind, contract.unit, contract.positive), []).append(path)
+    entries = [create_model("Quoted" + kind + (unit or "") + ("Positive" if positive else ""), __config__=CONFIG,
+        path=(Literal[tuple(paths)], ...), value=(contracts[paths[0]].value_type, ...), quote=(StrictStr, ...))
+        for (kind, unit, positive), paths in groups.items()]
     return create_model("SemanticExtraction", __config__=CONFIG,
         wire_version=(Literal[WIRE_VERSION], ...),
         facts=(list[StrictStr], ...), preferences=(list[StrictStr], ...),
@@ -114,6 +100,11 @@ def provider_schema(required_output, *, family_text: str | None = None):
             for child in value:
                 portable(child)
     portable(schema)
+    contracts = compile_fields(required_output["questionnaire_patch"])
+    for definition in schema["$defs"].values():
+        properties = definition.get("properties", {})
+        if "quote" in properties and contracts[properties["path"]["enum"][0]].positive:
+            properties["value"]["minimum"] = 1
     if family_text and family_text.strip():
         # Grammar chooses source spans; it does not interpret their meaning.
         # The complete narrative remains available when a fact spans sentences.
@@ -121,21 +112,32 @@ def provider_schema(required_output, *, family_text: str | None = None):
             part.strip() for part in re.split(r"[\n;]|(?<=[.!?])\s+", family_text)
             if part.strip()]]))
         schema["$defs"]["SourceQuote"] = {"type": "string", "enum": quotes}
-        for definition in schema["$defs"].values():
+        excluded = set()
+        for name, definition in list(schema["$defs"].items()):
             properties = definition.get("properties", {})
-            if "quote" in properties:
-                properties["quote"] = {"$ref": "#/$defs/SourceQuote"}
+            if "quote" not in properties:
+                continue
+            paths = properties["path"]["enum"]
+            contract = contracts[paths[0]]
+            eligible = [quote for quote in quotes if contract.accepts_quote(quote)]
+            if not eligible:
+                excluded.add("#/$defs/" + name)
+                del schema["$defs"][name]
+                continue
+            properties["quote"] = {"type": "string", "enum": eligible} if contract.unit else {"$ref": "#/$defs/SourceQuote"}
+        alternatives = schema["properties"]["questionnaire_patch_fields"]["items"]["anyOf"]
+        alternatives[:] = [item for item in alternatives if item.get("$ref") not in excluded]
     return schema
 
 
-def normalize_wire(packet: Any, required_output: dict) -> dict:
+def normalize_wire(packet: Any, required_output: dict, *, family_text: str | None = None) -> dict:
     try:
         wire = _model(_key(required_output)).model_validate(packet)
     except ValidationError as exc:
         raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:" + json.dumps(exc.errors(include_input=False), default=str)[:1000]) from exc
     result = wire.model_dump(exclude={"wire_version", "questionnaire_patch_fields", "interview"})
     patch, sources = {}, {}
-    declarations = dict(_leaves(required_output["questionnaire_patch"]))
+    contracts = compile_fields(required_output["questionnaire_patch"])
     for field in wire.questionnaire_patch_fields:
         entry = field.model_dump()
         path = entry["path"]
@@ -144,28 +146,12 @@ def normalize_wire(packet: Any, required_output: dict) -> dict:
         value, quote = entry["value"], entry["quote"]
         if not quote.strip():
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:EMPTY_QUOTE:{path}")
-        declaration = declarations[path]
-        # Prompt enum examples are advisory, not the canonical schema's value
-        # authority. Preserve established manual encodings instead of inventing
-        # a stricter value vocabulary at the transport boundary.
-        if path == "assistanceLevel":
-            value_type = Union[StrictStr, list[StrictStr]]
-        elif isinstance(declaration, list):
-            value_type = list[StrictStr]
-        elif declaration == "positive monthly integer":
-            value_type = StrictInt
-        else:
-            value_type = StrictStr
-            if declaration == "explicit number of months" and isinstance(value, int):
-                value = str(value)  # Encoding only; no conversion of weeks to months.
-        try:
-            value = TypeAdapter(value_type).validate_python(value, strict=True)
-        except ValidationError as exc:
-            raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:INVALID_FIELD_VALUE:{path}") from exc
-        if path == "assistanceLevel" and isinstance(value, list):
-            if not value:
-                raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:EMPTY_ASSISTANCE_SELECTIONS")
-            value = ", ".join(value)
+        value = contracts[path].normalize(value, path)
+        if family_text is not None:
+            if quote not in family_text:
+                raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:NO_EXACT_FIELD_QUOTE:{path}")
+            if not contracts[path].accepts_quote(quote):
+                raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:UNSUPPORTED_UNIT:{path}:{contracts[path].unit}")
         sources[path] = quote  # Copy the model's mandatory source; never manufacture it.
         target = patch
         parts = path.split(".")

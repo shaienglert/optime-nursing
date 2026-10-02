@@ -54,6 +54,19 @@ def test_repeated_invalid_repair_stays_blocked_and_does_not_loop():
     assert transport.call_count == 2
 
 
+def test_repeated_field_contract_violation_never_returns_a_usable_packet():
+    bad = packet()
+    bad["questionnaire_patch"]["budget"] = 0
+    bad["statements"].append({"raw_text": "monthly budget is $6500", "meaning": "Budget",
+        "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED",
+        "mapped_parameters": ["budget"]})
+    with patch("app.services.semantic_intent_ai._default_transport", side_effect=[deepcopy(bad), deepcopy(bad)]) as transport:
+        with pytest.raises(RuntimeError, match="NONPOSITIVE_VALUE:budget"):
+            interpret_client_intent_with_ai(user_text=TEXT)
+    assert transport.call_count == 2
+    assert "packet_validation_repair" in transport.call_args.args[0]
+
+
 def test_final_repair_can_recover_failed_question_repairs_with_ai_authored_question():
     bad = packet()
     bad["decision_readiness"] = "NEEDS_CLARIFICATION"

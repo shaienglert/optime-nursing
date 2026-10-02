@@ -73,6 +73,29 @@ attempt cap. HTTP errors are not converted into successful semantic packets.
 
 ## Regression evidence and limits
 
+The executable field contract is `semantic_field_contract.py`. Every declared
+extraction leaf is compiled against the approved canonical allowlist. Its
+representation, source owner, unit, positive-value constraint and dependencies
+are shared by provider schema generation, wire normalization and final server
+acceptance. Field rules are data, not repair-specific conditional branches.
+The prompt includes the same compiled contract for explanation.
+
+Generation offers only genuine narrative spans as quotes and removes unit-bound
+fields when no eligible source exists. The server independently validates
+quotes, types and units even if the provider ignores its grammar. It also checks
+the complete candidate patch before resolving conflicts with questionnaire
+buttons, so a button cannot hide an invalid AI value. Unknown and ambiguous
+facts retain their canonical states; existing questionnaire answers remain
+authoritative inputs. Medical dependencies and known-field accounting are
+checked before any AI candidate can enter matching.
+
+Schema compliance does not prove that every interpretation is semantically
+correct. Exact source presence is necessary evidence, not proof that a quote
+entails an arbitrary value. Model readiness is advisory; existing deterministic
+clarification and facility-evidence policy still decide what is usable. Failed
+acceptance never authorizes guessed facts. The existing structured-only fallback
+may use completed button answers with the narrative marked UNPROCESSED.
+
 Tests cover couple fact preservation, missing question/trace, invalid patch
 metadata, invalid types/enums, missing/forged quotes, duplicate paths, multiple
 ADL selections, answered buttons versus a different missing transfer need,
