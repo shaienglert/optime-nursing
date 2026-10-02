@@ -265,7 +265,7 @@ def _ranking_state(decision: Dict[str, Any]) -> RankingState:
     # deliberate, complete ranking -- AI judgment is skipped because the candidate
     # pool has no NICE preferences and no known rating/grade/disciplinary record for
     # it to differentiate on, not because ranking failed or is unavailable.
-    if status in {"AI_RANKED", "AI_BATCH_RANKED", "DETERMINISTIC_THIN_EVIDENCE_WATERFALL"}:
+    if status in {"AI_RANKED", "AI_BATCH_RANKED", "DETERMINISTIC_THIN_EVIDENCE_WATERFALL", "NOT_DECISION_AUTHORITY"}:
         return RankingState.COMPLETE
     if status in {"STARTED", "RUNNING", "IN_PROGRESS"}:
         return RankingState.RUNNING

@@ -53,6 +53,7 @@ const FULL_CASE: Record<string, string | string[] | number> = {
   socialFrequency: "Weekly",
   communityStyle: "Medium",
   activities: ["Music"],
+  activityImportance: "Preference",
   nearbyPlaces: ["Parks & walking paths"],
   nearbyImportance: "Nice to have",
   personalDestinationLabel: "No specific destination",

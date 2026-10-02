@@ -46,7 +46,7 @@ _GOVERNED_CITY_TOKENS = (
 
 
 def _explicit_location_city(questionnaire: Dict[str, Any], natural_language_query: str) -> str | None:
-    for key in ("locationCity", "location_city", "city"):
+    for key in ("locationCity", "location_city", "city", "referenceLocationValue", "referenceAddress"):
         value = str(questionnaire.get(key) or "").strip()
         lowered = value.lower()
         for token, canonical in _GOVERNED_CITY_TOKENS:
@@ -147,6 +147,13 @@ def _care_setting_context(profile: Dict[str, Any]) -> Dict[str, bool]:
             # adult living without forcing a full skilled-nursing setting on its own.
             {"adl_support", "medication_support", "transfer_assistance", "respiratory_trach_vent"},
         ),
+        "care_need_ids": sorted({
+            str(need.get("parameter_id") or "")
+            for need in needs
+            if str(need.get("parameter_id") or "") in CARE_CAPABILITY_PARAMETERS
+            and str(need.get("requirement_level") or "").upper() in {"REQUIRED", "HIGH"}
+            and str(need.get("desired_value") or "").upper() == "YES"
+        }),
     }
 
 
@@ -154,45 +161,66 @@ def _memory_confirmed(canonical_row: Dict[str, Any]) -> bool:
     return str(canonical_row.get("memory_care_classification") or "").upper() == "CONFIRMED"
 
 
+# Care-setting fit is decided by capability, not by facility type (owner, 2026-10-01,
+# PR-009). Authority order: binding regulation -> verified capability evidence -> UNKNOWN.
+# Facility type speaks only through REGULATORY_* below: what a license category legally
+# must provide, or legally may not provide in-house.
+CARE_CAPABILITY_PARAMETERS = frozenset({
+    "adl_support", "medication_support", "transfer_assistance", "respiratory_trach_vent",
+    "memory_care", "dementia_alz_programs", "nursing_24_7", "skilled_nursing_capabilities",
+    "post_stroke_neuro_evidence", "dialysis_arrangements", "wound_care", "pt", "ot", "speech_therapy",
+})
+REGULATORY_PROVIDES = {
+    # Nevada RFG licensure covers personal care and medication assistance.
+    "ASSISTED_LIVING_RFG": {"adl_support", "medication_support"},
+    # A licensed SNF must provide 24-hour licensed nursing and skilled care, including
+    # personal care and medication administration.
+    "SKILLED_NURSING": {"adl_support", "medication_support", "nursing_24_7", "skilled_nursing_capabilities"},
+}
+REGULATORY_CANNOT_PROVIDE_IN_HOUSE = {
+    # Unlicensed senior housing may not deliver care itself (an outside agency pathway is
+    # handled by the combined-care layer, not here).
+    "INDEPENDENT_LIVING": CARE_CAPABILITY_PARAMETERS,
+}
+
+
+def _capability_state(parameter_id: str, canonical_type: str, result: Dict[str, Any], canonical_row: Dict[str, Any]) -> str:
+    if parameter_id in REGULATORY_CANNOT_PROVIDE_IN_HOUSE.get(canonical_type, frozenset()):
+        return "NO"
+    if parameter_id in REGULATORY_PROVIDES.get(canonical_type, set()):
+        return "YES"
+    if parameter_id in {"memory_care", "dementia_alz_programs"} and _memory_confirmed(canonical_row):
+        return "YES"  # official state memory-care classification
+    matched = {str(item.get("parameter_id") or "") for item in result.get("matched_needs") or []}
+    unmet = {str(item.get("parameter_id") or "") for item in result.get("unmet_verified_needs") or []}
+    if parameter_id in unmet:
+        return "NO"
+    if parameter_id in matched:
+        return "YES"
+    return "UNKNOWN"
+
+
 def _care_setting_fit(
-    context: Dict[str, bool],
+    context: Dict[str, Any],
     result: Dict[str, Any],
     canonical_row: Dict[str, Any],
 ) -> Dict[str, str]:
     canonical_type = str(result.get("canonical_type") or canonical_row.get("canonical_type") or "UNKNOWN").upper()
+    care_needs = list(context.get("care_need_ids") or [])
+    if care_needs:
+        states = {pid: _capability_state(pid, canonical_type, result, canonical_row) for pid in care_needs}
+        missing = sorted(pid for pid, state in states.items() if state == "NO")
+        unknown = sorted(pid for pid, state in states.items() if state == "UNKNOWN")
+        if missing:
+            return {"status": "INSUFFICIENT_SETTING", "reason": f"Verified evidence or licensing shows these required capabilities are not provided: {', '.join(missing)}.", "basis": "CAPABILITY_EVIDENCE"}
+        if unknown:
+            return {"status": "POSSIBLE_FIT", "reason": f"Required capabilities still to verify: {', '.join(unknown)}.", "basis": "CAPABILITY_EVIDENCE"}
+        clinical = {"memory_care", "dementia_alz_programs", "nursing_24_7", "skilled_nursing_capabilities", "post_stroke_neuro_evidence", "dialysis_arrangements", "wound_care", "pt", "ot", "speech_therapy"}
+        if canonical_type == "SKILLED_NURSING" and not (set(care_needs) & clinical):
+            return {"status": "OVERLEVEL", "reason": "Skilled nursing is more intensive than the stated care needs; consider only if clinical assessment indicates it.", "basis": "CAPABILITY_EVIDENCE"}
+        return {"status": "PRIMARY_FIT", "reason": "Every required care capability is verified or provided by licensure.", "basis": "CAPABILITY_EVIDENCE"}
 
-    archetype = str(canonical_row.get("synthetic_archetype") or "").upper()
-
-    # Memory safety is a distinct required capability. It must not disappear
-    # merely because the profile also contains a generic 24/7-care signal.
-    if context["requires_memory"]:
-        if canonical_type == "ASSISTED_LIVING_RFG" and _memory_confirmed(canonical_row):
-            return {"status": "PRIMARY_FIT", "reason": "Memory care is required and officially confirmed for this residential setting."}
-        if canonical_type == "SKILLED_NURSING":
-            return {"status": "POSSIBLE_FIT", "reason": "A skilled setting may fit only when its memory-care capability is also verified."}
-        return {"status": "INSUFFICIENT_SETTING", "reason": "Required memory-care capability is not confirmed for this setting."}
-
-    if context["requires_rehab"] and not context["requires_stroke"]:
-        if archetype == "REHABILITATION":
-            return {"status": "PRIMARY_FIT", "reason": "A time-limited rehabilitation pathway is the stated high-priority need."}
-        if canonical_type == "SKILLED_NURSING":
-            return {"status": "POSSIBLE_FIT", "reason": "Skilled nursing may support rehabilitation, but a dedicated rehabilitation pathway is preferred."}
-        return {"status": "INSUFFICIENT_SETTING", "reason": "The stated recovery plan requires a verified rehabilitation pathway."}
-
-    if context["requires_skilled"]:
-        if canonical_type == "SKILLED_NURSING":
-            return {"status": "PRIMARY_FIT", "reason": "Skilled/24-7 clinical care is a stated high-priority need."}
-        return {"status": "INSUFFICIENT_SETTING", "reason": "The stated needs require a skilled clinical setting."}
-
-    if context["needs_residential_assistance"]:
-        if canonical_type == "ASSISTED_LIVING_RFG":
-            return {"status": "PRIMARY_FIT", "reason": "Daily living assistance is needed without a stated skilled-nursing requirement."}
-        if canonical_type == "SKILLED_NURSING":
-            return {"status": "OVERLEVEL", "reason": "Skilled nursing is more intensive than the stated care needs; consider only if clinical assessment indicates it."}
-        if canonical_type == "INDEPENDENT_LIVING":
-            return {"status": "INSUFFICIENT_SETTING", "reason": "Independent living alone does not establish the daily assistance required by this profile."}
-        return {"status": "POSSIBLE_FIT", "reason": "Care-setting fit requires direct verification."}
-
+    # No critical care need: the setting is described, not judged on capability.
     if canonical_type == "INDEPENDENT_LIVING":
         return {"status": "PRIMARY_FIT", "reason": "No high-priority daily-care or skilled-care need is stated."}
     if canonical_type == "ASSISTED_LIVING_RFG":

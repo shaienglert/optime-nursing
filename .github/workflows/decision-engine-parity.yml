@@ -1,4 +1,8 @@
 name: Decision engine behaviour parity
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 # Runs 17 fixed family cases through the base branch and the PR and diffs everything
 # the decision engine exposes (library calls, HTTP endpoints, database writes).
 # A refactor must show zero differences. A PR that intends to change decisions adds

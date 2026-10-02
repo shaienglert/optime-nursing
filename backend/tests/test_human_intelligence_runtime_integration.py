@@ -102,14 +102,12 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
         intelligence = result["decision_intelligence"]
         human = intelligence["human_intelligence"]
         self.assertEqual("READY", human["decision_readiness"])
-        # The ranking model is unavailable in this environment, so the hard criteria carry
-        # the result: the eligible set is shown, explicitly unordered, with a degradation
-        # notice. It used to be hidden entirely, which told the family nothing.
+        # Governed structured preferences participate in deterministic ranking; AI ranking is not required.
         self.assertTrue(intelligence["recommendation_execution_allowed"])
-        self.assertTrue(intelligence["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(intelligence["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual("ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE", intelligence["person_fit_rank_effect"])
         self.assertEqual([], human["adaptive_questions"])
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
 
     def test_explicit_small_home_preference_affects_rank_after_ai_ready(self):
         result = self._run(
@@ -121,13 +119,11 @@ class HumanIntelligenceRuntimeIntegrationTests(unittest.TestCase):
             {"decision_readiness": "READY", "next_question": None, "statements": []},
         )
         intelligence = result["decision_intelligence"]
-        # The ranking model is unavailable in this environment, so the hard criteria carry
-        # the result: the eligible set is shown, explicitly unordered, with a degradation
-        # notice. It used to be hidden entirely, which told the family nothing.
+        # Governed structured preferences participate in deterministic ranking; AI ranking is not required.
         self.assertTrue(intelligence["recommendation_execution_allowed"])
-        self.assertTrue(intelligence["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(intelligence["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual("ACTIVE_EXPLICIT_PREFERENCE_CONGRUENCE", intelligence["person_fit_rank_effect"])
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
 
 
 if __name__ == "__main__":

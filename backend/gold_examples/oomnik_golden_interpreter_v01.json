@@ -1,0 +1,87 @@
+{
+  "version": "0.1",
+  "cases": [
+    {
+      "id": "I01",
+      "text": "Sadly my father passed away.",
+      "must_not_contain": [
+        "adl_support",
+        "assistanceLevel"
+      ]
+    },
+    {
+      "id": "I02",
+      "text": "The building must have a lift because stairs are difficult.",
+      "must_not_contain": [
+        "transfer_assistance"
+      ],
+      "must_contain_any": [
+        "elevator",
+        "lift"
+      ]
+    },
+    {
+      "id": "I03",
+      "text": "My mother does not need memory care and has no dementia.",
+      "must_not_contain": [
+        "Dementia diagnosed",
+        "memory care required"
+      ]
+    },
+    {
+      "id": "I04",
+      "text": "Our comfortable monthly budget is $5,000–$8,000.",
+      "numeric_range": [
+        5000,
+        8000
+      ]
+    },
+    {
+      "id": "I05",
+      "text": "We are looking in Las Vegas, Nevada.",
+      "must_contain_any": [
+        "Las Vegas"
+      ]
+    },
+    {
+      "id": "I06",
+      "text": "Dad receives dialysis three times a week and needs wound care.",
+      "must_contain_any": [
+        "dialysis",
+        "wound"
+      ]
+    },
+    {
+      "id": "I07",
+      "text": "Grandmother speaks Hebrew and keeping kosher is important.",
+      "must_contain_any": [
+        "Hebrew",
+        "kosher"
+      ]
+    },
+    {
+      "id": "I08",
+      "text": "She has a dog and wants to keep living with it.",
+      "must_contain_any": [
+        "dog",
+        "pet"
+      ]
+    },
+    {
+      "id": "I09",
+      "text": "They are a couple; he needs help with daily activities and she is independent.",
+      "must_contain_any": [
+        "Couple",
+        "couple"
+      ]
+    },
+    {
+      "id": "I10",
+      "text": "He uses oxygen at night.",
+      "must_contain_any": [
+        "oxygen",
+        "At night"
+      ]
+    }
+  ]
+}

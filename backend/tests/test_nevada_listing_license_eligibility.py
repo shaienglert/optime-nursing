@@ -33,6 +33,6 @@ def test_care_without_current_official_license_is_not_in_available_nevada_catalo
 
 
 def test_synthetic_pilot_is_kept_separate_from_live_licensing_claims(monkeypatch):
-    monkeypatch.setenv("OOMNIK_PILOT_CATALOG_SIZE", "200")
+    monkeypatch.setenv("OOMNIK_PILOT_CATALOG_SIZE", "500")
     pilot = {"canonical_id": "PILOT", "pilot_exposure_order": 1, "canonical_type": "ASSISTED_LIVING_RFG"}
     assert _canonical_records_for_market({"records": [pilot]}, "synthetic-pilot") == [pilot]

@@ -20,11 +20,21 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
     """Golden regression for clarification -> MUST verification -> ranking -> AI process owner."""
 
     def _base_state(self) -> dict:
+        # Single authority (owner, 2026-10-01): decision facts come only from the Canonical
+        # Structured Profile. The medication-help need and the Las Vegas Valley market used
+        # to reach the decision only through a regex reading of the story below; they are
+        # now structured answers (the interpreter mock here returns no questionnaire_patch).
+        # KNOWN APP GAP (left failing): living_strategy_runtime sets
+        # medication_support_needed only from free text, so the structured "Help with
+        # medications" answer never creates the MEDICATION_SUPPORT_AVAILABLE MUST.
         return {
             "relationship": "Mom",
             "ageGroup": "90+",
-            "assistanceLevel": "Needs assistance with bathing and dressing",
+            "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
             "memoryStatus": "No",
+            "referenceLocationValue": "Las Vegas",
+            "referenceAddress": "Las Vegas",
+            "medicalCareProfile": {"mobilityMethod": "Independent"},
             "distanceFromFamily": "Balanced location",
             "humanIntelligenceV2": {
                 "personalityProfile": {"communitySizePreference": "No preference"},
@@ -176,9 +186,9 @@ class GoldenMother90FullLifecycleTests(unittest.TestCase):
         # The ordering claim is the line that must not be crossed, and it is not: the phase
         # is its own, the finality is degraded rather than provisional, and the payload
         # states results_are_ordered false.
-        self.assertTrue(decision["canonical_decision_state"]["is_degraded_result"])
-        self.assertEqual(decision["recommendation_visibility"], "UNRANKED_ELIGIBLE_SET_VISIBLE")
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertFalse(decision["canonical_decision_state"]["is_degraded_result"])
+        self.assertEqual(decision["recommendation_visibility"], "FINAL_RECOMMENDATION_VISIBLE")
+        self.assertNotIn("degraded_result_notice", result)
         for row in result["results"]:
             self.assertEqual("MUST_ELIGIBLE", row.get("must_eligibility"))
         self.assertGreater(result["total_candidates_scored"], 0)

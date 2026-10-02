@@ -3,7 +3,7 @@ from __future__ import annotations
 """Final facility selection pipeline.
 
 1. Deterministic MUST gate, no AI discretion.
-2. Semantic AI owns an open-ended preference model and ranks only MUST_ELIGIBLE rows.
+2. Deterministic governed evidence ranks MUST_ELIGIBLE rows; AI has no ranking authority.
 3. Dynamic preference verification is evidence-closed-world: MATCH/MISMATCH requires
    governed claims; missing evidence stays UNKNOWN.
 4. Legacy structured NICE signals are audit-only and cannot drive the authoritative
@@ -32,7 +32,7 @@ from copy import deepcopy
 import os
 from typing import Any, Dict, List
 
-from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates
+from app.services.ai_candidate_ranking_runtime import attach_nice_coverage, rank_must_eligible_candidates  # compatibility symbol; never called by production pipeline
 from app.services.client_intent_runtime import intent_rank_key
 from app.services.human_intelligence_runtime_verified import person_fit_sort_key
 from app.services.semantic_preference_runtime import build_dynamic_preference_model, verify_dynamic_preferences
@@ -40,6 +40,22 @@ from app.services.semantic_preference_runtime import build_dynamic_preference_mo
 
 def _fallback_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     return (*person_fit_sort_key(row), *intent_rank_key(row))
+
+
+# intent_rank_key = (gate, care setting, NICE match, NICE mismatch, community fit known,
+# community fit, <regulatory...>, <reputation...>, <evidence counts>). The family's own
+# criteria are the first six; everything after is government/quality/reputation evidence,
+# which belongs to the Regulatory/Quality Evidence Layer and is applied there instead.
+_FAMILY_CRITERIA_LENGTH = 6
+
+
+def _family_criteria_key(row: Dict[str, Any]) -> tuple[Any, ...]:
+    return (*person_fit_sort_key(row), *intent_rank_key(row)[:_FAMILY_CRITERIA_LENGTH])
+
+
+def _layered_rank(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    from app.services.regulatory_quality_layer import rank_with_evidence_layer
+    return rank_with_evidence_layer(rows, lambda row: (1 if row.get("budget_exception") else 0, *_family_criteria_key(row)))
 
 
 def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
@@ -57,6 +73,8 @@ def _rank_group_key(row: Dict[str, Any]) -> tuple[Any, ...]:
     global_score = ai_ranking.get("global_score")
     if isinstance(global_score, (int, float)):
         return (bool(row.get("budget_exception")), "AI_SCORE", round(float(global_score), 3))
+    if row.get("rank_group_signature") is not None:
+        return (bool(row.get("budget_exception")), "LAYERED", row["rank_group_signature"])
     return (bool(row.get("budget_exception")), "DETERMINISTIC", *_fallback_key(row)[:-1])
 
 
@@ -110,7 +128,7 @@ def _deterministic_waterfall_rank(rows: List[Dict[str, Any]]) -> tuple[List[Dict
     point 8. Same ai_ranking row shape as the AI paths (minus global_score, which
     _rank_group_key correctly reads as "no AI score, use the deterministic key" for
     tie detection -- exactly the right behavior here too)."""
-    ranked = sorted(rows, key=_fallback_key)
+    ranked = _layered_rank(list(rows))
     for position, row in enumerate(ranked, start=1):
         row["ai_ranking"] = {
             "status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL",
@@ -292,8 +310,11 @@ def apply_must_ai_nice_pipeline(
     rankable = list(eligible)
     budget = questionnaire_state.get("budget")
     if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
+        from app.services.affordability_floor import relevant_monthly_cost
         for row in rankable:
-            price = row.get("starting_monthly_price")
+            # Compared with the cost under the family's funding pathway (private pay, or
+            # household out-of-pocket under Medicaid) -- affordability_floor.py.
+            price = relevant_monthly_cost(row)
             if isinstance(price, (int, float)) and not isinstance(price, bool):
                 variance = (float(price) - float(budget)) / float(budget)
                 row["budget_variance_pct"] = round(variance * 100, 1)
@@ -301,40 +322,30 @@ def apply_must_ai_nice_pipeline(
                 row["budget_exception"] = variance > 0
         # In-budget candidates always rank ahead of the permitted +10% expansion.
         # The normal ranking still decides quality within each band.
-        rankable.sort(key=lambda row: (1 if row.get("budget_exception") else 0, _fallback_key(row)))
-    else:
-        rankable.sort(key=_fallback_key)
+    # The shortlist cut uses the same layered order as the final ranking.
+    rankable = _layered_rank(rankable)
     interactive_shortlist_limit = _resolve_interactive_shortlist_limit(limit)
     live_shortlist = rankable[:interactive_shortlist_limit]
 
     audit_intent = deepcopy(client_intent)
-    _remove_legacy_nice_from_authoritative_path(live_shortlist)
+    # Structured NICE evidence remains part of the deterministic ranking key. It is
+    # evidence, not a second decision engine. Dynamic/open-ended preferences remain
+    # UNKNOWN until verified and therefore cannot invent a ranking advantage.
     ranking_intent = deepcopy(client_intent)
-    ranking_intent["nice_to_haves"] = []
 
-    thin_evidence_bypass = bool(live_shortlist) and not _has_differentiating_evidence(live_shortlist, dynamic_preferences)
-    if thin_evidence_bypass:
-        ranked, ai_status = _deterministic_waterfall_rank(live_shortlist)
-    else:
-        ranked, ai_status = rank_must_eligible_candidates(
-            live_shortlist,
-            client_intent=ranking_intent,
-            human_context=human_context,
-            strategy=strategy,
-            deterministic_fallback_key=_fallback_key,
-        )
-
-    # Preserve the approved strict-budget-first rule after the AI has reranked
-    # the shortlist. Stable partition retains its order within each budget band.
+    # Single ranking authority: governed deterministic evidence. Candidate-ranking
+    # AI is intentionally outside the production decision path; it may not break ties
+    # or reorder facilities. Budget band remains the first ordering partition.
+    ranked, deterministic_status = _deterministic_waterfall_rank(live_shortlist)
     ranked.sort(key=lambda row: bool(row.get("budget_exception")))
-
-    ai_ranking_degraded = (
-        not thin_evidence_bypass
-        and bool(live_shortlist)
-        and _env_true("OPTIME_SEMANTIC_AI_ENABLED")
-        and _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED")
-        and not _ai_ranking_succeeded(ai_status)
-    )
+    ai_status = {
+        "status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL",
+        "authority": "DETERMINISTIC_DECISION_ENGINE",
+        "candidate_count": len(ranked),
+        "deterministic_status": deterministic_status,
+    }
+    ai_ranking_degraded = False
+    thin_evidence_bypass = True
 
     audit_rows = deepcopy(ranked)
     for audit_row in audit_rows:
@@ -542,12 +553,13 @@ def apply_must_ai_nice_pipeline(
             for row in rows
         ],
         "ai_ranking": ai_status,
-        "ai_ranking_required": _env_true("OPTIME_AI_CANDIDATE_RANKING_REQUIRED"),
+        "ai_ranking_required": False,
         "ai_ranking_fail_closed": False,
         "ai_ranking_degraded": ai_ranking_degraded,
         "dynamic_preferences": dynamic_summary,
         "legacy_structured_nice_audit": structured_nice_summary,
         "legacy_structured_nice_authoritative": False,
+        "governed_structured_nice_authoritative": True,
         "top_nice_complete_count": len(complete_selected),
         "top_nice_complete_candidate_ids": [str(row.get("canonical_facility_id")) for row in complete_selected],
         "nice_complete_beyond_display_count": len(complete_beyond_display),
@@ -597,11 +609,10 @@ def apply_must_ai_nice_pipeline(
     }
     decision["ranking_order"] = [
         "DETERMINISTIC_MUST_GATE",
-        "SEMANTIC_AI_DYNAMIC_PREFERENCES",
-        "SEMANTIC_AI_ALL_GOVERNED_EVIDENCE",
-        "EVIDENCE_GROUNDED_PREFERENCE_COVERAGE",
-        "PROVIDER_VERIFICATION",
-        "AI_RERANK",
+        "DETERMINISTIC_GOVERNED_NICE_EVIDENCE",
+        "GOVERNMENT_REGULATORY_DATA",
+        "PUBLIC_REPUTATION",
+        "RELEVANT_EVIDENCE_COMPLETENESS",
     ]
 
     if ai_ranking_degraded:

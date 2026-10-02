@@ -37,9 +37,23 @@ class MarketCoverageNoticeTests(unittest.TestCase):
             return run_patient_decision_engine(questionnaire, query, limit=limit)
 
     def test_out_of_market_city_gets_explicit_notice(self) -> None:
+        # Single authority (owner, 2026-10-01): the requested city is a structured answer
+        # (the intake writes the chosen area into referenceAddress/referenceLocationValue;
+        # locationCity is the legacy key), not a word found in the story.
+        # KNOWN APP GAP (left failing): the needs profile's location_city -- the only input
+        # of _market_coverage_notice -- is read from locationCity/location_city/city and
+        # only matched against Las Vegas Valley tokens (decision_engine_evidence
+        # ._explicit_location_city); an out-of-market city reached it only via the regex
+        # reading of free text, so a structured "Miami" never produces the notice.
         result = self._run_ready(
-            {"assistanceLevel": "Needs assistance", "budget": 5000},
-            "Looking for assisted living in Miami for my mother",
+            {
+                "assistanceLevel": "Needs assistance",
+                "budget": 5000,
+                "locationCity": "Miami",
+                "referenceAddress": "Miami",
+                "referenceLocationValue": "Miami",
+            },
+            "",
         )
         notice = result["market_coverage_notice"]
         self.assertIsNotNone(notice)

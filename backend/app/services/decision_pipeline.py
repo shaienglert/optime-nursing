@@ -114,11 +114,48 @@ def _ranking_basis(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+
+def _attach_room_pricing_truth(rows: list[dict[str, Any]]) -> None:
+    """Attach room-level governed price truth before budget policy runs."""
+    from app.database import SessionLocal
+    from app.services.facility_room_service import list_room_types
+    db=SessionLocal()
+    try:
+        for row in rows:
+            cid=str(row.get("canonical_facility_id") or "")
+            if not cid: continue
+            try:
+                rooms=list_room_types(db,cid)
+            except Exception as exc:
+                if "facility_room_types" in str(exc) and ("no such table" in str(exc).lower() or "does not exist" in str(exc).lower()):
+                    db.rollback()
+                    continue
+                raise
+            priced=[]
+            for room in rooms:
+                if room.monthly_price_cents is None: continue
+                total=(room.monthly_price_cents or 0)+(room.care_fee_cents or 0)+(room.mandatory_monthly_fees_cents or 0)
+                complete=room.care_fee_cents is not None and room.mandatory_monthly_fees_cents is not None
+                priced.append({"room_type":room.room_type_name,"base_price":room.monthly_price_cents/100,"total_known_monthly_cost":total/100,"total_affordability_status":"KNOWN" if complete else "PENDING","pricing_qualifier":room.pricing_qualifier or "UNKNOWN","availability_status":room.availability_status,"final_availability_status":"REQUIRES_DIRECT_VERIFICATION"})
+            row["room_pricing_options"]=priced
+            known=[x for x in priced if x["total_affordability_status"]=="KNOWN"]
+            if known:
+                best=min(known,key=lambda x:x["total_known_monthly_cost"])
+                row["starting_monthly_price"]=best["total_known_monthly_cost"]
+                row["price_truth_basis"]="ROOM_TOTAL_KNOWN_MONTHLY_COST"
+                row["total_affordability_status"]="KNOWN"
+            elif priced:
+                row["price_truth_basis"]="ROOM_BASE_ONLY_TOTAL_PENDING"
+                row["total_affordability_status"]="PENDING"
+    finally:
+        db.close()
+
 def _apply_combined_care_layer(result: dict[str, Any], questionnaire_state: dict[str, Any], natural_language_query: str, limit: int) -> dict[str, Any]:
     from app.services.client_intent_runtime import intent_rank_key
     from app.services.combined_care_solution_runtime import attach_combined_care_solutions
 
     rows = list(result.get("results") or [])
+    _attach_room_pricing_truth(rows)
     for row in rows:
         row["external_care_agency_matches"] = _agency_matches_for_row(row, result)
     profile = result.get("patient_needs_profile") or {}
@@ -195,6 +232,7 @@ def _classify_facilities_before_ranking(profile: dict[str, Any]) -> dict[str, An
         for need in (profile.get("needs") or [])
         if isinstance(need, dict)
         and str(need.get("requirement_level") or "").upper() in {"", "REQUIRED", "HIGH"}
+        and str(need.get("parameter_id") or "") != "current_availability"
     })
     query = query_facility_knowledge_catalog(required_parameter_ids=need_ids)
     return {
@@ -278,6 +316,42 @@ def _suppress_unverified_recommendations(result: dict[str, Any]) -> dict[str, An
     return result
 
 
+def _merge_funnel_fit(result: dict[str, Any]) -> None:
+    from app.services.decision_funnel import merge_late_fit
+    ledger = result.get("decision_funnel_ledger")
+    if isinstance(ledger, list):
+        merge_late_fit(ledger, result.get("results") or [])
+
+
+def _attach_decision_funnel(result: dict[str, Any], decision_questionnaire: dict[str, Any]) -> list | None:
+    """Mechanical funnel + zero-result classification (decision_funnel.py)."""
+    from app.services.decision_funnel import build_funnel
+    ledger = result.pop("decision_funnel_ledger", None)
+    catalog = result.pop("decision_funnel_catalog", None)
+    if not isinstance(ledger, list) or not isinstance(catalog, dict):
+        return None
+    decision = result.setdefault("decision_intelligence", {})
+    intent = decision.get("client_intent") if isinstance(decision.get("client_intent"), dict) else {}
+    must_order = [str(m.get("key") or "") for m in intent.get("must_haves") or []]
+    budget = decision_questionnaire.get("budget")
+    budget = float(budget) if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0 else None
+    shown = len(result.get("results") or [])
+    coverage = None
+    if shown == 0:
+        from app.services.must_evidence_sources import market_must_coverage
+        coverage = market_must_coverage(must_order)
+    result["decision_funnel"] = build_funnel(
+        catalog=catalog,
+        location_scope=result.get("location_scope") or {},
+        ledger=ledger,
+        must_order=must_order,
+        budget=budget,
+        shown_count=shown,
+        requested_must_coverage=coverage,
+    )
+    return ledger
+
+
 def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
     from app.services.decision_pipeline_trace import attach_decision_pipeline_trace
     return attach_decision_pipeline_trace(result)
@@ -313,7 +387,20 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     # rows through those stages wrote thousands of records for one family
     # search and could restart the production web worker.
     internal_limit = max(60, min(100, int(limit or 50)))
-    result = runner(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, limit=internal_limit, prepared_profile=profile)
+    # Cutover: conversation AI may read narrative upstream; decision engine gets structured facts only.
+    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+    # The profile builder already produced the canonical decision questionnaire from the
+    # Structured Profile (interpreter output included). Every decision stage below reads
+    # it -- never the raw questionnaire_state or the free text.
+    canonical = profile.get("canonical_decision_questionnaire") if isinstance(profile, dict) else None
+    if isinstance(canonical, dict):
+        decision_questionnaire = dict(canonical)
+    else:
+        decision_profile = build_structured_profile(questionnaire_state)
+        decision_questionnaire = materialize_questionnaire(decision_profile)
+        if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
+            decision_questionnaire["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
+    result = runner(questionnaire_state=decision_questionnaire, natural_language_query="", limit=internal_limit, prepared_profile=profile)
     stage_started = _mark("run_patient_decision_engine_deterministic_ms", stage_started)
     if not isinstance(result, dict):
         return result
@@ -331,53 +418,21 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     from app.services.ai_process_owner_guard_patch import attach_ai_process_owner_guarded
     from app.services.must_ai_nice_pipeline import apply_must_ai_nice_pipeline
 
-    result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit), questionnaire_state=questionnaire_state)
+    result = apply_semantic_facility_requirements(result, research_limit=max(60, internal_limit), questionnaire_state=decision_questionnaire)
     stage_started = _mark("apply_semantic_facility_requirements_ms", stage_started)
     decision = result.setdefault("decision_intelligence", {})
     decision["interview_owner"] = "SEMANTIC_AI"
     decision["guardian_role"] = "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT"
-    result = _apply_combined_care_layer(result, questionnaire_state, natural_language_query, internal_limit)
+    result = _apply_combined_care_layer(result, decision_questionnaire, "", internal_limit)
     stage_started = _mark("apply_combined_care_layer_ms", stage_started)
 
-    # Budget expansion belongs after every non-budget MUST has been reconciled.
-    # Admit only enough otherwise-qualified candidates to fill the requested shortlist,
-    # never more than 10% over budget. The final ranking keeps these behind in-budget rows.
-    budget = questionnaire_state.get("budget")
-    if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
-        rows = list(result.get("results") or [])
-        strict = []
-        fallback = []
-        for row in rows:
-            fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-            failed = list(fit.get("must_fail") or [])
-            unknown_non_budget = [x for x in (fit.get("must_unknown") or []) if x != "SEMANTIC_BUDGET_VERIFICATION"]
-            price = row.get("starting_monthly_price")
-            if failed or unknown_non_budget or not isinstance(price, (int, float)):
-                continue
-            if price <= budget:
-                strict.append(row)
-            elif price <= budget * 1.10:
-                fallback.append(row)
-        # Normalize budget metadata for every priced, otherwise-qualified row so
-        # the API/UI never has to infer whether a missing flag means "in budget".
-        for row in strict:
-            variance = (float(row["starting_monthly_price"]) - float(budget)) / float(budget)
-            row["budget_variance_pct"] = round(variance * 100, 1)
-            row["budget_band"] = "AT_OR_WITHIN_10_PERCENT_BELOW" if variance >= -0.10 else "MORE_THAN_10_PERCENT_BELOW"
-            row["budget_exception"] = False
-        needed = max(0, int(limit or 0) - len(strict))
-        for row in sorted(fallback, key=lambda x: float(x.get("starting_monthly_price") or 0))[:needed]:
-            fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-            fit["must_unknown"] = [x for x in (fit.get("must_unknown") or []) if x != "SEMANTIC_BUDGET_VERIFICATION"]
-            if "SEMANTIC_BUDGET_VERIFICATION" not in (fit.get("must_pass") or []):
-                fit.setdefault("must_pass", []).append("SEMANTIC_BUDGET_VERIFICATION")
-            fit["hard_gate"] = "PASS" if not fit.get("must_fail") and not fit.get("must_unknown") else "PENDING_VERIFICATION"
-            variance = (float(row["starting_monthly_price"]) - float(budget)) / float(budget)
-            row["budget_variance_pct"] = round(variance * 100, 1)
-            row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT"
-            row["budget_exception"] = True
-            row["client_intent_fit"] = fit
-    result = apply_must_ai_nice_pipeline(result, questionnaire_state, natural_language_query, limit)
+    # Budget authority is centralized in must_ai_nice_pipeline.  Earlier stages may
+    # expose price evidence but must not admit/remove candidates or decide how many
+    # over-budget rows are needed.  This avoids the former duplicate "fill shortlist"
+    # policy and preserves the owner rule: in-budget first, then all otherwise-eligible
+    # candidates up to +10%, with transparent deviation.
+    _merge_funnel_fit(result)
+    result = apply_must_ai_nice_pipeline(result, decision_questionnaire, "", limit)
     stage_started = _mark("apply_must_ai_nice_pipeline_ms", stage_started)
     # Re-seal after the MUST/ranking stages before the process owner reads
     # phase or visibility.  Raw pipeline facts may change; control state may
@@ -387,6 +442,21 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     stage_started = _mark("attach_ai_process_owner_guarded_ms", stage_started)
     result = apply_canonical_decision_state_authority(result)
     result = _suppress_unverified_recommendations(result)
+    ledger = _attach_decision_funnel(result, decision_questionnaire)
+    from app.services.oomniker_optimizer import analyze_oomniker
+    # Oomniker reads the same canonical profile, client intent and full candidate ledger
+    # the decision used -- never the raw questionnaire -- so it can say which parameter
+    # narrows supply and what changing it would do.
+    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+    oomniker_context = None
+    if ledger is not None:
+        oomniker_context = {
+            "ledger": ledger,
+            "client_intent": decision.get("client_intent") or {},
+            "funnel": result.get("decision_funnel") or {},
+            "location_scope": result.get("location_scope") or {},
+        }
+    result["oomniker"] = analyze_oomniker(dict(decision_questionnaire), list(result.get("results") or []), decision_context=oomniker_context)
     result = _attach_pipeline_trace(result)
     logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
     return result

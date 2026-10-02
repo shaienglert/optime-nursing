@@ -16,7 +16,8 @@ import {
   fetchSearchFacilities,
 } from "@/lib/api";
 import { personLabel, resolveFacilityImage, resolvePriceTruth } from "@/lib/facility-experience";
-import { runOptimeV2Engine } from "@/lib/optime-v2-engine";
+import { DecisionEngineResponse } from "@/lib/api";
+import { loadDecisionResponseCache } from "@/lib/search-session";
 
 type FacilityProfileClientProps = {
   facilityId: string;
@@ -69,22 +70,19 @@ function describeEvidenceConfidence(text?: string | null): string {
 
 function useFacilityRecommendation(
   facilityId: string,
-  facilities: SearchFacility[],
-  governanceContext: GovernanceRuntimeContext | null,
   state: ReturnType<typeof useQuestionnaire>["state"],
 ) {
   return useMemo(() => {
     const completion = state.questionnaireCompletion;
     if (!completion?.mandatoryComplete || !completion.conditionalFollowUpsComplete || !completion.clientSummaryConfirmed) return null;
-    if (!governanceContext || facilities.length === 0) return null;
-    const engineOutput = runOptimeV2Engine(facilities, state, { governanceContext });
-    return (
-      engineOutput.displayedRecommendations.find((item) => String(item.facility.id) === facilityId)
-      || engineOutput.accepted.find((item) => String(item.facility.id) === facilityId)
-      || engineOutput.rejected.find((item) => String(item.facility.id) === facilityId)
-      || null
-    );
-  }, [facilities, facilityId, governanceContext, state]);
+    const naturalLanguageQuery = String(state.notes || "").trim();
+    const requestKey = JSON.stringify({ questionnaire_state: state, natural_language_query: naturalLanguageQuery, limit: 50 });
+    const decision = loadDecisionResponseCache<DecisionEngineResponse>(requestKey);
+    if (!decision) return null;
+    return (decision.results || []).find((item) =>
+      String(item.canonical_facility_id || "") === String(facilityId)
+    ) || null;
+  }, [facilityId, state]);
 }
 
 function badgeRow(title: string, values: string[]) {
@@ -158,32 +156,32 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
     };
   }, [canonicalFromQuery, facilityId]);
 
-  const recommendation = useFacilityRecommendation(facilityId, facilities, governanceContext, state);
+  const recommendation = useFacilityRecommendation(facilityId, state);
   const person = personLabel(state.relationship || "your family member");
   const imageTruth = facility ? resolveFacilityImage(facility) : null;
   const priceTruth = facility ? resolvePriceTruth(facility) : null;
 
-  const verifiedItems = recommendation?.report.audit.verificationChecklist.filter((item) => item.state === "YES") || [];
-  const unknownItems = recommendation?.report.audit.verificationChecklist.filter((item) => item.state === "UNKNOWN") || [];
-  const noItems = recommendation?.report.audit.verificationChecklist.filter((item) => item.state === "NO") || [];
-  const questions = recommendation?.report.audit.clinicalReasoning.questionsForFacility || [];
-  const mustFailed = recommendation?.report.audit.governedFacilityDecision?.must_failed || [];
-  const mustUnknown = recommendation?.report.audit.governedFacilityDecision?.must_unknown || [];
-  const identity = recommendation?.report.audit.governedFacilityDecision?.identity_status || "UNRESOLVED_IDENTITY";
+  const verifiedItems = (recommendation?.matched_needs || []).map((item) => ({ label: String(item.parameter_id || item.need_text || "Verified need"), state: "YES" as const }));
+  const unknownItems = (recommendation?.unknown_critical_needs || []).map((item) => ({ label: String(item.parameter_id || item.need_text || "Needs verification"), state: "UNKNOWN" as const }));
+  const noItems = (recommendation?.unmet_verified_needs || []).map((item) => ({ label: String(item.parameter_id || item.need_text || "Verified gap"), state: "NO" as const }));
+  const questions = recommendation?.explanation?.needs_verification || [];
+  const mustFailed = recommendation?.unmet_verified_needs || [];
+  const mustUnknown = recommendation?.unknown_critical_needs || [];
+  const identity = recommendation?.canonical_facility_id ? "CANONICAL_BACKEND_IDENTITY" : "UNRESOLVED_IDENTITY";
   const canonicalFacilityId =
-    recommendation?.report.audit.governedFacilityDecision?.canonical_facility_id
+    recommendation?.canonical_facility_id
     || parameterTable?.canonical_facility_id
     || facility?.canonical_facility_id
     || canonicalFromQuery
     || facility?.id
     || null;
 
-  const whySelected = recommendation?.report.audit.clinicalReasoning.whyThisCommunity || recommendation?.whyThisFits;
-  const rankReason = recommendation?.rankReason || recommendation?.confidenceExplanation;
+  const whySelected = recommendation?.explanation?.why_matches?.[0] || null;
+  const rankReason = recommendation?.ai_ranking?.reason || recommendation?.explanation?.why_matches?.join(" ");
   const priceLine = priceTruth ? `${priceTruth.label}: ${priceTruth.value}` : "Current pricing not verified - contact facility";
   const priceDisclosure = priceTruth?.truthState === "UNKNOWN"
     ? "Pricing is not published by the backend for this facility."
-    : "Pricing is a derived estimate from the governed frontend model, not a facility quote.";
+    : "Pricing shown here comes from the backend facility evidence record and is not a final facility quote.";
 
   if (isLoading) {
     return <main className="min-h-screen bg-[#fffdf8] px-6 py-12 text-[#5d5548]">Loading facility profile...</main>;
@@ -235,7 +233,7 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
 
             <div className="mt-4 space-y-2 text-sm text-[#4f473d]">
               <p><span className="font-semibold text-[#2f2a24]">Profile link:</span> {canonicalFacilityId ? "Confirmed" : "Not available"}</p>
-              <p><span className="font-semibold text-[#2f2a24]">Record status:</span> {identity === "CONFIRMED_CANONICAL_ID" ? "Confirmed facility record" : "Under review"}</p>
+              <p><span className="font-semibold text-[#2f2a24]">Record status:</span> {identity === "CANONICAL_BACKEND_IDENTITY" ? "Confirmed facility record" : "Under review"}</p>
               <p><span className="font-semibold text-[#2f2a24]">Website:</span> {facility.website ? <a className="text-[#5f7f6b] underline" href={facility.website} target="_blank" rel="noreferrer">Verified website</a> : "Not verified"}</p>
               <p><span className="font-semibold text-[#2f2a24]">Phone:</span> {facility.phone || "Not verified"}</p>
               <p><span className="font-semibold text-[#2f2a24]">Price estimate:</span> {priceLine}</p>
@@ -371,11 +369,11 @@ export function FacilityProfileClient({ facilityId, backHref, backLabel }: Facil
                 <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#2f2a24]">Confidence</p>
                   <p className="font-semibold text-[#2f2a24]">Confidence</p>
-                  <p className="mt-1">{recommendation?.confidenceExplanation ? recommendation.confidenceExplanation.replace(/\b0 case-relevant requirements are independently verified and 0 still require verification\b/i, "the current evidence set is limited but internally consistent") : "Governed confidence not yet available."}</p>
+                  <p className="mt-1">{recommendation ? `${recommendation.match_score}% governed match score; ${unknownItems.length} item${unknownItems.length === 1 ? "" : "s"} still require verification.` : "Governed confidence not yet available."}</p>
                 </div>
                 <div className="rounded-2xl border border-[#e3d8c8] bg-[#fffaf2] p-4 text-sm text-[#4f473d]">
                   <p className="font-semibold text-[#2f2a24]">Next step</p>
-                  <p className="mt-1">{recommendation?.report.audit.verificationRequest.nextStepMessage || "Verify the unresolved items with the facility."}</p>
+                  <p className="mt-1">{unknownItems.length ? "Verify the unresolved items with the facility before proceeding." : "Review the current facility facts and confirm availability directly with the facility."}</p>
                 </div>
               </div>
             </section>

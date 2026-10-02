@@ -44,14 +44,6 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             "source": "QUESTIONNAIRE_CLIENT_INTENT",
         })
 
-    medicaid_raw = (questionnaire_state or {}).get("medicaidStatus")
-    medicaid_state = _upper(medicaid_raw)
-    medicaid_requires_pathway = medicaid_state in {"APPROVED", "APPLICATION PENDING", "MAY QUALIFY"}
-    # When no structured Medicaid answer is supplied (e.g. a direct semantic-unit
-    # contract), an explicit client MUST such as "facility must accept Medicaid"
-    # remains authoritative. A supplied negative structured answer overrides model text.
-    medicaid_structured_answered = medicaid_raw not in (None, "")
-
     statements = _semantic_result(result).get("statements") or []
     for statement in statements:
         if not isinstance(statement, dict):
@@ -167,15 +159,10 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             # become a mere "prefer transparent pricing" preference as it was before.
             key, dimension = "SEMANTIC_BUDGET_VERIFICATION", "budget_verification"
         elif "medicaid" in haystack or any(parameter == "medicaid_requirement" for parameter in mapped):
-            # Facility Medicaid capability matters only when the structured client
-            # state says Medicaid is or may be part of the payment pathway. Negative
-            # states ("Not eligible", model paraphrases such as "negative") cannot
-            # become a provider MUST regardless of model wording.
-            if medicaid_structured_answered and not medicaid_requires_pathway:
-                continue
-            if not medicaid_requires_pathway and not explicit_requirement_language:
-                continue
-            key, dimension = "SEMANTIC_MEDICAID_PATHWAY", "medicaid_pathway"
+            # Whether Medicaid is a MUST is decided once, by the canonical client intent
+            # (affordability_floor.py). A semantic statement may not re-decide it in either
+            # direction; it only becomes an evidence request below, for the canonical MUST.
+            continue
         else:
             key, dimension = "SEMANTIC_FACILITY_EVIDENCE", "semantic_facility_evidence"
         # Every recognized facility-capability bucket above is a governed domain this
@@ -199,8 +186,37 @@ def extract_semantic_facility_requirements(result: Dict[str, Any], questionnaire
             "research_task": str(statement.get("research_task") or "Verify this requirement against current facility-specific evidence."),
             "mapped_parameters": mapped,
             "source": "SEMANTIC_AI_CLIENT_INTENT",
+            # Single authority (owner, 2026-10-01): a semantic statement reaches the
+            # decision only through the Canonical Structured Profile. Detected here for the
+            # shadow comparison; it never gates a facility or queues research by itself.
+            "shadow_only": True,
         })
+    requirements.extend(_canonical_evidence_requests(result))
     return requirements
+
+
+def _canonical_evidence_requests(result: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Evidence requests for MUSTs the canonical client intent already decided.
+
+    These never gate: the canonical key (e.g. MEDICAID_PATHWAY_REQUIRED) is the gate. They
+    only route rows still UNKNOWN on that key to research.
+    """
+    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+    intent = decision.get("client_intent") if isinstance(decision.get("client_intent"), dict) else {}
+    keys = {str(m.get("key") or "") for m in intent.get("must_haves") or []}
+    requests: List[Dict[str, Any]] = []
+    if "MEDICAID_PATHWAY_REQUIRED" in keys:
+        requests.append({
+            "key": "SEMANTIC_MEDICAID_PATHWAY",
+            "dimension": "medicaid_pathway",
+            "reason": "Canonical client intent requires a Medicaid pathway; facility acceptance must be verified.",
+            "research_task": "Verify whether this community accepts Medicaid (waiver/HCBS or Medicaid-certified bed).",
+            "mapped_parameters": ["medicaid_attributes"],
+            "source": "CANONICAL_CLIENT_INTENT",
+            "canonical_must_key": "MEDICAID_PATHWAY_REQUIRED",
+            "evidence_request_only": True,
+        })
+    return requests
 
 
 def _payload_verifies(payload: Dict[str, Any], key: str) -> bool | None:
@@ -299,6 +315,24 @@ def _row_verifies_future_care(row: Dict[str, Any]) -> bool:
     return False
 
 
+def _row_budget_verdict(row: Dict[str, Any], questionnaire_state: Dict[str, Any] | None) -> bool | None:
+    """True = verified within budget+10%; False = verified above it; None = unknown.
+
+    A known price above the limit is negative evidence, not an unknown: research cannot
+    change it, and a room base price above the limit means the total is above it too.
+    """
+    from app.services.affordability_floor import relevant_monthly_cost
+    budget = (questionnaire_state or {}).get("budget")
+    price = relevant_monthly_cost(row)
+    if not isinstance(budget, (int, float)) or isinstance(budget, bool) or budget <= 0:
+        return None
+    if not isinstance(price, (int, float)) or isinstance(price, bool):
+        return None
+    if price > budget * 1.10:
+        return False
+    return True if _row_verifies_budget(row, questionnaire_state) else None
+
+
 def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any] | None) -> bool:
     """A published_rates_verified flag only proves a facility discloses its rates --
     it says nothing about whether that rate fits what the client can pay. Treating
@@ -308,17 +342,19 @@ def _row_verifies_budget(row: Dict[str, Any], questionnaire_state: Dict[str, Any
     at or under what the client stated; otherwise this stays unknown/pending, same
     as when no price is on file at all, until real pricing data exists to compare.
     """
+    from app.services.affordability_floor import relevant_monthly_cost
     budget = (questionnaire_state or {}).get("budget")
-    price = row.get("starting_monthly_price")
+    price = relevant_monthly_cost(row)
     if not isinstance(budget, (int, float)) or isinstance(budget, bool) or budget <= 0:
         return False
     if not isinstance(price, (int, float)) or isinstance(price, bool):
         return False
-    # Strict budget verification stays strict here. The optional +10% search
-    # expansion is applied later, after the engine knows how many otherwise-qualified
-    # in-budget candidates exist; it must not turn every over-budget row into a MUST pass
-    # or enqueue unnecessary provider research.
-    return price <= budget
+    # Owner-approved single budget rule: verified total price is acceptable up to
+    # +10%. Ranking, not eligibility, keeps at/below-budget options ahead of this band.
+    # A room base price whose total affordability is pending cannot prove affordability.
+    if row.get("total_affordability_status") == "PENDING" and row.get("price_truth_basis") == "ROOM_BASE_ONLY_TOTAL_PENDING":
+        return False
+    return price <= budget * 1.10
 
 
 def _apply_pilot_monthly_cost(row: Dict[str, Any]) -> None:
@@ -341,6 +377,18 @@ def _apply_pilot_monthly_cost(row: Dict[str, Any]) -> None:
     else:
         row["monthly_price_basis"] = "SINGLE_RESIDENT"
     row["monthly_rate_includes_verified_care"] = payload.get("monthly_rate_includes_verified_care") is True
+
+
+def _research_request(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int) -> Dict[str, Any]:
+    synthetic = row.get("synthetic_pilot") is True or str(row.get("canonical_facility_id") or "").startswith("PILOT-NV-")
+    return {
+        "canonical_facility_id": row.get("canonical_facility_id"),
+        "requirement_key": requirement.get("canonical_must_key") or requirement.get("key"),
+        "dimension": requirement.get("dimension"),
+        "requested_parameters": requirement.get("mapped_parameters") or [],
+        "research_priority": semantic_must_research_priority(candidate_rank_index),
+        "acquisition": "NOT_APPLICABLE_SYNTHETIC" if synthetic else "RESEARCH_INSTITUTE_SCHEDULER",
+    }
 
 
 def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candidate_rank_index: int = 0) -> bool:
@@ -388,32 +436,15 @@ def _queue_requirement(row: Dict[str, Any], requirement: Dict[str, Any], candida
 
 
 def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_limit: int = 20, questionnaire_state: Dict[str, Any] | None = None) -> Dict[str, Any]:
-    requirements = extract_semantic_facility_requirements(result, questionnaire_state)
+    detected = extract_semantic_facility_requirements(result, questionnaire_state)
+    shadow_requirements = [item for item in detected if item.get("shadow_only")]
+    requirements = [item for item in detected if not item.get("shadow_only")]
     rows = list(result.get("results") or [])
     for row in rows:
         _apply_pilot_monthly_cost(row)
     queued = 0
+    research_requests: List[Dict[str, Any]] = []
     budget = (questionnaire_state or {}).get("budget")
-    budget_expansion_ids: set[str] = set()
-    if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
-        def otherwise_must_qualified(row: Dict[str, Any]) -> bool:
-            fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
-            failed = [value for value in (fit.get("must_fail") or []) if value != "SEMANTIC_BUDGET_VERIFICATION"]
-            # At this pre-research stage, must_unknown is intentionally provisional.
-            # Do not let temporary evidence gaps prevent a budget fallback candidate
-            # from being researched; the final MUST gate still blocks every unresolved
-            # non-budget requirement from recommendation.
-            return not failed
-
-        qualified = [row for row in rows if otherwise_must_qualified(row)]
-        strict = [row for row in qualified if isinstance(row.get("starting_monthly_price"), (int, float)) and row.get("starting_monthly_price") <= budget]
-        needed = max(0, 10 - len(strict))
-        if needed:
-            expansion = sorted(
-                [row for row in qualified if isinstance(row.get("starting_monthly_price"), (int, float)) and budget < row.get("starting_monthly_price") <= budget * 1.10],
-                key=lambda row: float(row.get("starting_monthly_price") or 0),
-            )[:needed]
-            budget_expansion_ids = {str(row.get("canonical_facility_id") or "") for row in expansion}
     if requirements:
         for index, row in enumerate(rows):
             fit = row.get("client_intent_fit") if isinstance(row.get("client_intent_fit"), dict) else {}
@@ -424,6 +455,12 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
             trace: List[Dict[str, Any]] = []
             for requirement in requirements:
                 key = str(requirement["key"])
+                if requirement.get("evidence_request_only"):
+                    canonical_key = str(requirement.get("canonical_must_key") or "")
+                    if canonical_key in unknown and index < research_limit:
+                        research_requests.append(_research_request(row, requirement, index))
+                    trace.append({**requirement, "status": "REQUESTED" if canonical_key in unknown else "NOT_NEEDED"})
+                    continue
                 # This function runs before and after asynchronous research.  A
                 # previous pass must never survive a later evidence refresh.
                 passed = [value for value in passed if value != key]
@@ -445,14 +482,12 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 elif key == "SEMANTIC_BUDGET_VERIFICATION":
                     # Disclosure proves that rates are published, not that the
                     # family's budget covers them. Always compare the price.
-                    verified = _row_verifies_budget(row, questionnaire_state)
-                    if not verified and str(row.get("canonical_facility_id") or "") in budget_expansion_ids:
-                        verified = True
-                        price = float(row.get("starting_monthly_price"))
-                        variance = (price - float(budget)) / float(budget)
-                        row["budget_variance_pct"] = round(variance * 100, 1)
-                        row["budget_band"] = "OVER_BUDGET_WITHIN_10_PERCENT"
-                        row["budget_exception"] = True
+                    verdict = _row_budget_verdict(row, questionnaire_state)
+                    if verdict is False:
+                        if key not in failed: failed.append(key)
+                        trace.append({**requirement, "status": "FAIL"})
+                        continue
+                    verified = verdict is True
                 else:
                     verified = True in verdicts or _pilot_verifies_requirement(row, requirement, questionnaire_state or {})
                 if verified:
@@ -461,8 +496,8 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
                 else:
                     if key not in unknown: unknown.append(key)
                     status = "UNKNOWN"
-                    if index < research_limit and _queue_requirement(row, requirement, index):
-                        queued += 1
+                    if index < research_limit:
+                        research_requests.append(_research_request(row, requirement, index))
                 trace.append({**requirement, "status": status})
             fit["must_pass"] = passed
             fit["must_unknown"] = unknown
@@ -470,12 +505,18 @@ def apply_semantic_facility_requirements(result: Dict[str, Any], *, research_lim
             fit["hard_gate"] = "FAIL" if failed else ("PENDING_VERIFICATION" if unknown else "PASS")
             fit["semantic_must_trace"] = trace
             row["client_intent_fit"] = fit
-    if queued:
-        _kick_worker_async()
+    # A family search is read-only with respect to public research (AUTHORITY_MAP; same
+    # rule as decision_agent_bridge_fast): it never queues work and never starts a
+    # crawler. It records which evidence is missing; the Research Institute scheduler
+    # owns acquisition, and never for synthetic pilot identities.
     decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
     decision["semantic_facility_requirements"] = {
         "requirements": requirements,
+        "shadow_requirements": shadow_requirements,
+        "shadow_rule": "Semantic MUST statements are recorded for comparison with the Canonical Structured Profile; they have no decision authority.",
         "tasks_queued": queued,
+        "research_requests": research_requests,
+        "research_policy": "SEARCH_IS_READ_ONLY_RESEARCH_INSTITUTE_OWNS_ACQUISITION",
         "rule": "Semantic AI identifies client MUSTs; facility evidence or direct verification decides PASS/FAIL. UNKNOWN never becomes PASS.",
     }
     result["decision_intelligence"] = decision

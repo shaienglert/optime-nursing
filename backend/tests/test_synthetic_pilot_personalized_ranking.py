@@ -5,12 +5,23 @@ from unittest.mock import patch
 from app.services.facility_parameter_service import refresh_runtime_cache
 from app.services.patient_decision_engine import run_patient_decision_engine
 
+# Single authority (owner, 2026-10-01): decision facts come only from the Canonical
+# Structured Profile. The area these tests used to pass as the free-text story ("Las Vegas")
+# is the intake's structured area answer, and the interview is finished; without the
+# interpreter, story-only intake leaves the interview not ready and the text UNPROCESSED.
+READY_AREA = {
+    "referenceAddress": "Las Vegas",
+    "referenceLocationValue": "Las Vegas",
+    "questionnaireCompletion": {"mandatoryComplete": True, "conditionalFollowUpsComplete": True},
+}
+
 
 def _rank_for_budget(budget: int) -> list[dict]:
     questionnaire = {
         "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
         "budget": budget,
         "moveTiming": "Planning ahead",
+        **READY_AREA,
     }
     with patch.dict(
         "os.environ",
@@ -18,7 +29,7 @@ def _rank_for_budget(budget: int) -> list[dict]:
         clear=False,
     ):
         refresh_runtime_cache(f"personalized-ranking-{budget}")
-        return run_patient_decision_engine(questionnaire, "Las Vegas", limit=10)["results"]
+        return run_patient_decision_engine(questionnaire, "", limit=10)["results"]
 
 
 def _decision_for_budget(budget: int) -> dict:
@@ -26,6 +37,7 @@ def _decision_for_budget(budget: int) -> dict:
         "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
         "budget": budget,
         "moveTiming": "Planning ahead",
+        **READY_AREA,
     }
     with patch.dict(
         "os.environ",
@@ -33,7 +45,7 @@ def _decision_for_budget(budget: int) -> dict:
         clear=False,
     ):
         refresh_runtime_cache(f"budget-coverage-{budget}")
-        return run_patient_decision_engine(questionnaire, "Las Vegas", limit=10)
+        return run_patient_decision_engine(questionnaire, "", limit=10)
 
 
 def _rank_for_size(preference: str) -> list[dict]:
@@ -44,6 +56,7 @@ def _rank_for_size(preference: str) -> list[dict]:
         "humanIntelligenceV2": {
             "personalityProfile": {"communitySizePreference": preference},
         },
+        **READY_AREA,
     }
     with patch.dict(
         "os.environ",
@@ -51,7 +64,7 @@ def _rank_for_size(preference: str) -> list[dict]:
         clear=False,
     ):
         refresh_runtime_cache(f"size-ranking-{preference}")
-        return run_patient_decision_engine(questionnaire, "Las Vegas", limit=10)["results"]
+        return run_patient_decision_engine(questionnaire, "", limit=10)["results"]
 
 
 def test_budget_changes_ranking_and_top_results_fit_budget() -> None:
@@ -72,7 +85,11 @@ def test_no_in_budget_result_is_disclosed_instead_of_presented_as_a_fit() -> Non
     decision = _decision_for_budget(1000)
 
     assert not decision["results"]
-    assert decision["must_pending_verification_count"] > 0
+    # A verified price above budget+10% is negative evidence, not a pending research item.
+    assert decision["must_pending_verification_count"] == 0
+    funnel = decision["decision_funnel"]
+    assert funnel["zero_result_classification"] == "CORRECT_ZERO"
+    assert funnel["zeroing_stage"] == "BUDGET_VERIFIED_PRICE_ABOVE_LIMIT"
     assert decision["decision_intelligence"]["canonical_decision_state"]["can_show_recommendations"] is False
     assert "No currently eligible pilot community" in decision["market_coverage_notice"]
     assert "not in-budget matches" in decision["market_coverage_notice"]
@@ -113,16 +130,27 @@ def test_required_dialysis_need_reaches_full_engine_candidate_discovery() -> Non
     assert "dialysis_arrangements" in decision["candidate_discovery"]["required_parameter_ids"]
 
 
-def test_secure_setting_requirement_remains_pending_when_pilot_has_no_secured_unit_proof() -> None:
+def test_secure_setting_requirement_is_decided_by_secured_unit_evidence() -> None:
+    # Owner rule 2026-10-01: the pilot carries deliberate secured-unit evidence
+    # (YES / NO / no record). Only a verified YES is recommended; no record stays pending;
+    # a verified NO fails. It is never decided by the facility type.
+    import base64, gzip, json
+    from pathlib import Path
+    fixture = Path(__file__).resolve().parents[2] / "database/synthetic_pilot/facility_parameter_evidence.json.gz.b64"
+    records = json.loads(gzip.decompress(base64.b64decode(fixture.read_text())))["records"]
+    secured = {r["canonical_facility_id"]: r["value"] for r in records if r["parameter_id"] == "secured_units"}
     questionnaire = {
-        "memoryStatus": "Yes", "budget": 6000,
+        "memoryStatus": "Yes", "budget": 9000,
         "humanIntelligenceV2": {"futureCareProfile": {"secureMemoryNeighborhoodNeed": "Yes"}},
+        "relationship": "Dad",
+        **READY_AREA,
     }
     with patch.dict("os.environ", {"OPTIME_CANONICAL_MARKET": "synthetic-pilot", "OOMNIK_PILOT_FACILITY_LIMIT": "200"}, clear=False):
         refresh_runtime_cache("secure-setting-proof-regression")
-        decision = run_patient_decision_engine(questionnaire, "My father has dementia and needs a secure setting in Las Vegas.", limit=10)
-    assert decision["results"] == []
-    assert decision["must_pending_verification_candidates"]
-    for row in decision["must_pending_verification_candidates"]:
-        assert "SECURED_UNIT_AVAILABLE" in row["must_unknown"]
-        assert "SECURED_UNIT_AVAILABLE" not in row["must_fail"]
+        decision = run_patient_decision_engine(questionnaire, "", limit=10)
+    assert decision["results"]
+    for row in decision["results"]:
+        assert secured.get(row["canonical_facility_id"]) == "YES", row["canonical_facility_id"]
+    for row in decision.get("must_pending_verification_candidates") or []:
+        if "SECURED_UNIT_AVAILABLE" in row["must_unknown"]:
+            assert row["canonical_facility_id"] not in secured

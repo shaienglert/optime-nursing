@@ -11,6 +11,11 @@ if __package__:
 else:
     from priced_candidate_fixture import priced_payloads
 
+if __package__:
+    from .interpreter_road import decision_facts, interpreter_off, interpreter_packet, interpreter_returning, statement
+else:
+    from interpreter_road import decision_facts, interpreter_off, interpreter_packet, interpreter_returning, statement
+
 from app.services.facility_parameter_service import refresh_runtime_cache
 
 
@@ -42,32 +47,61 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         self.assertNotIn("skilled_nursing_capabilities", ids)
         self.assertNotIn("nursing_24_7", ids)
 
+    CLINICAL_TEXT = "Needs dialysis, daily wound care, and continuous oxygen."
+    CLINICAL_STATE = {"assistanceLevel": "Help with medications", "memoryStatus": "No"}
+
     def test_clinical_free_text_creates_case_relevant_parameters(self) -> None:
+        # Single authority (owner, 2026-10-01): clinical free text creates parameters only
+        # through the interpreter's questionnaire_patch (AI_EXTRACTED profile fields).
         module = importlib.import_module("app.services.patient_decision_engine")
-        profile = module.build_patient_needs_profile(
-            {"assistanceLevel": "Help with medications", "memoryStatus": "No"},
-            "Needs dialysis, daily wound care, and continuous oxygen.",
+        packet = interpreter_packet(
+            {"medicalCareProfile": {
+                "hasOngoingMedicalNeeds": "Yes",
+                "needs": ["Dialysis", "Wound care", "Oxygen"],
+                "woundCareFrequency": "Daily",
+                "oxygenUse": "Continuously",
+            }},
+            [statement(self.CLINICAL_TEXT, ["medicalCareProfile.needs"])],
         )
+        with interpreter_returning(packet):
+            profile = module.build_patient_needs_profile(dict(self.CLINICAL_STATE), self.CLINICAL_TEXT)
+        self.assertEqual("AI_EXTRACTED", profile["canonical_structured_profile"]["fields"]["medicalCareProfile.needs"]["provenance"])
         by_id = {item["parameter_id"]: item for item in profile["needs"]}
         self.assertEqual("REQUIRED", by_id["dialysis_arrangements"]["requirement_level"])
         self.assertEqual("HIGH", by_id["wound_care"]["requirement_level"])
         self.assertEqual("HIGH", by_id["respiratory_trach_vent"]["requirement_level"])
 
+    def test_clinical_free_text_without_the_interpreter_creates_no_parameter(self) -> None:
+        module = importlib.import_module("app.services.patient_decision_engine")
+        with interpreter_off():
+            baseline = decision_facts(module.build_patient_needs_profile(dict(self.CLINICAL_STATE), ""))
+            profile = module.build_patient_needs_profile(dict(self.CLINICAL_STATE), self.CLINICAL_TEXT)
+        self.assertEqual(baseline, decision_facts(profile))
+        ids = {item["parameter_id"] for item in profile["needs"]}
+        for parameter in ("dialysis_arrangements", "wound_care", "respiratory_trach_vent"):
+            self.assertNotIn(parameter, ids)
+
     def test_governed_setting_routes_memory_and_rehab_separately(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
         governed = module._governed
         memory = governed._care_setting_fit(
-            {"requires_memory": True, "requires_skilled": False, "requires_rehab": False, "requires_stroke": False, "needs_residential_assistance": True},
+            {"care_need_ids": ["adl_support", "memory_care"]},
             {"canonical_type": "ASSISTED_LIVING_RFG"},
             {"memory_care_classification": "CONFIRMED", "synthetic_archetype": "MEMORY_CARE"},
         )
         rehab = governed._care_setting_fit(
-            {"requires_memory": False, "requires_skilled": False, "requires_rehab": True, "requires_stroke": False, "needs_residential_assistance": True},
-            {"canonical_type": "SKILLED_NURSING"},
+            {"care_need_ids": ["adl_support", "pt", "ot"]},
+            {"canonical_type": "SKILLED_NURSING", "matched_needs": [{"parameter_id": "pt"}, {"parameter_id": "ot"}]},
             {"synthetic_archetype": "REHABILITATION"},
+        )
+        rehab_unverified = governed._care_setting_fit(
+            {"care_need_ids": ["adl_support", "pt", "ot"]},
+            {"canonical_type": "ASSISTED_LIVING_RFG"},
+            {"synthetic_archetype": "CONTINUING_CARE"},
         )
         self.assertEqual("PRIMARY_FIT", memory["status"])
         self.assertEqual("PRIMARY_FIT", rehab["status"])
+        self.assertEqual("POSSIBLE_FIT", rehab_unverified["status"])
 
     def test_ineligible_candidate_cannot_enter_visible_ranking(self) -> None:
         module = importlib.import_module("app.services.patient_decision_engine")
@@ -117,6 +151,8 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         ), patch(
             "app.services.governed_evidence_runtime.agent_and_provider_payloads", side_effect=priced_payloads([{"published_rates_verified": True}])
         ):
+            # Single authority (owner, 2026-10-01): the Las Vegas market is a structured
+            # answer, not a word found in the story.
             result = module.run_patient_decision_engine(
                 {
                     "relationship": "Dad",
@@ -125,8 +161,12 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
                     "memoryStatus": "No",
                     "budget": 6500,
                     "distanceFromFamily": "Balanced location",
+                    "locationCity": "Las Vegas",
+                    "referenceAddress": "Las Vegas",
+                    "referenceLocationValue": "Las Vegas",
+                    "medicalCareProfile": {"mobilityMethod": "Independent"},
                 },
-                "My father is 84, lives in Las Vegas, is mentally alert and mobile, and needs help with bathing, dressing and meals. No dementia.",
+                "",
                 limit=5,
             )
         self.assertEqual(result["patient_needs_profile"]["location_city"], "LAS VEGAS")
@@ -136,13 +176,13 @@ class PatientDecisionEngineImportResolutionTests(unittest.TestCase):
         # the result: the eligible set is shown, explicitly unordered, with a degradation
         # notice. It used to be hidden entirely, which told the family nothing.
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
         self.assertEqual("SEMANTIC_AI", result["decision_intelligence"]["interview_owner"])
         self.assertIn("living_strategy", result["decision_intelligence"])
         self.assertIn("client_intent", result["decision_intelligence"])
         self.assertIn("must_gate", result["decision_intelligence"])
         self.assertEqual(len(result["decision_intelligence"]["success_factor_policy"]["factors"]), 16)
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
 
 
 if __name__ == "__main__":

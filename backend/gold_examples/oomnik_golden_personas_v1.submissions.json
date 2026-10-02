@@ -1,0 +1,4615 @@
+{
+  "schema_version": "oomnik-golden-persona-submissions/1",
+  "generated_from": "backend/gold_examples/oomnik_golden_personas_v1.json",
+  "personas": [
+    {
+      "id": "pilot-001",
+      "title": "Independent, social, light help",
+      "oracle": {
+        "care": [
+          "INDEPENDENT_LIVING",
+          "ASSISTED_LIVING"
+        ],
+        "forbidden": [
+          "MEMORY_CARE_ONLY",
+          "SKILLED_NURSING_ONLY",
+          "REHABILITATION_ONLY"
+        ],
+        "budget": 5000,
+        "location": "Las Vegas",
+        "distance": "10",
+        "futureCare": "Preferred"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Mom"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "75-79"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Las Vegas"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "10"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 5000
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "1-3 months"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Daily"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "Large and active"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Music",
+            "Cultural activities"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Mom",
+        "gender": "Female",
+        "coupleAssistance": "",
+        "ageGroup": "75-79",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Music",
+          "Cultural activities"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 5000,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Las Vegas",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "10",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "1-3 months",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "No",
+          "needs": [],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "",
+          "physicianCoordination": ""
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Daily",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Music",
+              "Cultural activities"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "Large and active",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-002",
+      "title": "ADL and medications, Henderson, moving within 30 days",
+      "oracle": {
+        "care": [
+          "ASSISTED_LIVING",
+          "CONTINUING_CARE"
+        ],
+        "required": [
+          "adl_support",
+          "medication_support"
+        ],
+        "budget": 6000,
+        "location": "Henderson",
+        "distance": "10",
+        "availability": "REQUIRED"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Dad"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "80-84"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Henderson"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "10"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 6000
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "Within 30 days"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Weekly"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "No preference"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Music",
+            "Classes"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Dad",
+        "gender": "Male",
+        "coupleAssistance": "",
+        "ageGroup": "80-84",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Music",
+          "Classes"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 6000,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Henderson",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Henderson",
+        "maximumDistanceMiles": "10",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "Within 30 days",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "No",
+          "needs": [],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "",
+          "physicianCoordination": ""
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Weekly",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Music",
+              "Classes"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "No preference",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-003",
+      "title": "Significant memory issues with wandering",
+      "oracle": {
+        "care": [
+          "MEMORY_CARE"
+        ],
+        "required": [
+          "memory_care",
+          "wandering_safety"
+        ],
+        "forbidden": [
+          "INDEPENDENT_LIVING"
+        ],
+        "budget": 7000,
+        "location": "Las Vegas",
+        "distance": "20"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Dad"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "80-84"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Las Vegas"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "20"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Significant memory issues"
+        },
+        {
+          "id": "memoryWandering",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "secureMemory",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 7000
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "1-3 months"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Weekly"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "Small and familiar"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Music",
+            "Classes"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Dad",
+        "gender": "Male",
+        "coupleAssistance": "",
+        "ageGroup": "80-84",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "Significant memory issues",
+        "happinessPreferences": [
+          "Music",
+          "Classes"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 7000,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Las Vegas",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "20",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "1-3 months",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "No",
+          "needs": [],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "",
+          "physicianCoordination": ""
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Weekly",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Music",
+              "Classes"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "Small and familiar",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": "Yes"
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "Yes",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-004",
+      "title": "Post-hospital rehabilitation, immediate move",
+      "oracle": {
+        "care": [
+          "REHABILITATION",
+          "SKILLED_NURSING"
+        ],
+        "required": [
+          "rehabilitation"
+        ],
+        "forbidden": [
+          "INDEPENDENT_LIVING",
+          "MEMORY_CARE_ONLY"
+        ],
+        "budget": 7000,
+        "location": "Las Vegas",
+        "distance": "20"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Dad"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "80-84"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Las Vegas"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "20"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "medicalNeeds",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Complex chronic condition"
+          ]
+        },
+        {
+          "id": "complexConditionDetails",
+          "kind": "text",
+          "required": false,
+          "answer": "Post-hospital rehabilitation and closer monitoring are required."
+        },
+        {
+          "id": "physicianCoordination",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "hospitalTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "Within 30 days"
+        },
+        {
+          "id": "recentProcedure",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "rehabNeed",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "medicareStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Original Medicare"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 7000
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "Immediately"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Weekly"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "No preference"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Music",
+            "Classes"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Dad",
+        "gender": "Male",
+        "coupleAssistance": "",
+        "ageGroup": "80-84",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Music",
+          "Classes"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 7000,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Las Vegas",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "20",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "Original Medicare",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "Immediately",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "Yes",
+          "needs": [
+            "Complex chronic condition"
+          ],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "Post-hospital rehabilitation and closer monitoring are required.",
+          "physicianCoordination": "Yes"
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Weekly",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Music",
+              "Classes"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "No preference",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "Yes",
+            "hospitalizationRecency": "Within 30 days",
+            "postHospitalRehabNeed": "Yes",
+            "recentProcedure": "No",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-005",
+      "title": "Couple moving together",
+      "oracle": {
+        "care": [
+          "ASSISTED_LIVING",
+          "CONTINUING_CARE"
+        ],
+        "required": [
+          "couple_coresidence",
+          "adl_support"
+        ],
+        "budget": 8000,
+        "location": "Henderson",
+        "distance": "20",
+        "couple": true
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Couple"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "80-84"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Henderson"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "20"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 8000
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "1-3 months"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Weekly"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "Medium"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Music",
+            "Classes"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Couple",
+        "gender": "",
+        "coupleAssistance": "",
+        "ageGroup": "80-84",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Music",
+          "Classes"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 8000,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Henderson",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Henderson",
+        "maximumDistanceMiles": "20",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "1-3 months",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "No",
+          "needs": [],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "",
+          "physicianCoordination": ""
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Weekly",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Music",
+              "Classes"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "Medium",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-006",
+      "title": "Very low budget, Medicaid application pending",
+      "oracle": {
+        "care": [
+          "ASSISTED_LIVING",
+          "SMALL_GROUP_HOME"
+        ],
+        "required": [
+          "adl_support",
+          "medicaid_pathway"
+        ],
+        "budget": 3000,
+        "location": "Las Vegas",
+        "distance": "30",
+        "medicaid": "REQUIRED",
+        "zero_result": "EVIDENCE_PENDING"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Mom"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "80-84"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Las Vegas"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "30"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Application pending"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 3000
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "Within 30 days"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Weekly"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "No preference"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Music",
+            "Classes"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Mom",
+        "gender": "Female",
+        "coupleAssistance": "",
+        "ageGroup": "80-84",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Music",
+          "Classes"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 3000,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Las Vegas",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "30",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Application pending",
+        "moveTiming": "Within 30 days",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "No",
+          "needs": [],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "",
+          "physicianCoordination": ""
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Weekly",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Music",
+              "Classes"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "No preference",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-007",
+      "title": "Kosher required, Hebrew speaker",
+      "oracle": {
+        "care": [
+          "ASSISTED_LIVING",
+          "CONTINUING_CARE"
+        ],
+        "required": [
+          "adl_support",
+          "kosher"
+        ],
+        "preferred": [
+          "hebrew"
+        ],
+        "budget": 6500,
+        "location": "Las Vegas",
+        "distance": "30"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Grandma"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "80-84"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Las Vegas"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "30"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 6500
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "1-3 months"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Weekly"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "No preference"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Religious life",
+            "Cultural activities"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "Hebrew"
+        },
+        {
+          "id": "languageImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "medicalLanguage",
+          "kind": "text",
+          "required": true,
+          "answer": "Hebrew"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Kosher"
+          ]
+        },
+        {
+          "id": "kosherImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Requirement"
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Grandma",
+        "gender": "Female",
+        "coupleAssistance": "",
+        "ageGroup": "80-84",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Religious life",
+          "Cultural activities"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 6500,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Las Vegas",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "30",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "1-3 months",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "No",
+          "needs": [],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "",
+          "physicianCoordination": ""
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Weekly",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Religious life",
+              "Cultural activities"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "Requirement",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "Hebrew",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "Hebrew",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "Preference",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Kosher"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "No preference",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-008",
+      "title": "Very social, nearby places",
+      "oracle": {
+        "care": [
+          "INDEPENDENT_LIVING",
+          "ASSISTED_LIVING"
+        ],
+        "forbidden": [
+          "MEMORY_CARE_ONLY"
+        ],
+        "preferred": [
+          "social_fit",
+          "nearby_places"
+        ],
+        "budget": 5000,
+        "location": "Las Vegas",
+        "distance": "30"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Mom"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "75-79"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Las Vegas"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "30"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 5000
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "1-3 months"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Daily"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "Large and active"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Exercise",
+            "Classes"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Mom",
+        "gender": "Female",
+        "coupleAssistance": "",
+        "ageGroup": "75-79",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Exercise",
+          "Classes"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 5000,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Las Vegas",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "30",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "1-3 months",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "No",
+          "needs": [],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "",
+          "physicianCoordination": ""
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Daily",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Exercise",
+              "Classes"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "Large and active",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-009",
+      "title": "Dialysis and daily wound care",
+      "oracle": {
+        "care": [
+          "SKILLED_NURSING",
+          "ASSISTED_LIVING"
+        ],
+        "required": [
+          "dialysis",
+          "wound_care",
+          "dialysis_transportation"
+        ],
+        "budget": 7500,
+        "location": "Las Vegas",
+        "distance": "20"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Dad"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "75-79"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Las Vegas"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "20"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "medicalNeeds",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Dialysis",
+            "Wound care"
+          ]
+        },
+        {
+          "id": "dialysisFrequency",
+          "kind": "text",
+          "required": true,
+          "answer": "3 times a week"
+        },
+        {
+          "id": "dialysisCenter",
+          "kind": "text",
+          "required": false,
+          "answer": "Current local dialysis center"
+        },
+        {
+          "id": "dialysisTransportation",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "woundCareFrequency",
+          "kind": "text",
+          "required": true,
+          "answer": "Daily"
+        },
+        {
+          "id": "physicianCoordination",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 7500
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "Within 30 days"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Weekly"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "No preference"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Music",
+            "Classes"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Preferred"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Dad",
+        "gender": "Male",
+        "coupleAssistance": "",
+        "ageGroup": "75-79",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Music",
+          "Classes"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 7500,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Las Vegas",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "20",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "Within 30 days",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "Yes",
+          "needs": [
+            "Dialysis",
+            "Wound care"
+          ],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "3 times a week",
+          "dialysisCenter": "Current local dialysis center",
+          "dialysisTransportation": "Yes",
+          "oxygenUse": "",
+          "woundCareFrequency": "Daily",
+          "complexConditionDetails": "",
+          "physicianCoordination": "Yes"
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Weekly",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Music",
+              "Classes"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "No preference",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Preferred",
+            "continuumOfCarePreference": "Preferred",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "pilot-010",
+      "title": "Self, planning ahead, continuum of care required",
+      "oracle": {
+        "care": [
+          "CONTINUING_CARE"
+        ],
+        "required": [
+          "continuum_of_care"
+        ],
+        "forbidden": [
+          "INDEPENDENT_LIVING_ONLY",
+          "ASSISTED_LIVING_ONLY"
+        ],
+        "budget": 9900,
+        "location": "Las Vegas",
+        "distance": "50",
+        "futureCare": "Required"
+      },
+      "steps": [
+        {
+          "id": "relationship",
+          "kind": "single",
+          "required": true,
+          "answer": "Myself"
+        },
+        {
+          "id": "ageGroup",
+          "kind": "single",
+          "required": true,
+          "answer": "70-74"
+        },
+        {
+          "id": "referenceAddress",
+          "kind": "single",
+          "required": true,
+          "answer": "Las Vegas"
+        },
+        {
+          "id": "maximumDistanceMiles",
+          "kind": "single",
+          "required": true,
+          "answer": "50"
+        },
+        {
+          "id": "assistance",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Help with bathing",
+            "Help with dressing",
+            "Help with medications"
+          ]
+        },
+        {
+          "id": "mobilityMethod",
+          "kind": "single",
+          "required": true,
+          "answer": "Independent"
+        },
+        {
+          "id": "transferAssistance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentFalls",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "memoryStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "hasOngoingMedicalNeeds",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "recentHospitalization",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "medicaidStatus",
+          "kind": "single",
+          "required": true,
+          "answer": "Not eligible"
+        },
+        {
+          "id": "budget",
+          "kind": "number",
+          "required": true,
+          "answer": 9900
+        },
+        {
+          "id": "moveTiming",
+          "kind": "single",
+          "required": true,
+          "answer": "Planning ahead"
+        },
+        {
+          "id": "moveAttitude",
+          "kind": "single",
+          "required": true,
+          "answer": "Cautious but open"
+        },
+        {
+          "id": "socialFrequency",
+          "kind": "single",
+          "required": true,
+          "answer": "Weekly"
+        },
+        {
+          "id": "communityStyle",
+          "kind": "single",
+          "required": true,
+          "answer": "No preference"
+        },
+        {
+          "id": "activities",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Music",
+            "Classes"
+          ]
+        },
+        {
+          "id": "activityImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Preference"
+        },
+        {
+          "id": "nearbyPlaces",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Parks & walking paths"
+          ]
+        },
+        {
+          "id": "nearbyImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "Nice to have"
+        },
+        {
+          "id": "personalDestinationLabel",
+          "kind": "single",
+          "required": true,
+          "answer": "No specific destination"
+        },
+        {
+          "id": "moveLossConcerns",
+          "kind": "multi",
+          "required": true,
+          "answer": [
+            "Independence",
+            "Daily routine"
+          ]
+        },
+        {
+          "id": "otherInterests",
+          "kind": "text",
+          "required": false,
+          "answer": "Preserve familiar routines and preferred activities."
+        },
+        {
+          "id": "language",
+          "kind": "single",
+          "required": true,
+          "answer": "English"
+        },
+        {
+          "id": "dietary",
+          "kind": "multi",
+          "required": false,
+          "answer": [
+            "Low sodium"
+          ]
+        },
+        {
+          "id": "religiousCommunity",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "petOwnershipImportance",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "abilityToLeaveIndependently",
+          "kind": "single",
+          "required": true,
+          "answer": "Yes"
+        },
+        {
+          "id": "parkingRequirement",
+          "kind": "single",
+          "required": true,
+          "answer": "No"
+        },
+        {
+          "id": "continuum",
+          "kind": "single",
+          "required": true,
+          "answer": "Required"
+        },
+        {
+          "id": "careSearchApproach",
+          "kind": "single",
+          "required": false,
+          "answer": "Show me both approaches"
+        }
+      ],
+      "questionnaire_state": {
+        "relationship": "Myself",
+        "gender": "",
+        "coupleAssistance": "",
+        "ageGroup": "70-74",
+        "assistanceLevel": "Help with bathing, Help with dressing, Help with medications",
+        "futureCarePreference": "",
+        "memoryStatus": "No",
+        "happinessPreferences": [
+          "Music",
+          "Classes"
+        ],
+        "nearbyPlaces": [
+          "Parks & walking paths"
+        ],
+        "nearbyPlacesImportance": "Nice to have",
+        "personalDestinations": [],
+        "budget": 9900,
+        "distanceFromFamily": "",
+        "referenceLocationType": "",
+        "referenceLocationValue": "Las Vegas",
+        "searchState": "Nevada",
+        "locationImportant": "Yes",
+        "referenceAddress": "Las Vegas",
+        "maximumDistanceMiles": "50",
+        "customDistanceMiles": "",
+        "approvedSearchRadiusMiles": "",
+        "otherInterests": "Preserve familiar routines and preferred activities.",
+        "notes": "",
+        "parkingRequirement": "No",
+        "parkingVehicleCount": "",
+        "moveLossConcerns": [
+          "Independence",
+          "Daily routine"
+        ],
+        "medicareStatus": "",
+        "medicaidStatus": "Not eligible",
+        "moveTiming": "Planning ahead",
+        "careSearchApproach": "Show me both approaches",
+        "questionnaireCompletion": {
+          "mandatoryComplete": true,
+          "conditionalFollowUpsComplete": true,
+          "clientSummaryConfirmed": false,
+          "confirmedAt": ""
+        },
+        "medicalCareProfile": {
+          "hasOngoingMedicalNeeds": "No",
+          "needs": [],
+          "mobilityMethod": "Independent",
+          "transferAssistance": "No",
+          "recentFalls": "No",
+          "dialysisFrequency": "",
+          "dialysisCenter": "",
+          "dialysisTransportation": "",
+          "oxygenUse": "",
+          "woundCareFrequency": "",
+          "complexConditionDetails": "",
+          "physicianCoordination": ""
+        },
+        "humanIntelligenceV2": {
+          "socialProfile": {
+            "livingAloneDuration": "",
+            "socialInteractionFrequency": "Weekly",
+            "newFriendsImportance": "",
+            "hobbyParticipation": [
+              "Music",
+              "Classes"
+            ],
+            "preferredSocialIntensity": "",
+            "activityRequirementLevel": "Preference"
+          },
+          "familyProfile": {
+            "involvedFamilyMembers": "",
+            "visitFrequencyExpectation": "",
+            "grandchildrenPresence": "",
+            "grandchildrenImportance": "",
+            "familyDecisionDynamics": "",
+            "emergencySupportNetwork": "",
+            "coupleStayTogetherPreference": "",
+            "widowStatus": "",
+            "lossTiming": "",
+            "socialActivityChangeSinceLoss": "",
+            "socialInteractionNeed": "",
+            "temporarySeparationAcceptance": "",
+            "griefSupportInterest": ""
+          },
+          "culturalProfile": {
+            "religionImportance": "No",
+            "faithTraditions": [],
+            "religiousSupportNeeds": [],
+            "kosherRequirements": "",
+            "synagogueChurchAccess": "",
+            "holidayCelebrations": "",
+            "culturalIdentity": "",
+            "israeliJewishCommunityPreference": "",
+            "whatFeelsLikeHome": [],
+            "worshipAccessRequirement": "",
+            "jewishProgrammingImportance": "",
+            "churchAccessRequirement": "",
+            "christianServiceRequirement": "",
+            "halalMealsRequirement": "",
+            "prayerFacilityRequirement": ""
+          },
+          "languageProfile": {
+            "preferredSpokenLanguage": "English",
+            "nativeLanguage": "",
+            "medicalDiscussionLanguage": "",
+            "socialInteractionLanguage": "",
+            "languageNeedScope": "",
+            "languagesUnderstood": [],
+            "familyLanguages": [],
+            "bilingualStaffRequired": ""
+          },
+          "foodProfile": {
+            "dietaryPreferences": [
+              "Low sodium"
+            ]
+          },
+          "familyCultureProfile": {
+            "involvementExpectation": "",
+            "decisionRole": ""
+          },
+          "communityPreferenceProfile": {
+            "preferredEnvironment": []
+          },
+          "personalityProfile": {
+            "introvertExtrovert": "",
+            "communitySizePreference": "No preference",
+            "privacyImportance": "",
+            "structureFlexibilityPreference": ""
+          },
+          "interestsProfile": [],
+          "independenceProfile": {
+            "drivingImportance": "",
+            "cookingImportance": "",
+            "abilityToLeaveIndependently": "Yes",
+            "petOwnershipImportance": "No",
+            "hostingFamilyImportance": ""
+          },
+          "transitionRiskProfile": {
+            "biggestFear": "",
+            "attitudeTowardMove": "Cautious but open",
+            "previousMoves": "",
+            "bereavementStatus": "",
+            "lonelinessRisk": "",
+            "socialIsolationConcern": "",
+            "recentHospitalization": "No",
+            "hospitalizationRecency": "",
+            "postHospitalRehabNeed": "",
+            "recentProcedure": "",
+            "procedureType": "",
+            "expectedRecovery": "",
+            "temporarySupportMonths": "",
+            "wanderingConcerns": ""
+          },
+          "futureCareProfile": {
+            "agingInPlaceImportance": "",
+            "avoidFutureMovesPreference": "Required",
+            "continuumOfCarePreference": "Required",
+            "secureMemoryNeighborhoodNeed": "",
+            "familiarLanguageRequirement": ""
+          },
+          "distanceProfile": {
+            "referenceLocations": {
+              "parentCurrentHome": "",
+              "primaryCaregiverHome": "",
+              "secondaryFamilyHomes": "",
+              "preferredHospital": "",
+              "placeOfWorship": ""
+            },
+            "driveTimes": {
+              "normal": "",
+              "rushHour": "",
+              "emergency": ""
+            },
+            "familyVisitExpectation": "",
+            "familyGeographyModel": {
+              "involvedFamilyMembers": "",
+              "familyCenterOfGravity": "",
+              "multiLocationOptimization": ""
+            },
+            "emotionalDistanceFactors": {
+              "emergencyAccessImportance": "",
+              "spontaneousVisitsImportance": "",
+              "grandchildrenVisitsImportance": ""
+            },
+            "careLevelWeight": 0,
+            "optimizationStrategy": "",
+            "scores": {
+              "family_distance_score": null,
+              "visit_probability_score": null,
+              "emergency_access_score": null,
+              "grandchildren_access_score": null,
+              "travel_burden_score": null,
+              "family_engagement_score": null
+            },
+            "inferredConfidence": {}
+          },
+          "confidence": {},
+          "scoringEngine": {
+            "overallConfidence": 0,
+            "confidenceThreshold": 72,
+            "adaptiveSignals": [],
+            "scoringWeights": {},
+            "outputScores": {
+              "social_fit_score": 0,
+              "family_fit_score": 0,
+              "language_fit_score": 0,
+              "cultural_fit_score": 0,
+              "religious_fit_score": 0,
+              "food_fit_score": 0,
+              "family_engagement_score": 0,
+              "community_style_score": 0,
+              "independence_fit_score": 0,
+              "transition_success_probability": 0,
+              "loneliness_risk_score": 0
+            },
+            "recommendationImpacts": [],
+            "additionalQuestionAsked": ""
+          }
+        }
+      }
+    }
+  ]
+}

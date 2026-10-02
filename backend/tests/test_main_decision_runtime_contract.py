@@ -115,7 +115,15 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
     def test_ready_decision_context_and_success_factor_trace_survive_fastapi_response_model(self) -> None:
         main = importlib.import_module("app.main")
         decision = importlib.import_module("app.services.patient_decision_engine")
-        ai_result = {"decision_readiness": "READY", "next_question": None, "statements": []}
+        # Single authority: "recently widowed" reaches the decision as a quoted interpreter
+        # fact in the canonical profile, not via a regex over the story.
+        ai_result = {
+            "decision_readiness": "READY", "next_question": None,
+            "statements": [{"raw_text": "recently widowed", "meaning": "recent loss of spouse", "importance": "CONTEXT",
+                            "knowledge_state": "KNOWN", "status": "USED",
+                            "mapped_parameters": ["humanIntelligenceV2.familyProfile.widowStatus"]}],
+            "questionnaire_patch": {"humanIntelligenceV2": {"familyProfile": {"widowStatus": "Recently widowed"}}},
+        }
         # The fixture's stated budget (a required minimum client dimension -- removing
         # it blocks the interview as incomplete before this test's actual scenario is
         # even reached) is now also a facility-owned MUST (see
@@ -144,18 +152,17 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         # shape survives the FastAPI response model intact -- the flag a caller branches on
         # is worthless if serialisation drops it.
         self.assertTrue(top_decision["recommendation_execution_allowed"])
-        self.assertTrue(top_decision["canonical_decision_state"]["is_degraded_result"])
-        self.assertEqual(top_decision["recommendation_visibility"], "UNRANKED_ELIGIBLE_SET_VISIBLE")
-        self.assertFalse(serialized["degraded_result_notice"]["results_are_ordered"])
+        self.assertFalse(top_decision["canonical_decision_state"]["is_degraded_result"])
+        self.assertEqual(top_decision["recommendation_visibility"], "FINAL_RECOMMENDATION_VISIBLE")
+        self.assertIsNone(serialized["degraded_result_notice"])
         self.assertEqual(
             top_decision["ranking_order"],
             [
                 "DETERMINISTIC_MUST_GATE",
-                "SEMANTIC_AI_DYNAMIC_PREFERENCES",
-                "SEMANTIC_AI_ALL_GOVERNED_EVIDENCE",
-                "EVIDENCE_GROUNDED_PREFERENCE_COVERAGE",
-                "PROVIDER_VERIFICATION",
-                "AI_RERANK",
+                "DETERMINISTIC_GOVERNED_NICE_EVIDENCE",
+                "GOVERNMENT_REGULATORY_DATA",
+                "PUBLIC_REPUTATION",
+                "RELEVANT_EVIDENCE_COMPLETENESS",
             ],
         )
         self.assertEqual(len(patient_decision["success_factor_policy"]["factors"]), 16)
@@ -167,9 +174,11 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
         self.assertEqual(serialized["recommendation_audit_trace"]["model_version"], "decision-intelligence-runtime-v3.1")
 
     def test_couple_spine_rehab_unknowns_are_guardian_inputs_not_scripted_questions(self) -> None:
+        # Closed 2026-10-02: the guardian now runs once, AFTER the interpreter's quoted
+        # patch is in the canonical profile, and recovery facts are canonical fields.
         decision = importlib.import_module("app.services.patient_decision_engine")
         state = {
-            "relationship": "Dad",
+            "relationship": "Couple",
             "ageGroup": "80+",
             "assistanceLevel": "Needs assistance with bathing and dressing",
             "memoryStatus": "No",
@@ -180,7 +189,33 @@ class MainDecisionRuntimeContractTests(unittest.TestCase):
             },
         }
         question = "Which unresolved care-strategy issue should we clarify first?"
-        ai_result = {"decision_readiness": "NEEDS_CLARIFICATION", "next_question": question, "statements": []}
+        ai_result = {
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "next_question": question,
+            # Every patched fact carries its exact quote from the family text (contract).
+            "statements": [
+                {"raw_text": quote, "meaning": quote, "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": [path]}
+                for quote, path in (
+                    ("in Las Vegas", "referenceLocationValue"),
+                    ("had spinal surgery", "humanIntelligenceV2.transitionRiskProfile.recentProcedure"),
+                    ("spinal surgery", "humanIntelligenceV2.transitionRiskProfile.procedureType"),
+                    ("needs rehabilitation", "humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed"),
+                    ("expected to return to walking", "humanIntelligenceV2.transitionRiskProfile.expectedRecovery"),
+                    ("for the next 3 months", "humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths"),
+                    ("they want to live together", "humanIntelligenceV2.familyProfile.coupleStayTogetherPreference"),
+                )
+            ],
+            "questionnaire_patch": {
+                "referenceLocationValue": "Las Vegas",
+                "humanIntelligenceV2": {
+                    "transitionRiskProfile": {
+                        "recentProcedure": "Yes", "procedureType": "spinal surgery", "postHospitalRehabNeed": "Yes",
+                        "expectedRecovery": "Yes", "temporarySupportMonths": "3",
+                    },
+                    "familyProfile": {"coupleStayTogetherPreference": "They want to live together"},
+                },
+            },
+        }
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_ENABLED": "1", "OPTIME_SEMANTIC_AI_REQUIRED": "1"}, clear=False), patch(
             "app.services.human_intelligence_runtime_verified.interpret_client_intent_with_ai", return_value=ai_result
         ):

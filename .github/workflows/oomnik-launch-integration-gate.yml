@@ -6,6 +6,8 @@ on:
     paths:
       - 'backend/app/services/**'
       - 'backend/tests/**'
+      - 'backend/gold_examples/oomnik_golden_decision_v01.json'
+      - 'scripts/golden_decision_independent_oracle.py'
       - 'frontend/src/app/results/**'
       - 'frontend/tests/browser/**'
       - 'scripts/validate_oomnik_launch_contract.cjs'
@@ -29,13 +31,42 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install backend contract dependencies
-        run: pip install -r backend/requirements.txt
+        id: backend_deps
+        run: pip install -r backend/requirements.txt pytest
       - name: Verify ten-scenario launch contract
         run: node scripts/validate_oomnik_launch_contract.cjs
       - name: Verify decision and evidence contracts
         env:
           PYTHONPATH: backend
         run: python -m unittest backend.tests.test_launch_practical_constraints backend.tests.test_client_intent_runtime backend.tests.test_semantic_facility_requirements backend.tests.test_main_decision_runtime_contract -v
+      - name: Verify owner-approved golden decision oracle
+        env:
+          PYTHONPATH: backend
+        run: python -m pytest backend/tests/test_golden_decision_contract_v01.py backend/tests/test_golden_decision_independent_oracle.py backend/tests/test_authority_map_contract.py backend/tests/test_no_live_frontend_decision_engine.py backend/tests/test_no_legacy_engine_library_dependencies.py backend/tests/test_facility_evidence_contract.py backend/tests/test_research_institute_scheduler.py backend/tests/test_canonical_structured_profile.py backend/tests/test_deterministic_question_authority.py backend/tests/test_single_budget_authority.py backend/tests/test_client_structured_profile_schema.py backend/tests/test_client_case_structured_profile_persistence.py backend/tests/test_research_event_refresh.py backend/tests/test_research_source_change_detection.py backend/tests/test_legacy_authority_reconciliation.py backend/tests/test_facility_intelligence_readiness.py backend/tests/test_room_pricing_research_ingestion.py backend/tests/test_oomniker_optimizer.py backend/tests/test_market_price_floor_location_scope.py backend/tests/test_golden_intake_personas.py backend/tests/test_free_text_structured_equivalence.py backend/tests/test_oomniker_ai.py backend/tests/test_cutover_authority_gate.py -q
+      - name: Verify Golden personas ranking and Oomniker quality
+        env:
+          PYTHONPATH: backend
+        run: python -m pytest backend/tests/test_golden_persona_decisions.py backend/tests/test_golden_ranking_oracle.py backend/tests/test_oomniker_counterfactual_golden.py -q
+      - name: Verify live Golden Interpreter
+        if: ${{ always() && !cancelled() && steps.backend_deps.outcome == 'success' }}
+        env:
+          PYTHONPATH: backend:.
+          OPTIME_SEMANTIC_AI_ENABLED: '1'
+          OPTIME_SEMANTIC_AI_REQUIRED: '1'
+          OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
+          OPTIME_SEMANTIC_AI_MODEL: gpt-4.1-mini
+          OPTIME_SEMANTIC_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python backend/gold_examples/validate_golden_interpreter_live.py
+      - name: Verify structured profile shadow live
+        if: ${{ always() && !cancelled() && steps.backend_deps.outcome == 'success' }}
+        env:
+          PYTHONPATH: backend:.
+          OPTIME_SEMANTIC_AI_ENABLED: '1'
+          OPTIME_SEMANTIC_AI_REQUIRED: '1'
+          OPTIME_SEMANTIC_AI_URL: https://api.openai.com/v1/chat/completions
+          OPTIME_SEMANTIC_AI_MODEL: gpt-4.1-mini
+          OPTIME_SEMANTIC_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python backend/gold_examples/validate_structured_profile_shadow_live.py
       - name: Verify frontend types
         working-directory: frontend
         run: npm install && npm run typecheck

@@ -20,11 +20,13 @@ import requests
 
 from app.services.learning_center_advisor import build_learning_center_advice
 from app.services.canonical_gap_policy import normalize_gap_key
+from app.services.semantic_packet_wire import normalize_wire, parse_wire_json, provider_schema
 
 SEMANTIC_AI_SYSTEM_RULES = [
     "Supervision around the clock is not Nursing supervision or Skilled nursing care. Medication reminders are not Complex medication management. Rehabilitation alone does not establish speech therapy. Preserve only explicitly established clinical facts.",
     "Understand the client before recommending anything.",
     "Account for every meaningful client statement.",
+    "For every KNOWN/USED client fact mapped to a canonical questionnaire field, populate that field's quoted patch slot unless questionnaire_state already supplies it. A facility research request is not a substitute for preserving the client's own known need. For example, explicit dialysis and its transport need require the quoted medicalCareProfile.needs Dialysis selection and dialysisTransportation Yes even while researching which facilities provide those services.",
     "Separate explicit facts from inferences.",
     "When client statements conflict about the same person and current situation, preserve both statements as AMBIGUOUS and ask which is correct. Do not choose the higher budget or more severe care need. Distinguish genuine contradictions from different people, time periods, or an explicit correction.",
     "Never convert an inference into a fact without confirmation or evidence.",
@@ -45,6 +47,13 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Do not invent facility capabilities, prices, availability, reputation, or regulatory facts.",
     "Prefer one high-information clarification at a time.",
     "Populate questionnaire_patch from explicit client facts using only the exact field names and allowed enum values in required_output. Omit unknown or merely inferred fields; never copy defaults as client facts.",
+    "Every new or changed questionnaire_patch leaf needs a statement whose raw_text is an exact substring of user_text and whose mapped_parameters contains that leaf's full dotted schema path. A paraphrase, a capability name, or the parent object path is not a field quote. Map every supported leaf, including needs arrays and rehabilitation fields; one exact quote may support multiple related leaf paths.",
+    "Before returning JSON, walk every questionnaire_patch leaf and verify its full path appears in mapped_parameters on a statement with an exact source quote. Include relationship, gender, hasOngoingMedicalNeeds and other contextual leaves in this check, not only clinical needs. Add the appropriate path to an existing quoted statement or add a separate source-quoted statement. If a field is not supported, omit it; do not erase an explicit fact merely to avoid writing its trace.",
+    "All socialProfile, familyProfile, languageProfile, foodProfile, culturalProfile, personalityProfile, futureCareProfile and transitionRiskProfile objects are children of humanIntelligenceV2. None is allowed at the root. The nesting must match required_output exactly, even during repair.",
+    "Return questionnaire_patch_sources as a flat dictionary from every new/changed questionnaire_patch leaf path to an exact user_text quote. This explicit source index is mandatory for new facts even when the same quote is also in statements. Examples of keys: relationship, medicalCareProfile.hasOngoingMedicalNeeds, humanIntelligenceV2.transitionRiskProfile.recentHospitalization. Do not infer gender identity from pronouns or kinship. coupleAssistance is a single string, never an object keyed by partners.",
+    "NEEDS_CLARIFICATION must include a separate ASKED statement with importance MUST or UNKNOWN, knowledge_state UNKNOWN or AMBIGUOUS, and the real clarification_question matching next_question. Do not mark a known location statement ASKED just because a different care fact is missing. If there is no unresolved decision-critical client question, return READY.",
+    "Preserve the nested objects in required_output: mobilityMethod, transferAssistance and recentFalls belong under medicalCareProfile, never at the top level. Dialysis transportation belongs at medicalCareProfile.dialysisTransportation. Physical AND occupational therapy after hospitalization supports humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed.",
+    "Do not repeat values already supplied by questionnaire_state unless the family explicitly corrects them. A story about one parent's care must not turn a Parents/Couple search into Dad/Mom; preserve the household relationship and write each partner's needs in coupleAssistance. Do not infer no wandering from no dementia, or a recovery time from a therapy duration. temporarySupportMonths is measured in months, never copy a number of weeks into it.",
     "Medical terms must be normalized into the structured taxonomy: for example CPAP/BiPAP/ventilator/cough-assist belongs in respiratory equipment details and Permanent medical equipment, dialysis in Dialysis, chronic wounds in Wound care, wheelchairs in mobilityMethod, and lift/two-person transfers in transferAssistance.",
     "Return a compact decision packet: preserve 100% statement accounting but avoid repetition and long prose.",
 ]
@@ -61,8 +70,8 @@ def _required_output_schema() -> Dict[str, Any]:
         "next_question": "string|null",
         "research_requests": ["string"],
         "questionnaire_patch": {
-            "relationship": "Mom|Dad|Grandma|Grandpa|Spouse|Myself|Couple|Relative|Friend",
-            "gender": "Male|Female|Nonbinary|Other|Prefer not to say",
+            "relationship": "Mom|Dad|Grandma|Grandpa|Spouse|Myself|Parents|Couple|Relative|Friend",
+            "gender": "Male|Female|Nonbinary|Other|Prefer not to say; only an explicit gender identity declaration, never inferred from kinship or pronouns",
             "ageGroup": "60-64|65-69|70-74|75-79|80-84|85-89|90-94|95+",
             "assistanceLevel": "Fully independent|Light assistance|Help with bathing|Help with dressing|Help with toileting|Help with medications|Daytime supervision|24/7 support required|Skilled nursing care",
             "memoryStatus": "No|Occasionally forgetful|Mild memory issues|Significant memory issues|Not sure",
@@ -70,7 +79,7 @@ def _required_output_schema() -> Dict[str, Any]:
             "medicaidStatus": "Approved|Application pending|May qualify|Not eligible|Not sure",
             "medicareStatus": "Original Medicare|Medicare Advantage|No Medicare|Not sure",
             "moveTiming": "Immediately|Within 30 days|1-3 months|3-6 months|Planning ahead|Not sure",
-            "coupleAssistance": "explicit person-specific assistance description, preserving which partner needs which help",
+            "coupleAssistance": "ONE STRING describing each partner's explicit assistance needs; never a dictionary or list",
             "referenceLocationValue": "explicit city/market string",
             "referenceAddress": "explicit reference address; preserve full address if provided",
             "locationImportant": "Yes|No",
@@ -84,6 +93,8 @@ def _required_output_schema() -> Dict[str, Any]:
                 "transferAssistance": "No|One person|Two people|Mechanical lift|Not sure",
                 "recentFalls": "No|One|More than one|Not sure",
                 "dialysisFrequency": "explicit frequency string",
+                "dialysisCenter": "explicit center name/address",
+                "dialysisTransportation": "No|Yes|Not sure",
                 "oxygenUse": "At night|With activity|Continuously|Not sure",
                 "woundCareFrequency": "explicit frequency string",
                 "complexConditionDetails": "concise explicit conditions/equipment",
@@ -92,6 +103,10 @@ def _required_output_schema() -> Dict[str, Any]:
             "humanIntelligenceV2": {
                 "transitionRiskProfile": {
                     "recentHospitalization": "No|Yes|Not sure",
+                    "recentProcedure": "No|Yes|Not sure",
+                    "procedureType": "explicit surgery or procedure",
+                    "expectedRecovery": "No|Yes|Not sure",
+                    "temporarySupportMonths": "explicit number of months",
                     "postHospitalRehabNeed": "No|Yes|Not sure",
                     "wanderingConcerns": "No|Yes|Not sure",
                     "attitudeTowardMove": "Wants to move|Positive|Cautious but open|Anxious|Resistant|Not sure",
@@ -99,19 +114,23 @@ def _required_output_schema() -> Dict[str, Any]:
                 "languageProfile": {
                     "preferredSpokenLanguage": "explicit language",
                     "nativeLanguage": "explicit language",
+                    "languageNeedScope": "Requirement|Preference",
                 },
                 "foodProfile": {"dietaryPreferences": ["explicit dietary requirement"]},
                 "futureCareProfile": {"secureMemoryNeighborhoodNeed": "No|Yes|Not sure", "continuumOfCarePreference": "Required|Preferred|Not important|Not sure"},
                 "culturalProfile": {"religionImportance": "Yes|No", "faithTraditions": ["explicit faith tradition"]},
+                "socialProfile": {"activityRequirementLevel": "Requirement|Preference"},
                 "familyProfile": {"socialInteractionNeed": "Daily|Several times weekly|Weekly|Occasionally|Very little", "coupleStayTogetherPreference": "explicit preference to stay together"},
                 "personalityProfile": {"communitySizePreference": "Small and familiar|Medium|Large and active|Quiet|No preference"},
             },
         },
+        "questionnaire_patch_sources": {"full.dotted.patch.leaf.path": "exact source substring from user_text; one entry per new/changed patch leaf"},
         "decision_readiness": "READY|NEEDS_CLARIFICATION|NEEDS_RESEARCH",
     }
 
 
 def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_advice: Dict[str, Any]) -> Dict[str, Any]:
+    from app.services.semantic_field_contract import describe_fields
     return {
         "role": "OPTIME_NURSING_EXPERT_SEMANTIC_INTERPRETER",
         "mission": "Understand the resident/family request at senior-living expert level before matching. Distinguish decision-critical client clarification from downstream facility research and non-blocking NICE/CONTEXT ambiguity.",
@@ -133,6 +152,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             "adaptive_answer_rule": "Prior adaptiveSignals are part of the client record. If an adaptive signal contains an explicit answer, treat that dimension as answered and do not ask it again using a paraphrase.",
             "free_text_answer_rule": "Explicit statements in user_text are also part of the client record. Do not ask again about a dimension already answered there, including explicit negative statements such as no mobility limitation or no memory concerns.",
             "questionnaire_patch_rule": "Write every explicit structured client fact into questionnaire_patch. Use only supplied schema keys and exact enum spellings. Omit unknowns and inferences. This patch is the canonical bridge from narrative intake into the same table used by the manual questionnaire.",
+            "field_quote_rule": "For each new/changed patch leaf include its full dotted path in statements.mapped_parameters, with an exact source substring in raw_text. Example: medicalCareProfile.transferAssistance, not transfer_assistance or transferAssistance. Never invent a quote or use questionnaire defaults as a source quote.",
             "minimum_readiness_dimensions": {
                 "market_location": "Must be KNOWN from user_text, questionnaire_state, or prior adaptiveSignals before READY. If missing, ask the client.",
                 "monthly_affordability": "Must be KNOWN from user_text, questionnaire_state, or prior adaptiveSignals before READY. A client may explicitly say they have no budget limit or do not want to set one; silence is not a value.",
@@ -140,40 +160,76 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             },
         },
         "questionnaire_state": questionnaire_state,
+        "client_evidence": _client_evidence_context(user_text, questionnaire_state),
         "user_text": user_text,
         "learning_center_advice": learning_advice,
         "required_output": _required_output_schema(),
+        "field_contract": describe_fields(_required_output_schema()["questionnaire_patch"]),
+        "field_trace_example": {
+            "source_example": "My aunt receives dialysis and enjoys group activities.",
+            "questionnaire_patch": {"relationship": "Relative", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Dialysis"]}, "humanIntelligenceV2": {"socialProfile": {"activityRequirementLevel": "Preference"}}},
+            "questionnaire_patch_sources": {"relationship": "My aunt", "medicalCareProfile.hasOngoingMedicalNeeds": "receives dialysis", "medicalCareProfile.needs": "receives dialysis", "humanIntelligenceV2.socialProfile.activityRequirementLevel": "enjoys group activities"},
+            "statements": [
+                {"raw_text": "My aunt", "mapped_parameters": ["relationship"], "importance": "CONTEXT", "knowledge_state": "KNOWN", "status": "USED"},
+                {"raw_text": "receives dialysis", "mapped_parameters": ["medicalCareProfile.hasOngoingMedicalNeeds", "medicalCareProfile.needs"], "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED"},
+                {"raw_text": "enjoys group activities", "mapped_parameters": ["humanIntelligenceV2.socialProfile.activityRequirementLevel"], "importance": "NICE", "knowledge_state": "KNOWN", "status": "USED"},
+            ],
+            "instruction": "Example of field-by-field source accounting only. Never copy these values or quotes into the answer; use the actual user_text.",
+        },
+        "clarification_trace_example": {
+            "source_example": "I need some daily assistance.",
+            "statement": {"raw_text": "some daily assistance", "meaning": "The specific daily tasks requiring assistance remain unclear.", "importance": "MUST", "knowledge_state": "AMBIGUOUS", "status": "ASKED", "mapped_parameters": ["assistanceLevel"], "clarification_question": "Which daily tasks require assistance?"},
+            "next_question": "Which daily tasks require assistance?",
+            "decision_readiness": "NEEDS_CLARIFICATION",
+            "instruction": "Question trace example only. An unresolved MUST needs an ASKED statement, even when other statements are known. Do not invent a confirmed assistanceLevel value while its source is ambiguous. Never copy this example into the answer; use the actual record and AI-authored question.",
+        },
     }
 
 
 def _extract_responses_output(body: Dict[str, Any]) -> Dict[str, Any]:
     output_text = body.get("output_text")
     if isinstance(output_text, str) and output_text.strip():
-        return json.loads(output_text)
+        return parse_wire_json(output_text)
     for item in body.get("output") or []:
         if not isinstance(item, dict):
             continue
         for part in item.get("content") or []:
             if isinstance(part, dict) and part.get("type") == "output_text" and isinstance(part.get("text"), str):
-                return json.loads(part["text"])
+                return parse_wire_json(part["text"])
     raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
 
 
 def _request_with_retry(url: str, headers: Dict[str, str], request_json: Dict[str, Any]) -> requests.Response:
     timeout_seconds = max(5.0, float(os.getenv("OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS", "45")))
-    max_attempts = max(1, min(3, int(os.getenv("OPTIME_SEMANTIC_AI_MAX_ATTEMPTS", "1"))))
+    max_attempts = max(1, min(3, int(os.getenv("OPTIME_SEMANTIC_AI_MAX_ATTEMPTS", "2"))))
     backoff_seconds = max(0.0, float(os.getenv("OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS", "1")))
     last_error: Optional[Exception] = None
+    deadline = time.monotonic() + timeout_seconds
+    attempts_made = 0
     for attempt in range(1, max_attempts + 1):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        # A successful connection should get the available generation budget.
+        # Reserving equal slices for speculative retries cancelled valid slow
+        # generations after ~17 seconds despite a 45-second deadline. Retry
+        # only with time actually left after an early transport failure.
+        attempt_budget = remaining
+        connect_timeout = min(5.0, attempt_budget / 4)
+        read_timeout = attempt_budget - connect_timeout
+        attempts_made += 1
         try:
-            return requests.post(url, headers=headers, json=request_json, timeout=(10.0, timeout_seconds))
+            return requests.post(url, headers=headers, json=request_json, timeout=(connect_timeout, read_timeout))
         except (requests.Timeout, requests.ConnectionError) as exc:
             last_error = exc
             if attempt >= max_attempts:
                 break
             if backoff_seconds:
-                time.sleep(backoff_seconds * attempt)
-    raise RuntimeError(f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={max_attempts}:timeout={timeout_seconds}:{last_error}")
+                delay = backoff_seconds * attempt
+                if deadline - time.monotonic() <= delay:
+                    break
+                time.sleep(delay)
+    raise RuntimeError(f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={attempts_made}:timeout={timeout_seconds}:{last_error}")
 
 
 def _resolve_temperature() -> Optional[float]:
@@ -194,6 +250,30 @@ def _resolve_temperature() -> Optional[float]:
         return 0.0
 
 
+TRANSPORT_SYSTEM_PROMPT = (
+    "You are the governed semantic reasoning layer for a senior-living decision engine. "
+    "Return compact JSON only. Follow required_output nesting exactly. "
+    "Every new questionnaire_patch leaf, including context fields, must have its full dotted path "
+    "in statements.mapped_parameters beside a raw_text quote copied from user_text. "
+    "Statement accounting does not require a field mapping. mapped_parameters: [] is valid "
+    "and required when no canonical field value is explicitly established. Never attach a "
+    "nearby or generic field merely because a statement is meaningful. A KNOWN/USED trace "
+    "may map a canonical path only when the packet extracts that exact field with its quote "
+    "or the caller already supplied its value. Preserve unsupported facts and requirements "
+    "in their source traces without forcing them into a different profile field. "
+    "Audit every leaf before returning; repair responses obey the same contract. "
+    "Also audit the clarification contract in the final JSON, including every repair response: "
+    "NEEDS_CLARIFICATION requires a nonempty next_question and exactly one ASKED statement "
+    "with importance MUST or UNKNOWN, knowledge_state UNKNOWN or AMBIGUOUS, a stable gap_key, "
+    "and clarification_question identical to next_question. Trace the unresolved fact separately "
+    "from the known facts. Never return NEEDS_CLARIFICATION with null next_question or only USED statements. "
+    "If a material client-owned unknown remains, phrase a question; do not invent its answer or "
+    "return READY to avoid asking. If none remains and minimum client dimensions are resolved, "
+    "return READY. Keep known facts and their exact source quotes. "
+    "These are advisory extraction signals; deterministic policy owns final readiness."
+)
+
+
 def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     url = os.getenv("OPTIME_SEMANTIC_AI_URL", "").strip()
     model = os.getenv("OPTIME_SEMANTIC_AI_MODEL", "").strip()
@@ -204,21 +284,45 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
     uses_responses_api = "/responses" in url.lower()
+    required_output = _required_output_schema()
+    schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""))
+    payload = copy.deepcopy(payload)
+    # The record belongs to the caller, never to a previous model packet.
+    # Rebuild this view for every request and repair using the same predicates
+    # used by the server's no-reask and minimum-dimension checks.
+    payload["client_evidence"] = _client_evidence_context(
+        str(payload.get("user_text") or ""), payload.get("questionnaire_state") or {})
+    # Strict grammar already supplies the response structure. Sending a second,
+    # legacy packet shape and examples invites the model to mix the two formats.
+    payload.pop("required_output", None)
+    payload.pop("field_trace_example", None)
+    payload.pop("clarification_trace_example", None)
+    payload["wire_contract"] = {
+        "questionnaire_value_hints": required_output["questionnaire_patch"],
+        "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_fields is a sparse array of {path, value, quote} entries. Use the full canonical dotted path, exactly as in statements.mapped_parameters. Include at most one entry per path. Omit paths with no new fact, never emit empty placeholder entries. Multiple assistance selections belong in one assistanceLevel array entry. Every entry must be independently supported by an exact user_text quote. Constraints, facts and concerns are packet metadata, never patch fields. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
+        "version": "semantic-extraction-v1",
+        "field_paths": "Each extraction entry uses the full canonical dotted path in both path and statements.mapped_parameters. Do not use aliases. Omit unused paths. Map canonical client fields only when that exact field's value is explicitly established, not merely because it is related to the statement. A known client fact marked USED must reach its path in questionnaire_patch_fields unless questionnaire_state already supplies that field. Speaking a language does not establish nativeLanguage. A dietary preference does not establish faithTraditions or religious identity; preserve the dietary fact without these unrelated mappings.",
+        "source_quotes": "For each extraction quote choose an unchanged source span from SourceQuote in the response schema. Use that same quote in the associated statement raw_text. The full source sentence is valid; never paraphrase a quote or insert a pronoun that was not in the original text.",
+        "clinical_detail_consistency": "A known medical detail does not replace its medical need. Unless already supplied by questionnaire_state, pair dialysis frequency/center with medicalCareProfile.needs containing Dialysis, oxygen use with Oxygen, and wound-care frequency with Wound care. Give the parent need its own exact quote from the same explicit client treatment statement. Never add a need when the client's treatment itself is unknown or denied.",
+        "assistance_encoding": "Emit exactly one entry per field. assistanceLevel.value may preserve the existing questionnaire string or one array containing every explicit selection; normalization joins that array into the existing comma-separated string. Never split multiple ADL selections into repeated entries. Do not copy already supplied questionnaire values into new extracted entries unless explicitly corrected.",
+    }
+    system_prompt = TRANSPORT_SYSTEM_PROMPT + " The actual response shape is the supplied strict JSON schema. questionnaire_patch_fields is a sparse array of {path,value,quote}, with one entry per new or corrected field; omit unchanged fields and placeholders. client_evidence.resolved_questionnaire_fields contains existing client answers even when user_text does not repeat them: never ask for these facts again unless genuine conflicting client evidence needs resolution. An absent extraction entry does not make an existing answer unknown. client_evidence.minimum_dimensions reports whether the client has already answered location and affordability. Check the full questionnaire_state and original text for more specific unresolved facts; this summary does not authorize READY or invent answers. Never emit the same field twice; for couples use coupleAssistance to preserve each person's needs. Represent any ASKED trace only in interview.blocking_statement; its question is interview.next_question. Do not duplicate the blocking trace in statements. Keep metadata lists brief; retain every meaningful fact in its source trace. Normalization will reconstruct existing packet keys without inference."
+    response_format = {"type": "json_schema", "json_schema": {"name": "semantic_extraction", "strict": True, "schema": schema}}
     if uses_responses_api:
         request_json = {
             "model": model,
             "input": [
-                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only."},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
-            "text": {"format": {"type": "json_object"}},
+            "text": {"format": {"type": "json_schema", "name": "semantic_extraction", "strict": True, "schema": schema}},
         }
     else:
         request_json = {
             "model": model,
-            "response_format": {"type": "json_object"},
+            "response_format": response_format,
             "messages": [
-                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only."},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
         }
@@ -230,13 +334,13 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise RuntimeError(f"SEMANTIC_AI_HTTP_{response.status_code}:{response.text[:500]}")
     body = response.json()
     if uses_responses_api:
-        return _extract_responses_output(body)
+        return normalize_wire(_extract_responses_output(body), required_output, family_text=str(payload.get("user_text") or ""))
     if isinstance(body, dict) and "choices" in body:
-        return json.loads(body["choices"][0]["message"]["content"])
+        return normalize_wire(parse_wire_json(body["choices"][0]["message"]["content"]), required_output, family_text=str(payload.get("user_text") or ""))
     if isinstance(body, dict) and "output" in body and isinstance(body["output"], dict):
-        return body["output"]
+        return normalize_wire(body["output"], required_output, family_text=str(payload.get("user_text") or ""))
     if isinstance(body, dict):
-        return body
+        return normalize_wire(body, required_output, family_text=str(payload.get("user_text") or ""))
     raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
 
 
@@ -437,11 +541,20 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
         for statement in result.get("statements") or []
     )
     current = _question_terms(next_question)
-    if not current:
-        return False
     salient = {"mobility", "cognitive", "location", "budget"}
     if not has_conflict and current & _explicit_user_text_answered_dimensions(user_text) & salient:
         return True
+    if not has_conflict:
+        # Check the actual field targeted by the question, not merely similar
+        # words. This includes button answers, which are not adaptiveSignals.
+        asked = [s for s in result.get("statements") or []
+                 if isinstance(s, dict) and s.get("status") == "ASKED"]
+        for statement in asked:
+            paths = statement.get("mapped_parameters") or []
+            if paths and all(_questionnaire_field_resolved(questionnaire_state, path) for path in paths):
+                return True
+    if not current:
+        return False
     for entry in _adaptive_answer_summary(questionnaire_state):
         prior = _question_terms(f"{entry.get('question', '')} {entry.get('answer', '')}")
         if not prior:
@@ -452,6 +565,48 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
         if len(overlap) >= 2 and len(overlap) / max(1, min(len(current), len(prior))) >= 0.5:
             return True
     return False
+
+
+def _questionnaire_field_resolved(state: Dict[str, Any], path: str) -> bool:
+    from app.services.canonical_structured_profile import in_schema
+
+    if not isinstance(path, str) or not in_schema(path):
+        return False
+    value: Any = state
+    for part in path.split("."):
+        if not isinstance(value, dict) or part not in value:
+            return False
+        value = value[part]
+    if path == "budget":
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0
+    if value is None or value == [] or value == {}:
+        return False
+    text = str(value).strip().lower()
+    if text in {"", "not sure", "unknown", "none"}:
+        return False
+    # These broad answers do not resolve which daily tasks need assistance.
+    if path == "assistanceLevel" and text in {"light assistance", "24/7 support required"}:
+        return False
+    return True
+
+
+def _client_evidence_context(user_text: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    from app.services.semantic_field_contract import compile_fields
+
+    resolved = {}
+    for path in compile_fields(_required_output_schema()["questionnaire_patch"]):
+        if not _questionnaire_field_resolved(state, path):
+            continue
+        value = state
+        for part in path.split("."):
+            value = value[part]
+        resolved[path] = copy.deepcopy(value)
+    return {
+        "resolved_questionnaire_fields": resolved,
+        "minimum_dimensions": _minimum_dimension_status(user_text, state),
+        "prior_adaptive_answers": _adaptive_answer_summary(state),
+        "instruction": "These are existing client answers, not new AI extractions or facility evidence. Preserve them without fabricating source quotes. Unknowns remain unknown; ask only for a material unresolved fact or genuine conflict.",
+    }
 
 
 _DIMENSION_BY_FACT_KEY = {
@@ -547,7 +702,7 @@ def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: D
         "original_user_text": user_text,
         "prior_explicit_adaptive_answers": _adaptive_answer_summary(questionnaire_state),
         "failure": "REASKED_ANSWERED_DIMENSION" if repeated_question else "NEEDS_CLARIFICATION_WITHOUT_USABLE_BLOCKING_QUESTION",
-        "instruction": "Repair the packet without inventing facts. Explicit statements in original_user_text and prior explicit adaptive answers are binding client evidence and must not be asked again in different wording. If a different material client-owned unknown remains, return NEEDS_CLARIFICATION with exactly one new highest-information AI-authored question and one matching ASKED statement. If no material client-owned clarification remains, return READY. Facility-specific unknowns may remain RESEARCH_REQUIRED and must not block client-intent READY.",
+        "instruction": "Repair the packet without inventing facts. Existing questionnaire_state button selections, explicit statements in original_user_text and prior explicit adaptive answers are binding client evidence and must not be asked again in different wording. If a different material client-owned unknown remains, return NEEDS_CLARIFICATION with exactly one new highest-information AI-authored question and one matching ASKED statement. If no material client-owned clarification remains, return READY. Facility-specific unknowns may remain RESEARCH_REQUIRED and must not block client-intent READY.",
     }
     repaired = transport(repair_payload)
     repaired = _repair_live_readiness_mismatch(repaired)
@@ -569,12 +724,40 @@ def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: D
     return repaired
 
 
+def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict[str, Any]) -> None:
+    from app.services.canonical_structured_profile import build_structured_profile, in_schema
+
+    profile = build_structured_profile(state, packet, family_text=user_text)
+    issues = [f"OUT_OF_SCHEMA:{item['field']}" for item in profile["out_of_schema"] if item.get("field")]
+    from app.services.semantic_field_contract import compile_fields, leaves, profile_issues
+    contracts = compile_fields(_required_output_schema()["questionnaire_patch"])
+    # Validate every supplied leaf, including values hidden by button conflicts.
+    for path, value in leaves(packet.get("questionnaire_patch") or {}):
+        if path in contracts:
+            contracts[path].normalize(value, path)
+    issues.extend(profile_issues(profile, contracts))
+    # Accounting is bidirectional: a known client fact cannot be marked USED
+    # while its declared canonical field is absent from the decision profile.
+    # Facility parameter IDs are deliberately outside this check; research
+    # statements do not become client facts or prove provider capabilities.
+    for statement in packet.get("statements") or []:
+        if not isinstance(statement, dict) or statement.get("status") != "USED" or statement.get("knowledge_state") != "KNOWN":
+            continue
+        for path in statement.get("mapped_parameters") or []:
+            if in_schema(path) and path not in profile["fields"]:
+                issues.append(f"KNOWN_FIELD_NOT_MATERIALIZED:{path}")
+    if issues:
+        error = RuntimeError("SEMANTIC_AI_PATCH_CONTRACT:" + ",".join(issues))
+        error.patch_diagnostic = {"patch": packet.get("questionnaire_patch"), "sources": packet.get("questionnaire_patch_sources"), "statements": packet.get("statements")}
+        raise error
+
+
 def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Optional[Dict[str, Any]] = None, transport: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None) -> Dict[str, Any]:
     questionnaire_state = questionnaire_state or {}
     learning_advice = build_learning_center_advice(user_text=user_text)
     payload = _build_prompt(user_text, questionnaire_state, learning_advice)
     active_transport = transport or _default_transport
-    result = active_transport(payload)
+    result = {}
     def validate_live_packet(packet: Dict[str, Any]) -> Dict[str, Any]:
         packet = _ground_clinical_patch(packet, user_text, questionnaire_state)
         packet = _repair_live_readiness_mismatch(packet)
@@ -587,11 +770,14 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             raise RuntimeError(f"SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS:{','.join(missing)}")
         if readiness == "NEEDS_CLARIFICATION" and _question_reasks_answered_dimension(packet, questionnaire_state, user_text):
             raise RuntimeError("SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION")
+        _validate_patch_contract(packet, user_text, questionnaire_state)
         return packet
 
     if transport is None:
         prior_packet = copy.deepcopy(result)
         try:
+            result = active_transport(payload)
+            prior_packet = copy.deepcopy(result)
             result = _repair_live_readiness_mismatch(result)
             result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=False)
             result = _repair_missing_minimum_dimensions_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
@@ -611,19 +797,53 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "SEMANTIC_AI_INVALID_KNOWLEDGE",
                 "SEMANTIC_AI_ASKED_WITHOUT_QUESTION",
                 "SEMANTIC_AI_MISSING_STATEMENT_TRACE",
+                "SEMANTIC_AI_PATCH_CONTRACT",
+                "SEMANTIC_AI_WIRE_CONTRACT",
+                "SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION",
+                "SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS",
             }
             if not repairable:
                 raise
             repair_payload = dict(payload)
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
-                "prior_packet": prior_packet,
-                "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness and questionnaire_patch. Preserve explicit client facts and unknowns. Use only allowed enum values. If a material client question remains, include one ASKED statement and its identical next_question. Otherwise return READY with statement accounting. Never invent answers or discard a requirement to pass validation.",
+                "mapping_contract": {
+                    "supported_canonical_mapping": "Each KNOWN/USED canonical path must have its actual explicit field value in questionnaire_patch_fields or already in questionnaire_state.",
+                    "unsupported_mapping": "Remove the unsupported path from mapped_parameters, retaining the original source quote and meaning. An empty mapped_parameters array is valid. Never manufacture a field value or substitute another unrelated canonical path to preserve a trace.",
+                },
+                "issue_actions": {
+                    "NO_EXACT_FIELD_QUOTE": "Supply the field's own genuine source quote, or omit the unsupported field. Questionnaire defaults are not quotes from user_text.",
+                    "KNOWN_FIELD_NOT_MATERIALIZED": "If the exact field value is explicit, include one {path,value,quote} entry in questionnaire_patch_fields. If the path was only loosely related or inferred, remove that path from mapped_parameters instead of inventing its value; retain the original meaningful statement and its actual supported fields.",
+                    "UNSATISFIED_DEPENDENCY": "Supply the explicitly established parent field named in the contract error with its genuine source quote, or remove an unsupported detail. Never infer a parent fact or drop an explicit need.",
+                    "UNSUPPORTED_UNIT": "The source does not establish the field unit named in the contract error. Remove that unsupported field and mapping; retain the original statement. Never estimate or silently convert units.",
+                },
+                "client_dimension_status": _minimum_dimension_status(user_text, questionnaire_state),
+                "clarification_contract": {
+                    "NEEDS_CLARIFICATION": {
+                        "next_question": "one nonempty AI-authored question for an unresolved client-owned fact",
+                        "statement": {"status": "ASKED", "importance": "MUST|UNKNOWN",
+                                      "knowledge_state": "UNKNOWN|AMBIGUOUS", "gap_key": "the unresolved fact",
+                                      "clarification_question": "identical to next_question"},
+                    },
+                    "READY": "Only if no material client-owned clarification remains and minimum dimensions are resolved.",
+                    "preserve": "Keep known facts, each partner's distinct needs and exact source quotes. Never fill an unknown to avoid a question.",
+                },
+                "prior_packet": {key: value for key, value in prior_packet.items() if key not in {"governance", "learning_center"}},
+                "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness, questionnaire_patch and questionnaire_patch_sources. Preserve explicit client facts and unknowns. Every KNOWN/USED statement mapped to a client profile field must have that field in questionnaire_patch unless already supplied in questionnaire_state. Known medical detail requires its parent medicalCareProfile.needs selection: oxygenUse -> Oxygen, dialysisFrequency/dialysisCenter -> Dialysis, woundCareFrequency -> Wound care. Include the parent selection with its own exact quote; never drop an explicit clinical need to pass validation. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, put its full dotted path in questionnaire_patch_sources with a quote copied exactly from original user_text; also account for the fact in statements. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. gender must not be inferred from kinship/pronouns; coupleAssistance must be a string. If a material client question remains, include one ASKED MUST/UNKNOWN statement and its identical next_question. Otherwise return READY with statement accounting.",
             }
-            result = validate_live_packet(active_transport(repair_payload))
+            repaired_packet = active_transport(repair_payload)
+            try:
+                result = validate_live_packet(repaired_packet)
+            except RuntimeError as final_error:
+                if not hasattr(final_error, "patch_diagnostic"):
+                    final_error.patch_diagnostic = {"patch": repaired_packet.get("questionnaire_patch"), "sources": repaired_packet.get("questionnaire_patch_sources"), "statements": repaired_packet.get("statements"), "decision_readiness": repaired_packet.get("decision_readiness"), "next_question": repaired_packet.get("next_question")}
+                raise
             result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}
     else:
+        result = active_transport(payload)
         result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state), allow_empty_statements=not user_text.strip())
+        # Injection changes delivery, never the accepted field contract.
+        _validate_patch_contract(result, user_text, questionnaire_state)
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
 

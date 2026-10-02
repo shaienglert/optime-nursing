@@ -1,0 +1,43 @@
+{
+  "schema_version": "oomnik-golden-decision/0.1",
+  "status": "OWNER_APPROVED_RULES_PARTIAL_IDS_PENDING",
+  "global_rules": {
+    "max_results": 10,
+    "budget_tolerance_pct": 10,
+    "budget_order": "IN_BUDGET_THEN_WITHIN_10_PERCENT",
+    "availability_30_days_or_later": "DISPLAY_ONLY_NOT_INITIAL_RANKING",
+    "availability_immediate": "PRACTICAL_WEIGHT_WITH_TRANSPARENT_FALLBACK",
+    "final_availability_requires_direct_facility_verification": true,
+    "true_ties": "PRESERVE_AND_OFFER_OOMNIKER",
+    "unknown_is_pass": false
+  },
+  "scenarios": [
+    {"id":"D01","title":"Independent social","profile":{"care":"INDEPENDENT","budget":4500},"expected":{"allowed_archetypes":["INDEPENDENT_LIVING","ACTIVE_ADULT_55_PLUS"],"never_archetypes":["MEMORY_CARE","SKILLED_NURSING","REHABILITATION"],"max_results":10}},
+    {"id":"D02","title":"ADL no dementia","profile":{"required":["adl_support"],"memory":"NO","budget":6500},"expected":{"allowed_archetypes":["ASSISTED_LIVING_RFG","SMALL_GROUP_HOME","CONTINUING_CARE"],"never_archetypes":["MEMORY_CARE","SKILLED_NURSING","REHABILITATION"]}},
+    {"id":"D03","title":"ADL medications very low budget","profile":{"required":["adl_support","medication_support"],"budget":3000},"expected":{"no_in_budget":true,"max_price":3300,"explain_supply_gap":true}},
+    {"id":"D04","title":"ADL medications below tolerance floor","profile":{"required":["adl_support","medication_support"],"budget":3900},"expected":{"max_price":4290,"no_match_if_cheapest_above_ceiling":true}},
+    {"id":"D05","title":"ADL medications tolerance band","profile":{"required":["adl_support","medication_support"],"budget":4300},"expected":{"max_price":4730,"over_budget_must_be_labelled":true,"in_budget_first":true}},
+    {"id":"D06","title":"ADL medications normal budget","profile":{"required":["adl_support","medication_support"],"budget":6000},"expected":{"max_price":6600,"in_budget_first":true,"over_budget_must_be_labelled":true}},
+    {"id":"D07","title":"Alzheimer wandering","profile":{"required":["memory_care","dementia_alz_programs"],"budget":8000},"expected":{"never_archetypes":["INDEPENDENT_LIVING","ACTIVE_ADULT_55_PLUS"],"max_price":8800}},
+    {"id":"D08","title":"Memory care tolerance","profile":{"required":["memory_care"],"budget":6000},"expected":{"max_price":6600,"over_budget_must_be_labelled":true}},
+    {"id":"D09","title":"Mild forgetfulness no diagnosis","profile":{"memory":"MILD_NOT_DIAGNOSED","budget":5500},"expected":{"never_archetypes":["MEMORY_CARE"],"must_not_invent_memory_care":true}},
+    {"id":"D10","title":"Dialysis","profile":{"required":["dialysis_arrangements"],"budget":7000},"expected":{"required_evidence":{"dialysis_arrangements":"YES"},"never_archetypes":["INDEPENDENT_LIVING","ACTIVE_ADULT_55_PLUS","MEMORY_CARE"],"max_price":7700}},
+    {"id":"D11","title":"Oxygen wound","profile":{"required":["respiratory_trach_vent","wound_care"],"budget":8000},"expected":{"required_evidence":{"respiratory_trach_vent":"YES","wound_care":"YES"},"max_price":8800}},
+    {"id":"D12","title":"Hip rehab","profile":{"required":["pt","ot"],"budget":9000,"move_timing":"WITHIN_30_DAYS"},"expected":{"required_evidence":{"pt":"YES","ot":"YES"},"never_archetypes":["INDEPENDENT_LIVING","ACTIVE_ADULT_55_PLUS","MEMORY_CARE"],"availability_affects_initial_rank":false}},
+    {"id":"D13","title":"Stroke background only","profile":{"required":["adl_support"],"stroke_rehab":false},"expected":{"post_stroke_neuro_evidence_not_gate":true}},
+    {"id":"D14","title":"Stroke rehab explicit","profile":{"required":["post_stroke_neuro_evidence"],"budget":9000},"expected":{"required_evidence":{"post_stroke_neuro_evidence":"YES"},"max_price":9900}},
+    {"id":"D15","title":"Couple stay together","profile":{"couple":true,"stay_together":true,"required":["adl_support"],"budget":11000},"expected":{"accepts_couples":true,"never_archetypes":["MEMORY_CARE"]}},
+    {"id":"D16","title":"Las Vegas hard radius","profile":{"required":["adl_support"],"location":"LAS_VEGAS","radius_miles":10},"expected":{"max_distance_miles":10,"distance_visible":true,"outside_radius_excluded":true}},
+    {"id":"D17","title":"Las Vegas 20 miles","profile":{"required":["adl_support"],"location":"LAS_VEGAS","radius_miles":20},"expected":{"max_distance_miles":20}},
+    {"id":"D18","title":"Summerlin supported radius","profile":{"required":["adl_support"],"location":"SUMMERLIN","radius_miles":10},"expected":{"canonical_geocode_required":true,"max_distance_miles":10,"outside_radius_excluded":true}},
+    {"id":"D19","title":"Henderson 5 miles","profile":{"required":["adl_support"],"location":"HENDERSON","radius_miles":5},"expected":{"max_distance_miles":5,"outside_radius_excluded":true}},
+    {"id":"D20","title":"Immediate move availability","profile":{"required":["adl_support"],"move_timing":"IMMEDIATE"},"expected":{"availability_affects_practical_order":true,"limited_unknown_allowed_with_caveat":true,"no_must_be_disclosed":true,"final_verification_required":true}},
+    {"id":"D21","title":"Kosher required","profile":{"required":["adl_support","kosher"]},"expected":{"required_evidence":{"kosher":"YES"}}},
+    {"id":"D22","title":"Gluten free preference","profile":{"required":["adl_support"],"preferred":["gluten_free"]},"expected":{"gluten_free_not_gate":true}},
+    {"id":"D23","title":"Vegetarian no pilot evidence","profile":{"required":["adl_support"],"preferred":["vegetarian"]},"expected":{"vegetarian_not_gate":true,"display_unknown":true}},
+    {"id":"D24","title":"AI unavailable structured only","profile":{"structured_complete":true,"narrative_status":"UNPROCESSED"},"expected":{"narrative_has_zero_decision_weight":true,"normal_structured_results":true}},
+    {"id":"D25","title":"True tie","profile":{"all_relevant_facts_complete":true},"expected":{"preserve_joint_rank":true,"offer_oomniker":true}},
+    {"id":"D26","title":"Pet non negotiable","profile":{"required":["pets_allowed"]},"expected":{"pets_allowed_is_must":true,"unknown_pending":true}},
+    {"id":"D27","title":"Personal destination target","profile":{"personal_destination":true},"expected":{"inside_target_first":true,"outside_target_allowed_after_with_distance_caveat":true,"offer_oomniker_when_supply_constrained":true}}
+  ]
+}

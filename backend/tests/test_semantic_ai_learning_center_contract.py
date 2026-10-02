@@ -98,13 +98,33 @@ class SemanticAiLearningCenterContractTests(unittest.TestCase):
                 actual = _request_with_retry("https://example.invalid/responses", {"Content-Type": "application/json"}, {"model": "test"})
         self.assertIs(response, actual)
         self.assertEqual(2, post.call_count)
-        self.assertEqual((10.0, 45.0), post.call_args.kwargs["timeout"])
+        connect, read = post.call_args.kwargs["timeout"]
+        self.assertGreater(read, 0)
+        self.assertLessEqual(connect + read, 45.0)
 
     def test_transport_exhaustion_is_explicit(self) -> None:
         with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS": "45", "OPTIME_SEMANTIC_AI_MAX_ATTEMPTS": "2", "OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS": "0"}, clear=False):
             with patch("app.services.semantic_intent_ai.requests.post", side_effect=requests.Timeout("still slow")):
                 with self.assertRaisesRegex(RuntimeError, "SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts=2:timeout=45.0"):
                     _request_with_retry("https://example.invalid/responses", {"Content-Type": "application/json"}, {"model": "test"})
+
+    def test_retry_uses_remaining_shared_deadline(self) -> None:
+        response = Mock(ok=True)
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS": "45", "OPTIME_SEMANTIC_AI_MAX_ATTEMPTS": "2", "OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS": "0"}):
+            with patch("app.services.semantic_intent_ai.time.monotonic", side_effect=[100, 100, 123]):
+                with patch("app.services.semantic_intent_ai.requests.post", side_effect=[requests.Timeout("first"), response]) as post:
+                    self.assertIs(_request_with_retry("https://example.invalid/responses", {}, {}), response)
+        self.assertLessEqual(sum(post.call_args_list[0].kwargs["timeout"]), 45)
+        self.assertGreater(post.call_args_list[0].kwargs["timeout"][1], 30)
+        self.assertLessEqual(sum(post.call_args_list[1].kwargs["timeout"]), 22)
+
+    def test_exhausted_deadline_prevents_another_network_attempt(self) -> None:
+        with patch.dict(os.environ, {"OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS": "45", "OPTIME_SEMANTIC_AI_MAX_ATTEMPTS": "2", "OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS": "0"}):
+            with patch("app.services.semantic_intent_ai.time.monotonic", side_effect=[100, 100, 146]):
+                with patch("app.services.semantic_intent_ai.requests.post", side_effect=requests.Timeout("slow")) as post:
+                    with self.assertRaisesRegex(RuntimeError, "RETRY_EXHAUSTED:attempts=1"):
+                        _request_with_retry("https://example.invalid/responses", {}, {})
+        self.assertEqual(post.call_count, 1)
 
 
 if __name__ == "__main__":

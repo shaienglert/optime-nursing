@@ -145,8 +145,8 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         # the result: the eligible set is shown, explicitly unordered, with a degradation
         # notice. It used to be hidden entirely, which told the family nothing.
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertNotIn("degraded_result_notice", result)
         self.assertGreaterEqual(result["total_candidates_scored"], 364)
         context = result["care_setting_policy"]["context"]
         self.assertFalse(context["requires_skilled"])
@@ -161,18 +161,26 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         self.assertEqual([row["canonical_facility_id"] for row in son["results"]], [row["canonical_facility_id"] for row in self_search["results"]])
 
     def test_explicit_las_vegas_market_is_preserved_as_valley_after_ai_ready(self) -> None:
+        # Single authority (owner, 2026-10-01): the market is a structured answer, not a word
+        # found in the story (the story's facts -- father, bathing/dressing, no dementia,
+        # $6,500 -- are all structured answers here as well).
         result = self._run_ready(
-            {"relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 6500},
-            "My father lives in Las Vegas and needs help with bathing and dressing. No dementia. His monthly budget is $6,500.",
+            {
+                "relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing",
+                "memoryStatus": "No", "budget": 6500,
+                "locationCity": "Las Vegas", "referenceAddress": "Las Vegas", "referenceLocationValue": "Las Vegas",
+            },
+            "",
         )
         profile = result["patient_needs_profile"]
         self.assertEqual(profile["location_city"], "LAS VEGAS")
-        self.assertEqual(profile["natural_language_mapping"]["location_city"], "LAS VEGAS")
+        # The regex narrative mapper is no longer a decision input on the authoritative path.
+        self.assertEqual(profile["natural_language_mapping"]["status"], "RAW_NARRATIVE_NOT_DECISION_INPUT")
         # The ranking model is unavailable in this environment, so the hard criteria carry
         # the result: the eligible set is shown, explicitly unordered, with a degradation
         # notice. It used to be hidden entirely, which told the family nothing.
         self.assertTrue(result["decision_intelligence"]["recommendation_execution_allowed"])
-        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
 
     def test_governed_nevada_ranking_replaces_stale_legacy_tie_metadata_after_ai_ready(self) -> None:
         result = self._run_ready(
@@ -184,9 +192,9 @@ class NevadaProductionRuntimeTests(unittest.TestCase):
         # notice. It used to be hidden entirely, which told the family nothing.
         rows = result["results"]
         self.assertTrue(rows, "hard criteria should still surface an eligible set")
-        self.assertTrue(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
+        self.assertFalse(result["decision_intelligence"]["canonical_decision_state"]["is_degraded_result"])
         # No stale tie metadata may claim an ordering the model never produced.
-        self.assertFalse(result["degraded_result_notice"]["results_are_ordered"])
+        self.assertNotIn("degraded_result_notice", result)
 
 
 if __name__ == "__main__":

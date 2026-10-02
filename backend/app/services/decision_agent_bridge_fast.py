@@ -191,38 +191,12 @@ def attach_agent_evidence_and_queue_gaps_fast(rows: List[Dict[str, Any]], human_
                 )
                 if was_researched:
                     researched_unknown += 1
-                    continue
-                if key in pending_keys or key in newly_queued_keys:
-                    continue
-
-                agent_key = _agent_key_for_dimension(dimension)
-                payload = {
-                    "market": "las-vegas",
-                    "canonical_facility_id": cid,
-                    "facility_name": row.get("facility_name"),
-                    "city": row.get("city") or "LAS VEGAS",
-                    "state": "NV",
-                    "dimension": dimension,
-                    "requested_parameters": unknown,
-                    "requested_at": datetime.now(timezone.utc).isoformat(),
-                    "research_priority": research_priority(dimension, candidate_rank_index),
-                }
-                db.add(
-                    AgentQueueItem(
-                        queue_type=QUEUE_TYPE,
-                        agent_key=agent_key,
-                        payload_json=json.dumps(payload, sort_keys=True),
-                        status="PENDING",
-                        max_attempts=3,
-                    )
-                )
-                newly_queued_keys.add(key)
-                queued += 1
+                # Search is read-only with respect to public research.  The Research
+                # Institute scheduler owns refresh work for the whole catalog.
+                continue
 
         db.commit()
         pending_backlog = existing_pending_count + queued
-        if queued > 0 or pending_backlog > 0:
-            _kick_worker_async()
 
         if gaps and queued == 0 and researched_unknown == len(gaps):
             finality = "PROVISIONAL_DIRECT_VERIFICATION_REQUIRED"
@@ -243,7 +217,7 @@ def attach_agent_evidence_and_queue_gaps_fast(rows: List[Dict[str, Any]], human_
             "pending_backlog": pending_backlog,
             "researched_unknown_count": researched_unknown,
             "decision_finality": finality,
-            "policy": "client intent first; resident unknown -> ask; facility MUST unknown -> agent research; unknown is not mismatch",
+            "policy": "family search reads one evidence snapshot; Research Institute owns facility refresh; facility MUST unknown remains pending",
             "execution_mode": "BATCHED_DB_BRIDGE",
             "facility_count": len(canonical_ids),
             "database_prefetch": True,

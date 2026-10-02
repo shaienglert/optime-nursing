@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the isolated 200-community Oomnik recommendation pilot.
+"""Build the isolated 500-community Oomnik recommendation pilot.
 
 Every identity, claim, price and availability value in this artifact is synthetic.
 The output is deliberately kept outside the production Nevada universe and can only
@@ -32,6 +32,19 @@ CITIES = [
     ("HENDERSON", "89052", 35.9875, -115.1034),
     ("NORTH LAS VEGAS", "89031", 36.2578, -115.1711),
 ]
+
+PILOT_FACILITY_COUNT = 500
+
+CAPACITY_RANGES = {
+    "INDEPENDENT_LIVING": (50, 240),
+    "ACTIVE_ADULT_55_PLUS": (60, 300),
+    "ASSISTED_LIVING_RFG": (30, 180),
+    "MEMORY_CARE": (24, 120),
+    "SKILLED_NURSING": (40, 180),
+    "REHABILITATION": (30, 120),
+    "CONTINUING_CARE": (120, 450),
+    "SMALL_GROUP_HOME": (6, 16),
+}
 
 ARCHETYPES = [
     ("INDEPENDENT_LIVING", "Independent Living", 3600, 5200),
@@ -120,10 +133,22 @@ def yes_no(index: int, modulus: int, *, limited: bool = False) -> str:
     return "YES" if index % modulus != 0 else "NO"
 
 
+def room_availability(index: int) -> tuple[tuple[str, int], tuple[str, int]]:
+    """One fictional inventory shared by room records and facility evidence."""
+    state = ["YES", "YES", "LIMITED", "NO", "YES"][index % 5]
+    if state == "NO":
+        return (("WAITLIST", 0), ("UNAVAILABLE", 0))
+    if state == "LIMITED":
+        offers = (("AVAILABLE", 1), ("WAITLIST", 0))
+        return offers if index % 2 == 0 else offers[::-1]
+    return (("AVAILABLE", 3), ("AVAILABLE", 2))
+
+
 def capability_map(index: int, canonical_type: str) -> dict[str, object]:
     care = canonical_type in {"ASSISTED_LIVING_RFG", "MEMORY_CARE", "SKILLED_NURSING", "REHABILITATION", "CONTINUING_CARE", "SMALL_GROUP_HOME"}
     skilled = canonical_type in {"SKILLED_NURSING", "REHABILITATION", "CONTINUING_CARE"}
     memory = canonical_type in {"MEMORY_CARE", "CONTINUING_CARE"}
+    available_units = sum(units for status, units in room_availability(index) if status == "AVAILABLE")
     return {
         "adl_support": "YES" if care else "NO",
         "medication_support": "YES" if care else "NO",
@@ -138,7 +163,7 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
         "post_stroke_neuro_evidence": "YES" if canonical_type == "REHABILITATION" or (canonical_type == "SKILLED_NURSING" and index % 5 == 0) else "NO",
         "transportation": yes_no(index, 6, limited=True),
         "published_rates": "YES",
-        "current_availability": ["YES", "YES", "LIMITED", "NO", "YES"][index % 5],
+        "current_availability": "YES" if available_units > 1 else ("LIMITED" if available_units == 1 else "NO"),
         "languages": ["English", "English, Spanish", "English, Hebrew", "English, Russian", "English, Mandarin"][index % 5],
         "kosher": "YES" if index % 9 == 0 else ("LIMITED" if index % 4 == 0 else "NO"),
         "gluten_free": "YES" if index % 3 else "LIMITED",
@@ -160,6 +185,58 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
         "total_nurse_hours_per_resident_day": round(2.1 + ((index * 7) % 30) / 10, 1),
         "staffing_turnover": 18 + ((index * 13) % 43),
         "therapy_staffing": "YES" if skilled or index % 4 == 0 else "NO",
+    }
+
+
+# Coverage parameters (owner rule 2026-10-01): every MUST the engine can ask for needs an
+# evidence source in the market. These are deliberately mixed YES / NO / UNKNOWN (None =
+# no record at all) so the engine is exercised on verified pass, verified fail and pending.
+# Values are fictional and say nothing about any real community.
+def coverage_evidence(index: int, archetype: str) -> dict[str, str | None]:
+    # Archetypes repeat every 8 ids, so index % n would be constant within an archetype;
+    # vary on the ordinal within the archetype instead.
+    index = (index - 1) // len(ARCHETYPES)
+    secured = {
+        "MEMORY_CARE": None if index % 7 == 0 else ("NO" if index % 5 == 0 else "YES"),
+        "CONTINUING_CARE": "YES" if index % 3 == 0 else ("NO" if index % 3 == 1 else None),
+        "SKILLED_NURSING": "YES" if index % 4 == 0 else "NO",
+        "ASSISTED_LIVING_RFG": None if index % 4 == 0 else "NO",
+        "SMALL_GROUP_HOME": None if index % 2 == 0 else "NO",
+        "REHABILITATION": "NO",
+        "INDEPENDENT_LIVING": "NO",
+        "ACTIVE_ADULT_55_PLUS": "NO",
+    }[archetype]
+    medicaid = {
+        "SKILLED_NURSING": "NO" if index % 4 == 0 else "YES",
+        "REHABILITATION": "YES" if index % 2 == 0 else "NO",
+        "ASSISTED_LIVING_RFG": ["YES", "NO", None][index % 3],
+        "SMALL_GROUP_HOME": "YES" if index % 2 == 0 else None,
+        "MEMORY_CARE": "YES" if index % 4 == 0 else ("NO" if index % 4 == 1 else None),
+        "CONTINUING_CARE": "NO" if index % 3 else None,
+        "INDEPENDENT_LIVING": "NO",
+        "ACTIVE_ADULT_55_PLUS": "NO",
+    }[archetype]
+    return {"secured_units": secured, "medicaid_attributes": medicaid}
+
+
+def evidence_record(canonical_id: str, name: str, parameter_id: str, value, now: str) -> dict:
+    return {
+        "canonical_facility_id": canonical_id,
+        "parameter_id": parameter_id,
+        "value": value,
+        "source": "Synthetic owner-completed pilot profile",
+        "scope": "FACILITY",
+        "scope_name": name,
+        "last_verified": now,
+        "source_record_id": canonical_id,
+        "evidence_text": f"Synthetic provider response for {parameter_id.replace('_', ' ')}",
+        "evidence_value": value,
+        "evidence_date": now,
+        "confidence": "HIGH",
+        "evidence_strength": "FACILITY_REPORTED",
+        "verification_status": "VERIFIED",
+        "conflict_status": "NONE",
+        "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
     }
 
 
@@ -208,7 +285,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
     portal_capabilities: list[dict] = []
     now = datetime.now(timezone.utc).isoformat()
 
-    for offset in range(200):
+    for offset in range(PILOT_FACILITY_COUNT):
         index = offset + 1
         archetype_id, care_label, low, high = ARCHETYPES[offset % len(ARCHETYPES)]
         canonical_type = PRODUCTION_CANONICAL_TYPE[archetype_id]
@@ -216,7 +293,8 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
         canonical_id = f"PILOT-NV-{index:03d}"
         name = f"{PREFIXES[_name_component_index(offset, 'prefix', len(PREFIXES))]} {SUFFIXES[_name_component_index(offset, 'suffix', len(SUFFIXES))]} {care_label}"
         address = f"{1100 + index * 37} Pilot Mesa Avenue"
-        capacity = 12 + ((index * 17) % 170)
+        capacity_low, capacity_high = CAPACITY_RANGES[archetype_id]
+        capacity = capacity_low + ((index * 17) % (capacity_high - capacity_low + 1))
         capabilities = capability_map(index, archetype_id)
         facility = {
             "canonical_id": canonical_id,
@@ -268,13 +346,14 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
         if archetype_id in {"MEMORY_CARE", "SKILLED_NURSING", "REHABILITATION", "SMALL_GROUP_HOME"}:
             room_names = ["Private care room", "Shared companion room"]
         for room_offset, room_name in enumerate(room_names):
+            availability_status, available_units = room_availability(index)[room_offset]
             rooms.append({
                 "canonical_facility_id": canonical_id,
                 "room_type_name": room_name,
                 "description": f"Synthetic {room_name.lower()} used for controlled pilot testing.",
                 "monthly_price_cents": (monthly_mid + room_offset * 900) * 100,
-                "availability_status": ["AVAILABLE", "WAITLIST", "AVAILABLE", "UNAVAILABLE"][((index + room_offset) % 4)],
-                "available_units": [3, 0, 1, 0][((index + room_offset) % 4)],
+                "availability_status": availability_status,
+                "available_units": available_units,
                 "source": "SYNTHETIC_PROVIDER_PORTAL",
                 "last_verified_at": now,
             })
@@ -299,6 +378,9 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
                 "conflict_status": "NONE",
                 "provenance": {"synthetic_pilot": True, "not_real_world_evidence": True},
             })
+        for parameter_id, value in coverage_evidence(index, archetype_id).items():
+            if value is not None:
+                evidence.append(evidence_record(canonical_id, name, parameter_id, value, now))
         evidence.append({
             "canonical_facility_id": canonical_id,
             "parameter_id": "current_price",

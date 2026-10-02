@@ -9,6 +9,8 @@ from typing import Any, Dict, List
 logger = logging.getLogger(__name__)
 
 from app.services.client_intent_runtime import attach_client_intent_fit, build_client_intent, intent_rank_key
+from app.services.affordability_floor import apply_funding_pathway, apply_medicaid_affordability_rule
+from app.services.decision_funnel import ledger_rows
 from app.services.decision_agent_bridge_fast import attach_agent_evidence_and_queue_gaps_fast as attach_agent_evidence_and_queue_gaps
 from app.services.decision_governance_runtime import attach_governed_knowledge_learning_and_audit
 from app.services.human_intelligence_runtime_verified import attach_human_person_fit, build_human_intelligence_context, has_explicit_person_fit_preference, person_fit_sort_key
@@ -71,20 +73,29 @@ def _merge_strategy_questions(human_context: Dict[str, Any], strategy: Dict[str,
 def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
     from app.services.canonical_intake_state import canonicalize_intake_state
     questionnaire_state = canonicalize_intake_state(questionnaire_state)
-    from app.services.care_input_assertions import extract_care_denials
-    care_denials = extract_care_denials(natural_language_query)
-    profile = _governed.build_patient_needs_profile(questionnaire_state, natural_language_query, care_denials=care_denials)
-    strategy = build_living_strategy_context(questionnaire_state, natural_language_query, care_denials=care_denials)
+    # Single authority (owner, 2026-10-01). Free text is read in exactly one place: the
+    # interpreter pass (human intelligence / semantic AI), whose only output that counts is
+    # the Canonical Structured Profile. Every decision fact below -- needs, MUSTs, strategy,
+    # care-delivery signals, care-partner requirements -- is derived from that profile with
+    # no free text, so no downstream regex or keyword reading can re-decide a fact.
+    # Interpreter -> canonical profile -> strategy/guardian once (human intelligence owns
+    # the order); everything here reads only its canonical outputs.
+    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+    structured = human_context["structured_profile_shadow"]
+    decision_questionnaire = human_context["canonical_decision_questionnaire"]
+    strategy = human_context["canonical_living_strategy"]
+    profile = _governed.build_patient_needs_profile(decision_questionnaire, "", care_denials=None)
     _apply_strategy_needs(profile, strategy)
-    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, prepared_strategy=strategy)
     _merge_strategy_questions(human_context, strategy)
     from app.services.combined_care_solution_runtime import _query_signals
-    delivery_signals = _query_signals(questionnaire_state, natural_language_query, care_denials=care_denials)
-    client_intent = build_client_intent(questionnaire_state, natural_language_query, strategy, human_context, care_delivery_signals=delivery_signals)
-    factor_policy = build_success_factor_trace(questionnaire_state, profile)
+    delivery_signals = _query_signals(decision_questionnaire, "", care_denials=None)
+    client_intent = build_client_intent(decision_questionnaire, "", strategy, human_context, care_delivery_signals=delivery_signals)
+    factor_policy = build_success_factor_trace(decision_questionnaire, profile)
+    profile["canonical_structured_profile"] = structured
+    profile["canonical_decision_questionnaire"] = decision_questionnaire
     profile["living_strategy"] = strategy
     profile["care_delivery_signals"] = delivery_signals
-    profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, questionnaire_state, natural_language_query)
+    profile["care_partner_requirements"] = _prepare_care_partner_requirements(strategy, decision_questionnaire, "")
     profile["client_intent"] = client_intent
     profile["decision_intelligence"] = {
         "version": "decision-intelligence-runtime-v3.1",
@@ -359,6 +370,12 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
     _stage_started = _mark("attach_human_person_fit_ms", _stage_started)
     attach_client_intent_fit(rows, client_intent)
     _stage_started = _mark("attach_client_intent_fit_1_ms", _stage_started)
+    # Affordability floor of THIS search: after SYSTEM MUST/care, before budget/Medicaid.
+    affordability = apply_medicaid_affordability_rule(rows, client_intent, questionnaire_state, patient_profile)
+    if affordability.get("promoted"):
+        attach_client_intent_fit(rows, client_intent)
+    apply_funding_pathway(rows, client_intent)
+    _stage_started = _mark("affordability_floor_ms", _stage_started)
 
     indexed_pre_agent = list(enumerate(rows))
     indexed_pre_agent.sort(key=lambda pair: _stable_pre_agent_fit_key(pair[1], pair[0]))
@@ -373,6 +390,16 @@ def _run_prepared_decision(questionnaire_state: Dict[str, Any], natural_language
 
     attach_client_intent_fit(rows, client_intent)
     _stage_started = _mark("attach_client_intent_fit_2_ms", _stage_started)
+    for row in rows:
+        # Display field derived from the single authority (the client-intent MUST).
+        reasons = (row.get("client_intent_fit") or {}).get("must_pending_reasons") or {}
+        row["availability_decision_state"] = reasons.get("CURRENT_AVAILABILITY_FOR_URGENT_MOVE")
+    # Complete each candidate's monthly cost (e.g. a couple's second-resident fee) for the
+    # WHOLE universe before it is recorded, not only for the rows later stages look at.
+    from app.services.semantic_facility_requirements import _apply_pilot_monthly_cost
+    for row in rows:
+        _apply_pilot_monthly_cost(row)
+    core["decision_funnel_ledger"] = ledger_rows(rows)
     survivors = [row for row in rows if _is_rankable_candidate(row)]
     nearby_importance = str(questionnaire_state.get("nearbyPlacesImportance") or "No preference")
     attach_nearby_place_fit(survivors, questionnaire_state)

@@ -73,6 +73,7 @@ def stated_budget(profile: Dict[str, Any]) -> float | None:
 
 
 def grade(case: Dict[str, Any], profile: Dict[str, Any], decision: Dict[str, Any]) -> Dict[str, Any]:
+    from scripts.pilot_acceptance.care_oracle import evaluate_care
     results = decision.get("results") or []
     budget = stated_budget(profile)
     needed = required_capabilities(profile)
@@ -81,6 +82,7 @@ def grade(case: Dict[str, Any], profile: Dict[str, Any], decision: Dict[str, Any
     for item in results:
         facility_id = item.get("canonical_facility_id")
         record, evidence = universe().get(facility_id, {}), facts().get(facility_id, {})
+        required_path_proof = evaluate_care(case.get("required_care_paths") or [], record)
         price = evidence.get("current_price")
         if case.get("requires_couple_accepting") and isinstance(price, (int, float)):
             fee = (record.get("pilot_service_evidence") or {}).get("second_resident_monthly_fee")
@@ -93,12 +95,20 @@ def grade(case: Dict[str, Any], profile: Dict[str, Any], decision: Dict[str, Any
             "accepts_couples": record.get("accepts_couples"),
             "rank": item.get("rank_display"),
             "over_budget": bool(budget and isinstance(price, (int, float)) and price > budget),
-            "missing": [p for p in needed if str(evidence.get(p, "")).upper() != "YES"],
+            "required_care_proof": required_path_proof,
+            "missing": [p for p in sorted(set(needed) | set(case.get("required_catalog_capabilities") or [])) if str(evidence.get(p, "")).upper() != "YES"],
+            "care_proof": evaluate_care(case.get("any_of_care_paths") or [], record),
         })
 
     failures: List[str] = []
+    for key in ("any_of_care_paths", "required_care_paths"):
+        error = evaluate_care(case.get(key) or [], {}).get("error")
+        if error:
+            failures.append(f"{key}: {error}")
 
     for row in rows:
+        if row["required_care_proof"]["state"] != "PASS":
+            failures.append(f"{row['id']} lacks verified proof for a required care program: {row['required_care_proof']}")
         if case.get("requires_couple_accepting") and row["price"] is None:
             failures.append(f"{row['id']} has no verified monthly total for two residents")
         if row["over_budget"]:
@@ -120,9 +130,9 @@ def grade(case: Dict[str, Any], profile: Dict[str, Any], decision: Dict[str, Any
         minimum = int(case.get("min_recommendations") or 0)
         if len(rows) < minimum:
             failures.append(f"expected at least {minimum} recommendation(s), got {len(rows)}")
-        expected = set(case.get("any_of_archetypes") or ())
-        if expected and rows and not any(row["archetype"] in expected for row in rows):
-            failures.append(f"no recommendation is any of {sorted(expected)}; got {sorted({row['archetype'] for row in rows})}")
+        expected = set(case.get("any_of_care_paths") or ())
+        if expected and rows and not any(row["care_proof"]["state"] == "PASS" for row in rows):
+            failures.append(f"no recommendation has verified care-path proof for {sorted(expected)}")
         if case.get("requires_couple_accepting"):
             refuses = [row["id"] for row in rows if row["accepts_couples"] is not True]
             if refuses:

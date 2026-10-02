@@ -22,10 +22,16 @@ from app.services.location_radius import haversine_miles, plan_radius_scope, res
 from app.services.patient_decision_engine import run_patient_decision_engine
 
 CARE_NEEDS = "Help with bathing, Help with dressing, Help with medications"
+# Single authority (owner, 2026-10-01): decision facts come only from the Canonical
+# Structured Profile. The radius behaviour is fed through a finished structured interview
+# (the mother/bathing/area facts the old story repeated are already structured answers);
+# free text without the interpreter would stay UNPROCESSED and leave the interview not ready.
+READY_INTERVIEW = {"mandatoryComplete": True, "conditionalFollowUpsComplete": True}
 
 
 def _run(miles: str | None, *, city: str = "Las Vegas", approved: str | None = None, limit: int = 8) -> dict:
     questionnaire = {
+        "relationship": "Mom",
         "assistanceLevel": CARE_NEEDS,
         "budget": 8000,
         "moveTiming": "Planning ahead",
@@ -33,6 +39,7 @@ def _run(miles: str | None, *, city: str = "Las Vegas", approved: str | None = N
         "locationCity": city,
         "maximumDistanceMiles": miles or "",
         "approvedSearchRadiusMiles": approved or "",
+        "questionnaireCompletion": dict(READY_INTERVIEW),
     }
     with patch.dict(
         "os.environ",
@@ -40,7 +47,7 @@ def _run(miles: str | None, *, city: str = "Las Vegas", approved: str | None = N
         clear=False,
     ):
         refresh_runtime_cache(f"radius-{miles}-{city}-{approved}")
-        return run_patient_decision_engine(questionnaire, f"My mother needs help with bathing in {city}.", limit=limit)
+        return run_patient_decision_engine(questionnaire, "", limit=limit)
 
 
 class TheRadiusChangesTheAnswerTests(unittest.TestCase):
@@ -185,8 +192,7 @@ class TheScopeReachesTheFamilyTests(unittest.TestCase):
 
 
 class TheAreaAsTheIntakeWritesItTests(unittest.TestCase):
-    """The tests above name the area in locationCity and in the story. The intake does
-    neither: it writes the chosen area into referenceAddress AND referenceLocationValue, and
+    """The tests above name the area in locationCity. The intake does not: it writes the chosen area into referenceAddress AND referenceLocationValue, and
     the story need not mention it. Joined, those read "Las Vegas Las Vegas" and the limit
     never applied in any of the ten real browser journeys.
     """
@@ -204,8 +210,8 @@ class TheAreaAsTheIntakeWritesItTests(unittest.TestCase):
 
     def test_the_limit_applies_to_an_intake_shaped_request(self):
         questionnaire = dict(
-            self.INTAKE, assistanceLevel=CARE_NEEDS, budget=8000, moveTiming="Planning ahead",
-            maximumDistanceMiles="10",
+            self.INTAKE, relationship="Mom", assistanceLevel=CARE_NEEDS, budget=8000, moveTiming="Planning ahead",
+            maximumDistanceMiles="10", questionnaireCompletion=dict(READY_INTERVIEW),
         )
         with patch.dict(
             "os.environ",
@@ -213,7 +219,7 @@ class TheAreaAsTheIntakeWritesItTests(unittest.TestCase):
             clear=False,
         ):
             refresh_runtime_cache("radius-intake-shaped")
-            result = run_patient_decision_engine(questionnaire, "My mother needs help with bathing.", limit=8)
+            result = run_patient_decision_engine(questionnaire, "", limit=8)
         scope = result["location_scope"]
         self.assertTrue(scope["applied"], scope)
         for card in result["results"]:

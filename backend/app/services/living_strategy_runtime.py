@@ -93,7 +93,16 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     # `relationship` identifies who the search is for (for example, "my spouse");
     # it does not mean two residents are moving. Require an explicit joint-move or
     # co-residence statement before creating the COUPLE_CORESIDENCE hard gate.
-    couple = _mentions_couple(query)
+    structured_relationship = _norm(questionnaire_state.get("relationship") or questionnaire_state.get("whoFor") or questionnaire_state.get("personType"))
+    family_profile = hi.get("familyProfile") if isinstance(hi.get("familyProfile"), dict) else {}
+    stay_together = _norm(family_profile.get("coupleStayTogetherPreference"))
+    couple = (
+        structured_relationship in {"couple", "both", "two residents"}
+        or bool(questionnaire_state.get("coupleCoresidenceRequired"))
+        # Canonical answer that both partners are moving and want to live together.
+        or (bool(stay_together) and not stay_together.startswith(("no", "not ", "separate")))
+        or _mentions_couple(query)
+    )
 
     no_dementia = denials["memory"] or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
     # Strip denied mentions locally; "no wandering" is not a wandering signal.
@@ -103,14 +112,25 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         r"(?:any\s+)?(?:wandering|memory care|secure(?:-unit| unit)?(?: need)?|locked memory unit)\b",
         "", query,
     )
+    future = hi.get("futureCareProfile") if isinstance(hi.get("futureCareProfile"), dict) else {}
+    structured_memory = _norm(questionnaire_state.get("memoryStatus"))
     memory_care_needed = (
         not no_dementia
         and _contains(memory_query, "dementia", "alzheimer", "memory care", "wandering", "cognitive decline", "cognitive impairment")
-    ) or _norm(questionnaire_state.get("memoryStatus")) in {"yes", "dementia", "memory care", "alzheimer", "alzheimers"}
+    ) or structured_memory in {"yes", "dementia", "memory care", "alzheimer", "alzheimers"} or (
+        # The intake's own structured answers (the canonical profile carries these).
+        not no_dementia and (
+            _contains(structured_memory, "significant memory", "dementia", "alzheimer", "memory care")
+            or _norm(transition.get("wanderingConcerns")) == "yes"
+            or _norm(future.get("secureMemoryNeighborhoodNeed")) == "yes"
+        )
+    )
 
-    surgery = _contains(query, "surgery", "operation", "post-op", "postoperative")
-    spine_or_back = _contains(query, "spine", "spinal", "back surgery", "back operation")
-    rehab = _contains(query, "rehab", "rehabilitation", "physical therapy", "physiotherapy", "pt ", " pt", "occupational therapy")
+    procedure_status = _norm(transition.get("recentProcedure"))
+    procedure_type = _norm(transition.get("procedureType"))
+    surgery = procedure_status == "yes"
+    spine_or_back = surgery and _contains(procedure_type, "spine", "spinal", "back surgery", "back operation", "laminectomy", "fusion")
+    rehab = _norm(transition.get("postHospitalRehabNeed")) == "yes"
     # A phrase such as "not temporary" must not be mistaken for temporary recovery merely
     # because it contains the word "temporary". Persistent ADL support belongs on the
     # Assisted Living path, while a genuine recovery episode can lead with lower intensity.
@@ -123,19 +143,17 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         "ongoing help",
         "not expected to recover",
     )
-    expected_recovery = not explicitly_persistent and _contains(
-        query,
-        "expected to walk",
-        "should walk again",
-        "return to walking",
-        "expected to recover",
-        "temporary",
-        "short-term",
-        "short term",
-    )
-    duration = _duration_months(query)
-    if duration is not None and duration <= 6:
-        expected_recovery = True
+    recovery = transition if isinstance(transition, dict) else {}
+    recovery_answer = _norm(recovery.get("expectedRecovery"))
+    expected_recovery = recovery_answer == "yes"
+    duration = None
+    try:
+        raw_duration = recovery.get("temporarySupportMonths")
+        duration = float(raw_duration) if raw_duration not in (None, "") else None
+    except (TypeError, ValueError):
+        duration = None
+    if recovery_answer in {"no", "not sure"}:
+        expected_recovery = False
 
     explicit_independence = denials["independent"] or _contains(_norm(questionnaire_state.get("assistanceLevel")), "fully independent", "independent")
     no_adl_support = explicit_independence or denials["adl"]
@@ -162,11 +180,25 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
         )
         or _contains(_norm(questionnaire_state.get("assistanceLevel")), "bathing", "dressing", "assistance")
     )
-    medication = (not no_medication_support) and _contains(query, "medication", "medications", "medicine")
-    high_social = _contains(query, "culture", "cultural", "classes", "activities", "social", "clubs", "lectures", "music", "art", "events")
+    medication = (not no_medication_support) and (
+        _contains(query, "medication", "medications", "medicine")
+        or _contains(_norm(questionnaire_state.get("assistanceLevel")), "medication")
+    )
+    # Structured social priority (single authority): an explicit activity requirement or
+    # preference, a "very important" social need, or daily social contact.
+    social = hi.get("socialProfile") if isinstance(hi.get("socialProfile"), dict) else {}
+    family = hi.get("familyProfile") if isinstance(hi.get("familyProfile"), dict) else {}
+    high_social = (
+        _norm(social.get("activityRequirementLevel")) in {"requirement", "preference"}
+        or _norm(family.get("socialInteractionNeed")) == "very important"
+        or _norm(social.get("socialInteractionFrequency")) == "daily"
+        or _contains(query, "culture", "cultural", "classes", "activities", "social", "clubs", "lectures", "music", "art", "events")
+    )
 
     raw_rehab_need = _norm(transition.get("postHospitalRehabNeed"))
     skilled_rehab_known = raw_rehab_need in {"yes", "required", "high"} or _contains(query, "physical therapy", "occupational therapy", "skilled rehab", "rehabilitation")
+    # A structured "needs rehabilitation" answer is a rehabilitation need, same as the words.
+    rehab = rehab or raw_rehab_need in {"yes", "required", "high"}
 
     move_timing = _norm(transition.get("moveTiming") or questionnaire_state.get("moveTiming"))
     budget = _first_known(questionnaire_state, "budget", "monthlyBudget")

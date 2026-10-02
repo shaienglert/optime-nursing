@@ -116,14 +116,9 @@ def _nevada_listing_eligible(row: Dict[str, Any]) -> bool:
     detail = str(row.get("detail_url") or "").strip()
     if license_id in {"", "UNKNOWN"} or not detail.startswith("https://nvdpbh.aithent.com/"):
         return False
-    if str(row.get("license_status") or "").strip().upper() != "ACTIVE":
-        return False
-    expiration = str(row.get("expiration_date") or "").strip()
-    try:
-        expires = datetime.strptime(expiration, "%m/%d/%Y").date()
-    except ValueError:
-        return False
-    return expires >= datetime.now(timezone.utc).date()
+    # Status and expiry come from the single license authority.
+    from app.services.license_standing import license_standing, VERIFIED_CURRENT
+    return license_standing(row) == VERIFIED_CURRENT
 
 
 def _canonical_records_for_market(payload: Dict[str, Any], market: str) -> List[Dict[str, Any]]:
@@ -136,9 +131,9 @@ def _canonical_records_for_market(payload: Dict[str, Any], market: str) -> List[
             if row.get("is_las_vegas_valley") is True and _nevada_listing_eligible(row)
         ]
     elif market == "synthetic-pilot":
-        catalog_size = int(os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "200"))
-        if catalog_size != 200:
-            raise ValueError("OOMNIK_PILOT_CATALOG_SIZE must be 200")
+        catalog_size = int(os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "500"))
+        if catalog_size != 500:
+            raise ValueError("OOMNIK_PILOT_CATALOG_SIZE must be 500")
         rows.sort(key=lambda row: int(row.get("pilot_exposure_order") or 999999))
         rows = rows[:catalog_size]
     return rows
@@ -151,7 +146,7 @@ def _signature(market: str) -> tuple[Any, ...]:
         evidence_mtime = PILOT_EVIDENCE_PATH.stat().st_mtime
     return (
         market,
-        os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "200") if market == "synthetic-pilot" else None,
+        os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "500") if market == "synthetic-pilot" else None,
         os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50") if market == "synthetic-pilot" else None,
         REGISTRY_PATH.stat().st_mtime,
         evidence_mtime,
@@ -549,8 +544,8 @@ def get_exposed_canonical_facility_ids() -> List[str]:
     if runtime["market"] != "synthetic-pilot":
         return list(canonical)
     requested_limit = int(os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50"))
-    if requested_limit not in {50, 100, 150, 200}:
-        raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 50, 100, 150, or 200")
+    if requested_limit not in {50, 100, 150, 200, 500}:
+        raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 50, 100, 150, 200, or 500")
     ordered = sorted(
         canonical,
         key=lambda canonical_id: int(canonical[canonical_id].get("pilot_exposure_order") or 999999),
@@ -584,11 +579,13 @@ def query_facility_knowledge_catalog(
     requested = sorted({str(value).strip() for value in (required_parameter_ids or []) if str(value).strip()})
     candidate_ids = set(all_ids)
     excluded_by_parameter: Dict[str, int] = {}
+    excluded_ids_by_parameter: Dict[str, List[str]] = {}
     for parameter_id in requested:
         values = runtime["capability_value_index"].get(parameter_id, {})
         explicitly_negative = set(values.get("NO", set()))
         candidate_ids.difference_update(explicitly_negative)
         excluded_by_parameter[parameter_id] = len(explicitly_negative)
+        excluded_ids_by_parameter[parameter_id] = sorted(explicitly_negative)
 
     verified = 0
     pending = 0
@@ -619,6 +616,7 @@ def query_facility_knowledge_catalog(
         "pending_verification_count": pending,
         "excluded_explicit_negative_count": len(all_ids) - len(candidate_ids),
         "excluded_by_parameter": excluded_by_parameter,
+        "excluded_ids_by_parameter": excluded_ids_by_parameter,
         "classification_counts": dict(sorted(classification_counts.items())),
         "unknown_is_not_negative": True,
     }
@@ -691,8 +689,6 @@ def _resolve_rows_for_facility_lean(
             raw_value = "UNKNOWN"
             source = "Not verified"
             detail_scope = parameter["applicable_scope"]
-        if parameter["parameter_id"] == "current_availability":
-            raw_value = "UNKNOWN"
         resolved.append({
             "parameter_id": parameter["parameter_id"],
             "raw_value": raw_value,
@@ -759,9 +755,10 @@ def _resolve_rows_for_facility(
             evidence_records = []
 
         if parameter["parameter_id"] == "current_availability":
-            raw_value = "UNKNOWN"
-            display_value = "Confirm directly with facility"
-            source = "Direct facility confirmation required"
+            # Preserve governed evidence (YES/NO/LIMITED/UNKNOWN) as the single factual
+            # source. Decision policy treats every value as volatile and pending direct
+            # confirmation; presentation must not erase the evidence to achieve that.
+            display_value = f"{raw_value} — confirm directly with facility"
 
         resolved.append({
             "parameter_id": parameter["parameter_id"],

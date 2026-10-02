@@ -19,8 +19,11 @@ import { applyCanonicalIdentity } from "@/lib/canonical-intake-state";
 export type IntakeExtras = {
   assistance: string[];
   activities: string[];
+  activityImportance: string;
+  languageImportance: string;
   dietary: string[];
   dietaryOther: string;
+  kosherImportance: string;
   nearbyPlaces: string[];
   nearbyOther: string;
   nearbyImportance: string;
@@ -35,6 +38,10 @@ export type IntakeExtras = {
   recentHospitalization: string;
   rehabNeed: string;
   hospitalTiming: string;
+  recentProcedure: string;
+  procedureType: string;
+  expectedRecovery: string;
+  temporarySupportMonths: string;
   memoryWandering: string;
   secureMemory: string;
   language: string;
@@ -123,8 +130,11 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
   return {
     assistance: state.assistanceLevel ? state.assistanceLevel.split(", ") : [],
     activities: state.happinessPreferences || [],
+    activityImportance: human.socialProfile.activityRequirementLevel || "",
+    languageImportance: human.languageProfile.languageNeedScope || "",
     dietary: (human.foodProfile.dietaryPreferences || []).filter((item) => !item.startsWith("Other: ")),
     dietaryOther: (human.foodProfile.dietaryPreferences || []).find((item) => item.startsWith("Other: "))?.slice(7) || "",
+    kosherImportance: human.culturalProfile.kosherRequirements || "",
     nearbyPlaces: state.nearbyPlaces || [],
     nearbyOther: (state.nearbyPlaces || []).find((item) => item.startsWith("Other: "))?.slice(7) || "",
     nearbyImportance: state.nearbyPlacesImportance || "",
@@ -139,6 +149,10 @@ export function createExtras(state: QuestionnaireState): IntakeExtras {
     recentHospitalization: human.transitionRiskProfile.recentHospitalization || "",
     rehabNeed: human.transitionRiskProfile.postHospitalRehabNeed || "",
     hospitalTiming: human.transitionRiskProfile.hospitalizationRecency || "",
+    recentProcedure: human.transitionRiskProfile.recentProcedure || "",
+    procedureType: human.transitionRiskProfile.procedureType || "",
+    expectedRecovery: human.transitionRiskProfile.expectedRecovery || "",
+    temporarySupportMonths: human.transitionRiskProfile.temporarySupportMonths || "",
     memoryWandering: human.transitionRiskProfile.wanderingConcerns || "",
     secureMemory: human.futureCareProfile.secureMemoryNeighborhoodNeed || "",
     language: human.languageProfile.preferredSpokenLanguage || "",
@@ -166,6 +180,11 @@ const setMedical = (context: IntakeContext, patch: Partial<QuestionnaireState["m
 });
 
 const setExtra = (context: IntakeContext, patch: Partial<IntakeExtras>): IntakeContext => ({ ...context, extras: { ...context.extras, ...patch } });
+const setRecovery = (context: IntakeContext, patch: Partial<QuestionnaireState["humanIntelligenceV2"]["transitionRiskProfile"]>, extras: Partial<IntakeExtras>): IntakeContext => ({
+  ...context,
+  extras: { ...context.extras, ...extras },
+  draft: { ...context.draft, humanIntelligenceV2: { ...context.draft.humanIntelligenceV2, transitionRiskProfile: { ...context.draft.humanIntelligenceV2.transitionRiskProfile, ...patch } } },
+});
 
 const setIndependence = (context: IntakeContext, patch: Partial<QuestionnaireState["humanIntelligenceV2"]["independenceProfile"]>): IntakeContext => ({
   ...context,
@@ -490,6 +509,52 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setExtra(context, { hospitalTiming: text(value) }),
   },
   {
+    id: "recentProcedure",
+    section: SECTION_MEDICAL,
+    prompt: "Was the recent hospital stay related to a surgery or medical procedure?",
+    kind: "single",
+    options: ["Yes", "No", "Not sure"],
+    required: true,
+    label: "recent procedure",
+    visible: ({ extras }) => extras.recentHospitalization === "Yes",
+    get: ({ extras }) => extras.recentProcedure,
+    set: (context, value) => setRecovery(context, { recentProcedure: text(value) }, { recentProcedure: text(value) }),
+  },
+  {
+    id: "procedureType",
+    section: SECTION_MEDICAL,
+    prompt: "What surgery or procedure was it?",
+    kind: "text",
+    required: true,
+    label: "procedure type",
+    visible: ({ extras }) => extras.recentProcedure === "Yes",
+    get: ({ extras }) => extras.procedureType,
+    set: (context, value) => setRecovery(context, { procedureType: text(value) }, { procedureType: text(value) }),
+  },
+  {
+    id: "expectedRecovery",
+    section: SECTION_MEDICAL,
+    prompt: "Is the current extra support expected to be temporary as recovery progresses?",
+    kind: "single",
+    options: ["Yes", "No", "Not sure"],
+    required: true,
+    label: "expected recovery",
+    visible: ({ extras }) => extras.recentProcedure === "Yes",
+    get: ({ extras }) => extras.expectedRecovery,
+    set: (context, value) => setRecovery(context, { expectedRecovery: text(value) }, { expectedRecovery: text(value) }),
+  },
+  {
+    id: "temporarySupportMonths",
+    section: SECTION_MEDICAL,
+    prompt: "About how many months is the extra support expected to be needed?",
+    kind: "number",
+    required: true,
+    label: "temporary support duration",
+    visible: ({ extras }) => extras.expectedRecovery === "Yes",
+    get: ({ extras }) => extras.temporarySupportMonths,
+    set: (context, value) => setRecovery(context, { temporarySupportMonths: text(value) }, { temporarySupportMonths: text(value) }),
+  },
+  {
     id: "rehabNeed",
     section: SECTION_MEDICAL,
     prompt: "Is rehabilitation or closer monitoring still needed?",
@@ -598,6 +663,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setExtra(context, { activities: list(value) }),
   },
   {
+    id: "activityImportance",
+    section: SECTION_FIT,
+    prompt: "Are these activities a requirement for the community, or preferences?",
+    kind: "single",
+    options: ["Requirement", "Preference"],
+    required: true,
+    label: "activity requirement level",
+    visible: ({ extras }) => extras.activities.length > 0,
+    get: ({ extras }) => extras.activityImportance,
+    set: (context, value) => setExtra(context, { activityImportance: text(value) }),
+  },
+  {
     id: "nearbyPlaces",
     section: SECTION_FIT,
     prompt: "What would you like to have nearby?",
@@ -699,6 +776,18 @@ export const QUESTIONS: IntakeQuestion[] = [
     set: (context, value) => setExtra(context, { language: text(value) }),
   },
   {
+    id: "languageImportance",
+    section: SECTION_FIT,
+    prompt: "Is support in this language a requirement, or a preference?",
+    kind: "single",
+    options: ["Requirement", "Preference"],
+    required: true,
+    label: "language requirement level",
+    visible: ({ extras }) => Boolean(extras.language) && extras.language !== "English",
+    get: ({ extras }) => extras.languageImportance,
+    set: (context, value) => setExtra(context, { languageImportance: text(value) }),
+  },
+  {
     id: "medicalLanguage",
     section: SECTION_FIT,
     prompt: "Which language is needed for medical communication?",
@@ -726,6 +815,27 @@ export const QUESTIONS: IntakeQuestion[] = [
       if (added === "No restrictions / eats everything") return setExtra(context, { dietary: ["No restrictions / eats everything"], dietaryOther: "" });
       return setExtra(context, { dietary: next.filter((item) => item !== "No restrictions / eats everything") });
     },
+  },
+  {
+    id: "kosherImportance",
+    section: SECTION_FIT,
+    prompt: "Is keeping kosher a requirement, or a preference?",
+    kind: "single",
+    options: ["Requirement", "Preference"],
+    required: true,
+    label: "kosher requirement level",
+    visible: ({ extras }) => extras.dietary.includes("Kosher"),
+    get: ({ extras }) => extras.kosherImportance,
+    set: (context, value) => ({
+      ...setExtra(context, { kosherImportance: text(value) }),
+      draft: {
+        ...context.draft,
+        humanIntelligenceV2: {
+          ...context.draft.humanIntelligenceV2,
+          culturalProfile: { ...context.draft.humanIntelligenceV2.culturalProfile, kosherRequirements: text(value) },
+        },
+      },
+    }),
   },
   {
     id: "dietaryOther",
@@ -926,14 +1036,14 @@ export function buildSubmission(context: IntakeContext): QuestionnaireState {
     },
     humanIntelligenceV2: {
       ...draft.humanIntelligenceV2,
-      socialProfile: { ...draft.humanIntelligenceV2.socialProfile, socialInteractionFrequency: extras.socialFrequency, hobbyParticipation: extras.activities },
+      socialProfile: { ...draft.humanIntelligenceV2.socialProfile, socialInteractionFrequency: extras.socialFrequency, hobbyParticipation: extras.activities, activityRequirementLevel: extras.activityImportance },
       culturalProfile: {
         ...draft.humanIntelligenceV2.culturalProfile,
         religionImportance: extras.religiousCommunity,
         faithTraditions: extras.religiousCommunity === "Yes" ? [extras.religion] : [],
         religiousSupportNeeds: extras.religiousCommunity === "Yes" ? extras.religiousNeeds : [],
       },
-      languageProfile: { ...draft.humanIntelligenceV2.languageProfile, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage },
+      languageProfile: { ...draft.humanIntelligenceV2.languageProfile, preferredSpokenLanguage: extras.language, medicalDiscussionLanguage: extras.medicalLanguage, languageNeedScope: extras.languageImportance },
       foodProfile: { dietaryPreferences: [...extras.dietary.filter((item) => item !== "Other"), ...(extras.dietaryOther.trim() ? [`Other: ${extras.dietaryOther.trim()}`] : [])] },
       personalityProfile: { ...draft.humanIntelligenceV2.personalityProfile, communitySizePreference: extras.communityStyle },
       transitionRiskProfile: {

@@ -17,93 +17,89 @@ const scenarioStart = Number(process.env.OOMNIK_SCENARIO_START || 0);
 const scenarioCount = Number(process.env.OOMNIK_SCENARIO_COUNT || 1);
 const expectedCohort = Number(process.env.OOMNIK_EXPECTED_COHORT || 0);
 
-// Golden acceptance oracle: these cases intentionally cover distinct decision contracts.
-// They replace accidental combinatorial variation with explicit expected behavior.
-const GOLDEN_ORACLE = {
-  "pilot-001": { care: ["INDEPENDENT_LIVING","ASSISTED_LIVING"], forbidden: ["MEMORY_CARE_ONLY","SKILLED_NURSING_ONLY","REHABILITATION_ONLY"], budget: 5000, location: "Las Vegas", distance: "10", futureCare: "Preferred" },
-  "pilot-002": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["adl_support","medication_support"], budget: 6000, location: "Henderson", distance: "10", availability: "REQUIRED" },
-  "pilot-003": { care: ["MEMORY_CARE"], required: ["memory_care","wandering_safety"], forbidden: ["INDEPENDENT_LIVING"], budget: 7000, location: "Las Vegas", distance: "20" },
-  "pilot-004": { care: ["REHABILITATION","SKILLED_NURSING"], required: ["rehabilitation"], forbidden: ["INDEPENDENT_LIVING","MEMORY_CARE_ONLY"], budget: 7000, location: "Las Vegas", distance: "20" },
-  "pilot-005": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["couple_coresidence","adl_support"], budget: 8000, location: "Henderson", distance: "20", couple: true },
-  "pilot-006": { care: ["ASSISTED_LIVING","SMALL_GROUP_HOME"], required: ["adl_support","medicaid_pathway"], budget: 3000, location: "Las Vegas", distance: "30", medicaid: "REQUIRED" },
-  "pilot-007": { care: ["ASSISTED_LIVING","CONTINUING_CARE"], required: ["adl_support","kosher"], preferred: ["hebrew"], budget: 6500, location: "Las Vegas", distance: "30" },
-  "pilot-008": { care: ["INDEPENDENT_LIVING","ASSISTED_LIVING"], forbidden: ["MEMORY_CARE_ONLY"], preferred: ["social_fit","nearby_places"], budget: 5000, location: "Las Vegas", distance: "30" },
-  "pilot-009": { care: ["SKILLED_NURSING","ASSISTED_LIVING"], required: ["dialysis","wound_care"], budget: 7500, location: "Las Vegas", distance: "20" },
-  "pilot-010": { care: ["CONTINUING_CARE"], required: ["continuum_of_care"], forbidden: ["INDEPENDENT_LIVING_ONLY","ASSISTED_LIVING_ONLY"], budget: 9900, location: "Las Vegas", distance: "50", futureCare: "Required" },
-};
-
+// Golden personas. The answers are keyed by intake question id, validated against the live
+// question graph by tests/golden-personas.test.ts (no browser), and written -- together
+// with the oracle and the exact step sequence the graph produces -- to this fixture. The
+// journey only replays it: no prompt patterns, no answers maintained here.
+const PERSONAS = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../backend/gold_examples/oomnik_golden_personas_v1.submissions.json'), 'utf8')).personas;
 
 function scenarioFor(index) {
-  const id = `pilot-${String(index + 1).padStart(3, '0')}`;
-  const oracle = GOLDEN_ORACLE[id];
-  if (!oracle) throw new Error(`Missing golden oracle for ${id}`);
-  const base = {
-    id, relationship: 'Mom', age: '80-84', budget: oracle.budget,
-    moveTiming: '1-3 months', attitude: 'Cautious but open', social: 'Weekly',
-    community: 'No preference', activities: ['Music', 'Classes'],
-    concerns: ['Independence', 'Daily routine'], diet: 'Low sodium',
-    futureCare: oracle.futureCare || 'Preferred', distance: oracle.distance,
+  const persona = PERSONAS[index];
+  if (!persona) throw new Error(`No golden persona at index ${index}`);
+  const answers = Object.fromEntries(persona.steps.filter((step) => step.answer !== null).map((step) => [step.id, step.answer]));
+  const oracle = persona.oracle;
+  return {
+    persona,
+    oracle,
+    answers,
+    id: persona.id,
+    budget: oracle.budget,
     location: oracle.location,
+    distance: oracle.distance,
+    language: answers.language || 'English',
+    medicalLanguage: answers.medicalLanguage || answers.language || 'English',
+    diet: (answers.dietary || [])[0] || 'No restrictions / eats everything',
+    futureCare: oracle.futureCare || answers.continuum || 'Preferred',
   };
-  const overrides = {
-    "pilot-001": { relationship: "Mom", age: "75-79", social: "Daily", community: "Large and active", activities: ["Music","Cultural activities"] },
-    "pilot-002": { relationship: "Dad", age: "80-84", moveTiming: "Within 30 days" },
-    "pilot-003": { relationship: "Dad", age: "80-84", community: "Small and familiar" },
-    "pilot-004": { relationship: "Dad", age: "80-84", moveTiming: "Immediately" },
-    "pilot-005": { relationship: "Couple", age: "80-84", community: "Medium" },
-    "pilot-006": { relationship: "Mom", age: "80-84", moveTiming: "Within 30 days" },
-    "pilot-007": { relationship: "Grandma", age: "80-84", activities: ["Religious life","Cultural activities"], diet: "Kosher" },
-    "pilot-008": { relationship: "Mom", age: "75-79", social: "Daily", community: "Large and active", activities: ["Exercise","Classes"] },
-    "pilot-009": { relationship: "Dad", age: "75-79", moveTiming: "Within 30 days" },
-    "pilot-010": { relationship: "Myself", age: "70-74", moveTiming: "Planning ahead", futureCare: "Required" },
-  };
-  return { ...base, ...(overrides[id] || {}) };
 }
 
 /**
- * Drive the intake one question at a time.
+ * Replay a golden persona through the real intake, one question at a time.
  *
- * The intake asks a single question per step and decides the next one from the answers so
- * far, so the spec cannot click a fixed list of buttons: it has to read the question on
- * screen and answer that. `answers` maps a prompt pattern to what to do. A single-choice
- * answer advances by itself; anything else needs "Next".
+ * The question on screen is identified by its data-question-id, and answered from the
+ * persona by that id and its kind. A question the persona has no answer for fails with
+ * its id: the static validator should already have caught it, so reaching one here means
+ * the browser shows a question the data model does not.
  */
-async function answerInterview(page, answers, maxSteps = 120) {
+async function answerInterview(page, scenario, maxSteps = 120) {
   const asked = [];
   for (let step = 0; step < maxSteps; step += 1) {
     if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
     const summary = page.getByRole('heading', { name: /Here’s what I understood/i });
     if (await summary.isVisible().catch(() => false)) return asked;
 
-    const heading = page.locator('main h1').first();
-    await heading.waitFor({ state: 'visible' });
-    const prompt = (await heading.innerText()).trim();
-    if (asked[asked.length - 1] === prompt) {
+    const heading = page.locator('main h1[data-question-id]').first();
+    const visible = await heading.waitFor({ state: 'visible', timeout: 15_000 }).then(() => true).catch(() => false);
+    if (!visible) {
+      if (/\/intake-confirmation(?:\?|$)/.test(page.url()) || await summary.isVisible().catch(() => false)) return asked;
+      throw new Error(`No intake question on screen after: ${asked.join(' > ')}`);
+    }
+    const id = await heading.getAttribute('data-question-id');
+    const kind = await heading.getAttribute('data-question-kind');
+    if (asked[asked.length - 1] === id) {
       await page.waitForURL(/\/intake-confirmation(?:\?|$)/, { timeout: 5_000 }).catch(() => {});
       if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
-      throw new Error(`Intake repeated a question without advancing: ${prompt}`);
+      throw new Error(`Intake repeated question "${id}" without advancing`);
     }
-
-    const entry = answers.find(([pattern]) => pattern.test(prompt));
-    if (!entry) throw new Error(`No answer configured for intake question: "${prompt}"`);
-    const [, action] = entry;
-
-    if (action.choose) {
-      const choice = page.getByRole('button', { name: action.choose, exact: true });
-      await choice.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => {});
-      if (/\/intake-confirmation(?:\?|$)/.test(page.url())) return asked;
-      asked.push(prompt);
-      await choice.click();
+    asked.push(id);
+    const has = Object.prototype.hasOwnProperty.call(scenario.answers, id);
+    const next = page.getByRole('button', { name: /^(Next →|See the summary →)$/ });
+    if (!has) {
+      const step = scenario.persona.steps.find((item) => item.id === id);
+      if (step && !step.required) { await next.click(); continue; }
+      throw new Error(`${scenario.id}: the browser asked "${id}", which the persona does not answer — run tests/golden-personas.test.ts`);
+    }
+    const value = scenario.answers[id];
+    if (kind === 'single') {
+      await page.getByRole('button', { name: String(value), exact: true }).click();
       continue; // a single choice advances on its own
     }
-    asked.push(prompt);
-    if (action.select) {
-      for (const option of action.select) await page.getByRole('button', { name: option, exact: true }).click();
+    if (kind === 'multi') {
+      for (const option of value) await page.getByRole('button', { name: String(option), exact: true }).click();
+    } else {
+      const range = page.locator('main input[type="range"]');
+      if (kind === 'number' && await range.count()) {
+        await range.first().evaluate((el, v) => {
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+          setter.call(el, String(v));
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }, Number(value));
+      } else {
+        await page.locator('main input[type="text"], main input[type="number"], main textarea').first().fill(String(value));
+      }
     }
-    if (action.fill !== undefined) {
-      await page.locator('main input[type="text"], main input[type="number"]').first().fill(String(action.fill));
-    }
-    await page.getByRole('button', { name: /^(Next →|See the summary →)$/ }).click();
+    await next.click();
   }
   throw new Error('Intake did not reach the summary within the step budget');
 }
@@ -113,8 +109,7 @@ test.describe('real synthetic-pilot customer journey', () => {
 
   for (let scenarioIndex = scenarioStart; scenarioIndex < scenarioStart + scenarioCount; scenarioIndex += 1) {
     const scenario = scenarioFor(scenarioIndex);
-    const oracle = GOLDEN_ORACLE[scenario.id];
-    if (!oracle) throw new Error(`Missing golden oracle for ${scenario.id}`);
+    const { oracle } = scenario;
     test(`${scenario.id} completes the real customer journey`, async ({ page }) => {
     page.setDefaultTimeout(15_000);
     const errors = [];
@@ -124,46 +119,13 @@ test.describe('real synthetic-pilot customer journey', () => {
 
     await page.goto('http://127.0.0.1:3000/intake', { waitUntil: 'networkidle' });
 
-    const asked = await answerInterview(page, [
-      [/Who are we finding the right place for\?/i, { choose: scenario.relationship }],
-      [/About how old/i, { choose: scenario.age }],
-      [/Which part of the Las Vegas Valley would you prefer\?/i, { choose: scenario.location }],
-      [/How far is still close enough\?/i, { choose: scenario.distance }],
-      [/What kind of help makes everyday life easier\?/i, { select: ['Help with bathing', 'Help with dressing', 'Help with medications'] }],
-      [/usually get around\?/i, { choose: 'Independent' }],
-      [/getting up, sitting down, or transferring\?/i, { choose: 'No' }],
-      [/falls in the last six months\?/i, { choose: 'No' }],
-      [/changes in memory or confusion lately\?/i, { choose: 'No' }],
-      [/ongoing medical care the community/i, { choose: 'No' }],
-      [/hospital stay recently\?/i, { choose: 'No' }],
-      [/Medicaid situation\?/i, { choose: 'Not eligible' }],
-      [/What monthly budget would feel comfortable\?/i, { fill: scenario.budget }],
-      [/When would you ideally like the move to happen\?/i, { choose: scenario.moveTiming }],
-      [/feel about the idea of moving\?/i, { choose: scenario.attitude }],
-      [/How social would/i, { choose: scenario.social }],
-      [/What kind of community would feel most comfortable\?/i, { choose: scenario.community }],
-      [/genuinely enjoy doing\?/i, { select: scenario.activities }],
-      [/What would you like to have nearby\?/i, { select: ["Parks & walking paths"] }],
-      [/How important is it to be close to these places\?/i, { choose: "Nice to have" }],
-      [/specific person or place it would be important to stay close to\?/i, { choose: "No specific destination" }],
-      [/hate for .* to lose after the move\?/i, { select: scenario.concerns }],
-      [/Anything specific we should preserve\?/i, { fill: `${scenario.id}: preserve familiar routines and preferred activities.` }],
-      [/What language feels most natural day to day\?/i, { choose: 'English' }],
-      [/food preferences or requirements/i, { select: [scenario.diet] }],
-      [/religious or faith community be important\?/i, { choose: 'No' }],
-      [/pet need to move with/i, { choose: 'No' }],
-      [/leave the community and go out on/i, { choose: 'Yes' }],
-      [/need parking at the community\?/i, { choose: 'No' }],
-      [/provide more care later/i, { choose: scenario.futureCare }],
-      [/How broadly would you like me to search\?/i, { choose: 'Show me both approaches' }],
-    ]);
+    const asked = await answerInterview(page, scenario);
 
     // The interview must ask one question at a time and never repeat itself.
     expect(new Set(asked).size).toBe(asked.length);
     expect(asked.length).toBeGreaterThan(20);
-    expect(asked[0]).toMatch(/Who are we finding the right place for\?/i);
-    expect(asked[1]).toMatch(/About how old/i);
-    expect(asked[2]).toMatch(/Which part of the Las Vegas Valley would you prefer\?/i);
+    // The browser must walk exactly the question graph the persona was validated against.
+    expect(asked, `${scenario.id}: browser question sequence differs from the intake data model`).toEqual(scenario.persona.steps.map((step) => step.id));
 
     if (!/\/intake-confirmation(?:\?|$)/.test(page.url())) {
       await page.getByText('Yes — this reflects what I told Oomnik.').click();
@@ -200,7 +162,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       const answerBox = page.getByLabel('Your answer');
       const continueButton = page.getByRole('button', { name: /^Continue$/ });
       if (await answerBox.count()) {
-        await answerBox.fill(`Use the confirmed questionnaire facts: English for daily life, medical discussions and social interaction; budget $${scenario.budget} per month including all required care${oracle.couple ? ' and both residents, who must live together' : ''}; ${scenario.location} within ${scenario.distance} miles; ${scenario.diet === 'Kosher' ? 'kosher meals are required, a religious community is not required' : 'low sodium is a preference, not a mandatory clinical diet'}; future care ${scenario.futureCare.toLowerCase()}. No additional medical requirement beyond the questionnaire.`);
+        await answerBox.fill(`Use the confirmed questionnaire facts: ${scenario.language} for daily life and social interaction, ${scenario.medicalLanguage} for medical discussions; budget $${scenario.budget} per month including all required care${oracle.couple ? ' and both residents, who must live together' : ''}; ${scenario.location} within ${scenario.distance} miles; ${scenario.diet === 'Kosher' ? 'kosher meals are required, a religious community is not required' : 'low sodium is a preference, not a mandatory clinical diet'}; future care ${scenario.futureCare.toLowerCase()}. No additional medical requirement beyond the questionnaire.`);
         await continueButton.click();
       } else {
         const offeredOption = page.locator('main section button').first();
@@ -235,11 +197,14 @@ test.describe('real synthetic-pilot customer journey', () => {
       needs: payload.patient_needs_profile?.needs?.map(need => ({ id: need.parameter_id, level: need.requirement_level, value: need.desired_value })),
     }));
     const classifiedCohort = payload.candidate_discovery?.total_facilities_classified;
-    if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
+    if (classifiedCohort !== undefined) expect([expectedCohort, 500]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
+    // Whether each oracle requirement became a MUST is graded by
+    // backend/tests/test_golden_persona_decisions.py, from the same persona, against the
+    // engine's real parameter ids. The browser checks the flow and the universal invariants.
     const budgetNeed = payload.patient_needs_profile.needs.find(item => item.parameter_id === 'current_price');
-    expect(budgetNeed.desired_value).toBe(scenario.budget);
+    expect(Number(budgetNeed.desired_value)).toBe(Number(scenario.budget));
     expect(Number.isFinite(minimumCarePrice)).toBe(true);
     // A verified option may be shown up to ten percent over the stated budget, labelled as
     // an exception and ranked after every in-budget option. Nothing further over is shown.

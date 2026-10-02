@@ -26,6 +26,10 @@ def _upper(value: Any) -> str:
     return str(value or "UNKNOWN").strip().upper()
 
 
+URGENT_MOVE_TIMINGS = {"immediately", "within 30 days"}
+URGENT_AVAILABILITY_KEY = "CURRENT_AVAILABILITY_FOR_URGENT_MOVE"
+
+
 def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_query: str, living_strategy: Dict[str, Any], human_context: Dict[str, Any], *, care_delivery_signals=None) -> Dict[str, Any]:
     query = str(natural_language_query or "").lower()
     signals = living_strategy.get("signals") if isinstance(living_strategy.get("signals"), dict) else {}
@@ -106,6 +110,9 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if _upper(future.get("secureMemoryNeighborhoodNeed")) == "YES" or _upper(transition.get("wanderingConcerns")) == "YES":
         add_must("SECURED_UNIT_AVAILABLE", "The resident explicitly needs a secure setting or wandering protection.", "verified secured-unit capability")
 
+    if _upper(transition.get("postHospitalRehabNeed")) == "YES":
+        add_must("POST_HOSPITAL_REHAB_PROGRAM", "Recovery after hospitalization requires a verified rehabilitation program with PT/OT, nursing and physician coordination.", "verified rehabilitation program and clinical support")
+
     if signals.get("rehabilitation_need_detected"):
         add_must("REHAB_PATH_AVAILABLE", "The recovery plan requires access to appropriate rehabilitation/PT/OT, either onsite or through a verified external pathway.", "rehab/PT/OT evidence")
 
@@ -136,17 +143,46 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
     if any(token in query for token in ("dining", "restaurant", "food")):
         add_nice("DINING_EXPERIENCE", "Dining quality/experience is explicitly relevant.")
     human_profile = questionnaire_state.get("humanIntelligenceV2") if isinstance(questionnaire_state.get("humanIntelligenceV2"), dict) else {}
+    # A stated preferred language is a NICE the Structured Profile carries; it used to be
+    # dropped before ranking (golden ranking oracle, persona 007).
+    language_profile = human_profile.get("languageProfile") if isinstance(human_profile.get("languageProfile"), dict) else {}
+    preferred_language = str(language_profile.get("preferredSpokenLanguage") or language_profile.get("medicalDiscussionLanguage") or "").strip()
+    if preferred_language and preferred_language.lower() not in {"english", "no preference", "unknown", "not sure"}:
+        language_required = _upper(language_profile.get("languageNeedScope")) in {"REQUIREMENT", "REQUIRED", "MUST"}
+        if language_required:
+            add_must("REQUIRED_LANGUAGE_SUPPORT", f"The resident explicitly requires {preferred_language} language support.", "verified language capability")
+            must[-1]["value"] = preferred_language
+        else:
+            add_nice("PREFERRED_LANGUAGE_SUPPORT", f"The resident prefers {preferred_language}; verified language support should rank higher.")
+            nice[-1]["value"] = preferred_language
+    social_profile = human_profile.get("socialProfile") if isinstance(human_profile.get("socialProfile"), dict) else {}
+    activities = [str(x).strip() for x in social_profile.get("hobbyParticipation") or [] if str(x).strip()]
+    if activities and _upper(social_profile.get("activityRequirementLevel")) in {"REQUIREMENT", "REQUIRED", "MUST"}:
+        add_must("REQUIRED_ACTIVITIES", "The family explicitly marked the selected activities as required.", "verified activities/programming evidence")
+        must[-1]["value"] = activities
     food_profile = human_profile.get("foodProfile") if isinstance(human_profile.get("foodProfile"), dict) else {}
     dietary_preferences = " ".join(str(value or "").lower() for value in food_profile.get("dietaryPreferences") or [])
     if "kosher" in query or "kosher" in dietary_preferences:
-        add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
+        cultural_profile = human_profile.get("culturalProfile") if isinstance(human_profile.get("culturalProfile"), dict) else {}
+        kosher_level = _upper(cultural_profile.get("kosherRequirements"))
+        if kosher_level in {"REQUIREMENT", "REQUIRED", "MUST"}:
+            add_must("KOSHER_MEALS", "The client explicitly marked keeping kosher as a requirement.", "verified kosher meal capability")
+        else:
+            add_nice("KOSHER_MEALS", "Verified kosher meal availability is an explicit resident preference.")
 
     budget = questionnaire_state.get("budget")
     if isinstance(budget, (int, float)) and float(budget) > 0:
         add_nice("BUDGET_FIT", "The verified starting monthly price should fit the client's stated budget.")
 
+    # Availability depends on move timing (owner, 2026-10-02). For an urgent move it is a
+    # CLIENT MUST: only current YES/LIMITED evidence passes; a recorded NO is
+    # PENDING_RECONFIRMATION (volatile, never a permanent fail) and no/stale evidence is
+    # EVIDENCE_PENDING -- neither is shown as a recommendation now. For a later move it is
+    # informational and never excludes a community.
     move_timing = str(questionnaire_state.get("moveTiming") or "").strip()
-    if move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
+    if move_timing.lower() in URGENT_MOVE_TIMINGS:
+        add_must(URGENT_AVAILABILITY_KEY, f"The family needs to move {move_timing.lower()}; current availability must be confirmed.", "current availability YES/LIMITED from governed evidence or direct confirmation")
+    elif move_timing and move_timing.lower() not in {"not sure", "planning ahead"}:
         add_nice("AVAILABILITY_FIT", "Verified availability should fit the client's requested move timing.")
 
     future_profile = human_profile.get("futureCareProfile") if isinstance(human_profile.get("futureCareProfile"), dict) else {}
@@ -188,6 +224,7 @@ def build_client_intent(questionnaire_state: Dict[str, Any], natural_language_qu
 def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Dict[str, Any]:
     hard_fail: List[str] = []
     must_unknown: List[str] = []
+    pending_reasons: Dict[str, str] = {}
     must_pass: List[str] = []
     nice_match: List[str] = []
     nice_unknown: List[str] = []
@@ -205,14 +242,16 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
     for must in intent.get("must_haves") or []:
         key = str(must.get("key") or "")
         if key == "LICENSE_CURRENTLY_VALID":
-            # Only a confirmed-past expiration_date (a curated registry field, not agent
-            # evidence) fails this; missing/unparseable data passes rather than blocking
-            # on absence of information, matching the "never fail on unverified data"
-            # policy but treating a *reliable* negative here as safe to hard-fail on.
-            if row.get("license_expired") is True:
+            # One authority: license_standing (also used by the market listing filter).
+            # Where a license is legally required, missing/unverified is PENDING, never PASS.
+            from app.services.license_standing import license_standing, VERIFIED_CURRENT, NOT_REQUIRED, EXPIRED, NOT_ACTIVE
+            standing = row.get("license_standing") or license_standing(row)
+            if standing in {VERIFIED_CURRENT, NOT_REQUIRED}:
+                must_pass.append(key)
+            elif standing in {EXPIRED, NOT_ACTIVE}:
                 hard_fail.append(key)
             else:
-                must_pass.append(key)
+                must_unknown.append(key)
         elif key == "LAS_VEGAS":
             las_vegas_valley_cities = {
                 "LAS VEGAS", "HENDERSON", "NORTH LAS VEGAS", "PARADISE",
@@ -233,6 +272,57 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 hard_fail.append(key)
             else:
                 must_pass.append(key)
+        elif key == "REQUIRED_LANGUAGE_SUPPORT":
+            wanted = str(must.get("value") or "").strip().lower()
+            verified = str((row.get("verified_capabilities") or {}).get("languages") or "").lower()
+            if not verified or verified == "unknown":
+                must_unknown.append(key)
+            elif wanted and wanted in verified:
+                must_pass.append(key)
+            else:
+                hard_fail.append(key)
+        elif key == "REQUIRED_ACTIVITIES":
+            wanted = [str(x).strip().lower() for x in must.get("value") or [] if str(x).strip()]
+            verified = str((row.get("verified_capabilities") or {}).get("activities") or "").lower()
+            if not verified or verified == "unknown":
+                must_unknown.append(key)
+            elif all(x in verified for x in wanted):
+                must_pass.append(key)
+            else:
+                hard_fail.append(key)
+        elif key == URGENT_AVAILABILITY_KEY:
+            recorded = _upper((row.get("verified_capabilities") or {}).get("current_availability"))
+            if recorded in {"YES", "LIMITED"}:
+                must_pass.append(key)
+            else:
+                must_unknown.append(key)
+                pending_reasons[key] = "PENDING_RECONFIRMATION" if recorded == "NO" else "EVIDENCE_PENDING"
+        elif key == "KOSHER_MEALS":
+            # Same evidence authority as the needs engine and the NICE branch below: the
+            # governed kosher parameter. Verified YES passes, verified incompatible evidence
+            # fails, and UNKNOWN stays a verification item.
+            matched = {str(item.get("parameter_id") or "") for item in row.get("matched_needs") or []}
+            gaps = {str(item.get("parameter_id") or "") for item in row.get("unmet_verified_needs") or []}
+            if "kosher" in matched:
+                must_pass.append(key)
+            elif "kosher" in gaps:
+                hard_fail.append(key)
+            else:
+                must_unknown.append(key)
+        elif key == "MEDICAID_PATHWAY_REQUIRED":
+            # Added by the affordability-floor rule (affordability_floor.py). Passes only on
+            # verified Medicaid acceptance. UNKNOWN is a verification item, never a pass; and
+            # since the research pipeline stores "not found" and "not researched" alike, an
+            # unverified False never fails a community either.
+            # Governed facility parameter first (verified YES/NO is real evidence either
+            # way); then agent payloads, which may confirm but never exclude.
+            governed = _upper((row.get("verified_capabilities") or {}).get("medicaid_attributes"))
+            if governed == "YES" or any(p.get("medicaid_accepted_verified") is True for p in payloads):
+                must_pass.append(key)
+            elif governed == "NO":
+                hard_fail.append(key)
+            else:
+                must_unknown.append(key)
         elif key == "ADL_SUPPORT_AVAILABLE":
             # Never hard-fail entry on unverified agent evidence -- see MEDICATION_SUPPORT_AVAILABLE
             # above for why: the research pipeline cannot currently distinguish "confirmed not
@@ -244,12 +334,15 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # nursing facility sat in MUST_PENDING_VERIFICATION on this key alone, even ones
             # with governed CMS-sourced evidence (facility_parameter_service.py) confirming
             # adl_support=YES that this gate simply never consulted.
-            if canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or any(
+            governed = _upper((row.get("verified_capabilities") or {}).get("adl_support"))
+            if canonical_type in {"ASSISTED_LIVING_RFG", "SKILLED_NURSING"} or governed == "YES" or any(
                 p.get("adl_support_verified") is True or p.get("outside_care_allowed_verified") is True
                 for p in payloads
             ):
                 must_pass.append(key)
             else:
+                # A verified in-house NO is still not a fail: external_care_policy lets a
+                # verified agency pathway satisfy the care need (combined care layer).
                 must_unknown.append(key)
         elif key == "MEDICATION_SUPPORT_AVAILABLE":
             # Entry into the candidate list must never turn on an unverified "False": the
@@ -257,7 +350,8 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             # "never researched" (both are stored as False), so a hard_fail here would wrongly
             # exclude facilities with no real negative finding. In-house-vs-external-agency
             # delivery is a ranking signal (see combined_care_solution_runtime.py), never a gate.
-            if any(p.get("medication_support_verified") is True for p in payloads):
+            governed = _upper((row.get("verified_capabilities") or {}).get("medication_support"))
+            if governed == "YES" or any(p.get("medication_support_verified") is True for p in payloads):
                 must_pass.append(key)
             else:
                 must_unknown.append(key)
@@ -271,6 +365,14 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
             if _upper(secured.get("value")) == "YES" and secured.get("verified") is True:
                 must_pass.append(key)
             elif _upper(secured.get("value")) == "NO" and secured.get("verified") is True:
+                hard_fail.append(key)
+            else:
+                must_unknown.append(key)
+        elif key == "POST_HOSPITAL_REHAB_PROGRAM":
+            proof = governed_evidence_runtime.post_hospital_rehab_state(row)
+            if proof == "PASS":
+                must_pass.append(key)
+            elif proof == "FAIL":
                 hard_fail.append(key)
             else:
                 must_unknown.append(key)
@@ -355,6 +457,18 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
                 nice_fit_scores[key] = 100.0
             else:
                 nice_unknown.append(key)
+        elif key == "PREFERRED_LANGUAGE_SUPPORT":
+            wanted = str(nice.get("value") or "").strip().lower()
+            verified = str((row.get("verified_capabilities") or {}).get("languages") or "").lower()
+            if wanted and verified and verified != "unknown":
+                if wanted in verified:
+                    nice_match.append(key)
+                    nice_fit_scores[key] = 100.0
+                else:
+                    nice_mismatch.append(key)
+                    nice_fit_scores[key] = 0.0
+            else:
+                nice_unknown.append(key)
         elif key == "DINING_EXPERIENCE":
             if any(p.get("dining_verified") is True for p in payloads):
                 nice_match.append(key)
@@ -426,6 +540,7 @@ def evaluate_candidate_intent(row: Dict[str, Any], intent: Dict[str, Any]) -> Di
         "hard_gate": "FAIL" if hard_fail else ("PENDING_VERIFICATION" if must_unknown else "PASS"),
         "must_pass": must_pass,
         "must_unknown": must_unknown,
+        "must_pending_reasons": pending_reasons,
         "must_fail": hard_fail,
         "nice_match": nice_match,
         "nice_unknown": nice_unknown,

@@ -266,8 +266,8 @@ export function ResultsPageClient() {
     } else {
       params.delete("show_more");
     }
-    const next = `/results/details${params.toString() ? `?${params.toString()}` : ""}`;
-    const current = `/results/details${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+    const next = `/results${params.toString() ? `?${params.toString()}` : ""}`;
+    const current = `/results${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
     if (next !== current) {
       router.replace(next, { scroll: false });
     }

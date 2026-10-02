@@ -182,3 +182,45 @@ def ensure_market_metric_observation_schema(engine: Engine) -> None:
     from app.models.competitive_intelligence import MarketMetricObservation  # noqa: PLC0415
 
     MarketMetricObservation.__table__.create(bind=engine, checkfirst=True)
+
+
+def ensure_client_structured_profile_schema(engine: Engine) -> None:
+    tables = {
+        "client_cases": [
+            ("structured_profile_schema_version", "VARCHAR(80) NOT NULL DEFAULT 'oomnik-structured-profile/0.1'"),
+            ("structured_profile_version", "INTEGER NOT NULL DEFAULT 1"),
+            ("structured_profile_json", "TEXT NULL"),
+        ],
+        "client_questionnaire_versions": [
+            ("structured_profile_schema_version", "VARCHAR(80) NOT NULL DEFAULT 'oomnik-structured-profile/0.1'"),
+            ("structured_profile_json", "TEXT NULL"),
+        ],
+    }
+    with engine.begin() as connection:
+        for table_name, specs in tables.items():
+            columns = _column_names(engine, table_name)
+            if not columns:
+                continue
+            for name, ddl in specs:
+                if name not in columns:
+                    connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {name} {ddl}"))
+
+
+def ensure_facility_room_pricing_schema(engine: Engine) -> None:
+    columns = _column_names(engine, "facility_room_types")
+    if not columns:
+        return
+    specs = [
+        ("pricing_qualifier", "VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN'"),
+        ("care_fee_cents", "INTEGER NULL"),
+        ("mandatory_monthly_fees_cents", "INTEGER NULL"),
+        ("second_person_fee_cents", "INTEGER NULL"),
+        ("entrance_fee_cents", "INTEGER NULL"),
+        ("occupancy_type", "VARCHAR(32) NULL"),
+        ("source_url", "TEXT NULL"),
+        ("observed_at", "DATETIME NULL"),
+    ]
+    with engine.begin() as connection:
+        for name, ddl in specs:
+            if name not in columns:
+                connection.execute(text(f"ALTER TABLE facility_room_types ADD COLUMN {name} {ddl}"))

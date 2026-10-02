@@ -148,9 +148,11 @@ def _governed_context(
     questionnaire_state: Dict[str, Any],
 ) -> Dict[str, Any]:
     accounting = account_user_input(natural_language_query)
+    # Facts count as answered only from the canonical state; text reaches it through the
+    # interpreter's quoted patch, never through a regex here (single authority).
     answered_fact_keys = _answered_fact_keys(questionnaire_state) | _explicit_client_fact_keys(
         questionnaire_state,
-        natural_language_query,
+        "",
     )
     blockers = _base_client_blockers(base_context, answered_fact_keys) + _strategy_client_blockers(strategy_context, answered_fact_keys)
     material_unknowns = [str(value) for value in strategy_context.get("material_unknowns") or []]
@@ -276,7 +278,10 @@ def _canonical_fallback_result(base_result: Dict[str, Any], blocker: Dict[str, A
         "decision_readiness": "NEEDS_CLARIFICATION",
         "next_question": fallback_question,
         "selected_fact_key": fact_key,
-        "statements": [{
+        # Keep the interpreter's own statements: they carry the exact family quotes that
+        # every AI_EXTRACTED profile field needs. Dropping them used to leave the patch
+        # in place without its quotes. The policy question is appended, not substituted.
+        "statements": [*[s for s in base_result.get("statements") or [] if isinstance(s, dict) and str(s.get("status") or "").upper() != "ASKED"], {
             "raw_text": str(blocker.get("reason") or readable_fact),
             "meaning": str(blocker.get("reason") or readable_fact),
             "importance": "MUST",
@@ -333,7 +338,10 @@ def _apply_canonical_policy_without_ai(
     return context
 
 
-def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str) -> Dict[str, Any]:
+def _consult_semantic_ai(
+    context: Dict[str, Any], questionnaire_state: Dict[str, Any], natural_language_query: str, *,
+    initial_result: Dict[str, Any] | None = None, initial_error: Exception | None = None,
+) -> Dict[str, Any]:
     enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     required = os.getenv("OPTIME_SEMANTIC_AI_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
     context["semantic_ai"] = {"enabled": enabled, "required": required, "status": "DISABLED"}
@@ -344,7 +352,11 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         return _apply_canonical_policy_without_ai(context, questionnaire_state, natural_language_query)
 
     try:
-        result = _call_semantic_ai(context, questionnaire_state, natural_language_query)
+        # The interpreter already ran once (extraction pass); reuse its packet. Later calls
+        # in this function are wording-only repairs for a target the policy selected.
+        if initial_error is not None:
+            raise initial_error
+        result = initial_result if initial_result is not None else _call_semantic_ai(context, questionnaire_state, natural_language_query)
         readiness = str(result.get("decision_readiness") or "NEEDS_CLARIFICATION").upper()
 
         all_guardian_gaps = list(((context.get("readiness_guardian") or {}).get("client_owned_blockers") or []))
@@ -445,15 +457,21 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
             user_text=natural_language_query,
         )
         blocking_keys = set(gap_policy.get("blocking_gap_keys") or [])
-        has_question = bool(str(result.get("next_question") or "").strip()) and not suppress_misaligned_question
-        if suppress_misaligned_question:
-            readiness = "NEEDS_RESEARCH"
-        elif gap_policy.get("escalation_required"):
+        # Deterministic policy owns WHETHER another client fact is required and WHICH
+        # fact is next.  Semantic AI owns only the conversational wording for that
+        # already-selected target.  A missing/misaligned AI question therefore cannot
+        # change readiness or choose an unstructured target.
+        canonical_blockers = [
+            row for row in all_guardian_gaps
+            if str(row.get("fact_key") or "") in blocking_keys
+        ]
+        selected_blocker = canonical_blockers[0] if canonical_blockers else None
+        if gap_policy.get("escalation_required") or blocking_keys:
             readiness = "NEEDS_CLARIFICATION"
-        elif blocking_keys:
-            readiness = "NEEDS_CLARIFICATION" if has_question else "NEEDS_RESEARCH"
         else:
             readiness = "READY"
+        if selected_blocker is not None:
+            context["readiness_guardian"]["selected_fact_key"] = selected_blocker.get("fact_key")
         context["canonical_gap_policy"] = gap_policy
         context["readiness_guardian"]["client_owned_blockers"] = [
             row for row in all_guardian_gaps if str(row.get("fact_key") or "") in blocking_keys
@@ -473,6 +491,13 @@ def _consult_semantic_ai(context: Dict[str, Any], questionnaire_state: Dict[str,
         context["adaptive_questions"] = []
 
         next_question = "" if suppress_misaligned_question else str(result.get("next_question") or "").strip()
+        # The model's wording is accepted only when it addresses the deterministic
+        # target. Otherwise use neutral canonical wording for the same target.
+        if readiness == "NEEDS_CLARIFICATION" and selected_blocker is not None and (
+            not next_question or not _question_matches_guardian_target(result, selected_blocker)
+        ):
+            fallback = _canonical_fallback_result({}, selected_blocker)
+            next_question = str(fallback.get("next_question") or "")
         if readiness == "NEEDS_CLARIFICATION" and next_question:
             question_key = _semantic_question_key(next_question)
             answered_keys = _answered_adaptive_keys(questionnaire_state)
@@ -520,25 +545,87 @@ def build_human_intelligence_context(
     questionnaire_state: Dict[str, Any], natural_language_query: str = "", *,
     prepared_strategy: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
-    base_context = _base.build_human_intelligence_context(questionnaire_state, natural_language_query)
-    # The intake composer owns this interpretation. Standalone callers still
-    # construct it here; an explicitly supplied empty strategy is also authoritative.
-    strategy_context = prepared_strategy if prepared_strategy is not None else build_living_strategy_context(questionnaire_state, natural_language_query)
-    context = _governed_context(base_context, strategy_context, natural_language_query, questionnaire_state)
+    """One pass, in authority order (owner, 2026-10-02):
+
+    1. Interpreter: the AI reads the family text once and returns a quoted patch.
+    2. Canonical Structured Profile: buttons + validated patch -> materialized questionnaire.
+    3. Strategy and Guardian, ONCE, from that canonical questionnaire only.
+    4. Readiness and the next question from the deterministic gap policy; the AI may only
+       word a target the policy selected.
+
+    Nothing after step 2 reads the family text for facts. The text is used only for
+    statement accounting and the deterministic immediate-safety screen.
+    """
+    from app.services.canonical_intake_state import canonicalize_intake_state
+    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+
+    enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+    has_narrative = bool(str(natural_language_query or "").strip())
+
+    # 1. Interpreter (extraction). It is given the interview policy, not a guardian built
+    #    from pre-interpretation state: choosing the target is the policy's job (step 4).
+    interpreter_result: Dict[str, Any] | None = None
+    interpreter_error: Exception | None = None
+    if enabled:
+        try:
+            interpreter_result = _call_semantic_ai(_interpreter_context(), questionnaire_state, natural_language_query)
+        except Exception as exc:  # handled by the policy path in step 4
+            interpreter_error = exc
+    semantic_unavailable = (not enabled) or interpreter_error is not None
+
+    # 2. Canonical profile.
+    semantic_result = dict(interpreter_result or {})
+    unprocessed_narrative = has_narrative and semantic_unavailable
+    if unprocessed_narrative:
+        semantic_result["_unprocessed_narrative"] = str(natural_language_query or "")
+    structured = build_structured_profile(questionnaire_state, semantic_result, family_text=str(natural_language_query or ""))
+    canonical = materialize_questionnaire(structured)
+    if isinstance(questionnaire_state.get("questionnaireCompletion"), dict):
+        canonical["questionnaireCompletion"] = questionnaire_state["questionnaireCompletion"]
+    canonical = canonicalize_intake_state(canonical)
+
+    # 3. Strategy and Guardian once, from canonical state.
+    strategy_context = prepared_strategy if prepared_strategy is not None else build_living_strategy_context(canonical, "")
+    base_context = _base.build_human_intelligence_context(canonical, "")
+    context = _governed_context(base_context, strategy_context, natural_language_query, canonical)
     context["adaptive_questions"] = []
     context["decision_readiness"] = "NEEDS_CLARIFICATION"
-    context = _consult_semantic_ai(context, questionnaire_state, natural_language_query)
+
+    # 4. Readiness and question.
+    context = _consult_semantic_ai(context, canonical, natural_language_query, initial_result=interpreter_result, initial_error=interpreter_error)
     completion = questionnaire_state.get("questionnaireCompletion") or {}
     structured_complete = completion.get("mandatoryComplete") is True and completion.get("conditionalFollowUpsComplete") is True
-    semantic = context.get("semantic_ai") or {}
-    narrative_extraction_required = bool(str(natural_language_query or "").strip()) and not structured_complete
-    semantic_unavailable = semantic.get("status") in {"FAILED", "REQUIRED_BUT_DISABLED"}
+    narrative_extraction_required = has_narrative and not structured_complete
+    resolution_status = (
+        "UNAVAILABLE" if narrative_extraction_required and semantic_unavailable
+        else "UNPROCESSED" if structured_complete and unprocessed_narrative
+        else "ASSESSED"
+    )
+    if resolution_status == "UNAVAILABLE":
+        # The family's only account was never interpreted: the interview is not complete,
+        # whatever the guardian sees in the (empty) canonical state.
+        context["decision_readiness"] = "NEEDS_CLARIFICATION"
+    context["structured_profile_shadow"] = structured
+    context["canonical_decision_questionnaire"] = canonical
+    context["canonical_living_strategy"] = strategy_context
     context["intake_resolution"] = {
         "source": "STRUCTURED" if structured_complete else "NARRATIVE",
         "narrative_extraction_required": narrative_extraction_required,
-        "status": "UNAVAILABLE" if narrative_extraction_required and semantic_unavailable else "ASSESSED",
+        "unprocessed_narrative": unprocessed_narrative,
+        "status": resolution_status,
     }
     return context
+
+
+def _interpreter_context() -> Dict[str, Any]:
+    return {
+        "interview_policy": {
+            "owner": "SEMANTIC_AI",
+            "role": "EXTRACT_CLIENT_FACTS_INTO_THE_CANONICAL_PROFILE_WITH_EXACT_QUOTES",
+            "guardian_role": "CONSTRAIN_VALIDATE_BLOCK_NOT_SCRIPT",
+        },
+        "material_unknown_policy": {"unknown_is_not_default": True, "no_silent_drop": True},
+    }
 
 
 @lru_cache(maxsize=1)

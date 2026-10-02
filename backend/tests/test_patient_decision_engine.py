@@ -35,7 +35,13 @@ class PatientNeedsProfileTests(unittest.TestCase):
 
         self.assertEqual(needs["current_price"]["desired_value"], 5000.0)
         self.assertEqual(needs["current_price"]["requirement_level"], "MEDIUM")
-        self.assertEqual(needs["current_availability"]["requirement_level"], "HIGH")
+        # Owner decision (a), 2026-10-02: for an urgent move availability is a CLIENT MUST
+        # (CURRENT_AVAILABILITY_FOR_URGENT_MOVE, client intent). The needs-layer row is
+        # disclosure only -- one authority for the gate.
+        self.assertEqual(needs["current_availability"]["requirement_level"], "PREFERENCE")
+        from app.services.client_intent_runtime import build_client_intent
+        intent = build_client_intent({"budget": 5000, "moveTiming": "Within 30 days"}, "", {"signals": {}, "household": {}}, {"signals": {}})
+        self.assertIn("CURRENT_AVAILABILITY_FOR_URGENT_MOVE", {m["key"] for m in intent["must_haves"]})
 
     def test_natural_language_stroke_profile_maps_expected_parameters(self) -> None:
         profile = build_patient_needs_profile(
@@ -75,7 +81,7 @@ class EligibilitySemanticsTests(unittest.TestCase):
         self.assertEqual(within[0], "MATCH")
         self.assertEqual(over[0], "GAP")
 
-    def test_limited_does_not_satisfy_yes_only_critical_need(self) -> None:
+    def test_limited_availability_remains_pending_direct_confirmation(self) -> None:
         need = {
             "parameter_id": "current_availability",
             "requirement_level": "HIGH",
@@ -86,7 +92,7 @@ class EligibilitySemanticsTests(unittest.TestCase):
             need,
             {"current_availability": {"raw_value": "LIMITED", "source": "Facility reported"}},
         )
-        self.assertEqual(result[0], "GAP")
+        self.assertEqual(result[0], "UNKNOWN")
 
     def test_unknown_required_need_is_not_automatically_ineligible(self) -> None:
         needs = [

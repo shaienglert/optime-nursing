@@ -84,6 +84,8 @@ def _prompt(*, facility_name: str, city: str, source_url: str, source_text: str,
             "Medication reminders alone are REMINDER_ONLY and do not prove medication management or administration.",
             "General personal care does not prove bathing or dressing assistance unless the text supports those ADLs.",
             "Return every canonical capability exactly once.",
+            "When room_pricing is requested, extract only explicitly published room/floor-plan pricing facts; never infer fees or availability.",
+            "Preserve pricing qualifiers exactly: STARTING_AT, RANGE, EXACT, or UNKNOWN.",
             "evidence_summary must be a concise paraphrase of the source support, not an invented claim.",
             "confidence measures interpretation confidence, not facility quality.",
         ],
@@ -100,7 +102,8 @@ def _prompt(*, facility_name: str, city: str, source_url: str, source_text: str,
                     "evidence_summary": "short paraphrase",
                     "confidence": "HIGH|MEDIUM|LOW",
                 }
-            ]
+            ],
+            "room_pricing": "optional list of source-grounded room pricing objects when requested"
         },
     }
 
@@ -134,6 +137,7 @@ def _validate(packet: Dict[str, Any]) -> Dict[str, Any]:
         "status": "AI_SEMANTIC_EVIDENCE_INTERPRETED",
         "closed_world_validated": True,
         "capabilities": [by_key[key] for key in CAPABILITY_SCHEMA],
+        "room_pricing": [item for item in (packet.get("room_pricing") or []) if isinstance(item, dict) and str(item.get("room_type_name") or "").strip() and str(item.get("pricing_qualifier") or "UNKNOWN").upper() in {"EXACT", "STARTING_AT", "RANGE", "UNKNOWN"} and str(item.get("availability_status") or "UNKNOWN").upper() in {"AVAILABLE", "LIMITED", "WAITLIST", "UNAVAILABLE", "UNKNOWN"}],
     }
 
 

@@ -104,6 +104,13 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
             "humanIntelligenceV2": {
                 "personalityProfile": {"communitySizePreference": "Large community"},
                 "familyProfile": {"socialInteractionNeed": "Very important"},
+                "transitionRiskProfile": {
+                    "recentProcedure": "Yes",
+                    "procedureType": "spinal surgery",
+                    "expectedRecovery": "Yes",
+                    "temporarySupportMonths": "3",
+                    "postHospitalRehabNeed": "Yes",
+                },
             },
         }
         query = (
@@ -111,10 +118,10 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
             "The husband had spinal surgery and needs rehabilitation and temporary help with bathing and dressing for 3 months. "
             "The wife is independent and they want to live together."
         )
-        strategy = build_living_strategy_context(state, query)
+        strategy = build_living_strategy_context(state, "")
         human = build_human_intelligence_context(questionnaire_state=state, natural_language_query=query)
         human["living_strategy"] = strategy
-        intent = build_client_intent(state, query, strategy, human)
+        intent = build_client_intent(state, "", strategy, human)
         row = {
             "facility_name": "Unknown IL",
             "address": "1 Test St",
@@ -129,26 +136,38 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         self.assertNotEqual(fit["hard_gate"], "FAIL")
         self.assertIn("ADL_SUPPORT_AVAILABLE", fit["must_unknown"])
 
-    def test_las_ventanas_primary_evidence_satisfies_couple_rehab_musts(self) -> None:
+    def test_las_ventanas_primary_evidence_does_not_prove_full_post_hospital_program(self) -> None:
         state = {
-            "relationship": "Wife",
+            "relationship": "Couple",
             "ageGroup": "80+",
             "assistanceLevel": "Needs assistance with bathing and dressing",
             "memoryStatus": "No",
             "humanIntelligenceV2": {
                 "personalityProfile": {"communitySizePreference": "Large community"},
                 "familyProfile": {"socialInteractionNeed": "Very important"},
+                # Canonical recovery facts (single authority) -- the story below repeats
+                # them but no longer reaches the decision by itself.
+                "transitionRiskProfile": {
+                    "recentProcedure": "Yes",
+                    "procedureType": "spinal surgery",
+                    "expectedRecovery": "Yes",
+                    "temporarySupportMonths": "3",
+                    "postHospitalRehabNeed": "Yes",
+                },
             },
+            "happinessPreferences": ["Classes", "Cultural activities"],
+            "locationCity": "Las Vegas",
+            "referenceLocationValue": "Las Vegas",
         }
         query = (
             "My husband and I are both over 80 and want to move to senior living in Las Vegas with lots of culture, classes and activities. "
             "My husband had spinal surgery and needs rehabilitation. He is expected to return to walking, but for the next 3 months he needs help with bathing and dressing. "
             "I am independent and we want to live together."
         )
-        strategy = build_living_strategy_context(state, query)
+        strategy = build_living_strategy_context(state, "")
         human = build_human_intelligence_context(questionnaire_state=state, natural_language_query=query)
         human["living_strategy"] = strategy
-        intent = build_client_intent(state, query, strategy, human)
+        intent = build_client_intent(state, "", strategy, human)
 
         index = get_canonical_facility_index()
         row = dict(index["NV-LIC-4000-AGC-31"], canonical_facility_id="NV-LIC-4000-AGC-31")
@@ -158,7 +177,12 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         attach_provider_housing_evidence(rows)
         fit = evaluate_candidate_intent(rows[0], intent)
 
-        self.assertEqual(fit["hard_gate"], "PASS")
+        # The curated URL establishes therapy access, not the full clinical program.
+        # Preserve those positive proofs while requiring research of the new MUST.
+        self.assertEqual(fit["hard_gate"], "PENDING_VERIFICATION")
+        self.assertIn("POST_HOSPITAL_REHAB_PROGRAM", fit["must_unknown"])
+        self.assertNotIn("POST_HOSPITAL_REHAB_PROGRAM", fit["must_pass"])
+        self.assertNotIn("POST_HOSPITAL_REHAB_PROGRAM", fit["must_fail"])
         for key in ("LAS_VEGAS", "COUPLE_CORESIDENCE", "ADL_SUPPORT_AVAILABLE", "REHAB_PATH_AVAILABLE", "RECOVERY_TRANSITION_COMPATIBLE", "NO_FORCED_MEMORY_PLACEMENT"):
             self.assertIn(key, fit["must_pass"])
         self.assertIn("RICH_CULTURE_AND_ACTIVITIES", fit["nice_match"])

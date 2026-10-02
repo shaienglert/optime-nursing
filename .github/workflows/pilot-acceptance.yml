@@ -1,6 +1,10 @@
 name: Pilot acceptance cases
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 # Runs the ten family situations against the synthetic-pilot market, where every one of
-# the 200 communities has a curated record and verified evidence for 31 parameters, and
+# the 500 communities has a curated record and verified evidence for 31 parameters, and
 # grades each recommendation against those records rather than against the engine's own
 # verdict. A recommendation over the family's budget, one missing a capability the family
 # needs, or one in a kind of community the case must never be shown, fails the run.
@@ -10,6 +14,7 @@ on:
       - 'backend/app/**'
       - 'database/synthetic_pilot/**'
       - 'scripts/pilot_acceptance/**'
+      - 'scripts/validate_synthetic_pilot.cjs'
       - '.github/workflows/pilot-acceptance.yml'
   workflow_dispatch:
 jobs:
@@ -18,6 +23,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Validate the 500-community catalog
+        run: node scripts/validate_synthetic_pilot.cjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -26,7 +33,7 @@ jobs:
         env:
           # The whole catalog, not the default first fifty: a benchmark that looks at a
           # quarter of the market is not a benchmark.
-          OOMNIK_PILOT_FACILITY_LIMIT: '200'
+          OOMNIK_PILOT_FACILITY_LIMIT: '500'
           PYTHONHASHSEED: '0'
         run: python scripts/pilot_acceptance/run_all.py --out "${{ runner.temp }}/pilot-acceptance"
       - name: Keep the per-case snapshots

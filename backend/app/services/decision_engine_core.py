@@ -23,6 +23,10 @@ from app.services.facility_parameter_service import (
     get_runtime_metadata,
 )
 from app.services.canonical_universe import configured_canonical_market
+from app.services.license_standing import license_standing
+from app.services.must_evidence_sources import MUST_EVIDENCE_PARAMETER_IDS
+from app.services.affordability_floor import FUNDING_EVIDENCE_PARAMETER_IDS
+from app.services.regulatory_quality_layer import QUALITY_PARAMETERS as REGULATORY_QUALITY_PARAMETERS
 from app.services.care_input_assertions import without_negated_nursing
 from app.services.location_radius import (
     annotate_distances,
@@ -357,6 +361,10 @@ def _map_structured_medical_needs(questionnaire: Dict[str, Any], needs_by_id: Di
 
 def _map_structured_follow_ups(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     medical = questionnaire.get("medicalCareProfile") or {}
+    if _normalize(medical.get("dialysisTransportation")) == "yes":
+        _add_need(needs_by_id, "transportation", "REQUIRED", "YES", ["YES"], "SERVICE",
+                  "questionnaire.medicalCareProfile.dialysisTransportation", 1.0,
+                  "Requires transportation to dialysis appointments")
     transfer = _normalize(medical.get("transferAssistance"))
     if transfer in {"one person", "two people", "mechanical lift"}:
         level = "HIGH" if transfer in {"two people", "mechanical lift"} else "MEDIUM"
@@ -402,7 +410,11 @@ def _map_personal_preferences(questionnaire: Dict[str, Any], needs_by_id: Dict[s
     if any("gluten" in _normalize(item) for item in dietary):
         _add_need(needs_by_id, "gluten_free", "PREFERENCE", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.foodProfile.dietaryPreferences", 1.0, "Gluten-free option preferred")
     if any("kosher" in _normalize(item) for item in dietary):
-        _add_need(needs_by_id, "kosher", "PREFERENCE", "YES", ["YES", "UNKNOWN"], "SERVICE", "questionnaire.foodProfile.dietaryPreferences", 1.0, "Kosher option preferred")
+        human = questionnaire.get("humanIntelligenceV2") if isinstance(questionnaire.get("humanIntelligenceV2"), dict) else {}
+        cultural = human.get("culturalProfile") if isinstance(human.get("culturalProfile"), dict) else {}
+        kosher_level = _normalize(cultural.get("kosherRequirements"))
+        kosher_required = kosher_level in {"requirement", "required", "must"}
+        _add_need(needs_by_id, "kosher", "HIGH" if kosher_required else "PREFERENCE", "YES", ["YES"] if kosher_required else ["YES", "UNKNOWN"], "SERVICE", "questionnaire.culturalProfile.kosherRequirements", 1.0, "Kosher meals are required" if kosher_required else "Kosher option preferred")
 
     distance = _normalize(questionnaire.get("distanceFromFamily"))
     if distance:
@@ -439,12 +451,14 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
 
     move_timing = _normalize(questionnaire.get("moveTiming"))
     if move_timing in {"immediately", "within 30 days"}:
+        # Disclosure only. The urgent-move gate is the CLIENT MUST
+        # CURRENT_AVAILABILITY_FOR_URGENT_MOVE (client_intent_runtime) -- one authority.
         _add_need(
             needs_by_id,
             "current_availability",
-            "HIGH",
+            "PREFERENCE",
             "YES",
-            ["YES"],
+            ["YES", "LIMITED"],
             "FACILITY",
             "questionnaire.moveTiming",
             1.0,
@@ -464,6 +478,10 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
         )
     medicaid_status = _normalize(questionnaire.get("medicaidStatus"))
     if medicaid_status in {"approved", "application pending", "may qualify", "not sure"}:
+        # Whether Medicaid is a CLIENT MUST depends on the affordability floor of the
+        # search -- the lowest price among candidates that passed SYSTEM MUST and the care
+        # needs -- which this stage cannot know. The runtime decides it after the MUST/care
+        # gate (app/services/affordability_floor.py) and promotes this need there.
         _add_need(
             needs_by_id,
             "medicaid_attributes",
@@ -473,7 +491,7 @@ def _map_financial(questionnaire: Dict[str, Any], needs_by_id: Dict[str, Any]) -
             "FACILITY",
             "questionnaire.medicaidStatus",
             1.0,
-            "Medicaid/payment pathway must be confirmed",
+            "Medicaid/payment pathway should be confirmed",
         )
 
 
@@ -492,6 +510,17 @@ SERVED_CITIES = (
 # commonest surnames in the United States and also a city fifteen miles from Las Vegas.
 _PERSONAL_TITLE = re.compile(r"\b(?:dr|doctor|mr|mrs|ms|miss|nurse|sister|brother|pastor|rabbi|father|prof|professor)\.?\s+$")
 _LOCATION_LEAD = re.compile(r"\b(?:in|near|around|from|at|to|within|outside|by)\s+$")
+
+
+def _structured_location_city(questionnaire: Dict[str, Any]) -> Optional[str]:
+    """City from the structured location answers the intake writes (canonical fields)."""
+    for key in ("locationCity", "city", "referenceLocationValue", "referenceAddress"):
+        value = str(questionnaire.get(key) or "").strip().lower()
+        if value:
+            detected = _detect_location_city(value)
+            if detected:
+                return detected
+    return None
 
 
 def _detect_location_city(normalized: str) -> Optional[str]:
@@ -740,7 +769,11 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     _map_personal_preferences(questionnaire_state, needs_by_id)
     _map_financial(questionnaire_state, needs_by_id)
 
-    nl_meta = _map_natural_language(natural_language_query or "", needs_by_id, care_denials=care_denials)
+    # Shadow migration: direct legacy callers keep mapping until Structured Profile is explicitly authoritative.
+    if questionnaire_state.get("_structured_profile_authoritative") is True:
+        nl_meta = {"status": "RAW_NARRATIVE_NOT_DECISION_INPUT", "location_city": None}
+    else:
+        nl_meta = _map_natural_language(natural_language_query or "", needs_by_id, care_denials=care_denials)
 
     needs = [
         {
@@ -769,7 +802,9 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
         "need_tags": need_tags,
         "priority_parameter_ids": priority_parameter_ids,
         "profile_key": profile_key,
-        "location_city": nl_meta.get("location_city"),
+        # The structured location answer is the authority; free-text city only on the
+        # legacy (non-authoritative) path.
+        "location_city": _structured_location_city(questionnaire_state) or nl_meta.get("location_city"),
         "natural_language_mapping": nl_meta,
     }
 
@@ -780,6 +815,10 @@ def _evaluate_need(need: Dict[str, Any], row_by_param: Dict[str, Dict[str, Any]]
         return "UNKNOWN", "No evidence row available for this parameter."
 
     raw = row.get("raw_value")
+    if need["parameter_id"] == "current_availability":
+        # Availability is volatile by definition. Preserve the evidence for disclosure,
+        # but YES/NO/LIMITED all remain pending direct confirmation for the requested date.
+        return "UNKNOWN", f"Recorded availability is {raw or 'UNKNOWN'}; direct facility confirmation is required."
     if need["parameter_id"] == "current_price":
         price = _to_number(raw)
         budget = _to_number(need.get("desired_value"))
@@ -1757,6 +1796,8 @@ def _build_ranked_candidate_detail(
         "county": table.get("county"),
         "license_expiration_date": canonical_meta.get("expiration_date"),
         "license_expired": _license_expired(canonical_meta.get("expiration_date")),
+        "license_status": canonical_meta.get("license_status"),
+        "license_standing": license_standing({**canonical_meta, "canonical_type": table.get("canonical_type") or canonical_meta.get("canonical_type")}),
         "zip": table.get("zip"),
         "canonical_type": table.get("canonical_type"),
         "role_classification": table.get("role_classification"),
@@ -1783,6 +1824,15 @@ def _build_ranked_candidate_detail(
             parameter: evidence.get("raw_value")
             for parameter, evidence in row_by_param.items()
             if _is_verified_row(evidence)
+        },
+        # Verified government/quality measures with their source, for the Regulatory /
+        # Quality Evidence Layer (regulatory_quality_layer.py). Values stay in their units.
+        "regulatory_quality_evidence": {
+            parameter: {"value": row_by_param[parameter].get("raw_value"), "source_family": str(row_by_param[parameter].get("source") or "UNKNOWN_SOURCE")}
+            for parameter in REGULATORY_QUALITY_PARAMETERS
+            if parameter in row_by_param
+            and _is_verified_row(row_by_param[parameter])
+            and str(row_by_param[parameter].get("raw_value") or "UNKNOWN").upper() != "UNKNOWN"
         },
         "visual_media": build_visual_media_payload(get_facility_media_record(canonical_id)),
         "eligibility_status": eligibility["eligibility_status"],
@@ -1876,6 +1926,9 @@ def run_patient_decision_engine(
         *STAFFING_PARAMETER_IDS,
         *OUTCOME_PARAMETER_IDS,
         *PRACTICAL_FIT_PARAMETER_IDS,
+        *MUST_EVIDENCE_PARAMETER_IDS,
+        *REGULATORY_QUALITY_PARAMETERS,
+        *FUNDING_EVIDENCE_PARAMETER_IDS,
         "current_price",
         "current_availability",
     }
@@ -1897,12 +1950,29 @@ def run_patient_decision_engine(
             for need in needs
             if isinstance(need, dict)
             and str(need.get("requirement_level") or "").upper() in {"", "REQUIRED", "HIGH"}
+            # Volatile availability is evidence for disclosure/research, never a catalog
+            # exclusion. Direct confirmation for the requested date is the sole decision gate.
+            and str(need.get("parameter_id") or "") != "current_availability"
         ],
     )
     discovered_ids = list(catalog_query["candidate_ids"])
+    universe_ids = set(discovered_ids)
+    for excluded in (catalog_query.get("excluded_ids_by_parameter") or {}).values():
+        universe_ids.update(excluded)
     if configured_canonical_market() == "synthetic-pilot":
         exposed_ids = set(get_exposed_canonical_facility_ids())
         discovered_ids = [canonical_id for canonical_id in discovered_ids if canonical_id in exposed_ids]
+        universe_ids &= exposed_ids
+    # Mechanical funnel, stage 1: who entered the market universe and who left at catalog
+    # retrieval on verified NO for a required need (decision_funnel.py reads this).
+    catalog_stage = {
+        "market_universe_count": len(universe_ids),
+        "discovered_count": len(discovered_ids),
+        "excluded_ids_by_parameter": {
+            parameter: sorted(set(ids) & universe_ids)
+            for parameter, ids in (catalog_query.get("excluded_ids_by_parameter") or {}).items()
+        },
+    }
 
     results = []
     requested_city = profile.get("location_city")
@@ -1926,6 +1996,9 @@ def run_patient_decision_engine(
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
 
         eligibility = _eligibility_from_needs(needs, row_by_param)
+        # Urgent-move availability is gated once, by the CLIENT MUST
+        # CURRENT_AVAILABILITY_FOR_URGENT_MOVE (client_intent_runtime): YES/LIMITED pass,
+        # recorded NO -> PENDING_RECONFIRMATION, none/stale -> EVIDENCE_PENDING.
         scoring = _score_result(needs, eligibility)
         geo_note, geo_bonus = _facility_geo_match({"city": table.get("city")}, requested_city)
 
@@ -1995,6 +2068,7 @@ def run_patient_decision_engine(
         questionnaire_state, canonical_index.values(), location_city=requested_city
     )
     annotate_distances(results, location_reference, canonical_index)
+    scored_count = len(results)
     radius_plan = plan_radius_scope(results, questionnaire_state, location_reference)
     location_scope = radius_plan["scope"]
     results = radius_plan["rows"]
@@ -2091,6 +2165,7 @@ def run_patient_decision_engine(
         # for the family to say so. When the reference point had no coordinates this says
         # the radius was not applied, rather than implying it was.
         "location_scope": location_scope,
+        "decision_funnel_catalog": {**catalog_stage, "scored_count": scored_count, "in_scope_count": len(results)},
         "availability_policy": "Current availability must be confirmed directly with the facility.",
         "tie_break_policy": {
             "thresholds": TIE_THRESHOLD_POLICY,

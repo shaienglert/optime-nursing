@@ -63,7 +63,7 @@ from app.services.cms_quality_import import import_quality_data
 from app.services.cms_staffing_import import import_staffing_data
 from app.services.activity_intelligence import ALLOWED_ACTIVITY_CATEGORIES, get_public_activity_categories, import_activity_categories
 from app.services.facility_memory_persistence import apply_provider_verification_answers, facility_memory_overlay
-from app.services.schema_migrations import ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
+from app.services.schema_migrations import ensure_client_structured_profile_schema, ensure_facility_room_pricing_schema, ensure_facility_intelligence_profile_schema, ensure_provider_identity_schema
 from app.services.schema_migrations import ensure_agent_knowledge_report_snapshot_schema
 from app.services.schema_migrations import ensure_market_metric_observation_schema, ensure_market_supply_signal_schema, ensure_state_license_schema
 from app.services.market_report_service import market_report
@@ -227,6 +227,18 @@ def create_client_case_endpoint(payload: ClientCaseCreateRequest):
         return {"case_token": row.case_token, "status": row.status}
     finally:
         db.close()
+
+@app.post("/api/oomniker/advice")
+def oomniker_advice_endpoint(payload: dict):
+    from app.services.oomniker_ai import advise_with_ai
+    return advise_with_ai(analysis=payload.get("analysis") or {}, client_context=payload.get("client_context") or {})
+
+
+@app.post("/api/market-price-floor")
+def market_price_floor_endpoint(questionnaire_state: dict):
+    from app.services.market_price_floor import minimum_price_for_questionnaire
+    return minimum_price_for_questionnaire(questionnaire_state)
+
 
 @app.get("/api/client-cases/{case_token}")
 def get_client_case_endpoint(case_token: str):
@@ -464,7 +476,18 @@ class FacilityRoomTypeOut(BaseModel):
     room_type_name: str
     description: str
     monthly_price: Optional[float] = None
+    pricing_qualifier: str = "UNKNOWN"
+    care_fee: Optional[float] = None
+    mandatory_monthly_fees: Optional[float] = None
+    second_person_fee: Optional[float] = None
+    entrance_fee: Optional[float] = None
+    total_known_monthly_cost: Optional[float] = None
+    total_affordability_status: str = "PENDING"
+    occupancy_type: Optional[str] = None
+    source_url: Optional[str] = None
+    observed_at: Optional[str] = None
     availability_status: str
+    final_availability_status: str = "REQUIRES_DIRECT_VERIFICATION"
     source: str
     last_verified_at: Optional[str] = None
     photos: List[FacilityRoomPhotoOut] = Field(default_factory=list)
@@ -506,6 +529,13 @@ class RoomSubmissionIn(BaseModel):
     room_type_name: str
     description: str = ""
     monthly_price_cents: Optional[int] = None
+    pricing_qualifier: str = "UNKNOWN"
+    care_fee_cents: Optional[int] = None
+    mandatory_monthly_fees_cents: Optional[int] = None
+    second_person_fee_cents: Optional[int] = None
+    entrance_fee_cents: Optional[int] = None
+    occupancy_type: Optional[str] = None
+    source_url: Optional[str] = None
     availability_status: str = "UNKNOWN"
     photo_urls: List[str] = Field(default_factory=list)
 
@@ -769,6 +799,10 @@ class PatientDecisionEngineOut(BaseModel):
     # as the notice above -- undeclared, it is dropped and the page cannot say whether the
     # limit was applied or why not.
     location_scope: Optional[Dict[str, Any]] = None
+    # Mechanical funnel and zero-result classification (decision_funnel.py): how many
+    # communities entered, how many left at each stage and why, and which parameter took
+    # the result to zero. Declared so it is not dropped in serialisation.
+    decision_funnel: Optional[Dict[str, Any]] = None
     # Opaque handle to the server-held copy of this exact response; a personal report
     # for the same inputs can reuse it instead of re-running the engine.
     decision_id: Optional[str] = None
@@ -1657,6 +1691,8 @@ def startup() -> None:
     # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
     ensure_provider_identity_schema(engine)
+    ensure_client_structured_profile_schema(engine)
+    ensure_facility_room_pricing_schema(engine)
     ensure_state_license_schema(engine)
     ensure_market_supply_signal_schema(engine)
     ensure_market_metric_observation_schema(engine)
@@ -2356,7 +2392,18 @@ async def get_canonical_facility_rooms(canonical_id: str, db: Session = Depends(
                 room_type_name=room.room_type_name,
                 description=room.description or "",
                 monthly_price=(room.monthly_price_cents / 100) if room.monthly_price_cents is not None else None,
+                pricing_qualifier=room.pricing_qualifier or "UNKNOWN",
+                care_fee=(room.care_fee_cents / 100) if room.care_fee_cents is not None else None,
+                mandatory_monthly_fees=(room.mandatory_monthly_fees_cents / 100) if room.mandatory_monthly_fees_cents is not None else None,
+                second_person_fee=(room.second_person_fee_cents / 100) if room.second_person_fee_cents is not None else None,
+                entrance_fee=(room.entrance_fee_cents / 100) if room.entrance_fee_cents is not None else None,
+                total_known_monthly_cost=((room.monthly_price_cents or 0)+(room.care_fee_cents or 0)+(room.mandatory_monthly_fees_cents or 0)+(room.second_person_fee_cents or 0))/100 if room.monthly_price_cents is not None else None,
+                total_affordability_status="KNOWN" if room.monthly_price_cents is not None and room.care_fee_cents is not None and room.mandatory_monthly_fees_cents is not None else "PENDING",
+                occupancy_type=room.occupancy_type,
+                source_url=room.source_url,
+                observed_at=room.observed_at.isoformat() if room.observed_at else None,
                 availability_status=room.availability_status,
+                final_availability_status="REQUIRES_DIRECT_VERIFICATION",
                 source=room.source,
                 last_verified_at=room.last_verified_at.isoformat() if room.last_verified_at else None,
                 photos=[FacilityRoomPhotoOut(url=photo.url, caption=photo.caption) for photo in room.photos],

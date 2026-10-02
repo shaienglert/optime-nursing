@@ -9,7 +9,9 @@ def _intent(*must_keys: str) -> dict:
 
 
 def _row(canonical_type: str, **extra) -> dict:
-    return {"canonical_type": canonical_type, "city": "LAS VEGAS", "state": "NV", **extra}
+    # A verified current license, so these fixtures exercise the MUST under test only
+    # (missing/unverified license is PENDING by owner rule -- test_license_validity_gate).
+    return {"canonical_type": canonical_type, "city": "LAS VEGAS", "state": "NV", "license_status": "Active", "expiration_date": "12/31/2099", **extra}
 
 
 def test_secure_questionnaire_answer_requires_secured_unit_evidence():
@@ -213,3 +215,28 @@ def test_explicit_continuum_match_ranks_above_generic_active_adult_fit():
     active_adult["client_intent_fit"] = evaluate_candidate_intent(active_adult, intent)
 
     assert intent_rank_key(continuing_care) < intent_rank_key(active_adult)
+
+
+def test_kosher_requirement_is_client_must_not_nice():
+    questionnaire={"humanIntelligenceV2":{"foodProfile":{"dietaryPreferences":["Kosher"]},"culturalProfile":{"kosherRequirements":"Requirement"}}}
+    intent=build_client_intent(questionnaire,"",{}, {})
+    must={x["key"] for x in intent["must_haves"]}
+    nice={x["key"] for x in intent["nice_to_haves"]}
+    assert "KOSHER_MEALS" in must
+    assert "KOSHER_MEALS" not in nice
+
+
+def test_required_language_is_must_while_preference_is_nice():
+    base={"humanIntelligenceV2":{"languageProfile":{"preferredSpokenLanguage":"Hebrew","languageNeedScope":"Requirement"}}}
+    required=build_client_intent(base,"",{}, {})
+    assert "REQUIRED_LANGUAGE_SUPPORT" in {x["key"] for x in required["must_haves"]}
+    base["humanIntelligenceV2"]["languageProfile"]["languageNeedScope"]="Preference"
+    preferred=build_client_intent(base,"",{}, {})
+    assert "PREFERRED_LANGUAGE_SUPPORT" in {x["key"] for x in preferred["nice_to_haves"]}
+
+
+def test_required_activities_are_must_only_when_explicitly_marked():
+    q={"humanIntelligenceV2":{"socialProfile":{"hobbyParticipation":["Music","Classes"],"activityRequirementLevel":"Requirement"}}}
+    intent=build_client_intent(q,"",{}, {})
+    row=next(x for x in intent["must_haves"] if x["key"]=="REQUIRED_ACTIVITIES")
+    assert row["value"]==["Music","Classes"]

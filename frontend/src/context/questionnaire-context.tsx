@@ -66,6 +66,7 @@ export type HumanIntelligenceV2 = {
     newFriendsImportance: string;
     hobbyParticipation: string[];
     preferredSocialIntensity: string;
+    activityRequirementLevel: string;
   };
   familyProfile: {
     involvedFamilyMembers: string;
@@ -143,6 +144,10 @@ export type HumanIntelligenceV2 = {
     recentHospitalization: string;
     hospitalizationRecency: string;
     postHospitalRehabNeed: string;
+    recentProcedure: string;
+    procedureType: string;
+    expectedRecovery: string;
+    temporarySupportMonths: string;
     wanderingConcerns: string;
   };
   futureCareProfile: {
@@ -277,6 +282,7 @@ export const DEFAULT_STATE: QuestionnaireState = {
       newFriendsImportance: "",
       hobbyParticipation: [],
       preferredSocialIntensity: "",
+      activityRequirementLevel: "",
     },
     familyProfile: {
       involvedFamilyMembers: "",
@@ -354,6 +360,10 @@ export const DEFAULT_STATE: QuestionnaireState = {
       recentHospitalization: "",
       hospitalizationRecency: "",
       postHospitalRehabNeed: "",
+      recentProcedure: "",
+      procedureType: "",
+      expectedRecovery: "",
+      temporarySupportMonths: "",
       wanderingConcerns: "",
     },
     futureCareProfile: {

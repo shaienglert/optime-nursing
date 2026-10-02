@@ -188,6 +188,8 @@ def _recent_completed_item(db, canonical_id: str, dimension: str, hours: int = 2
 
 
 def _queue(db, row: Dict[str, Any], dimension: str, unknown: List[str], candidate_rank_index: int = 0) -> bool:
+    if row.get("synthetic_pilot") is True or str(row.get("canonical_facility_id") or "").startswith("PILOT-NV-"):
+        return False
     agent_key = "activities_intelligence" if dimension == "social_engagement" else "regulatory_intelligence" if dimension == "facility_quality_safety" else "provider_intelligence"
     _ensure_worker(db, agent_key); canonical_id = str(row.get("canonical_facility_id") or "")
     pending = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.agent_key == agent_key, AgentQueueItem.status.in_(["PENDING", "RUNNING"])).all()
@@ -219,6 +221,7 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
             if bind.dialect.name == "sqlite": return {"status": "LOCAL_AGENT_SCHEMA_NOT_INITIALIZED", "market": "las-vegas", "market_scoped": True, "material_gaps": [], "tasks_queued": 0, "pending_backlog": 0, "researched_unknown_count": 0, "decision_finality": "PROVISIONAL_LOCAL_AGENT_SCHEMA_NOT_INITIALIZED", "policy": "Local/test SQLite may omit agent persistence tables; production PostgreSQL must contain them."}
             raise RuntimeError("Production agent persistence schema is incomplete")
         dimensions = _material_dimensions(human_context)
+        search_triggered_research = False
         for candidate_rank_index, row in enumerate(rows):
             cid = str(row.get("canonical_facility_id") or "")
             if not cid: continue
@@ -229,9 +232,9 @@ def attach_agent_evidence_and_queue_gaps(rows: List[Dict[str, Any]], human_conte
                 was_researched = _recent_completed_item(db, cid, dimension)
                 gaps.append({"canonical_facility_id": cid, "facility_name": row.get("facility_name"), "dimension": dimension, "unknown_parameters": unknown, "research_completed_no_public_evidence": was_researched})
                 if was_researched: researched_unknown += 1
-                elif _queue(db, row, dimension, unknown, candidate_rank_index): queued += 1
+                elif search_triggered_research and _queue(db, row, dimension, unknown, candidate_rank_index): queued += 1
         db.commit(); pending_backlog = db.query(AgentQueueItem).filter(AgentQueueItem.queue_type == QUEUE_TYPE, AgentQueueItem.status == "PENDING").count()
-        if queued > 0 or pending_backlog > 0: _kick_worker_async()
+        if search_triggered_research and (queued > 0 or pending_backlog > 0): _kick_worker_async()
         if gaps and queued == 0 and researched_unknown == len(gaps): finality, status = "PROVISIONAL_DIRECT_VERIFICATION_REQUIRED", "PUBLIC_RESEARCH_EXHAUSTED_MATERIAL_UNKNOWN_REMAINS"
         elif gaps: finality, status = "PROVISIONAL_PENDING_AGENT_EVIDENCE", "RESEARCH_REQUIRED"
         else: finality, status = "EVIDENCE_COMPLETE_FOR_MATERIAL_DIMENSIONS", "MATERIAL_EVIDENCE_AVAILABLE"

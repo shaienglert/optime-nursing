@@ -1,5 +1,9 @@
 name: Nevada Production Recommendation Runtime
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     paths:
@@ -110,7 +114,6 @@ jobs:
 
           os.environ['OPTIME_SEMANTIC_AI_ENABLED'] = '1'
           os.environ['OPTIME_SEMANTIC_AI_REQUIRED'] = '1'
-          os.environ['OPTIME_AI_CANDIDATE_RANKING_REQUIRED'] = '1'
 
           # Every persona below states a budget, now also a facility-owned MUST (see
           # semantic_facility_requirements.py's SEMANTIC_BUDGET_VERIFICATION). No
@@ -140,19 +143,28 @@ jobs:
 
           must_pipeline.rank_must_eligible_candidates = unavailable_required_ranking
 
+          # Single authority (owner, 2026-10-01/02): story facts reach the decision only as
+          # quoted interpreter facts in the Canonical Structured Profile. The mocked
+          # interpreter therefore returns, with each packet, the quoted patch a real model
+          # extracts from the story; nothing is read from the text by a regex.
+          def quoted_facts(pairs, patch):
+              return ([{'raw_text': q, 'meaning': q, 'importance': 'MUST', 'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': [path]} for q, path in pairs], patch)
+
+          def with_facts(packet, facts):
+              statements, patch = facts
+              return {**packet, 'statements': list(packet.get('statements') or []) + statements, 'questionnaire_patch': patch}
+
           VALLEY_CITIES = {
               'las vegas', 'henderson', 'north las vegas', 'paradise',
               'spring valley', 'enterprise', 'winchester', 'sunrise manor',
           }
           EXPECTED_RANKING_ORDER = [
               'DETERMINISTIC_MUST_GATE',
-              'SEMANTIC_AI_DYNAMIC_PREFERENCES',
-              'SEMANTIC_AI_ALL_GOVERNED_EVIDENCE',
-              'EVIDENCE_GROUNDED_PREFERENCE_COVERAGE',
-              'PROVIDER_VERIFICATION',
-              'AI_RERANK',
+              'DETERMINISTIC_GOVERNED_NICE_EVIDENCE',
+              'GOVERNMENT_REGULATORY_DATA',
+              'PUBLIC_REPUTATION',
+              'RELEVANT_EVIDENCE_COMPLETENESS',
           ]
-
           base = {
               'relationship': 'Dad',
               'ageGroup': '80-84',
@@ -170,8 +182,12 @@ jobs:
               'He is mentally alert, has no dementia, is still mobile, and needs daily help.'
           )
 
+          BASE_FACTS = quoted_facts(
+              [('lives in Las Vegas', 'referenceLocationValue'), ('recently widowed', 'humanIntelligenceV2.familyProfile.widowStatus')],
+              {'referenceLocationValue': 'Las Vegas', 'humanIntelligenceV2': {'familyProfile': {'widowStatus': 'Recently widowed'}}},
+          )
           clarification_question = 'What matters most to him about the social environment in his next home?'
-          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: with_facts({
               'decision_readiness': 'NEEDS_CLARIFICATION',
               'next_question': clarification_question,
               'statements': [{
@@ -185,7 +201,8 @@ jobs:
                   'clarification_question': clarification_question,
                   'research_task': None,
               }],
-          }
+          }, BASE_FACTS)
+          CURRENT_FACTS = BASE_FACTS
           nonblocking = run_patient_decision_engine(base, query, limit=5)
           human = nonblocking['decision_intelligence']['human_intelligence']
           assert human['decision_readiness'] == 'READY', human
@@ -196,23 +213,23 @@ jobs:
               row['gap_key'] == 'loneliness_severity' and row['classification'] == 'IMPORTANT_NON_BLOCKING'
               for row in human['canonical_gap_policy']['assessments']
           )
-          # Ranking AI is advisory: its unavailability must preserve the verified
-          # MUST-qualified set, explicitly labeled as degraded and unranked.
+          # Candidate-ranking AI is retired from authority. Deterministic governed evidence
+          # preserves and ranks the MUST-qualified set.
           assert nonblocking['result_count'] == 5 and len(nonblocking['results']) == 5
           assert nonblocking['decision_intelligence']['recommendation_execution_allowed'] is True
-          assert nonblocking['decision_intelligence']['canonical_decision_state']['phase'] == 'UNRANKED_ELIGIBLE_SET'
+          assert nonblocking['decision_intelligence']['canonical_decision_state']['phase'] == 'FINAL_RECOMMENDATION'
 
-          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: with_facts({
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
-          }
+          }, CURRENT_FACTS)
           ready_variant = run_patient_decision_engine(base, query, limit=5)
           ready_human = ready_variant['decision_intelligence']['human_intelligence']
           assert ready_human['decision_readiness'] == human['decision_readiness'] == 'READY'
           assert ready_variant['result_count'] == nonblocking['result_count'] == 5
 
-          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: with_facts({
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
-          }
+          }, CURRENT_FACTS)
 
           base_ready = deepcopy(base)
           base_ready['humanIntelligenceV2'] = {
@@ -281,7 +298,7 @@ jobs:
           }
 
           couple_state = {
-              'relationship': 'Wife',
+              'relationship': 'Couple',
               'ageGroup': '80+',
               'assistanceLevel': 'Needs assistance with bathing and dressing',
               'memoryStatus': 'No',
@@ -289,7 +306,14 @@ jobs:
               'humanIntelligenceV2': {
                   'familyProfile': {'socialInteractionNeed': 'Very important'},
                   'personalityProfile': {'communitySizePreference': 'No preference'},
-                  'transitionRiskProfile': {'attitudeTowardMove': 'Wants to move'},
+                  'transitionRiskProfile': {
+                      'attitudeTowardMove': 'Wants to move',
+                      'recentHospitalization': 'Yes',
+                      'recentProcedure': 'Yes',
+                      'procedureType': 'spinal surgery',
+                      'expectedRecovery': 'Yes',
+                      'temporarySupportMonths': '3',
+                  },
               },
           }
           couple_query = (
@@ -298,13 +322,24 @@ jobs:
               'The wife is independent and they want to live together.'
           )
           couple_question = 'What does the rehabilitation team say is needed next?'
+          COUPLE_FACTS = quoted_facts(
+              [('in Las Vegas', 'referenceLocationValue'),
+               ('had spinal surgery', 'humanIntelligenceV2.transitionRiskProfile.recentProcedure'),
+               ('spinal surgery', 'humanIntelligenceV2.transitionRiskProfile.procedureType'),
+               ('is expected to recover', 'humanIntelligenceV2.transitionRiskProfile.expectedRecovery'),
+               ('for the next 3 months', 'humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths'),
+               ('they want to live together', 'humanIntelligenceV2.familyProfile.coupleStayTogetherPreference')],
+              {'referenceLocationValue': 'Las Vegas', 'humanIntelligenceV2': {
+                  'transitionRiskProfile': {'recentProcedure': 'Yes', 'procedureType': 'spinal surgery', 'expectedRecovery': 'Yes', 'temporarySupportMonths': '3'},
+                  'familyProfile': {'coupleStayTogetherPreference': 'They want to live together'}}},
+          )
           couple_answers = iter([
               {'decision_readiness': 'READY', 'next_question': None, 'statements': []},
               {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': couple_question, 'statements': []},
               {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': couple_question, 'statements': []},
               {'decision_readiness': 'NEEDS_CLARIFICATION', 'next_question': couple_question, 'statements': []},
           ])
-          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: next(couple_answers)
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: with_facts(next(couple_answers), COUPLE_FACTS)
           couple_blocked = run_patient_decision_engine(couple_state, couple_query, limit=5)
           couple_human = couple_blocked['decision_intelligence']['human_intelligence']
           unknowns = set(couple_human['living_strategy_guardian']['material_unknowns'])
@@ -324,9 +359,10 @@ jobs:
               'entranceFeeTolerance': 'No',
           })
           couple_ready['humanIntelligenceV2']['transitionRiskProfile']['postHospitalRehabNeed'] = 'No'
-          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: {
+          CURRENT_FACTS = COUPLE_FACTS
+          hi_runtime.interpret_client_intent_with_ai = lambda **kwargs: with_facts({
               'decision_readiness': 'READY', 'next_question': None, 'statements': [],
-          }
+          }, CURRENT_FACTS)
           couple = run_patient_decision_engine(couple_ready, couple_query + ' The clinical team says only personal-care help is needed, not skilled rehab. Our budget is $8,000 monthly; he has Original Medicare; we want to move during recovery and do not want a CCRC entrance fee.', limit=5)
           assert couple['decision_intelligence']['recommendation_execution_allowed'] is True
           assert len(couple['results']) == couple['decision_intelligence']['facility_selection_pipeline']['must_eligible_count'] == 1

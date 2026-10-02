@@ -23,6 +23,7 @@ function IntakeConfirmationContent() {
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const [additionalContext, setAdditionalContext] = useState("");
+  const [narrativeUnprocessed, setNarrativeUnprocessed] = useState(false);
   const inputKey = intakeInputKey(state as unknown as Record<string, unknown>, state.notes || "");
   const requestedDestination = searchParams.get("next")?.startsWith("/results") ? String(searchParams.get("next")) : "/results";
 
@@ -31,11 +32,15 @@ function IntakeConfirmationContent() {
     void fetchPatientNeedsProfile({ questionnaire_state: state as unknown as Record<string, unknown>, natural_language_query: state.notes || "" }).then(profile => {
       if (!active) return;
       const canonical = profile.decision_intelligence?.canonical_decision_state as { authoritative?: boolean; client?: string; system?: string } | undefined;
-      const human = profile.decision_intelligence?.human_intelligence as { semantic_ai?: { status?: string; result?: { statements?: unknown } } } | undefined;
-      if (!profile.intake_profile_id || canonical?.authoritative !== true || canonical.client !== "COMPLETE" || canonical.system === "BLOCKED" || semanticIntakeFailure(human?.semantic_ai) || hasUnresolvedSemanticConflict(human?.semantic_ai?.result?.statements)) {
+      const human = profile.decision_intelligence?.human_intelligence as { semantic_ai?: { status?: string; result?: { statements?: unknown } }; intake_resolution?: { status?: string; unprocessed_narrative?: boolean } } | undefined;
+      const structuredComplete = state.questionnaireCompletion?.mandatoryComplete === true && state.questionnaireCompletion?.conditionalFollowUpsComplete === true;
+      const semanticFailed = semanticIntakeFailure(human?.semantic_ai);
+      const allowStructuredFallback = structuredComplete && semanticFailed;
+      if (!profile.intake_profile_id || canonical?.authoritative !== true || canonical.client !== "COMPLETE" || canonical.system === "BLOCKED" || (semanticFailed && !allowStructuredFallback) || hasUnresolvedSemanticConflict(human?.semantic_ai?.result?.statements)) {
         setReviewError("We need to finish reviewing your answers before you can confirm. Return to the conversation to continue.");
         return;
       }
+      setNarrativeUnprocessed(allowStructuredFallback && !!state.notes?.trim());
       setReviewError(null);
       setReviewed({ key: inputKey, profile });
     }).catch(error => { if (active) setReviewError(error instanceof Error ? error.message : "Unable to prepare your profile."); });
@@ -98,6 +103,7 @@ function IntakeConfirmationContent() {
         <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#397a69]">Final understanding check</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Please confirm what OOmnik understood.</h1>
         <p className="mt-5 max-w-3xl text-lg leading-8 text-[#5c665f]">This confirmed profile—not free-text guesses—will be the basis for research, matching, and the questions shown for each community.</p>
+        {narrativeUnprocessed ? <div role="status" className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-lg leading-7">OOmnik could not read the free-text story right now. Your structured answers below are still usable and will be the only information used for matching. The story will not affect recommendations unless it is successfully interpreted and you approve the updated profile.</div> : null}
         {reviewError ? <div role="alert" className="mt-6 rounded-2xl bg-amber-50 p-5 text-lg">{reviewError} <button type="button" onClick={() => { setReviewed(null); setRetry(value => value + 1); }} className="ml-3 underline">Try again</button> <button type="button" onClick={() => router.push("/adaptive-interview?next=%2Fresults")} className="ml-3 underline">Continue our conversation</button></div>
           : reviewed?.key !== inputKey ? <p role="status" className="mt-6 text-xl">Preparing the profile for your review…</p>
           : <section className="mt-6 rounded-2xl bg-white p-5"><h2 className="text-2xl font-semibold">Needs used in your search</h2><ul className="mt-3 space-y-2 text-lg">{reviewed.profile.needs.map((need, index) => <li key={`${need.parameter_id}-${index}`}>{need.need_text}</li>)}</ul></section>}
