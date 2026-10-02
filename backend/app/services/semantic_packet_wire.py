@@ -71,20 +71,19 @@ def _leaves(obj, prefix=""):
 @lru_cache(maxsize=1)
 def _model(declarations_json):
     declarations = json.loads(declarations_json)
-    paths = tuple(path for path, _ in _leaves(declarations))
-    # A union of one object per field makes constrained decoding unnecessarily
-    # expensive. Keep the provider grammar compact and apply the exact existing
-    # field representation locally before reconstructing the canonical patch.
-    entry = create_model("PatchEntry", __config__=CONFIG,
-        path=(Literal[paths], ...),
+    # One structural slot per existing field prevents competing entries from
+    # overwriting each other. Null means no new extraction, never a default fact.
+    entry = create_model("QuotedValue", __config__=CONFIG,
         value=(Union[StrictStr, StrictInt, list[StrictStr]], ...), quote=(StrictStr, ...))
+    fields = create_model("PatchFields", __config__=CONFIG,
+        **{path: (Union[entry, None], ...) for path, _ in _leaves(declarations)})
     return create_model("SemanticExtraction", __config__=CONFIG,
         wire_version=(Literal[WIRE_VERSION], ...),
         facts=(list[StrictStr], ...), preferences=(list[StrictStr], ...),
         constraints=(list[StrictStr], ...), concerns=(list[StrictStr], ...),
         implications=(list[Implication], ...), statements=(list[Trace], ...),
         research_requests=(list[StrictStr], ...),
-        questionnaire_patch_entries=(list[entry], ...),
+        questionnaire_patch_fields=(fields, ...),
         interview=(Union[NoClientQuestion, ClientQuestion], ...))
 
 
@@ -114,13 +113,13 @@ def normalize_wire(packet: Any, required_output: dict) -> dict:
         wire = _model(_key(required_output)).model_validate(packet)
     except ValidationError as exc:
         raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:" + json.dumps(exc.errors(include_input=False), default=str)[:1000]) from exc
-    result = wire.model_dump(exclude={"wire_version", "questionnaire_patch_entries", "interview"})
+    result = wire.model_dump(exclude={"wire_version", "questionnaire_patch_fields", "interview"})
     patch, sources = {}, {}
     declarations = dict(_leaves(required_output["questionnaire_patch"]))
-    for entry in wire.questionnaire_patch_entries:
-        path, value, quote = entry.path, entry.value, entry.quote
-        if path in sources:
-            raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:DUPLICATE_PATH:{path}")
+    for path, entry in wire.questionnaire_patch_fields.model_dump().items():
+        if entry is None:
+            continue
+        value, quote = entry["value"], entry["quote"]
         if not quote.strip():
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:EMPTY_QUOTE:{path}")
         declaration = declarations[path]
@@ -163,3 +162,14 @@ def normalize_wire(packet: Any, required_output: dict) -> dict:
         result["statements"].append(trace)
     result["wire_contract"] = {"version": WIRE_VERSION, "schema_constrained": True}
     return result
+
+
+def parse_wire_json(content: str) -> dict:
+    def unique_members(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:DUPLICATE_MEMBER:{key}")
+            result[key] = value
+        return result
+    return json.loads(content, object_pairs_hook=unique_members)

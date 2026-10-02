@@ -18,14 +18,15 @@ UNKNOWN, and research does not manufacture eligibility or scores.
 
 `semantic_packet_wire.py` derives a strict provider JSON schema from the existing
 interpreter field declarations. Both Chat Completions and Responses transports
-request this format; the same Pydantic model validates it locally. Each extracted
-entry pairs an allowed path, its value and a mandatory AI-authored quote.
-The compact provider grammar constrains legal paths and JSON value kinds;
+request this format; the same Pydantic model validates it locally. Each approved
+path has one structural slot, either null or a value/quote pair. Null means no
+new extraction; it does not become a default fact. The provider grammar
+constrains legal field slots and JSON value kinds;
 local validation checks the existing scalar/list representation. Advisory prompt
 enum descriptions do not acquire new canonical value authority. It avoids a
 large union of one object per profile field at constrained-decoding time.
 Normalization only reconstructs the existing nested patch and quote index.
-Duplicate paths and blank quotes fail. The existing canonical exact-quote,
+Duplicate JSON members and blank quotes fail. The existing canonical exact-quote,
 schema and conflict validators remain authoritative: schema conformity alone
 does not prove the truth or semantic support of a value.
 
@@ -44,6 +45,18 @@ Multiple ADL choices travel as one existing questionnaire string or one wire
 array, joined into the existing comma-separated representation without inference.
 Explicit integer months may be encoded as the existing string field; weeks are
 never converted to months by the transport.
+
+Medical detail fields must retain the existing clinical need they describe:
+dialysis frequency/center, oxygen use and wound-care frequency require the
+corresponding selected or explicitly extracted medical need. An omission asks
+the AI to repair the packet; the validator does not add clinical facts. Existing
+button selections already satisfy the dependency and need not be re-extracted.
+
+Transient connection/read timeouts get at most two transport attempts by
+default. Timeout allocations and backoff share the existing 45-second deadline;
+an exhausted deadline prevents another attempt. These are transport retries,
+not semantic repair or guessed fallback data. Configuration still controls the
+attempt cap. HTTP errors are not converted into successful semantic packets.
 
 ## Regression evidence and limits
 

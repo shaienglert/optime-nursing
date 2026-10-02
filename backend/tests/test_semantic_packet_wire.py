@@ -7,13 +7,14 @@ from app.services.semantic_intent_ai import (
     _required_output_schema, _validate_patch_contract, _validate_result,
     _question_reasks_answered_dimension, interpret_client_intent_with_ai,
 )
-from app.services.semantic_packet_wire import normalize_wire, provider_schema
+from app.services.semantic_packet_wire import normalize_wire, parse_wire_json, provider_schema
 
 
 def wire():
     return {"wire_version": "semantic-extraction-v1", "facts": [], "preferences": [],
             "constraints": [], "concerns": [], "implications": [], "statements": [],
-            "research_requests": [], "questionnaire_patch_entries": [],
+            "research_requests": [], "questionnaire_patch_fields": {
+                path: None for path in provider_schema(_required_output_schema())["$defs"]["PatchFields"]["properties"]},
             "interview": {"readiness": "READY", "next_question": None, "blocking_statement": None}}
 
 
@@ -34,13 +35,17 @@ def clarify(packet, question="Which daily tasks require assistance?", path="assi
 
 
 def normalize(packet):
+    # Convert readable test entries into the provider's unique field slots.
+    for entry in packet.pop("test_entries", []):
+        packet["questionnaire_patch_fields"][entry["path"]] = {
+            "value": entry["value"], **({"quote": entry["quote"]} if "quote" in entry else {})}
     return normalize_wire(packet, _required_output_schema())
 
 
 def test_couple_clarification_preserves_known_partners_and_ai_authored_question():
     text = "He needs daily assistance; she is fully independent."
     packet = clarify(wire())
-    packet["questionnaire_patch_entries"] = [{"path": "coupleAssistance", "value": text, "quote": text}]
+    packet["test_entries"] = [{"path": "coupleAssistance", "value": text, "quote": text}]
     packet["statements"] = [trace(text, ["coupleAssistance"])]
     result = normalize(packet)
     _validate_patch_contract(result, text, {"relationship": "Couple"})
@@ -66,7 +71,7 @@ def test_clarification_cannot_omit_question_or_gap_trace(missing):
 ])
 def test_illegal_fields_types_and_missing_quotes_are_rejected(entry):
     packet = wire()
-    packet["questionnaire_patch_entries"] = [entry]
+    packet["test_entries"] = [entry]
     with pytest.raises(RuntimeError, match="SEMANTIC_AI_WIRE_CONTRACT"):
         normalize(packet)
 
@@ -84,32 +89,29 @@ def test_building_lift_remains_a_requirement_without_inventing_transfer_assistan
 
 def test_quote_presence_does_not_bypass_exact_quote_validator():
     packet = wire()
-    packet["questionnaire_patch_entries"] = [{"path": "budget", "value": 6000, "quote": "$6000"}]
+    packet["test_entries"] = [{"path": "budget", "value": 6000, "quote": "$6000"}]
     packet["statements"] = [trace("$6000", ["budget"])]
     with pytest.raises(RuntimeError, match="NO_EXACT_FIELD_QUOTE:budget"):
         _validate_patch_contract(normalize(packet), "I haven't chosen a budget.", {})
 
 
 def test_duplicate_fields_fail_instead_of_overwriting_evidence():
-    packet = wire()
-    entry = {"path": "budget", "value": 6000, "quote": "$6000"}
-    packet["questionnaire_patch_entries"] = [entry, dict(entry, value=7000)]
-    with pytest.raises(RuntimeError, match="DUPLICATE_PATH"):
-        normalize(packet)
+    with pytest.raises(RuntimeError, match="DUPLICATE_MEMBER:budget"):
+        parse_wire_json('{"questionnaire_patch_fields":{"budget":{"value":6000,"quote":"$6000"},"budget":{"value":7000,"quote":"$7000"}}}')
 
 
 def test_multiple_manual_adl_choices_survive_wire_format():
     value = "Help with bathing, Help with dressing"
     packet = wire()
-    packet["questionnaire_patch_entries"] = [{"path": "assistanceLevel", "value": value.split(", "), "quote": value}]
+    packet["test_entries"] = [{"path": "assistanceLevel", "value": value.split(", "), "quote": value}]
     assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
-    packet["questionnaire_patch_entries"][0]["value"] = value
+    packet["questionnaire_patch_fields"]["assistanceLevel"]["value"] = value
     assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
 
 
 def test_established_manual_values_are_not_rejected_by_advisory_prompt_examples():
     packet = wire()
-    packet["questionnaire_patch_entries"] = [
+    packet["test_entries"] = [
         {"path": "assistanceLevel", "value": "Needs help with bathing and dressing", "quote": "help with bathing and dressing"},
         {"path": "humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths", "value": 3, "quote": "three months"},
     ]
@@ -181,3 +183,21 @@ def test_provider_schema_has_closed_objects_and_required_fields():
             for child in value:
                 inspect(child)
     inspect(schema)
+
+
+@pytest.mark.parametrize("detail,need,value", [
+    ("dialysisFrequency", "Dialysis", "three times weekly"),
+    ("oxygenUse", "Oxygen", "At night"),
+    ("woundCareFrequency", "Wound care", "daily"),
+])
+def test_clinical_detail_cannot_silently_lose_its_explicit_parent_need(detail, need, value):
+    path = f"medicalCareProfile.{detail}"
+    packet = wire()
+    packet["test_entries"] = [{"path": path, "value": value, "quote": value}]
+    packet["statements"] = [trace(value, [path])]
+    result = normalize(packet)
+    with pytest.raises(RuntimeError, match="MEDICAL_DETAIL_WITHOUT_NEED"):
+        _validate_patch_contract(result, value, {})
+    # A button-selected need already satisfies the dependency: no duplicate fact.
+    _validate_patch_contract(result, value, {"medicalCareProfile": {"needs": [need]}})
+    assert "needs" not in result["questionnaire_patch"]["medicalCareProfile"]

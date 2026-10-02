@@ -5,7 +5,8 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-from app.services.semantic_intent_ai import _default_transport, _resolve_temperature
+from app.services.semantic_intent_ai import _default_transport, _resolve_temperature, _required_output_schema
+from app.services.semantic_packet_wire import provider_schema
 
 _BASE_ENV = {
     "OPTIME_SEMANTIC_AI_URL": "https://example.test/v1/chat/completions",
@@ -16,7 +17,8 @@ _BASE_ENV = {
 def _mock_response(body: dict):
     wire = json.dumps({"wire_version": "semantic-extraction-v1", "facts": [],
         "preferences": [], "constraints": [], "concerns": [], "implications": [],
-        "statements": [], "research_requests": [], "questionnaire_patch_entries": [],
+        "statements": [], "research_requests": [], "questionnaire_patch_fields": {
+            path: None for path in provider_schema(_required_output_schema())["$defs"]["PatchFields"]["properties"]},
         "interview": {"readiness": "READY", "next_question": None, "blocking_statement": None}})
     if "choices" in body:
         body["choices"][0]["message"]["content"] = wire

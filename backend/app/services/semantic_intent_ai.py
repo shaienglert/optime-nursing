@@ -20,7 +20,7 @@ import requests
 
 from app.services.learning_center_advisor import build_learning_center_advice
 from app.services.canonical_gap_policy import normalize_gap_key
-from app.services.semantic_packet_wire import normalize_wire, provider_schema
+from app.services.semantic_packet_wire import normalize_wire, parse_wire_json, provider_schema
 
 SEMANTIC_AI_SYSTEM_RULES = [
     "Supervision around the clock is not Nursing supervision or Skilled nursing care. Medication reminders are not Complex medication management. Rehabilitation alone does not establish speech therapy. Preserve only explicitly established clinical facts.",
@@ -185,31 +185,43 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
 def _extract_responses_output(body: Dict[str, Any]) -> Dict[str, Any]:
     output_text = body.get("output_text")
     if isinstance(output_text, str) and output_text.strip():
-        return json.loads(output_text)
+        return parse_wire_json(output_text)
     for item in body.get("output") or []:
         if not isinstance(item, dict):
             continue
         for part in item.get("content") or []:
             if isinstance(part, dict) and part.get("type") == "output_text" and isinstance(part.get("text"), str):
-                return json.loads(part["text"])
+                return parse_wire_json(part["text"])
     raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
 
 
 def _request_with_retry(url: str, headers: Dict[str, str], request_json: Dict[str, Any]) -> requests.Response:
     timeout_seconds = max(5.0, float(os.getenv("OPTIME_SEMANTIC_AI_TIMEOUT_SECONDS", "45")))
-    max_attempts = max(1, min(3, int(os.getenv("OPTIME_SEMANTIC_AI_MAX_ATTEMPTS", "1"))))
+    max_attempts = max(1, min(3, int(os.getenv("OPTIME_SEMANTIC_AI_MAX_ATTEMPTS", "2"))))
     backoff_seconds = max(0.0, float(os.getenv("OPTIME_SEMANTIC_AI_RETRY_BACKOFF_SECONDS", "1")))
     last_error: Optional[Exception] = None
+    deadline = time.monotonic() + timeout_seconds
+    attempts_made = 0
     for attempt in range(1, max_attempts + 1):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        attempt_budget = remaining / (max_attempts - attempt + 1)
+        connect_timeout = min(10.0, attempt_budget / 4)
+        read_timeout = attempt_budget - connect_timeout
+        attempts_made += 1
         try:
-            return requests.post(url, headers=headers, json=request_json, timeout=(10.0, timeout_seconds))
+            return requests.post(url, headers=headers, json=request_json, timeout=(connect_timeout, read_timeout))
         except (requests.Timeout, requests.ConnectionError) as exc:
             last_error = exc
             if attempt >= max_attempts:
                 break
             if backoff_seconds:
-                time.sleep(backoff_seconds * attempt)
-    raise RuntimeError(f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={max_attempts}:timeout={timeout_seconds}:{last_error}")
+                delay = backoff_seconds * attempt
+                if deadline - time.monotonic() <= delay:
+                    break
+                time.sleep(delay)
+    raise RuntimeError(f"SEMANTIC_AI_TRANSPORT_RETRY_EXHAUSTED:attempts={attempts_made}:timeout={timeout_seconds}:{last_error}")
 
 
 def _resolve_temperature() -> Optional[float]:
@@ -262,11 +274,11 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     schema = provider_schema(required_output)
     payload = copy.deepcopy(payload)
     payload["wire_contract"] = {
-        "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_entries must contain one legal path, correctly typed value and exact user_text quote for each new explicit fact. Every entry must be independently supported. Constraints, facts and concerns are packet metadata, never patch entries. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
+        "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_fields has exactly one slot per legal dotted path. Set a slot to null when no new fact is extracted; otherwise supply its correctly typed value and exact user_text quote. Every active field must be independently supported. Constraints, facts and concerns are packet metadata, never patch fields. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
         "version": "semantic-extraction-v1",
         "assistance_encoding": "Emit exactly one entry per field. assistanceLevel.value may preserve the existing questionnaire string or one array containing every explicit selection; normalization joins that array into the existing comma-separated string. Never split multiple ADL selections into repeated entries. Do not copy already supplied questionnaire values into new extracted entries unless explicitly corrected.",
     }
-    system_prompt = TRANSPORT_SYSTEM_PROMPT + " The actual response shape is the supplied strict JSON schema. Represent patch fields as typed path/value/quote entries. Represent any ASKED trace only in interview.blocking_statement; its question is interview.next_question. Normalization will reconstruct existing packet keys without inference."
+    system_prompt = TRANSPORT_SYSTEM_PROMPT + " The actual response shape is the supplied strict JSON schema. Each dotted path in questionnaire_patch_fields is either null or one value/quote pair. Never emit the same field twice; for couples use coupleAssistance to preserve each person's needs. Represent any ASKED trace only in interview.blocking_statement; its question is interview.next_question. Normalization will reconstruct existing packet keys without inference."
     response_format = {"type": "json_schema", "json_schema": {"name": "semantic_extraction", "strict": True, "schema": schema}}
     if uses_responses_api:
         request_json = {
@@ -296,7 +308,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     if uses_responses_api:
         return normalize_wire(_extract_responses_output(body), required_output)
     if isinstance(body, dict) and "choices" in body:
-        return normalize_wire(json.loads(body["choices"][0]["message"]["content"]), required_output)
+        return normalize_wire(parse_wire_json(body["choices"][0]["message"]["content"]), required_output)
     if isinstance(body, dict) and "output" in body and isinstance(body["output"], dict):
         return normalize_wire(body["output"], required_output)
     if isinstance(body, dict):
@@ -670,6 +682,16 @@ def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict
     issues = [f"OUT_OF_SCHEMA:{item['field']}" for item in profile["out_of_schema"] if item.get("field")]
     issues.extend(f"NO_EXACT_FIELD_QUOTE:{path}" for path, field in profile["fields"].items()
                   if field.get("provenance") == "AI_EXTRACTED" and field.get("unverified_reason"))
+    # Existing medical taxonomy: detail fields must not lose the explicitly
+    # established need they describe. Require AI repair, never infer/add facts.
+    medical = (packet.get("questionnaire_patch") or {}).get("medicalCareProfile") or {}
+    selected = (state.get("medicalCareProfile") or {}).get("needs") or []
+    clinical_needs = set(selected) | set(medical.get("needs") or [])
+    for detail, need in {"dialysisFrequency": "Dialysis", "dialysisCenter": "Dialysis",
+                         "oxygenUse": "Oxygen", "woundCareFrequency": "Wound care"}.items():
+        field = profile["fields"].get(f"medicalCareProfile.{detail}") or {}
+        if medical.get(detail) and field.get("state") == "EXPLICIT" and need not in clinical_needs:
+            issues.append(f"MEDICAL_DETAIL_WITHOUT_NEED:medicalCareProfile.{detail}:{need}")
     if issues:
         error = RuntimeError("SEMANTIC_AI_PATCH_CONTRACT:" + ",".join(issues))
         error.patch_diagnostic = {"patch": packet.get("questionnaire_patch"), "sources": packet.get("questionnaire_patch_sources"), "statements": packet.get("statements")}
@@ -723,6 +745,8 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "SEMANTIC_AI_MISSING_STATEMENT_TRACE",
                 "SEMANTIC_AI_PATCH_CONTRACT",
                 "SEMANTIC_AI_WIRE_CONTRACT",
+                "SEMANTIC_AI_REPAIR_REASKED_ANSWERED_DIMENSION",
+                "SEMANTIC_AI_READY_WITH_MISSING_MINIMUM_DIMENSIONS",
             }
             if not repairable:
                 raise
