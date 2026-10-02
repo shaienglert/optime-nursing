@@ -46,6 +46,8 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Prefer one high-information clarification at a time.",
     "Populate questionnaire_patch from explicit client facts using only the exact field names and allowed enum values in required_output. Omit unknown or merely inferred fields; never copy defaults as client facts.",
     "Every new or changed questionnaire_patch leaf needs a statement whose raw_text is an exact substring of user_text and whose mapped_parameters contains that leaf's full dotted schema path. A paraphrase, a capability name, or the parent object path is not a field quote. Map every supported leaf, including needs arrays and rehabilitation fields; one exact quote may support multiple related leaf paths.",
+    "Before returning JSON, walk every questionnaire_patch leaf and verify its full path appears in mapped_parameters on a statement with an exact source quote. Include relationship, gender, hasOngoingMedicalNeeds and other contextual leaves in this check, not only clinical needs. Add the appropriate path to an existing quoted statement or add a separate source-quoted statement. If a field is not supported, omit it; do not erase an explicit fact merely to avoid writing its trace.",
+    "All socialProfile, familyProfile, languageProfile, foodProfile, culturalProfile, personalityProfile, futureCareProfile and transitionRiskProfile objects are children of humanIntelligenceV2. None is allowed at the root. The nesting must match required_output exactly, even during repair.",
     "Preserve the nested objects in required_output: mobilityMethod, transferAssistance and recentFalls belong under medicalCareProfile, never at the top level. Dialysis transportation belongs at medicalCareProfile.dialysisTransportation. Physical AND occupational therapy after hospitalization supports humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed.",
     "Do not repeat values already supplied by questionnaire_state unless the family explicitly corrects them. A story about one parent's care must not turn a Parents/Couple search into Dad/Mom; preserve the household relationship and write each partner's needs in coupleAssistance. Do not infer no wandering from no dementia, or a recovery time from a therapy duration. temporarySupportMonths is measured in months, never copy a number of weeks into it.",
     "Medical terms must be normalized into the structured taxonomy: for example CPAP/BiPAP/ventilator/cough-assist belongs in respiratory equipment details and Permanent medical equipment, dialysis in Dialysis, chronic wounds in Wound care, wheelchairs in mobilityMethod, and lift/two-person transfers in transferAssistance.",
@@ -155,6 +157,16 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
         "user_text": user_text,
         "learning_center_advice": learning_advice,
         "required_output": _required_output_schema(),
+        "field_trace_example": {
+            "source_example": "My aunt receives dialysis and enjoys group activities.",
+            "questionnaire_patch": {"relationship": "Relative", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Dialysis"]}, "humanIntelligenceV2": {"socialProfile": {"activityRequirementLevel": "Preference"}}},
+            "statements": [
+                {"raw_text": "My aunt", "mapped_parameters": ["relationship"], "importance": "CONTEXT", "knowledge_state": "KNOWN", "status": "USED"},
+                {"raw_text": "receives dialysis", "mapped_parameters": ["medicalCareProfile.hasOngoingMedicalNeeds", "medicalCareProfile.needs"], "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED"},
+                {"raw_text": "enjoys group activities", "mapped_parameters": ["humanIntelligenceV2.socialProfile.activityRequirementLevel"], "importance": "NICE", "knowledge_state": "KNOWN", "status": "USED"},
+            ],
+            "instruction": "Example of field-by-field source accounting only. Never copy these values or quotes into the answer; use the actual user_text.",
+        },
     }
 
 
@@ -220,7 +232,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         request_json = {
             "model": model,
             "input": [
-                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only."},
+                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only. Follow required_output nesting exactly. Every new questionnaire_patch leaf, including context fields, must have its full dotted path in statements.mapped_parameters beside a raw_text quote copied from user_text. Audit every leaf before returning; repair responses obey the same contract."},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
             "text": {"format": {"type": "json_object"}},
@@ -230,7 +242,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
             "model": model,
             "response_format": {"type": "json_object"},
             "messages": [
-                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only."},
+                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only. Follow required_output nesting exactly. Every new questionnaire_patch leaf, including context fields, must have its full dotted path in statements.mapped_parameters beside a raw_text quote copied from user_text. Audit every leaf before returning; repair responses obey the same contract."},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
         }

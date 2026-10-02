@@ -64,3 +64,28 @@ def test_repair_does_not_accept_an_invented_quote():
         with pytest.raises(RuntimeError, match="NO_EXACT_FIELD_QUOTE"):
             interpret_client_intent_with_ai(user_text="He lives in Las Vegas. Budget $7000.", questionnaire_state={"referenceLocationValue": "Las Vegas", "budget": 7000})
     assert transport.call_count == 2
+
+
+def test_shadow_live_reports_every_case_after_an_interpreter_failure(monkeypatch, capsys):
+    import backend.gold_examples.validate_structured_profile_shadow_live as gate
+    from app.database import Base
+
+    monkeypatch.setattr(Base.metadata, "create_all", lambda **_: None)
+    monkeypatch.setattr(gate, "CASES", {
+        "bad": {"questionnaire": {}, "query": "first"},
+        "good": {"questionnaire": {}, "query": "second"},
+    })
+    monkeypatch.setattr(gate, "legacy_regex_profile", lambda *_: {"needs": []})
+    monkeypatch.setattr(gate, "build_patient_needs_profile", lambda *_: {"needs": []})
+    with patch.object(gate, "interpret_client_intent_with_ai", side_effect=[
+        RuntimeError("invalid source quote"), {"questionnaire_patch": {}, "statements": []},
+    ]) as transport:
+        with pytest.raises(SystemExit) as exit_status:
+            gate.main()
+    assert exit_status.value.code == 1
+    assert transport.call_count == 2
+    import json
+    report = json.loads(capsys.readouterr().out.split("::error", 1)[0])
+    assert report["blocking"] == 1
+    assert [case["pass"] for case in report["cases"]] == [False, True]
+    assert report["cases"][0]["interpreter_error"] == "invalid source quote"
