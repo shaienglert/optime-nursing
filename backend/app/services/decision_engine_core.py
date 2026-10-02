@@ -1969,6 +1969,7 @@ def run_patient_decision_engine(
     }
 
     results = []
+    move_timing = _normalize(questionnaire_state.get("moveTiming"))
     requested_city = profile.get("location_city")
 
     _table_lookup_ms = 0.0
