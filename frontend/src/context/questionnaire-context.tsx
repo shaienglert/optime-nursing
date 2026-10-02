@@ -446,7 +446,9 @@ function mergeSavedState<T>(base: T, saved: unknown): T {
 
 export function restoreQuestionnaireState(): QuestionnaireState {
   const saved = loadSessionJson<Partial<QuestionnaireState>>(QUESTIONNAIRE_SESSION_KEY);
-  return saved ? mergeSavedState(DEFAULT_STATE, saved) : DEFAULT_STATE;
+  const restored = saved ? mergeSavedState(DEFAULT_STATE, saved) : DEFAULT_STATE;
+  // Retire the interview radius, including limits persisted by older sessions.
+  return { ...restored, maximumDistanceMiles: "", customDistanceMiles: "", approvedSearchRadiusMiles: "" };
 }
 
 export function QuestionnaireProvider({ children }: { children: React.ReactNode }) {

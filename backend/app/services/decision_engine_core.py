@@ -873,7 +873,12 @@ def _eligibility_from_needs(
         elif status == "GAP":
             unmet_verified_needs.append(entry)
         else:
-            if need["requirement_level"] in {"REQUIRED", "HIGH"}:
+            # Urgent timing is a request to confirm an opening, not proof that
+            # a community has none. The parameter table deliberately reports
+            # UNKNOWN until direct confirmation; it must not block care fit.
+            if need["parameter_id"] == "current_availability":
+                unknown_preferences.append(entry)
+            elif need["requirement_level"] in {"REQUIRED", "HIGH"}:
                 unknown_critical_needs.append(entry)
             elif need["requirement_level"] == "PREFERENCE":
                 unknown_preferences.append(entry)

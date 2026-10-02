@@ -105,7 +105,9 @@ export function SimpleResultsPageClient() {
       // A distance stated here replaces the limit outright, including any wider radius
       // accepted earlier -- otherwise "make it 10 miles" after widening to 30 would change
       // nothing, because the engine applies the larger of the two.
-      if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
+      if (/(?:no|without|remove|drop|clear)\s+(?:the\s+)?(?:distance|radius|mile)(?:\s+limit)?|(?:distance|radius)\s*(?:limit)?\s*[:=]?\s*(?:none|unlimited)|ללא מגבלת (?:מרחק|מיילים)|בטל.*מגבלת.*(?:מרחק|מיילים)/.test(lower)) {
+        next.maximumDistanceMiles = ""; next.customDistanceMiles = ""; next.approvedSearchRadiusMiles = "";
+      } else if (miles) { next.maximumDistanceMiles = miles[1]; next.customDistanceMiles = miles[1]; next.approvedSearchRadiusMiles = ""; next.locationImportant = "Yes"; }
       if (/dog.*(?:not|no longer).*(?:require|important)|(?:remove|drop).*(?:dog|pet)/.test(lower)) next.humanIntelligenceV2.independenceProfile.petOwnershipImportance = "Not important";
       if (/large community.*(?:not|no longer).*(?:important|required)|(?:remove|drop).*large community/.test(lower)) next.humanIntelligenceV2.personalityProfile.communitySizePreference = "No preference";
       if (/independent.*(?:outing|leave|go out).*(?:required|must|only)/.test(lower)) next.humanIntelligenceV2.independenceProfile.abilityToLeaveIndependently = "Very important";

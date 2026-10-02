@@ -143,9 +143,9 @@ describe("one question at a time", () => {
     expect(asked).not.toContain("physicianCoordination");
     // No hospital stay, so no Medicare question.
     expect(asked).not.toContain("medicareStatus");
-    // Location matters, so the address and radius are asked.
+    // Area preference remains, but the retired radius question is never asked.
     expect(asked).toContain("referenceAddress");
-    expect(asked).toContain("maximumDistanceMiles");
+    expect(asked).not.toContain("maximumDistanceMiles");
   });
 
   it("never presents the whole interview at once", () => {
@@ -232,5 +232,19 @@ describe("submission", () => {
     const submitted = buildSubmission(context);
     expect(submitted.humanIntelligenceV2.transitionRiskProfile.wanderingConcerns).toBe("");
     expect(submitted.humanIntelligenceV2.futureCareProfile.secureMemoryNeighborhoodNeed).toBe("");
+  });
+});
+
+ describe("retired interview radius", () => {
+  it("does not carry a previously saved radius into the decision request", () => {
+    const context = ctx();
+    context.draft.maximumDistanceMiles = "10";
+    context.draft.customDistanceMiles = "10";
+    context.draft.approvedSearchRadiusMiles = "30";
+    const submission = buildSubmission(context);
+    expect(submission.maximumDistanceMiles).toBe("");
+    expect(submission.customDistanceMiles).toBe("");
+    expect(submission.approvedSearchRadiusMiles).toBe("");
+    expect(QUESTIONS.some(q => q.id === "maximumDistanceMiles")).toBe(false);
   });
 });
