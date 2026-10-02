@@ -71,7 +71,38 @@ def test_injected_transport_cannot_bypass_field_acceptance():
     bad = packet()
     bad["questionnaire_patch"]["budget"] = 0
     with pytest.raises(RuntimeError, match="NONPOSITIVE_VALUE:budget"):
-        interpret_client_intent_with_ai(user_text=TEXT, transport=lambda _: bad)
+            interpret_client_intent_with_ai(user_text=TEXT, transport=lambda _: bad)
+
+
+def test_unsupported_fact_repair_keeps_source_trace_without_invented_mapping():
+    text = "The resident wants to keep their vintage piano."
+    bad = {"decision_readiness": "READY", "next_question": None,
+        "questionnaire_patch": {}, "statements": [{"raw_text": text,
+            "meaning": "The resident wants to keep their vintage piano.",
+            "importance": "NICE", "knowledge_state": "KNOWN", "status": "USED",
+            "mapped_parameters": ["relationship"]}]}
+    corrected = deepcopy(bad)
+    corrected["statements"][0]["mapped_parameters"] = []
+    with patch("app.services.semantic_intent_ai._default_transport", side_effect=[bad, corrected]) as transport:
+        result = interpret_client_intent_with_ai(user_text=text,
+            questionnaire_state={"budget": 6000, "referenceLocationValue": "Las Vegas"})
+    assert transport.call_count == 2
+    assert "mapping_contract" in transport.call_args.args[0]["packet_validation_repair"]
+    assert result["statements"][0]["raw_text"] == text
+    assert result["statements"][0]["mapped_parameters"] == []
+    assert result["questionnaire_patch"] == {}
+
+
+def test_repeated_unsupported_mapping_is_still_rejected_after_repair():
+    text = "The resident wants to keep their vintage piano."
+    bad = {"decision_readiness": "READY", "next_question": None,
+        "questionnaire_patch": {}, "statements": [{"raw_text": text,
+            "meaning": text, "importance": "NICE", "knowledge_state": "KNOWN",
+            "status": "USED", "mapped_parameters": ["relationship"]}]}
+    with patch("app.services.semantic_intent_ai._default_transport", side_effect=[deepcopy(bad), deepcopy(bad)]):
+        with pytest.raises(RuntimeError, match="KNOWN_FIELD_NOT_MATERIALIZED:relationship"):
+            interpret_client_intent_with_ai(user_text=text,
+                questionnaire_state={"budget": 6000, "referenceLocationValue": "Las Vegas"})
 
 
 def test_final_repair_can_recover_failed_question_repairs_with_ai_authored_question():

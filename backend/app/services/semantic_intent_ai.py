@@ -255,6 +255,12 @@ TRANSPORT_SYSTEM_PROMPT = (
     "Return compact JSON only. Follow required_output nesting exactly. "
     "Every new questionnaire_patch leaf, including context fields, must have its full dotted path "
     "in statements.mapped_parameters beside a raw_text quote copied from user_text. "
+    "Statement accounting does not require a field mapping. mapped_parameters: [] is valid "
+    "and required when no canonical field value is explicitly established. Never attach a "
+    "nearby or generic field merely because a statement is meaningful. A KNOWN/USED trace "
+    "may map a canonical path only when the packet extracts that exact field with its quote "
+    "or the caller already supplied its value. Preserve unsupported facts and requirements "
+    "in their source traces without forcing them into a different profile field. "
     "Audit every leaf before returning; repair responses obey the same contract. "
     "Also audit the clarification contract in the final JSON, including every repair response: "
     "NEEDS_CLARIFICATION requires a nonempty next_question and exactly one ASKED statement "
@@ -801,6 +807,10 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             repair_payload = dict(payload)
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
+                "mapping_contract": {
+                    "supported_canonical_mapping": "Each KNOWN/USED canonical path must have its actual explicit field value in questionnaire_patch_fields or already in questionnaire_state.",
+                    "unsupported_mapping": "Remove the unsupported path from mapped_parameters, retaining the original source quote and meaning. An empty mapped_parameters array is valid. Never manufacture a field value or substitute another unrelated canonical path to preserve a trace.",
+                },
                 "issue_actions": {
                     "NO_EXACT_FIELD_QUOTE": "Supply the field's own genuine source quote, or omit the unsupported field. Questionnaire defaults are not quotes from user_text.",
                     "KNOWN_FIELD_NOT_MATERIALIZED": "If the exact field value is explicit, include one {path,value,quote} entry in questionnaire_patch_fields. If the path was only loosely related or inferred, remove that path from mapped_parameters instead of inventing its value; retain the original meaningful statement and its actual supported fields.",
