@@ -193,6 +193,31 @@ def test_provider_schema_has_closed_objects_and_required_fields():
     inspect(schema)
 
 
+def test_live_quote_grammar_only_offers_unchanged_family_source_spans():
+    text = "My father had hip surgery. He needs therapy for six weeks."
+    schema = provider_schema(_required_output_schema(), family_text=text)
+    quotes = schema["$defs"]["SourceQuote"]["enum"]
+    assert text in quotes
+    assert "He needs therapy for six weeks." in quotes
+    assert all(quote in text for quote in quotes)
+    assert "He is in hospital." not in quotes
+
+
+def test_weeks_cannot_become_an_explicit_month_count_and_buttons_are_preserved():
+    path = "humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths"
+    text = "Therapy for six weeks."
+    schema = provider_schema(_required_output_schema(), family_text=text)
+    assert path not in __import__("json").dumps(schema)
+    assert path in __import__("json").dumps(provider_schema(_required_output_schema(), family_text="Support for six months."))
+    packet = wire()
+    packet["test_entries"] = [{"path": path, "value": "6", "quote": text}]
+    packet["statements"] = [trace(text, [path])]
+    with pytest.raises(RuntimeError, match="UNSUPPORTED_UNIT"):
+        _validate_patch_contract(normalize(packet), text, {})
+    selected = {"humanIntelligenceV2": {"transitionRiskProfile": {"temporarySupportMonths": "6"}}}
+    _validate_patch_contract({"questionnaire_patch": {}, "statements": []}, text, selected)
+
+
 @pytest.mark.parametrize("detail,need,value", [
     ("dialysisFrequency", "Dialysis", "three times weekly"),
     ("oxygenUse", "Oxygen", "At night"),
@@ -204,7 +229,7 @@ def test_clinical_detail_cannot_silently_lose_its_explicit_parent_need(detail, n
     packet["test_entries"] = [{"path": path, "value": value, "quote": value}]
     packet["statements"] = [trace(value, [path])]
     result = normalize(packet)
-    with pytest.raises(RuntimeError, match="MEDICAL_DETAIL_WITHOUT_NEED"):
+    with pytest.raises(RuntimeError, match="UNSATISFIED_DEPENDENCY"):
         _validate_patch_contract(result, value, {})
     # A button-selected need already satisfies the dependency: no duplicate fact.
     _validate_patch_contract(result, value, {"medicalCareProfile": {"needs": [need]}})
@@ -227,3 +252,49 @@ def test_quoted_unknown_does_not_become_a_confirmed_client_fact_or_contest_butto
     profile = build_structured_profile(selected, result, family_text=text)
     assert not profile["conflicts"]
     assert materialize_questionnaire(profile)["medicalCareProfile"] == selected["medicalCareProfile"]
+
+
+@pytest.mark.parametrize("path,value,quote,error", [
+    ("budget", 0, "Budget is zero", "NONPOSITIVE_VALUE"),
+    ("budget", "6000", "Budget 6000", "INVALID_FIELD_VALUE"),
+    ("maximumDistanceMiles", "10", "Within ten kilometres", "UNSUPPORTED_UNIT"),
+])
+def test_direct_packet_cannot_bypass_declarative_field_contract(path, value, quote, error):
+    packet = {"questionnaire_patch": {path: value}, "questionnaire_patch_sources": {path: quote},
+              "statements": [trace(quote, [path])]}
+    with pytest.raises(RuntimeError, match=error):
+        _validate_patch_contract(packet, quote, {})
+
+
+def test_invalid_value_hidden_by_existing_button_is_still_rejected():
+    with pytest.raises(RuntimeError, match="INVALID_FIELD_VALUE:budget"):
+        _validate_patch_contract({"questionnaire_patch": {"budget": "6000"},
+            "statements": [trace("6000", ["budget"])]}, "6000", {"budget": 6000})
+
+
+def test_provider_bypass_cannot_change_the_quoted_source_or_field_unit():
+    packet = wire()
+    packet["questionnaire_patch_fields"] = [{"path": "maximumDistanceMiles", "value": "10", "quote": "Within ten kilometres"}]
+    with pytest.raises(RuntimeError, match="UNSUPPORTED_UNIT"):
+        normalize_wire(packet, _required_output_schema(), family_text="Within ten kilometres")
+    packet["questionnaire_patch_fields"][0]["quote"] = "Within ten miles"
+    with pytest.raises(RuntimeError, match="NO_EXACT_FIELD_QUOTE"):
+        normalize_wire(packet, _required_output_schema(), family_text="Within ten kilometres")
+
+
+def test_new_declarative_requirement_controls_generation_and_acceptance(monkeypatch):
+    from app.services import semantic_field_contract as contract
+    # No new path-specific branch in either the compiler or validator.
+    monkeypatch.setitem(contract.FIELD_RULES, "referenceLocationValue", contract.FieldContract(unit="miles"))
+    schema = provider_schema(_required_output_schema(), family_text="Las Vegas")
+    assert "referenceLocationValue" not in __import__("json").dumps(schema)
+    with pytest.raises(RuntimeError, match="UNSUPPORTED_UNIT:referenceLocationValue"):
+        _validate_patch_contract({"questionnaire_patch": {"referenceLocationValue": "Las Vegas"},
+            "statements": [trace("Las Vegas", ["referenceLocationValue"])]}, "Las Vegas", {})
+
+
+def test_unapproved_declaration_cannot_expand_the_model_write_surface():
+    output = _required_output_schema()
+    output["questionnaire_patch"]["facilityProvidesDialysis"] = "Yes|No"
+    with pytest.raises(RuntimeError, match="UNAPPROVED_DECLARATION"):
+        provider_schema(output)

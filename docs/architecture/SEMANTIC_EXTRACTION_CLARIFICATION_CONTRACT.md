@@ -33,6 +33,11 @@ The provider grammar constrains legal field paths and JSON value kinds;
 local validation checks the existing scalar/list representation. Advisory prompt
 enum descriptions do not acquire new canonical value authority. It avoids a
 large union of one object per profile field at constrained-decoding time.
+Live extraction quotes select unchanged source sentences or the full narrative
+from a provider enum. Splitting source spans performs no semantic interpretation;
+the existing exact-source validator still applies after normalization. A quoted
+week duration cannot establish `temporarySupportMonths`; an absent month unit
+requires AI repair rather than a numeric conversion or a guessed duration.
 Normalization only reconstructs the existing nested patch and quote index.
 Duplicate JSON members and blank quotes fail. The existing canonical exact-quote,
 schema and conflict validators remain authoritative: schema conformity alone
@@ -67,6 +72,29 @@ not semantic repair or guessed fallback data. Configuration still controls the
 attempt cap. HTTP errors are not converted into successful semantic packets.
 
 ## Regression evidence and limits
+
+The executable field contract is `semantic_field_contract.py`. Every declared
+extraction leaf is compiled against the approved canonical allowlist. Its
+representation, source owner, unit, positive-value constraint and dependencies
+are shared by provider schema generation, wire normalization and final server
+acceptance. Field rules are data, not repair-specific conditional branches.
+The prompt includes the same compiled contract for explanation.
+
+Generation offers only genuine narrative spans as quotes and removes unit-bound
+fields when no eligible source exists. The server independently validates
+quotes, types and units even if the provider ignores its grammar. It also checks
+the complete candidate patch before resolving conflicts with questionnaire
+buttons, so a button cannot hide an invalid AI value. Unknown and ambiguous
+facts retain their canonical states; existing questionnaire answers remain
+authoritative inputs. Medical dependencies and known-field accounting are
+checked before any AI candidate can enter matching.
+
+Schema compliance does not prove that every interpretation is semantically
+correct. Exact source presence is necessary evidence, not proof that a quote
+entails an arbitrary value. Model readiness is advisory; existing deterministic
+clarification and facility-evidence policy still decide what is usable. Failed
+acceptance never authorizes guessed facts. The existing structured-only fallback
+may use completed button answers with the narrative marked UNPROCESSED.
 
 Tests cover couple fact preservation, missing question/trace, invalid patch
 metadata, invalid types/enums, missing/forged quotes, duplicate paths, multiple

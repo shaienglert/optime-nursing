@@ -6,6 +6,20 @@ RELEVANT EXISTING PRINCIPLES: PR-002, PR-003, PR-004, PR-005, PR-007; Knowledge 
 DOES THIS CHANGE ALTER ANY PRINCIPLE? NO
 OWNER APPROVAL REQUIRED? NO
 
+## Daily reporting and owner delivery
+
+Implementation completion under the same evidence/unknown principles. Daily audit
+captures are append-only records in the existing database ledger, exposed only by
+authenticated admin endpoints. They enumerate registered and observed agents,
+runs, ingested records and guard decisions. Missing activity is MISSING. A guard's
+USED label is permission, not demonstrated fact adoption; absent consumption
+traces, adopted fact counts remain null. Exports omit resident and recommendation
+identifiers. The monitor exports one file per agent plus a daily summary even when
+facility coverage is degraded. GitHub retains these artifacts for 90 days; the
+owner delivery task saves persistent copies in Daily-Reports and emails only the
+authenticated owner. Repository code is not production activation. Owner policy
+questions do not change eligibility until explicitly decided.
+
 Owner scope: October 2, 2026 request to repair the Research Institute as a system,
 include official complaints over the past year, keep source ratings separate, and
 exclude referral-marketplace ratings.

@@ -2809,6 +2809,23 @@ def refresh_research_institute(_: None = Depends(require_admin_token)):
     return queue_daily_facility_refresh()
 
 
+@app.post("/admin/research-institute/daily-reports")
+def capture_research_daily_report(report_date: Optional[str] = None, db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    from datetime import date, timezone
+    from app.services.research_daily_reports import archive_daily_report
+    try:
+        day = date.fromisoformat(report_date) if report_date else datetime.now(timezone.utc).date()
+        return archive_daily_report(db, day)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/admin/research-institute/daily-reports")
+def list_research_daily_reports(limit: int = Query(30, ge=1, le=90), db: Session = Depends(get_db), _: None = Depends(require_admin_token)):
+    from app.services.research_daily_reports import daily_report_history
+    return {"reports": daily_report_history(db, limit)}
+
+
 @app.post("/admin/research-institute/process")
 def process_research_institute(limit: int = Query(10, ge=1, le=50), _: None = Depends(require_admin_token)):
     from app.services.decision_research_worker import process_pending_decision_research
