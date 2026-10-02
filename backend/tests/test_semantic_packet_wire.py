@@ -140,6 +140,13 @@ def test_answered_task_does_not_suppress_different_missing_transfer_need():
     assert not _question_reasks_answered_dimension(packet, {"assistanceLevel": "Help with bathing"})
 
 
+def test_budget_placeholder_does_not_suppress_a_needed_budget_question():
+    packet = normalize(clarify(wire(), "What monthly budget should we use?", "budget"))
+    assert not _question_reasks_answered_dimension(packet, {"budget": 0})
+    assert not _question_reasks_answered_dimension(packet, {"budget": None})
+    assert _question_reasks_answered_dimension(packet, {"budget": 6000})
+
+
 def test_facility_unknown_becomes_research_and_does_not_ask_family_to_prove_service():
     packet = wire()
     packet["statements"] = [trace("kosher meals", knowledge_state="UNKNOWN",

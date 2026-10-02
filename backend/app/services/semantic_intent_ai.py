@@ -549,6 +549,8 @@ def _questionnaire_field_resolved(state: Dict[str, Any], path: str) -> bool:
         if not isinstance(value, dict) or part not in value:
             return False
         value = value[part]
+    if path == "budget":
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0
     if value is None or value == [] or value == {}:
         return False
     text = str(value).strip().lower()
