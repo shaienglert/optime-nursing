@@ -6,6 +6,7 @@ existing packet keys; it does not infer facts, invent questions or decide finali
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from typing import Any, Literal, Union
 
@@ -99,7 +100,7 @@ def _key(required_output):
     return json.dumps(required_output["questionnaire_patch"], sort_keys=True)
 
 
-def provider_schema(required_output):
+def provider_schema(required_output, *, family_text: str | None = None):
     schema = _model(_key(required_output)).model_json_schema()
 
     def portable(value):
@@ -113,6 +114,17 @@ def provider_schema(required_output):
             for child in value:
                 portable(child)
     portable(schema)
+    if family_text and family_text.strip():
+        # Grammar chooses source spans; it does not interpret their meaning.
+        # The complete narrative remains available when a fact spans sentences.
+        quotes = list(dict.fromkeys([family_text.strip(), *[
+            part.strip() for part in re.split(r"[\n;]|(?<=[.!?])\s+", family_text)
+            if part.strip()]]))
+        schema["$defs"]["SourceQuote"] = {"type": "string", "enum": quotes}
+        for definition in schema["$defs"].values():
+            properties = definition.get("properties", {})
+            if "quote" in properties:
+                properties["quote"] = {"$ref": "#/$defs/SourceQuote"}
     return schema
 
 

@@ -193,6 +193,28 @@ def test_provider_schema_has_closed_objects_and_required_fields():
     inspect(schema)
 
 
+def test_live_quote_grammar_only_offers_unchanged_family_source_spans():
+    text = "My father had hip surgery. He needs therapy for six weeks."
+    schema = provider_schema(_required_output_schema(), family_text=text)
+    quotes = schema["$defs"]["SourceQuote"]["enum"]
+    assert text in quotes
+    assert "He needs therapy for six weeks." in quotes
+    assert all(quote in text for quote in quotes)
+    assert "He is in hospital." not in quotes
+
+
+def test_weeks_cannot_become_an_explicit_month_count_and_buttons_are_preserved():
+    path = "humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths"
+    text = "Therapy for six weeks."
+    packet = wire()
+    packet["test_entries"] = [{"path": path, "value": "6", "quote": text}]
+    packet["statements"] = [trace(text, [path])]
+    with pytest.raises(RuntimeError, match="NO_EXPLICIT_MONTH_UNIT"):
+        _validate_patch_contract(normalize(packet), text, {})
+    selected = {"humanIntelligenceV2": {"transitionRiskProfile": {"temporarySupportMonths": "6"}}}
+    _validate_patch_contract({"questionnaire_patch": {}, "statements": []}, text, selected)
+
+
 @pytest.mark.parametrize("detail,need,value", [
     ("dialysisFrequency", "Dialysis", "three times weekly"),
     ("oxygenUse", "Oxygen", "At night"),

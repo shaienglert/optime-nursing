@@ -33,6 +33,11 @@ The provider grammar constrains legal field paths and JSON value kinds;
 local validation checks the existing scalar/list representation. Advisory prompt
 enum descriptions do not acquire new canonical value authority. It avoids a
 large union of one object per profile field at constrained-decoding time.
+Live extraction quotes select unchanged source sentences or the full narrative
+from a provider enum. Splitting source spans performs no semantic interpretation;
+the existing exact-source validator still applies after normalization. A quoted
+week duration cannot establish `temporarySupportMonths`; an absent month unit
+requires AI repair rather than a numeric conversion or a guessed duration.
 Normalization only reconstructs the existing nested patch and quote index.
 Duplicate JSON members and blank quotes fail. The existing canonical exact-quote,
 schema and conflict validators remain authoritative: schema conformity alone

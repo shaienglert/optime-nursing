@@ -276,12 +276,13 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         headers["Authorization"] = f"Bearer {api_key}"
     uses_responses_api = "/responses" in url.lower()
     required_output = _required_output_schema()
-    schema = provider_schema(required_output)
+    schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""))
     payload = copy.deepcopy(payload)
     payload["wire_contract"] = {
         "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_fields is a sparse array of {path, value, quote} entries. Use the full canonical dotted path, exactly as in statements.mapped_parameters. Include at most one entry per path. Omit paths with no new fact, never emit empty placeholder entries. Multiple assistance selections belong in one assistanceLevel array entry. Every entry must be independently supported by an exact user_text quote. Constraints, facts and concerns are packet metadata, never patch fields. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
         "version": "semantic-extraction-v1",
         "field_paths": "Each extraction entry uses the full canonical dotted path in both path and statements.mapped_parameters. Do not use aliases. Omit unused paths. Map canonical client fields only when that exact field's value is explicitly established, not merely because it is related to the statement. A known client fact marked USED must reach its path in questionnaire_patch_fields unless questionnaire_state already supplies that field. Speaking a language does not establish nativeLanguage. A dietary preference does not establish faithTraditions or religious identity; preserve the dietary fact without these unrelated mappings.",
+        "source_quotes": "For each extraction quote choose an unchanged source span from SourceQuote in the response schema. Use that same quote in the associated statement raw_text. The full source sentence is valid; never paraphrase a quote or insert a pronoun that was not in the original text.",
         "clinical_detail_consistency": "A known medical detail does not replace its medical need. Unless already supplied by questionnaire_state, pair dialysis frequency/center with medicalCareProfile.needs containing Dialysis, oxygen use with Oxygen, and wound-care frequency with Wound care. Give the parent need its own exact quote from the same explicit client treatment statement. Never add a need when the client's treatment itself is unknown or denied.",
         "assistance_encoding": "Emit exactly one entry per field. assistanceLevel.value may preserve the existing questionnaire string or one array containing every explicit selection; normalization joins that array into the existing comma-separated string. Never split multiple ADL selections into repeated entries. Do not copy already supplied questionnaire values into new extracted entries unless explicitly corrected.",
     }
@@ -691,6 +692,10 @@ def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict
     issues = [f"OUT_OF_SCHEMA:{item['field']}" for item in profile["out_of_schema"] if item.get("field")]
     issues.extend(f"NO_EXACT_FIELD_QUOTE:{path}" for path, field in profile["fields"].items()
                   if field.get("provenance") == "AI_EXTRACTED" and field.get("unverified_reason"))
+    months = profile["fields"].get("humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths") or {}
+    if (months.get("provenance") == "AI_EXTRACTED" and months.get("state") == "EXPLICIT"
+            and not re.search(r"\bmonths?\b|חודש(?:ים|יים)?", str(months.get("quote") or ""), re.IGNORECASE)):
+        issues.append("NO_EXPLICIT_MONTH_UNIT:humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths")
     # Accounting is bidirectional: a known client fact cannot be marked USED
     # while its declared canonical field is absent from the decision profile.
     # Facility parameter IDs are deliberately outside this check; research
@@ -777,6 +782,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                     "NO_EXACT_FIELD_QUOTE": "Supply the field's own genuine source quote, or omit the unsupported field. Questionnaire defaults are not quotes from user_text.",
                     "KNOWN_FIELD_NOT_MATERIALIZED": "If the exact field value is explicit, include one {path,value,quote} entry in questionnaire_patch_fields. If the path was only loosely related or inferred, remove that path from mapped_parameters instead of inventing its value; retain the original meaningful statement and its actual supported fields.",
                     "MEDICAL_DETAIL_WITHOUT_NEED": "Keep the explicitly established detail AND include a separate medicalCareProfile.needs entry with the named parent need and its genuine treatment quote. This entry is an array of selected needs, not a detail string. Unknown or denied treatment is not a positive parent need.",
+                    "NO_EXPLICIT_MONTH_UNIT": "The quoted duration does not establish months. Remove temporarySupportMonths and its mapping; retain the stated duration in statement accounting. Never copy a number of weeks into months or estimate a conversion.",
                 },
                 "client_dimension_status": _minimum_dimension_status(user_text, questionnaire_state),
                 "clarification_contract": {
