@@ -17,8 +17,7 @@ _BASE_ENV = {
 def _mock_response(body: dict):
     wire = json.dumps({"wire_version": "semantic-extraction-v1", "facts": [],
         "preferences": [], "constraints": [], "concerns": [], "implications": [],
-        "statements": [], "research_requests": [], "questionnaire_patch_fields": {
-            path: None for path in provider_schema(_required_output_schema())["$defs"]["PatchFields"]["properties"]},
+        "statements": [], "research_requests": [], "questionnaire_patch_fields": [],
         "interview": {"readiness": "READY", "next_question": None, "blocking_statement": None}})
     if "choices" in body:
         body["choices"][0]["message"]["content"] = wire

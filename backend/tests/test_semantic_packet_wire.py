@@ -13,8 +13,7 @@ from app.services.semantic_packet_wire import normalize_wire, parse_wire_json, p
 def wire():
     return {"wire_version": "semantic-extraction-v1", "facts": [], "preferences": [],
             "constraints": [], "concerns": [], "implications": [], "statements": [],
-            "research_requests": [], "questionnaire_patch_fields": {
-                path: None for path in provider_schema(_required_output_schema())["$defs"]["PatchFields"]["properties"]},
+            "research_requests": [], "questionnaire_patch_fields": [],
             "interview": {"readiness": "READY", "next_question": None, "blocking_statement": None}}
 
 
@@ -35,16 +34,8 @@ def clarify(packet, question="Which daily tasks require assistance?", path="assi
 
 
 def normalize(packet):
-    # Convert readable test entries into the provider's unique field slots.
-    for entry in packet.pop("test_entries", []):
-        packet["questionnaire_patch_fields"][slot(entry["path"])] = {
-            "value": entry["value"], **({"quote": entry["quote"]} if "quote" in entry else {})}
+    packet["questionnaire_patch_fields"].extend(packet.pop("test_entries", []))
     return normalize_wire(packet, _required_output_schema())
-
-
-def slot(path):
-    fields = provider_schema(_required_output_schema())["$defs"]["PatchFields"]["properties"]
-    return next((alias for alias, field in fields.items() if field["description"] == path), path)
 
 
 def test_couple_clarification_preserves_known_partners_and_ai_authored_question():
@@ -103,6 +94,11 @@ def test_quote_presence_does_not_bypass_exact_quote_validator():
 def test_duplicate_fields_fail_instead_of_overwriting_evidence():
     with pytest.raises(RuntimeError, match="DUPLICATE_MEMBER:budget"):
         parse_wire_json('{"questionnaire_patch_fields":{"budget":{"value":6000,"quote":"$6000"},"budget":{"value":7000,"quote":"$7000"}}}')
+    packet = wire()
+    packet["test_entries"] = [{"path": "budget", "value": 6000, "quote": "$6000"},
+                              {"path": "budget", "value": 7000, "quote": "$7000"}]
+    with pytest.raises(RuntimeError, match="DUPLICATE_FIELD:budget"):
+        normalize(packet)
 
 
 def test_multiple_manual_adl_choices_survive_wire_format():
@@ -110,7 +106,7 @@ def test_multiple_manual_adl_choices_survive_wire_format():
     packet = wire()
     packet["test_entries"] = [{"path": "assistanceLevel", "value": value.split(", "), "quote": value}]
     assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
-    packet["questionnaire_patch_fields"][slot("assistanceLevel")]["value"] = value
+    packet["questionnaire_patch_fields"][0]["value"] = value
     assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
 
 
