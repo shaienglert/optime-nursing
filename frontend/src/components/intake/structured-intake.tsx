@@ -1,7 +1,7 @@
 "use client";
 
 import { updateClientCaseQuestionnaire } from "@/lib/api";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQuestionnaire } from "@/context/questionnaire-context";
@@ -30,7 +30,7 @@ function Choice({ label, active, onClick }: { label: string; active: boolean; on
   );
 }
 
-function AnswerControl({ question, value, onAnswer }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void }) {
+function AnswerControl({ question, value, onAnswer, budgetFloor }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void; budgetFloor?: number | null }) {
   if (question.kind === "single") {
     return (
       <div className="mt-4 flex flex-wrap gap-2">
@@ -49,6 +49,10 @@ function AnswerControl({ question, value, onAnswer }: { question: IntakeQuestion
         ))}
       </div>
     );
+  }
+  if (question.kind === "number" && question.id === "budget") {
+    const minimum = budgetFloor ? Math.ceil(budgetFloor) : 1;
+    return <div><input aria-label="Monthly budget" type="number" min={minimum} value={Number(value) > 0 ? String(value) : ""} onChange={(event) => onAnswer(Number(event.target.value), false)} className="mt-4 block w-full rounded-xl border border-[#ddd4c7] bg-white px-4 py-3 text-base" /><p className="mt-2 text-sm">{budgetFloor ? `Published room prices in this area start at ${minimum.toLocaleString()} per month. Care and mandatory fees may be additional.` : "A verified minimum price for this area is not available yet."}</p></div>;
   }
   if (question.kind === "number") {
     return (
@@ -86,6 +90,15 @@ export function StructuredIntake() {
   const [phase, setPhase] = useState<"questions" | "summary">("questions");
   const [confirmed, setConfirmed] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [floorRecord, setFloorRecord] = useState<{ area: string; value: number | null } | null>(null);
+  const selectedArea = context.draft.referenceAddress || context.draft.referenceLocationValue;
+  const budgetFloor = floorRecord?.area === selectedArea ? floorRecord.value : null;
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/backend/api/market-price-floor", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ referenceAddress: selectedArea }), signal: controller.signal })
+      .then(r => r.ok ? r.json() : null).then(v => { if (!controller.signal.aborted) setFloorRecord({ area: selectedArea, value: v?.minimum_monthly_price > 0 ? Number(v.minimum_monthly_price) : null }); }).catch(() => undefined);
+    return () => controller.abort();
+  }, [selectedArea]);
 
   const questions = useMemo(() => visibleQuestions(context), [context]);
 
@@ -167,7 +180,7 @@ export function StructuredIntake() {
 
   function next() {
     if (!question) return;
-    if (question.required && !isAnswered(question, context)) {
+    if ((question.id === "budget" && budgetFloor !== null && context.draft.budget < budgetFloor) || (question.required && !isAnswered(question, context))) {
       setShowError(true);
       return;
     }
@@ -214,9 +227,9 @@ export function StructuredIntake() {
 
             <div className="mt-7">
               {question.note ? <p className="mb-3 text-base leading-7 text-[#527083]">{question.note}</p> : null}
-              <AnswerControl question={question} value={question.get(context)} onAnswer={answer} />
+              <AnswerControl question={question} value={question.get(context)} onAnswer={answer} budgetFloor={budgetFloor} />
               {question.kind === "multi" ? <p className="mt-3 text-sm text-[#7d8b84]">Choose anything that applies, then continue.</p> : null}
-              {showError ? <p className="mt-3 text-sm font-semibold text-[#a4501f]">Please answer this before we continue.</p> : null}
+              {showError ? <p className="mt-3 text-sm font-semibold text-[#a4501f]">{question.id === "budget" && budgetFloor !== null && context.draft.budget < budgetFloor ? `Please choose at least ${Math.ceil(budgetFloor).toLocaleString()} for this area.` : "Please answer this before we continue."}</p> : null}
             </div>
 
             <div className="mt-8 flex items-center justify-between gap-3">

@@ -3019,6 +3019,12 @@ async def intelligence_schedule():
     }
 
 
+@app.post("/api/market-price-floor")
+def market_price_floor_endpoint(questionnaire_state: dict):
+    from app.services.market_price_floor import minimum_price_for_questionnaire
+    return minimum_price_for_questionnaire(questionnaire_state)
+
+
 @app.get("/expert-agents/knowledge-reports", response_model=List[AgentKnowledgeReportSummaryOut])
 async def list_agent_knowledge_reports(db: Session = Depends(get_db)):
     ensure_reports_available(db)

@@ -27,3 +27,7 @@ Owner explicitly requested retiring the mileage interview question on 2026-10-02
 The area preference stays. Restore and submission clear old persisted radius
 values, and OOmniker recognizes explicit removal instead of confirming a no-op.
 No cutover is included. Validation: 40 backend tests, 13 intake tests, TypeScript.
+
+Price-floor completion uses only verified positive room base prices in the real
+catalog area. No room price means no known floor; synthetic and other-area rows
+are excluded. This is not total affordability or a guaranteed current quote.
