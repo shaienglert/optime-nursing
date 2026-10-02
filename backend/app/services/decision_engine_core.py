@@ -1990,6 +1990,12 @@ def run_patient_decision_engine(
         row_by_param = {row["parameter_id"]: row for row in table["rows"]}
 
         eligibility = _eligibility_from_needs(needs, row_by_param)
+        if move_timing in {"immediately", "within 30 days"}:
+            availability_row = row_by_param.get("current_availability") or {}
+            if _normalize(availability_row.get("raw_value")) == "no" and _normalize(availability_row.get("source")) not in {"", "not verified"}:
+                eligibility["unknown_critical_needs"] = [item for item in eligibility.get("unknown_critical_needs") or [] if item.get("parameter_id") != "current_availability"] + [{"parameter_id": "current_availability", "requirement_level": "HIGH", "status": "UNKNOWN", "reason": "Recorded NO for urgent move; direct reconfirmation required before recommendation.", "decision_state": "PENDING_RECONFIRMATION"}]
+                eligibility["eligibility_status"] = "INSUFFICIENT_EVIDENCE"
+                eligibility["availability_decision_state"] = "PENDING_RECONFIRMATION"
         scoring = _score_result(needs, eligibility)
         geo_note, geo_bonus = _facility_geo_match({"city": table.get("city")}, requested_city)
 
