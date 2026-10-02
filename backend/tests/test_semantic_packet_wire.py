@@ -60,11 +60,11 @@ def test_clarification_cannot_omit_question_or_gap_trace(missing):
 
 @pytest.mark.parametrize("entry", [
     {"path": "constraints", "value": ["Building lift"], "quote": "lift"},
-    {"path": "medicalCareProfile.transferAssistance", "value": "Elevator", "quote": "lift"},
+    {"path": "medicalCareProfile.transferAssistance", "value": 123, "quote": "lift"},
     {"path": "budget", "value": "6000", "quote": "$6000"},
     {"path": "humanIntelligenceV2.languageProfile.languageNeedScope", "value": "Preference"},
 ])
-def test_illegal_fields_values_and_missing_quotes_are_rejected(entry):
+def test_illegal_fields_types_and_missing_quotes_are_rejected(entry):
     packet = wire()
     packet["questionnaire_patch_entries"] = [entry]
     with pytest.raises(RuntimeError, match="SEMANTIC_AI_WIRE_CONTRACT"):
@@ -103,6 +103,20 @@ def test_multiple_manual_adl_choices_survive_wire_format():
     packet = wire()
     packet["questionnaire_patch_entries"] = [{"path": "assistanceLevel", "value": value.split(", "), "quote": value}]
     assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
+    packet["questionnaire_patch_entries"][0]["value"] = value
+    assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
+
+
+def test_established_manual_values_are_not_rejected_by_advisory_prompt_examples():
+    packet = wire()
+    packet["questionnaire_patch_entries"] = [
+        {"path": "assistanceLevel", "value": "Needs help with bathing and dressing", "quote": "help with bathing and dressing"},
+        {"path": "humanIntelligenceV2.transitionRiskProfile.temporarySupportMonths", "value": 3, "quote": "three months"},
+    ]
+    result = normalize(packet)
+    assert result["questionnaire_patch"]["assistanceLevel"] == "Needs help with bathing and dressing"
+    assert result["questionnaire_patch"]["humanIntelligenceV2"]["transitionRiskProfile"]["temporarySupportMonths"] == "3"
+    _validate_patch_contract(result, "Needs help with bathing and dressing for three months", {})
 
 
 def test_button_selections_prevent_reasking_exact_resolved_field():

@@ -21,7 +21,8 @@ interpreter field declarations. Both Chat Completions and Responses transports
 request this format; the same Pydantic model validates it locally. Each extracted
 entry pairs an allowed path, its value and a mandatory AI-authored quote.
 The compact provider grammar constrains legal paths and JSON value kinds;
-local validation enforces each field's exact existing type and enum. It avoids a
+local validation checks the existing scalar/list representation. Advisory prompt
+enum descriptions do not acquire new canonical value authority. It avoids a
 large union of one object per profile field at constrained-decoding time.
 Normalization only reconstructs the existing nested patch and quote index.
 Duplicate paths and blank quotes fail. The existing canonical exact-quote,
@@ -39,8 +40,10 @@ failure raises an error; network/configuration errors are not schema repairs.
 Direct manual answers are checked using the question's exact mapped field paths.
 Known button answers trigger repair of a redundant question. Unresolved values,
 broad assistance answers and explicit ambiguity do not trigger that shortcut.
-Multiple ADL choices travel in one wire array and are joined into the
-questionnaire's existing comma-separated representation without inference.
+Multiple ADL choices travel as one existing questionnaire string or one wire
+array, joined into the existing comma-separated representation without inference.
+Explicit integer months may be encoded as the existing string field; weeks are
+never converted to months by the transport.
 
 ## Regression evidence and limits
 

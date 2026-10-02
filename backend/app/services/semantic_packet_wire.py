@@ -68,24 +68,13 @@ def _leaves(obj, prefix=""):
             yield path, value
 
 
-def _value_type(declaration):
-    if isinstance(declaration, list):
-        return list[_value_type(declaration[0])]
-    if declaration == "positive monthly integer":
-        return StrictInt
-    if "|" in declaration:
-        # Descriptive annotations after ';' are not allowed enum values.
-        return Literal[tuple(declaration.split(";", 1)[0].split("|"))]
-    return StrictStr
-
-
 @lru_cache(maxsize=1)
 def _model(declarations_json):
     declarations = json.loads(declarations_json)
     paths = tuple(path for path, _ in _leaves(declarations))
     # A union of one object per field makes constrained decoding unnecessarily
     # expensive. Keep the provider grammar compact and apply the exact existing
-    # field-specific type/enum locally before reconstructing the canonical patch.
+    # field representation locally before reconstructing the canonical patch.
     entry = create_model("PatchEntry", __config__=CONFIG,
         path=(Literal[paths], ...),
         value=(Union[StrictStr, StrictInt, list[StrictStr]], ...), quote=(StrictStr, ...))
@@ -135,14 +124,24 @@ def normalize_wire(packet: Any, required_output: dict) -> dict:
         if not quote.strip():
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:EMPTY_QUOTE:{path}")
         declaration = declarations[path]
-        # Wire ADL values are one array of all selected tasks, never repeated
-        # entries. Manual questionnaire encoding remains a comma-separated string.
-        value_type = list[_value_type(declaration)] if path == "assistanceLevel" else _value_type(declaration)
+        # Prompt enum examples are advisory, not the canonical schema's value
+        # authority. Preserve established manual encodings instead of inventing
+        # a stricter value vocabulary at the transport boundary.
+        if path == "assistanceLevel":
+            value_type = Union[StrictStr, list[StrictStr]]
+        elif isinstance(declaration, list):
+            value_type = list[StrictStr]
+        elif declaration == "positive monthly integer":
+            value_type = StrictInt
+        else:
+            value_type = StrictStr
+            if declaration == "explicit number of months" and isinstance(value, int):
+                value = str(value)  # Encoding only; no conversion of weeks to months.
         try:
             value = TypeAdapter(value_type).validate_python(value, strict=True)
         except ValidationError as exc:
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:INVALID_FIELD_VALUE:{path}") from exc
-        if path == "assistanceLevel":
+        if path == "assistanceLevel" and isinstance(value, list):
             if not value:
                 raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:EMPTY_ASSISTANCE_SELECTIONS")
             value = ", ".join(value)
