@@ -30,7 +30,7 @@ def main():
             semantic=interpret_client_intent_with_ai(user_text=text,questionnaire_state=q)
         except Exception as exc:
             blocking+=1
-            report.append({"case":key,"pass":False,"interpreter_error":str(exc),"legacy_need_count":len(needs(legacy))})
+            report.append({"case":key,"pass":False,"interpreter_error":str(exc),"patch_diagnostic":getattr(exc,"patch_diagnostic",None),"legacy_need_count":len(needs(legacy))})
             continue
         structured=build_structured_profile(q,semantic,family_text=text)
         materialized=materialize_questionnaire(structured)
@@ -45,7 +45,7 @@ def main():
     print(json.dumps({"blocking":blocking,"cases":report},indent=2))
     for item in report:
         if not item["pass"]:
-            detail=json.dumps({"interpreter_error":item.get("interpreter_error"),"missing":item.get("missing_critical_needs"),"conflicts":item.get("conflicts"),"unquoted":item.get("unquoted_ai_fields"),"ai":item.get("ai_fields"),"oos":item.get("out_of_schema"),"patch":item.get("raw_patch")},ensure_ascii=False)
+            detail=json.dumps({"interpreter_error":item.get("interpreter_error"),"patch_diagnostic":item.get("patch_diagnostic"),"missing":item.get("missing_critical_needs"),"conflicts":item.get("conflicts"),"unquoted":item.get("unquoted_ai_fields"),"ai":item.get("ai_fields"),"oos":item.get("out_of_schema"),"patch":item.get("raw_patch")},ensure_ascii=False)
             print(f"::error title=shadow-live {item['case']}::{detail}"[:3000])
     raise SystemExit(0 if blocking==0 else 1)
 

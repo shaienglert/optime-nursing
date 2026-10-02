@@ -90,6 +90,14 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
         keys=[s.get("gap_key"),s.get("target_fact_key"),*(s.get("mapped_parameters") or [])]
         for key in keys:
             if key: by_key.setdefault(str(key),[]).append(s)
+    # Direct quotes supplement statement traces without superseding their states.
+    # They obey the same exact-source and closed-path checks as statement traces.
+    sources=semantic_result.get("questionnaire_patch_sources") or {}
+    if isinstance(sources,dict):
+        for key,quote in sources.items():
+            if isinstance(quote,str):
+                knowledge=next((s.get("knowledge_state") for s in by_key.get(str(key),[]) if s.get("knowledge_state")),None)
+                by_key.setdefault(str(key),[]).append({"raw_text":quote,"knowledge_state":knowledge})
     button_state={k:v for k,v in questionnaire_state.items() if k not in {"notes","questionnaireCompletion"}}
     flattened_buttons=_flatten(button_state)
     for key,value in flattened_buttons.items():

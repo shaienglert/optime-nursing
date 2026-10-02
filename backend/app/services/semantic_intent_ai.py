@@ -48,6 +48,8 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Every new or changed questionnaire_patch leaf needs a statement whose raw_text is an exact substring of user_text and whose mapped_parameters contains that leaf's full dotted schema path. A paraphrase, a capability name, or the parent object path is not a field quote. Map every supported leaf, including needs arrays and rehabilitation fields; one exact quote may support multiple related leaf paths.",
     "Before returning JSON, walk every questionnaire_patch leaf and verify its full path appears in mapped_parameters on a statement with an exact source quote. Include relationship, gender, hasOngoingMedicalNeeds and other contextual leaves in this check, not only clinical needs. Add the appropriate path to an existing quoted statement or add a separate source-quoted statement. If a field is not supported, omit it; do not erase an explicit fact merely to avoid writing its trace.",
     "All socialProfile, familyProfile, languageProfile, foodProfile, culturalProfile, personalityProfile, futureCareProfile and transitionRiskProfile objects are children of humanIntelligenceV2. None is allowed at the root. The nesting must match required_output exactly, even during repair.",
+    "Return questionnaire_patch_sources as a flat dictionary from every new/changed questionnaire_patch leaf path to an exact user_text quote. This explicit source index is mandatory for new facts even when the same quote is also in statements. Examples of keys: relationship, medicalCareProfile.hasOngoingMedicalNeeds, humanIntelligenceV2.transitionRiskProfile.recentHospitalization. Do not infer gender identity from pronouns or kinship. coupleAssistance is a single string, never an object keyed by partners.",
+    "NEEDS_CLARIFICATION must include a separate ASKED statement with importance MUST or UNKNOWN, knowledge_state UNKNOWN or AMBIGUOUS, and the real clarification_question matching next_question. Do not mark a known location statement ASKED just because a different care fact is missing. If there is no unresolved decision-critical client question, return READY.",
     "Preserve the nested objects in required_output: mobilityMethod, transferAssistance and recentFalls belong under medicalCareProfile, never at the top level. Dialysis transportation belongs at medicalCareProfile.dialysisTransportation. Physical AND occupational therapy after hospitalization supports humanIntelligenceV2.transitionRiskProfile.postHospitalRehabNeed.",
     "Do not repeat values already supplied by questionnaire_state unless the family explicitly corrects them. A story about one parent's care must not turn a Parents/Couple search into Dad/Mom; preserve the household relationship and write each partner's needs in coupleAssistance. Do not infer no wandering from no dementia, or a recovery time from a therapy duration. temporarySupportMonths is measured in months, never copy a number of weeks into it.",
     "Medical terms must be normalized into the structured taxonomy: for example CPAP/BiPAP/ventilator/cough-assist belongs in respiratory equipment details and Permanent medical equipment, dialysis in Dialysis, chronic wounds in Wound care, wheelchairs in mobilityMethod, and lift/two-person transfers in transferAssistance.",
@@ -67,7 +69,7 @@ def _required_output_schema() -> Dict[str, Any]:
         "research_requests": ["string"],
         "questionnaire_patch": {
             "relationship": "Mom|Dad|Grandma|Grandpa|Spouse|Myself|Parents|Couple|Relative|Friend",
-            "gender": "Male|Female|Nonbinary|Other|Prefer not to say",
+            "gender": "Male|Female|Nonbinary|Other|Prefer not to say; only an explicit gender identity declaration, never inferred from kinship or pronouns",
             "ageGroup": "60-64|65-69|70-74|75-79|80-84|85-89|90-94|95+",
             "assistanceLevel": "Fully independent|Light assistance|Help with bathing|Help with dressing|Help with toileting|Help with medications|Daytime supervision|24/7 support required|Skilled nursing care",
             "memoryStatus": "No|Occasionally forgetful|Mild memory issues|Significant memory issues|Not sure",
@@ -75,7 +77,7 @@ def _required_output_schema() -> Dict[str, Any]:
             "medicaidStatus": "Approved|Application pending|May qualify|Not eligible|Not sure",
             "medicareStatus": "Original Medicare|Medicare Advantage|No Medicare|Not sure",
             "moveTiming": "Immediately|Within 30 days|1-3 months|3-6 months|Planning ahead|Not sure",
-            "coupleAssistance": "explicit person-specific assistance description, preserving which partner needs which help",
+            "coupleAssistance": "ONE STRING describing each partner's explicit assistance needs; never a dictionary or list",
             "referenceLocationValue": "explicit city/market string",
             "referenceAddress": "explicit reference address; preserve full address if provided",
             "locationImportant": "Yes|No",
@@ -120,6 +122,7 @@ def _required_output_schema() -> Dict[str, Any]:
                 "personalityProfile": {"communitySizePreference": "Small and familiar|Medium|Large and active|Quiet|No preference"},
             },
         },
+        "questionnaire_patch_sources": {"full.dotted.patch.leaf.path": "exact source substring from user_text; one entry per new/changed patch leaf"},
         "decision_readiness": "READY|NEEDS_CLARIFICATION|NEEDS_RESEARCH",
     }
 
@@ -160,6 +163,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
         "field_trace_example": {
             "source_example": "My aunt receives dialysis and enjoys group activities.",
             "questionnaire_patch": {"relationship": "Relative", "medicalCareProfile": {"hasOngoingMedicalNeeds": "Yes", "needs": ["Dialysis"]}, "humanIntelligenceV2": {"socialProfile": {"activityRequirementLevel": "Preference"}}},
+            "questionnaire_patch_sources": {"relationship": "My aunt", "medicalCareProfile.hasOngoingMedicalNeeds": "receives dialysis", "medicalCareProfile.needs": "receives dialysis", "humanIntelligenceV2.socialProfile.activityRequirementLevel": "enjoys group activities"},
             "statements": [
                 {"raw_text": "My aunt", "mapped_parameters": ["relationship"], "importance": "CONTEXT", "knowledge_state": "KNOWN", "status": "USED"},
                 {"raw_text": "receives dialysis", "mapped_parameters": ["medicalCareProfile.hasOngoingMedicalNeeds", "medicalCareProfile.needs"], "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED"},
@@ -601,7 +605,9 @@ def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict
     issues.extend(f"NO_EXACT_FIELD_QUOTE:{path}" for path, field in profile["fields"].items()
                   if field.get("provenance") == "AI_EXTRACTED" and field.get("unverified_reason"))
     if issues:
-        raise RuntimeError("SEMANTIC_AI_PATCH_CONTRACT:" + ",".join(issues))
+        error = RuntimeError("SEMANTIC_AI_PATCH_CONTRACT:" + ",".join(issues))
+        error.patch_diagnostic = {"patch": packet.get("questionnaire_patch"), "sources": packet.get("questionnaire_patch_sources"), "statements": packet.get("statements")}
+        raise error
 
 
 def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Optional[Dict[str, Any]] = None, transport: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None) -> Dict[str, Any]:
@@ -654,8 +660,8 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             repair_payload = dict(payload)
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
-                "prior_packet": prior_packet,
-                "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness and questionnaire_patch. Preserve explicit client facts and unknowns. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, map its full dotted path to a statement with raw_text copied exactly from original user_text. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. If a material client question remains, include one ASKED statement and its identical next_question. Otherwise return READY with statement accounting.",
+                "prior_packet": {key: value for key, value in prior_packet.items() if key not in {"governance", "learning_center"}},
+                "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness, questionnaire_patch and questionnaire_patch_sources. Preserve explicit client facts and unknowns. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, put its full dotted path in questionnaire_patch_sources with a quote copied exactly from original user_text; also account for the fact in statements. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. gender must not be inferred from kinship/pronouns; coupleAssistance must be a string. If a material client question remains, include one ASKED MUST/UNKNOWN statement and its identical next_question. Otherwise return READY with statement accounting.",
             }
             result = validate_live_packet(active_transport(repair_payload))
             result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}

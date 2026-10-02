@@ -50,6 +50,12 @@ The initial schema must preserve all existing QuestionnaireState business facts,
 ### Identity and timing
 relationship, gender, ageGroup, coupleAssistance, moveTiming, careSearchApproach.
 
+The interpreter may supply `questionnaire_patch_sources`, a flat index of full
+patch leaf paths to exact family-text quotes, in addition to statement mappings.
+This is source provenance only: the index cannot authorize a new canonical field,
+invent a quote, override a button answer, or erase an ambiguous statement state.
+Existing packets with exact statement field mappings remain compatible.
+
 ### Current support and medical
 assistanceLevel; medicalCareProfile.hasOngoingMedicalNeeds, needs, mobilityMethod, transferAssistance, recentFalls, dialysisFrequency, dialysisCenter, dialysisTransportation, oxygenUse, woundCareFrequency, complexConditionDetails, physicianCoordination.
 

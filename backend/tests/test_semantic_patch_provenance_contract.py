@@ -39,6 +39,21 @@ def test_a_valid_trace_is_not_lost_behind_an_ungrounded_paraphrase():
     assert materialize_questionnaire(profile)["medicalCareProfile"]["transferAssistance"] == "One person"
 
 
+def test_direct_field_sources_keep_exact_quote_requirement_and_ambiguity():
+    path = "medicalCareProfile.transferAssistance"
+    packet = {"questionnaire_patch": {"medicalCareProfile": {"transferAssistance": "One person"}},
+              "questionnaire_patch_sources": {path: "one person to help"}, "statements": []}
+    source = "She needs one person to help."
+    _validate_patch_contract(packet, source, {})
+    assert materialize_questionnaire(build_structured_profile({}, packet, family_text=source))["medicalCareProfile"]["transferAssistance"] == "One person"
+    packet["statements"] = [{"raw_text": "unclear transfer arrangement", "mapped_parameters": [path], "knowledge_state": "AMBIGUOUS"}]
+    assert "transferAssistance" not in materialize_questionnaire(build_structured_profile({}, packet, family_text=source)).get("medicalCareProfile", {})
+    assert build_structured_profile({}, packet, family_text=source)["fields"][path]["state"] == "UNCLEAR"
+    packet["questionnaire_patch_sources"][path] = "an invented quote"
+    with pytest.raises(RuntimeError, match="NO_EXACT_FIELD_QUOTE"):
+        _validate_patch_contract(packet, source, {})
+
+
 def test_live_transport_repairs_invalid_field_trace_once():
     source = "She needs one person to help in Las Vegas. Budget $7000."
     path = "medicalCareProfile.transferAssistance"
