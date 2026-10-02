@@ -67,6 +67,13 @@ def test_repeated_field_contract_violation_never_returns_a_usable_packet():
     assert "packet_validation_repair" in transport.call_args.args[0]
 
 
+def test_injected_transport_cannot_bypass_field_acceptance():
+    bad = packet()
+    bad["questionnaire_patch"]["budget"] = 0
+    with pytest.raises(RuntimeError, match="NONPOSITIVE_VALUE:budget"):
+        interpret_client_intent_with_ai(user_text=TEXT, transport=lambda _: bad)
+
+
 def test_final_repair_can_recover_failed_question_repairs_with_ai_authored_question():
     bad = packet()
     bad["decision_readiness"] = "NEEDS_CLARIFICATION"

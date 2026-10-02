@@ -801,6 +801,8 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     else:
         result = active_transport(payload)
         result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state), allow_empty_statements=not user_text.strip())
+        # Injection changes delivery, never the accepted field contract.
+        _validate_patch_contract(result, user_text, questionnaire_state)
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result
 
