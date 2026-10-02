@@ -28,6 +28,25 @@ def test_parent_trace_does_not_authorize_unquoted_medical_leaves():
         _validate_patch_contract(packet, "He needs dialysis.", {})
 
 
+def test_known_client_field_cannot_be_used_without_reaching_profile():
+    text = "He needs dialysis."
+    packet = {"questionnaire_patch": {}, "statements": [{
+        "raw_text": text, "mapped_parameters": ["medicalCareProfile.needs"],
+        "knowledge_state": "KNOWN", "status": "USED"}]}
+    with pytest.raises(RuntimeError, match="KNOWN_FIELD_NOT_MATERIALIZED:medicalCareProfile.needs"):
+        _validate_patch_contract(packet, text, {})
+    _validate_patch_contract(packet, text, {"medicalCareProfile": {"needs": ["Dialysis"]}})
+
+
+@pytest.mark.parametrize("status,knowledge", [("ASKED", "UNKNOWN"), ("RESEARCH_REQUIRED", "KNOWN"), ("USED", "UNKNOWN")])
+def test_unresolved_or_research_traces_do_not_invent_client_fields(status, knowledge):
+    packet = {"questionnaire_patch": {}, "statements": [{
+        "raw_text": "Oxygen service is unverified", "mapped_parameters": ["medicalCareProfile.needs", "oxygen_support"],
+        "knowledge_state": knowledge, "status": status}]}
+    _validate_patch_contract(packet, "Oxygen service is unverified", {})
+    assert not packet["questionnaire_patch"]
+
+
 def test_a_valid_trace_is_not_lost_behind_an_ungrounded_paraphrase():
     path = "medicalCareProfile.transferAssistance"
     packet = {"questionnaire_patch": {"medicalCareProfile": {"transferAssistance": "One person"}},

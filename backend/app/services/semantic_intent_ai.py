@@ -26,6 +26,7 @@ SEMANTIC_AI_SYSTEM_RULES = [
     "Supervision around the clock is not Nursing supervision or Skilled nursing care. Medication reminders are not Complex medication management. Rehabilitation alone does not establish speech therapy. Preserve only explicitly established clinical facts.",
     "Understand the client before recommending anything.",
     "Account for every meaningful client statement.",
+    "For every KNOWN/USED client fact mapped to a canonical questionnaire field, populate that field's quoted patch slot unless questionnaire_state already supplies it. A facility research request is not a substitute for preserving the client's own known need. For example, explicit dialysis and its transport need require the quoted medicalCareProfile.needs Dialysis selection and dialysisTransportation Yes even while researching which facilities provide those services.",
     "Separate explicit facts from inferences.",
     "When client statements conflict about the same person and current situation, preserve both statements as AMBIGUOUS and ask which is correct. Do not choose the higher budget or more severe care need. Distinguish genuine contradictions from different people, time periods, or an explicit correction.",
     "Never convert an inference into a fact without confirmation or evidence.",
@@ -206,8 +207,12 @@ def _request_with_retry(url: str, headers: Dict[str, str], request_json: Dict[st
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             break
-        attempt_budget = remaining / (max_attempts - attempt + 1)
-        connect_timeout = min(10.0, attempt_budget / 4)
+        # A successful connection should get the available generation budget.
+        # Reserving equal slices for speculative retries cancelled valid slow
+        # generations after ~17 seconds despite a 45-second deadline. Retry
+        # only with time actually left after an early transport failure.
+        attempt_budget = remaining
+        connect_timeout = min(5.0, attempt_budget / 4)
         read_timeout = attempt_budget - connect_timeout
         attempts_made += 1
         try:
@@ -274,9 +279,9 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     schema = provider_schema(required_output)
     payload = copy.deepcopy(payload)
     payload["wire_contract"] = {
-        "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_fields has exactly one slot per legal dotted path. Set a slot to null when no new fact is extracted; otherwise supply its correctly typed value and exact user_text quote. Every active field must be independently supported. Constraints, facts and concerns are packet metadata, never patch fields. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
+        "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_fields is a sparse array of {path, value, quote} entries. Use the full canonical dotted path, exactly as in statements.mapped_parameters. Include at most one entry per path. Omit paths with no new fact, never emit empty placeholder entries. Multiple assistance selections belong in one assistanceLevel array entry. Every entry must be independently supported by an exact user_text quote. Constraints, facts and concerns are packet metadata, never patch fields. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
         "version": "semantic-extraction-v1",
-        "field_slots": "Compact f-number slots are encoding only. The JSON schema describes each slot with its full canonical dotted path. Use that full path in statements.mapped_parameters; never use the slot alias there. Set all unused slots to null.",
+        "field_paths": "Each extraction entry uses the full canonical dotted path in both path and statements.mapped_parameters. Do not use aliases. Omit unused paths. Map canonical client fields only when that exact field's value is explicitly established, not merely because it is related to the statement. A known client fact marked USED must reach its path in questionnaire_patch_fields unless questionnaire_state already supplies that field. Speaking a language does not establish nativeLanguage. A dietary preference does not establish faithTraditions or religious identity; preserve the dietary fact without these unrelated mappings.",
         "clinical_detail_consistency": "A known medical detail does not replace its medical need. Unless already supplied by questionnaire_state, pair dialysis frequency/center with medicalCareProfile.needs containing Dialysis, oxygen use with Oxygen, and wound-care frequency with Wound care. Give the parent need its own exact quote from the same explicit client treatment statement. Never add a need when the client's treatment itself is unknown or denied.",
         "assistance_encoding": "Emit exactly one entry per field. assistanceLevel.value may preserve the existing questionnaire string or one array containing every explicit selection; normalization joins that array into the existing comma-separated string. Never split multiple ADL selections into repeated entries. Do not copy already supplied questionnaire values into new extracted entries unless explicitly corrected.",
     }
@@ -680,12 +685,22 @@ def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: D
 
 
 def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict[str, Any]) -> None:
-    from app.services.canonical_structured_profile import build_structured_profile
+    from app.services.canonical_structured_profile import build_structured_profile, in_schema
 
     profile = build_structured_profile(state, packet, family_text=user_text)
     issues = [f"OUT_OF_SCHEMA:{item['field']}" for item in profile["out_of_schema"] if item.get("field")]
     issues.extend(f"NO_EXACT_FIELD_QUOTE:{path}" for path, field in profile["fields"].items()
                   if field.get("provenance") == "AI_EXTRACTED" and field.get("unverified_reason"))
+    # Accounting is bidirectional: a known client fact cannot be marked USED
+    # while its declared canonical field is absent from the decision profile.
+    # Facility parameter IDs are deliberately outside this check; research
+    # statements do not become client facts or prove provider capabilities.
+    for statement in packet.get("statements") or []:
+        if not isinstance(statement, dict) or statement.get("status") != "USED" or statement.get("knowledge_state") != "KNOWN":
+            continue
+        for path in statement.get("mapped_parameters") or []:
+            if in_schema(path) and path not in profile["fields"]:
+                issues.append(f"KNOWN_FIELD_NOT_MATERIALIZED:{path}")
     # Existing medical taxonomy: detail fields must not lose the explicitly
     # established need they describe. Require AI repair, never infer/add facts.
     medical = (packet.get("questionnaire_patch") or {}).get("medicalCareProfile") or {}
@@ -758,6 +773,11 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             repair_payload = dict(payload)
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
+                "issue_actions": {
+                    "NO_EXACT_FIELD_QUOTE": "Supply the field's own genuine source quote, or omit the unsupported field. Questionnaire defaults are not quotes from user_text.",
+                    "KNOWN_FIELD_NOT_MATERIALIZED": "If the exact field value is explicit, include one {path,value,quote} entry in questionnaire_patch_fields. If the path was only loosely related or inferred, remove that path from mapped_parameters instead of inventing its value; retain the original meaningful statement and its actual supported fields.",
+                    "MEDICAL_DETAIL_WITHOUT_NEED": "Keep the explicitly established detail AND include a separate medicalCareProfile.needs entry with the named parent need and its genuine treatment quote. This entry is an array of selected needs, not a detail string. Unknown or denied treatment is not a positive parent need.",
+                },
                 "client_dimension_status": _minimum_dimension_status(user_text, questionnaire_state),
                 "clarification_contract": {
                     "NEEDS_CLARIFICATION": {
@@ -770,7 +790,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                     "preserve": "Keep known facts, each partner's distinct needs and exact source quotes. Never fill an unknown to avoid a question.",
                 },
                 "prior_packet": {key: value for key, value in prior_packet.items() if key not in {"governance", "learning_center"}},
-                "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness, questionnaire_patch and questionnaire_patch_sources. Preserve explicit client facts and unknowns. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, put its full dotted path in questionnaire_patch_sources with a quote copied exactly from original user_text; also account for the fact in statements. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. gender must not be inferred from kinship/pronouns; coupleAssistance must be a string. If a material client question remains, include one ASKED MUST/UNKNOWN statement and its identical next_question. Otherwise return READY with statement accounting.",
+                "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness, questionnaire_patch and questionnaire_patch_sources. Preserve explicit client facts and unknowns. Every KNOWN/USED statement mapped to a client profile field must have that field in questionnaire_patch unless already supplied in questionnaire_state. Known medical detail requires its parent medicalCareProfile.needs selection: oxygenUse -> Oxygen, dialysisFrequency/dialysisCenter -> Dialysis, woundCareFrequency -> Wound care. Include the parent selection with its own exact quote; never drop an explicit clinical need to pass validation. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, put its full dotted path in questionnaire_patch_sources with a quote copied exactly from original user_text; also account for the fact in statements. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. gender must not be inferred from kinship/pronouns; coupleAssistance must be a string. If a material client question remains, include one ASKED MUST/UNKNOWN statement and its identical next_question. Otherwise return READY with statement accounting.",
             }
             repaired_packet = active_transport(repair_payload)
             try:

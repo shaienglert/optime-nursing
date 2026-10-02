@@ -21,14 +21,15 @@ an explicit button answer; source-backed ambiguity remains a separate state.
 
 `semantic_packet_wire.py` derives a strict provider JSON schema from the existing
 interpreter field declarations. Both Chat Completions and Responses transports
-request this format; the same Pydantic model validates it locally. Each approved
-path has one structural slot, either null or a value/quote pair. Compact f-number
-aliases keep the mandatory null slots short; each schema property describes its
-full canonical path, reconstructed by Pydantic without semantic inference.
-Statements and the canonical quote index always use full canonical paths.
-Null means no
-new extraction; it does not become a default fact. The provider grammar
-constrains legal field slots and JSON value kinds;
+request this format; the same Pydantic model validates it locally. Extraction is
+a sparse list of full canonical path/value/quote entries, grouped in the provider
+schema by the existing value representations. Unused fields are omitted, and
+duplicate paths fail closed. Opaque aliases and mandatory empty slots are removed
+after live diagnostics showed correct statement paths with missing or misplaced
+extractions. Normalization reconstructs nested profile fields without inference.
+A KNOWN/USED statement mapped to a client field must reach the profile unless
+the questionnaire already supplies that field. Facility research remains separate.
+The provider grammar constrains legal field paths and JSON value kinds;
 local validation checks the existing scalar/list representation. Advisory prompt
 enum descriptions do not acquire new canonical value authority. It avoids a
 large union of one object per profile field at constrained-decoding time.

@@ -9,7 +9,7 @@ import json
 from functools import lru_cache
 from typing import Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, TypeAdapter, ValidationError, create_model
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, TypeAdapter, ValidationError, create_model
 
 WIRE_VERSION = "semantic-extraction-v1"
 CONFIG = ConfigDict(extra="forbid", strict=True)
@@ -71,20 +71,27 @@ def _leaves(obj, prefix=""):
 @lru_cache(maxsize=1)
 def _model(declarations_json):
     declarations = json.loads(declarations_json)
-    # One structural slot per existing field prevents competing entries from
-    # overwriting each other. Null means no new extraction, never a default fact.
-    entry = create_model("QuotedValue", __config__=CONFIG,
-        value=(Union[StrictStr, StrictInt, list[StrictStr]], ...), quote=(StrictStr, ...))
-    fields = create_model("PatchFields", __config__=CONFIG,
-        **{path: (Union[entry, None], Field(..., alias=f"f{n}", description=path))
-           for n, (path, _) in enumerate(_leaves(declarations))})
+    # Sparse, full canonical paths avoid opaque aliases and mandatory empty
+    # slots. Group by existing representation, not by clinical interpretation.
+    groups = {}
+    for path, declaration in _leaves(declarations):
+        # Constrain representation at generation time instead of letting the
+        # provider choose an invalid value kind and spending another live call
+        # on repair. These are existing encodings, not new enum authority.
+        kind = "Selections" if path == "assistanceLevel" else "List" if isinstance(declaration, list) else "Integer" if declaration == "positive monthly integer" else "Months" if declaration == "explicit number of months" else "Text"
+        types = {"Selections": Union[StrictStr, list[StrictStr]], "List": list[StrictStr],
+                 "Integer": StrictInt, "Months": Union[StrictStr, StrictInt], "Text": StrictStr}
+        groups.setdefault(kind, []).append(path)
+    entries = [create_model("Quoted" + kind, __config__=CONFIG,
+        path=(Literal[tuple(paths)], ...), value=(types[kind], ...), quote=(StrictStr, ...))
+        for kind, paths in groups.items()]
     return create_model("SemanticExtraction", __config__=CONFIG,
         wire_version=(Literal[WIRE_VERSION], ...),
         facts=(list[StrictStr], ...), preferences=(list[StrictStr], ...),
         constraints=(list[StrictStr], ...), concerns=(list[StrictStr], ...),
         implications=(list[Implication], ...), statements=(list[Trace], ...),
         research_requests=(list[StrictStr], ...),
-        questionnaire_patch_fields=(fields, ...),
+        questionnaire_patch_fields=(list[Union[tuple(entries)]], ...),
         interview=(Union[NoClientQuestion, ClientQuestion], ...))
 
 
@@ -117,9 +124,11 @@ def normalize_wire(packet: Any, required_output: dict) -> dict:
     result = wire.model_dump(exclude={"wire_version", "questionnaire_patch_fields", "interview"})
     patch, sources = {}, {}
     declarations = dict(_leaves(required_output["questionnaire_patch"]))
-    for path, entry in wire.questionnaire_patch_fields.model_dump().items():
-        if entry is None:
-            continue
+    for field in wire.questionnaire_patch_fields:
+        entry = field.model_dump()
+        path = entry["path"]
+        if path in sources:
+            raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:DUPLICATE_FIELD:{path}")
         value, quote = entry["value"], entry["quote"]
         if not quote.strip():
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:EMPTY_QUOTE:{path}")
