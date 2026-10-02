@@ -73,11 +73,21 @@ def _model(declarations_json):
     declarations = json.loads(declarations_json)
     # One structural slot per existing field prevents competing entries from
     # overwriting each other. Null means no new extraction, never a default fact.
-    entry = create_model("QuotedValue", __config__=CONFIG,
-        value=(Union[StrictStr, StrictInt, list[StrictStr]], ...), quote=(StrictStr, ...))
+    entries = {}
+    slots = {}
+    for n, (path, declaration) in enumerate(_leaves(declarations)):
+        # Constrain representation at generation time instead of letting the
+        # provider choose an invalid value kind and spending another live call
+        # on repair. These are existing encodings, not new enum authority.
+        kind = "Selections" if path == "assistanceLevel" else "List" if isinstance(declaration, list) else "Integer" if declaration == "positive monthly integer" else "Months" if declaration == "explicit number of months" else "Text"
+        types = {"Selections": Union[StrictStr, list[StrictStr]], "List": list[StrictStr],
+                 "Integer": StrictInt, "Months": Union[StrictStr, StrictInt], "Text": StrictStr}
+        if kind not in entries:
+            entries[kind] = create_model("Quoted" + kind, __config__=CONFIG,
+                value=(types[kind], ...), quote=(StrictStr, ...))
+        slots[path] = (Union[entries[kind], None], Field(..., alias=f"f{n}", description=path))
     fields = create_model("PatchFields", __config__=CONFIG,
-        **{path: (Union[entry, None], Field(..., alias=f"f{n}", description=path))
-           for n, (path, _) in enumerate(_leaves(declarations))})
+        **slots)
     return create_model("SemanticExtraction", __config__=CONFIG,
         wire_version=(Literal[WIRE_VERSION], ...),
         facts=(list[StrictStr], ...), preferences=(list[StrictStr], ...),

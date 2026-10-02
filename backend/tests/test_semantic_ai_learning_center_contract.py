@@ -114,7 +114,8 @@ class SemanticAiLearningCenterContractTests(unittest.TestCase):
             with patch("app.services.semantic_intent_ai.time.monotonic", side_effect=[100, 100, 123]):
                 with patch("app.services.semantic_intent_ai.requests.post", side_effect=[requests.Timeout("first"), response]) as post:
                     self.assertIs(_request_with_retry("https://example.invalid/responses", {}, {}), response)
-        self.assertLessEqual(sum(post.call_args_list[0].kwargs["timeout"]), 22.5)
+        self.assertLessEqual(sum(post.call_args_list[0].kwargs["timeout"]), 45)
+        self.assertGreater(post.call_args_list[0].kwargs["timeout"][1], 30)
         self.assertLessEqual(sum(post.call_args_list[1].kwargs["timeout"]), 22)
 
     def test_exhausted_deadline_prevents_another_network_attempt(self) -> None:

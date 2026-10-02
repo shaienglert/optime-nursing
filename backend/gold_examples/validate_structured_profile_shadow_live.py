@@ -41,7 +41,7 @@ def main():
         ok=not missing and not conflicts
         if not ok: blocking+=1
         unquoted=[k for k,v in (structured.get("fields") or {}).items() if v.get("unverified_reason")]
-        report.append({"case":key,"pass":ok,"missing_critical_needs":missing,"conflicts":conflicts,"unquoted_ai_fields":unquoted,"ai_fields":{k:v.get("value") for k,v in (structured.get("fields") or {}).items() if v.get("provenance")=="AI_EXTRACTED"},"out_of_schema":[o.get("field") for o in (structured.get("out_of_schema") or [])],"raw_patch":semantic.get("questionnaire_patch"),"legacy_need_count":len(a),"structured_need_count":len(b)})
+        report.append({"case":key,"pass":ok,"missing_critical_needs":missing,"conflicts":conflicts,"unquoted_ai_fields":unquoted,"ai_fields":{k:v.get("value") for k,v in (structured.get("fields") or {}).items() if v.get("provenance")=="AI_EXTRACTED"},"out_of_schema":[o.get("field") for o in (structured.get("out_of_schema") or [])],"raw_patch":semantic.get("questionnaire_patch"),"semantic_diagnostic":{k:semantic.get(k) for k in ("statements","decision_readiness","next_question")} if not ok else None,"legacy_need_count":len(a),"structured_need_count":len(b)})
     print(json.dumps({"blocking":blocking,"cases":report},indent=2))
     for item in report:
         if not item["pass"]:
