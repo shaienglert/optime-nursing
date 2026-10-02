@@ -94,7 +94,15 @@ def build_living_strategy_context(questionnaire_state: Dict[str, Any], natural_l
     # it does not mean two residents are moving. Require an explicit joint-move or
     # co-residence statement before creating the COUPLE_CORESIDENCE hard gate.
     structured_relationship = _norm(questionnaire_state.get("relationship") or questionnaire_state.get("whoFor") or questionnaire_state.get("personType"))
-    couple = structured_relationship in {"couple", "both", "two residents"} or bool(questionnaire_state.get("coupleCoresidenceRequired")) or _mentions_couple(query)
+    family_profile = hi.get("familyProfile") if isinstance(hi.get("familyProfile"), dict) else {}
+    stay_together = _norm(family_profile.get("coupleStayTogetherPreference"))
+    couple = (
+        structured_relationship in {"couple", "both", "two residents"}
+        or bool(questionnaire_state.get("coupleCoresidenceRequired"))
+        # Canonical answer that both partners are moving and want to live together.
+        or (bool(stay_together) and not stay_together.startswith(("no", "not ", "separate")))
+        or _mentions_couple(query)
+    )
 
     no_dementia = denials["memory"] or _norm(questionnaire_state.get("memoryStatus")) in {"no", "none", "no dementia", "no memory concerns"}
     # Strip denied mentions locally; "no wandering" is not a wandering signal.
