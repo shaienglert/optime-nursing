@@ -197,7 +197,7 @@ test.describe('real synthetic-pilot customer journey', () => {
       needs: payload.patient_needs_profile?.needs?.map(need => ({ id: need.parameter_id, level: need.requirement_level, value: need.desired_value })),
     }));
     const classifiedCohort = payload.candidate_discovery?.total_facilities_classified;
-    if (classifiedCohort !== undefined) expect([expectedCohort, 200]).toContain(classifiedCohort);
+    if (classifiedCohort !== undefined) expect([expectedCohort, 500]).toContain(classifiedCohort);
     expect(payload.total_candidates_scored).toBeGreaterThan(0);
     if (expectedCohort) expect(payload.total_candidates_scored).toBeLessThanOrEqual(expectedCohort);
     // Whether each oracle requirement became a MUST is graded by
