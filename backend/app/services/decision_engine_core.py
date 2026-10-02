@@ -2036,6 +2036,7 @@ def run_patient_decision_engine(
                 "synthetic_archetype": canonical_meta.get("synthetic_archetype") if canonical_meta.get("synthetic_pilot") else None,
                 "accepts_couples": canonical_meta.get("accepts_couples") if canonical_meta.get("synthetic_pilot") else None,
                 "eligibility_status": eligibility["eligibility_status"],
+                "availability_decision_state": eligibility.get("availability_decision_state"),
                 "match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "patient_match_score": min(100.0, round(scoring["match_score"] + geo_bonus, 2)),
                 "quality_safety_score": quality_safety_score,
