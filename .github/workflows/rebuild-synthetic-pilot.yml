@@ -1,0 +1,55 @@
+name: Rebuild Synthetic Pilot Catalog
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - architecture/structured-profile-shadow
+    paths:
+      - scripts/build_synthetic_pilot_facilities.py
+      - .github/workflows/rebuild-synthetic-pilot.yml
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: architecture/structured-profile-shadow
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rebuild 500-community synthetic pilot
+        run: python scripts/build_synthetic_pilot_facilities.py
+      - name: Validate generated catalog
+        run: |
+          python - <<'PY'
+          import base64, gzip, json
+          from pathlib import Path
+          root=Path("database/synthetic_pilot")
+          def load(name):
+              return json.loads(gzip.decompress(base64.b64decode((root/name).read_text())))["records"]
+          facilities=load("facility_universe.json.gz.b64")
+          assert len(facilities)==500, len(facilities)
+          by={r["synthetic_archetype"]:[] for r in facilities}
+          for r in facilities:
+              by.setdefault(r["synthetic_archetype"],[]).append(r["licensed_capacity"])
+          assert max(by["SMALL_GROUP_HOME"]) <= 16
+          assert min(by["CONTINUING_CARE"]) >= 120
+          assert all(r["community_size"]=="SMALL" for r in facilities if r["synthetic_archetype"]=="SMALL_GROUP_HOME")
+          print({k:(len(v),min(v),max(v)) for k,v in sorted(by.items())})
+          PY
+      - name: Commit regenerated pilot artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add database/synthetic_pilot/*.json.gz.b64
+          if git diff --cached --quiet; then
+            echo "No generated changes"
+            exit 0
+          fi
+          git commit -m "data: regenerate coherent 500-community synthetic pilot"
+          git push origin HEAD:architecture/structured-profile-shadow
