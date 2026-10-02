@@ -117,13 +117,15 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
             out.append({"field":key,"text":quote or str(value),"quote":quote,"reason":"NO_CANONICAL_FIELD","status":"OUT_OF_SCHEMA"})
             continue
         knowledge=str((selected or {}).get("knowledge_state") or "").upper()
-        state="NEGATED" if knowledge=="NEGATED" else "UNCLEAR" if knowledge in {"AMBIGUOUS","UNCLEAR"} else "EXPLICIT"
+        state="UNKNOWN" if knowledge=="UNKNOWN" else "NEGATED" if knowledge=="NEGATED" else "UNCLEAR" if knowledge in {"AMBIGUOUS","UNCLEAR"} else "EXPLICIT"
         # Contract: AI_EXTRACTED requires an exact quote present in the family text.
         # Without one the value is UNCLEAR and never materialized.
         quote_ok=bool(source_text) and bool(quote) and _normalized_text(quote) in source_text
         if not quote_ok:
             state="UNCLEAR"
         extracted={"value":value,"state":state,"provenance":"AI_EXTRACTED","quote":quote,"source_question_key":None,**({} if quote_ok else {"unverified_reason":"NO_EXACT_QUOTE_IN_FAMILY_TEXT"})}
+        if key in fields and state=="UNKNOWN":
+            continue  # absence of AI knowledge cannot contest an explicit button answer
         if key in fields and not quote_ok:
             continue  # an unquoted AI value can neither override nor contest a button answer
         if key in fields and not _compatible_values(key, fields[key]["value"], value):

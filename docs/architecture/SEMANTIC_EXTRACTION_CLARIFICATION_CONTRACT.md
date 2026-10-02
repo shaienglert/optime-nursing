@@ -13,13 +13,20 @@ ADL tasks. A different partner or a different care fact must remain distinct.
 Missing facility capability, price or availability evidence remains downstream
 research. The family is not asked to prove a facility service. UNKNOWN remains
 UNKNOWN, and research does not manufacture eligibility or scores.
+An exact quote does not turn UNKNOWN into EXPLICIT. Quoted unknown AI fields
+remain UNKNOWN and are not materialized as decision facts. They cannot contest
+an explicit button answer; source-backed ambiguity remains a separate state.
 
 ## General live transport boundary
 
 `semantic_packet_wire.py` derives a strict provider JSON schema from the existing
 interpreter field declarations. Both Chat Completions and Responses transports
 request this format; the same Pydantic model validates it locally. Each approved
-path has one structural slot, either null or a value/quote pair. Null means no
+path has one structural slot, either null or a value/quote pair. Compact f-number
+aliases keep the mandatory null slots short; each schema property describes its
+full canonical path, reconstructed by Pydantic without semantic inference.
+Statements and the canonical quote index always use full canonical paths.
+Null means no
 new extraction; it does not become a default fact. The provider grammar
 constrains legal field slots and JSON value kinds;
 local validation checks the existing scalar/list representation. Advisory prompt

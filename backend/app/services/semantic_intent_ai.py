@@ -276,6 +276,8 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     payload["wire_contract"] = {
         "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_fields has exactly one slot per legal dotted path. Set a slot to null when no new fact is extracted; otherwise supply its correctly typed value and exact user_text quote. Every active field must be independently supported. Constraints, facts and concerns are packet metadata, never patch fields. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
         "version": "semantic-extraction-v1",
+        "field_slots": "Compact f-number slots are encoding only. The JSON schema describes each slot with its full canonical dotted path. Use that full path in statements.mapped_parameters; never use the slot alias there. Set all unused slots to null.",
+        "clinical_detail_consistency": "A known medical detail does not replace its medical need. Unless already supplied by questionnaire_state, pair dialysis frequency/center with medicalCareProfile.needs containing Dialysis, oxygen use with Oxygen, and wound-care frequency with Wound care. Give the parent need its own exact quote from the same explicit client treatment statement. Never add a need when the client's treatment itself is unknown or denied.",
         "assistance_encoding": "Emit exactly one entry per field. assistanceLevel.value may preserve the existing questionnaire string or one array containing every explicit selection; normalization joins that array into the existing comma-separated string. Never split multiple ADL selections into repeated entries. Do not copy already supplied questionnaire values into new extracted entries unless explicitly corrected.",
     }
     system_prompt = TRANSPORT_SYSTEM_PROMPT + " The actual response shape is the supplied strict JSON schema. Each dotted path in questionnaire_patch_fields is either null or one value/quote pair. Never emit the same field twice; for couples use coupleAssistance to preserve each person's needs. Represent any ASKED trace only in interview.blocking_statement; its question is interview.next_question. Normalization will reconstruct existing packet keys without inference."
@@ -687,12 +689,13 @@ def _validate_patch_contract(packet: Dict[str, Any], user_text: str, state: Dict
     # Existing medical taxonomy: detail fields must not lose the explicitly
     # established need they describe. Require AI repair, never infer/add facts.
     medical = (packet.get("questionnaire_patch") or {}).get("medicalCareProfile") or {}
-    selected = (state.get("medicalCareProfile") or {}).get("needs") or []
-    clinical_needs = set(selected) | set(medical.get("needs") or [])
+    need_field = profile["fields"].get("medicalCareProfile.needs") or {}
+    clinical_needs = set(need_field.get("value") or []) if need_field.get("state") == "EXPLICIT" else set()
     for detail, need in {"dialysisFrequency": "Dialysis", "dialysisCenter": "Dialysis",
                          "oxygenUse": "Oxygen", "woundCareFrequency": "Wound care"}.items():
         field = profile["fields"].get(f"medicalCareProfile.{detail}") or {}
-        if medical.get(detail) and field.get("state") == "EXPLICIT" and need not in clinical_needs:
+        if (medical.get(detail) and str(medical[detail]).strip().lower() not in {"not sure", "unknown", "none", "no"}
+                and field.get("state") == "EXPLICIT" and need not in clinical_needs):
             issues.append(f"MEDICAL_DETAIL_WITHOUT_NEED:medicalCareProfile.{detail}:{need}")
     if issues:
         error = RuntimeError("SEMANTIC_AI_PATCH_CONTRACT:" + ",".join(issues))

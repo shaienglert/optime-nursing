@@ -9,7 +9,7 @@ import json
 from functools import lru_cache
 from typing import Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, TypeAdapter, ValidationError, create_model
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, TypeAdapter, ValidationError, create_model
 
 WIRE_VERSION = "semantic-extraction-v1"
 CONFIG = ConfigDict(extra="forbid", strict=True)
@@ -76,7 +76,8 @@ def _model(declarations_json):
     entry = create_model("QuotedValue", __config__=CONFIG,
         value=(Union[StrictStr, StrictInt, list[StrictStr]], ...), quote=(StrictStr, ...))
     fields = create_model("PatchFields", __config__=CONFIG,
-        **{path: (Union[entry, None], ...) for path, _ in _leaves(declarations)})
+        **{path: (Union[entry, None], Field(..., alias=f"f{n}", description=path))
+           for n, (path, _) in enumerate(_leaves(declarations))})
     return create_model("SemanticExtraction", __config__=CONFIG,
         wire_version=(Literal[WIRE_VERSION], ...),
         facts=(list[StrictStr], ...), preferences=(list[StrictStr], ...),

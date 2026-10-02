@@ -37,9 +37,14 @@ def clarify(packet, question="Which daily tasks require assistance?", path="assi
 def normalize(packet):
     # Convert readable test entries into the provider's unique field slots.
     for entry in packet.pop("test_entries", []):
-        packet["questionnaire_patch_fields"][entry["path"]] = {
+        packet["questionnaire_patch_fields"][slot(entry["path"])] = {
             "value": entry["value"], **({"quote": entry["quote"]} if "quote" in entry else {})}
     return normalize_wire(packet, _required_output_schema())
+
+
+def slot(path):
+    fields = provider_schema(_required_output_schema())["$defs"]["PatchFields"]["properties"]
+    return next((alias for alias, field in fields.items() if field["description"] == path), path)
 
 
 def test_couple_clarification_preserves_known_partners_and_ai_authored_question():
@@ -105,7 +110,7 @@ def test_multiple_manual_adl_choices_survive_wire_format():
     packet = wire()
     packet["test_entries"] = [{"path": "assistanceLevel", "value": value.split(", "), "quote": value}]
     assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
-    packet["questionnaire_patch_fields"]["assistanceLevel"]["value"] = value
+    packet["questionnaire_patch_fields"][slot("assistanceLevel")]["value"] = value
     assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
 
 
@@ -208,3 +213,21 @@ def test_clinical_detail_cannot_silently_lose_its_explicit_parent_need(detail, n
     # A button-selected need already satisfies the dependency: no duplicate fact.
     _validate_patch_contract(result, value, {"medicalCareProfile": {"needs": [need]}})
     assert "needs" not in result["questionnaire_patch"]["medicalCareProfile"]
+
+
+def test_quoted_unknown_does_not_become_a_confirmed_client_fact_or_contest_buttons():
+    from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+
+    text = "Not sure whether oxygen is used."
+    packet = wire()
+    packet["test_entries"] = [{"path": "medicalCareProfile.oxygenUse", "value": "Not sure", "quote": text}]
+    packet["statements"] = [trace(text, ["medicalCareProfile.oxygenUse"], knowledge_state="UNKNOWN")]
+    result = normalize(packet)
+    _validate_patch_contract(result, text, {})
+    profile = build_structured_profile({}, result, family_text=text)
+    assert profile["fields"]["medicalCareProfile.oxygenUse"]["state"] == "UNKNOWN"
+    assert "medicalCareProfile" not in materialize_questionnaire(profile)
+    selected = {"medicalCareProfile": {"oxygenUse": "At night"}}
+    profile = build_structured_profile(selected, result, family_text=text)
+    assert not profile["conflicts"]
+    assert materialize_questionnaire(profile)["medicalCareProfile"] == selected["medicalCareProfile"]
