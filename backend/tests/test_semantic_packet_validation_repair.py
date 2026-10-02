@@ -24,7 +24,7 @@ def packet():
         "questionnaire_patch": {"medicalCareProfile": {"needs": ["Dialysis"]}},
         "statements": [{"raw_text": "dialysis three times a week", "meaning": "Dialysis required",
                         "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED",
-                        "mapped_parameters": ["dialysis_arrangements"]}],
+                        "mapped_parameters": ["medicalCareProfile.needs"]}],
     }
 
 
@@ -89,6 +89,7 @@ def test_structured_only_case_may_have_no_narrative_statements():
     structured = {"budget": 6500, "referenceLocationValue": "Las Vegas"}
     response = packet()
     response["statements"] = []
+    response["questionnaire_patch"] = {}
     with patch("app.services.semantic_intent_ai._default_transport", return_value=response) as transport:
         result = interpret_client_intent_with_ai(user_text="", questionnaire_state=structured)
     assert transport.call_count == 1

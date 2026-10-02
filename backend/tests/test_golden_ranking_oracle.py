@@ -125,6 +125,8 @@ def oracle(persona) -> Dict[str, Any]:
             need(yes("secured_units"), "secured_units")
         if "dialysis" in needs:
             need(yes("dialysis_arrangements"), "dialysis")
+            if _lower(medical.get("dialysisTransportation")) == "yes":
+                need(yes("transportation"), "dialysis_transportation")
         if "wound care" in needs:
             need(yes("wound_care"), "wound_care")
         if _lower(transition.get("postHospitalRehabNeed")) == "yes":
@@ -165,6 +167,7 @@ def oracle(persona) -> Dict[str, Any]:
         if not fail:
             (pending if unknown else eligible).append(row)
     prefs = {
+        "preferred": set(persona.get("oracle", {}).get("preferred") or []),
         "continuum": continuum == "preferred",
         "size": SIZE.get(next((k for k in SIZE if k in _lower((hi.get("personalityProfile") or {}).get("communitySizePreference"))), ""), None),
         "language": _lower((hi.get("languageProfile") or {}).get("preferredSpokenLanguage")) or None,
@@ -193,6 +196,10 @@ def _nice(row, prefs) -> tuple:
     lang = prefs["language"]
     if lang and lang != "english" and lang in _lower(row["facts"].get("languages")):
         score += 1
+    if "social_fit" in prefs.get("preferred", set()):
+        service = row["facility"].get("pilot_service_evidence") or {}
+        if service.get("social_engagement_verified") is True and service.get("activity_schedule"):
+            score += 1
     return (size, score)
 
 

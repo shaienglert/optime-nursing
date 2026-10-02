@@ -27,6 +27,7 @@ from app.services.canonical_structured_profile import build_structured_profile, 
 ROOT = Path(__file__).resolve().parents[2]
 SUBMISSIONS = ROOT / "backend" / "gold_examples" / "oomnik_golden_personas_v1.submissions.json"
 EVIDENCE = ROOT / "database" / "synthetic_pilot" / "facility_parameter_evidence.json.gz.b64"
+CATALOG = ROOT / "database" / "synthetic_pilot" / "facility_universe.json.gz.b64"
 PILOT_ENV = {
     "OPTIME_CANONICAL_MARKET": "synthetic-pilot",
     "OOMNIK_PILOT_FACILITY_LIMIT": "500",
@@ -45,6 +46,7 @@ NEED_IDS = {
     "wandering_safety": {"dementia_alz_programs", "memory_care", "wandering_safety"},
     "rehabilitation": {"pt", "ot", "post_hospital_rehab", "rehabilitation", "skilled_nursing_capabilities"},
     "dialysis": {"dialysis_arrangements"},
+    "dialysis_transportation": {"transportation"},
     "wound_care": {"wound_care"},
     "kosher": {"kosher"},
     "medicaid_pathway": {"medicaid_attributes"},
@@ -64,6 +66,9 @@ EVIDENCE_CHECK = {
     "medication_support": lambda facts, row: facts.get("medication_support") == "YES",
     "memory_care": lambda facts, row: facts.get("memory_care") == "YES",
     "dialysis": lambda facts, row: facts.get("dialysis_arrangements") == "YES",
+    "dialysis_transportation": lambda facts, row: facts.get("transportation") == "YES"
+        and (row.get("pilot_service_evidence") or {}).get("dialysis_transport_verified") is True,
+    "rehabilitation": lambda facts, row: facts.get("pt") == "YES" and facts.get("ot") == "YES",
     "wound_care": lambda facts, row: facts.get("wound_care") == "YES",
     "kosher": lambda facts, row: facts.get("kosher") == "YES",
     "couple_coresidence": lambda facts, row: row.get("accepts_couples") is True,
@@ -78,6 +83,62 @@ FORBIDDEN_ARCHETYPES = {
     "INDEPENDENT_LIVING_ONLY": {"INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS"},
     "ASSISTED_LIVING_ONLY": {"ASSISTED_LIVING_RFG"},
 }
+CARE_ARCHETYPES = {
+    "INDEPENDENT_LIVING": {"INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS"},
+    "ASSISTED_LIVING": {"ASSISTED_LIVING_RFG"},
+    "MEMORY_CARE": {"MEMORY_CARE"},
+    "SKILLED_NURSING": {"SKILLED_NURSING"},
+    "REHABILITATION": {"REHABILITATION"},
+    "CONTINUING_CARE": {"CONTINUING_CARE"},
+    "SMALL_GROUP_HOME": {"SMALL_GROUP_HOME"},
+}
+
+
+def _care_violations(oracle, results, index):
+    expected = oracle.get("care") or []
+    unknown = set(expected) - set(CARE_ARCHETYPES)
+    if unknown:
+        return [f"unimplemented oracle.care values: {sorted(unknown)}"]
+    allowed = set().union(*(CARE_ARCHETYPES[key] for key in expected)) if expected else set()
+    return [f"Top-10 {row.get('canonical_facility_id')} is {index.get(row.get('canonical_facility_id'), {}).get('synthetic_archetype')}, outside oracle.care {expected}"
+            for row in results[:10] if allowed and index.get(row.get("canonical_facility_id"), {}).get("synthetic_archetype") not in allowed]
+
+
+def _preferred_violations(oracle, response):
+    preferred = set(oracle.get("preferred") or [])
+    unknown = preferred - {"hebrew", "social_fit", "nearby_places"}
+    problems = [f"unimplemented oracle.preferred values: {sorted(unknown)}"] if unknown else []
+    intelligence = response.get("decision_intelligence") or {}
+    intent = intelligence.get("client_intent") or {}
+    nice = {str(item.get("key")): item for item in intent.get("nice_to_haves") or []}
+    if "hebrew" in preferred and str((nice.get("PREFERRED_LANGUAGE_SUPPORT") or {}).get("value") or "").lower() != "hebrew":
+        problems.append("oracle.preferred Hebrew never reached the ranking NICE contract")
+    if "social_fit" in preferred and "RICH_CULTURE_AND_ACTIVITIES" not in nice:
+        problems.append("oracle.preferred social_fit never reached the ranking NICE contract")
+    for row in response.get("results") or []:
+        fid = row.get("canonical_facility_id")
+        fit = row.get("client_intent_fit") or {}
+        accounted = set(fit.get("nice_match") or []) | set(fit.get("nice_unknown") or []) | set(fit.get("nice_mismatch") or [])
+        for preference, key in [("hebrew", "PREFERRED_LANGUAGE_SUPPORT"), ("social_fit", "RICH_CULTURE_AND_ACTIVITIES")]:
+            if preference in preferred and key not in accounted:
+                problems.append(f"{fid}: preferred {preference} has no match/mismatch/unknown evidence trace")
+        if "hebrew" in preferred and "PREFERRED_LANGUAGE_SUPPORT" in set(fit.get("nice_match") or []):
+            languages = str(FACTS.get(fid, {}).get("languages") or "").lower().split(",")
+            if "hebrew" not in {language.strip() for language in languages}:
+                problems.append(f"{fid}: Hebrew NICE match is unsupported by catalog language evidence")
+        if "social_fit" in preferred and "RICH_CULTURE_AND_ACTIVITIES" in set(fit.get("nice_match") or []):
+            service = (CATALOG_ROWS.get(fid) or {}).get("pilot_service_evidence") or {}
+            if service.get("social_engagement_verified") is not True:
+                problems.append(f"{fid}: social NICE match is unsupported by catalog service evidence")
+        if "nearby_places" in preferred:
+            place = row.get("nearby_place_fit") or {}
+            if place.get("status") not in {"KNOWN", "UNKNOWN", "NOT_EVALUATED"}:
+                problems.append(f"{fid}: preferred nearby_places has no evidence or visible unknown")
+            if place.get("status") == "KNOWN" and not place.get("source"):
+                problems.append(f"{fid}: nearby_places claims KNOWN without a source")
+            if place.get("status") in {"UNKNOWN", "NOT_EVALUATED"} and not place.get("reason"):
+                problems.append(f"{fid}: nearby_places uncertainty has no explanation")
+    return problems
 
 
 def _facts() -> Dict[str, Dict[str, Any]]:
@@ -89,6 +150,8 @@ def _facts() -> Dict[str, Dict[str, Any]]:
 
 
 FACTS = _facts()
+CATALOG_ROWS = {row["canonical_id"]: row for row in
+                json.loads(gzip.decompress(base64.b64decode(CATALOG.read_text())))["records"]}
 
 
 @pytest.fixture(scope="module")
@@ -122,7 +185,7 @@ def _violations(persona: Dict[str, Any], decision: Dict[str, Any]) -> List[str]:
     needs = {n.get("parameter_id"): n for n in (response.get("patient_needs_profile") or {}).get("needs") or []}
     intent = (response.get("decision_intelligence") or {}).get("client_intent") or {}
     intent_must = {str(m.get("key") or "") for m in intent.get("must_haves") or []}
-    problems: List[str] = []
+    problems: List[str] = _care_violations(oracle, results, index) + _preferred_violations(oracle, response)
 
     # 1. The profile reached the engine as stated.
     price_need = needs.get("current_price")
@@ -191,3 +254,21 @@ def _violations(persona: Dict[str, Any], decision: Dict[str, Any]) -> List[str]:
 def test_golden_persona_decision(persona, decisions):
     problems = _violations(persona, decisions[persona["id"]])
     assert not problems, f"{persona['id']} ({persona['title']}):\n  " + "\n  ".join(problems)
+
+
+def test_care_contract_catches_a_top_community_outside_the_declared_setting():
+    assert _care_violations({"care": ["REHABILITATION"]}, [{"canonical_facility_id": "bad"}],
+                            {"bad": {"synthetic_archetype": "SMALL_GROUP_HOME"}})
+
+
+def test_preferred_contract_catches_silently_dropped_nice_preferences():
+    problems = _preferred_violations({"preferred": ["hebrew", "social_fit", "nearby_places"]},
+                                    {"results": [{"canonical_facility_id": "missing"}]})
+    assert any("Hebrew" in problem for problem in problems)
+    assert any("social_fit" in problem for problem in problems)
+    assert any("nearby_places" in problem for problem in problems)
+
+
+def test_unknown_oracle_fields_cannot_silently_pass():
+    assert _care_violations({"care": ["UNIMPLEMENTED"]}, [], {})
+    assert _preferred_violations({"preferred": ["UNIMPLEMENTED"]}, {})

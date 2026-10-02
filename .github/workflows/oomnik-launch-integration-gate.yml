@@ -31,6 +31,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install backend contract dependencies
+        id: backend_deps
         run: pip install -r backend/requirements.txt pytest
       - name: Verify ten-scenario launch contract
         run: node scripts/validate_oomnik_launch_contract.cjs
@@ -47,6 +48,7 @@ jobs:
           PYTHONPATH: backend
         run: python -m pytest backend/tests/test_golden_persona_decisions.py backend/tests/test_golden_ranking_oracle.py backend/tests/test_oomniker_counterfactual_golden.py -q
       - name: Verify live Golden Interpreter
+        if: ${{ always() && !cancelled() && steps.backend_deps.outcome == 'success' }}
         env:
           PYTHONPATH: backend:.
           OPTIME_SEMANTIC_AI_ENABLED: '1'
@@ -56,6 +58,7 @@ jobs:
           OPTIME_SEMANTIC_AI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python backend/gold_examples/validate_golden_interpreter_live.py
       - name: Verify structured profile shadow live
+        if: ${{ always() && !cancelled() && steps.backend_deps.outcome == 'success' }}
         env:
           PYTHONPATH: backend:.
           OPTIME_SEMANTIC_AI_ENABLED: '1'

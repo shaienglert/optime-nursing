@@ -33,6 +33,16 @@ class StructuredMedicalNeedsMappingTests(unittest.TestCase):
         by_id = self._needs_by_id(["Dialysis"])
         self.assertEqual("REQUIRED", by_id["dialysis_arrangements"]["requirement_level"])
 
+    def test_dialysis_transportation_answer_creates_a_required_need(self) -> None:
+        by_id = self._needs_by_id(["Dialysis"], dialysisTransportation="Yes")
+        self.assertEqual("REQUIRED", by_id["transportation"]["requirement_level"])
+        self.assertEqual("questionnaire.medicalCareProfile.dialysisTransportation", by_id["transportation"]["user_evidence_source"])
+
+    def test_dialysis_without_transport_request_does_not_infer_transport(self) -> None:
+        for answer in ("No", "Not sure", ""):
+            by_id = self._needs_by_id(["Dialysis"], dialysisTransportation=answer)
+            self.assertNotIn("transportation", by_id)
+
     def test_wound_care_checkbox_creates_a_high_need(self) -> None:
         by_id = self._needs_by_id(["Wound care"])
         self.assertEqual("HIGH", by_id["wound_care"]["requirement_level"])

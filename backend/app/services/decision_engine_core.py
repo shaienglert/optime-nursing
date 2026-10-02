@@ -361,6 +361,10 @@ def _map_structured_medical_needs(questionnaire: Dict[str, Any], needs_by_id: Di
 
 def _map_structured_follow_ups(questionnaire: Dict[str, Any], needs_by_id: Dict[str, NeedItem]) -> None:
     medical = questionnaire.get("medicalCareProfile") or {}
+    if _normalize(medical.get("dialysisTransportation")) == "yes":
+        _add_need(needs_by_id, "transportation", "REQUIRED", "YES", ["YES"], "SERVICE",
+                  "questionnaire.medicalCareProfile.dialysisTransportation", 1.0,
+                  "Requires transportation to dialysis appointments")
     transfer = _normalize(medical.get("transferAssistance"))
     if transfer in {"one person", "two people", "mechanical lift"}:
         level = "HIGH" if transfer in {"two people", "mechanical lift"} else "MEDIUM"

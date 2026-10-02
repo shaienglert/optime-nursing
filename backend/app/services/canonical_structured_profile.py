@@ -98,12 +98,17 @@ def build_structured_profile(questionnaire_state: Dict[str,Any], semantic_result
     source_text=_normalized_text(family_text if family_text is not None else semantic_result.get("_family_text"))
     for key,value in patch.items():
         candidates=by_key.get(str(key),[])
-        quote=next((str(s.get("raw_text")) for s in candidates if str(s.get("raw_text") or "").strip()),None)
+        # A packet can contain several traces for a field. Choose a source-grounded
+        # trace before an ungrounded one; statement ordering must not lose a valid fact.
+        grounded=next((s for s in candidates if str(s.get("raw_text") or "").strip()
+            and source_text and _normalized_text(s["raw_text"]) in source_text),None)
+        selected=grounded or next((s for s in candidates if str(s.get("raw_text") or "").strip()),None)
+        quote=str(selected["raw_text"]) if selected else None
         if not in_schema(str(key)):
             # Contract: no canonical field -> OUT_OF_SCHEMA, zero decision weight.
             out.append({"field":key,"text":quote or str(value),"quote":quote,"reason":"NO_CANONICAL_FIELD","status":"OUT_OF_SCHEMA"})
             continue
-        knowledge=next((str(s.get("knowledge_state") or "").upper() for s in candidates if s.get("knowledge_state")), "")
+        knowledge=str((selected or {}).get("knowledge_state") or "").upper()
         state="NEGATED" if knowledge=="NEGATED" else "UNCLEAR" if knowledge in {"AMBIGUOUS","UNCLEAR"} else "EXPLICIT"
         # Contract: AI_EXTRACTED requires an exact quote present in the family text.
         # Without one the value is UNCLEAR and never materialized.

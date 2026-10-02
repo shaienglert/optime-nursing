@@ -3681,7 +3681,8 @@
         ],
         "required": [
           "dialysis",
-          "wound_care"
+          "wound_care",
+          "dialysis_transportation"
         ],
         "budget": 7500,
         "location": "Las Vegas",
