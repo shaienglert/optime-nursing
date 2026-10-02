@@ -38,6 +38,10 @@ def main():
         unquoted=[k for k,v in (structured.get("fields") or {}).items() if v.get("unverified_reason")]
         report.append({"case":key,"pass":ok,"missing_critical_needs":missing,"conflicts":conflicts,"unquoted_ai_fields":unquoted,"legacy_need_count":len(a),"structured_need_count":len(b)})
     print(json.dumps({"blocking":blocking,"cases":report},indent=2))
+    for item in report:
+        if not item["pass"]:
+            detail=json.dumps({"missing":item["missing_critical_needs"],"conflicts":item["conflicts"],"unquoted":item["unquoted_ai_fields"]},ensure_ascii=False)
+            print(f"::error title=shadow-live {item['case']}::{detail}"[:900])
     raise SystemExit(0 if blocking==0 else 1)
 
 if __name__=="__main__": main()
