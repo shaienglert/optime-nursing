@@ -229,6 +229,24 @@ def _resolve_temperature() -> Optional[float]:
         return 0.0
 
 
+TRANSPORT_SYSTEM_PROMPT = (
+    "You are the governed semantic reasoning layer for a senior-living decision engine. "
+    "Return compact JSON only. Follow required_output nesting exactly. "
+    "Every new questionnaire_patch leaf, including context fields, must have its full dotted path "
+    "in statements.mapped_parameters beside a raw_text quote copied from user_text. "
+    "Audit every leaf before returning; repair responses obey the same contract. "
+    "Also audit the clarification contract in the final JSON, including every repair response: "
+    "NEEDS_CLARIFICATION requires a nonempty next_question and exactly one ASKED statement "
+    "with importance MUST or UNKNOWN, knowledge_state UNKNOWN or AMBIGUOUS, a stable gap_key, "
+    "and clarification_question identical to next_question. Trace the unresolved fact separately "
+    "from the known facts. Never return NEEDS_CLARIFICATION with null next_question or only USED statements. "
+    "If a material client-owned unknown remains, phrase a question; do not invent its answer or "
+    "return READY to avoid asking. If none remains and minimum client dimensions are resolved, "
+    "return READY. Keep known facts and their exact source quotes. "
+    "These are advisory extraction signals; deterministic policy owns final readiness."
+)
+
+
 def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     url = os.getenv("OPTIME_SEMANTIC_AI_URL", "").strip()
     model = os.getenv("OPTIME_SEMANTIC_AI_MODEL", "").strip()
@@ -243,7 +261,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         request_json = {
             "model": model,
             "input": [
-                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only. Follow required_output nesting exactly. Every new questionnaire_patch leaf, including context fields, must have its full dotted path in statements.mapped_parameters beside a raw_text quote copied from user_text. Audit every leaf before returning; repair responses obey the same contract."},
+                {"role": "system", "content": TRANSPORT_SYSTEM_PROMPT},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
             "text": {"format": {"type": "json_object"}},
@@ -253,7 +271,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
             "model": model,
             "response_format": {"type": "json_object"},
             "messages": [
-                {"role": "system", "content": "You are the governed semantic reasoning layer for a senior-living decision engine. Return compact JSON only. Follow required_output nesting exactly. Every new questionnaire_patch leaf, including context fields, must have its full dotted path in statements.mapped_parameters beside a raw_text quote copied from user_text. Audit every leaf before returning; repair responses obey the same contract."},
+                {"role": "system", "content": TRANSPORT_SYSTEM_PROMPT},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
         }
@@ -667,6 +685,17 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
             repair_payload = dict(payload)
             repair_payload["packet_validation_repair"] = {
                 "validation_error": str(error),
+                "client_dimension_status": _minimum_dimension_status(user_text, questionnaire_state),
+                "clarification_contract": {
+                    "NEEDS_CLARIFICATION": {
+                        "next_question": "one nonempty AI-authored question for an unresolved client-owned fact",
+                        "statement": {"status": "ASKED", "importance": "MUST|UNKNOWN",
+                                      "knowledge_state": "UNKNOWN|AMBIGUOUS", "gap_key": "the unresolved fact",
+                                      "clarification_question": "identical to next_question"},
+                    },
+                    "READY": "Only if no material client-owned clarification remains and minimum dimensions are resolved.",
+                    "preserve": "Keep known facts, each partner's distinct needs and exact source quotes. Never fill an unknown to avoid a question.",
+                },
                 "prior_packet": {key: value for key, value in prior_packet.items() if key not in {"governance", "learning_center"}},
                 "instruction": "Return the complete corrected packet using required_output exactly, including decision_readiness, questionnaire_patch and questionnaire_patch_sources. Preserve explicit client facts and unknowns. Use only allowed enum values and exact nested schema paths. For every new/changed patch leaf, put its full dotted path in questionnaire_patch_sources with a quote copied exactly from original user_text; also account for the fact in statements. Reuse a genuine quote for related fields; never invent quotes, paraphrase them, move fields to the top level, or discard an explicit requirement to pass validation. Omit unsupported inferred fields and duplicate questionnaire defaults. gender must not be inferred from kinship/pronouns; coupleAssistance must be a string. If a material client question remains, include one ASKED MUST/UNKNOWN statement and its identical next_question. Otherwise return READY with statement accounting.",
             }
