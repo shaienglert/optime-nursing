@@ -131,9 +131,9 @@ def _canonical_records_for_market(payload: Dict[str, Any], market: str) -> List[
             if row.get("is_las_vegas_valley") is True and _nevada_listing_eligible(row)
         ]
     elif market == "synthetic-pilot":
-        catalog_size = int(os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "200"))
-        if catalog_size != 200:
-            raise ValueError("OOMNIK_PILOT_CATALOG_SIZE must be 200")
+        catalog_size = int(os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "500"))
+        if catalog_size != 500:
+            raise ValueError("OOMNIK_PILOT_CATALOG_SIZE must be 500")
         rows.sort(key=lambda row: int(row.get("pilot_exposure_order") or 999999))
         rows = rows[:catalog_size]
     return rows
@@ -146,7 +146,7 @@ def _signature(market: str) -> tuple[Any, ...]:
         evidence_mtime = PILOT_EVIDENCE_PATH.stat().st_mtime
     return (
         market,
-        os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "200") if market == "synthetic-pilot" else None,
+        os.getenv("OOMNIK_PILOT_CATALOG_SIZE", "500") if market == "synthetic-pilot" else None,
         os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50") if market == "synthetic-pilot" else None,
         REGISTRY_PATH.stat().st_mtime,
         evidence_mtime,
@@ -544,8 +544,8 @@ def get_exposed_canonical_facility_ids() -> List[str]:
     if runtime["market"] != "synthetic-pilot":
         return list(canonical)
     requested_limit = int(os.getenv("OOMNIK_PILOT_FACILITY_LIMIT", "50"))
-    if requested_limit not in {50, 100, 150, 200}:
-        raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 50, 100, 150, or 200")
+    if requested_limit not in {50, 100, 150, 200, 500}:
+        raise ValueError("OOMNIK_PILOT_FACILITY_LIMIT must be one of 50, 100, 150, 200, or 500")
     ordered = sorted(
         canonical,
         key=lambda canonical_id: int(canonical[canonical_id].get("pilot_exposure_order") or 999999),
