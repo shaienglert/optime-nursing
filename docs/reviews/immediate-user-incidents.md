@@ -23,3 +23,17 @@ Runtime/unhandled browser errors and server 5xx/exceptions are covered. A 200
 response with legitimately pending evidence is not a technical fault. Semantic
 failures require specific product contract signals; this does not claim universal
 error detection. Existing hourly monitoring remains backup only.
+
+Owner scope clarification (2026-10-02): notify only about failures in public
+user flows on the live production site. The browser monitor is mounted only
+in Vercel production and sends events only from public user pages. The proxy
+forwards the page Referer only in production. Server incident capture requires
+a Referer on the configured production origin and a public page category;
+admin, health and telemetry endpoints are excluded. Internal requests without
+user-page provenance do not generate mail. Startup probes are removed and
+unclassified legacy pending events are suppressed rather than mailed.
+
+This is page/origin provenance, not proof that a human made the request.
+Automated tests against the live public site can share the same provenance;
+requests without a Referer are not covered by server capture. No deliberate
+production failure or diagnostic email is needed to validate the narrowing.

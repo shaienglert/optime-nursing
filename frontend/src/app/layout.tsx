@@ -62,7 +62,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AppQuestionnaireProvider>
-          <UserIncidentMonitor />
+          {process.env.VERCEL_ENV === "production" && <UserIncidentMonitor />}
           <ProcessContinuityBridge>
             <SiteHeader />
             <div className="flex-1">{children}</div>

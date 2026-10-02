@@ -20,3 +20,11 @@ it("a telemetry outage does not throw into the user flow", async () => {
   expect(() => reportClientIncident("UNHANDLED_REJECTION")).not.toThrow();
   await Promise.resolve();
 });
+
+it.each(["/admin", "/admin/results", "/research", "/health"])("does not alert from internal page %s", (pathname) => {
+  vi.stubGlobal("window", { location: { pathname } });
+  const fetch = vi.fn();
+  vi.stubGlobal("fetch", fetch);
+  reportClientIncident("CLIENT_RUNTIME_ERROR");
+  expect(fetch).not.toHaveBeenCalled();
+});
