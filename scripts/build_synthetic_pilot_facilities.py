@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the isolated 200-community Oomnik recommendation pilot.
+"""Build the isolated 500-community Oomnik recommendation pilot.
 
 Every identity, claim, price and availability value in this artifact is synthetic.
 The output is deliberately kept outside the production Nevada universe and can only
@@ -133,10 +133,22 @@ def yes_no(index: int, modulus: int, *, limited: bool = False) -> str:
     return "YES" if index % modulus != 0 else "NO"
 
 
+def room_availability(index: int) -> tuple[tuple[str, int], tuple[str, int]]:
+    """One fictional inventory shared by room records and facility evidence."""
+    state = ["YES", "YES", "LIMITED", "NO", "YES"][index % 5]
+    if state == "NO":
+        return (("WAITLIST", 0), ("UNAVAILABLE", 0))
+    if state == "LIMITED":
+        offers = (("AVAILABLE", 1), ("WAITLIST", 0))
+        return offers if index % 2 == 0 else offers[::-1]
+    return (("AVAILABLE", 3), ("AVAILABLE", 2))
+
+
 def capability_map(index: int, canonical_type: str) -> dict[str, object]:
     care = canonical_type in {"ASSISTED_LIVING_RFG", "MEMORY_CARE", "SKILLED_NURSING", "REHABILITATION", "CONTINUING_CARE", "SMALL_GROUP_HOME"}
     skilled = canonical_type in {"SKILLED_NURSING", "REHABILITATION", "CONTINUING_CARE"}
     memory = canonical_type in {"MEMORY_CARE", "CONTINUING_CARE"}
+    available_units = sum(units for status, units in room_availability(index) if status == "AVAILABLE")
     return {
         "adl_support": "YES" if care else "NO",
         "medication_support": "YES" if care else "NO",
@@ -151,7 +163,7 @@ def capability_map(index: int, canonical_type: str) -> dict[str, object]:
         "post_stroke_neuro_evidence": "YES" if canonical_type == "REHABILITATION" or (canonical_type == "SKILLED_NURSING" and index % 5 == 0) else "NO",
         "transportation": yes_no(index, 6, limited=True),
         "published_rates": "YES",
-        "current_availability": ["YES", "YES", "LIMITED", "NO", "YES"][index % 5],
+        "current_availability": "YES" if available_units > 1 else ("LIMITED" if available_units == 1 else "NO"),
         "languages": ["English", "English, Spanish", "English, Hebrew", "English, Russian", "English, Mandarin"][index % 5],
         "kosher": "YES" if index % 9 == 0 else ("LIMITED" if index % 4 == 0 else "NO"),
         "gluten_free": "YES" if index % 3 else "LIMITED",
@@ -334,13 +346,14 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
         if archetype_id in {"MEMORY_CARE", "SKILLED_NURSING", "REHABILITATION", "SMALL_GROUP_HOME"}:
             room_names = ["Private care room", "Shared companion room"]
         for room_offset, room_name in enumerate(room_names):
+            availability_status, available_units = room_availability(index)[room_offset]
             rooms.append({
                 "canonical_facility_id": canonical_id,
                 "room_type_name": room_name,
                 "description": f"Synthetic {room_name.lower()} used for controlled pilot testing.",
                 "monthly_price_cents": (monthly_mid + room_offset * 900) * 100,
-                "availability_status": ["AVAILABLE", "WAITLIST", "AVAILABLE", "UNAVAILABLE"][((index + room_offset) % 4)],
-                "available_units": [3, 0, 1, 0][((index + room_offset) % 4)],
+                "availability_status": availability_status,
+                "available_units": available_units,
                 "source": "SYNTHETIC_PROVIDER_PORTAL",
                 "last_verified_at": now,
             })

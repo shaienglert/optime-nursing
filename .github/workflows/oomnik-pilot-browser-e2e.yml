@@ -2,7 +2,8 @@ name: Oomnik Pilot Real Browser E2E
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # Finish collecting the ten journeys when another contributor pushes to the PR.
+  cancel-in-progress: false
 
 on:
   pull_request:
@@ -20,6 +21,8 @@ on:
       - 'backend/app/services/agent_knowledge_reports.py'
       - 'backend/app/services/external_discovery.py'
       - 'scripts/validate_synthetic_pilot.cjs'
+      - 'scripts/build_synthetic_pilot_facilities.py'
+      - 'database/synthetic_pilot/**'
   workflow_dispatch:
     inputs:
       scenario_start:
@@ -61,6 +64,8 @@ jobs:
       OOMNIK_EXPECTED_COHORT: ${{ github.event.inputs.expected_cohort || '500' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Validate the 500-community catalog
+        run: node ../scripts/validate_synthetic_pilot.cjs
       - name: Check semantic AI configuration
         run: |
           if [ -z "$OPTIME_SEMANTIC_AI_API_KEY" ]; then

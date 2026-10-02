@@ -14,13 +14,13 @@ Exits non-zero if any case fails. A per-case JSON snapshot and log are written t
 
 ## Why this market
 
-The pilot catalog carries, for all 200 communities, a curated record (type, archetype,
+The pilot catalog carries, for all 500 communities, a curated record (type, archetype,
 whether it houses couples, capacity) and verified evidence for 31 parameters including
 `current_price`. That makes it the only market where a recommendation can be independently
 checked: the real Nevada licence registry has no price evidence, so every candidate there
 sits pending verification and nothing about matching quality can be concluded from it.
 
-Runs expose all 200 communities (`OOMNIK_PILOT_FACILITY_LIMIT=200`). The product default
+Runs expose all 500 communities (`OOMNIK_PILOT_FACILITY_LIMIT=500`). The product default
 is 50, which is fine for a demo and useless for a benchmark.
 
 ## How a case is graded

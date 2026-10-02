@@ -16,7 +16,7 @@ engine correctly refuses to expose any facility -- `identities_hidden_pending_cl
 
 BASE = {"distanceFromFamily": "Balanced location"}
 
-# The eight archetypes in the pilot catalog, 25 communities each.
+# The eight archetypes in the 500-community pilot catalog (62 or 63 each).
 INDEPENDENT = {"INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS"}
 RESIDENTIAL_CARE = {"ASSISTED_LIVING_RFG", "SMALL_GROUP_HOME", "CONTINUING_CARE"}
 CLINICAL = {"SKILLED_NURSING", "REHABILITATION"}

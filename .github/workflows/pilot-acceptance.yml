@@ -14,6 +14,7 @@ on:
       - 'backend/app/**'
       - 'database/synthetic_pilot/**'
       - 'scripts/pilot_acceptance/**'
+      - 'scripts/validate_synthetic_pilot.cjs'
       - '.github/workflows/pilot-acceptance.yml'
   workflow_dispatch:
 jobs:
@@ -22,6 +23,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Validate the 500-community catalog
+        run: node scripts/validate_synthetic_pilot.cjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

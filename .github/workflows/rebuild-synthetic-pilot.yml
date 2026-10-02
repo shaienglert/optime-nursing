@@ -25,23 +25,7 @@ jobs:
       - name: Rebuild 500-community synthetic pilot
         run: python scripts/build_synthetic_pilot_facilities.py
       - name: Validate generated catalog
-        run: |
-          python - <<'PY'
-          import base64, gzip, json
-          from pathlib import Path
-          root=Path("database/synthetic_pilot")
-          def load(name):
-              return json.loads(gzip.decompress(base64.b64decode((root/name).read_text())))["records"]
-          facilities=load("facility_universe.json.gz.b64")
-          assert len(facilities)==500, len(facilities)
-          by={r["synthetic_archetype"]:[] for r in facilities}
-          for r in facilities:
-              by.setdefault(r["synthetic_archetype"],[]).append(r["licensed_capacity"])
-          assert max(by["SMALL_GROUP_HOME"]) <= 16
-          assert min(by["CONTINUING_CARE"]) >= 120
-          assert all(r["community_size"]=="SMALL" for r in facilities if r["synthetic_archetype"]=="SMALL_GROUP_HOME")
-          print({k:(len(v),min(v),max(v)) for k,v in sorted(by.items())})
-          PY
+        run: node scripts/validate_synthetic_pilot.cjs
       - name: Commit regenerated pilot artifacts
         run: |
           git config user.name "github-actions[bot]"

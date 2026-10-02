@@ -29,7 +29,7 @@ OUT = Path(sys.argv[2])
 TMP = Path(tempfile.mkdtemp(prefix="pilot_acceptance_"))
 os.environ["DATABASE_URL"] = f"sqlite:///{(TMP / 'acceptance.db').as_posix()}"
 os.environ["OPTIME_CANONICAL_MARKET"] = "synthetic-pilot"
-os.environ.setdefault("OOMNIK_PILOT_FACILITY_LIMIT", "200")
+os.environ.setdefault("OOMNIK_PILOT_FACILITY_LIMIT", "500")
 
 sys.path.insert(0, str(REPO_ROOT / "backend"))
 sys.path.insert(0, str(HERE))
