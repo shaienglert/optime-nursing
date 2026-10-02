@@ -19,7 +19,10 @@ UNKNOWN, and research does not manufacture eligibility or scores.
 `semantic_packet_wire.py` derives a strict provider JSON schema from the existing
 interpreter field declarations. Both Chat Completions and Responses transports
 request this format; the same Pydantic model validates it locally. Each extracted
-entry pairs an allowed path, its typed value and a mandatory AI-authored quote.
+entry pairs an allowed path, its value and a mandatory AI-authored quote.
+The compact provider grammar constrains legal paths and JSON value kinds;
+local validation enforces each field's exact existing type and enum. It avoids a
+large union of one object per profile field at constrained-decoding time.
 Normalization only reconstructs the existing nested patch and quote index.
 Duplicate paths and blank quotes fail. The existing canonical exact-quote,
 schema and conflict validators remain authoritative: schema conformity alone
@@ -36,7 +39,8 @@ failure raises an error; network/configuration errors are not schema repairs.
 Direct manual answers are checked using the question's exact mapped field paths.
 Known button answers trigger repair of a redundant question. Unresolved values,
 broad assistance answers and explicit ambiguity do not trigger that shortcut.
-Multiple ADL choices retain the questionnaire's comma-separated representation.
+Multiple ADL choices travel in one wire array and are joined into the
+questionnaire's existing comma-separated representation without inference.
 
 ## Regression evidence and limits
 

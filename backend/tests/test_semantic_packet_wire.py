@@ -101,7 +101,7 @@ def test_duplicate_fields_fail_instead_of_overwriting_evidence():
 def test_multiple_manual_adl_choices_survive_wire_format():
     value = "Help with bathing, Help with dressing"
     packet = wire()
-    packet["questionnaire_patch_entries"] = [{"path": "assistanceLevel", "value": value, "quote": value}]
+    packet["questionnaire_patch_entries"] = [{"path": "assistanceLevel", "value": value.split(", "), "quote": value}]
     assert normalize(packet)["questionnaire_patch"]["assistanceLevel"] == value
 
 

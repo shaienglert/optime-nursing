@@ -9,7 +9,7 @@ import json
 from functools import lru_cache
 from typing import Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, ValidationError, create_model
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, TypeAdapter, ValidationError, create_model
 
 WIRE_VERSION = "semantic-extraction-v1"
 CONFIG = ConfigDict(extra="forbid", strict=True)
@@ -82,19 +82,20 @@ def _value_type(declaration):
 @lru_cache(maxsize=1)
 def _model(declarations_json):
     declarations = json.loads(declarations_json)
-    entries = []
-    for n, (path, declaration) in enumerate(_leaves(declarations)):
-        entries.append(create_model(f"PatchField{n}", __config__=CONFIG,
-            # The manual questionnaire stores its multiple ADL selections as a
-            # comma-separated string. A single-value enum would lose selections.
-            path=(Literal[path], ...), value=(StrictStr if path == "assistanceLevel" else _value_type(declaration), ...), quote=(StrictStr, ...)))
+    paths = tuple(path for path, _ in _leaves(declarations))
+    # A union of one object per field makes constrained decoding unnecessarily
+    # expensive. Keep the provider grammar compact and apply the exact existing
+    # field-specific type/enum locally before reconstructing the canonical patch.
+    entry = create_model("PatchEntry", __config__=CONFIG,
+        path=(Literal[paths], ...),
+        value=(Union[StrictStr, StrictInt, list[StrictStr]], ...), quote=(StrictStr, ...))
     return create_model("SemanticExtraction", __config__=CONFIG,
         wire_version=(Literal[WIRE_VERSION], ...),
         facts=(list[StrictStr], ...), preferences=(list[StrictStr], ...),
         constraints=(list[StrictStr], ...), concerns=(list[StrictStr], ...),
         implications=(list[Implication], ...), statements=(list[Trace], ...),
         research_requests=(list[StrictStr], ...),
-        questionnaire_patch_entries=(list[Union[tuple(entries)]], ...),
+        questionnaire_patch_entries=(list[entry], ...),
         interview=(Union[NoClientQuestion, ClientQuestion], ...))
 
 
@@ -126,12 +127,25 @@ def normalize_wire(packet: Any, required_output: dict) -> dict:
         raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:" + json.dumps(exc.errors(include_input=False), default=str)[:1000]) from exc
     result = wire.model_dump(exclude={"wire_version", "questionnaire_patch_entries", "interview"})
     patch, sources = {}, {}
+    declarations = dict(_leaves(required_output["questionnaire_patch"]))
     for entry in wire.questionnaire_patch_entries:
         path, value, quote = entry.path, entry.value, entry.quote
         if path in sources:
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:DUPLICATE_PATH:{path}")
         if not quote.strip():
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:EMPTY_QUOTE:{path}")
+        declaration = declarations[path]
+        # Wire ADL values are one array of all selected tasks, never repeated
+        # entries. Manual questionnaire encoding remains a comma-separated string.
+        value_type = list[_value_type(declaration)] if path == "assistanceLevel" else _value_type(declaration)
+        try:
+            value = TypeAdapter(value_type).validate_python(value, strict=True)
+        except ValidationError as exc:
+            raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:INVALID_FIELD_VALUE:{path}") from exc
+        if path == "assistanceLevel":
+            if not value:
+                raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:EMPTY_ASSISTANCE_SELECTIONS")
+            value = ", ".join(value)
         sources[path] = quote  # Copy the model's mandatory source; never manufacture it.
         target = patch
         parts = path.split(".")
