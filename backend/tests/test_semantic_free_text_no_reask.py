@@ -96,3 +96,30 @@ def test_explicit_location_and_budget_are_recognized_as_answers():
     text = "Please search in Las Vegas. Her monthly budget is $8,000."
     answered = _explicit_user_text_answered_dimensions(text)
     assert {"location", "budget"}.issubset(answered)
+
+
+def test_budget_button_is_visible_to_generation_and_every_question_repair(monkeypatch):
+    calls = []
+
+    def transport(payload):
+        calls.append(payload)
+        assert payload["client_evidence"]["resolved_questionnaire_fields"]["budget"] == 6000
+        assert payload["client_evidence"]["minimum_dimensions"]["monthly_affordability"] is True
+        if "clarification_contract_repair" in payload:
+            return {**_ready_packet(), "facts": [], "statements": [{
+                "raw_text": "We are looking in Las Vegas, Nevada.", "meaning": "Search location",
+                "importance": "MUST", "knowledge_state": "KNOWN", "status": "USED",
+                "mapped_parameters": ["referenceLocationValue"]}]}
+        packet = _packet("What is your monthly budget for senior living?")
+        packet["statements"][0]["mapped_parameters"] = ["budget"]
+        return packet
+
+    monkeypatch.setattr("app.services.semantic_intent_ai._default_transport", transport)
+    result = interpret_client_intent_with_ai(
+        user_text="We are looking in Las Vegas, Nevada.",
+        questionnaire_state={"referenceLocationValue": "Las Vegas, Nevada", "budget": 6000},
+    )
+    assert len(calls) == 2
+    assert result["decision_readiness"] == "READY"
+    assert result["next_question"] is None
+    assert result["questionnaire_patch"] == {}

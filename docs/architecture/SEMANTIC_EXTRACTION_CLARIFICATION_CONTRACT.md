@@ -109,3 +109,24 @@ browser workflow passed 9/10 with a loading timeout on pilot-004. This broader
 contract must therefore be verified separately by live interpreter, structured
 profile shadow and branch browser workflows. These are branch CI runs, not
 interactive journeys on Production. PR #424 remains Draft and pre-cutover.
+# Client evidence in generation and repair
+
+Principle impact check: relevant PR-002, PR-003 and PR-005; existing single
+canonical authority and explicit client evidence. Classification B
+(implementation completion). DOES THIS CHANGE ALTER ANY PRINCIPLE? NO.
+OWNER APPROVAL REQUIRED? NO.
+
+Every provider request and repair receives a caller-derived view of resolved
+questionnaire fields and minimum-dimension status, using the existing server
+predicates. Values are not extracted again or assigned fabricated narrative
+quotes. Unknown selections and broad assistance answers remain unresolved.
+The original questionnaire and family text remain available for genuine
+contradictions or more specific questions. Acceptance still blocks repeat
+questions and unsupported facts independently of model instructions.
+
+Provider requests carry one response grammar, existing questionnaire value
+hints and the shared field contract, without a duplicate legacy packet shape or
+unrelated trace examples. Blocking question traces belong only in the wire
+interview. The transport deadline, evidence gates and live fixture expectations
+are unchanged. Reduced prompt duplication is not proof of a resolved timeout;
+live interpreter and launch-gate checks must pass on the resulting commit.

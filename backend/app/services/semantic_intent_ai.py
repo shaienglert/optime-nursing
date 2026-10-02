@@ -160,6 +160,7 @@ def _build_prompt(user_text: str, questionnaire_state: Dict[str, Any], learning_
             },
         },
         "questionnaire_state": questionnaire_state,
+        "client_evidence": _client_evidence_context(user_text, questionnaire_state),
         "user_text": user_text,
         "learning_center_advice": learning_advice,
         "required_output": _required_output_schema(),
@@ -280,7 +281,18 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     required_output = _required_output_schema()
     schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""))
     payload = copy.deepcopy(payload)
+    # The record belongs to the caller, never to a previous model packet.
+    # Rebuild this view for every request and repair using the same predicates
+    # used by the server's no-reask and minimum-dimension checks.
+    payload["client_evidence"] = _client_evidence_context(
+        str(payload.get("user_text") or ""), payload.get("questionnaire_state") or {})
+    # Strict grammar already supplies the response structure. Sending a second,
+    # legacy packet shape and examples invites the model to mix the two formats.
+    payload.pop("required_output", None)
+    payload.pop("field_trace_example", None)
+    payload.pop("clarification_trace_example", None)
     payload["wire_contract"] = {
+        "questionnaire_value_hints": required_output["questionnaire_patch"],
         "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_fields is a sparse array of {path, value, quote} entries. Use the full canonical dotted path, exactly as in statements.mapped_parameters. Include at most one entry per path. Omit paths with no new fact, never emit empty placeholder entries. Multiple assistance selections belong in one assistanceLevel array entry. Every entry must be independently supported by an exact user_text quote. Constraints, facts and concerns are packet metadata, never patch fields. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
         "version": "semantic-extraction-v1",
         "field_paths": "Each extraction entry uses the full canonical dotted path in both path and statements.mapped_parameters. Do not use aliases. Omit unused paths. Map canonical client fields only when that exact field's value is explicitly established, not merely because it is related to the statement. A known client fact marked USED must reach its path in questionnaire_patch_fields unless questionnaire_state already supplies that field. Speaking a language does not establish nativeLanguage. A dietary preference does not establish faithTraditions or religious identity; preserve the dietary fact without these unrelated mappings.",
@@ -288,7 +300,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         "clinical_detail_consistency": "A known medical detail does not replace its medical need. Unless already supplied by questionnaire_state, pair dialysis frequency/center with medicalCareProfile.needs containing Dialysis, oxygen use with Oxygen, and wound-care frequency with Wound care. Give the parent need its own exact quote from the same explicit client treatment statement. Never add a need when the client's treatment itself is unknown or denied.",
         "assistance_encoding": "Emit exactly one entry per field. assistanceLevel.value may preserve the existing questionnaire string or one array containing every explicit selection; normalization joins that array into the existing comma-separated string. Never split multiple ADL selections into repeated entries. Do not copy already supplied questionnaire values into new extracted entries unless explicitly corrected.",
     }
-    system_prompt = TRANSPORT_SYSTEM_PROMPT + " The actual response shape is the supplied strict JSON schema. Each dotted path in questionnaire_patch_fields is either null or one value/quote pair. Never emit the same field twice; for couples use coupleAssistance to preserve each person's needs. Represent any ASKED trace only in interview.blocking_statement; its question is interview.next_question. Normalization will reconstruct existing packet keys without inference."
+    system_prompt = TRANSPORT_SYSTEM_PROMPT + " The actual response shape is the supplied strict JSON schema. questionnaire_patch_fields is a sparse array of {path,value,quote}, with one entry per new or corrected field; omit unchanged fields and placeholders. client_evidence.resolved_questionnaire_fields contains existing client answers even when user_text does not repeat them: never ask for these facts again unless genuine conflicting client evidence needs resolution. An absent extraction entry does not make an existing answer unknown. client_evidence.minimum_dimensions reports whether the client has already answered location and affordability. Check the full questionnaire_state and original text for more specific unresolved facts; this summary does not authorize READY or invent answers. Never emit the same field twice; for couples use coupleAssistance to preserve each person's needs. Represent any ASKED trace only in interview.blocking_statement; its question is interview.next_question. Do not duplicate the blocking trace in statements. Keep metadata lists brief; retain every meaningful fact in its source trace. Normalization will reconstruct existing packet keys without inference."
     response_format = {"type": "json_schema", "json_schema": {"name": "semantic_extraction", "strict": True, "schema": schema}}
     if uses_responses_api:
         request_json = {
@@ -570,6 +582,25 @@ def _questionnaire_field_resolved(state: Dict[str, Any], path: str) -> bool:
     if path == "assistanceLevel" and text in {"light assistance", "24/7 support required"}:
         return False
     return True
+
+
+def _client_evidence_context(user_text: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    from app.services.semantic_field_contract import compile_fields
+
+    resolved = {}
+    for path in compile_fields(_required_output_schema()["questionnaire_patch"]):
+        if not _questionnaire_field_resolved(state, path):
+            continue
+        value = state
+        for part in path.split("."):
+            value = value[part]
+        resolved[path] = copy.deepcopy(value)
+    return {
+        "resolved_questionnaire_fields": resolved,
+        "minimum_dimensions": _minimum_dimension_status(user_text, state),
+        "prior_adaptive_answers": _adaptive_answer_summary(state),
+        "instruction": "These are existing client answers, not new AI extractions or facility evidence. Preserve them without fabricating source quotes. Unknowns remain unknown; ask only for a material unresolved fact or genuine conflict.",
+    }
 
 
 _DIMENSION_BY_FACT_KEY = {

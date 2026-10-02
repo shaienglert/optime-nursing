@@ -53,6 +53,30 @@ class ResolveTemperatureTests(unittest.TestCase):
 
 
 class DefaultTransportTemperatureTests(unittest.TestCase):
+    def test_caller_answers_survive_wire_generation_without_narrative_repetition(self) -> None:
+        with patch.dict(os.environ, _BASE_ENV, clear=False):
+            with patch("app.services.semantic_intent_ai.requests.post") as mock_post:
+                mock_post.return_value = _mock_response({"choices": [{"message": {"content": "{}"}}]})
+                _default_transport({"user_text": "We are looking in Las Vegas, Nevada.",
+                    "questionnaire_state": {"budget": 6000, "referenceLocationValue": "Las Vegas, Nevada",
+                        "memoryStatus": "Not sure", "assistanceLevel": "Light assistance"},
+                    "client_evidence": {"resolved_questionnaire_fields": {"budget": 9000}},
+                    "required_output": _required_output_schema(),
+                    "field_trace_example": {"budget": 4500},
+                    "clarification_trace_example": {"next_question": "Example question"}})
+        request = mock_post.call_args.kwargs["json"]
+        payload = json.loads(request["messages"][1]["content"])
+        evidence = payload["client_evidence"]
+        self.assertEqual(evidence["resolved_questionnaire_fields"], {
+            "budget": 6000, "referenceLocationValue": "Las Vegas, Nevada"})
+        self.assertEqual(evidence["minimum_dimensions"], {
+            "market_location": True, "monthly_affordability": True})
+        self.assertNotIn("required_output", payload)
+        self.assertNotIn("field_trace_example", payload)
+        self.assertNotIn("clarification_trace_example", payload)
+        self.assertEqual(request["response_format"]["json_schema"]["schema"],
+            provider_schema(_required_output_schema(), family_text=payload["user_text"]))
+
     def test_chat_completions_request_includes_temperature_zero_by_default(self) -> None:
         with patch.dict(os.environ, _BASE_ENV, clear=False):
             os.environ.pop("OPTIME_SEMANTIC_AI_TEMPERATURE", None)
