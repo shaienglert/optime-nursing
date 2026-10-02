@@ -7,6 +7,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 from typing import Literal
+from urllib.parse import urlsplit
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field
@@ -22,10 +23,35 @@ stop = threading.Event()
 worker = None
 lock = threading.Lock()
 browser_counts = {}
+USER_PAGES = {"/", "/intake", "/intake-confirmation", "/adaptive-interview", "/results", "/facilities", "/compare"}
+
+
+def production_origins():
+    return {s.strip().rstrip("/") for s in os.getenv("OOMNIK_USER_INCIDENT_PRODUCTION_ORIGINS", "https://optime-nursing.vercel.app").split(",") if s.strip().startswith("https://")}
+
+
+def user_request_page(scope):
+    if os.getenv("OOMNIK_USER_INCIDENT_ALERTS_ENABLED", "0") != "1":
+        return None
+    path = scope.get("path", "")
+    if path.startswith(("/admin", "/health", "/api/user-incidents")):
+        return None
+    headers = dict(scope.get("headers", []))
+    try:
+        referer = urlsplit(headers.get(b"referer", b"").decode("latin-1"))
+    except ValueError:
+        return None
+    origin = f"{referer.scheme}://{referer.netloc}"
+    page = "/" if referer.path == "/" else safe_path(referer.path)
+    if origin not in production_origins() or page not in USER_PAGES:
+        return None
+    return page
 
 
 def safe_path(path):
     # Do not retain tokens, IDs, queries or personal destinations.
+    if str(path).split("?")[0] == "/":
+        return "/"
     first = str(path).split("?")[0].strip("/").split("/")[0]
     known = {"intake", "intake-confirmation", "adaptive-interview", "results", "facilities",
              "decision-engine", "personal-report", "api", "compare", "health"}
@@ -33,11 +59,14 @@ def safe_path(path):
 
 
 def record_incident(*, kind, path, status=0, event_id=None):
+    if kind == "DELIVERY_PROBE":
+        return None
     event_id = str(event_id or uuid.uuid4())
     data = {"event_id": event_id, "kind": kind, "path": safe_path(path), "status": status,
             "occurred_at": datetime.now(timezone.utc).isoformat(),
             "version": os.getenv("RENDER_GIT_COMMIT", "UNKNOWN"),
-            "delivery": "PENDING", "attempts": 0, "retry_at": 0}
+            "delivery": "PENDING", "attempts": 0, "retry_at": 0,
+            "scope": "PRODUCTION_USER"}
     db = SessionLocal()
     try:
         summary = "OOmnik incident " + event_id
@@ -73,6 +102,10 @@ def deliver_pending(limit=10):
             if row is None:
                 return delivered
             data = json.loads(row.details_json)
+            if data.get("scope") != "PRODUCTION_USER" or data.get("kind") == "DELIVERY_PROBE":
+                row.status = "SUPPRESSED"
+                db.commit()
+                continue
             data["attempts"] += 1
             # SQL transaction lock prevents concurrent workers mailing the same row.
             result = send_email_detailed(subject="OOmnik SITE INCIDENT " + data["event_id"],
@@ -114,15 +147,12 @@ def start_worker():
             stop.clear()
             worker = threading.Thread(target=run_worker, name="user-incident-mail", daemon=True)
             worker.start()
-            if os.getenv("OOMNIK_USER_INCIDENT_PROBE_ON_STARTUP", "0") == "1":
-                version = os.getenv("RENDER_GIT_COMMIT", "local")
-                emit_safely(kind="DELIVERY_PROBE", path="/health", event_id=uuid.uuid5(uuid.NAMESPACE_URL, "oomnik-incident-probe:" + version))
             wake.set()
 
 
 class ClientIncident(BaseModel):
     kind: Literal["CLIENT_RUNTIME_ERROR", "UNHANDLED_REJECTION", "API_FAILURE"]
-    page: Literal["/intake", "/intake-confirmation", "/adaptive-interview", "/results", "/facilities", "/compare", "/other"]
+    page: Literal["/", "/intake", "/intake-confirmation", "/adaptive-interview", "/results", "/facilities", "/compare"]
     event_id: uuid.UUID
 
 
@@ -133,19 +163,22 @@ class IncidentMiddleware:
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
+        page = user_request_page(scope)
+        if page is None:
+            return await self.app(scope, receive, send)
         import asyncio
         reported = False
         async def send_with_incident(message):
             nonlocal reported
             if message["type"] == "http.response.start" and message["status"] >= 500:
                 reported = True
-                await asyncio.to_thread(emit_safely, kind="SERVER_HTTP_ERROR", path=scope.get("path", ""), status=message["status"])
+                await asyncio.to_thread(emit_safely, kind="SERVER_HTTP_ERROR", path=page, status=message["status"])
             await send(message)
         try:
             await self.app(scope, receive, send_with_incident)
         except Exception:
             if not reported:
-                await asyncio.to_thread(emit_safely, kind="SERVER_EXCEPTION", path=scope.get("path", ""), status=500)
+                await asyncio.to_thread(emit_safely, kind="SERVER_EXCEPTION", path=page, status=500)
             raise
 
 
@@ -159,11 +192,14 @@ def install_incident_reporting(app, origins):
         cfg = validate_email_configuration()
         return {"enabled": os.getenv("OOMNIK_USER_INCIDENT_ALERTS_ENABLED", "0") == "1",
                 "worker_running": worker is not None and worker.is_alive(),
-                "mail_configured": cfg["configured"], "delivery_mode": "EVENT_DRIVEN"}
+                "mail_configured": cfg["configured"], "delivery_mode": "EVENT_DRIVEN",
+                "alert_scope": "PRODUCTION_USER"}
 
     @app.post("/api/user-incidents", status_code=202)
     async def client_incident(payload: ClientIncident, request: Request):
-        if request.headers.get("origin") not in origins:
+        if os.getenv("OOMNIK_USER_INCIDENT_ALERTS_ENABLED", "0") != "1":
+            raise HTTPException(403, "Production user alerts disabled")
+        if request.headers.get("origin") not in production_origins() or request.headers.get("origin") not in origins:
             raise HTTPException(403, "Unknown site origin")
         # Bounded public telemetry; never accept free text, recipient or error payload.
         key = (request.client.host if request.client else "unknown", int(time.time() // 60))

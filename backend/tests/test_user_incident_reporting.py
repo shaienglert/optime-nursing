@@ -14,7 +14,8 @@ from app.services import user_incident_reporting as service
 
 
 @pytest.fixture
-def database():
+def database(monkeypatch):
+    monkeypatch.setenv("OOMNIK_USER_INCIDENT_ALERTS_ENABLED", "1")
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     SupervisorIncidentLog.__table__.create(engine)
     factory = sessionmaker(bind=engine)
@@ -77,7 +78,7 @@ def test_middleware_and_origin_boundary(database):
     def broken():
         raise ValueError("private family text")
     client = TestClient(app, raise_server_exceptions=False)
-    assert client.get("/broken").status_code == 500
+    assert client.get("/broken", headers={"referer": "https://optime-nursing.vercel.app/results?private=secret"}).status_code == 500
     body = {"kind": "CLIENT_RUNTIME_ERROR", "page": "/results", "event_id": str(uuid4())}
     assert client.post("/api/user-incidents", json=body).status_code == 403
     assert client.post("/api/user-incidents", json=body, headers={"origin": "https://optime-nursing.vercel.app"}).status_code == 202
@@ -96,3 +97,30 @@ def test_reporting_failure_does_not_replace_original_exception():
     with patch.object(service, "record_incident", side_effect=RuntimeError("database down")):
         with pytest.raises(ValueError, match="original"):
             TestClient(app).get("/broken")
+
+
+@pytest.mark.parametrize("referer", [None, "http://localhost:3000/results", "https://preview.vercel.app/results", "https://optime-nursing.vercel.app/admin", "https://optime-nursing.vercel.app/research"])
+def test_internal_preview_and_admin_requests_are_not_alerted(database, referer):
+    app = FastAPI()
+    service.install_incident_reporting(app, ["https://optime-nursing.vercel.app"])
+    @app.get("/broken")
+    def broken():
+        raise ValueError("internal")
+    headers = {"referer": referer} if referer else {}
+    assert TestClient(app, raise_server_exceptions=False).get("/broken", headers=headers).status_code == 500
+    with database() as db:
+        assert db.query(SupervisorIncidentLog).count() == 0
+
+
+def test_probe_is_never_mailed(database):
+    assert service.record_incident(kind="DELIVERY_PROBE", path="/health") is None
+    with patch.object(service, "send_email_detailed") as send:
+        assert service.deliver_pending() == 0
+        send.assert_not_called()
+
+
+def test_local_client_origin_is_not_accepted_even_when_cors_allows_it(database):
+    app = FastAPI()
+    service.install_incident_reporting(app, ["http://localhost:3000"])
+    body = {"kind": "CLIENT_RUNTIME_ERROR", "page": "/results", "event_id": str(uuid4())}
+    assert TestClient(app).post("/api/user-incidents", json=body, headers={"origin": "http://localhost:3000"}).status_code == 403

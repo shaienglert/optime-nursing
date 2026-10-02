@@ -16,9 +16,13 @@ async function proxy(request: NextRequest, path: string[]): Promise<NextResponse
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
   if (contentType) headers.set("content-type", contentType);
-  if (path.join("/") === "api/user-incidents") {
+  if (process.env.VERCEL_ENV === "production") {
     const origin = request.headers.get("origin");
     if (origin) headers.set("origin", origin);
+    const referer = request.headers.get("referer");
+    if (referer) headers.set("referer", referer);
+  } else if (path.join("/") === "api/user-incidents") {
+    return new NextResponse(null, { status: 204 });
   }
   const authorization = request.headers.get("authorization");
   if (authorization) headers.set("authorization", authorization);
