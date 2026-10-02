@@ -1,5 +1,42 @@
 # 500-community care and preference audit
 
+## Approved service/program contract — 2026-10-02
+
+The owner explicitly selected option 2. `oracle.care` now grades independently
+verified services/programs rather than literal building categories, as required by
+PR009. See `architecture/PILOT_CARE_PATH_CONTRACT.md` for the exact proof matrix.
+The frozen personas, data and their declared care paths were not changed.
+`oracle.preferred` enforcement remains active.
+
+The stronger proof first exposed a real engine gap in persona 004: 16 Small Group
+Homes beyond the Top-10 passed rehab on PT+OT alone. The new explicit post-hospital
+program MUST requires a rehabilitation program, therapy staffing, nursing and
+physician coordination. It is registered with evidence loading and the affordability
+floor. The engine and independent oracle now agree on 26 eligible communities
+for 004; the 16 false positives are removed. Generic outpatient PT/OT access remains
+a separate requirement. UNKNOWN remains pending rather than a verified failure.
+
+Local validation: 90/90 focused tests (Golden Decision, full-universe Ranking Oracle,
+Oomniker counterfactuals, affordability, intent, and program evidence counterfactuals);
+10/10 Pilot Acceptance cases on 500 (interpreter MOCKED). The acceptance memory
+case explicitly demands secured-unit evidence; the post-hospital case demands full
+rehabilitation proof for every shown recommendation. No fixture facts were changed.
+
+The broader local suite recorded 1176 passes, seven local CORS dependency errors,
+and one old Las Ventanas assertion equating a therapy URL
+with complete post-hospital clinical proof. It now explicitly requires PENDING and
+keeps every previous therapy/couple positive assertion. Real cases with missing
+full-program evidence need research; the program is never inferred from that URL. The corrected provider regression and
+care-path counterfactual module pass 19/19. Full CI on the new commit is still required.
+
+#424 remains Draft and NO-GO. Live interpreter and browser CI results must be checked
+on the new commit; deterministic and mocked results do not authorize cutover.
+
+## Historical literal-category baseline
+
+The following findings describe the earlier, superseded interpretation and its
+then-pending owner decision. They are retained as the audit trail.
+
 Catalog and engine baseline: `9812cdd1b4eb342cb58819b6367b260d49c2862d`.
 Scope: deterministic structured submissions, 500 synthetic communities, independent
 catalog evidence and eligibility oracle. This is not a production or live AI claim.

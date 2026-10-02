@@ -21,6 +21,9 @@ INDEPENDENT = {"INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS"}
 RESIDENTIAL_CARE = {"ASSISTED_LIVING_RFG", "SMALL_GROUP_HOME", "CONTINUING_CARE"}
 CLINICAL = {"SKILLED_NURSING", "REHABILITATION"}
 MEMORY = {"MEMORY_CARE"}
+INDEPENDENT_PATHS = {"INDEPENDENT_LIVING"}
+RESIDENTIAL_PATHS = {"ASSISTED_LIVING", "SMALL_GROUP_HOME", "CONTINUING_CARE"}
+CLINICAL_PATHS = {"SKILLED_NURSING", "REHABILITATION"}
 
 CASES = {
     "01_independent_social": {
@@ -28,7 +31,7 @@ CASES = {
         "questionnaire": {**BASE, "relationship": "Mom", "ageGroup": "75-79", "assistanceLevel": "Fully independent", "memoryStatus": "No", "budget": 4500},
         "query": "My mother is 77, fully independent and mentally sharp, recently widowed and lonely. She lives in Las Vegas and wants an active community with lots of social activities. Budget about $4,500 a month.",
         "min_recommendations": 1,
-        "any_of_archetypes": INDEPENDENT,
+        "any_of_care_paths": INDEPENDENT_PATHS,
         # Nobody who is fully independent should be shown a nursing home or a locked unit.
         "never_archetypes": CLINICAL | MEMORY,
     },
@@ -37,7 +40,7 @@ CASES = {
         "questionnaire": {**BASE, "relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 6500},
         "query": "My father is 84, lives in Las Vegas, is mentally alert and walks on his own. He needs help with bathing and dressing. No dementia.",
         "min_recommendations": 1,
-        "any_of_archetypes": RESIDENTIAL_CARE,
+        "any_of_care_paths": RESIDENTIAL_PATHS,
         "never_archetypes": CLINICAL | MEMORY,
     },
     "03_falls_transfers": {
@@ -45,7 +48,7 @@ CASES = {
         "questionnaire": {**BASE, "relationship": "Mom", "ageGroup": "85-89", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 7000},
         "query": "My mother is 86 in Las Vegas. She has fallen twice this year, uses a walker, and needs one person to help her get in and out of bed and the shower. No dementia.",
         "min_recommendations": 1,
-        "any_of_archetypes": RESIDENTIAL_CARE,
+        "any_of_care_paths": RESIDENTIAL_PATHS,
         "never_archetypes": MEMORY,
     },
     "04_mild_forgetfulness": {
@@ -53,27 +56,30 @@ CASES = {
         "questionnaire": {**BASE, "relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Help with medications", "memoryStatus": "Mild forgetfulness", "budget": 5500},
         "query": "My father is 82 in Las Vegas. He sometimes forgets appointments and needs reminders to take his pills, but he has no dementia diagnosis and does not wander.",
         "min_recommendations": 1,
-        "any_of_archetypes": RESIDENTIAL_CARE,
+        "any_of_care_paths": RESIDENTIAL_PATHS,
         # Forgetting an appointment is not a dementia diagnosis. Routing this family into
         # memory care would sell them a locked unit they never asked for.
         "never_archetypes": MEMORY | CLINICAL,
     },
     "05_dementia_wandering": {
         "title": "Dementia with wandering",
-        "questionnaire": {**BASE, "relationship": "Mom", "ageGroup": "85-89", "assistanceLevel": "Help with bathing, 24/7 support required", "memoryStatus": "Significant memory issues", "budget": 8000},
+        "questionnaire": {**BASE, "relationship": "Mom", "ageGroup": "85-89", "assistanceLevel": "Help with bathing, 24/7 support required", "memoryStatus": "Significant memory issues", "budget": 8000, "humanIntelligenceV2": {"transitionRiskProfile": {"wanderingConcerns": "Yes"}}},
         "query": "My mother has Alzheimer's and wanders at night; she tried to leave the house twice. She lives in Las Vegas and needs a secure memory care setting with 24/7 supervision.",
         "min_recommendations": 1,
-        "any_of_archetypes": MEMORY,
+        "any_of_care_paths": MEMORY,
+        "required_care_paths": MEMORY,
+        "required_catalog_capabilities": {"secured_units"},
         "never_archetypes": INDEPENDENT,
     },
     "06_rehab_after_hospital": {
         "title": "Rehabilitation after hospitalization",
         # Medicare and timing are what a real interview asks a post-hospital family; the
         # engine withholds every facility until they are answered.
-        "questionnaire": {**BASE, "relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 9000, "medicareStatus": "Original Medicare", "moveTiming": "Within 30 days"},
+        "questionnaire": {**BASE, "relationship": "Dad", "ageGroup": "80-84", "assistanceLevel": "Needs assistance with bathing and dressing", "memoryStatus": "No", "budget": 9000, "medicareStatus": "Original Medicare", "moveTiming": "Within 30 days", "humanIntelligenceV2": {"transitionRiskProfile": {"postHospitalRehabNeed": "Yes"}}},
         "query": "My father had hip surgery last week and is in the hospital in Las Vegas. He needs physical and occupational therapy for about six weeks before he can go home. No dementia.",
         "min_recommendations": 1,
-        "any_of_archetypes": CLINICAL | {"CONTINUING_CARE"},
+        "any_of_care_paths": CLINICAL_PATHS,
+        "required_care_paths": {"REHABILITATION"},
         "never_archetypes": INDEPENDENT | MEMORY,
     },
     "07_dialysis": {

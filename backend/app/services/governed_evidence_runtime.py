@@ -16,6 +16,7 @@ instead of re-deriving its own reading of these fields.
 """
 
 import json
+from functools import lru_cache
 from typing import Any, Dict, List
 
 from app.models.agent_execution import AgentKnowledgeRecord
@@ -156,4 +157,54 @@ __all__ = [
     "bulk_market_scoped_agent_evidence",
     "is_governed_positive_source",
     "TRUSTED_POSITIVE_SOURCES",
+    "post_hospital_rehab_state",
 ]
+
+
+def post_hospital_rehab_state(row: Dict[str, Any]) -> str:
+    """Post-hospital clinical program, distinct from an outpatient PT/OT pathway.
+
+    Category never proves this requirement. Pilot evidence is fictional and guarded;
+    real claims require an identity-verified, governed source for the full program.
+    """
+    pilot = pilot_service_payload(row)
+    if pilot:
+        capabilities = row.get("verified_capabilities") or {}
+        values = [capabilities.get(k) for k in ("pt", "ot", "therapy_staffing", "nursing_24_7")]
+        states = ["PASS" if _upper(v) == "YES" else "FAIL" if _upper(v) in {"NO", "LIMITED"} else "UNKNOWN" for v in values]
+        states += ["PASS" if pilot.get(k) is True else "FAIL" if pilot.get(k) is False else "UNKNOWN"
+                   for k in ("nursing_support_verified", "physician_coordination_verified")]
+        program = _pilot_rehabilitation_programs().get(row.get("canonical_facility_id"), [])
+        valid = [r for r in program if r.get("verification_status") == "VERIFIED"
+                 and r.get("source") and r.get("conflict_status", "NONE") == "NONE"]
+        values = {_upper(r.get("value")) for r in valid}
+        if any(r.get("conflict_status", "NONE") != "NONE" for r in program):
+            values = set()
+        states.append("UNKNOWN" if "YES" in values and "NO" in values else
+                      "PASS" if values == {"YES"} else "FAIL" if values == {"NO"} else "UNKNOWN")
+        return "FAIL" if "FAIL" in states else "UNKNOWN" if "UNKNOWN" in states else "PASS"
+    for record in row.get("agent_person_fit_evidence") or []:
+        payload = record.get("payload") or {}
+        if payload.get("conflict_status", "NONE") == "NONE" and is_governed_positive_source(record.get("source"), payload) and all(
+            payload.get(k) is True for k in ("post_hospital_rehab_program_verified", "pt_ot_verified",
+                                            "nursing_support_verified", "physician_coordination_verified")
+        ):
+            return "PASS"
+    return "UNKNOWN"
+
+
+@lru_cache(maxsize=1)
+def _pilot_rehabilitation_programs() -> dict:
+    import base64
+    import gzip
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[3] / "database/synthetic_pilot/provider_capabilities.json.gz.b64"
+    if not path.is_file():
+        return {}
+    data = json.loads(gzip.decompress(base64.b64decode(path.read_text())))
+    records = data if isinstance(data, list) else data["records"]
+    index = {}
+    for record in records:
+        if record.get("capability") == "continuum_rehabilitation":
+            index.setdefault(record.get("canonical_facility_id"), []).append(record)
+    return index

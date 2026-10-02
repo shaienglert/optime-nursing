@@ -32,6 +32,7 @@ os.environ["OPTIME_CANONICAL_MARKET"] = "synthetic-pilot"
 os.environ.setdefault("OOMNIK_PILOT_FACILITY_LIMIT", "500")
 
 sys.path.insert(0, str(REPO_ROOT / "backend"))
+sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(HERE))
 logging.disable(logging.CRITICAL)
 

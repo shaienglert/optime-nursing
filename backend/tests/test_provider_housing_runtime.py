@@ -136,7 +136,7 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         self.assertNotEqual(fit["hard_gate"], "FAIL")
         self.assertIn("ADL_SUPPORT_AVAILABLE", fit["must_unknown"])
 
-    def test_las_ventanas_primary_evidence_satisfies_couple_rehab_musts(self) -> None:
+    def test_las_ventanas_primary_evidence_does_not_prove_full_post_hospital_program(self) -> None:
         state = {
             "relationship": "Couple",
             "ageGroup": "80+",
@@ -177,7 +177,12 @@ class ProviderHousingRuntimeTests(unittest.TestCase):
         attach_provider_housing_evidence(rows)
         fit = evaluate_candidate_intent(rows[0], intent)
 
-        self.assertEqual(fit["hard_gate"], "PASS")
+        # The curated URL establishes therapy access, not the full clinical program.
+        # Preserve those positive proofs while requiring research of the new MUST.
+        self.assertEqual(fit["hard_gate"], "PENDING_VERIFICATION")
+        self.assertIn("POST_HOSPITAL_REHAB_PROGRAM", fit["must_unknown"])
+        self.assertNotIn("POST_HOSPITAL_REHAB_PROGRAM", fit["must_pass"])
+        self.assertNotIn("POST_HOSPITAL_REHAB_PROGRAM", fit["must_fail"])
         for key in ("LAS_VEGAS", "COUPLE_CORESIDENCE", "ADL_SUPPORT_AVAILABLE", "REHAB_PATH_AVAILABLE", "RECOVERY_TRANSITION_COMPATIBLE", "NO_FORCED_MEMORY_PLACEMENT"):
             self.assertIn(key, fit["must_pass"])
         self.assertIn("RICH_CULTURE_AND_ACTIVITIES", fit["nice_match"])

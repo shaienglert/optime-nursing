@@ -23,6 +23,7 @@ from unittest.mock import patch
 import pytest
 
 from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
+from scripts.pilot_acceptance.care_oracle import evaluate_care
 
 ROOT = Path(__file__).resolve().parents[2]
 SUBMISSIONS = ROOT / "backend" / "gold_examples" / "oomnik_golden_personas_v1.submissions.json"
@@ -68,7 +69,7 @@ EVIDENCE_CHECK = {
     "dialysis": lambda facts, row: facts.get("dialysis_arrangements") == "YES",
     "dialysis_transportation": lambda facts, row: facts.get("transportation") == "YES"
         and (row.get("pilot_service_evidence") or {}).get("dialysis_transport_verified") is True,
-    "rehabilitation": lambda facts, row: facts.get("pt") == "YES" and facts.get("ot") == "YES",
+    "rehabilitation": lambda facts, row: evaluate_care(["REHABILITATION"], row)["state"] == "PASS",
     "wound_care": lambda facts, row: facts.get("wound_care") == "YES",
     "kosher": lambda facts, row: facts.get("kosher") == "YES",
     "couple_coresidence": lambda facts, row: row.get("accepts_couples") is True,
@@ -83,25 +84,17 @@ FORBIDDEN_ARCHETYPES = {
     "INDEPENDENT_LIVING_ONLY": {"INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS"},
     "ASSISTED_LIVING_ONLY": {"ASSISTED_LIVING_RFG"},
 }
-CARE_ARCHETYPES = {
-    "INDEPENDENT_LIVING": {"INDEPENDENT_LIVING", "ACTIVE_ADULT_55_PLUS"},
-    "ASSISTED_LIVING": {"ASSISTED_LIVING_RFG"},
-    "MEMORY_CARE": {"MEMORY_CARE"},
-    "SKILLED_NURSING": {"SKILLED_NURSING"},
-    "REHABILITATION": {"REHABILITATION"},
-    "CONTINUING_CARE": {"CONTINUING_CARE"},
-    "SMALL_GROUP_HOME": {"SMALL_GROUP_HOME"},
-}
-
-
 def _care_violations(oracle, results, index):
     expected = oracle.get("care") or []
-    unknown = set(expected) - set(CARE_ARCHETYPES)
-    if unknown:
-        return [f"unimplemented oracle.care values: {sorted(unknown)}"]
-    allowed = set().union(*(CARE_ARCHETYPES[key] for key in expected)) if expected else set()
-    return [f"Top-10 {row.get('canonical_facility_id')} is {index.get(row.get('canonical_facility_id'), {}).get('synthetic_archetype')}, outside oracle.care {expected}"
-            for row in results[:10] if allowed and index.get(row.get("canonical_facility_id"), {}).get("synthetic_archetype") not in allowed]
+    problems = []
+    if evaluate_care(expected, {})["state"] == "FAIL" and not results:
+        return [evaluate_care(expected, {}).get("error") or "no care evidence"]
+    for row in results[:10]:
+        fid = row.get("canonical_facility_id")
+        proof = evaluate_care(expected, CATALOG_ROWS.get(fid) or {})
+        if proof["state"] != "PASS":
+            problems.append(f"Top-10 {fid} has {proof['state']} care proof for {expected}: {proof}")
+    return problems
 
 
 def _preferred_violations(oracle, response):
@@ -256,7 +249,7 @@ def test_golden_persona_decision(persona, decisions):
     assert not problems, f"{persona['id']} ({persona['title']}):\n  " + "\n  ".join(problems)
 
 
-def test_care_contract_catches_a_top_community_outside_the_declared_setting():
+def test_care_contract_rejects_a_top_community_without_independent_program_evidence():
     assert _care_violations({"care": ["REHABILITATION"]}, [{"canonical_facility_id": "bad"}],
                             {"bad": {"synthetic_archetype": "SMALL_GROUP_HOME"}})
 

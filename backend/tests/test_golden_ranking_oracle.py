@@ -13,7 +13,8 @@ Eligibility (all must hold; UNKNOWN is not a pass -- such candidates are "pendin
       memoryStatus "No" -> not a memory-care-only community;
       significant memory -> memory_care YES; wandering / secure unit -> secured_units YES;
       dialysis / wound care -> dialysis_arrangements / wound_care YES;
-      rehab need -> pt YES
+      post-hospital rehab -> verified program, PT/OT, therapy staff, nursing and physician coordination
+  * oracle.care -> at least one independently proved service/program path; category alone is insufficient
   * kosher "Requirement" -> kosher YES; couple -> accepts_couples; continuum "Required" ->
     a continuing-care community; move within 30 days/immediately -> current_availability YES
   * cost <= budget x 1.10, where cost is the private price, or under a Medicaid pathway the
@@ -39,6 +40,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from unittest.mock import patch
 
 import pytest
+from scripts.pilot_acceptance.care_oracle import evaluate_care
 
 ROOT = Path(__file__).resolve().parents[2]
 PILOT = ROOT / "database" / "synthetic_pilot"
@@ -113,6 +115,8 @@ def oracle(persona) -> Dict[str, Any]:
         distance = distances.get(fid)
         if distance is None or distance > radius:
             continue  # outside the stated limit: not part of this search's universe
+        care = evaluate_care(persona.get("oracle", {}).get("care") or [], f)
+        need(True if care["state"] == "PASS" else None if care["state"] == "UNKNOWN" else False, "care_path")
         if ("bathing" in assistance or "dressing" in assistance) and not licensed_care:
             need(yes("adl_support"), "adl_support")
         if "medication" in assistance and not licensed_care:
@@ -130,8 +134,8 @@ def oracle(persona) -> Dict[str, Any]:
         if "wound care" in needs:
             need(yes("wound_care"), "wound_care")
         if _lower(transition.get("postHospitalRehabNeed")) == "yes":
-            need(yes("pt"), "pt")
-            need(yes("ot"), "ot")  # a rehabilitation path is PT and OT
+            rehab = evaluate_care(["REHABILITATION"], f)
+            need(True if rehab["state"] == "PASS" else None if rehab["state"] == "UNKNOWN" else False, "rehabilitation_program")
         if kosher:
             need(yes("kosher"), "kosher")
         if couple and f.get("accepts_couples") is not True:
