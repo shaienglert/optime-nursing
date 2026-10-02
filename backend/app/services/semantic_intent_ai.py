@@ -20,6 +20,7 @@ import requests
 
 from app.services.learning_center_advisor import build_learning_center_advice
 from app.services.canonical_gap_policy import normalize_gap_key
+from app.services.semantic_packet_wire import normalize_wire, provider_schema
 
 SEMANTIC_AI_SYSTEM_RULES = [
     "Supervision around the clock is not Nursing supervision or Skilled nursing care. Medication reminders are not Complex medication management. Rehabilitation alone does not establish speech therapy. Preserve only explicitly established clinical facts.",
@@ -257,21 +258,31 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
     uses_responses_api = "/responses" in url.lower()
+    required_output = _required_output_schema()
+    schema = provider_schema(required_output)
+    payload = copy.deepcopy(payload)
+    payload["wire_contract"] = {
+        "instruction": "Return the schema-constrained wire format, not a free-form packet. questionnaire_patch_entries must contain one legal path, correctly typed value and exact user_text quote for each new explicit fact. Every entry must be independently supported. Constraints, facts and concerns are packet metadata, never patch entries. Omit unsupported inferred fields; preserve unsupported requirements in statements/constraints for accounting. Do not infer native language, religion importance or requirement scope merely from language use or dietary preference. Choose the interview variant matching whether a material client question remains. A clarification variant requires one AI-authored question and its unresolved-fact trace. Never invent facts or a source quote to satisfy the schema. These rules apply to all repairs too.",
+        "version": "semantic-extraction-v1",
+        "assistance_encoding": "assistanceLevel preserves all explicit selections as one comma-separated string, as in the manual questionnaire",
+    }
+    system_prompt = TRANSPORT_SYSTEM_PROMPT + " The actual response shape is the supplied strict JSON schema. Represent patch fields as typed path/value/quote entries. Represent any ASKED trace only in interview.blocking_statement; its question is interview.next_question. Normalization will reconstruct existing packet keys without inference."
+    response_format = {"type": "json_schema", "json_schema": {"name": "semantic_extraction", "strict": True, "schema": schema}}
     if uses_responses_api:
         request_json = {
             "model": model,
             "input": [
-                {"role": "system", "content": TRANSPORT_SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
-            "text": {"format": {"type": "json_object"}},
+            "text": {"format": {"type": "json_schema", "name": "semantic_extraction", "strict": True, "schema": schema}},
         }
     else:
         request_json = {
             "model": model,
-            "response_format": {"type": "json_object"},
+            "response_format": response_format,
             "messages": [
-                {"role": "system", "content": TRANSPORT_SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
         }
@@ -283,13 +294,13 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise RuntimeError(f"SEMANTIC_AI_HTTP_{response.status_code}:{response.text[:500]}")
     body = response.json()
     if uses_responses_api:
-        return _extract_responses_output(body)
+        return normalize_wire(_extract_responses_output(body), required_output)
     if isinstance(body, dict) and "choices" in body:
-        return json.loads(body["choices"][0]["message"]["content"])
+        return normalize_wire(json.loads(body["choices"][0]["message"]["content"]), required_output)
     if isinstance(body, dict) and "output" in body and isinstance(body["output"], dict):
-        return body["output"]
+        return normalize_wire(body["output"], required_output)
     if isinstance(body, dict):
-        return body
+        return normalize_wire(body, required_output)
     raise RuntimeError("SEMANTIC_AI_INVALID_RESPONSE")
 
 
@@ -490,11 +501,20 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
         for statement in result.get("statements") or []
     )
     current = _question_terms(next_question)
-    if not current:
-        return False
     salient = {"mobility", "cognitive", "location", "budget"}
     if not has_conflict and current & _explicit_user_text_answered_dimensions(user_text) & salient:
         return True
+    if not has_conflict:
+        # Check the actual field targeted by the question, not merely similar
+        # words. This includes button answers, which are not adaptiveSignals.
+        asked = [s for s in result.get("statements") or []
+                 if isinstance(s, dict) and s.get("status") == "ASKED"]
+        for statement in asked:
+            paths = statement.get("mapped_parameters") or []
+            if paths and all(_questionnaire_field_resolved(questionnaire_state, path) for path in paths):
+                return True
+    if not current:
+        return False
     for entry in _adaptive_answer_summary(questionnaire_state):
         prior = _question_terms(f"{entry.get('question', '')} {entry.get('answer', '')}")
         if not prior:
@@ -505,6 +525,27 @@ def _question_reasks_answered_dimension(result: Dict[str, Any], questionnaire_st
         if len(overlap) >= 2 and len(overlap) / max(1, min(len(current), len(prior))) >= 0.5:
             return True
     return False
+
+
+def _questionnaire_field_resolved(state: Dict[str, Any], path: str) -> bool:
+    from app.services.canonical_structured_profile import in_schema
+
+    if not isinstance(path, str) or not in_schema(path):
+        return False
+    value: Any = state
+    for part in path.split("."):
+        if not isinstance(value, dict) or part not in value:
+            return False
+        value = value[part]
+    if value is None or value == [] or value == {}:
+        return False
+    text = str(value).strip().lower()
+    if text in {"", "not sure", "unknown", "none"}:
+        return False
+    # These broad answers do not resolve which daily tasks need assistance.
+    if path == "assistanceLevel" and text in {"light assistance", "24/7 support required"}:
+        return False
+    return True
 
 
 _DIMENSION_BY_FACT_KEY = {
@@ -600,7 +641,7 @@ def _repair_clarification_contract_with_ai(*, result: Dict[str, Any], payload: D
         "original_user_text": user_text,
         "prior_explicit_adaptive_answers": _adaptive_answer_summary(questionnaire_state),
         "failure": "REASKED_ANSWERED_DIMENSION" if repeated_question else "NEEDS_CLARIFICATION_WITHOUT_USABLE_BLOCKING_QUESTION",
-        "instruction": "Repair the packet without inventing facts. Explicit statements in original_user_text and prior explicit adaptive answers are binding client evidence and must not be asked again in different wording. If a different material client-owned unknown remains, return NEEDS_CLARIFICATION with exactly one new highest-information AI-authored question and one matching ASKED statement. If no material client-owned clarification remains, return READY. Facility-specific unknowns may remain RESEARCH_REQUIRED and must not block client-intent READY.",
+        "instruction": "Repair the packet without inventing facts. Existing questionnaire_state button selections, explicit statements in original_user_text and prior explicit adaptive answers are binding client evidence and must not be asked again in different wording. If a different material client-owned unknown remains, return NEEDS_CLARIFICATION with exactly one new highest-information AI-authored question and one matching ASKED statement. If no material client-owned clarification remains, return READY. Facility-specific unknowns may remain RESEARCH_REQUIRED and must not block client-intent READY.",
     }
     repaired = transport(repair_payload)
     repaired = _repair_live_readiness_mismatch(repaired)
@@ -640,7 +681,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     learning_advice = build_learning_center_advice(user_text=user_text)
     payload = _build_prompt(user_text, questionnaire_state, learning_advice)
     active_transport = transport or _default_transport
-    result = active_transport(payload)
+    result = {}
     def validate_live_packet(packet: Dict[str, Any]) -> Dict[str, Any]:
         packet = _ground_clinical_patch(packet, user_text, questionnaire_state)
         packet = _repair_live_readiness_mismatch(packet)
@@ -659,6 +700,8 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
     if transport is None:
         prior_packet = copy.deepcopy(result)
         try:
+            result = active_transport(payload)
+            prior_packet = copy.deepcopy(result)
             result = _repair_live_readiness_mismatch(result)
             result = _repair_clarification_contract_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport, strict=False)
             result = _repair_missing_minimum_dimensions_with_ai(result=result, payload=payload, user_text=user_text, questionnaire_state=questionnaire_state, transport=active_transport)
@@ -679,6 +722,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 "SEMANTIC_AI_ASKED_WITHOUT_QUESTION",
                 "SEMANTIC_AI_MISSING_STATEMENT_TRACE",
                 "SEMANTIC_AI_PATCH_CONTRACT",
+                "SEMANTIC_AI_WIRE_CONTRACT",
             }
             if not repairable:
                 raise
@@ -708,6 +752,7 @@ def interpret_client_intent_with_ai(*, user_text: str, questionnaire_state: Opti
                 raise
             result["packet_validation_repair"] = {"applied": True, "validation_error": code, "attempts": 1}
     else:
+        result = active_transport(payload)
         result = _validate_result(_ground_clinical_patch(result, user_text, questionnaire_state), allow_empty_statements=not user_text.strip())
     result["learning_center"] = {"advisor": learning_advice["advisor"], "consulted": True, "available_agent_count": learning_advice["available_agent_count"], "agent_count": learning_advice["agent_count"]}
     return result

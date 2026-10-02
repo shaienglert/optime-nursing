@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -13,6 +14,14 @@ _BASE_ENV = {
 
 
 def _mock_response(body: dict):
+    wire = json.dumps({"wire_version": "semantic-extraction-v1", "facts": [],
+        "preferences": [], "constraints": [], "concerns": [], "implications": [],
+        "statements": [], "research_requests": [], "questionnaire_patch_entries": [],
+        "interview": {"readiness": "READY", "next_question": None, "blocking_statement": None}})
+    if "choices" in body:
+        body["choices"][0]["message"]["content"] = wire
+    elif "output_text" in body:
+        body["output_text"] = wire
     resp = MagicMock()
     resp.ok = True
     resp.json.return_value = body
@@ -51,6 +60,8 @@ class DefaultTransportTemperatureTests(unittest.TestCase):
                 _default_transport({"user_text": "hello"})
         sent_json = mock_post.call_args.kwargs["json"]
         self.assertEqual(sent_json["temperature"], 0.0)
+        self.assertEqual(sent_json["response_format"]["type"], "json_schema")
+        self.assertTrue(sent_json["response_format"]["json_schema"]["strict"])
 
     def test_responses_api_request_also_includes_temperature(self) -> None:
         env = dict(_BASE_ENV, OPTIME_SEMANTIC_AI_URL="https://example.test/v1/responses")
@@ -61,6 +72,8 @@ class DefaultTransportTemperatureTests(unittest.TestCase):
                 _default_transport({"user_text": "hello"})
         sent_json = mock_post.call_args.kwargs["json"]
         self.assertEqual(sent_json["temperature"], 0.0)
+        self.assertEqual(sent_json["text"]["format"]["type"], "json_schema")
+        self.assertTrue(sent_json["text"]["format"]["strict"])
 
     def test_configured_temperature_is_forwarded(self) -> None:
         env = dict(_BASE_ENV, OPTIME_SEMANTIC_AI_TEMPERATURE="0.25")
