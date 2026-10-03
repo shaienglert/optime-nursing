@@ -12,6 +12,7 @@ ledger. Missing evidence remains UNKNOWN.
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
+import json
 import logging
 import os
 from typing import Any, Dict, List, Tuple
@@ -101,13 +102,16 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
     preferences: List[Dict[str, Any]] = []
     for original, meaning, source in raw:
         canonical_text = meaning.strip()
-        dedupe_key = canonical_text.casefold()
+        # A generic model gloss can describe several distinct selected values.
+        # Keep their source identities separate; never erase a quoted choice.
+        identity_text = json.dumps([canonical_text, original], ensure_ascii=False) if traced_authority else canonical_text
+        dedupe_key = identity_text.casefold()
         if not canonical_text or dedupe_key in seen:
             continue
         seen.add(dedupe_key)
         preferences.append(
             {
-                "preference_id": _stable_id(canonical_text),
+                "preference_id": _stable_id(identity_text),
                 "client_expression": original,
                 "semantic_meaning": canonical_text,
                 "importance": "NICE",
@@ -293,7 +297,7 @@ def verify_dynamic_preferences(rows: List[Dict[str, Any]], model: Dict[str, Any]
                     "status": "UNKNOWN",
                     "supporting_claim_ids": [],
                     "reason": "No validated semantic preference verification was available.",
-                    "provider_question_if_unknown": f"Please verify whether this community satisfies: {pref.get('semantic_meaning')}",
+                    "provider_question_if_unknown": f"Please verify whether this community satisfies: {pref.get('client_expression') if model.get('preference_authority') == 'QUOTED_STATEMENT_TRACES' else pref.get('semantic_meaning')}",
                 }
                 for pref in preferences
             ]

@@ -62,3 +62,12 @@ AI repair on omission or wrong role. No fixed hobby catalog or ranking shortcut 
 NICE source expressions must be genuine narrative spans or exact existing selections;
 model-generated field descriptions cannot serve as quotes. Missing materialized-field
 repair receives an explicit path/source work list without supplying inferred values.
+
+Production follow-up: distinct quoted client selections must not collapse because
+the model assigns them the same generic meaning. Preference identity and deduplication
+include the original source expression for strict production packets. An exact repeated
+trace still deduplicates; distinct sources retain separate obligations. Unverified-provider
+questions name the actual client expression, so a generic gloss cannot hide specificity.
+Classification A; PR-001, PR-002, PR-005, PR-009. No principle, ranking-policy or oracle
+change; no owner approval required. This repairs the observed production loss of Classes
+in 004/008 without naming any activity in the implementation.

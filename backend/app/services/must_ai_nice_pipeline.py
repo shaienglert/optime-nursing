@@ -179,7 +179,7 @@ def _defer_dynamic_preference_verification(
                 "status": "UNKNOWN",
                 "supporting_claim_ids": [],
                 "reason": "Facility-specific preference evidence is still being researched.",
-                "provider_question_if_unknown": f"Please verify whether this community satisfies: {pref.get('semantic_meaning')}",
+                "provider_question_if_unknown": f"Please verify whether this community satisfies: {pref.get('client_expression') if dynamic_preferences.get('preference_authority') == 'QUOTED_STATEMENT_TRACES' else pref.get('semantic_meaning')}",
             }
             for pref in preferences
         ]
