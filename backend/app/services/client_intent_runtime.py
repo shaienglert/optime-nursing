@@ -635,6 +635,46 @@ def intent_rank_key(row: Dict[str, Any]) -> tuple[Any, ...]:
 def attach_client_intent_fit(rows: List[Dict[str, Any]], intent: Dict[str, Any]) -> None:
     for row in rows:
         row["client_intent_fit"] = evaluate_candidate_intent(row, intent)
+        attach_explicit_intent_explanation(row, intent)
+
+
+def attach_explicit_intent_explanation(row: Dict[str, Any], intent: Dict[str, Any]) -> None:
+    """Surface specific requested properties only when their actual fit passed.
+
+    Existing care explanations retain their evidence. Language support is not a
+    selling point just because a provider has a language entry in its profile.
+    """
+    fit = row.get("client_intent_fit") or {}
+    proofs = []
+    for kind, passed, role in (
+        ("must_haves", set(fit.get("must_pass") or []), "requirement"),
+        ("nice_to_haves", set(fit.get("nice_match") or []), "preference"),
+    ):
+        for item in intent.get(kind) or []:
+            key = item.get("key")
+            if key not in passed:
+                continue
+            value = item.get("value")
+            if key in {"REQUIRED_LANGUAGE_SUPPORT", "PREFERRED_LANGUAGE_SUPPORT"} and isinstance(value, str) and value.strip():
+                text = f"Verified {value.strip()} language support matches your {role}."
+            elif key == "REQUIRED_ACTIVITIES" and isinstance(value, list) and value:
+                text = f"Verified activities match your requirement: {', '.join(str(activity) for activity in value)}."
+            elif key == "KOSHER_MEALS":
+                text = f"Verified kosher meals match your {role}."
+            elif key in {"CONTINUUM_OF_CARE_REQUIRED", "CONTINUUM_OF_CARE"}:
+                text = f"A verified care continuum matches your {role} to avoid another move as care needs change."
+            else:
+                continue
+            proofs.append({"key": key, "role": role, "requested_value": value, "fit": "PASS" if role == "requirement" else "MATCH", "text": text})
+
+    explanation = row.setdefault("explanation", {})
+    # Retain a requested-language point only from the explicit proof above, so a
+    # generic English capability cannot be advertised as a personalized match.
+    existing = [str(text) for text in explanation.get("why_matches") or [] if not str(text).casefold().startswith("language support")]
+    previous = {item.get("text") for item in explanation.get("explicit_intent_matches") or []}
+    existing = [text for text in existing if text not in previous]
+    explanation["explicit_intent_matches"] = proofs
+    explanation["why_matches"] = list(dict.fromkeys([item["text"] for item in proofs] + existing))
 
 
 __all__ = ["attach_client_intent_fit", "build_client_intent", "evaluate_candidate_intent", "intent_rank_key"]

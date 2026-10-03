@@ -22,3 +22,14 @@ The earlier production report predates merged PRs 435-437. PR 438 independently
 addresses source identity and canonical quote paths and is not modified here.
 Availability is excluded from organic ranking by Principle 1. Current recorded
 urgent-move evidence remains governed by the existing timing contract.
+
+Explanation completion (B): prepend requested-language, required-activity,
+kosher and continuity proof only from the actual must_pass/nice_match result.
+Unrequested generic language capability is removed from personalized reasons.
+Unknown, failed and subsequently withdrawn proof creates no positive bullet.
+This changes presentation, not eligibility or the comparator. Every generated
+bullet carries its explicit intent key, role and requested value in the audit.
+
+Local validation: 116 focused tests pass, including the existing intent and
+radius contracts, the neutral-choice matrix, ranking neutrality, explicit proof,
+unknown/failure handling, arbitrary activities and repeated-fit refreshes.
