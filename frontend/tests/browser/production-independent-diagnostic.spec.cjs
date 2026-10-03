@@ -35,7 +35,7 @@ test('production independent woman anywhere Las Vegas $6500', async ({ page }, t
    })(); responseTasks.push(task);
  });
  try {
-   await page.goto('https://optime-nursing.vercel.app/', {waitUntil:'networkidle',timeout:60000});
+   await page.goto('https://optime-nursing.vercel.app/', {waitUntil:'domcontentloaded',timeout:60000});
    await page.getByRole('button',{name:'my mother',exact:true}).click();
    await expect(page.getByRole('button',{name:'80-84',exact:true})).toBeVisible({timeout:15000});
    await page.getByRole('button',{name:'80-84',exact:true}).click();
