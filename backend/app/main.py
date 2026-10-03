@@ -1685,8 +1685,30 @@ def _to_agent_knowledge_report(row: AgentKnowledgeReportSnapshot) -> AgentKnowle
     )
 
 
+
+def _env_true(name: str) -> bool:
+    return os.getenv(name, "0").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def validate_ai_authority_configuration() -> None:
+    enabled = _env_true("OPTIME_SEMANTIC_AI_ENABLED")
+    required_flags = [
+        "OPTIME_SEMANTIC_AI_REQUIRED",
+        "OPTIME_AI_PROCESS_OWNER_REQUIRED",
+        "OPTIME_AI_CANDIDATE_RANKING_REQUIRED",
+        "OPTIME_AI_PREFERENCE_VERIFICATION_REQUIRED",
+    ]
+    impossible = [name for name in required_flags if _env_true(name) and not enabled]
+    if impossible:
+        raise RuntimeError(
+            "Invalid AI authority configuration: Semantic AI is disabled while required components are enabled: "
+            + ", ".join(impossible)
+        )
+
+
 @app.on_event("startup")
 def startup() -> None:
+    validate_ai_authority_configuration()
     print(f"CORS_ALLOWED_ORIGINS={allowed_origins}")
     # Preserve provider memory and verification history across restarts.
     Base.metadata.create_all(bind=engine)
