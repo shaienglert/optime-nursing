@@ -87,12 +87,10 @@ async function answerInterview(page, scenario, maxSteps = 120) {
     if (kind === 'multi') {
       for (const option of value) await page.getByRole('button', { name: String(option), exact: true }).click();
     } else {
-      const range = page.locator('main input[type="range"]');
-      if (kind === 'number' && await range.count()) {
-        const input=range.first(); const min=Number(await input.getAttribute('min')); const step=Number(await input.getAttribute('step'))||1;
-        if(Number(value)<min) throw new Error('UI budget minimum '+min+' prevents persona budget '+value);
-        await input.focus(); await input.press('Home');
-        for(let n=0;n<Math.round((Number(value)-min)/step);n++) await input.press('ArrowRight');
+      if (id === 'budget') {
+        const input = page.getByLabel('Monthly budget in dollars', { exact: true });
+        await expect(input).toBeVisible({ timeout: 60000 });
+        await input.fill(String(value));
         await expect(input).toHaveValue(String(value));
       } else {
         await page.locator('main input[type="text"], main input[type="number"], main textarea').first().fill(String(value));
@@ -103,10 +101,9 @@ async function answerInterview(page, scenario, maxSteps = 120) {
   throw new Error('Intake did not reach the summary within the step budget');
 }
 
-test.use({ screenshot: 'only-on-failure', trace: 'retain-on-failure' });
-
 test.describe('deployed production golden customer journeys', () => {
   test.setTimeout(600_000);
+  test.use({ screenshot: 'only-on-failure', trace: 'retain-on-failure' });
   test.afterEach(async ({ page }, info) => {
     fs.writeFileSync(info.outputPath('final-screen.txt'), await page.locator('main').innerText().catch(() => 'No main content'));
     await page.screenshot({path: info.outputPath('final-screen.png'), fullPage:true}).catch(() => {});
@@ -124,7 +121,7 @@ test.describe('deployed production golden customer journeys', () => {
 
     const wire = []; const tasks = [];
     page.on('response', response => {
-      if (!response.url().includes('/decision-engine/') || response.request().method() !== 'POST') return;
+      if (!(response.url().includes('/decision-engine/') || response.url().includes('/market-price-floor')) || response.request().method() !== 'POST') return;
       tasks.push((async () => { wire.push({url:response.url(),status:response.status(),request:response.request().postData(),body:await response.json().catch(()=>null)}); fs.writeFileSync(require('node:path').join(test.info().outputDir,'wire.json'),JSON.stringify(wire,null,2)); })());
     });
     fs.mkdirSync(test.info().outputDir,{recursive:true});
@@ -202,8 +199,32 @@ test.describe('deployed production golden customer journeys', () => {
     const payload = await response.json();
     fs.writeFileSync(test.info().outputPath('decision.json'),JSON.stringify(payload,null,2));
     await Promise.allSettled(tasks);
+    const priceLookups = wire.filter(item => item.url.includes('/market-price-floor'));
+    expect(priceLookups.length, 'Live intake must request the governed price floor').toBeGreaterThan(0);
+    for (const lookup of priceLookups) {
+      expect(lookup.status).toBe(200);
+      expect(typeof lookup.body.minimum_budget_is_binding).toBe('boolean');
+      expect(lookup.body.monthly_price_basis).toBe(oracle.couple ? 'TWO_RESIDENT_TOTAL' : 'SINGLE_RESIDENT');
+      if (scenario.answers.medicaidStatus === 'Application pending') {
+        expect(lookup.body.minimum_budget_is_binding).toBe(false);
+        expect(lookup.body.funding_pathway).toBe('MEDICAID_COST_REQUIRES_VERIFICATION');
+      }
+    }
     console.log('PRODUCTION_CASE_DECISION',JSON.stringify({id:scenario.id,count:payload.result_count,classified:payload.candidate_discovery?.total_facilities_classified,state:payload.decision_intelligence?.canonical_decision_state,top:(payload.results||[]).slice(0,5).map(x=>({id:x.canonical_facility_id,name:x.facility_name,price:x.starting_monthly_price,archetype:x.synthetic_archetype,entrance_fee:x.entrance_fee}))}));
     const results = payload.results || [];
+    expect(payload.candidate_discovery.catalog_version, 'Production must serve the quality-tested catalog').toBe('74ab5954f3b6ca14');
+    const audit = payload.decision_intelligence.ranking_universe_audit;
+    expect(audit.eligible_candidate_count).toBe(audit.eligible_candidate_order.length);
+    expect(audit.eligible_candidate_order.slice(0, results.length)).toEqual(results.map(item => item.canonical_facility_id));
+    for (const item of results) {
+      expect(Number.isFinite(item.latitude) && Number.isFinite(item.longitude)).toBe(true);
+      expect(item.nearby_place_fit.status).toBe('KNOWN');
+      expect(item.nearby_place_fit.source).toBe('SYNTHETIC_PILOT_NEARBY_FIXTURE');
+      if (Number(item.entrance_fee) > 0) {
+        expect(item.one_time_cost_review.status).toBe('FAMILY_AND_PROVIDER_CONFIRMATION_REQUIRED');
+        expect(payload.decision_intelligence.canonical_decision_state.finality).toBe('PROVISIONAL');
+      }
+    }
     console.log('OOMNIK_PILOT_GATE_DIAGNOSTIC', JSON.stringify({
       scenario_id: scenario.id, budget: scenario.budget, result_count: results.length,
       must_eligible_count: payload.must_eligible_count,
