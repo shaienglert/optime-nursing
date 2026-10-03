@@ -41,6 +41,7 @@ test('production independent woman anywhere Las Vegas $6500', async ({ page }, t
    await page.getByRole('button',{name:'80–84',exact:true}).click();
    const asked = [];
    for (let i=0;i<65;i++) {
+     if (page.url().includes('/intake-confirmation')) break;
      if (await page.getByText('Yes — this reflects what I told Oomnik.',{exact:true}).isVisible()) break;
      const heading = page.locator('main h1[data-question-id]');
      await expect(heading).toBeVisible();
@@ -50,7 +51,8 @@ test('production independent woman anywhere Las Vegas $6500', async ({ page }, t
      asked.push(id); console.log('INTAKE_STEP',id,JSON.stringify(answers[id]));
      if (!Object.hasOwn(answers,id)) throw new Error('No declared synthetic answer for '+id);
      const value = answers[id];
-     if (kind==='single') { await page.getByRole('button',{name:String(value),exact:true}).click(); continue; }
+     const waitForAdvance = () => expect.poll(async () => page.url().includes('/intake-confirmation') || !(await heading.count()) || (await heading.getAttribute('data-question-id')) !== id, {timeout:15000}).toBe(true);
+     if (kind==='single') { await page.getByRole('button',{name:String(value),exact:true}).click(); await waitForAdvance(); continue; }
      if (kind==='multi') for (const v of value) await page.getByRole('button',{name:v,exact:true}).click();
      else if (kind==='number') {
        const range=page.locator('main input[type=range]');
@@ -61,11 +63,13 @@ test('production independent woman anywhere Las Vegas $6500', async ({ page }, t
        for(let k=0;k<Math.round((Number(value)-min)/step);k++) await range.press('ArrowRight');
        await expect(range).toHaveValue(String(value));
      } else if (value) await page.locator('main input[type=text], main textarea').first().fill(String(value));
-     await page.getByRole('button',{name:/^(Next →|See the summary →)$/}).click();
+     await page.getByRole('button',{name:/^(Next →|See the summary →)$/}).click(); await waitForAdvance();
    }
    console.log('INTAKE_SUMMARY',await page.locator('main').innerText());
-   await page.getByText('Yes — this reflects what I told Oomnik.',{exact:true}).click();
-   await page.getByRole('button',{name:'Continue our conversation',exact:true}).click();
+   if (!page.url().includes('/intake-confirmation')) {
+     await page.getByText('Yes — this reflects what I told Oomnik.',{exact:true}).click();
+     await page.getByRole('button',{name:'Continue our conversation',exact:true}).click();
+   }
    for(let i=0;i<12;i++) {
      const final=page.getByRole('button',{name:/I confirm.*show recommendations/i});
      const answer=page.getByLabel('Your answer');
