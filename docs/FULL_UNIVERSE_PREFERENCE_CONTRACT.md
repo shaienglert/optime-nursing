@@ -35,3 +35,30 @@ using the same funding-pathway cost, never a published-rate flag alone.
 Orchestrated audit persistence runs after final selection, so a late winner is
 recorded with its final rank. Preliminary research remains bounded, and no
 preliminary full-universe persistence is performed.
+
+Production strict semantic packets use statement traces as the only dynamic
+preference authority. The free-form preferences array is advisory metadata; it
+cannot bypass a CONTEXT or excluded control trace by paraphrasing it. Every genuine
+facility preference must be preserved as a NICE source trace by the interpreter.
+Legacy unversioned test/compatibility packets retain their existing behavior.
+Classification A/B; PR-001, PR-002, PR-005, PR-009; no principle change or new
+approval required. No candidate ranking or unknown-evidence policy is changed.
+
+Rejected schema-constrained packets must reach the existing single AI repair as
+rejected evidence, rather than an empty prior packet. The repair preserves both
+partners' facts, source quotes and original client inputs. Duplicate fields remain
+fatal unless the complete corrected packet passes the unchanged wire and clinical
+contracts; there is no last-value-wins normalization or additional retry loop.
+When narrative is empty, provider grammar permits zero new extraction entries:
+there is no legal narrative source quote. Existing button values remain client
+evidence and may have their own exact-value statement traces without rewriting
+the canonical profile. This completes the existing explicit-source boundary.
+
+Live browser artifacts showed that prompt-only retention was insufficient: selected
+activities sometimes disappeared from otherwise valid packets. A declarative
+field/control contract now enumerates the actual selected values (including arbitrary
+values), validates their individual MUST/NICE traces and requests the existing bounded
+AI repair on omission or wrong role. No fixed hobby catalog or ranking shortcut exists.
+NICE source expressions must be genuine narrative spans or exact existing selections;
+model-generated field descriptions cannot serve as quotes. Missing materialized-field
+repair receives an explicit path/source work list without supplying inferred values.

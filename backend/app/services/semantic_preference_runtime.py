@@ -57,7 +57,8 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
     excluded_expressions: set[str] = set()
     relevant_statements = []
     neutral_answers = {"none", "no preference", "not important", "not required", "not needed"}
-    context_fields = {"relationship", "gender", "ageGroup", "moveTiming", "budget", "medicaidStatus", "humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove"}
+    control_values = {"yes", "no", "preference", "preferred", "requirement", "required", "important", "not important", "very important", "critical", "essential"}
+    context_fields = {"relationship", "gender", "ageGroup", "moveTiming", "budget", "medicaidStatus", "careSearchApproach", "humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove"}
     for statement in result.get("statements") or []:
         if not isinstance(statement, dict):
             continue
@@ -67,17 +68,24 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
             str(statement.get("status") or "").upper() == "NOT_DECISION_RELEVANT"
             or (bool(paths) and original.casefold() in neutral_answers)
             or (paths == ["parkingRequirement"] and original.casefold() == "no")
-            or (bool(paths) and all(path in context_fields or path.endswith(("RequirementLevel", "Importance")) for path in paths))
+            or (bool(paths) and all(path in context_fields for path in paths))
+            or (bool(paths) and original.casefold() in control_values and all(path.endswith(("RequirementLevel", "Importance", "NeedScope")) for path in paths))
         )
         if excluded:
             excluded_expressions.update(str(statement.get(key) or "").strip().casefold() for key in ("raw_text", "meaning"))
         else:
             relevant_statements.append(statement)
 
-    for value in result.get("preferences") or []:
-        text = str(value or "").strip()
-        if text and text.casefold() not in excluded_expressions and text.casefold() not in neutral_answers:
-            raw.append((text, text, "semantic_ai.preferences"))
+    wire = result.get("wire_contract") if isinstance(result.get("wire_contract"), dict) else {}
+    traced_authority = wire.get("schema_constrained") is True
+    # Strict production packets already provide quoted statement accounting. Their
+    # unquoted summary must not recreate a preference excluded by its source role.
+    # Keep legacy unversioned callers compatible; production never takes this path.
+    if not traced_authority:
+        for value in result.get("preferences") or []:
+            text = str(value or "").strip()
+            if text and text.casefold() not in excluded_expressions and text.casefold() not in neutral_answers:
+                raw.append((text, text, "semantic_ai.preferences"))
 
     for statement in relevant_statements:
         if str(statement.get("importance") or "").upper() != "NICE":
@@ -111,6 +119,7 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
     return {
         "version": "dynamic-semantic-preferences-v1",
         "owner": "SEMANTIC_AI",
+        "preference_authority": "QUOTED_STATEMENT_TRACES" if traced_authority else "LEGACY_SEMANTIC_PACKET",
         "preferences": preferences,
         "preference_count": len(preferences),
         "open_world": True,

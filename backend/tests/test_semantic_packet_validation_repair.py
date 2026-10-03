@@ -198,3 +198,82 @@ def test_i09_repeated_missing_question_stays_blocked_after_the_existing_attempt_
     assert transport.call_count == 4
     assert error.value.patch_diagnostic["patch"] == invalid["questionnaire_patch"]
     assert error.value.patch_diagnostic["next_question"] is None
+
+
+@pytest.mark.parametrize("corrected", [True, False])
+def test_rejected_wire_repair_sees_both_partner_values_and_remains_bounded(corrected, monkeypatch):
+    import json
+    from unittest.mock import MagicMock
+    from test_semantic_packet_wire import wire, trace
+
+    monkeypatch.setenv("OPTIME_SEMANTIC_AI_URL", "https://example.test/v1/chat/completions")
+    monkeypatch.setenv("OPTIME_SEMANTIC_AI_MODEL", "test-model")
+    bad = wire()
+    bad["questionnaire_patch_fields"] = [
+        {"path": "assistanceLevel", "value": "Help with daily activities", "quote": "he needs help with daily activities"},
+        {"path": "assistanceLevel", "value": "Independent", "quote": "she is independent"},
+    ]
+    bad["statements"] = [trace("he needs help with daily activities", ["assistanceLevel"]),
+                          trace("she is independent", ["assistanceLevel"])]
+    good = wire()
+    quote = "he needs help with daily activities and she is independent"
+    good["questionnaire_patch_fields"] = [{"path": "coupleAssistance", "value": quote, "quote": quote}]
+    good["statements"] = [trace("he needs help with daily activities", ["coupleAssistance"]),
+                           trace("she is independent", ["coupleAssistance"])]
+    def response(packet):
+        result = MagicMock()
+        result.ok = True
+        result.json.return_value = {"choices": [{"message": {"content": json.dumps(packet)}}]}
+        return result
+    with patch("app.services.semantic_intent_ai.requests.post", side_effect=[response(bad), response(good if corrected else bad)]) as post:
+        if corrected:
+            result = interpret_client_intent_with_ai(user_text=COUPLE_TEXT, questionnaire_state=COUPLE_BASELINE)
+            assert result["questionnaire_patch"] == {"coupleAssistance": quote}
+            assert [s["raw_text"] for s in result["statements"]] == [s["raw_text"] for s in good["statements"]]
+            assert result["packet_validation_repair"]["attempts"] == 1
+        else:
+            with pytest.raises(RuntimeError, match="DUPLICATE_FIELD:assistanceLevel") as error:
+                interpret_client_intent_with_ai(user_text=COUPLE_TEXT, questionnaire_state=COUPLE_BASELINE)
+            assert error.value.patch_diagnostic["rejected_wire_packet"] == bad
+        assert post.call_count == 2
+        repair = json.loads(post.call_args.kwargs["json"]["messages"][1]["content"])["packet_validation_repair"]
+        assert repair["rejected_wire_packet"] == bad
+        assert "DUPLICATE_FIELD" in repair["issue_actions"]
+
+
+@pytest.mark.parametrize("failure", ["missing", "paraphrased", "wrong_importance"])
+def test_selected_open_ended_properties_have_grounded_traces_without_losing_care(failure):
+    values = ["Glacier microscopy seminars", "Lunar astronomy club"]
+    state = {"budget": 6500, "referenceLocationValue": "Las Vegas",
+             "happinessPreferences": values,
+             "humanIntelligenceV2": {"socialProfile": {"activityRequirementLevel": "Preference", "hobbyParticipation": values}}}
+    good = packet()
+    good["wire_contract"] = {"schema_constrained": True}
+    for value in values:
+        good["statements"].append({"raw_text": value, "meaning": "The community should offer " + value,
+            "importance": "NICE", "knowledge_state": "KNOWN", "status": "USED", "mapped_parameters": ["happinessPreferences"]})
+    bad = deepcopy(good)
+    if failure == "missing":
+        bad["statements"].pop()
+    elif failure == "paraphrased":
+        bad["statements"][-1]["raw_text"] = "Their happiness profile includes " + values[-1]
+    else:
+        bad["statements"][-1]["importance"] = "CONTEXT"
+    with patch("app.services.semantic_intent_ai._default_transport", side_effect=[bad, good]) as transport:
+        result = interpret_client_intent_with_ai(user_text=TEXT, questionnaire_state=state)
+    assert transport.call_count == 2
+    repair = transport.call_args.args[0]["packet_validation_repair"]
+    assert "MISSING_SELECTED_PROPERTY_TRACE" in repair["validation_error"]
+    assert len(transport.call_args.args[0]["selected_facility_property_traces"]) == 2
+    assert result["questionnaire_patch"]["medicalCareProfile"]["needs"] == ["Dialysis"]
+    assert [t["raw_text"] for t in result["statements"] if t["importance"] == "NICE"] == values
+
+
+def test_repeated_missing_selected_preference_cannot_claim_validated_packet():
+    bad = packet()
+    bad["wire_contract"] = {"schema_constrained": True}
+    state = {"budget": 6500, "referenceLocationValue": "Las Vegas", "nearbyPlaces": ["Specialty art museum"], "nearbyPlacesImportance": "Nice to have"}
+    with patch("app.services.semantic_intent_ai._default_transport", side_effect=[deepcopy(bad), deepcopy(bad)]) as transport:
+        with pytest.raises(RuntimeError, match="MISSING_SELECTED_PROPERTY_TRACE"):
+            interpret_client_intent_with_ai(user_text=TEXT, questionnaire_state=state)
+    assert transport.call_count == 2

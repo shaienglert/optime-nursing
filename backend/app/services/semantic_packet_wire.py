@@ -89,6 +89,12 @@ def _key(required_output):
 def provider_schema(required_output, *, family_text: str | None = None):
     schema = _model(_key(required_output)).model_json_schema()
 
+    # Without narrative there is no legal exact source quote for a new field.
+    # Existing buttons remain in the caller's profile and statement accounting;
+    # do not invite the provider to copy them into ungrounded extraction entries.
+    if family_text is not None and not family_text.strip():
+        schema["properties"]["questionnaire_patch_fields"]["maxItems"] = 0
+
     def portable(value):
         if isinstance(value, dict):
             value.pop("title", None)
