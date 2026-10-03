@@ -72,7 +72,7 @@ test('production independent woman anywhere Las Vegas $6500', async ({ page }, t
      const review=page.getByRole('button',{name:'Continue our conversation',exact:true});
      let phase='';
      await expect.poll(async()=>{
-       if (/\\/results/.test(page.url())) return phase='RESULTS';
+       if (/results/.test(page.url())) return phase='RESULTS';
        if(await final.isVisible() && await final.isEnabled()) return phase='FINAL';
        if(await answer.isVisible() && await answer.isEnabled()) return phase='ANSWER';
        if(await review.isVisible() && await review.isEnabled()) return phase='REVIEW';
@@ -82,12 +82,12 @@ test('production independent woman anywhere Las Vegas $6500', async ({ page }, t
      console.log('INTERVIEW_SCREEN',phase,await page.locator('main').innerText());
      if(phase==='RESULTS') break;
      if(phase==='ERROR') throw new Error('Production interview error');
-     if(phase==='FINAL') { await final.click(); await expect(page).toHaveURL(/\\/results/,{timeout:60000}); break; }
+     if(phase==='FINAL') { await final.click(); await expect(page).toHaveURL(/results/,{timeout:60000}); break; }
      if(phase==='REVIEW') { await review.click(); continue; }
      await answer.fill('Use the confirmed questionnaire facts. Fully independent woman, anywhere in the Las Vegas Valley, total monthly budget $6500. No additional mandatory facility requirement beyond the confirmed questionnaire. No preference on additional amenities.');
      await page.getByRole('button',{name:'Continue',exact:true}).click();
    }
-   await expect(page).toHaveURL(/\\/results/,{timeout:60000});
+   await expect(page).toHaveURL(/results/,{timeout:60000});
    await expect(page.getByText('OOmnik results',{exact:true})).toBeVisible({timeout:120000});
    await Promise.allSettled(responseTasks);
    console.log('FINAL_RESULTS',await page.locator('main').innerText());
