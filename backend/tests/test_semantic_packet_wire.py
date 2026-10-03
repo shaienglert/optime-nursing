@@ -298,3 +298,17 @@ def test_unapproved_declaration_cannot_expand_the_model_write_surface():
     output["questionnaire_patch"]["facilityProvidesDialysis"] = "Yes|No"
     with pytest.raises(RuntimeError, match="UNAPPROVED_DECLARATION"):
         provider_schema(output)
+
+
+def test_empty_narrative_grammar_allows_no_new_fields_but_preserves_button_traces():
+    schema = provider_schema(_required_output_schema(), family_text="")
+    assert schema["properties"]["questionnaire_patch_fields"]["maxItems"] == 0
+    assert "maxItems" not in provider_schema(_required_output_schema(), family_text="Music")["properties"]["questionnaire_patch_fields"]
+    selected = {"happinessPreferences": ["Lunar astronomy club"],
+                "humanIntelligenceV2": {"socialProfile": {"activityRequirementLevel": "Preference"}}}
+    packet = wire()
+    packet["statements"] = [trace("Lunar astronomy club", ["happinessPreferences"], importance="NICE")]
+    result = normalize_wire(packet, _required_output_schema(), family_text="")
+    _validate_patch_contract(result, "", selected)
+    assert result["questionnaire_patch"] == {}
+    assert result["statements"][0]["raw_text"] == selected["happinessPreferences"][0]

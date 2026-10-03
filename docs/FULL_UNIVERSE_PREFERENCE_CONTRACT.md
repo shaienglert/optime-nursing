@@ -49,3 +49,7 @@ rejected evidence, rather than an empty prior packet. The repair preserves both
 partners' facts, source quotes and original client inputs. Duplicate fields remain
 fatal unless the complete corrected packet passes the unchanged wire and clinical
 contracts; there is no last-value-wins normalization or additional retry loop.
+When narrative is empty, provider grammar permits zero new extraction entries:
+there is no legal narrative source quote. Existing button values remain client
+evidence and may have their own exact-value statement traces without rewriting
+the canonical profile. This completes the existing explicit-source boundary.
