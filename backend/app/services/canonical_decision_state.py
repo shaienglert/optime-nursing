@@ -448,7 +448,8 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
     # decide FINAL vs PROVISIONAL below, never whether anything is shown at all.
     # Pending MUST candidates stay in the research queue.
     if rankable_count > 0 and ranking is RankingState.COMPLETE:
-        finality = DecisionFinality.FINAL if preferences is PreferenceState.COMPLETE and pending == 0 else DecisionFinality.PROVISIONAL
+        capital_pending = (decision.get("financial_review") or {}).get("status") == "PENDING_ONE_TIME_COST_CONFIRMATION"
+        finality = DecisionFinality.FINAL if preferences is PreferenceState.COMPLETE and pending == 0 and not capital_pending else DecisionFinality.PROVISIONAL
         phase = DecisionPhase.FINAL_RECOMMENDATION if finality is DecisionFinality.FINAL else DecisionPhase.PROVISIONAL_RECOMMENDATION
         return CanonicalDecisionState(
             phase=phase,
@@ -460,7 +461,7 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             finality=finality,
             system=SystemHealth.HEALTHY,
             next_action="SHOW_FINAL_RECOMMENDATION" if finality is DecisionFinality.FINAL else "SHOW_PROVISIONAL_RECOMMENDATION",
-            reason="validated MUST gate and AI ranking are complete",
+            reason="Monthly and care requirements passed; one-time cost applicability and household funding still require confirmation" if capital_pending else "validated MUST gate and AI ranking are complete",
             legacy_readiness=legacy_readiness,
             legacy_recommendation_execution_allowed=legacy_execution,
             legacy_recommendation_visibility=legacy_visibility,
@@ -529,6 +530,8 @@ def apply_canonical_decision_state_authority(result: Dict[str, Any]) -> Dict[str
         visibility, finality = "FINAL_RECOMMENDATION_VISIBLE", "FINAL"
     elif state.phase is DecisionPhase.PROVISIONAL_RECOMMENDATION:
         visibility, finality = "PROVISIONAL_RANKING_VISIBLE", "PROVISIONAL_PENDING_PREFERENCE_VERIFICATION"
+        if (decision.get("financial_review") or {}).get("status") == "PENDING_ONE_TIME_COST_CONFIRMATION":
+            finality = "PROVISIONAL_PENDING_FINANCIAL_VERIFICATION"
     elif state.phase is DecisionPhase.UNRANKED_ELIGIBLE_SET:
         # Visible, and named so no legacy reader mistakes it for a ranking. Falling through
         # to the generic branch below would have produced BLOCKED_UNRANKED_ELIGIBLE_SET

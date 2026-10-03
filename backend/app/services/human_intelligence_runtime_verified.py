@@ -544,6 +544,7 @@ def _consult_semantic_ai(
 def build_human_intelligence_context(
     questionnaire_state: Dict[str, Any], natural_language_query: str = "", *,
     prepared_strategy: Dict[str, Any] | None = None,
+    structured_only: bool = False,
 ) -> Dict[str, Any]:
     """One pass, in authority order (owner, 2026-10-02):
 
@@ -559,7 +560,7 @@ def build_human_intelligence_context(
     from app.services.canonical_intake_state import canonicalize_intake_state
     from app.services.canonical_structured_profile import build_structured_profile, materialize_questionnaire
 
-    enabled = os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+    enabled = not structured_only and os.getenv("OPTIME_SEMANTIC_AI_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
     has_narrative = bool(str(natural_language_query or "").strip())
 
     # 1. Interpreter (extraction). It is given the interview policy, not a guardian built
@@ -592,7 +593,8 @@ def build_human_intelligence_context(
     context["decision_readiness"] = "NEEDS_CLARIFICATION"
 
     # 4. Readiness and question.
-    context = _consult_semantic_ai(context, canonical, natural_language_query, initial_result=interpreter_result, initial_error=interpreter_error)
+    context = (_apply_canonical_policy_without_ai(context, canonical, "") if structured_only
+               else _consult_semantic_ai(context, canonical, natural_language_query, initial_result=interpreter_result, initial_error=interpreter_error))
     completion = questionnaire_state.get("questionnaireCompletion") or {}
     structured_complete = completion.get("mandatoryComplete") is True and completion.get("conditionalFollowUpsComplete") is True
     narrative_extraction_required = has_narrative and not structured_complete

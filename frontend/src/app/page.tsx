@@ -178,7 +178,7 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-5">
             <Link href="/workspace" className="hover:text-[#254d42]">Workspace</Link>
             <Link href="/profiles" className="hover:text-[#254d42]">Saved profiles</Link>
-            <Link href="/admin" className="hover:text-[#254d42]">Admin</Link>
+            <Link href="/admin" prefetch={false} className="hover:text-[#254d42]">Admin</Link>
           </div>
         </div>
       </footer>

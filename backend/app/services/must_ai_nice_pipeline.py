@@ -50,7 +50,10 @@ _FAMILY_CRITERIA_LENGTH = 6
 
 
 def _family_criteria_key(row: Dict[str, Any]) -> tuple[Any, ...]:
-    return (*person_fit_sort_key(row), *intent_rank_key(row)[:_FAMILY_CRITERIA_LENGTH])
+    from app.services.nearby_place_service import nearby_rank_key
+    nearby = row.get("nearby_place_fit") or {}
+    return (*person_fit_sort_key(row), *intent_rank_key(row)[:_FAMILY_CRITERIA_LENGTH],
+            *nearby_rank_key(row, str(nearby.get("importance") or "No preference")))
 
 
 def _layered_rank(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -324,6 +327,12 @@ def apply_must_ai_nice_pipeline(
         # The normal ranking still decides quality within each band.
     # The shortlist cut uses the same layered order as the final ranking.
     rankable = _layered_rank(rankable)
+    decision["ranking_universe_audit"] = {
+        "eligible_candidate_count": len(rankable),
+        "eligible_candidate_order": [row.get("canonical_facility_id") for row in rankable],
+        "order": "BUDGET_BAND_THEN_EXPLICIT_PERSON_FIT_THEN_VERIFIED_NICE_THEN_REGULATORY_QUALITY",
+        "shortlist_applied_after_full_universe_ranking": True,
+    }
     interactive_shortlist_limit = _resolve_interactive_shortlist_limit(limit)
     live_shortlist = rankable[:interactive_shortlist_limit]
 
@@ -351,12 +360,30 @@ def apply_must_ai_nice_pipeline(
     for audit_row in audit_rows:
         legacy = audit_row.get("legacy_structured_nice_fit") if isinstance(audit_row.get("legacy_structured_nice_fit"), dict) else {}
         fit = audit_row.get("client_intent_fit") if isinstance(audit_row.get("client_intent_fit"), dict) else {}
-        fit["nice_match"] = list(legacy.get("nice_match") or [])
-        fit["nice_unknown"] = list(legacy.get("nice_unknown") or [])
-        fit["nice_fit_scores"] = dict(legacy.get("nice_fit_scores") or {})
+        fit["nice_match"] = list(legacy.get("nice_match", fit.get("nice_match")) or [])
+        fit["nice_unknown"] = list(legacy.get("nice_unknown", fit.get("nice_unknown")) or [])
+        fit["nice_fit_scores"] = dict(legacy.get("nice_fit_scores", fit.get("nice_fit_scores")) or {})
     structured_nice_summary = attach_nice_coverage(audit_rows, audit_intent)
+    for row, audit_row in zip(ranked, audit_rows):
+        # Keep evidence already used by deterministic ranking visible without
+        # claiming it proves an arbitrary, narrower semantic preference.
+        row["structured_nice_to_have_coverage"] = audit_row.get("nice_to_have_coverage")
 
     selected = ranked[: max(0, int(limit or 0))]
+    capital_review = []
+    for row in selected:
+        fee = row.get("entrance_fee")
+        if isinstance(fee, (int, float)) and not isinstance(fee, bool) and fee > 0:
+            row["one_time_cost_review"] = {
+                "status": "FAMILY_AND_PROVIDER_CONFIRMATION_REQUIRED",
+                "amount": fee,
+                "provider_question": "Does this entrance fee apply to the specific care program and admission contract offered?",
+                "family_question": "Can the household fund this one-time fee separately from the monthly budget?",
+                "rule": "A monthly budget match is not proof of one-time capital affordability.",
+            }
+            capital_review.append(row.get("canonical_facility_id"))
+    decision["financial_review"] = {"status": "PENDING_ONE_TIME_COST_CONFIRMATION" if capital_review else "NO_KNOWN_ONE_TIME_COST_REVIEW",
+                                    "candidate_ids": capital_review}
     if _env_true("OPTIME_LIVE_PREFERENCE_VERIFICATION"):
         dynamic_summary, nice_complete_rows = _verify_dynamic_preferences_in_waves(
             ranked, dynamic_preferences, len(ranked)

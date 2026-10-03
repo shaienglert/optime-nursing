@@ -70,7 +70,7 @@ def _merge_strategy_questions(human_context: Dict[str, Any], strategy: Dict[str,
         human_context["decision_readiness"] = "NEEDS_CLARIFICATION"
 
 
-def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "") -> Dict[str, Any]:
+def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_language_query: str = "", *, structured_only: bool = False) -> Dict[str, Any]:
     from app.services.canonical_intake_state import canonicalize_intake_state
     questionnaire_state = canonicalize_intake_state(questionnaire_state)
     # Single authority (owner, 2026-10-01). Free text is read in exactly one place: the
@@ -80,7 +80,7 @@ def build_patient_needs_profile(questionnaire_state: Dict[str, Any], natural_lan
     # no free text, so no downstream regex or keyword reading can re-decide a fact.
     # Interpreter -> canonical profile -> strategy/guardian once (human intelligence owns
     # the order); everything here reads only its canonical outputs.
-    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query)
+    human_context = build_human_intelligence_context(questionnaire_state=questionnaire_state, natural_language_query=natural_language_query, structured_only=structured_only)
     structured = human_context["structured_profile_shadow"]
     decision_questionnaire = human_context["canonical_decision_questionnaire"]
     strategy = human_context["canonical_living_strategy"]

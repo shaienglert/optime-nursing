@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 """Explicit composition of the existing governed decision stages.
 
 One intake profile is built before matching and passed through the request.
@@ -352,6 +354,37 @@ def _attach_decision_funnel(result: dict[str, Any], decision_questionnaire: dict
     return ledger
 
 
+_PRIVATE_PRICE_BUDGET_SENTENCE = re.compile(
+    r"No currently eligible pilot community in this result set fits the stated \$[\d,]+ monthly budget\. "
+    r"The lowest verified starting price shown is \$[\d,]+; these are alternatives for review, not in-budget matches\.\s*"
+)
+
+
+def _reconcile_budget_notice(result: dict[str, Any], decision_questionnaire: dict[str, Any]) -> None:
+    """The family-facing budget sentence must come from the same funding pathway the decision used.
+
+    The core builds a private-price sentence before the pathway is known. When Medicaid is the
+    pathway (owner rule), the budget is compared with the household's verified out-of-pocket cost,
+    never the private-pay price, so that sentence would contradict the decision (it says nothing
+    fits while the funnel says the relevant cost is still unverified). Replace it with the pathway
+    statement; private-pay searches are untouched.
+    """
+    decision = result.get("decision_intelligence") if isinstance(result.get("decision_intelligence"), dict) else {}
+    intent = decision.get("client_intent") if isinstance(decision.get("client_intent"), dict) else {}
+    if intent.get("funding_pathway") != "MEDICAID":
+        return
+    notice = str(result.get("market_coverage_notice") or "")
+    notice = _PRIVATE_PRICE_BUDGET_SENTENCE.sub("", notice).strip()
+    budget = decision_questionnaire.get("budget")
+    if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
+        notice = (notice + " " if notice else "") + (
+            f"Because Medicaid is the funding pathway, your ${budget:,.0f} budget is compared with the "
+            "household's out-of-pocket cost under Medicaid, not the private-pay price. That cost is not "
+            "yet verified for these communities."
+        )
+    result["market_coverage_notice"] = notice or None
+
+
 def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
     from app.services.decision_pipeline_trace import attach_decision_pipeline_trace
     return attach_decision_pipeline_trace(result)
@@ -443,6 +476,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     result = apply_canonical_decision_state_authority(result)
     result = _suppress_unverified_recommendations(result)
     ledger = _attach_decision_funnel(result, decision_questionnaire)
+    _reconcile_budget_notice(result, decision_questionnaire)
     from app.services.oomniker_optimizer import analyze_oomniker
     # Oomniker reads the same canonical profile, client intent and full candidate ledger
     # the decision used -- never the raw questionnaire -- so it can say which parameter

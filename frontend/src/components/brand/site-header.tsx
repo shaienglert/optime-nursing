@@ -22,6 +22,7 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={item.href.startsWith("/admin") ? false : undefined}
               className="rounded-full px-2 py-3 text-sm font-medium whitespace-nowrap text-[#31554a] transition hover:bg-[#eef7f3] hover:text-[#1e4339] sm:text-base md:text-[1.3rem]"
             >
               {item.label}

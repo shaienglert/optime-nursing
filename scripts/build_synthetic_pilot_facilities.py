@@ -277,6 +277,29 @@ def pilot_service_evidence(index: int, archetype: str) -> dict:
     }
 
 
+def pilot_nearby_place_evidence(index: int, latitude: float, longitude: float, verified_at: str) -> dict:
+    """Fictional POI coverage for the entire pilot, never real map observations."""
+    categories = ("Shopping", "Restaurants & cafés", "Movie theater", "Bowling",
+                  "Senior center / social club", "Parks & walking paths", "Gym / pool",
+                  "Library", "Place of worship", "Medical center / doctors", "Pharmacy",
+                  "Public transportation", "Entertainment / cultural venues")
+    places = {}
+    for offset, category in enumerate(categories):
+        # Varied, reproducible geography. No persona identifiers or desired ranks.
+        if (index + offset) % 5 == 0:
+            places[category] = []
+            continue
+        delta = (1 + ((index * 7 + offset * 11) % 90)) / 1000
+        places[category] = [{"name": f"Synthetic {category} {index}",
+                             "latitude": round(latitude + delta, 6),
+                             "longitude": round(longitude + delta / 2, 6),
+                             "synthetic_pilot": True}]
+    return {"canonical_facility_id": f"PILOT-NV-{index:03d}",
+            "source": "SYNTHETIC_PILOT_NEARBY_FIXTURE", "verification_status": "VERIFIED",
+            "verified_at": verified_at, "synthetic_pilot": True,
+            "not_real_world_evidence": True, "places": places}
+
+
 def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]:
     facilities: list[dict] = []
     evidence: list[dict] = []
@@ -285,6 +308,7 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
     portal_capabilities: list[dict] = []
     now = datetime.now(timezone.utc).isoformat()
 
+    used_names: set[str] = set()
     for offset in range(PILOT_FACILITY_COUNT):
         index = offset + 1
         archetype_id, care_label, low, high = ARCHETYPES[offset % len(ARCHETYPES)]
@@ -292,6 +316,18 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
         city, zip_code, base_lat, base_lon = CITIES[offset % len(CITIES)]
         canonical_id = f"PILOT-NV-{index:03d}"
         name = f"{PREFIXES[_name_component_index(offset, 'prefix', len(PREFIXES))]} {SUFFIXES[_name_component_index(offset, 'suffix', len(SUFFIXES))]} {care_label}"
+        # 10 prefixes x 5 suffixes x 8 care labels cannot name 500 communities uniquely, and two
+        # different communities with one name are indistinguishable in results. A repeated name is
+        # disambiguated by the community's own city, then by an ordinal, so every name is unique.
+        if name in used_names:
+            name = f"{name} of {city.title()}"
+        ordinal = 2
+        unique_name = name
+        while unique_name in used_names:
+            unique_name = f"{name} {ordinal}"
+            ordinal += 1
+        name = unique_name
+        used_names.add(name)
         address = f"{1100 + index * 37} Pilot Mesa Avenue"
         capacity_low, capacity_high = CAPACITY_RANGES[archetype_id]
         capacity = capacity_low + ((index * 17) % (capacity_high - capacity_low + 1))
@@ -334,6 +370,8 @@ def build() -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]
             "owner_profile_status": "COMPLETE_SYNTHETIC_PILOT",
             "source_identity_ids": {"synthetic_pilot_id": canonical_id},
         }
+        facility["pilot_nearby_place_evidence"] = pilot_nearby_place_evidence(
+            index, facility["latitude"], facility["longitude"], now)
         if archetype_id in {"MEMORY_CARE", "CONTINUING_CARE"}:
             # Matches how real Nevada memory-care communities are recognized by
             # _care_setting_fit()/_memory_confirmed(): canonical_type ASSISTED_LIVING_RFG

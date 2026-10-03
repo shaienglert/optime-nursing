@@ -125,7 +125,7 @@ def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dic
     # External POI lookup is intentionally bounded to the strongest pre-ranked candidates.
     # Calling a remote provider serially for thousands of survivors would make the recommendation path unusable.
     for position, row in enumerate(rows):
-        if position >= max_candidates:
+        if position >= max_candidates and not row.get("synthetic_pilot"):
             row["nearby_place_fit"] = {"status": "NOT_EVALUATED", "reason": "outside POI shortlist", "importance": importance}
             continue
         try:
@@ -134,9 +134,31 @@ def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dic
             row["nearby_place_fit"] = {"status": "UNKNOWN", "reason": "facility coordinates unavailable", "importance": importance}
             continue
         try:
-            lookup = nearby_places(lat, lon, categories)
+            if row.get("synthetic_pilot"):
+                fixture = row.get("pilot_nearby_place_evidence") or {}
+                if not (fixture.get("verification_status") == "VERIFIED"
+                        and fixture.get("source") == "SYNTHETIC_PILOT_NEARBY_FIXTURE"
+                        and fixture.get("synthetic_pilot") is True
+                        and fixture.get("not_real_world_evidence") is True
+                        and fixture.get("canonical_facility_id") == row.get("canonical_facility_id")
+                        and all(category in (fixture.get("places") or {}) for category in categories)):
+                    row["nearby_place_fit"] = {"status": "UNKNOWN", "reason": "synthetic nearby evidence unavailable", "importance": importance}
+                    continue
+                lookup = {"source": fixture["source"], "places": {}}
+                for category in categories:
+                    lookup["places"][category] = [
+                        {**place, "distance_miles": round(_distance_miles(lat, lon, float(place["latitude"]), float(place["longitude"])), 2), "source": fixture["source"]}
+                        for place in (fixture.get("places") or {}).get(category, [])
+                        if place.get("synthetic_pilot") is True
+                    ]
+                    lookup["places"][category].sort(key=lambda place: place["distance_miles"])
+            else:
+                lookup = nearby_places(lat, lon, categories)
         except requests.RequestException:
             row["nearby_place_fit"] = {"status": "UNKNOWN", "reason": "place lookup unavailable", "importance": importance}
+            continue
+        except (KeyError, TypeError, ValueError, OverflowError):
+            row["nearby_place_fit"] = {"status": "UNKNOWN", "reason": "nearby evidence is invalid", "importance": importance}
             continue
         nearest = {}
         distances = []
@@ -157,7 +179,7 @@ def attach_nearby_place_fit(rows: list[dict[str, Any]], questionnaire_state: dic
             band = 1
         else:
             band = 0
-        row["nearby_place_fit"] = {"status": "KNOWN", "importance": importance, "fit_band": band, "matched_categories": len(nearest), "requested_categories": len(categories), "nearest": nearest, "average_distance_miles": round(avg, 2) if avg is not None else None, "source": lookup.get("source")}
+        row["nearby_place_fit"] = {"status": "KNOWN", "importance": importance, "fit_band": band, "matched_categories": len(nearest), "requested_categories": len(categories), "nearest": nearest, "average_distance_miles": round(avg, 2) if avg is not None else None, "source": lookup.get("source"), "synthetic_pilot": bool(row.get("synthetic_pilot"))}
 
 
 def nearby_rank_key(row: dict[str, Any], importance: str) -> tuple[Any, ...]:

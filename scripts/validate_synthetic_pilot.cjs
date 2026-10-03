@@ -28,6 +28,7 @@ assert(canonical.dataset_mode === 'SYNTHETIC_PILOT', 'canonical data must be lab
 assert(canonical.records.length === expectedCount, `pilot must contain exactly ${expectedCount} facilities`);
 const facilityIds = new Set(canonical.records.map((row) => row.canonical_id));
 assert(facilityIds.size === expectedCount, 'pilot IDs must be unique');
+assert(new Set(canonical.records.map((row) => row.facility_name)).size === expectedCount, 'every pilot community must have a unique name: two different communities with one name are indistinguishable in results');
 assert(canonical.records.every((row) => row.synthetic_pilot === true && row.truth_label.includes('FICTIONAL')), 'every facility must be visibly fictional');
 assert(canonical.records.every((row) => row.license_status === 'SYNTHETIC_PILOT_ACTIVE'
   && row.expiration_date === '12/31/2030'
@@ -39,6 +40,13 @@ for (const row of canonical.records) {
   `${row.canonical_id}: capacity must be in its archetype range`);
   const size = row.licensed_capacity < 45 ? 'SMALL' : row.licensed_capacity < 100 ? 'MEDIUM' : 'LARGE';
   assert(row.community_size === size, `${row.canonical_id}: community size contradicts capacity`);
+  const nearby = row.pilot_nearby_place_evidence;
+  assert(nearby?.canonical_facility_id === row.canonical_id && nearby.synthetic_pilot === true
+    && nearby.not_real_world_evidence === true && nearby.source === 'SYNTHETIC_PILOT_NEARBY_FIXTURE'
+    && nearby.verification_status === 'VERIFIED', `${row.canonical_id}: nearby evidence must be identity-bound and fictional`);
+  assert(Object.keys(nearby.places).length === 13, `${row.canonical_id}: complete nearby category coverage required`);
+  assert(Object.values(nearby.places).flat().every(place => place.synthetic_pilot === true
+    && Number.isFinite(place.latitude) && Number.isFinite(place.longitude)), `${row.canonical_id}: valid fictional POI coordinates required`);
 }
 for (const dataset of [canonical, evidence, rooms, media, capabilities]) {
   assert(dataset.record_count === dataset.records.length, 'record_count must match the actual records');
