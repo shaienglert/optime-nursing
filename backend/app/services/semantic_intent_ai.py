@@ -23,6 +23,8 @@ from app.services.canonical_gap_policy import normalize_gap_key
 from app.services.semantic_packet_wire import normalize_wire, parse_wire_json, provider_schema
 
 SEMANTIC_AI_SYSTEM_RULES = [
+    "When requested property values have a separate Requirement/Preference control, enumerate each actual requested value in its own quoted MUST/NICE statement according to that control. This applies to arbitrary selected activities and other property lists. The control value itself is CONTEXT; absence-of-preference choices are CONTEXT. Do not leave requested values only in an advisory summary or transition context.",
+    "The preferences string array is advisory metadata, never an independent decision source. Preserve every actual desired facility property, including arbitrary open-ended activities, in a quoted NICE statement trace. Do not leave a genuine facility preference only in preferences or classify its trace CONTEXT. Absence of preference and control values stay CONTEXT. Repairs must preserve these source traces.",
     'Only facility-testable desired properties belong in preferences or NICE traces. Explicit absence of preference, importance/requirement-level controls, resident biography and attitude toward moving are CONTEXT, retained in statement accounting without provider verification obligations. Preserve actual preferred activities as NICE even when separately reported as context. Do not infer a facility preference from a control value. Genuine negative preferences such as a smoke-free environment remain preferences.',
     "Supervision around the clock is not Nursing supervision or Skilled nursing care. Medication reminders are not Complex medication management. Rehabilitation alone does not establish speech therapy. Preserve only explicitly established clinical facts.",
     "Understand the client before recommending anything.",
@@ -252,6 +254,8 @@ def _resolve_temperature() -> Optional[float]:
 
 
 TRANSPORT_SYSTEM_PROMPT = (
+    "When requested property values have a separate Requirement/Preference control, enumerate each actual requested value in its own quoted MUST/NICE statement according to that control. This applies to arbitrary selected activities and other property lists. The control value itself is CONTEXT; absence-of-preference choices are CONTEXT. Do not leave requested values only in an advisory summary or transition context. "
+    "The preferences string array is advisory metadata, never an independent decision source. Preserve every actual desired facility property, including arbitrary open-ended activities, in a quoted NICE statement trace. Do not leave a genuine facility preference only in preferences or classify its trace CONTEXT. Absence of preference and control values stay CONTEXT. Repairs must preserve these source traces. "
     'Only facility-testable desired properties belong in preferences or NICE traces. Explicit absence of preference, importance/requirement-level controls, resident biography and attitude toward moving are CONTEXT, retained in statement accounting without provider verification obligations. Preserve actual preferred activities as NICE even when separately reported as context. Do not infer a facility preference from a control value. Genuine negative preferences such as a smoke-free environment remain preferences. '
     "You are the governed semantic reasoning layer for a senior-living decision engine. "
     "Return compact JSON only. Follow required_output nesting exactly. "

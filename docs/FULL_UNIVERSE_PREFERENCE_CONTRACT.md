@@ -35,3 +35,11 @@ using the same funding-pathway cost, never a published-rate flag alone.
 Orchestrated audit persistence runs after final selection, so a late winner is
 recorded with its final rank. Preliminary research remains bounded, and no
 preliminary full-universe persistence is performed.
+
+Production strict semantic packets use statement traces as the only dynamic
+preference authority. The free-form preferences array is advisory metadata; it
+cannot bypass a CONTEXT or excluded control trace by paraphrasing it. Every genuine
+facility preference must be preserved as a NICE source trace by the interpreter.
+Legacy unversioned test/compatibility packets retain their existing behavior.
+Classification A/B; PR-001, PR-002, PR-005, PR-009; no principle change or new
+approval required. No candidate ranking or unknown-evidence policy is changed.

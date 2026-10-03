@@ -187,6 +187,16 @@ test.describe('real synthetic-pilot customer journey', () => {
     expect(response.status()).toBe(200);
     const payload = await response.json();
     const results = payload.results || [];
+    const dynamicModel = payload.decision_intelligence.dynamic_preference_model;
+    expect(dynamicModel.preference_authority).toBe('QUOTED_STATEMENT_TRACES');
+    expect(dynamicModel.preferences.every(pref => pref.source === 'semantic_ai.statements')).toBe(true);
+    if (scenario.answers.activityImportance === 'Preference') {
+      for (const activity of scenario.answers.activities || []) {
+        expect(dynamicModel.preferences.some(pref => pref.client_expression.toLowerCase().includes(activity.toLowerCase())),
+          scenario.id + ': actual activity preference must remain source-traced: ' + activity).toBe(true);
+      }
+    }
+
     console.log('OOMNIK_PILOT_GATE_DIAGNOSTIC', JSON.stringify({
       scenario_id: scenario.id, budget: scenario.budget, result_count: results.length,
       must_eligible_count: payload.must_eligible_count,

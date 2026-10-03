@@ -205,5 +205,46 @@ class DynamicSemanticPreferenceTests(unittest.TestCase):
         self.assertEqual(summary["verification_required_count"], 1)
 
 
+
+
+class TracedProductionPreferenceTests(unittest.TestCase):
+    def _packet(self, statements, preferences):
+        return {'semantic_ai': {'result': {
+            'wire_contract': {'version': 'semantic-extraction-v1', 'schema_constrained': True},
+            'statements': statements, 'preferences': preferences,
+        }}}
+
+    def test_advisory_paraphrase_cannot_bypass_excluded_control_and_context_traces(self):
+        statements = [
+            {'raw_text': 'No preference', 'meaning': 'Community size preference is no preference.', 'importance': 'CONTEXT', 'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': ['humanIntelligenceV2.personalityProfile.communitySizePreference']},
+            {'raw_text': 'Preference', 'meaning': 'Activity requirement level is preference.', 'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': ['humanIntelligenceV2.socialProfile.activityRequirementLevel']},
+            {'raw_text': 'Cautious but open', 'meaning': 'Cautious about moving.', 'importance': 'CONTEXT', 'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': []},
+        ]
+        packet = self._packet(statements, ['No preference for community size', 'Preference for activity requirement level', 'Open but cautious about a move'])
+        model = build_dynamic_preference_model(packet)
+        self.assertEqual(model['preference_count'], 0)
+        self.assertEqual(model['preference_authority'], 'QUOTED_STATEMENT_TRACES')
+        self.assertEqual(packet['semantic_ai']['result']['statements'], statements)
+        self.assertEqual(len(packet['semantic_ai']['result']['preferences']), 3)
+
+    def test_arbitrary_traced_preference_remains_open_ended_without_summary_or_mapping(self):
+        statements = [{'raw_text': 'A lunar astronomy discussion club', 'meaning': 'Regular lunar astronomy discussions', 'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': []}]
+        model = build_dynamic_preference_model(self._packet(statements, []))
+        self.assertEqual(model['preference_count'], 1)
+        self.assertEqual(model['preferences'][0]['semantic_meaning'], statements[0]['meaning'])
+        self.assertEqual(model['preferences'][0]['source'], 'semantic_ai.statements')
+
+    def test_traced_preference_has_one_dimension_despite_summary_paraphrases(self):
+        statements = [{'raw_text': 'Low sodium', 'meaning': 'Low sodium diet', 'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': ['humanIntelligenceV2.foodProfile.dietaryPreferences']}]
+        model = build_dynamic_preference_model(self._packet(statements, ['Low sodium diet.', 'Dietary preference is low sodium']))
+        self.assertEqual(model['preference_count'], 1)
+
+    def test_property_quote_is_retained_even_when_it_also_maps_an_importance_control(self):
+        statements = [{'raw_text': 'Enjoys glacier microscopy seminars', 'meaning': 'Glacier microscopy seminars are preferred', 'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': ['humanIntelligenceV2.socialProfile.activityRequirementLevel']}]
+        model = build_dynamic_preference_model(self._packet(statements, []))
+        self.assertEqual(model['preference_count'], 1)
+        self.assertEqual(model['preferences'][0]['client_expression'], statements[0]['raw_text'])
+
+
 if __name__ == "__main__":
     unittest.main()
