@@ -30,7 +30,9 @@ function Choice({ label, active, onClick }: { label: string; active: boolean; on
   );
 }
 
-function AnswerControl({ question, value, onAnswer, budgetFloor = 1 }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void; budgetFloor?: number }) {
+type PriceFloor = { minimum_monthly_price: number | null; minimum_budget_is_binding: boolean; funding_pathway: string; status: string; synthetic_pilot?: boolean };
+
+function AnswerControl({ question, value, onAnswer, priceFloor }: { question: IntakeQuestion; value: IntakeAnswer; onAnswer: (value: IntakeAnswer, advance: boolean) => void; priceFloor: PriceFloor | null }) {
   if (question.kind === "single") {
     return (
       <div className="mt-4 flex flex-wrap gap-2">
@@ -51,11 +53,18 @@ function AnswerControl({ question, value, onAnswer, budgetFloor = 1 }: { questio
     );
   }
   if (question.kind === "number" && question.id === "budget") {
-    const rawFloor = Math.max(1, Math.ceil(budgetFloor));
-    const min = Math.max(100, Math.ceil(rawFloor / 100) * 100);
+    const knownFloor = priceFloor?.minimum_monthly_price;
+    const min = priceFloor?.minimum_budget_is_binding && knownFloor ? Math.ceil(knownFloor) : 100;
     const max = Math.max(15000, min + 10000);
     const current = Number(value) > 0 ? Number(value) : min;
-    return <div className="mt-4"><input type="range" min={min} max={max} step="100" value={Math.min(max, Math.max(min, current))} onChange={(event) => onAnswer(Number(event.target.value), false)} className="w-full" /><div className="mt-2 flex justify-between text-sm text-[#606a64]"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div><p className="mt-2 text-xs text-[#68766f]">Starts at the lowest current published room price OOmnik has for this market. Final total cost may include care and mandatory fees.</p></div>;
+    return <div className="mt-4">
+      <input aria-label="Monthly budget slider" type="range" min={min} max={max} step="1" value={Math.min(max, Math.max(min, current))} onChange={(event) => onAnswer(Number(event.target.value), false)} className="w-full" />
+      <div className="mt-2 flex justify-between text-sm text-[#606a64]"><span>From ${min.toLocaleString()}</span><strong>${current.toLocaleString()} / month</strong><span>${max.toLocaleString()}+</span></div>
+      <label className="mt-3 block text-sm">Monthly budget in dollars<input aria-label="Monthly budget in dollars" type="number" min={min} step="1" value={Number(value) > 0 ? Number(value) : ""} onChange={event => onAnswer(Number(event.target.value), false)} className="ml-3 rounded-xl border p-2" /></label>
+      {knownFloor ? <p className="mt-3 text-sm">{priceFloor?.synthetic_pilot ? "Synthetic pilot: " : ""}The lowest known starting monthly price in your selected area for the care answers given so far is ${knownFloor.toLocaleString()}.</p> : <p className="mt-3 text-sm">The minimum price for this search has not been verified. Your budget will be kept as stated; affordability still needs evidence.</p>}
+      {priceFloor?.funding_pathway === "MEDICAID_COST_REQUIRES_VERIFICATION" ? <p className="mt-2 text-sm">That is a private-pay price, not your Medicaid household cost. Enter what the household can pay; Medicaid coverage and out-of-pocket cost still need verification.</p> : null}
+      <p className="mt-2 text-xs text-[#68766f]">This is a starting monthly cost, not proof of total affordability. Mandatory fees, one-time entrance fees and any outside care must be checked separately.</p>
+    </div>;
   }
   if (question.kind === "number") {
     return (
@@ -93,8 +102,10 @@ export function StructuredIntake() {
   const [phase, setPhase] = useState<"questions" | "summary">("questions");
   const [confirmed, setConfirmed] = useState(false);
   const [showError, setShowError] = useState(false);
-  const [budgetFloor, setBudgetFloor] = useState(1);
-  useEffect(() => { fetch("/api/backend/api/market-price-floor", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(context.draft) }).then((r) => r.ok ? r.json() : null).then((v) => { if (v?.minimum_monthly_price) setBudgetFloor(Number(v.minimum_monthly_price)); }).catch(() => undefined); }, [context.draft.referenceLocationValue, context.draft.referenceAddress, context.draft.maximumDistanceMiles, context.draft.customDistanceMiles, context.draft.approvedSearchRadiusMiles]);
+  const [priceFloor, setPriceFloor] = useState<PriceFloor | null>(null);
+  const [priceFloorLoading, setPriceFloorLoading] = useState(false);
+  const [priceFloorError, setPriceFloorError] = useState(false);
+  const [priceFloorRetry, setPriceFloorRetry] = useState(0);
 
   const questions = useMemo(() => visibleQuestions(context), [context]);
 
@@ -109,6 +120,20 @@ export function StructuredIntake() {
 
   const index = Math.max(0, questions.findIndex((question) => question.id === stepId));
   const question = questions[index];
+  const priceQuery = JSON.stringify({ ...buildSubmission(context), budget: 0 });
+  const onBudget = question?.id === "budget";
+  useEffect(() => {
+    if (!onBudget) return;
+    const controller = new AbortController();
+    setPriceFloor(null); setPriceFloorLoading(true); setPriceFloorError(false);
+    fetch("/api/backend/api/market-price-floor", { method: "POST", headers: { "Content-Type": "application/json" }, body: priceQuery, signal: controller.signal })
+      .then(async response => { if (!response.ok) throw new Error("Price lookup unavailable"); return response.json(); })
+      .then(value => { if (!controller.signal.aborted) setPriceFloor(value); })
+      .catch(() => { if (!controller.signal.aborted) setPriceFloorError(true); })
+      .finally(() => { if (!controller.signal.aborted) setPriceFloorLoading(false); });
+    return () => controller.abort();
+  }, [onBudget, priceQuery, priceFloorRetry]);
+  const belowKnownFloor = onBudget && priceFloor?.minimum_budget_is_binding === true && Number(context.draft.budget) > 0 && Number(context.draft.budget) < Number(priceFloor.minimum_monthly_price);
   const relation = context.draft.relationship;
   const subject = relation === "Mom" ? "your mother" : relation === "Dad" ? "your father" : relation === "Grandma" ? "your grandmother" : relation === "Grandpa" ? "your grandfather" : relation === "Spouse" ? "your spouse" : relation === "Myself" ? "you" : relation === "Couple" ? "they" : relation === "Relative" ? "your relative" : relation === "Friend" ? "your friend" : "they";
   const objectPronoun = relation === "Mom" || relation === "Grandma" ? "her" : relation === "Dad" || relation === "Grandpa" ? "him" : relation === "Myself" ? "you" : "them";
@@ -176,6 +201,7 @@ export function StructuredIntake() {
 
   function next() {
     if (!question) return;
+    if (onBudget && (priceFloorLoading || belowKnownFloor)) { setShowError(true); return; }
     if (question.required && !isAnswered(question, context)) {
       setShowError(true);
       return;
@@ -223,7 +249,9 @@ export function StructuredIntake() {
 
             <div className="mt-7">
               {question.note ? <p className="mb-3 text-base leading-7 text-[#527083]">{question.note}</p> : null}
-              <AnswerControl question={question} value={question.get(context)} onAnswer={answer} budgetFloor={budgetFloor} />
+              {onBudget && priceFloorLoading ? <p role="status">Checking starting prices in your selected area for the care answers given so far…</p> : <AnswerControl question={question} value={question.get(context)} onAnswer={answer} priceFloor={priceFloor} />}
+              {onBudget && priceFloorError ? <p className="mt-3 text-sm">Price lookup is unavailable. <button type="button" onClick={() => setPriceFloorRetry(value => value + 1)} className="underline">Try price lookup again</button></p> : null}
+              {belowKnownFloor ? <p role="alert" className="mt-3 text-sm text-[#a4501f]">Your stated budget is below the known private-pay starting price. I have kept your amount. Choose a budget you can fund, or go back to change the area or funding answer before continuing.</p> : null}
               {question.kind === "multi" ? <p className="mt-3 text-sm text-[#7d8b84]">Choose anything that applies, then continue.</p> : null}
               {showError ? <p className="mt-3 text-sm font-semibold text-[#a4501f]">Please answer this before we continue.</p> : null}
             </div>
@@ -233,7 +261,7 @@ export function StructuredIntake() {
                 ← Back
               </button>
               <p className="text-sm text-[#7d8b84]">Question {index + 1} of {questions.length}</p>
-              <button type="button" onClick={next} className="rounded-full bg-[#397a69] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#2f6759]">
+              <button type="button" onClick={next} disabled={onBudget && (priceFloorLoading || belowKnownFloor)} className="rounded-full bg-[#397a69] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#2f6759] disabled:opacity-40">
                 {question.required && !isAnswered(question, context) ? "Next →" : index + 1 === questions.length ? "See the summary →" : "Next →"}
               </button>
             </div>

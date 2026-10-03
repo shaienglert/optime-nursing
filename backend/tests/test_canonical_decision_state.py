@@ -57,6 +57,21 @@ def test_client_blocker_beats_legacy_ready():
     assert state.phase is DecisionPhase.CLIENT_INPUT_REQUIRED
     assert state.next_action == "ASK_CLIENT"
 
+def test_monthly_match_cannot_prove_capital_affordability():
+    result = base_result()
+    result.update(must_eligible_count=1, must_pending_verification_count=0)
+    result["decision_intelligence"]["facility_selection_pipeline"] = {
+        "ai_ranking": {"status": "DETERMINISTIC_THIN_EVIDENCE_WATERFALL"},
+        "dynamic_preferences": {"preference_count": 0, "verification_required_count": 0},
+    }
+    result["decision_intelligence"]["financial_review"] = {"status": "PENDING_ONE_TIME_COST_CONFIRMATION"}
+    state = derive_canonical_decision_state(result)
+    assert state.can_show_recommendations is True
+    assert state.finality is DecisionFinality.PROVISIONAL
+    assert "one-time" in state.reason
+    apply_canonical_decision_state_authority(result)
+    assert result["decision_intelligence"]["decision_finality"] == "PROVISIONAL_PENDING_FINANCIAL_VERIFICATION"
+
 
 def test_ai_failure_does_not_override_canonical_policy():
     result = base_result()

@@ -175,6 +175,8 @@ def oracle(persona) -> Dict[str, Any]:
         "continuum": continuum == "preferred",
         "size": SIZE.get(next((k for k in SIZE if k in _lower((hi.get("personalityProfile") or {}).get("communitySizePreference"))), ""), None),
         "language": _lower((hi.get("languageProfile") or {}).get("preferredSpokenLanguage")) or None,
+        "nearby_categories": list(s.get("nearbyPlaces") or []),
+        "nearby_importance": str(s.get("nearbyPlacesImportance") or "No preference"),
     }
     return {"eligible": eligible, "pending": pending, "budget": budget, "prefs": prefs}
 
@@ -215,6 +217,10 @@ def beats(b, a, o) -> Optional[str]:
     na, nb = _nice(a, o["prefs"]), _nice(b, o["prefs"])
     if na != nb:
         return f"verified NICE {nb} > {na}" if nb > na else None
+    from scripts.pilot_acceptance.nearby_oracle import nearby_evidence_key
+    pa, pb = nearby_evidence_key(a["facility"], o["prefs"]), nearby_evidence_key(b["facility"], o["prefs"])
+    if pa != pb:
+        return f"verified nearby preference {pb} < {pa}" if pb < pa else None
     for measure, better in MEASURES:
         va, vb = a["facts"].get(measure), b["facts"].get(measure)
         if isinstance(va, (int, float)) and isinstance(vb, (int, float)) and va != vb:
