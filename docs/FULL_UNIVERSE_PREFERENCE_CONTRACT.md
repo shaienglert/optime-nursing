@@ -62,3 +62,31 @@ AI repair on omission or wrong role. No fixed hobby catalog or ranking shortcut 
 NICE source expressions must be genuine narrative spans or exact existing selections;
 model-generated field descriptions cannot serve as quotes. Missing materialized-field
 repair receives an explicit path/source work list without supplying inferred values.
+
+Production follow-up: distinct quoted client selections must not collapse because
+the model assigns them the same generic meaning. Preference identity and deduplication
+include the original source expression for strict production packets. An exact repeated
+trace still deduplicates; distinct sources retain separate obligations. Unverified-provider
+questions name the actual client expression, so a generic gloss cannot hide specificity.
+Classification A; PR-001, PR-002, PR-005, PR-009. No principle, ranking-policy or oracle
+change; no owner approval required. This repairs the observed production loss of Classes
+in 004/008 without naming any activity in the implementation.
+Live gates reproduced paraphrased quotes, omitted selected properties and a read-only
+questionnaire answer mapped to a related writable field. Provider grammar now gives
+all relevance roles the same original narrative/button source expressions. Relevance
+cannot be chosen merely to enter a differently constrained syntax branch. AI still
+authors meaning and relevance; runtime validation and bounded repair remain intact.
+The existing-answer index includes every resolved canonical questionnaire field,
+including read-only fields, with its exact source path. This read authority does not
+expand the AI write surface. Empty source evidence permits zero source traces.
+Classification A/B; PR-001, PR-002, PR-005, PR-009; no principle, ranking, oracle or
+architectural authority change; no owner approval required.
+
+Full live output also exposed one selected activity duplicated through its two canonical
+storage fields, and literal importance controls treated as provider properties. Strict
+preference identity uses canonical source path/value (folding the existing activity
+field alias), independent of model wording; unmapped narrative preserves distinct
+interpretations of the same multi-property sentence. Typed literal preference and
+importance controls remain audit context. Questions retain both AI meaning and exact
+client selection, so frequency answers do not become unexplained single-word requests.
+Classification A/B; existing source and unknown principles unchanged.

@@ -214,6 +214,77 @@ class TracedProductionPreferenceTests(unittest.TestCase):
             'statements': statements, 'preferences': preferences,
         }}}
 
+    def test_distinct_sources_with_one_generic_gloss_remain_separate_obligations(self):
+        from app.services.must_ai_nice_pipeline import _defer_dynamic_preference_verification
+        expressions = ['Lunar astronomy club', 'Glacier microscopy seminars']
+        traces = [{'raw_text': value, 'meaning': 'A preferred facility activity',
+                   'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED',
+                   'mapped_parameters': []} for value in expressions]
+        model = build_dynamic_preference_model(self._packet([*traces, traces[0]], []))
+        self.assertEqual(model['preference_count'], 2)
+        self.assertEqual([pref['client_expression'] for pref in model['preferences']], expressions)
+        self.assertEqual(len({pref['preference_id'] for pref in model['preferences']}), 2)
+        self.assertEqual(model, build_dynamic_preference_model(self._packet([*traces, traces[0]], [])))
+        rows = [{}]
+        _defer_dynamic_preference_verification(rows, model)
+        assessments = rows[0]['dynamic_preference_fit']['assessments']
+        self.assertEqual([a['status'] for a in assessments], ['UNKNOWN', 'UNKNOWN'])
+        self.assertTrue(all(value in assessment['provider_question_if_unknown']
+                            for value, assessment in zip(expressions, assessments)))
+
+    def test_same_canonical_selection_has_one_stable_identity_across_model_glosses(self):
+        def trace(path, meaning):
+            return {'raw_text': 'Glacier microscopy seminars', 'meaning': meaning,
+                    'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED',
+                    'mapped_parameters': [path]}
+        primary = trace('happinessPreferences', 'Preferred seminars')
+        alias = trace('humanIntelligenceV2.socialProfile.hobbyParticipation', 'Microscopy hobby participation')
+        model = build_dynamic_preference_model(self._packet([primary, alias], []))
+        self.assertEqual(model['preference_count'], 1)
+        other = build_dynamic_preference_model(self._packet([alias], []))
+        self.assertEqual(model['preferences'][0]['preference_id'], other['preferences'][0]['preference_id'])
+
+    def test_one_narrative_quote_can_still_have_distinct_unmapped_meanings(self):
+        traces = [{'raw_text': 'She wants bridge and gardening.', 'meaning': meaning,
+                   'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED',
+                   'mapped_parameters': []} for meaning in ['Organized bridge games', 'Resident gardening program']]
+        self.assertEqual(build_dynamic_preference_model(self._packet(traces, []))['preference_count'], 2)
+
+    def test_typed_control_values_do_not_become_provider_properties(self):
+        traces = [{'raw_text': quote, 'meaning': 'A preferred facility feature',
+                   'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED',
+                   'mapped_parameters': [path]} for path, quote in [
+            ('humanIntelligenceV2.futureCareProfile.continuumOfCarePreference', 'Preferred'),
+            ('nearbyPlacesImportance', 'Nice to have')]]
+        model = build_dynamic_preference_model(self._packet(traces, []))
+        self.assertEqual(model['preference_count'], 0)
+
+    def test_unverified_question_preserves_interpretation_and_literal_selection(self):
+        from app.services.must_ai_nice_pipeline import _defer_dynamic_preference_verification
+        trace = {'raw_text': 'Weekly', 'meaning': 'Organized social activities at least once a week',
+                 'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED',
+                 'mapped_parameters': ['humanIntelligenceV2.socialProfile.socialInteractionFrequency']}
+        model = build_dynamic_preference_model(self._packet([trace], []))
+        rows = [{}]
+        _defer_dynamic_preference_verification(rows, model)
+        question = rows[0]['dynamic_preference_fit']['assessments'][0]['provider_question_if_unknown']
+        self.assertIn(trace['meaning'], question)
+        self.assertIn(trace['raw_text'], question)
+
+    def test_live_verification_fallback_questions_preserve_distinct_source_specificity(self):
+        expressions = ['Lunar astronomy club', 'Glacier microscopy seminars']
+        traces = [{'raw_text': value, 'meaning': 'A preferred facility activity',
+                   'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED',
+                   'mapped_parameters': []} for value in expressions]
+        model = build_dynamic_preference_model(self._packet(traces, []))
+        rows = [{}]
+        with patch.dict(os.environ, {'OPTIME_SEMANTIC_AI_ENABLED': '0'}):
+            verify_dynamic_preferences(rows, model)
+        assessments = rows[0]['dynamic_preference_fit']['assessments']
+        self.assertEqual(len(assessments), 2)
+        self.assertTrue(all(value in assessment['provider_question_if_unknown']
+                            for value, assessment in zip(expressions, assessments)))
+
     def test_advisory_paraphrase_cannot_bypass_excluded_control_and_context_traces(self):
         statements = [
             {'raw_text': 'No preference', 'meaning': 'Community size preference is no preference.', 'importance': 'CONTEXT', 'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': ['humanIntelligenceV2.personalityProfile.communitySizePreference']},
