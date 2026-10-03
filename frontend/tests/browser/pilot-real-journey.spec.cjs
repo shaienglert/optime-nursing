@@ -207,7 +207,9 @@ test.describe('real synthetic-pilot customer journey', () => {
     if (scenario.answers.activityImportance === 'Preference') {
       for (const activity of scenario.answers.activities || []) {
         expect(dynamicModel.preferences.filter(pref => pref.client_expression === activity).length,
-          scenario.id + ': actual activity preference must have exactly one source obligation: ' + activity).toBe(1);
+          scenario.id + ': actual activity preference must have exactly one source obligation: ' + activity
+            + ' | preferences=' + JSON.stringify(dynamicModel.preferences)
+            + ' | statements=' + JSON.stringify(payload.decision_intelligence.human_intelligence.semantic_ai.result?.statements)).toBe(1);
       }
     }
 

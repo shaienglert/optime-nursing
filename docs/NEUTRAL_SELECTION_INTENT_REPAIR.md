@@ -73,3 +73,26 @@ mapping policies and deployment verification remain outside this repair.
 
 Local validation after this completion: 145 tests pass, including 29 additional
 source-accounting/final-comparator cases and the original 116 focused checks.
+
+## Integrated live-boundary completion
+
+PR 438 is integrated at 138112c; its branch is not modified. First-head live
+browser validation exposed an ungrounded-source failure (9/10 journeys). After
+integration, 1,415 backend tests and 30 subtests passed, while live gates exposed
+a duplicate source obligation and repeated identical extraction entries.
+
+Classification A/B; PR-002/003/005/009 preserved; no principle change or owner
+approval required. Selected-property identity now reads the existing canonical
+input slot before applying a model gloss. A literal value in one selected slot
+keeps one obligation despite extra/missing AI paths; equal values in distinct
+slots stay distinct. One shared helper normalizes existing storage aliases.
+Unmapped multi-meaning narrative retains distinct obligations.
+
+Wire normalization collapses only identical field/value/quote entries and audits
+the repetition. Conflicting values, different quotes and representations remain
+errors; existing duplicate/conflict tests are unchanged. This is idempotent
+normalization, not selection among competing facts. Generation and schema-repair
+instructions now describe the actual questionnaire_patch_fields/interview wire
+format, rather than competing reconstructed legacy keys. Repair count and strict
+source validation remain unchanged. Browser diagnostics retain the failing
+source model; its exactly-one-obligation assertions remain strict.

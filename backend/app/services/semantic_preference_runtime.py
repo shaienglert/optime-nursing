@@ -111,13 +111,24 @@ def build_dynamic_preference_model(human_context: Dict[str, Any]) -> Dict[str, A
     seen: set[str] = set()
     preferences: List[Dict[str, Any]] = []
     from app.services.canonical_structured_profile import in_schema
-    # These canonical fields store the same selected activity list.
-    source_aliases = {"humanIntelligenceV2.socialProfile.hobbyParticipation": "happinessPreferences"}
+    from app.services.semantic_field_contract import canonical_source_path
+    from app.services.semantic_intent_ai import _selected_facility_property_traces
+    # A literal selected value keeps the identity of its input slot, even when
+    # a second AI gloss adds extra paths or leaves its mapping empty. Narrative
+    # sentences with multiple meanings keep the existing distinct identities.
+    selection_sources: Dict[str, set[str]] = {}
+    for selection in _selected_facility_property_traces(human_context.get("canonical_decision_questionnaire") or {}):
+        selection_sources.setdefault(selection["quote"], set()).add(canonical_source_path(selection["path"]))
     for original, meaning, source, paths in raw:
         canonical_text = meaning.strip()
         # A generic model gloss can describe several distinct selected values.
         # Keep their source identities separate; never erase a quoted choice.
-        source_paths = sorted({source_aliases.get(path, path) for path in paths if in_schema(path)})
+        source_paths = sorted({canonical_source_path(path) for path in paths if in_schema(path)})
+        selected_paths = selection_sources.get(original, set()) if traced_authority else set()
+        if len(selected_paths) == 1:
+            source_paths = sorted(selected_paths)
+        elif selected_paths and set(source_paths) & selected_paths:
+            source_paths = sorted(set(source_paths) & selected_paths)
         # A field/value is one obligation despite different model wording.
         # Unmapped narrative can express distinct meanings in one source sentence.
         identity_text = json.dumps([original, source_paths or canonical_text], ensure_ascii=False) if traced_authority else canonical_text

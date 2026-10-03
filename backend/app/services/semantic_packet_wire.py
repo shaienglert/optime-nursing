@@ -162,13 +162,19 @@ def normalize_wire(packet: Any, required_output: dict, *, family_text: str | Non
     except ValidationError as exc:
         raise RuntimeError("SEMANTIC_AI_WIRE_CONTRACT:" + json.dumps(exc.errors(include_input=False), default=str)[:1000]) from exc
     result = wire.model_dump(exclude={"wire_version", "questionnaire_patch_fields", "interview"})
-    patch, sources = {}, {}
+    patch, sources, original_entries, repeated_entries = {}, {}, {}, []
     contracts = compile_fields(required_output["questionnaire_patch"])
     for field in wire.questionnaire_patch_fields:
         entry = field.model_dump()
         path = entry["path"]
-        if path in sources:
-            raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:DUPLICATE_FIELD:{path}")
+        if path in original_entries:
+            if original_entries[path] != entry:
+                raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:DUPLICATE_FIELD:{path}")
+            # Identical field/value/source content is repetition, not a second
+            # fact. Never collapse different values, representations or quotes.
+            repeated_entries.append(path)
+            continue
+        original_entries[path] = entry
         value, quote = entry["value"], entry["quote"]
         if not quote.strip():
             raise RuntimeError(f"SEMANTIC_AI_WIRE_CONTRACT:EMPTY_QUOTE:{path}")
@@ -195,6 +201,8 @@ def normalize_wire(packet: Any, required_output: dict, *, family_text: str | Non
         trace.update(status="ASKED", clarification_question=wire.interview.next_question, research_task=None)
         result["statements"].append(trace)
     result["wire_contract"] = {"version": WIRE_VERSION, "schema_constrained": True}
+    if repeated_entries:
+        result["wire_contract"]["identical_repeated_entries"] = repeated_entries
     return result
 
 

@@ -244,6 +244,36 @@ class TracedProductionPreferenceTests(unittest.TestCase):
         other = build_dynamic_preference_model(self._packet([alias], []))
         self.assertEqual(model['preferences'][0]['preference_id'], other['preferences'][0]['preference_id'])
 
+    def test_known_selected_slot_has_one_identity_despite_extra_or_missing_ai_paths(self):
+        expression = 'Glacier microscopy seminars'
+        traces = [{'raw_text': expression, 'meaning': meaning, 'importance': 'NICE',
+                   'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': paths}
+                  for meaning, paths in [('Preferred seminar', ['happinessPreferences']),
+                                         ('Another generic gloss', []),
+                                         ('A related interpretation', ['happinessPreferences', 'otherInterests'])]]
+        human = self._packet(traces, [])
+        human['canonical_decision_questionnaire'] = {
+            'happinessPreferences': [expression],
+            'humanIntelligenceV2': {'socialProfile': {'activityRequirementLevel': 'Preference'}}}
+        model = build_dynamic_preference_model(human)
+        self.assertEqual(model['preference_count'], 1)
+        self.assertEqual(model['preferences'][0]['client_expression'], expression)
+
+    def test_equal_literal_values_in_different_selected_slots_remain_distinct(self):
+        from app.services.semantic_intent_ai import _selected_facility_property_traces
+        expression = 'Shared arbitrary value'
+        state = {'happinessPreferences': [expression], 'nearbyPlaces': [expression],
+                 'nearbyPlacesImportance': 'Nice to have',
+                 'humanIntelligenceV2': {'socialProfile': {'activityRequirementLevel': 'Preference'}}}
+        selections = _selected_facility_property_traces(state)
+        self.assertEqual({s['path'] for s in selections}, {'happinessPreferences', 'nearbyPlaces'})
+        traces = [{'raw_text': expression, 'meaning': 'A selected property', 'importance': 'NICE',
+                   'knowledge_state': 'KNOWN', 'status': 'USED', 'mapped_parameters': [s['path']]}
+                  for s in selections]
+        human = self._packet(traces, [])
+        human['canonical_decision_questionnaire'] = state
+        self.assertEqual(build_dynamic_preference_model(human)['preference_count'], 2)
+
     def test_one_narrative_quote_can_still_have_distinct_unmapped_meanings(self):
         traces = [{'raw_text': 'She wants bridge and gardening.', 'meaning': meaning,
                    'importance': 'NICE', 'knowledge_state': 'KNOWN', 'status': 'USED',

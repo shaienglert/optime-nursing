@@ -101,6 +101,24 @@ def test_duplicate_fields_fail_instead_of_overwriting_evidence():
         normalize(packet)
 
 
+def test_identical_repeated_entry_is_idempotent_and_audited():
+    packet = wire()
+    entry = {"path": "budget", "value": 6000, "quote": "$6000"}
+    packet["test_entries"] = [entry, copy.deepcopy(entry)]
+    result = normalize(packet)
+    assert result["questionnaire_patch"] == {"budget": 6000}
+    assert result["questionnaire_patch_sources"] == {"budget": "$6000"}
+    assert result["wire_contract"]["identical_repeated_entries"] == ["budget"]
+
+
+def test_equal_value_with_a_different_quote_still_requires_repair():
+    packet = wire()
+    packet["test_entries"] = [{"path": "budget", "value": 6000, "quote": "$6000"},
+                              {"path": "budget", "value": 6000, "quote": "six thousand dollars"}]
+    with pytest.raises(RuntimeError, match="DUPLICATE_FIELD:budget"):
+        normalize(packet)
+
+
 def test_multiple_manual_adl_choices_survive_wire_format():
     value = "Help with bathing, Help with dressing"
     packet = wire()
