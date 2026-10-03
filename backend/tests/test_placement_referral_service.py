@@ -73,7 +73,7 @@ class PlacementReferralServiceTests(unittest.TestCase):
         finally:
             db.close()
 
-    def test_confirmed_entry_before_day_60_is_tracking(self) -> None:
+    def test_confirmed_entry_before_day_90_is_tracking(self) -> None:
         db = _db()
         try:
             referral = create_referral(db, canonical_facility_id="canonical-b")
@@ -86,11 +86,11 @@ class PlacementReferralServiceTests(unittest.TestCase):
         finally:
             db.close()
 
-    def test_no_departure_report_bills_full_fee_automatically_at_day_60(self) -> None:
+    def test_no_departure_report_bills_full_fee_automatically_at_day_90(self) -> None:
         db = _db()
         try:
             referral = create_referral(db, canonical_facility_id="canonical-c")
-            entry = datetime.now(timezone.utc) - timedelta(days=61)
+            entry = datetime.now(timezone.utc) - timedelta(days=91)
             confirm_entry(db, referral.referral_code, entry_date=entry)
             loaded = get_referral_by_code(db, referral.referral_code)
             self.assertEqual(billable_status(db, loaded), "DUE")
@@ -98,18 +98,18 @@ class PlacementReferralServiceTests(unittest.TestCase):
         finally:
             db.close()
 
-    def test_exactly_day_60_is_due(self) -> None:
+    def test_exactly_day_90_is_due(self) -> None:
         db = _db()
         try:
             referral = create_referral(db, canonical_facility_id="canonical-c2")
-            entry = datetime.now(timezone.utc) - timedelta(days=60)
+            entry = datetime.now(timezone.utc) - timedelta(days=90)
             confirm_entry(db, referral.referral_code, entry_date=entry)
             loaded = get_referral_by_code(db, referral.referral_code)
             self.assertEqual(billable_status(db, loaded), "DUE")
         finally:
             db.close()
 
-    def test_voluntary_departure_before_day_60_waives_commission(self) -> None:
+    def test_voluntary_departure_before_day_90_waives_commission(self) -> None:
         db = _db()
         try:
             referral = create_referral(db, canonical_facility_id="canonical-d")
@@ -122,20 +122,20 @@ class PlacementReferralServiceTests(unittest.TestCase):
         finally:
             db.close()
 
-    def test_voluntary_departure_after_day_60_does_not_undo_billing(self) -> None:
+    def test_voluntary_departure_after_day_90_does_not_undo_billing(self) -> None:
         db = _db()
         try:
             referral = create_referral(db, canonical_facility_id="canonical-e")
-            entry = datetime.now(timezone.utc) - timedelta(days=90)
+            entry = datetime.now(timezone.utc) - timedelta(days=120)
             confirm_entry(db, referral.referral_code, entry_date=entry)
-            report_departure(db, referral.referral_code, departure_date=entry + timedelta(days=75), reason="VOLUNTARY")
+            report_departure(db, referral.referral_code, departure_date=entry + timedelta(days=100), reason="VOLUNTARY")
             loaded = get_referral_by_code(db, referral.referral_code)
             self.assertEqual(billable_status(db, loaded), "DUE")
             self.assertEqual(commission_due_cents(db, loaded), FULL_FEE_CENTS)
         finally:
             db.close()
 
-    def test_death_before_day_60_bills_the_50_percent_partial_fee_no_day_30_threshold(self) -> None:
+    def test_death_before_day_90_bills_the_50_percent_partial_fee_no_day_30_threshold(self) -> None:
         db = _db()
         try:
             referral = create_referral(db, canonical_facility_id="canonical-f")
@@ -143,7 +143,7 @@ class PlacementReferralServiceTests(unittest.TestCase):
             confirm_entry(db, referral.referral_code, entry_date=entry)
             # Died on day 5 -- the superseded 2026-09-08 rule would have waived
             # this (before day 30); the current rule pays 50% regardless of when
-            # before day 60 death occurs.
+            # before day 90 death occurs.
             report_departure(db, referral.referral_code, departure_date=entry + timedelta(days=5), reason="DECEASED")
             loaded = get_referral_by_code(db, referral.referral_code)
             self.assertEqual(billable_status(db, loaded, now=entry + timedelta(days=6)), "DUE")
@@ -152,13 +152,13 @@ class PlacementReferralServiceTests(unittest.TestCase):
         finally:
             db.close()
 
-    def test_death_after_day_60_bills_the_full_fee_not_the_partial_one(self) -> None:
+    def test_death_after_day_90_bills_the_full_fee_not_the_partial_one(self) -> None:
         db = _db()
         try:
             referral = create_referral(db, canonical_facility_id="canonical-g")
-            entry = datetime.now(timezone.utc) - timedelta(days=90)
+            entry = datetime.now(timezone.utc) - timedelta(days=120)
             confirm_entry(db, referral.referral_code, entry_date=entry)
-            report_departure(db, referral.referral_code, departure_date=entry + timedelta(days=70), reason="DECEASED")
+            report_departure(db, referral.referral_code, departure_date=entry + timedelta(days=100), reason="DECEASED")
             loaded = get_referral_by_code(db, referral.referral_code)
             self.assertEqual(billable_status(db, loaded), "DUE")
             self.assertEqual(commission_due_cents(db, loaded), FULL_FEE_CENTS)
@@ -190,7 +190,7 @@ class PlacementReferralServiceTests(unittest.TestCase):
             confirm_entry(db, first.referral_code, entry_date=datetime.now(timezone.utc) - timedelta(days=100))
 
             second = create_referral(db, canonical_facility_id="canonical-j")
-            entry2 = datetime.now(timezone.utc) - timedelta(days=61)
+            entry2 = datetime.now(timezone.utc) - timedelta(days=91)
             confirm_entry(db, second.referral_code, entry_date=entry2)
             loaded_first = get_referral_by_code(db, first.referral_code)
             loaded_second = get_referral_by_code(db, second.referral_code)
@@ -263,7 +263,7 @@ class PlacementReferralServiceTests(unittest.TestCase):
             mark_onboarding_complete(db, "canonical-o", completed_at=datetime.fromisoformat(_LAUNCH_AT) + timedelta(days=1))
             with patch.dict(os.environ, {"OPTIME_LAUNCH_DATE": _LAUNCH_AT}, clear=False):
                 referral = create_referral(db, canonical_facility_id="canonical-o")
-                entry = datetime.now(timezone.utc) - timedelta(days=90)
+                entry = datetime.now(timezone.utc) - timedelta(days=120)
                 confirm_entry(db, referral.referral_code, entry_date=entry)
                 loaded = get_referral_by_code(db, referral.referral_code)
                 self.assertEqual(billable_status(db, loaded), "WAIVED_FOUNDING_FIRST_PLACEMENT")
@@ -282,7 +282,7 @@ class PlacementReferralServiceTests(unittest.TestCase):
                 confirm_entry(db, first.referral_code, entry_date=datetime.now(timezone.utc) - timedelta(days=100))
 
                 second = create_referral(db, canonical_facility_id="canonical-p")
-                entry2 = datetime.now(timezone.utc) - timedelta(days=61)
+                entry2 = datetime.now(timezone.utc) - timedelta(days=91)
                 confirm_entry(db, second.referral_code, entry_date=entry2)
                 loaded = get_referral_by_code(db, second.referral_code)
                 self.assertEqual(billable_status(db, loaded), "DUE")
@@ -299,7 +299,7 @@ class PlacementReferralServiceTests(unittest.TestCase):
             mark_onboarding_complete(db, "canonical-q", completed_at=datetime.fromisoformat(_LAUNCH_AT) + timedelta(days=200))
             with patch.dict(os.environ, {"OPTIME_LAUNCH_DATE": _LAUNCH_AT}, clear=False):
                 referral = create_referral(db, canonical_facility_id="canonical-q")
-                entry = datetime.now(timezone.utc) - timedelta(days=90)
+                entry = datetime.now(timezone.utc) - timedelta(days=120)
                 confirm_entry(db, referral.referral_code, entry_date=entry)
                 loaded = get_referral_by_code(db, referral.referral_code)
                 self.assertEqual(billable_status(db, loaded), "DUE")

@@ -17,7 +17,7 @@ def _new_referral_code() -> str:
 class PlacementReferral(Base):
     """OPTIME's commission mechanism, end to end, for one client-facility referral.
 
-    OPTIME is paid only on confirmed 60-day retention (or a qualifying earlier
+    OPTIME is paid only on confirmed 90-day retention (or a qualifying earlier
     outcome), never on the referral itself. The client's $500 Welcome Package
     benefit isn't just an incentive -- redeeming it is what makes the facility
     confirm the real entry date, which is the only signal this whole mechanism
