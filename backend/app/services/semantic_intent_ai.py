@@ -326,7 +326,7 @@ def _default_transport(payload: Dict[str, Any]) -> Dict[str, Any]:
         headers["Authorization"] = f"Bearer {api_key}"
     uses_responses_api = "/responses" in url.lower()
     required_output = _required_output_schema()
-    schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""))
+    schema = provider_schema(required_output, family_text=str(payload.get("user_text") or ""), questionnaire_state=payload.get("questionnaire_state") or {})
     payload = copy.deepcopy(payload)
     # The record belongs to the caller, never to a previous model packet.
     # Rebuild this view for every request and repair using the same predicates
@@ -642,10 +642,12 @@ def _questionnaire_field_resolved(state: Dict[str, Any], path: str) -> bool:
 
 
 def _client_evidence_context(user_text: str, state: Dict[str, Any]) -> Dict[str, Any]:
-    from app.services.semantic_field_contract import compile_fields
+    from app.services.canonical_structured_profile import SCHEMA_FIELDS
 
     resolved = {}
-    for path in compile_fields(_required_output_schema()["questionnaire_patch"]):
+    # Read authority includes canonical button fields that AI cannot write.
+    # Restricting this index to extraction paths invites related-field guesses.
+    for path in sorted(SCHEMA_FIELDS):
         if not _questionnaire_field_resolved(state, path):
             continue
         value = state
@@ -656,7 +658,7 @@ def _client_evidence_context(user_text: str, state: Dict[str, Any]) -> Dict[str,
         "resolved_questionnaire_fields": resolved,
         "minimum_dimensions": _minimum_dimension_status(user_text, state),
         "prior_adaptive_answers": _adaptive_answer_summary(state),
-        "instruction": "These are existing client answers, not new AI extractions or facility evidence. Preserve them without fabricating source quotes. Unknowns remain unknown; ask only for a material unresolved fact or genuine conflict.",
+        "instruction": "These are existing client answers, not new AI extractions or facility evidence. Each key is the exact canonical source path, including read-only questionnaire fields. Quote its literal value and map that exact key; never substitute a related writable field. Preserve them without fabricating source quotes. Unknowns remain unknown; ask only for a material unresolved fact or genuine conflict.",
     }
 
 

@@ -86,7 +86,7 @@ def _key(required_output):
     return json.dumps(required_output["questionnaire_patch"], sort_keys=True)
 
 
-def provider_schema(required_output, *, family_text: str | None = None):
+def provider_schema(required_output, *, family_text: str | None = None, questionnaire_state: dict | None = None):
     schema = _model(_key(required_output)).model_json_schema()
 
     # Without narrative there is no legal exact source quote for a new field.
@@ -111,6 +111,7 @@ def provider_schema(required_output, *, family_text: str | None = None):
         properties = definition.get("properties", {})
         if "quote" in properties and contracts[properties["path"]["enum"][0]].positive:
             properties["value"]["minimum"] = 1
+    quotes = []
     if family_text and family_text.strip():
         # Grammar chooses source spans; it does not interpret their meaning.
         # The complete narrative remains available when a fact spans sentences.
@@ -133,6 +134,25 @@ def provider_schema(required_output, *, family_text: str | None = None):
             properties["quote"] = {"type": "string", "enum": eligible} if contract.unit else {"$ref": "#/$defs/SourceQuote"}
         alternatives = schema["properties"]["questionnaire_patch_fields"]["items"]["anyOf"]
         alternatives[:] = [item for item in alternatives if item.get("$ref") not in excluded]
+    if family_text is not None:
+        from app.services.canonical_structured_profile import build_structured_profile, in_schema
+        fields = build_structured_profile(questionnaire_state or {})["fields"]
+        selected = []
+        for path, field in fields.items():
+            if not in_schema(path):
+                continue
+            value = field.get("value")
+            selected.extend(value if isinstance(value, list) else [value])
+        preference_quotes = list(dict.fromkeys([*quotes, *[
+            value for value in selected if isinstance(value, str) and value.strip()]]))
+        # One trace grammar for every relevance role. Splitting NICE into a
+        # separate quoted branch lets the decoder choose a role to satisfy
+        # syntax instead of the client's actual requirement.
+        if preference_quotes:
+            schema["$defs"]["Trace"]["properties"]["raw_text"] = {
+                "type": "string", "enum": preference_quotes}
+        else:
+            schema["properties"]["statements"]["maxItems"] = 0
     return schema
 
 
