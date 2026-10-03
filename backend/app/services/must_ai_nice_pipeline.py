@@ -349,6 +349,16 @@ def apply_must_ai_nice_pipeline(
         fit["nice_match"] = list(legacy.get("nice_match", fit.get("nice_match")) or [])
         fit["nice_unknown"] = list(legacy.get("nice_unknown", fit.get("nice_unknown")) or [])
         fit["nice_fit_scores"] = dict(legacy.get("nice_fit_scores", fit.get("nice_fit_scores")) or {})
+        # The final budget gate can learn a price after the earlier fit snapshot.
+        # Reuse that exact governed proof; a boolean published-rate claim is insufficient.
+        from app.services.affordability_floor import relevant_monthly_cost
+        cost = relevant_monthly_cost(audit_row)
+        if ("SEMANTIC_BUDGET_VERIFICATION" in (fit.get("must_pass") or [])
+                and isinstance(budget, (int, float)) and not isinstance(budget, bool)
+                and budget > 0 and cost is not None and cost <= budget):
+            if "BUDGET_FIT" not in fit["nice_match"]:
+                fit["nice_match"].append("BUDGET_FIT")
+            fit["nice_unknown"] = [key for key in fit["nice_unknown"] if key != "BUDGET_FIT"]
     structured_nice_summary = attach_nice_coverage(audit_rows, audit_intent)
     for row, audit_row in zip(ranked, audit_rows):
         # Keep evidence already used by deterministic ranking visible without

@@ -106,3 +106,17 @@ def test_prepared_runtime_returns_all_survivors_but_keeps_research_budget():
     assert len(result['results']) == 200
     assert len(research.call_args.args[0]) <= 60
     assert audit.call_args.kwargs['audit_limit'] == 60
+
+
+def test_structured_budget_audit_uses_late_governed_price_proof_only():
+    verified = _row('Verified-price', 'PASS', [], ['BUDGET_FIT', 'SOCIAL'])
+    unproven = _row('Unproven-price', 'PASS', [], ['BUDGET_FIT'])
+    for row in [verified, unproven]:
+        row['starting_monthly_price'] = 4800
+    verified['client_intent_fit']['must_pass'].append('SEMANTIC_BUDGET_VERIFICATION')
+    result = {'results': [verified, unproven], 'decision_intelligence': {'client_intent': {'nice_to_haves': [{'key': 'BUDGET_FIT'}, {'key': 'SOCIAL'}]}}}
+    result = apply_must_ai_nice_pipeline(result, {'budget': 5000}, '', 10)
+    coverage = {row['canonical_facility_id']: row['structured_nice_to_have_coverage'] for row in result['results']}
+    assert 'BUDGET_FIT' in coverage['Verified-price']['verified_match']
+    assert 'SOCIAL' in coverage['Verified-price']['unresolved']
+    assert 'BUDGET_FIT' in coverage['Unproven-price']['unresolved']

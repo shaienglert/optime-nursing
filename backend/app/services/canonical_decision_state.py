@@ -464,7 +464,7 @@ def derive_canonical_decision_state(result: Dict[str, Any]) -> CanonicalDecision
             finality=finality,
             system=SystemHealth.HEALTHY,
             next_action="SHOW_FINAL_RECOMMENDATION" if finality is DecisionFinality.FINAL else "SHOW_PROVISIONAL_RECOMMENDATION",
-            reason="Monthly and care requirements passed; one-time cost applicability and household funding still require confirmation" if capital_pending else "validated MUST gate and AI ranking are complete",
+            reason="Monthly and care requirements passed; one-time cost applicability and household funding still require confirmation" if capital_pending else ("Verified matches are ranked; other candidates still require MUST evidence" if pending else "Verified matches are ranked; expressed preferences still require evidence" if preferences is not PreferenceState.COMPLETE else "Verified requirements, preferences and deterministic ranking are complete"),
             legacy_readiness=legacy_readiness,
             legacy_recommendation_execution_allowed=legacy_execution,
             legacy_recommendation_visibility=legacy_visibility,

@@ -24,3 +24,10 @@ Availability and capital affordability remain separate from care fit. The UI
 must describe unresolved move readiness honestly, without changing inventory
 ranking policy or rejecting a capital-cost candidate on missing family evidence.
 Frozen personas and independent oracle expectations remain unchanged.
+
+The full universe can expose additional pending MUST research candidates. Existing
+canonical finality keeps these searches provisional while selected verified matches
+remain visible. Lifecycle/serialization tests assert that honest state and complete
+selected preference accounting; frozen ranking and care oracles stay unchanged.
+A late, governed numeric budget PASS closes duplicate structured budget uncertainty
+using the same funding-pathway cost, never a published-rate flag alone.
