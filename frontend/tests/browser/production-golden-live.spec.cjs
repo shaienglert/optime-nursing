@@ -222,6 +222,22 @@ test.describe('deployed production golden customer journeys', () => {
     expect(payload.candidate_discovery.catalog_version).toMatch(/^[a-f0-9]{16}$/);
     const audit = payload.decision_intelligence.ranking_universe_audit;
     expect(audit.eligible_candidate_count).toBe(audit.eligible_candidate_order.length);
+    expect(audit.eligible_candidate_count, 'Every recommendable candidate must enter final comparison').toBe(payload.decision_funnel.recommendable_ids.length);
+    expect(new Set(audit.eligible_candidate_order)).toEqual(new Set(payload.decision_funnel.recommendable_ids));
+    const structuredPending = results.some(item => (item.structured_nice_to_have_coverage?.unresolved || []).length > 0);
+    if (structuredPending) {
+      expect(payload.decision_intelligence.canonical_decision_state.preferences).toBe('PARTIAL');
+      expect(payload.decision_intelligence.canonical_decision_state.finality).toBe('PROVISIONAL');
+    }
+    if (results.length) {
+      await expect(page.getByRole('heading', { name: /Care-compatible options to review for/i })).toBeVisible();
+      await expect(page.getByText(/Care compatibility does not confirm readiness to move/i).first()).toBeVisible();
+    }
+    const dynamicModel = payload.decision_intelligence.dynamic_preference_model;
+    const traces = payload.decision_intelligence.human_intelligence.semantic_ai.result.statements || [];
+    const contextOnly = new Set(traces.filter(trace => trace.status === 'NOT_DECISION_RELEVANT' || (trace.mapped_parameters || []).some(path => path === 'humanIntelligenceV2.transitionRiskProfile.attitudeTowardMove' || path.endsWith('RequirementLevel'))).map(trace => trace.meaning));
+    expect((dynamicModel.preferences || []).every(pref => !contextOnly.has(pref.semantic_meaning))).toBe(true);
+
     expect(audit.eligible_candidate_order.slice(0, results.length)).toEqual(results.map(item => item.canonical_facility_id));
     for (const item of results) {
       expect(Number.isFinite(item.latitude) && Number.isFinite(item.longitude)).toBe(true);
