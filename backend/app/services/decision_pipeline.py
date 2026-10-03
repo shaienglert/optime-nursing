@@ -409,8 +409,11 @@ def _persist_selected_decision_audit(result: dict[str, Any], questionnaire_state
     )
 
 
-def _attach_pipeline_trace(result: dict[str, Any]) -> dict[str, Any]:
+def _attach_pipeline_trace(result: dict[str, Any], questionnaire_state: dict[str, Any] | None = None) -> dict[str, Any]:
     from app.services.decision_pipeline_trace import attach_decision_pipeline_trace
+    if questionnaire_state is not None:
+        from app.services.questionnaire_answer_accounting import attach_questionnaire_answer_accounting
+        attach_questionnaire_answer_accounting(result, questionnaire_state)
     return attach_decision_pipeline_trace(result)
 
 
@@ -433,7 +436,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
         profile_complete = _canonical_client_complete(profile_decision)
         if _client_interview_blocked(profile_complete):
             logger.info("decision_pipeline_stage_timings_ms (blocked at profile) %s", stage_timings)
-            return _attach_pipeline_trace(_blocked_interview_result(profile, "CANONICAL_CLIENT_INCOMPLETE"))
+            return _attach_pipeline_trace(_blocked_interview_result(profile, "CANONICAL_CLIENT_INCOMPLETE"), questionnaire_state)
         human = profile_decision.get("human_intelligence") if isinstance(profile_decision.get("human_intelligence"), dict) else {}
         profile_readiness = str(human.get("decision_readiness") or "READY").upper()
         _mark_client_ready_for_research(profile_decision, profile_readiness)
@@ -466,7 +469,7 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
     if _client_interview_blocked(_canonical_client_complete(decision)):
         runtime_profile = result.get("patient_needs_profile") if isinstance(result.get("patient_needs_profile"), dict) else profile
         logger.info("decision_pipeline_stage_timings_ms (blocked at result) %s", stage_timings)
-        return _attach_pipeline_trace(_blocked_interview_result(runtime_profile or {}, "CANONICAL_CLIENT_INCOMPLETE"))
+        return _attach_pipeline_trace(_blocked_interview_result(runtime_profile or {}, "CANONICAL_CLIENT_INCOMPLETE"), questionnaire_state)
     human = decision.get("human_intelligence") if isinstance(decision.get("human_intelligence"), dict) else {}
     readiness = str(human.get("decision_readiness") or "READY").upper()
     _mark_client_ready_for_research(decision, readiness)
@@ -517,6 +520,6 @@ def run_decision_pipeline(questionnaire_state: dict[str, Any], natural_language_
             "location_scope": result.get("location_scope") or {},
         }
     result["oomniker"] = analyze_oomniker(dict(decision_questionnaire), list(result.get("results") or []), decision_context=oomniker_context)
-    result = _attach_pipeline_trace(result)
+    result = _attach_pipeline_trace(result, questionnaire_state)
     logger.info("decision_pipeline_stage_timings_ms %s total_ms=%s", stage_timings, round(sum(stage_timings.values()), 1))
     return result
